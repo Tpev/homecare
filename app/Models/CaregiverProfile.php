@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 class CaregiverProfile extends Model
@@ -31,6 +32,9 @@ class CaregiverProfile extends Model
         'average_rating',
         'reviews_count',
         'identity_verified_at',
+        'identity_verification_status',
+        'identity_verification_session_id',
+        'identity_verification_checked_at',
         'background_check_verified_at',
         'top_caregiver',
         'invite_response_rate',
@@ -46,6 +50,7 @@ class CaregiverProfile extends Model
             'review_submitted_at' => 'datetime',
             'reviewed_at' => 'datetime',
             'identity_verified_at' => 'datetime',
+            'identity_verification_checked_at' => 'datetime',
             'background_check_verified_at' => 'datetime',
             'top_caregiver' => 'boolean',
             'invite_response_rate' => 'decimal:2',
@@ -98,9 +103,20 @@ class CaregiverProfile extends Model
         return $this->hasMany(CaregiverModerationLog::class);
     }
 
+    public function identityVerifications(): HasMany
+    {
+        return $this->hasMany(CaregiverIdentityVerification::class);
+    }
+
+    public function latestIdentityVerification(): HasOne
+    {
+        return $this->hasOne(CaregiverIdentityVerification::class)->latestOfMany();
+    }
+
     public function hasIdentityVerifiedBadge(): bool
     {
-        return (bool) $this->identity_verified_at;
+        return (bool) $this->identity_verified_at
+            || $this->identity_verification_status === CaregiverIdentityVerification::STATUS_APPROVED;
     }
 
     public function hasBackgroundCheckBadge(): bool

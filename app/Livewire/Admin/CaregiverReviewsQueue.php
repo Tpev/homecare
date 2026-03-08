@@ -22,12 +22,17 @@ class CaregiverReviewsQueue extends Component
     {
         $profile = CaregiverProfile::findOrFail($id);
 
+        if (! $profile->hasIdentityVerifiedBadge()) {
+            $this->addError('approval_'.$id, 'Identity verification must be approved before activation.');
+
+            return;
+        }
+
         $profile->update([
             'status' => 'active',
             'reviewed_at' => now(),
             'reviewed_by' => auth()->id(),
             'rejection_reason' => null,
-            'identity_verified_at' => $profile->identity_verified_at ?: now(),
             'background_check_verified_at' => $profile->background_check_verified_at ?: now(),
         ]);
 
@@ -97,6 +102,8 @@ class CaregiverReviewsQueue extends Component
 
         $profile->update([
             'identity_verified_at' => $enabled ? now() : null,
+            'identity_verification_status' => $enabled ? 'approved' : 'not_started',
+            'identity_verification_checked_at' => now(),
         ]);
 
         CaregiverModerationLog::create([
@@ -145,13 +152,13 @@ class CaregiverReviewsQueue extends Component
     public function render()
     {
         $profiles = CaregiverProfile::query()
-            ->with('user')
+            ->with(['user', 'latestIdentityVerification'])
             ->where('status', 'under_review')
             ->latest('review_submitted_at')
             ->get();
 
         $activeProfiles = CaregiverProfile::query()
-            ->with('user')
+            ->with(['user', 'latestIdentityVerification'])
             ->where('status', 'active')
             ->latest('updated_at')
             ->limit(30)

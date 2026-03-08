@@ -126,6 +126,13 @@ class OnboardingWizard extends Component
     {
         $this->step = $this->totalSteps;
         $this->validateStep();
+
+        if (! $this->identityIsApproved()) {
+            $this->addError('identity_verification', 'Please complete identity verification before submitting for review.');
+
+            return;
+        }
+
         $this->saveDraft(true);
 
         session()->flash('status', 'Profile submitted. Review usually takes a few hours.');
@@ -313,6 +320,14 @@ class OnboardingWizard extends Component
                 ]);
             }
         });
+    }
+
+    private function identityIsApproved(): bool
+    {
+        $this->profile->refresh();
+
+        return (bool) $this->profile->identity_verified_at
+            || $this->profile->identity_verification_status === 'approved';
     }
 
     public function render()

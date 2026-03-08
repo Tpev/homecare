@@ -118,6 +118,26 @@
         </div>
     </section>
 
+    <section class="bg-white py-14">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-extrabold tracking-tight">Raleigh family care guides</h2>
+                    <p class="mt-1 text-sm text-slate-600">Explore detailed local pages before posting your request.</p>
+                </div>
+                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-home-care']) }}" class="text-sm font-semibold text-blue-700 hover:underline">
+                    View all Raleigh guides
+                </a>
+            </div>
+            <div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-companion-care']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">Companion care in Raleigh</a>
+                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-respite-care']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">Respite care in Raleigh</a>
+                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-post-hospital-home-help']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">Post-hospital home help</a>
+                <a href="{{ route('seo.page', ['seoSlug' => 'home-care-cost-raleigh-nc']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">Home care cost in Raleigh</a>
+            </div>
+        </div>
+    </section>
+
     <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div class="rounded-3xl bg-gradient-to-r from-blue-700 via-cyan-700 to-emerald-600 p-7 text-white shadow-2xl sm:p-10">
             <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">

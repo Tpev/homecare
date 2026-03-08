@@ -12,11 +12,24 @@
 
             <p class="text-sm text-slate-600">{{ $profile->bio }}</p>
             <p class="text-sm mt-2">Rate: ${{ $profile->hourly_rate }}/hr</p>
-            <p class="text-xs text-slate-500 mt-1">Approval marks identity and background check as verified by default.</p>
+            <p class="text-xs text-slate-500 mt-1">
+                Identity status:
+                <span class="font-semibold uppercase">{{ str_replace('_', ' ', $profile->identity_verification_status ?? 'not_started') }}</span>
+            </p>
+
+            @error('approval_'.$profile->id)
+                <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
+            @enderror
 
             <x-slot:footer>
                 <div class="flex flex-wrap gap-2 items-center">
-                    <x-button color="green" wire:click="approve({{ $profile->id }})">Approve</x-button>
+                    <x-button
+                        color="green"
+                        wire:click="approve({{ $profile->id }})"
+                        :disabled="!$profile->hasIdentityVerifiedBadge()"
+                    >
+                        Approve
+                    </x-button>
                     <x-input placeholder="Rejection reason" wire:model="rejection_reason" />
                     <x-button color="red" wire:click="reject({{ $profile->id }})">Reject</x-button>
                     <x-button color="amber" wire:click="suspend({{ $profile->id }})">Suspend</x-button>

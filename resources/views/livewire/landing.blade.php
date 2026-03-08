@@ -148,6 +148,41 @@
         </div>
     </section>
 
+    <section class="bg-white py-14">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-extrabold tracking-tight">Raleigh care guides</h2>
+                    <p class="mt-1 text-sm text-slate-600">Local pages built around real family and caregiver needs in Raleigh, NC.</p>
+                </div>
+                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-home-care']) }}" class="text-sm font-semibold text-blue-700 hover:underline">
+                    Explore all Raleigh pages
+                </a>
+            </div>
+
+            <div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-home-care']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">
+                    <p class="text-sm font-semibold text-slate-900">Home care in Raleigh, NC</p>
+                </a>
+                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-companion-care']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">
+                    <p class="text-sm font-semibold text-slate-900">Companion care in Raleigh</p>
+                </a>
+                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-respite-care']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">
+                    <p class="text-sm font-semibold text-slate-900">Respite care in Raleigh</p>
+                </a>
+                <a href="{{ route('seo.page', ['seoSlug' => 'home-care-cost-raleigh-nc']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">
+                    <p class="text-sm font-semibold text-slate-900">Home care cost in Raleigh</p>
+                </a>
+                <a href="{{ route('seo.page', ['seoSlug' => 'trusted-caregiver-screening']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">
+                    <p class="text-sm font-semibold text-slate-900">Trusted caregiver screening</p>
+                </a>
+                <a href="{{ route('seo.page', ['seoSlug' => 'caregiver-jobs-raleigh-nc']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">
+                    <p class="text-sm font-semibold text-slate-900">Caregiver jobs in Raleigh</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
     <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div class="rounded-3xl bg-gradient-to-r from-cyan-700 via-blue-700 to-emerald-600 p-7 text-white shadow-2xl sm:p-10">
             <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">

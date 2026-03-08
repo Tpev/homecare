@@ -106,6 +106,25 @@
                 </div>
             </section>
 
+            @php
+                $identityStatus = $caregiverData['profile']?->identity_verification_status ?? 'not_started';
+                $identityApproved = ($caregiverData['profile']?->identity_verified_at !== null) || $identityStatus === 'approved';
+            @endphp
+
+            @unless ($identityApproved)
+                <section class="rounded-2xl border border-amber-300 bg-amber-50 p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <p class="font-semibold text-amber-900">Identity verification required</p>
+                            <p class="text-sm text-amber-800">Current status: {{ strtoupper(str_replace('_', ' ', $identityStatus)) }}. Complete this to be eligible for activation.</p>
+                        </div>
+                        <a href="{{ route('caregiver.verification.show') }}" wire:navigate>
+                            <x-button color="amber" sm>Verify identity</x-button>
+                        </a>
+                    </div>
+                </section>
+            @endunless
+
             <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
                 <div class="hc-kpi"><p class="hc-kpi-label">Applications</p><p class="hc-kpi-value">{{ $caregiverData['stats']['applications_total'] }}</p></div>
                 <div class="hc-kpi"><p class="hc-kpi-label">Shortlisted</p><p class="hc-kpi-value">{{ $caregiverData['stats']['shortlisted'] }}</p></div>

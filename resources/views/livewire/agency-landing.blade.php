@@ -115,6 +115,17 @@
         </div>
     </section>
 
+    <section class="bg-white py-14">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <h2 class="text-2xl font-extrabold tracking-tight">Raleigh market intelligence pages</h2>
+            <div class="mt-6 grid gap-4 md:grid-cols-3">
+                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-home-care']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">Home care demand in Raleigh</a>
+                <a href="{{ route('seo.page', ['seoSlug' => 'home-care-cost-raleigh-nc']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">Home care cost benchmark</a>
+                <a href="{{ route('seo.page', ['seoSlug' => 'trusted-caregiver-screening']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">Trust and screening standards</a>
+            </div>
+        </div>
+    </section>
+
     <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div class="rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-700 to-emerald-600 p-7 text-white shadow-2xl sm:p-10">
             <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">

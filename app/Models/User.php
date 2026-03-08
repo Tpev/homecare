@@ -113,4 +113,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(FamilyCaregiverFavorite::class, 'caregiver_user_id');
     }
+
+    public function aiRequestSessions(): HasMany
+    {
+        return $this->hasMany(AiRequestSession::class, 'family_user_id');
+    }
+
+    public function caregiverIdentityVerifications(): HasMany
+    {
+        return $this->hasMany(CaregiverIdentityVerification::class);
+    }
 }

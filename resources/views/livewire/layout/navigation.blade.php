@@ -21,6 +21,10 @@ new class extends Component
         $isFamily = $user?->role === 'family';
         $isAdmin = $user && strtolower($user->email) === 'test@test.com';
         $caregiverProfile = $isCaregiver ? $user?->caregiverProfile : null;
+        $identityStatus = $isCaregiver ? (string) ($caregiverProfile?->identity_verification_status ?? 'not_started') : '';
+        $identityApproved = $isCaregiver
+            ? ((bool) $caregiverProfile?->identity_verified_at || $identityStatus === 'approved')
+            : false;
 
         $messageUnread = 0;
         $invitationUnread = 0;
@@ -110,6 +114,11 @@ new class extends Component
         }
 
         if ($isCaregiver) {
+            $primaryLinks[] = [
+                'label' => $identityApproved ? 'Identity Verified' : 'Verify Identity',
+                'href' => route('caregiver.verification.show'),
+                'active' => request()->routeIs('caregiver.verification.*'),
+            ];
             $primaryLinks[] = [
                 'label' => 'Open Requests',
                 'href' => route('care-requests.index'),
@@ -204,6 +213,9 @@ new class extends Component
                 <a href="{{ route('support.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Support Center</a>
 
                 @if ($isCaregiver)
+                    <a href="{{ route('caregiver.verification.show') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                        {{ $identityApproved ? 'Identity Verified' : 'Verify Identity' }}
+                    </a>
                     <a href="{{ route('caregiver.invitations.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                         {{ $invitationUnread > 0 ? 'Invitations ('.$invitationUnread.')' : 'Invitations' }}
                     </a>
@@ -253,6 +265,11 @@ new class extends Component
                     {{ $messageUnread > 0 ? __('Messages').' ('.$messageUnread.')' : __('Messages') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('support.index')" wire:navigate>{{ __('Support Center') }}</x-responsive-nav-link>
+                @if ($isCaregiver)
+                    <x-responsive-nav-link :href="route('caregiver.verification.show')" wire:navigate>
+                        {{ $identityApproved ? __('Identity Verified') : __('Verify Identity') }}
+                    </x-responsive-nav-link>
+                @endif
                 <button wire:click="logout" class="w-full text-start">
                     <x-responsive-nav-link>{{ __('Log Out') }}</x-responsive-nav-link>
                 </button>

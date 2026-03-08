@@ -93,6 +93,27 @@
                 <div class="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
                     After submit, profile goes under review for a few hours before it can go live.
                 </div>
+
+                <div class="rounded-md border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <p class="font-medium text-slate-900">Identity verification</p>
+                            <p class="text-xs text-slate-500 mt-1">
+                                Status:
+                                <span class="font-semibold uppercase">
+                                    {{ str_replace('_', ' ', $profile->identity_verification_status ?? 'not_started') }}
+                                </span>
+                            </p>
+                        </div>
+                        <a href="{{ route('caregiver.verification.show') }}">
+                            <x-button color="blue" sm light>Start / retry verification</x-button>
+                        </a>
+                    </div>
+                </div>
+
+                @error('identity_verification')
+                    <p class="text-sm text-red-600">{{ $message }}</p>
+                @enderror
             </div>
         @endif
 

@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
+        'base_url' => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
+        'model' => env('OPENAI_MODEL', 'gpt-4.1-mini'),
+        'timeout' => (int) env('OPENAI_TIMEOUT_SECONDS', 25),
+    ],
+
+    'didit' => [
+        'api_key' => env('DIDIT_API_KEY'),
+        'webhook_secret' => env('DIDIT_WEBHOOK_SECRET'),
+        'workflow_id' => env('DIDIT_WORKFLOW_ID'),
+        'base_url' => env('DIDIT_BASE_URL', 'https://verification.didit.me'),
+        'timeout' => (int) env('DIDIT_TIMEOUT_SECONDS', 20),
+    ],
+
 ];

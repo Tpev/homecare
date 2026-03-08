@@ -24,7 +24,12 @@ class CaregiverRegressionTest extends TestCase
         $skill = Skill::query()->create(['name' => 'Companionship']);
         $language = Language::query()->create(['name' => 'English']);
         $user = User::factory()->create(['role' => 'caregiver', 'city' => 'Raleigh', 'state' => 'NC']);
-        $profile = CaregiverProfile::query()->create(['user_id' => $user->id, 'status' => 'draft']);
+        $profile = CaregiverProfile::query()->create([
+            'user_id' => $user->id,
+            'status' => 'draft',
+            'identity_verified_at' => now(),
+            'identity_verification_status' => 'approved',
+        ]);
 
         Livewire::actingAs($user)
             ->test(OnboardingWizard::class)
@@ -108,6 +113,8 @@ class CaregiverRegressionTest extends TestCase
         $profile = CaregiverProfile::query()->create([
             'user_id' => $caregiver->id,
             'status' => 'under_review',
+            'identity_verified_at' => now(),
+            'identity_verification_status' => 'approved',
         ]);
 
         Livewire::actingAs($admin)
@@ -152,6 +159,27 @@ class CaregiverRegressionTest extends TestCase
         $this->assertDatabaseHas('caregiver_moderation_logs', [
             'caregiver_profile_id' => $profile->id,
             'action' => 'rejected',
+        ]);
+    }
+
+    public function test_admin_cannot_approve_without_identity_verification(): void
+    {
+        $admin = User::factory()->create(['email' => 'test@test.com']);
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        $profile = CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'under_review',
+            'identity_verification_status' => 'not_started',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(CaregiverReviewsQueue::class)
+            ->call('approve', $profile->id)
+            ->assertHasErrors(['approval_'.$profile->id]);
+
+        $this->assertDatabaseHas('caregiver_profiles', [
+            'id' => $profile->id,
+            'status' => 'under_review',
         ]);
     }
 

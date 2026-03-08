@@ -5,9 +5,14 @@
                 <h1 class="text-2xl font-display font-semibold">My care requests</h1>
                 <p class="text-sm text-slate-600">Track applicants, shortlist, and hire caregivers.</p>
             </div>
-            <a href="{{ route('family.requests.create') }}" wire:navigate>
-                <x-button color="blue">New request</x-button>
-            </a>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('family.requests.create_ai') }}" wire:navigate>
+                    <x-button color="emerald" icon="sparkles" position="left">New request with AI</x-button>
+                </a>
+                <a href="{{ route('family.requests.create') }}" wire:navigate>
+                    <x-button color="blue" light>Manual form</x-button>
+                </a>
+            </div>
         </div>
 
         @if (session('status'))

@@ -18,6 +18,22 @@
         @if ($profile->rejection_reason)
             <x-alert color="red">Rejected reason: {{ $profile->rejection_reason }}</x-alert>
         @endif
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <p class="text-sm font-semibold text-slate-900">Identity verification</p>
+                    <p class="text-xs text-slate-500">
+                        Status: {{ strtoupper(str_replace('_', ' ', $profile->identity_verification_status ?? 'not_started')) }}
+                        @if ($profile->identity_verified_at)
+                            • Verified {{ $profile->identity_verified_at->format('M d, Y H:i') }}
+                        @endif
+                    </p>
+                </div>
+                <a href="{{ route('caregiver.verification.show') }}">
+                    <x-button color="blue" sm light>Open verification</x-button>
+                </a>
+            </div>
+        </div>
 <livewire:caregiver.profile-completeness-card :profile="$profile" />
 
         <div class="space-y-4">
