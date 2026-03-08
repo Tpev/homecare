@@ -55,7 +55,7 @@
 
                 <form method="POST" action="{{ route('caregiver.verification.session') }}">
                     @csrf
-                    <x-button color="blue">
+                    <x-button color="blue" type="submit">
                         {{ $profile->identity_verification_status === 'approved' ? 'Start new verification' : 'Start verification' }}
                     </x-button>
                 </form>
@@ -93,4 +93,3 @@
         </section>
     </div>
 </x-app-layout>
-
