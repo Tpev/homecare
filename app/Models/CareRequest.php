@@ -13,6 +13,9 @@ class CareRequest extends Model
 {
     use HasFactory;
 
+    public const TYPE_ONE_TIME = 'one_time';
+    public const TYPE_RECURRING = 'recurring';
+
     public const STATUS_DRAFT = 'draft';
     public const STATUS_OPEN = 'open';
     public const STATUS_FILLED = 'filled';
@@ -23,11 +26,21 @@ class CareRequest extends Model
         'family_user_id',
         'title',
         'additional_info',
+        'scope_of_work',
+        'time_expectations',
+        'home_access_notes',
+        'preferred_response_hours',
         'status',
+        'request_type',
         'budget_min',
         'budget_max',
         'requested_start_at',
         'requested_end_at',
+        'recurring_days',
+        'recurring_start_time',
+        'recurring_end_time',
+        'recurring_starts_on',
+        'recurring_ends_on',
         'address_line1',
         'address_line2',
         'city',
@@ -42,8 +55,12 @@ class CareRequest extends Model
         return [
             'budget_min' => 'decimal:2',
             'budget_max' => 'decimal:2',
+            'preferred_response_hours' => 'integer',
             'requested_start_at' => 'datetime',
             'requested_end_at' => 'datetime',
+            'recurring_days' => 'array',
+            'recurring_starts_on' => 'date',
+            'recurring_ends_on' => 'date',
             'lat' => 'decimal:7',
             'lng' => 'decimal:7',
         ];
@@ -79,5 +96,25 @@ class CareRequest extends Model
     public function conversations(): HasMany
     {
         return $this->hasMany(CareRequestConversation::class);
+    }
+
+    public function booking(): HasOne
+    {
+        return $this->hasOne(CareBooking::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(CareReview::class);
+    }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(CareRequestInvitation::class);
+    }
+
+    public function isRecurring(): bool
+    {
+        return $this->request_type === self::TYPE_RECURRING;
     }
 }

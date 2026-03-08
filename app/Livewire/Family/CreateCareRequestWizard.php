@@ -4,6 +4,7 @@ namespace App\Livewire\Family;
 
 use App\Models\CareRequest;
 use App\Models\CareTask;
+use App\Support\FunnelTracker;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -17,8 +18,18 @@ class CreateCareRequestWizard extends Component
 
     public string $title = '';
     public string $additional_info = '';
+    public string $scope_of_work = '';
+    public string $time_expectations = '';
+    public string $home_access_notes = '';
+    public int $preferred_response_hours = 12;
+    public string $request_type = CareRequest::TYPE_ONE_TIME;
     public string $requested_start_at = '';
     public string $requested_end_at = '';
+    public array $recurring_days = [];
+    public string $recurring_start_time = '';
+    public string $recurring_end_time = '';
+    public string $recurring_starts_on = '';
+    public string $recurring_ends_on = '';
     public string $address_line1 = '';
     public string $address_line2 = '';
     public string $city = '';
@@ -41,6 +52,19 @@ class CreateCareRequestWizard extends Component
     public string $third_party_email = '';
 
     public array $taskOptions = [];
+    public array $requestTypeOptions = [
+        ['label' => 'One-time job', 'value' => CareRequest::TYPE_ONE_TIME],
+        ['label' => 'Recurring job', 'value' => CareRequest::TYPE_RECURRING],
+    ];
+    public array $dayOptions = [
+        ['label' => 'Sun', 'value' => 0],
+        ['label' => 'Mon', 'value' => 1],
+        ['label' => 'Tue', 'value' => 2],
+        ['label' => 'Wed', 'value' => 3],
+        ['label' => 'Thu', 'value' => 4],
+        ['label' => 'Fri', 'value' => 5],
+        ['label' => 'Sat', 'value' => 6],
+    ];
 
     public array $genderOptions = [
         ['label' => 'Female', 'value' => 'female'],
@@ -96,6 +120,22 @@ class CreateCareRequestWizard extends Component
         $this->step = max($this->step - 1, 1);
     }
 
+    public function updatedRequestType(string $value): void
+    {
+        if ($value === CareRequest::TYPE_ONE_TIME) {
+            $this->reset([
+                'recurring_days',
+                'recurring_start_time',
+                'recurring_end_time',
+                'recurring_starts_on',
+                'recurring_ends_on',
+            ]);
+            return;
+        }
+
+        $this->reset(['requested_start_at', 'requested_end_at']);
+    }
+
     public function publish(): void
     {
         $this->validateAll();
@@ -105,9 +145,19 @@ class CreateCareRequestWizard extends Component
                 'family_user_id' => auth()->id(),
                 'title' => trim($this->title),
                 'additional_info' => trim($this->additional_info) ?: null,
+                'scope_of_work' => trim($this->scope_of_work),
+                'time_expectations' => trim($this->time_expectations),
+                'home_access_notes' => trim($this->home_access_notes),
+                'preferred_response_hours' => $this->preferred_response_hours,
                 'status' => CareRequest::STATUS_OPEN,
-                'requested_start_at' => $this->requested_start_at,
-                'requested_end_at' => $this->requested_end_at,
+                'request_type' => $this->request_type,
+                'requested_start_at' => $this->request_type === CareRequest::TYPE_ONE_TIME ? $this->requested_start_at : null,
+                'requested_end_at' => $this->request_type === CareRequest::TYPE_ONE_TIME ? $this->requested_end_at : null,
+                'recurring_days' => $this->request_type === CareRequest::TYPE_RECURRING ? $this->normalizedRecurringDays() : null,
+                'recurring_start_time' => $this->request_type === CareRequest::TYPE_RECURRING ? $this->recurring_start_time : null,
+                'recurring_end_time' => $this->request_type === CareRequest::TYPE_RECURRING ? $this->recurring_end_time : null,
+                'recurring_starts_on' => $this->request_type === CareRequest::TYPE_RECURRING ? $this->recurring_starts_on : null,
+                'recurring_ends_on' => $this->request_type === CareRequest::TYPE_RECURRING ? ($this->recurring_ends_on ?: null) : null,
                 'address_line1' => trim($this->address_line1),
                 'address_line2' => trim($this->address_line2) ?: null,
                 'city' => trim($this->city),
@@ -143,6 +193,11 @@ class CreateCareRequestWizard extends Component
             return $careRequest;
         });
 
+        FunnelTracker::track('care_request_published', auth()->user(), $careRequest, [
+            'request_type' => $careRequest->request_type,
+            'tasks_count' => count($this->selectedTasks),
+        ]);
+
         session()->flash('status', 'Care request is live. Caregivers can now apply.');
         $this->redirect(route('family.requests.show', $careRequest->id, false), navigate: true);
     }
@@ -172,11 +227,14 @@ class CreateCareRequestWizard extends Component
 
     private function rulesForBasics(): array
     {
-        return [
+        $rules = [
+            'request_type' => ['required', Rule::in([CareRequest::TYPE_ONE_TIME, CareRequest::TYPE_RECURRING])],
             'title' => ['required', 'string', 'min:8', 'max:140'],
-            'additional_info' => ['nullable', 'string', 'max:3000'],
-            'requested_start_at' => ['required', 'date', 'after:now'],
-            'requested_end_at' => ['required', 'date', 'after:requested_start_at'],
+            'additional_info' => ['required', 'string', 'min:30', 'max:3000'],
+            'scope_of_work' => ['required', 'string', 'min:30', 'max:3000'],
+            'time_expectations' => ['required', 'string', 'min:8', 'max:255'],
+            'home_access_notes' => ['required', 'string', 'min:8', 'max:3000'],
+            'preferred_response_hours' => ['required', 'integer', 'min:1', 'max:72'],
             'address_line1' => ['required', 'string', 'max:255'],
             'address_line2' => ['nullable', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:120'],
@@ -186,6 +244,30 @@ class CreateCareRequestWizard extends Component
             'selectedTasks.*' => ['integer', Rule::exists('care_tasks', 'id')],
             'taskNotes.*' => ['nullable', 'string', 'max:500'],
         ];
+
+        if ($this->request_type === CareRequest::TYPE_ONE_TIME) {
+            $rules['requested_start_at'] = ['required', 'date', 'after:now'];
+            $rules['requested_end_at'] = ['required', 'date', 'after:requested_start_at'];
+        } else {
+            $rules['recurring_days'] = ['required', 'array', 'min:1'];
+            $rules['recurring_days.*'] = ['integer', Rule::in(range(0, 6))];
+            $rules['recurring_start_time'] = ['required', 'date_format:H:i'];
+            $rules['recurring_end_time'] = ['required', 'date_format:H:i', 'after:recurring_start_time'];
+            $rules['recurring_starts_on'] = ['required', 'date', 'after_or_equal:today'];
+            $rules['recurring_ends_on'] = ['nullable', 'date', 'after_or_equal:recurring_starts_on'];
+        }
+
+        return $rules;
+    }
+
+    private function normalizedRecurringDays(): array
+    {
+        return collect($this->recurring_days)
+            ->map(fn ($day) => (int) $day)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
     }
 
     private function rulesForRecipient(): array
@@ -196,7 +278,7 @@ class CreateCareRequestWizard extends Component
             'recipient_gender' => ['nullable', Rule::in(array_column($this->genderOptions, 'value'))],
             'recipient_mobility_level' => ['nullable', Rule::in(array_column($this->mobilityOptions, 'value'))],
             'recipient_relationship_to_family' => ['required', 'string', 'max:120'],
-            'recipient_care_notes' => ['nullable', 'string', 'max:2000'],
+            'recipient_care_notes' => ['required', 'string', 'min:20', 'max:2000'],
         ];
     }
 

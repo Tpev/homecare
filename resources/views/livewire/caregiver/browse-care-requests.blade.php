@@ -12,6 +12,16 @@
             />
 
             <x-select.styled
+                label="Job type"
+                wire:model.live="requestType"
+                :options="[
+                    ['label' => 'All types', 'value' => 'all'],
+                    ['label' => 'One-time', 'value' => \App\Models\CareRequest::TYPE_ONE_TIME],
+                    ['label' => 'Recurring', 'value' => \App\Models\CareRequest::TYPE_RECURRING],
+                ]"
+            />
+
+            <x-select.styled
                 label="When"
                 wire:model.live="when"
                 :options="[
@@ -44,13 +54,23 @@
                     <div class="space-y-1">
                         <p class="font-semibold">{{ $request->title }}</p>
                         <p class="text-sm text-slate-600">
-                            {{ $request->city }}, {{ $request->state }} - {{ optional($request->requested_start_at)->format('M d, Y H:i') }}
+                            {{ $request->city }}, {{ $request->state }}
+                            @if ($request->request_type === \App\Models\CareRequest::TYPE_ONE_TIME)
+                                - {{ optional($request->requested_start_at)->format('M d, Y H:i') }}
+                            @else
+                                - Recurring
+                            @endif
                         </p>
                         <p class="text-sm text-slate-600">
                             Recipient: {{ $request->recipient?->full_name ?? 'Unknown' }}
                         </p>
                     </div>
-                    <x-badge text="OPEN" color="blue" />
+                    <div class="flex items-center gap-2">
+                        @if ($request->request_type === \App\Models\CareRequest::TYPE_RECURRING)
+                            <x-badge text="RECURRING" color="green" />
+                        @endif
+                        <x-badge text="OPEN" color="blue" />
+                    </div>
                 </div>
 
                 <div class="mt-3 flex flex-wrap gap-2">
@@ -83,6 +103,13 @@
                                 Open application to start chat
                             </a>
                         @endif
+                    </div>
+                @endif
+
+                @php $invitation = $request->invitations->first(); @endphp
+                @if ($invitation && $invitation->status === \App\Models\CareRequestInvitation::STATUS_PENDING)
+                    <div class="mt-3 rounded-md border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs text-cyan-900">
+                        You were invited by this family. Respond in the Invitations page.
                     </div>
                 @endif
             </x-card>

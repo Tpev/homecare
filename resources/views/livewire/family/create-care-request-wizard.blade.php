@@ -24,23 +24,81 @@
             @if ($step === 1)
                 <div class="space-y-5">
                     <div class="grid grid-cols-1 gap-4">
+                        <x-select.styled
+                            label="Request type"
+                            wire:model.live="request_type"
+                            :options="$requestTypeOptions"
+                        />
+                        @error('request_type') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
                         <x-input label="Request title" wire:model="title" hint="Example: Monday afternoon companionship in Raleigh" />
                         @error('title') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
                         <x-textarea label="Additional info" wire:model="additional_info" hint="Care expectations, home context, routines, pet info, etc." />
                         @error('additional_info') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+                        <x-textarea label="Scope of work" wire:model="scope_of_work" hint="Clearly describe what the caregiver must do during the shift." />
+                        @error('scope_of_work') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+                        <x-input label="Time expectations" wire:model="time_expectations" hint="Example: Arrive 10 minutes early, keep routine on schedule." />
+                        @error('time_expectations') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+                        <x-textarea label="Home access notes" wire:model="home_access_notes" hint="Entry instructions, parking, security gate, etc." />
+                        @error('home_access_notes') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+                        <x-input
+                            type="number"
+                            min="1"
+                            max="72"
+                            label="Preferred caregiver response SLA (hours)"
+                            wire:model="preferred_response_hours"
+                            hint="Used for urgency and invite response expectations."
+                        />
+                        @error('preferred_response_hours') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <x-input type="datetime-local" label="Start date and time" wire:model="requested_start_at" />
-                            @error('requested_start_at') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                    @if ($request_type === \App\Models\CareRequest::TYPE_ONE_TIME)
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <x-input type="datetime-local" label="Start date and time" wire:model="requested_start_at" />
+                                @error('requested_start_at') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <x-input type="datetime-local" label="End date and time" wire:model="requested_end_at" />
+                                @error('requested_end_at') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                            </div>
                         </div>
-                        <div>
-                            <x-input type="datetime-local" label="End date and time" wire:model="requested_end_at" />
-                            @error('requested_end_at') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                    @else
+                        <div class="space-y-4 rounded-lg border border-slate-200 p-4 bg-slate-50">
+                            <x-select.styled
+                                wire:model="recurring_days"
+                                multiple
+                                label="Days of week"
+                                :options="$dayOptions"
+                            />
+                            @error('recurring_days') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                            @error('recurring_days.*') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <x-input type="time" label="Recurring start time" wire:model="recurring_start_time" />
+                                    @error('recurring_start_time') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <x-input type="time" label="Recurring end time" wire:model="recurring_end_time" />
+                                    @error('recurring_end_time') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <x-input type="date" label="Starts on" wire:model="recurring_starts_on" />
+                                    @error('recurring_starts_on') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <x-input type="date" label="Ends on (optional)" wire:model="recurring_ends_on" />
+                                    @error('recurring_ends_on') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    @endif
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="md:col-span-2">
@@ -167,11 +225,30 @@
                     <div class="rounded-lg border border-slate-200 p-4 bg-slate-50">
                         <p class="font-medium text-slate-900">{{ $title }}</p>
                         <p class="text-sm text-slate-600 mt-1">{{ $city }}, {{ $state }} {{ $zip }}</p>
-                        <p class="text-sm text-slate-600">
-                            {{ $requested_start_at ? \Illuminate\Support\Carbon::parse($requested_start_at)->format('M d, Y H:i') : '-' }}
-                            to
-                            {{ $requested_end_at ? \Illuminate\Support\Carbon::parse($requested_end_at)->format('M d, Y H:i') : '-' }}
-                        </p>
+                        <p class="text-xs text-slate-500 mt-1">Response target: {{ $preferred_response_hours }}h</p>
+                        @if ($request_type === \App\Models\CareRequest::TYPE_ONE_TIME)
+                            <p class="text-sm text-slate-600">
+                                One-time:
+                                {{ $requested_start_at ? \Illuminate\Support\Carbon::parse($requested_start_at)->format('M d, Y H:i') : '-' }}
+                                to
+                                {{ $requested_end_at ? \Illuminate\Support\Carbon::parse($requested_end_at)->format('M d, Y H:i') : '-' }}
+                            </p>
+                        @else
+                            <p class="text-sm text-slate-600">
+                                Recurring:
+                                {{ collect($dayOptions)->whereIn('value', collect($recurring_days)->map(fn($d)=>(int)$d)->all())->pluck('label')->implode(', ') ?: '-' }}
+                                {{ $recurring_start_time }}-{{ $recurring_end_time }}
+                            </p>
+                            <p class="text-xs text-slate-500">
+                                {{ $recurring_starts_on ?: '-' }} @if($recurring_ends_on) until {{ $recurring_ends_on }} @endif
+                            </p>
+                        @endif
+                    </div>
+
+                    <div class="rounded-lg border border-slate-200 p-4 text-sm">
+                        <p><span class="font-medium">Scope:</span> {{ $scope_of_work }}</p>
+                        <p class="mt-2"><span class="font-medium">Time expectations:</span> {{ $time_expectations }}</p>
+                        <p class="mt-2"><span class="font-medium">Home access:</span> {{ $home_access_notes }}</p>
                     </div>
 
                     <div class="rounded-lg border border-slate-200 p-4">

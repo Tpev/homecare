@@ -6,12 +6,12 @@
         $canSend = $active ? $currentUser->can('sendMessage', $active) : false;
     @endphp
 
-    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8" wire:poll.2s="refreshThread">
-        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[72vh]">
-            <aside class="lg:col-span-4 xl:col-span-3 border-r border-slate-200 bg-slate-50/80">
+    <div class="hc-page py-6" wire:poll.2s="refreshThread">
+        <div class="rounded-3xl border border-slate-200 bg-white/95 shadow-lg shadow-slate-200/70 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[72vh]">
+            <aside class="lg:col-span-4 xl:col-span-3 border-r border-slate-200 bg-slate-50/90">
                 <div class="p-4 border-b border-slate-200 bg-white">
                     <p class="text-xs uppercase tracking-[0.16em] text-slate-500">Messages</p>
-                    <h1 class="text-lg font-semibold text-slate-900">Inbox</h1>
+                    <h1 class="text-lg font-display font-semibold text-slate-900">Inbox</h1>
                     <div class="mt-3">
                         <x-input wire:model.live.debounce.300ms="search" placeholder="Search by request or name" />
                     </div>
@@ -26,10 +26,10 @@
                         <button
                             type="button"
                             wire:click="openConversation({{ $conversation->id }})"
-                            class="w-full text-left px-4 py-3 border-b border-slate-200 transition {{ $isActive ? 'bg-blue-50' : 'bg-white hover:bg-slate-50' }}"
+                            class="w-full text-left px-4 py-3 border-b border-slate-200 transition {{ $isActive ? 'bg-cyan-50/70' : 'bg-white hover:bg-slate-50' }}"
                         >
                             <div class="flex items-center justify-between gap-2">
-                                <p class="font-semibold text-slate-900 truncate">{{ $otherParty?->name }}</p>
+                                <p class="font-display font-semibold text-slate-900 truncate">{{ $otherParty?->name }}</p>
                                 @if ($conversation->is_unread_for_current_user)
                                     <span class="inline-flex h-2.5 w-2.5 rounded-full bg-blue-600"></span>
                                 @endif
@@ -57,7 +57,7 @@
                         <div class="flex items-center justify-between gap-3">
                             <div>
                                 <p class="text-xs uppercase tracking-[0.16em] text-slate-500">Conversation</p>
-                                <h2 class="text-lg font-semibold text-slate-900">{{ $otherParty?->name }}</h2>
+                                <h2 class="text-lg font-display font-semibold text-slate-900">{{ $otherParty?->name }}</h2>
                                 <p class="text-sm text-slate-600">{{ $active->careRequest?->title }}</p>
                             </div>
                             <div class="text-right">
@@ -78,9 +78,9 @@
                             @foreach ($messages as $message)
                                 @php $mine = (int) $message->sender_user_id === (int) $currentUser->id; @endphp
                                 <div class="flex {{ $mine ? 'justify-end' : 'justify-start' }}">
-                                    <div class="max-w-[85%] md:max-w-[65%] rounded-2xl px-4 py-3 shadow-sm {{ $mine ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-800' }}">
+                                    <div class="max-w-[85%] md:max-w-[65%] rounded-2xl px-4 py-3 shadow-sm {{ $mine ? 'bg-cyan-700 text-white' : 'bg-white border border-slate-200 text-slate-800' }}">
                                         <p class="text-sm whitespace-pre-line">{{ $message->body }}</p>
-                                        <div class="mt-2 flex items-center justify-between gap-3 text-[11px] {{ $mine ? 'text-blue-100' : 'text-slate-500' }}">
+                                        <div class="mt-2 flex items-center justify-between gap-3 text-[11px] {{ $mine ? 'text-cyan-100' : 'text-slate-500' }}">
                                             <span>{{ $message->sender?->name }}</span>
                                             <span>{{ $message->created_at?->format('H:i') }}</span>
                                         </div>

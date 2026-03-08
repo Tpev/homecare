@@ -4,6 +4,8 @@ namespace App\Livewire\Messaging;
 
 use App\Models\CareRequestConversation;
 use App\Models\CareRequestMessage;
+use App\Notifications\MarketplaceAlert;
+use App\Support\FunnelTracker;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -85,6 +87,21 @@ class Inbox extends Component
 
             $conversation->forceFill($payload)->save();
         });
+
+        $recipient = auth()->user()->role === 'family'
+            ? $conversation->caregiver
+            : $conversation->family;
+
+        $recipient?->notify(new MarketplaceAlert(
+            'New message',
+            auth()->user()->name.' sent you a new message.',
+            route('messages.show', $conversation->id),
+            'message_received'
+        ));
+
+        FunnelTracker::track('message_sent', auth()->user(), $conversation, [
+            'conversation_id' => $conversation->id,
+        ]);
 
         $this->reset('messageBody');
         $this->markActiveAsRead();

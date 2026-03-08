@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CareRequestApplication extends Model
 {
@@ -46,5 +47,15 @@ class CareRequestApplication extends Model
     public function conversation(): HasOne
     {
         return $this->hasOne(CareRequestConversation::class, 'care_request_application_id');
+    }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(CareRequestInvitation::class, 'care_request_application_id');
+    }
+
+    public function booking(): HasOne
+    {
+        return $this->hasOne(CareBooking::class, 'care_request_application_id');
     }
 }

@@ -14,18 +14,79 @@ class BrowseCaregivers extends Component
 {
     use WithPagination;
 
+    public string $search = '';
     public string $zip = '';
     public ?float $rate_min = null;
     public ?float $rate_max = null;
     public array $skills = [];
     public array $languages = [];
+    public string $trust = 'all';
     public string $sort = 'relevance';
+
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingZip(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingRateMin(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingRateMax(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSkills(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingLanguages(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingTrust(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSort(): void
+    {
+        $this->resetPage();
+    }
 
     public function render()
     {
         $query = CaregiverProfile::query()
             ->with(['user','skills','languages'])
-            ->where('status', 'active');
+            ->where('status', 'active')
+            ->whereNotNull('bio')
+            ->whereNotNull('hourly_rate')
+            ->whereNotNull('years_experience')
+            ->whereNotNull('service_area_zip')
+            ->whereNotNull('service_radius_miles')
+            ->whereHas('skills')
+            ->whereHas('languages')
+            ->whereHas('availabilities');
+
+        if ($this->search !== '') {
+            $term = trim($this->search);
+            $query->where(function ($inner) use ($term) {
+                $inner->where('bio', 'like', '%'.$term.'%')
+                    ->orWhereHas('user', fn ($q) => $q
+                        ->where('name', 'like', '%'.$term.'%')
+                        ->orWhere('city', 'like', '%'.$term.'%')
+                        ->orWhere('state', 'like', '%'.$term.'%'));
+            });
+        }
 
         if ($this->zip !== '') {
             $query->where('service_area_zip', $this->zip);
@@ -47,11 +108,22 @@ class BrowseCaregivers extends Component
             $query->whereHas('languages', fn ($q) => $q->whereIn('languages.id', $this->languages));
         }
 
+        if ($this->trust === 'verified') {
+            $query
+                ->whereNotNull('identity_verified_at')
+                ->whereNotNull('background_check_verified_at');
+        }
+
+        if ($this->trust === 'top') {
+            $query->where('top_caregiver', true);
+        }
+
         match ($this->sort) {
             'price_low' => $query->orderBy('hourly_rate'),
             'price_high' => $query->orderByDesc('hourly_rate'),
             'experience' => $query->orderByDesc('years_experience'),
-            default => $query->orderByDesc('average_rating')->orderByDesc('reviews_count'),
+            'top' => $query->orderByDesc('top_caregiver')->orderByDesc('average_rating')->orderByDesc('reviews_count'),
+            default => $query->orderByDesc('top_caregiver')->orderByDesc('average_rating')->orderByDesc('reviews_count'),
         };
 
         return view('livewire.caregiver.browse-caregivers', [

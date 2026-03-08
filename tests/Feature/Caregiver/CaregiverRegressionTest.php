@@ -119,6 +119,10 @@ class CaregiverRegressionTest extends TestCase
             'status' => 'active',
         ]);
 
+        $freshProfile = $profile->fresh();
+        $this->assertNotNull($freshProfile?->identity_verified_at);
+        $this->assertNotNull($freshProfile?->background_check_verified_at);
+
         $this->assertDatabaseHas('caregiver_moderation_logs', [
             'caregiver_profile_id' => $profile->id,
             'action' => 'approved',
@@ -235,7 +239,18 @@ class CaregiverRegressionTest extends TestCase
         $activeUser = User::factory()->create(['name' => 'Active Caregiver', 'role' => 'caregiver']);
         $draftUser = User::factory()->create(['name' => 'Draft Caregiver', 'role' => 'caregiver']);
 
-        CaregiverProfile::query()->create(['user_id' => $activeUser->id, 'slug' => 'active-caregiver-1', 'status' => 'active']);
+        $activeProfile = CaregiverProfile::query()->create([
+            'user_id' => $activeUser->id,
+            'slug' => 'active-caregiver-1',
+            'status' => 'active',
+            'bio' => str_repeat('Bio ', 12),
+            'hourly_rate' => 28,
+            'years_experience' => 4,
+            'service_area_zip' => '27601',
+            'service_radius_miles' => 10,
+        ]);
+        $this->markProfileMarketplaceReady($activeProfile, 'active');
+
         CaregiverProfile::query()->create(['user_id' => $draftUser->id, 'slug' => 'draft-caregiver-1', 'status' => 'under_review']);
 
         $response = $this->actingAs($viewer)->get('/caregivers/search');
@@ -243,6 +258,62 @@ class CaregiverRegressionTest extends TestCase
         $response->assertOk();
         $response->assertSee('Active Caregiver');
         $response->assertDontSee('Draft Caregiver');
+    }
+
+    public function test_search_page_shows_trust_badges_for_verified_top_caregiver(): void
+    {
+        $viewer = User::factory()->create(['role' => 'family']);
+        $caregiverUser = User::factory()->create([
+            'name' => 'Trusted Caregiver',
+            'role' => 'caregiver',
+        ]);
+
+        CaregiverProfile::query()->create([
+            'user_id' => $caregiverUser->id,
+            'slug' => 'trusted-caregiver-1',
+            'status' => 'active',
+            'bio' => str_repeat('Bio ', 12),
+            'hourly_rate' => 30,
+            'years_experience' => 6,
+            'service_area_zip' => '27601',
+            'service_radius_miles' => 10,
+            'identity_verified_at' => now(),
+            'background_check_verified_at' => now(),
+            'top_caregiver' => true,
+        ]);
+        $this->markProfileMarketplaceReady(
+            CaregiverProfile::query()->where('user_id', $caregiverUser->id)->firstOrFail(),
+            'trusted'
+        );
+
+        $response = $this->actingAs($viewer)->get('/caregivers/search');
+
+        $response->assertOk();
+        $response->assertSee('Trusted Caregiver');
+        $response->assertSee('Identity verified');
+        $response->assertSee('Background check');
+        $response->assertSee('Top Caregiver');
+    }
+
+    public function test_admin_can_toggle_trust_badges_for_active_caregiver(): void
+    {
+        $admin = User::factory()->create(['email' => 'test@test.com']);
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        $profile = CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'active',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(CaregiverReviewsQueue::class)
+            ->call('toggleIdentityVerification', $profile->id)
+            ->call('toggleBackgroundCheck', $profile->id)
+            ->call('toggleTopCaregiver', $profile->id);
+
+        $freshProfile = $profile->fresh();
+        $this->assertNotNull($freshProfile?->identity_verified_at);
+        $this->assertNotNull($freshProfile?->background_check_verified_at);
+        $this->assertTrue((bool) $freshProfile?->top_caregiver);
     }
 
     public function test_admin_moderation_logs_page_lists_recent_actions(): void
@@ -273,5 +344,18 @@ class CaregiverRegressionTest extends TestCase
             ->test(CaregiverModerationLogs::class)
             ->assertSee('APPROVED')
             ->assertSee('Approved after review');
+    }
+
+    private function markProfileMarketplaceReady(CaregiverProfile $profile, string $suffix): void
+    {
+        $skill = Skill::query()->firstOrCreate(['name' => 'Skill '.$suffix]);
+        $language = Language::query()->firstOrCreate(['name' => 'Language '.$suffix]);
+        $profile->skills()->syncWithoutDetaching([$skill->id]);
+        $profile->languages()->syncWithoutDetaching([$language->id]);
+        $profile->availabilities()->firstOrCreate([
+            'day_of_week' => 1,
+            'start_time' => '09:00',
+            'end_time' => '12:00',
+        ]);
     }
 }

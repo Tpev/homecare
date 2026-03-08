@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
+use App\Models\CareRequestInvitation;
 use App\Models\CareRequestMessage;
 use App\Models\CareTask;
 use App\Models\CaregiverProfile;
@@ -12,7 +13,6 @@ use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -64,6 +64,9 @@ class HomeCareDemoSeeder extends Seeder
                 'rejection_reason' => null,
                 'average_rating' => 4.80,
                 'reviews_count' => 12,
+                'identity_verified_at' => now()->subDays(4),
+                'background_check_verified_at' => now()->subDays(4),
+                'top_caregiver' => true,
             ]
         );
 
@@ -91,9 +94,6 @@ class HomeCareDemoSeeder extends Seeder
             ['day_of_week' => 5, 'start_time' => '08:00', 'end_time' => '12:00'],
         ]);
 
-        $start = Carbon::now()->addDays(2)->setTime(9, 0);
-        $end = Carbon::now()->addDays(2)->setTime(13, 0);
-
         $request = CareRequest::query()->updateOrCreate(
             [
                 'family_user_id' => $family->id,
@@ -102,10 +102,16 @@ class HomeCareDemoSeeder extends Seeder
             [
                 'additional_info' => 'Looking for calm, patient support. Recipient likes short walks and simple card games.',
                 'status' => CareRequest::STATUS_OPEN,
+                'request_type' => CareRequest::TYPE_RECURRING,
                 'budget_min' => 24.00,
                 'budget_max' => 32.00,
-                'requested_start_at' => $start,
-                'requested_end_at' => $end,
+                'recurring_days' => [1, 3, 5],
+                'recurring_start_time' => '09:00',
+                'recurring_end_time' => '13:00',
+                'recurring_starts_on' => now()->addDays(2)->toDateString(),
+                'recurring_ends_on' => now()->addMonths(3)->toDateString(),
+                'requested_start_at' => null,
+                'requested_end_at' => null,
                 'address_line1' => '123 Oak Ridge Ave',
                 'address_line2' => 'Apt 2B',
                 'city' => 'Raleigh',
@@ -191,6 +197,21 @@ class HomeCareDemoSeeder extends Seeder
                 'body' => 'Yes, I am available both mornings and can start this week.',
             ],
             ['created_at' => now()->subMinute(), 'updated_at' => now()->subMinute()]
+        );
+
+        CareRequestInvitation::query()->updateOrCreate(
+            [
+                'care_request_id' => $request->id,
+                'caregiver_user_id' => $caregiver->id,
+            ],
+            [
+                'family_user_id' => $family->id,
+                'care_request_application_id' => $application->id,
+                'status' => CareRequestInvitation::STATUS_ACCEPTED,
+                'message' => 'Would love to speak with you first about this recurring schedule.',
+                'expires_at' => now()->addDays(3),
+                'responded_at' => now()->subHours(12),
+            ]
         );
     }
 }

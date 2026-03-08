@@ -13,6 +13,7 @@ class RequestsIndex extends Component
     use WithPagination;
 
     public string $status = 'all';
+    public string $requestType = 'all';
     public string $sort = 'latest';
 
     public array $statusOptions = [
@@ -30,6 +31,12 @@ class RequestsIndex extends Component
         ['label' => 'Start time (soonest)', 'value' => 'start_soon'],
     ];
 
+    public array $requestTypeOptions = [
+        ['label' => 'All types', 'value' => 'all'],
+        ['label' => 'One-time', 'value' => CareRequest::TYPE_ONE_TIME],
+        ['label' => 'Recurring', 'value' => CareRequest::TYPE_RECURRING],
+    ];
+
     public function mount(): void
     {
         abort_unless(auth()->user()?->role === 'family', 403);
@@ -45,13 +52,19 @@ class RequestsIndex extends Component
         $this->resetPage();
     }
 
+    public function updatingRequestType(): void
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
         $requests = CareRequest::query()
             ->with(['recipient'])
             ->withCount(['applications'])
             ->where('family_user_id', auth()->id())
-            ->when($this->status !== 'all', fn ($q) => $q->where('status', $this->status));
+            ->when($this->status !== 'all', fn ($q) => $q->where('status', $this->status))
+            ->when($this->requestType !== 'all', fn ($q) => $q->where('request_type', $this->requestType));
 
         match ($this->sort) {
             'oldest' => $requests->orderBy('created_at'),

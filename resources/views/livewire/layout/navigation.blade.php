@@ -2,28 +2,28 @@
 
 use App\Livewire\Actions\Logout;
 use App\Models\CareRequestConversation;
+use App\Models\CareRequestInvitation;
 use Livewire\Volt\Component;
 
 new class extends Component
 {
-    /**
-     * Log the current user out of the application.
-     */
     public function logout(Logout $logout): void
     {
         $logout();
-
         $this->redirect('/', navigate: true);
     }
 }; ?>
 
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false }" class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur">
     @php
         $user = auth()->user();
         $isCaregiver = $user?->role === 'caregiver';
         $isFamily = $user?->role === 'family';
         $isAdmin = $user && strtolower($user->email) === 'test@test.com';
+        $caregiverProfile = $isCaregiver ? $user?->caregiverProfile : null;
+
         $messageUnread = 0;
+        $invitationUnread = 0;
 
         if (\Illuminate\Support\Facades\Schema::hasTable('care_request_conversations')) {
             if ($isFamily) {
@@ -46,8 +46,32 @@ new class extends Component
                             ->orWhereColumn('last_message_at', '>', 'caregiver_last_read_at');
                     })
                     ->count();
+
+                if (\Illuminate\Support\Facades\Schema::hasTable('care_request_invitations')) {
+                    $invitationUnread = CareRequestInvitation::query()
+                        ->where('caregiver_user_id', $user->id)
+                        ->where('status', CareRequestInvitation::STATUS_PENDING)
+                        ->where(function ($query) {
+                            $query->whereNull('expires_at')->orWhere('expires_at', '>=', now());
+                        })
+                        ->count();
+                }
             }
         }
+
+        $myProfileHref = $isCaregiver ? route('caregiver.profile.edit') : route('profile');
+        $myProfileLabel = $isCaregiver ? 'My Caregiver Profile' : 'My Family Profile';
+        $securityHref = route('profile').'#password-security';
+        $publicProfileHref = $isCaregiver && $caregiverProfile?->slug ? route('caregivers.show', $caregiverProfile->slug) : null;
+
+        $avatarUrl = null;
+        if ($isCaregiver && $caregiverProfile?->profile_photo_path) {
+            $avatarUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($caregiverProfile->profile_photo_path);
+        }
+
+        $nameParts = preg_split('/\s+/', trim((string) $user->name));
+        $initials = collect($nameParts)->filter()->map(fn ($part) => strtoupper(substr($part, 0, 1)))->take(2)->implode('');
+        $initials = $initials !== '' ? $initials : strtoupper(substr((string) $user->name, 0, 1));
 
         $primaryLinks = [
             [
@@ -59,6 +83,11 @@ new class extends Component
                 'label' => $messageUnread > 0 ? "Messages ($messageUnread)" : 'Messages',
                 'href' => route('messages.index'),
                 'active' => request()->routeIs('messages.*'),
+            ],
+            [
+                'label' => 'Support',
+                'href' => route('support.index'),
+                'active' => request()->routeIs('support.*'),
             ],
         ];
 
@@ -87,6 +116,11 @@ new class extends Component
                 'active' => request()->routeIs('care-requests.*'),
             ];
             $primaryLinks[] = [
+                'label' => $invitationUnread > 0 ? "Invitations ($invitationUnread)" : 'Invitations',
+                'href' => route('caregiver.invitations.index'),
+                'active' => request()->routeIs('caregiver.invitations.*'),
+            ];
+            $primaryLinks[] = [
                 'label' => 'My Caregiver Profile',
                 'href' => route('caregiver.profile.edit'),
                 'active' => request()->routeIs('caregiver.profile.edit') || request()->routeIs('caregiver.onboarding'),
@@ -99,109 +133,103 @@ new class extends Component
                 'href' => route('admin.caregivers.reviews'),
                 'active' => request()->routeIs('admin.caregivers.reviews'),
             ];
+            $primaryLinks[] = [
+                'label' => 'Admin Support',
+                'href' => route('admin.support.tickets'),
+                'active' => request()->routeIs('admin.support.tickets'),
+            ];
         }
     @endphp
 
-    <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" wire:navigate class="inline-flex items-center gap-2">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
-                        <span class="hidden md:inline text-sm font-semibold text-slate-700">HomeCare</span>
+    <div class="hc-page relative">
+        <div class="flex h-16 items-center">
+            <div class="shrink-0 flex items-center">
+                <a href="{{ route('dashboard') }}" wire:navigate class="inline-flex items-center gap-2">
+                    <x-application-logo class="block h-9 w-auto fill-current text-cyan-800" />
+                    <span class="hidden md:inline text-sm font-display font-semibold text-slate-800">HomeCare</span>
+                </a>
+            </div>
+
+            <div class="hidden sm:flex sm:ml-8 space-x-2">
+                @foreach ($primaryLinks as $link)
+                    <x-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
+                        {{ __($link['label']) }}
+                    </x-nav-link>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2" x-data="{ accountOpen: false }">
+            <button
+                type="button"
+                @click="accountOpen = !accountOpen"
+                class="inline-flex items-center gap-3 px-3 py-2 border border-slate-200 rounded-xl text-sm text-slate-700 bg-white hover:bg-slate-50 shadow-sm"
+            >
+                @if ($avatarUrl)
+                    <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="h-8 w-8 rounded-full object-cover border border-slate-200">
+                @else
+                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-cyan-100 text-cyan-700 text-xs font-semibold">
+                        {{ $initials }}
+                    </span>
+                @endif
+
+                <span class="hidden md:block text-left">
+                    <span class="block text-sm font-semibold leading-tight">{{ $user->name }}</span>
+                    <span class="block text-xs text-slate-500 leading-tight">{{ ucfirst((string) $user->role) }}</span>
+                </span>
+
+                <svg class="h-4 w-4 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.12l3.71-3.89a.75.75 0 111.08 1.04l-4.25 4.46a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                </svg>
+            </button>
+
+            <div
+                x-show="accountOpen"
+                x-transition
+                @click.outside="accountOpen = false"
+                class="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 bg-white shadow-lg p-2 space-y-1"
+                style="display: none;"
+            >
+                <a href="{{ $myProfileHref }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">{{ $myProfileLabel }}</a>
+
+                @if ($publicProfileHref)
+                    <a href="{{ $publicProfileHref }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">View Public Profile</a>
+                @endif
+
+                <a href="{{ route('profile') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Account Settings</a>
+                <a href="{{ $securityHref }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Change Password</a>
+                <a href="{{ route('messages.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                    {{ $messageUnread > 0 ? 'Messages ('.$messageUnread.')' : 'Messages' }}
+                </a>
+                <a href="{{ route('support.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Support Center</a>
+
+                @if ($isCaregiver)
+                    <a href="{{ route('caregiver.invitations.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                        {{ $invitationUnread > 0 ? 'Invitations ('.$invitationUnread.')' : 'Invitations' }}
                     </a>
-                </div>
+                @endif
 
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    @foreach ($primaryLinks as $link)
-                        <x-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
-                            {{ __($link['label']) }}
-                        </x-nav-link>
-                    @endforeach
-                </div>
+                @if ($isAdmin)
+                    <a href="{{ route('admin.caregivers.reviews') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Admin Reviews</a>
+                    <a href="{{ route('admin.support.tickets') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Support Queue</a>
+                    <a href="{{ route('admin.analytics.funnel') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Funnel Analytics</a>
+                @endif
+
+                <button wire:click="logout" class="w-full text-left rounded-lg px-3 py-2 text-sm text-red-700 hover:bg-red-50">Log Out</button>
             </div>
+        </div>
 
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center gap-3 px-3 py-2 border border-slate-200 text-sm leading-4 font-medium rounded-lg text-slate-600 bg-white hover:text-slate-800 hover:bg-slate-50 focus:outline-none transition ease-in-out duration-150">
-                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
-                                {{ strtoupper(substr($user->name, 0, 1)) }}
-                            </span>
-
-                            <div class="text-left">
-                                <p class="text-sm font-semibold text-slate-800" x-data="{{ json_encode(['name' => $user->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></p>
-                                <p class="text-xs text-slate-500">{{ ucfirst((string) $user->role) }}</p>
-                            </div>
-
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </button>
-                    </x-slot>
-
-                    <x-slot name="content">
-                        <div class="px-4 py-3 border-b border-slate-100">
-                            <p class="text-sm font-semibold text-slate-800">{{ $user->name }}</p>
-                            <p class="text-xs text-slate-500">{{ $user->email }}</p>
-                        </div>
-
-                        <x-dropdown-link :href="route('profile')" wire:navigate>
-                            {{ __('Account Settings') }}
-                        </x-dropdown-link>
-
-                        <x-dropdown-link :href="route('messages.index')" wire:navigate>
-                            {{ $messageUnread > 0 ? __('Messages').' ('.$messageUnread.')' : __('Messages') }}
-                        </x-dropdown-link>
-
-                        @if ($isCaregiver)
-                            <x-dropdown-link :href="route('caregiver.profile.edit')" wire:navigate>
-                                {{ __('Caregiver Profile') }}
-                            </x-dropdown-link>
-                        @endif
-
-                        @if ($isFamily)
-                            <x-dropdown-link :href="route('family.requests.index')" wire:navigate>
-                                {{ __('Family Requests') }}
-                            </x-dropdown-link>
-                        @endif
-
-                        @if ($isAdmin)
-                            <x-dropdown-link :href="route('admin.caregivers.reviews')" wire:navigate>
-                                {{ __('Admin Reviews') }}
-                            </x-dropdown-link>
-                        @endif
-
-                        <!-- Authentication -->
-                        <button wire:click="logout" class="w-full text-start">
-                            <x-dropdown-link>
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </button>
-                    </x-slot>
-                </x-dropdown>
-            </div>
-
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+        <div class="sm:hidden absolute right-0 top-1/2 -translate-y-1/2">
+            <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100">
+                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                    <path :class="{'hidden': open, 'inline-flex': !open}" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    <path :class="{'hidden': !open, 'inline-flex': open}" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
     </div>
 
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
+    <div :class="{'block': open, 'hidden': !open}" class="hidden sm:hidden bg-white border-t border-slate-200">
         <div class="pt-2 pb-3 space-y-1">
             @foreach ($primaryLinks as $link)
                 <x-responsive-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
@@ -210,46 +238,23 @@ new class extends Component
             @endforeach
         </div>
 
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
+        <div class="pt-4 pb-2 border-t border-slate-200">
             <div class="px-4">
-                <div class="font-medium text-base text-gray-800" x-data="{{ json_encode(['name' => $user->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
+                <div class="font-medium text-base text-gray-800">{{ $user->name }}</div>
                 <div class="font-medium text-sm text-gray-500">{{ $user->email }}</div>
                 <div class="font-medium text-xs text-gray-500 mt-1">{{ ucfirst((string) $user->role) }}</div>
             </div>
 
             <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile')" wire:navigate>
-                    {{ __('Account Settings') }}
-                </x-responsive-nav-link>
-
+                <x-responsive-nav-link :href="$myProfileHref" wire:navigate>{{ __($myProfileLabel) }}</x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('profile')" wire:navigate>{{ __('Account Settings') }}</x-responsive-nav-link>
+                <x-responsive-nav-link :href="$securityHref">{{ __('Change Password') }}</x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('messages.index')" wire:navigate>
                     {{ $messageUnread > 0 ? __('Messages').' ('.$messageUnread.')' : __('Messages') }}
                 </x-responsive-nav-link>
-
-                @if ($isCaregiver)
-                    <x-responsive-nav-link :href="route('caregiver.profile.edit')" wire:navigate>
-                        {{ __('Caregiver Profile') }}
-                    </x-responsive-nav-link>
-                @endif
-
-                @if ($isFamily)
-                    <x-responsive-nav-link :href="route('family.requests.index')" wire:navigate>
-                        {{ __('Family Requests') }}
-                    </x-responsive-nav-link>
-                @endif
-
-                @if ($isAdmin)
-                    <x-responsive-nav-link :href="route('admin.caregivers.reviews')" wire:navigate>
-                        {{ __('Admin Reviews') }}
-                    </x-responsive-nav-link>
-                @endif
-
-                <!-- Authentication -->
+                <x-responsive-nav-link :href="route('support.index')" wire:navigate>{{ __('Support Center') }}</x-responsive-nav-link>
                 <button wire:click="logout" class="w-full text-start">
-                    <x-responsive-nav-link>
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
+                    <x-responsive-nav-link>{{ __('Log Out') }}</x-responsive-nav-link>
                 </button>
             </div>
         </div>

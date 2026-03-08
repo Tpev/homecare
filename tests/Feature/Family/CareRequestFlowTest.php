@@ -10,6 +10,8 @@ use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\CareTask;
 use App\Models\CaregiverProfile;
+use App\Models\Language;
+use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -37,6 +39,10 @@ class CareRequestFlowTest extends TestCase
             ->test(CreateCareRequestWizard::class)
             ->set('title', 'Need caregiver for Monday afternoon support')
             ->set('additional_info', 'Looking for non-medical help and supervision.')
+            ->set('scope_of_work', 'Companionship, meal setup, and mobility supervision for afternoon support.')
+            ->set('time_expectations', 'Please arrive 10 minutes early and keep routine timing.')
+            ->set('home_access_notes', 'Use side entrance. Parking is available in driveway.')
+            ->set('preferred_response_hours', 12)
             ->set('requested_start_at', $startAt)
             ->set('requested_end_at', $endAt)
             ->set('address_line1', '123 Main St')
@@ -48,6 +54,7 @@ class CareRequestFlowTest extends TestCase
             ->call('nextStep')
             ->set('recipient_full_name', 'Jane Doe')
             ->set('recipient_relationship_to_family', 'Mother')
+            ->set('recipient_care_notes', 'Needs reminders to hydrate and supervision during short walks.')
             ->call('nextStep')
             ->set('includeThirdPartyContact', true)
             ->set('third_party_full_name', 'John Doe')
@@ -85,7 +92,24 @@ class CareRequestFlowTest extends TestCase
     {
         $family = User::factory()->create(['role' => 'family']);
         $caregiver = User::factory()->create(['role' => 'caregiver']);
-        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active']);
+        $profile = CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'active',
+            'bio' => str_repeat('Experienced caregiver. ', 4),
+            'hourly_rate' => 28,
+            'years_experience' => 5,
+            'service_area_zip' => '27601',
+            'service_radius_miles' => 10,
+        ]);
+        $skill = Skill::query()->create(['name' => 'Companionship']);
+        $language = Language::query()->create(['name' => 'English']);
+        $profile->skills()->sync([$skill->id]);
+        $profile->languages()->sync([$language->id]);
+        $profile->availabilities()->create([
+            'day_of_week' => 1,
+            'start_time' => '09:00',
+            'end_time' => '13:00',
+        ]);
 
         $request = CareRequest::query()->create([
             'family_user_id' => $family->id,
@@ -188,5 +212,54 @@ class CareRequestFlowTest extends TestCase
         $response = $this->actingAs($caregiver)->get('/family/requests');
 
         $response->assertForbidden();
+    }
+
+    public function test_family_can_publish_recurring_care_request(): void
+    {
+        $family = User::factory()->create([
+            'role' => 'family',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+        ]);
+
+        $task = CareTask::query()->create(['name' => 'Companionship']);
+
+        Livewire::actingAs($family)
+            ->test(CreateCareRequestWizard::class)
+            ->set('request_type', CareRequest::TYPE_RECURRING)
+            ->set('title', 'Recurring weekday morning support')
+            ->set('additional_info', 'Needs recurring support for morning routine.')
+            ->set('scope_of_work', 'Morning routine setup, companionship, and non-medical safety supervision.')
+            ->set('time_expectations', 'Arrive by 8:55 and follow medicine reminder schedule.')
+            ->set('home_access_notes', 'Keypad entry code provided after hire.')
+            ->set('preferred_response_hours', 10)
+            ->set('recurring_days', [1, 3, 5])
+            ->set('recurring_start_time', '09:00')
+            ->set('recurring_end_time', '12:00')
+            ->set('recurring_starts_on', now()->addDay()->toDateString())
+            ->set('recurring_ends_on', now()->addMonths(2)->toDateString())
+            ->set('address_line1', '900 Elm St')
+            ->set('city', 'Raleigh')
+            ->set('state', 'NC')
+            ->set('zip', '27605')
+            ->set('selectedTasks', [$task->id])
+            ->call('nextStep')
+            ->set('recipient_full_name', 'Mary Doe')
+            ->set('recipient_relationship_to_family', 'Mother')
+            ->set('recipient_care_notes', 'Needs standby support from bed to chair in mornings.')
+            ->call('nextStep')
+            ->set('includeThirdPartyContact', false)
+            ->call('nextStep')
+            ->call('publish');
+
+        $careRequest = CareRequest::query()->latest('id')->first();
+
+        $this->assertNotNull($careRequest);
+        $this->assertSame(CareRequest::TYPE_RECURRING, $careRequest->request_type);
+        $this->assertSame([1, 3, 5], $careRequest->recurring_days);
+        $this->assertSame('09:00', $careRequest->recurring_start_time);
+        $this->assertSame('12:00', $careRequest->recurring_end_time);
+        $this->assertNull($careRequest->requested_start_at);
+        $this->assertNull($careRequest->requested_end_at);
     }
 }

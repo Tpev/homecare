@@ -17,6 +17,7 @@ class BrowseCareRequests extends Component
     public string $city = '';
     public string $state = '';
     public array $taskIds = [];
+    public string $requestType = 'all';
     public string $when = 'any';
     public string $sort = 'newest';
 
@@ -49,6 +50,11 @@ class BrowseCareRequests extends Component
         $this->resetPage();
     }
 
+    public function updatingRequestType(): void
+    {
+        $this->resetPage();
+    }
+
     public function updatingSort(): void
     {
         $this->resetPage();
@@ -63,8 +69,15 @@ class BrowseCareRequests extends Component
                 'applications' => fn ($q) => $q
                     ->where('caregiver_user_id', auth()->id())
                     ->with(['conversation:id,care_request_application_id,care_request_id,caregiver_user_id']),
+                'invitations' => fn ($q) => $q
+                    ->where('caregiver_user_id', auth()->id())
+                    ->latest('created_at'),
             ])
             ->where('status', CareRequest::STATUS_OPEN);
+
+        if ($this->requestType !== 'all') {
+            $query->where('request_type', $this->requestType);
+        }
 
         if ($this->city !== '') {
             $query->where('city', 'like', '%'.$this->city.'%');

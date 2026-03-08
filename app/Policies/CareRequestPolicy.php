@@ -59,8 +59,11 @@ class CareRequestPolicy
 
     public function apply(User $user, CareRequest $careRequest): bool
     {
+        $profile = $user->caregiverProfile;
+
         return $user->role === 'caregiver'
             && $careRequest->status === CareRequest::STATUS_OPEN
-            && $user->caregiverProfile?->status === 'active';
+            && $profile?->status === 'active'
+            && $profile->isMarketplaceReady();
     }
 }

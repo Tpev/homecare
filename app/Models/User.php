@@ -68,4 +68,49 @@ class User extends Authenticatable
     {
         return $this->hasMany(CareRequestMessage::class, 'sender_user_id');
     }
+
+    public function sentCareRequestInvitations(): HasMany
+    {
+        return $this->hasMany(CareRequestInvitation::class, 'family_user_id');
+    }
+
+    public function receivedCareRequestInvitations(): HasMany
+    {
+        return $this->hasMany(CareRequestInvitation::class, 'caregiver_user_id');
+    }
+
+    public function familyBookings(): HasMany
+    {
+        return $this->hasMany(CareBooking::class, 'family_user_id');
+    }
+
+    public function caregiverBookings(): HasMany
+    {
+        return $this->hasMany(CareBooking::class, 'caregiver_user_id');
+    }
+
+    public function givenCareReviews(): HasMany
+    {
+        return $this->hasMany(CareReview::class, 'reviewer_user_id');
+    }
+
+    public function receivedCareReviews(): HasMany
+    {
+        return $this->hasMany(CareReview::class, 'reviewee_user_id');
+    }
+
+    public function openedSupportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class, 'opener_user_id');
+    }
+
+    public function familyFavorites(): HasMany
+    {
+        return $this->hasMany(FamilyCaregiverFavorite::class, 'family_user_id');
+    }
+
+    public function favoritedByFamilies(): HasMany
+    {
+        return $this->hasMany(FamilyCaregiverFavorite::class, 'caregiver_user_id');
+    }
 }
