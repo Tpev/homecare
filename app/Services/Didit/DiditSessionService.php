@@ -39,12 +39,50 @@ class DiditSessionService
             'vendor_data' => $vendorData,
         ]);
 
-        $sessionId = (string) ($response['session_id'] ?? '');
-        $verificationUrl = (string) ($response['verification_url'] ?? '');
+        $sessionId = $this->extractString($response, [
+            'session_id',
+            'sessionId',
+            'id',
+            'data.session_id',
+            'data.sessionId',
+            'data.id',
+        ]);
+
+        $verificationUrl = $this->extractString($response, [
+            'verification_url',
+            'verificationUrl',
+            'url',
+            'session_url',
+            'sessionUrl',
+            'data.verification_url',
+            'data.verificationUrl',
+            'data.url',
+            'data.session_url',
+            'data.sessionUrl',
+        ]);
+
+        // Fallback if Didit returns only session_token without direct URL key.
+        if ($verificationUrl === '') {
+            $sessionToken = $this->extractString($response, [
+                'session_token',
+                'sessionToken',
+                'token',
+                'data.session_token',
+                'data.sessionToken',
+                'data.token',
+            ]);
+
+            if ($sessionToken !== '') {
+                $verificationUrl = 'https://verify.didit.me/session/'.urlencode($sessionToken);
+            }
+        }
+
         $status = CaregiverIdentityVerification::normalizeDiditStatus((string) ($response['status'] ?? 'Not Started'));
 
         if ($sessionId === '' || $verificationUrl === '') {
-            throw new RuntimeException('Didit did not return a valid session response.');
+            $keys = implode(', ', array_keys($response));
+
+            throw new RuntimeException('Didit did not return a valid session response. Top-level keys: '.$keys);
         }
 
         return DB::transaction(function () use ($profile, $user, $sessionId, $verificationUrl, $vendorData, $status, $response) {
@@ -67,5 +105,26 @@ class DiditSessionService
 
             return $verification;
         });
+    }
+
+    /**
+     * @param  array<string,mixed>  $payload
+     * @param  array<int,string>  $paths
+     */
+    private function extractString(array $payload, array $paths): string
+    {
+        foreach ($paths as $path) {
+            $value = data_get($payload, $path);
+            if (! is_string($value)) {
+                continue;
+            }
+
+            $value = trim($value);
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
     }
 }
