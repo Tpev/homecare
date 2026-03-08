@@ -1,30 +1,52 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'HomeCare') }}</title>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
-            <div>
-                <a href="/" wire:navigate>
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
+    <tallstackui:script />
+
+    @livewireStyles
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+
+<body class="font-sans antialiased text-slate-900 bg-slate-100">
+    <x-toast />
+
+    <div class="min-h-screen grid lg:grid-cols-2">
+        <aside class="hidden lg:flex relative bg-gradient-to-br from-blue-950 via-blue-800 to-cyan-700 text-white p-12">
+            <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_20%,white_0,transparent_40%),radial-gradient(circle_at_80%_80%,white_0,transparent_35%)]"></div>
+            <div class="relative max-w-md my-auto space-y-6">
+                <a href="/" wire:navigate class="inline-flex items-center gap-3">
+                    <x-application-logo class="w-10 h-10 fill-current text-white" />
+                    <span class="text-2xl font-semibold tracking-tight">HomeCare</span>
                 </a>
+                <h1 class="text-4xl font-semibold leading-tight">Find trusted non-medical care, faster.</h1>
+                <p class="text-blue-100 leading-relaxed">Families connect directly with independent caregivers for companionship, daily support, and flexible scheduling.</p>
             </div>
+        </aside>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
-                {{ $slot }}
+        <main class="flex items-center justify-center p-4 md:p-8">
+            <div class="w-full max-w-3xl">
+                <div class="lg:hidden mb-6 text-center">
+                    <a href="/" wire:navigate class="inline-flex items-center gap-2 text-slate-700">
+                        <x-application-logo class="w-8 h-8 fill-current text-blue-700" />
+                        <span class="text-xl font-semibold">HomeCare</span>
+                    </a>
+                </div>
+                <div class="bg-white border border-slate-200 shadow-xl shadow-slate-200/60 rounded-2xl p-6 md:p-8">
+                    {{ $slot }}
+                </div>
             </div>
-        </div>
-    </body>
+        </main>
+    </div>
+
+    @livewireScripts
+</body>
 </html>

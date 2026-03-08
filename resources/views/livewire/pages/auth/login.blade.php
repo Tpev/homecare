@@ -9,9 +9,6 @@ new #[Layout('layouts.guest')] class extends Component
 {
     public LoginForm $form;
 
-    /**
-     * Handle an incoming authentication request.
-     */
     public function login(): void
     {
         $this->validate();
@@ -20,52 +17,48 @@ new #[Layout('layouts.guest')] class extends Component
 
         Session::regenerate();
 
+        $user = auth()->user();
+
+        if ($user && $user->role === 'caregiver' && ! $user->onboarding_completed_at) {
+            $this->redirect(route('caregiver.onboarding', absolute: false), navigate: true);
+            return;
+        }
+
         $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
     }
 }; ?>
 
-<div>
-    <!-- Session Status -->
+<div class="space-y-6">
+    <div class="space-y-2">
+        <h1 class="text-2xl font-semibold tracking-tight">Welcome back</h1>
+        <p class="text-sm text-slate-600">Sign in to continue to your HomeCare dashboard.</p>
+    </div>
+
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <form wire:submit="login">
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="form.email" id="email" class="block mt-1 w-full" type="email" name="email" required autofocus autocomplete="username" />
+    <form wire:submit="login" class="space-y-4">
+        <div class="grid grid-cols-1 gap-4">
+            <x-input wire:model="form.email" id="email" type="email" name="email" label="Email" required autofocus autocomplete="username" />
             <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
-        </div>
-
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input wire:model="form.password" id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
-
+            <x-password wire:model="form.password" id="password" name="password" label="Password" required autocomplete="current-password" />
             <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
         </div>
 
-        <!-- Remember Me -->
-        <div class="block mt-4">
+        <div class="block">
             <label for="remember" class="inline-flex items-center">
                 <input wire:model="form.remember" id="remember" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
                 <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
             </label>
         </div>
 
-        <div class="flex items-center justify-end mt-4">
+        <div class="flex items-center justify-between pt-2">
             @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}" wire:navigate>
+                <a class="underline text-sm text-slate-600 hover:text-slate-900 rounded-md" href="{{ route('password.request') }}" wire:navigate>
                     {{ __('Forgot your password?') }}
                 </a>
             @endif
 
-            <x-primary-button class="ms-3">
-                {{ __('Log in') }}
-            </x-primary-button>
+            <x-button type="submit" color="blue">{{ __('Log in') }}</x-button>
         </div>
     </form>
 </div>
