@@ -28,7 +28,10 @@ class DiditSessionService
         );
 
         $vendorData = 'caregiver_user_'.$user->id.'_profile_'.$profile->id;
-        $callback = route('caregiver.verification.return');
+        $callback = (string) config('services.didit.callback_url');
+        if ($callback === '') {
+            $callback = route('caregiver.verification.return');
+        }
 
         $response = $this->client->createSession([
             'workflow_id' => $workflowId,
@@ -66,4 +69,3 @@ class DiditSessionService
         });
     }
 }
-

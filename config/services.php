@@ -46,6 +46,7 @@ return [
         'api_key' => env('DIDIT_API_KEY'),
         'webhook_secret' => env('DIDIT_WEBHOOK_SECRET'),
         'workflow_id' => env('DIDIT_WORKFLOW_ID'),
+        'callback_url' => env('DIDIT_CALLBACK_URL'),
         'base_url' => env('DIDIT_BASE_URL', 'https://verification.didit.me'),
         'timeout' => (int) env('DIDIT_TIMEOUT_SECONDS', 20),
     ],
