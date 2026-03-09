@@ -22,6 +22,10 @@ class User extends Authenticatable
         'state',
         'date_of_birth',
         'onboarding_completed_at',
+        'family_reliability_score',
+        'family_completed_bookings_count',
+        'family_cancellation_count',
+        'family_dispute_count',
     ];
 
     protected $hidden = [
@@ -36,6 +40,10 @@ class User extends Authenticatable
             'password' => 'hashed',
             'date_of_birth' => 'date',
             'onboarding_completed_at' => 'datetime',
+            'family_reliability_score' => 'decimal:2',
+            'family_completed_bookings_count' => 'integer',
+            'family_cancellation_count' => 'integer',
+            'family_dispute_count' => 'integer',
         ];
     }
 

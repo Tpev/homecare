@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Dashboard;
 
+use App\Models\CareBooking;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
@@ -26,23 +27,77 @@ class Home extends Component
 
         if ($mode === 'family') {
             $requestQuery = CareRequest::query()->where('family_user_id', $user->id);
+            $openRequestQuery = CareRequest::query()
+                ->where('family_user_id', $user->id)
+                ->where('status', CareRequest::STATUS_OPEN);
+
+            $readyToReviewCount = (clone $openRequestQuery)
+                ->whereHas('applications', function ($query) {
+                    $query->whereIn('status', [
+                        CareRequestApplication::STATUS_APPLIED,
+                        CareRequestApplication::STATUS_SHORTLISTED,
+                    ]);
+                })
+                ->count();
+
+            $waitingApplicantsCount = (clone $openRequestQuery)
+                ->whereDoesntHave('applications')
+                ->count();
+
+            $activeShiftCount = CareRequest::query()
+                ->where('family_user_id', $user->id)
+                ->whereHas('booking', function ($query) {
+                    $query->whereIn('status', [
+                        CareBooking::STATUS_SCHEDULED,
+                        CareBooking::STATUS_IN_PROGRESS,
+                        CareBooking::STATUS_COMPLETED,
+                    ]);
+                })
+                ->count();
 
             $familyData['stats'] = [
                 'open_requests' => (clone $requestQuery)->where('status', CareRequest::STATUS_OPEN)->count(),
-                'filled_requests' => (clone $requestQuery)->where('status', CareRequest::STATUS_FILLED)->count(),
-                'total_applicants' => CareRequestApplication::query()
-                    ->whereHas('careRequest', fn ($q) => $q->where('family_user_id', $user->id))
-                    ->count(),
+                'ready_to_review' => $readyToReviewCount,
+                'waiting_for_applicants' => $waitingApplicantsCount,
+                'active_shifts' => $activeShiftCount,
                 'unread_messages' => $this->unreadMessagesCount($user->id, 'family'),
             ];
 
-            $familyData['upcoming_requests'] = CareRequest::query()
-                ->with(['recipient'])
-                ->withCount(['applications'])
+            $familyData['urgent_open_requests'] = (clone $openRequestQuery)
+                ->whereDoesntHave('applications')
+                ->where('created_at', '<=', now()->subHours(6))
+                ->count();
+
+            $familyData['focus_requests'] = CareRequest::query()
+                ->with(['recipient', 'booking'])
+                ->withCount([
+                    'applications',
+                    'applications as pending_candidate_count' => function ($query) {
+                        $query->whereIn('status', [
+                            CareRequestApplication::STATUS_APPLIED,
+                            CareRequestApplication::STATUS_SHORTLISTED,
+                        ]);
+                    },
+                ])
                 ->where('family_user_id', $user->id)
                 ->whereIn('status', [CareRequest::STATUS_OPEN, CareRequest::STATUS_FILLED])
-                ->orderBy('requested_start_at')
-                ->limit(6)
+                ->orderByRaw("CASE WHEN status = '".CareRequest::STATUS_OPEN."' THEN 0 ELSE 1 END")
+                ->orderByDesc('updated_at')
+                ->limit(8)
+                ->get();
+
+            $familyData['active_shifts'] = CareRequest::query()
+                ->with(['recipient', 'booking'])
+                ->where('family_user_id', $user->id)
+                ->whereHas('booking', function ($query) {
+                    $query->whereIn('status', [
+                        CareBooking::STATUS_SCHEDULED,
+                        CareBooking::STATUS_IN_PROGRESS,
+                        CareBooking::STATUS_COMPLETED,
+                    ]);
+                })
+                ->orderByDesc('updated_at')
+                ->limit(4)
                 ->get();
 
             $familyData['recent_applicants'] = CareRequestApplication::query()
@@ -53,7 +108,7 @@ class Home extends Component
                 ])
                 ->whereHas('careRequest', fn ($q) => $q->where('family_user_id', $user->id))
                 ->latest()
-                ->limit(8)
+                ->limit(6)
                 ->get();
         }
 

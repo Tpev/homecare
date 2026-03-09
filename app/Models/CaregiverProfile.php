@@ -40,6 +40,11 @@ class CaregiverProfile extends Model
         'invite_response_rate',
         'avg_invite_response_minutes',
         'response_metrics_updated_at',
+        'reliability_score',
+        'completed_bookings_count',
+        'cancellation_count',
+        'dispute_count',
+        'on_time_check_in_count',
     ];
 
     protected function casts(): array
@@ -56,6 +61,11 @@ class CaregiverProfile extends Model
             'invite_response_rate' => 'decimal:2',
             'avg_invite_response_minutes' => 'integer',
             'response_metrics_updated_at' => 'datetime',
+            'reliability_score' => 'decimal:2',
+            'completed_bookings_count' => 'integer',
+            'cancellation_count' => 'integer',
+            'dispute_count' => 'integer',
+            'on_time_check_in_count' => 'integer',
         ];
     }
 

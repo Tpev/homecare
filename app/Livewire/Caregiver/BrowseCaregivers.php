@@ -122,6 +122,7 @@ class BrowseCaregivers extends Component
             'price_low' => $query->orderBy('hourly_rate'),
             'price_high' => $query->orderByDesc('hourly_rate'),
             'experience' => $query->orderByDesc('years_experience'),
+            'reliability' => $query->orderByDesc('reliability_score')->orderByDesc('reviews_count'),
             'top' => $query->orderByDesc('top_caregiver')->orderByDesc('average_rating')->orderByDesc('reviews_count'),
             default => $query->orderByDesc('top_caregiver')->orderByDesc('average_rating')->orderByDesc('reviews_count'),
         };

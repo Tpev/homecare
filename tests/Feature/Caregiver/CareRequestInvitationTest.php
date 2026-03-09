@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Caregiver;
 
+use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Caregiver\InvitationsIndex;
 use App\Livewire\Caregiver\ShowCaregiver;
+use App\Models\CareBooking;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestInvitation;
@@ -130,6 +132,39 @@ class CareRequestInvitationTest extends TestCase
         $this->assertDatabaseHas('care_request_invitations', [
             'id' => $invitation->id,
             'status' => CareRequestInvitation::STATUS_DECLINED,
+        ]);
+    }
+
+    public function test_caregiver_cannot_check_out_before_check_in(): void
+    {
+        [$family, $caregiver, $request] = $this->seedContext();
+
+        $application = CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 29,
+            'cover_note' => 'Ready to support.',
+        ]);
+
+        CareBooking::query()->create([
+            'care_request_id' => $request->id,
+            'care_request_application_id' => $application->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+            'scheduled_start_at' => now()->addDay()->setTime(9, 0),
+            'scheduled_end_at' => now()->addDay()->setTime(12, 0),
+            'caregiver_terms_accepted_at' => now(),
+        ]);
+
+        Livewire::actingAs($caregiver)
+            ->test(ApplyToCareRequest::class, ['careRequest' => $request->id])
+            ->call('completeBooking');
+
+        $this->assertDatabaseHas('care_bookings', [
+            'care_request_id' => $request->id,
+            'status' => CareBooking::STATUS_SCHEDULED,
         ]);
     }
 

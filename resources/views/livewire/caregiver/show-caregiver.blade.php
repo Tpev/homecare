@@ -28,6 +28,7 @@
                         <p class="text-sm text-slate-600">{{ $caregiver->user->city }}, {{ $caregiver->user->state }}</p>
                         <p class="mt-2 text-lg font-semibold text-slate-900">${{ number_format((float) $caregiver->hourly_rate, 2) }}/hr</p>
                         <p class="text-sm text-slate-600 mt-1">⭐ {{ number_format((float) $caregiver->average_rating, 1) }} ({{ $caregiver->reviews_count }} reviews)</p>
+                        <p class="text-xs text-slate-500 mt-1">Reliability score: {{ number_format((float) $caregiver->reliability_score, 0) }}%</p>
 
                         <div class="mt-3 flex flex-wrap justify-center gap-2">
                             @if ($caregiver->hasIdentityVerifiedBadge())

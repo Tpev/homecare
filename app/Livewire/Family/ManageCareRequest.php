@@ -4,6 +4,7 @@ namespace App\Livewire\Family;
 
 use App\Models\CareBooking;
 use App\Models\CareBookingChangeRequest;
+use App\Models\CareBookingIncident;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
@@ -11,6 +12,7 @@ use App\Models\CareRequestInvitation;
 use App\Models\CareReview;
 use App\Models\SupportTicket;
 use App\Notifications\MarketplaceAlert;
+use App\Services\Booking\BookingTrustService;
 use App\Support\FunnelTracker;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +24,7 @@ use Livewire\Component;
 class ManageCareRequest extends Component
 {
     public CareRequest $requestItem;
+    public string $activeTab = 'overview';
     public string $applicationStatus = 'all';
     public string $applicationSort = 'latest';
 
@@ -36,6 +39,12 @@ class ManageCareRequest extends Component
     public string $supportSubject = '';
     public string $supportDescription = '';
     public string $supportCategory = 'general';
+
+    public string $confirmationNote = '';
+    public string $disputeReason = '';
+    public string $incidentTitle = '';
+    public string $incidentDescription = '';
+    public string $incidentSeverity = 'medium';
 
     public array $applicationStatusOptions = [
         ['label' => 'All applicants', 'value' => 'all'],
@@ -56,6 +65,9 @@ class ManageCareRequest extends Component
                 'thirdPartyContact',
                 'tasks',
                 'booking',
+                'booking.taskChecks',
+                'booking.events.actor:id,name',
+                'booking.incidents.reporter:id,name',
                 'booking.changeRequests.requester:id,name',
                 'booking.reviews.reviewer:id,name',
                 'invitations' => fn ($query) => $query->with(['caregiver:id,name']),
@@ -69,6 +81,24 @@ class ManageCareRequest extends Component
             ->findOrFail($careRequest);
 
         abort_unless(auth()->user()->can('manageApplicants', $this->requestItem), 403);
+
+        $this->activeTab = $this->requestItem->booking
+            ? 'shift'
+            : ($this->requestItem->status === CareRequest::STATUS_OPEN ? 'applicants' : 'overview');
+    }
+
+    public function setActiveTab(string $tab): void
+    {
+        if (! in_array($tab, ['overview', 'applicants', 'shift', 'support'], true)) {
+            return;
+        }
+
+        if ($tab === 'shift' && ! $this->requestItem->booking) {
+            $this->activeTab = 'overview';
+            return;
+        }
+
+        $this->activeTab = $tab;
     }
 
     public function shortlist(int $applicationId): void
@@ -120,16 +150,37 @@ class ManageCareRequest extends Component
 
             $this->requestItem->update(['status' => CareRequest::STATUS_FILLED]);
 
-            CareBooking::query()->updateOrCreate(
+            $startAt = $this->deriveScheduledStartAt();
+            $endAt = $this->deriveScheduledEndAt();
+            $expectedMinutes = ($startAt && $endAt)
+                ? (int) max(0, $startAt->diffInMinutes($endAt, false))
+                : null;
+
+            $booking = CareBooking::query()->updateOrCreate(
                 ['care_request_id' => $this->requestItem->id],
                 [
                     'care_request_application_id' => $application->id,
                     'family_user_id' => (int) auth()->id(),
                     'caregiver_user_id' => (int) $application->caregiver_user_id,
+                    'agreement_snapshot' => app(BookingTrustService::class)->buildAgreementSnapshot(
+                        $this->requestItem->fresh(['recipient', 'tasks']),
+                        $application
+                    ),
+                    'family_terms_accepted_at' => now(),
                     'status' => CareBooking::STATUS_SCHEDULED,
-                    'scheduled_start_at' => $this->deriveScheduledStartAt(),
-                    'scheduled_end_at' => $this->deriveScheduledEndAt(),
+                    'scheduled_start_at' => $startAt,
+                    'scheduled_end_at' => $endAt,
+                    'expected_minutes' => $expectedMinutes,
                 ]
+            );
+
+            app(BookingTrustService::class)->seedTaskChecks($booking, $this->requestItem->fresh(['tasks']));
+            app(BookingTrustService::class)->recordEvent(
+                $booking,
+                auth()->id(),
+                'family',
+                'booking_hired',
+                ['application_id' => $application->id]
             );
         });
 
@@ -148,41 +199,48 @@ class ManageCareRequest extends Component
         session()->flash('status', 'Care request filled and caregiver hired. Booking created.');
     }
 
-    public function startBooking(): void
-    {
-        $booking = $this->requestItem->booking;
-        if (! $booking || $booking->status !== CareBooking::STATUS_SCHEDULED) {
-            return;
-        }
-
-        $booking->update([
-            'status' => CareBooking::STATUS_IN_PROGRESS,
-            'started_at' => now(),
-        ]);
-
-        $booking->caregiver?->notify(new MarketplaceAlert(
-            'Care shift started',
-            auth()->user()->name.' marked this shift as in progress.',
-            route('care-requests.apply', $this->requestItem->id),
-            'booking_in_progress'
-        ));
-
-        FunnelTracker::track('care_booking_started', auth()->user(), $booking);
-        $this->refreshRequestItem();
-        session()->flash('status', 'Shift marked in progress.');
-    }
-
     public function completeBooking(): void
     {
         $booking = $this->requestItem->booking;
-        if (! $booking || ! in_array($booking->status, [CareBooking::STATUS_SCHEDULED, CareBooking::STATUS_IN_PROGRESS], true)) {
+        if (! $booking) {
             return;
         }
 
-        $booking->update([
-            'status' => CareBooking::STATUS_COMPLETED,
-            'completed_at' => now(),
-        ]);
+        if ($booking->status === CareBooking::STATUS_IN_PROGRESS) {
+            $booking->update([
+                'status' => CareBooking::STATUS_COMPLETED,
+                'completed_at' => now(),
+                'timesheet_submitted_at' => $booking->timesheet_submitted_at ?: now(),
+            ]);
+
+            app(BookingTrustService::class)->recordEvent(
+                $booking,
+                auth()->id(),
+                'family',
+                'booking_completed_by_family'
+            );
+        } elseif ($booking->status === CareBooking::STATUS_COMPLETED && ! $booking->family_confirmed_at) {
+            $booking->update([
+                'family_confirmed_at' => now(),
+            ]);
+
+            app(BookingTrustService::class)->recordEvent(
+                $booking,
+                auth()->id(),
+                'family',
+                'timesheet_confirmed_by_family',
+                ['note' => trim($this->confirmationNote) ?: null]
+            );
+
+            app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
+            $this->confirmationNote = '';
+            $this->refreshRequestItem();
+            session()->flash('status', 'Timesheet confirmed.');
+            return;
+        } else {
+            session()->flash('status', 'This action is only available after caregiver check-in or timesheet submission.');
+            return;
+        }
 
         $booking->caregiver?->notify(new MarketplaceAlert(
             'Care shift completed',
@@ -192,6 +250,7 @@ class ManageCareRequest extends Component
         ));
 
         FunnelTracker::track('care_booking_completed', auth()->user(), $booking);
+        app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
         $this->refreshRequestItem();
         session()->flash('status', 'Shift marked completed.');
     }
@@ -239,7 +298,16 @@ class ManageCareRequest extends Component
         $booking->update([
             'status' => CareBooking::STATUS_REVIEWED,
             'reviewed_at' => now(),
+            'family_confirmed_at' => $booking->family_confirmed_at ?: now(),
         ]);
+
+        app(BookingTrustService::class)->recordEvent(
+            $booking,
+            auth()->id(),
+            'family',
+            'review_submitted_by_family',
+            ['rating' => $this->reviewRating]
+        );
 
         $booking->caregiver?->notify(new MarketplaceAlert(
             'New family review',
@@ -251,6 +319,7 @@ class ManageCareRequest extends Component
         FunnelTracker::track('care_review_submitted', auth()->user(), $booking, [
             'rating' => $this->reviewRating,
         ]);
+        app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
 
         $this->reset(['reviewRating', 'reviewComment']);
         $this->refreshRequestItem();
@@ -285,6 +354,17 @@ class ManageCareRequest extends Component
             'proposed_start_at' => $this->changeType === CareBookingChangeRequest::TYPE_RESCHEDULE ? $this->proposedStartAt : null,
             'proposed_end_at' => $this->changeType === CareBookingChangeRequest::TYPE_RESCHEDULE ? $this->proposedEndAt : null,
         ]);
+
+        app(BookingTrustService::class)->recordEvent(
+            $booking,
+            auth()->id(),
+            'family',
+            'booking_change_requested',
+            [
+                'type' => $this->changeType,
+                'reason' => trim($this->changeReason),
+            ]
+        );
 
         $booking->caregiver?->notify(new MarketplaceAlert(
             'Booking change request',
@@ -324,6 +404,13 @@ class ManageCareRequest extends Component
                 'resolved_at' => now(),
                 'resolved_by_user_id' => auth()->id(),
             ]);
+            app(BookingTrustService::class)->recordEvent(
+                $booking,
+                auth()->id(),
+                'family',
+                'booking_change_rejected',
+                ['change_request_id' => $changeRequest->id]
+            );
             $changeRequest->requester?->notify(new MarketplaceAlert(
                 'Change request rejected',
                 'Your booking change request was rejected.',
@@ -343,11 +430,13 @@ class ManageCareRequest extends Component
         ]);
 
         if ($changeRequest->type === CareBookingChangeRequest::TYPE_CANCEL) {
+            $lateCancel = app(BookingTrustService::class)->markLateCancelFlag($booking);
             $booking->update([
                 'status' => CareBooking::STATUS_CANCELLED,
                 'cancelled_at' => now(),
                 'cancelled_by_user_id' => $changeRequest->requester_user_id,
                 'cancellation_reason' => $changeRequest->reason,
+                'late_cancel_flag' => $lateCancel,
             ]);
             FunnelTracker::track('care_booking_cancelled', auth()->user(), $booking);
         } else {
@@ -360,6 +449,20 @@ class ManageCareRequest extends Component
             ]);
             FunnelTracker::track('care_booking_rescheduled', auth()->user(), $booking);
         }
+
+        app(BookingTrustService::class)->recordEvent(
+            $booking,
+            auth()->id(),
+            'family',
+            $changeRequest->type === CareBookingChangeRequest::TYPE_CANCEL
+                ? 'booking_cancelled_by_change_request'
+                : 'booking_rescheduled_by_change_request',
+            [
+                'change_request_id' => $changeRequest->id,
+                'requester_user_id' => $changeRequest->requester_user_id,
+            ]
+        );
+        app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
 
         $changeRequest->requester?->notify(new MarketplaceAlert(
             'Change request accepted',
@@ -390,8 +493,140 @@ class ManageCareRequest extends Component
             'description' => trim($this->supportDescription),
         ]);
 
+        if ($this->requestItem->booking) {
+            app(BookingTrustService::class)->recordEvent(
+                $this->requestItem->booking,
+                auth()->id(),
+                'family',
+                'support_ticket_opened',
+                ['category' => $this->supportCategory]
+            );
+        }
+
         $this->reset(['supportSubject', 'supportDescription', 'supportCategory']);
         session()->flash('status', 'Support ticket created.');
+    }
+
+    public function openDispute(): void
+    {
+        $booking = $this->requestItem->booking;
+        if (! $booking || ! in_array($booking->status, [CareBooking::STATUS_COMPLETED, CareBooking::STATUS_REVIEWED], true)) {
+            return;
+        }
+
+        $this->validate([
+            'disputeReason' => ['required', 'string', 'min:12', 'max:3000'],
+        ]);
+
+        $booking->update([
+            'status' => CareBooking::STATUS_DISPUTED,
+            'dispute_opened_at' => now(),
+            'dispute_opened_by_user_id' => auth()->id(),
+            'dispute_reason' => trim($this->disputeReason),
+            'dispute_status' => 'open',
+        ]);
+
+        SupportTicket::query()->create([
+            'opener_user_id' => auth()->id(),
+            'counterparty_user_id' => $booking->caregiver_user_id,
+            'care_request_id' => $this->requestItem->id,
+            'care_booking_id' => $booking->id,
+            'category' => 'dispute',
+            'priority' => 'high',
+            'subject' => 'Booking dispute for request #'.$this->requestItem->id,
+            'description' => trim($this->disputeReason),
+        ]);
+
+        app(BookingTrustService::class)->recordEvent(
+            $booking,
+            auth()->id(),
+            'family',
+            'dispute_opened_by_family',
+            ['reason' => trim($this->disputeReason)]
+        );
+        app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
+
+        $this->disputeReason = '';
+        $this->refreshRequestItem();
+        session()->flash('status', 'Dispute opened and support ticket created.');
+    }
+
+    public function markNoShow(): void
+    {
+        $booking = $this->requestItem->booking;
+        if (! $booking || $booking->status !== CareBooking::STATUS_SCHEDULED) {
+            return;
+        }
+
+        if (! $booking->scheduled_start_at || now()->lt($booking->scheduled_start_at->copy()->addMinutes(30))) {
+            session()->flash('status', 'No-show can be marked 30 minutes after scheduled start.');
+            return;
+        }
+
+        $booking->update([
+            'status' => CareBooking::STATUS_CANCELLED,
+            'cancelled_at' => now(),
+            'cancelled_by_user_id' => auth()->id(),
+            'cancellation_reason' => 'Marked as caregiver no-show by family.',
+            'no_show_flag' => true,
+        ]);
+
+        app(BookingTrustService::class)->recordEvent(
+            $booking,
+            auth()->id(),
+            'family',
+            'caregiver_no_show_marked'
+        );
+        app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
+
+        $this->refreshRequestItem();
+        session()->flash('status', 'Booking marked as no-show.');
+    }
+
+    public function reportIncident(): void
+    {
+        $booking = $this->requestItem->booking;
+        if (! $booking) {
+            return;
+        }
+
+        $this->validate([
+            'incidentTitle' => ['required', 'string', 'min:6', 'max:160'],
+            'incidentDescription' => ['required', 'string', 'min:12', 'max:4000'],
+            'incidentSeverity' => ['required', Rule::in(['low', 'medium', 'high'])],
+        ]);
+
+        CareBookingIncident::query()->create([
+            'care_booking_id' => $booking->id,
+            'reporter_user_id' => auth()->id(),
+            'severity' => $this->incidentSeverity,
+            'title' => trim($this->incidentTitle),
+            'description' => trim($this->incidentDescription),
+            'reported_at' => now(),
+        ]);
+
+        SupportTicket::query()->create([
+            'opener_user_id' => auth()->id(),
+            'counterparty_user_id' => $booking->caregiver_user_id,
+            'care_request_id' => $this->requestItem->id,
+            'care_booking_id' => $booking->id,
+            'category' => 'incident',
+            'priority' => $this->incidentSeverity === 'high' ? 'high' : 'normal',
+            'subject' => trim($this->incidentTitle),
+            'description' => trim($this->incidentDescription),
+        ]);
+
+        app(BookingTrustService::class)->recordEvent(
+            $booking,
+            auth()->id(),
+            'family',
+            'incident_reported_by_family',
+            ['severity' => $this->incidentSeverity, 'title' => trim($this->incidentTitle)]
+        );
+
+        $this->reset(['incidentTitle', 'incidentDescription', 'incidentSeverity']);
+        $this->refreshRequestItem();
+        session()->flash('status', 'Incident reported. Support was notified.');
     }
 
     public function rebookHiredCaregiver(): void
@@ -512,10 +747,10 @@ class ManageCareRequest extends Component
             return $this->requestItem->requested_start_at;
         }
 
-        $startDate = $this->requestItem->recurring_starts_on ?: now()->toDateString();
-        $startTime = $this->requestItem->recurring_start_time ?: '09:00';
+        $startDate = $this->requestItem->recurring_starts_on ?: now();
+        $startTime = $this->requestItem->recurring_start_time ?: '09:00:00';
 
-        return Carbon::parse($startDate.' '.$startTime);
+        return $this->combineDateAndTime($startDate, $startTime);
     }
 
     private function deriveScheduledEndAt(): ?Carbon
@@ -524,10 +759,42 @@ class ManageCareRequest extends Component
             return $this->requestItem->requested_end_at;
         }
 
-        $startDate = $this->requestItem->recurring_starts_on ?: now()->toDateString();
-        $endTime = $this->requestItem->recurring_end_time ?: '13:00';
+        $startDate = $this->requestItem->recurring_starts_on ?: now();
+        $endTime = $this->requestItem->recurring_end_time ?: '13:00:00';
 
-        return Carbon::parse($startDate.' '.$endTime);
+        return $this->combineDateAndTime($startDate, $endTime);
+    }
+
+    private function combineDateAndTime(mixed $dateValue, mixed $timeValue): Carbon
+    {
+        $date = $dateValue instanceof Carbon
+            ? $dateValue->copy()
+            : Carbon::parse((string) $dateValue);
+
+        return $date->setTimeFromTimeString($this->normalizeTimeString($timeValue));
+    }
+
+    private function normalizeTimeString(mixed $timeValue): string
+    {
+        if ($timeValue instanceof Carbon) {
+            return $timeValue->format('H:i:s');
+        }
+
+        $time = trim((string) $timeValue);
+
+        if ($time === '') {
+            return '00:00:00';
+        }
+
+        if (preg_match('/^\d{2}:\d{2}$/', $time) === 1) {
+            return $time.':00';
+        }
+
+        if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $time) === 1) {
+            return $time;
+        }
+
+        return Carbon::parse($time)->format('H:i:s');
     }
 
     private function findOwnedApplication(int $applicationId): CareRequestApplication
@@ -546,6 +813,9 @@ class ManageCareRequest extends Component
             'thirdPartyContact',
             'tasks',
             'booking',
+            'booking.taskChecks',
+            'booking.events.actor:id,name',
+            'booking.incidents.reporter:id,name',
             'booking.changeRequests.requester:id,name',
             'booking.reviews.reviewer:id,name',
             'invitations' => fn ($query) => $query->with(['caregiver:id,name']),

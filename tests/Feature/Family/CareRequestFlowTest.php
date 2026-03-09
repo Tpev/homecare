@@ -5,6 +5,7 @@ namespace Tests\Feature\Family;
 use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Family\CreateCareRequestWizard;
 use App\Livewire\Family\ManageCareRequest;
+use App\Models\CareBooking;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
@@ -203,6 +204,100 @@ class CareRequestFlowTest extends TestCase
             'caregiver_user_id' => $caregiverB->id,
             'family_user_id' => $family->id,
         ]);
+    }
+
+    public function test_family_can_hire_applicant_for_recurring_request_and_create_scheduled_booking(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active']);
+
+        $recurringStartsOn = now()->addDays(2)->startOfDay();
+
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Recurring daytime support',
+            'status' => CareRequest::STATUS_OPEN,
+            'request_type' => CareRequest::TYPE_RECURRING,
+            'recurring_days' => [1, 3, 5],
+            'recurring_starts_on' => $recurringStartsOn,
+            'recurring_start_time' => '09:00:00',
+            'recurring_end_time' => '12:30:00',
+            'address_line1' => '42 Cedar Ave',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27607',
+        ]);
+        $request->recipient()->create([
+            'full_name' => 'Parent Name',
+            'relationship_to_family' => 'Mother',
+        ]);
+
+        $application = CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_APPLIED,
+            'proposed_rate' => 30,
+            'cover_note' => 'Can do recurring mornings.',
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $request = $request->fresh('booking');
+
+        $this->assertNotNull($request->booking);
+        $this->assertSame('scheduled', $request->booking->status);
+        $this->assertSame(
+            $recurringStartsOn->copy()->setTime(9, 0, 0)->format('Y-m-d H:i:s'),
+            $request->booking->scheduled_start_at?->format('Y-m-d H:i:s')
+        );
+        $this->assertSame(
+            $recurringStartsOn->copy()->setTime(12, 30, 0)->format('Y-m-d H:i:s'),
+            $request->booking->scheduled_end_at?->format('Y-m-d H:i:s')
+        );
+    }
+
+    public function test_family_cannot_complete_shift_before_caregiver_check_in(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active']);
+
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Morning assistance',
+            'status' => CareRequest::STATUS_OPEN,
+            'requested_start_at' => now()->addDays(2)->setTime(9, 0),
+            'requested_end_at' => now()->addDays(2)->setTime(12, 0),
+            'address_line1' => '12 Maple St',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+        ]);
+        $request->recipient()->create([
+            'full_name' => 'Family Recipient',
+            'relationship_to_family' => 'Mother',
+        ]);
+
+        $application = CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_APPLIED,
+            'proposed_rate' => 29,
+            'cover_note' => 'Available this week.',
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id)
+            ->call('completeBooking');
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->first();
+        $this->assertNotNull($booking);
+        $this->assertSame(CareBooking::STATUS_SCHEDULED, $booking?->status);
+        $this->assertNull($booking?->completed_at);
     }
 
     public function test_non_family_user_cannot_access_family_routes(): void

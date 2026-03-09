@@ -32,6 +32,7 @@
                 :options="[
                     ['label'=>'Relevance','value'=>'relevance'],
                     ['label'=>'Top caregivers first','value'=>'top'],
+                    ['label'=>'Reliability high-low','value'=>'reliability'],
                     ['label'=>'Price low-high','value'=>'price_low'],
                     ['label'=>'Price high-low','value'=>'price_high'],
                     ['label'=>'Experience high-low','value'=>'experience'],
@@ -71,6 +72,7 @@
                         @if (! is_null($c->invite_response_rate))
                             <p class="mt-1 text-xs text-slate-500">Response score {{ number_format((float) $c->invite_response_rate, 0) }}%</p>
                         @endif
+                        <p class="mt-1 text-xs text-slate-500">Reliability {{ number_format((float) $c->reliability_score, 0) }}%</p>
                     </div>
                 </div>
 
