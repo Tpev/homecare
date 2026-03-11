@@ -17,6 +17,7 @@ use App\Livewire\Caregiver\InsuranceSetup;
 use App\Livewire\Caregiver\IntroVideoSetup;
 use App\Livewire\Caregiver\InvitationsIndex;
 use App\Livewire\Caregiver\ProfileEditor;
+use App\Livewire\Caregiver\ShiftsIndex;
 use App\Livewire\Caregiver\ShowCaregiver;
 use App\Livewire\Caregiver\TaskComfortSetup;
 use App\Livewire\Dashboard\Home as DashboardHome;
@@ -83,6 +84,7 @@ Route::middleware(['auth', 'caregiver.role'])->group(function () {
     Route::get('/caregiver/verification/return', [CaregiverIdentityVerificationController::class, 'returned'])
         ->name('caregiver.verification.return');
     Route::get('/caregiver/invitations', InvitationsIndex::class)->name('caregiver.invitations.index');
+    Route::get('/caregiver/shifts', ShiftsIndex::class)->name('caregiver.shifts.index');
     Route::get('/care-requests', BrowseCareRequests::class)->name('care-requests.index');
     Route::get('/care-requests/{careRequest}/apply', ApplyToCareRequest::class)
         ->whereNumber('careRequest')

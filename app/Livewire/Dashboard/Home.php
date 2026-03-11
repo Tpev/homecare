@@ -153,6 +153,37 @@ class Home extends Component
                 ->limit(6)
                 ->get();
 
+            $caregiverData['active_shift'] = CareBooking::query()
+                ->with(['careRequest:id,title,city,state,request_type,requested_start_at,requested_end_at'])
+                ->where('caregiver_user_id', $user->id)
+                ->where('status', CareBooking::STATUS_IN_PROGRESS)
+                ->latest('started_at')
+                ->first();
+
+            $caregiverData['next_shift'] = CareBooking::query()
+                ->with(['careRequest:id,title,city,state,request_type,requested_start_at,requested_end_at'])
+                ->where('caregiver_user_id', $user->id)
+                ->where('status', CareBooking::STATUS_SCHEDULED)
+                ->orderBy('scheduled_start_at')
+                ->first();
+
+            $caregiverData['quick_shifts'] = CareBooking::query()
+                ->with(['careRequest:id,title,city,state,request_type,requested_start_at,requested_end_at'])
+                ->where('caregiver_user_id', $user->id)
+                ->whereIn('status', [
+                    CareBooking::STATUS_IN_PROGRESS,
+                    CareBooking::STATUS_SCHEDULED,
+                    CareBooking::STATUS_COMPLETED,
+                ])
+                ->orderByRaw("CASE status
+                    WHEN 'in_progress' THEN 0
+                    WHEN 'scheduled' THEN 1
+                    WHEN 'completed' THEN 2
+                    ELSE 3 END")
+                ->orderBy('scheduled_start_at')
+                ->limit(3)
+                ->get();
+
             $profile = $caregiverData['profile'];
             $identityComplete = $profile->hasIdentityVerifiedBadge();
             $tasksComplete = $profile->skills()->exists();

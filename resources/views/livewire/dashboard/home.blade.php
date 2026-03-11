@@ -224,6 +224,7 @@
                             Complete the remaining setup cards below, then submit your profile. Reviews usually complete within 1 business day.
                         </p>
                         <div class="mt-5 flex flex-wrap gap-2">
+                            <a href="{{ route('caregiver.shifts.index') }}" wire:navigate><x-button color="white">My shifts</x-button></a>
                             <a href="{{ route('care-requests.index') }}" wire:navigate><x-button color="white">Browse Requests</x-button></a>
                             <a href="{{ route('messages.index') }}" wire:navigate><x-button color="white" light>Messages</x-button></a>
                             <a href="{{ route('caregiver.profile.edit') }}" wire:navigate><x-button color="white" light>Edit Profile</x-button></a>
@@ -248,6 +249,85 @@
                         </div>
                     </div>
                 </div>
+            </section>
+
+            <section class="space-y-4">
+                @if (!empty($caregiverData['active_shift']))
+                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <p class="text-xs uppercase tracking-[0.14em] text-emerald-700 font-semibold">Live now</p>
+                            <p class="font-semibold text-emerald-900">{{ $caregiverData['active_shift']->careRequest?->title ?? 'Current shift' }}</p>
+                            <p class="text-sm text-emerald-800 mt-1">
+                                Started {{ optional($caregiverData['active_shift']->started_at)->format('M d, H:i') ?: 'just now' }}
+                                · {{ $caregiverData['active_shift']->careRequest?->city }}, {{ $caregiverData['active_shift']->careRequest?->state }}
+                            </p>
+                        </div>
+                        @if ($caregiverData['active_shift']->careRequest)
+                            <a href="{{ route('care-requests.apply', $caregiverData['active_shift']->careRequest->id) }}" wire:navigate>
+                                <x-button color="green">Continue shift</x-button>
+                            </a>
+                        @endif
+                    </div>
+                @elseif (!empty($caregiverData['next_shift']))
+                    <div class="rounded-2xl border border-sky-200 bg-sky-50 p-4 flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <p class="text-xs uppercase tracking-[0.14em] text-sky-700 font-semibold">Next shift</p>
+                            <p class="font-semibold text-sky-900">{{ $caregiverData['next_shift']->careRequest?->title ?? 'Upcoming shift' }}</p>
+                            <p class="text-sm text-sky-800 mt-1">
+                                {{ optional($caregiverData['next_shift']->scheduled_start_at)->format('M d, Y H:i') ?: 'Date pending' }}
+                                · {{ $caregiverData['next_shift']->careRequest?->city }}, {{ $caregiverData['next_shift']->careRequest?->state }}
+                            </p>
+                        </div>
+                        @if ($caregiverData['next_shift']->careRequest)
+                            <a href="{{ route('care-requests.apply', $caregiverData['next_shift']->careRequest->id) }}" wire:navigate>
+                                <x-button color="blue">Open shift details</x-button>
+                            </a>
+                        @endif
+                    </div>
+                @endif
+
+                @if (!empty($caregiverData['quick_shifts']) && $caregiverData['quick_shifts']->count() > 0)
+                    <x-card>
+                        <x-slot:header>
+                            <div class="flex items-center justify-between">
+                                <h2 class="font-display font-semibold">Shift quick access</h2>
+                                <a href="{{ route('caregiver.shifts.index') }}" wire:navigate class="hc-link">View all shifts</a>
+                            </div>
+                        </x-slot:header>
+                        <div class="space-y-3">
+                            @foreach ($caregiverData['quick_shifts'] as $shift)
+                                @php
+                                    $shiftStatus = (string) $shift->status;
+                                    $shiftCta = match ($shiftStatus) {
+                                        \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Continue shift',
+                                        \App\Models\CareBooking::STATUS_SCHEDULED => 'Start shift',
+                                        \App\Models\CareBooking::STATUS_COMPLETED => 'View recap',
+                                        default => 'Open shift',
+                                    };
+                                @endphp
+                                <div class="rounded-xl border border-slate-200 bg-white p-3">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p class="font-medium text-slate-900">{{ $shift->careRequest?->title ?? 'Care request' }}</p>
+                                            <p class="text-xs text-slate-500 mt-1">
+                                                {{ optional($shift->scheduled_start_at)->format('M d, H:i') ?: 'Date pending' }}
+                                                · {{ $shift->careRequest?->city }}, {{ $shift->careRequest?->state }}
+                                            </p>
+                                        </div>
+                                        <x-badge :text="strtoupper($shiftStatus)" color="{{ $shiftStatus === \App\Models\CareBooking::STATUS_IN_PROGRESS ? 'green' : 'blue' }}" />
+                                    </div>
+                                    @if ($shift->careRequest)
+                                        <div class="mt-3">
+                                            <a href="{{ route('care-requests.apply', $shift->careRequest->id) }}" wire:navigate>
+                                                <x-button color="{{ $shiftStatus === \App\Models\CareBooking::STATUS_IN_PROGRESS ? 'green' : 'blue' }}" light sm>{{ $shiftCta }}</x-button>
+                                            </a>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </x-card>
+                @endif
             </section>
 
             <section class="space-y-4">

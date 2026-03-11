@@ -1,0 +1,73 @@
+<?php
+
+namespace App\Livewire\Caregiver;
+
+use App\Models\CareBooking;
+use App\Models\CareRequestApplication;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+use Livewire\WithPagination;
+
+#[Layout('layouts.app')]
+class ShiftsIndex extends Component
+{
+    use WithPagination;
+
+    public string $status = 'all';
+
+    public function mount(): void
+    {
+        abort_unless(auth()->user()?->role === 'caregiver', 403);
+    }
+
+    public function updatingStatus(): void
+    {
+        $this->resetPage();
+    }
+
+    public function render()
+    {
+        $statusOrderSql = "CASE status
+            WHEN 'in_progress' THEN 0
+            WHEN 'scheduled' THEN 1
+            WHEN 'completed' THEN 2
+            WHEN 'reviewed' THEN 3
+            WHEN 'disputed' THEN 4
+            WHEN 'cancelled' THEN 5
+            ELSE 6 END";
+
+        $bookingsQuery = CareBooking::query()
+            ->with([
+                'careRequest:id,title,city,state,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time',
+                'family:id,name',
+                'application:id,care_request_id,caregiver_user_id,status,proposed_rate',
+                'application.conversation:id,care_request_application_id',
+            ])
+            ->where('caregiver_user_id', auth()->id());
+
+        if ($this->status !== 'all') {
+            $bookingsQuery->where('status', $this->status);
+        }
+
+        $bookings = $bookingsQuery
+            ->orderByRaw($statusOrderSql)
+            ->orderBy('scheduled_start_at')
+            ->orderByDesc('updated_at')
+            ->paginate(10);
+
+        $hiredWithoutBooking = CareRequestApplication::query()
+            ->with(['careRequest:id,title,city,state,request_type,requested_start_at,requested_end_at'])
+            ->where('caregiver_user_id', auth()->id())
+            ->where('status', CareRequestApplication::STATUS_HIRED)
+            ->whereDoesntHave('booking')
+            ->latest()
+            ->limit(6)
+            ->get();
+
+        return view('livewire.caregiver.shifts-index', [
+            'bookings' => $bookings,
+            'hiredWithoutBooking' => $hiredWithoutBooking,
+        ]);
+    }
+}
+
