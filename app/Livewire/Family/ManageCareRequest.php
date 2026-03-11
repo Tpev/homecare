@@ -220,11 +220,12 @@ class ManageCareRequest extends Component
             return;
         }
 
-        if ($booking->status === CareBooking::STATUS_IN_PROGRESS) {
+        if (in_array($booking->status, [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED], true)) {
             $booking->update([
                 'status' => CareBooking::STATUS_COMPLETED,
                 'completed_at' => now(),
                 'timesheet_submitted_at' => $booking->timesheet_submitted_at ?: now(),
+                'paused_at' => null,
             ]);
 
             app(BookingTrustService::class)->recordEvent(

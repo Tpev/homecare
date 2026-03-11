@@ -258,13 +258,14 @@
                             <p class="text-xs uppercase tracking-[0.14em] text-emerald-700 font-semibold">Live now</p>
                             <p class="font-semibold text-emerald-900">{{ $caregiverData['active_shift']->careRequest?->title ?? 'Current shift' }}</p>
                             <p class="text-sm text-emerald-800 mt-1">
-                                Started {{ optional($caregiverData['active_shift']->started_at)->format('M d, H:i') ?: 'just now' }}
+                                {{ $caregiverData['active_shift']->status === \App\Models\CareBooking::STATUS_PAUSED ? 'Paused' : 'Started' }}
+                                {{ optional($caregiverData['active_shift']->started_at)->format('M d, H:i') ?: 'just now' }}
                                 · {{ $caregiverData['active_shift']->careRequest?->city }}, {{ $caregiverData['active_shift']->careRequest?->state }}
                             </p>
                         </div>
                         @if ($caregiverData['active_shift']->careRequest)
                             <a href="{{ route('care-requests.apply', $caregiverData['active_shift']->careRequest->id) }}" wire:navigate>
-                                <x-button color="green">Continue shift</x-button>
+                                <x-button color="green">{{ $caregiverData['active_shift']->status === \App\Models\CareBooking::STATUS_PAUSED ? 'Resume shift' : 'Continue shift' }}</x-button>
                             </a>
                         @endif
                     </div>
@@ -300,6 +301,7 @@
                                     $shiftStatus = (string) $shift->status;
                                     $shiftCta = match ($shiftStatus) {
                                         \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Continue shift',
+                                        \App\Models\CareBooking::STATUS_PAUSED => 'Resume shift',
                                         \App\Models\CareBooking::STATUS_SCHEDULED => 'Start shift',
                                         \App\Models\CareBooking::STATUS_COMPLETED => 'View recap',
                                         default => 'Open shift',
@@ -314,12 +316,12 @@
                                                 · {{ $shift->careRequest?->city }}, {{ $shift->careRequest?->state }}
                                             </p>
                                         </div>
-                                        <x-badge :text="strtoupper($shiftStatus)" color="{{ $shiftStatus === \App\Models\CareBooking::STATUS_IN_PROGRESS ? 'green' : 'blue' }}" />
+                                        <x-badge :text="strtoupper($shiftStatus)" color="{{ in_array($shiftStatus, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true) ? 'green' : 'blue' }}" />
                                     </div>
                                     @if ($shift->careRequest)
                                         <div class="mt-3">
                                             <a href="{{ route('care-requests.apply', $shift->careRequest->id) }}" wire:navigate>
-                                                <x-button color="{{ $shiftStatus === \App\Models\CareBooking::STATUS_IN_PROGRESS ? 'green' : 'blue' }}" light sm>{{ $shiftCta }}</x-button>
+                                                <x-button color="{{ in_array($shiftStatus, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true) ? 'green' : 'blue' }}" light sm>{{ $shiftCta }}</x-button>
                                             </a>
                                         </div>
                                     @endif

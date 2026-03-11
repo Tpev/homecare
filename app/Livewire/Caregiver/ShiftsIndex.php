@@ -29,12 +29,13 @@ class ShiftsIndex extends Component
     {
         $statusOrderSql = "CASE status
             WHEN 'in_progress' THEN 0
-            WHEN 'scheduled' THEN 1
-            WHEN 'completed' THEN 2
-            WHEN 'reviewed' THEN 3
-            WHEN 'disputed' THEN 4
-            WHEN 'cancelled' THEN 5
-            ELSE 6 END";
+            WHEN 'paused' THEN 1
+            WHEN 'scheduled' THEN 2
+            WHEN 'completed' THEN 3
+            WHEN 'reviewed' THEN 4
+            WHEN 'disputed' THEN 5
+            WHEN 'cancelled' THEN 6
+            ELSE 7 END";
 
         $bookingsQuery = CareBooking::query()
             ->with([
@@ -70,4 +71,3 @@ class ShiftsIndex extends Component
         ]);
     }
 }
-

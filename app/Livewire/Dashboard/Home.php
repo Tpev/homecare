@@ -50,6 +50,7 @@ class Home extends Component
                     $query->whereIn('status', [
                         CareBooking::STATUS_SCHEDULED,
                         CareBooking::STATUS_IN_PROGRESS,
+                        CareBooking::STATUS_PAUSED,
                         CareBooking::STATUS_COMPLETED,
                     ]);
                 })
@@ -93,6 +94,7 @@ class Home extends Component
                     $query->whereIn('status', [
                         CareBooking::STATUS_SCHEDULED,
                         CareBooking::STATUS_IN_PROGRESS,
+                        CareBooking::STATUS_PAUSED,
                         CareBooking::STATUS_COMPLETED,
                     ]);
                 })
@@ -156,7 +158,7 @@ class Home extends Component
             $caregiverData['active_shift'] = CareBooking::query()
                 ->with(['careRequest:id,title,city,state,request_type,requested_start_at,requested_end_at'])
                 ->where('caregiver_user_id', $user->id)
-                ->where('status', CareBooking::STATUS_IN_PROGRESS)
+                ->whereIn('status', [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED])
                 ->latest('started_at')
                 ->first();
 
@@ -172,14 +174,16 @@ class Home extends Component
                 ->where('caregiver_user_id', $user->id)
                 ->whereIn('status', [
                     CareBooking::STATUS_IN_PROGRESS,
+                    CareBooking::STATUS_PAUSED,
                     CareBooking::STATUS_SCHEDULED,
                     CareBooking::STATUS_COMPLETED,
                 ])
                 ->orderByRaw("CASE status
                     WHEN 'in_progress' THEN 0
-                    WHEN 'scheduled' THEN 1
-                    WHEN 'completed' THEN 2
-                    ELSE 3 END")
+                    WHEN 'paused' THEN 1
+                    WHEN 'scheduled' THEN 2
+                    WHEN 'completed' THEN 3
+                    ELSE 4 END")
                 ->orderBy('scheduled_start_at')
                 ->limit(3)
                 ->get();

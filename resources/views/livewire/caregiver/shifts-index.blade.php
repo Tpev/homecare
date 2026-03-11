@@ -33,6 +33,7 @@
                         :options="[
                             ['label' => 'All statuses', 'value' => 'all'],
                             ['label' => 'In progress', 'value' => \App\Models\CareBooking::STATUS_IN_PROGRESS],
+                            ['label' => 'Paused', 'value' => \App\Models\CareBooking::STATUS_PAUSED],
                             ['label' => 'Scheduled', 'value' => \App\Models\CareBooking::STATUS_SCHEDULED],
                             ['label' => 'Completed', 'value' => \App\Models\CareBooking::STATUS_COMPLETED],
                             ['label' => 'Reviewed', 'value' => \App\Models\CareBooking::STATUS_REVIEWED],
@@ -51,6 +52,7 @@
                         $ctaLabel = match ($status) {
                             \App\Models\CareBooking::STATUS_SCHEDULED => 'Start shift',
                             \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Continue shift',
+                            \App\Models\CareBooking::STATUS_PAUSED => 'Resume shift',
                             \App\Models\CareBooking::STATUS_COMPLETED => 'View recap',
                             \App\Models\CareBooking::STATUS_REVIEWED => 'View shift',
                             \App\Models\CareBooking::STATUS_DISPUTED => 'Open dispute view',
@@ -68,7 +70,7 @@
                                     · {{ $request?->city ?? '-' }}, {{ $request?->state ?? '-' }}
                                 </p>
                             </div>
-                            <x-badge :text="strtoupper($status)" color="{{ $status === \App\Models\CareBooking::STATUS_IN_PROGRESS ? 'green' : 'blue' }}" />
+                            <x-badge :text="strtoupper($status)" color="{{ in_array($status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true) ? 'green' : 'blue' }}" />
                         </div>
 
                         <div class="mt-3 grid grid-cols-1 gap-2 text-xs text-slate-600 md:grid-cols-3">
@@ -85,7 +87,7 @@
                         <div class="mt-4 flex flex-wrap items-center gap-2">
                             @if ($request)
                                 <a href="{{ route('care-requests.apply', $request->id) }}" wire:navigate>
-                                    <x-button color="{{ $status === \App\Models\CareBooking::STATUS_IN_PROGRESS ? 'green' : 'blue' }}" sm>{{ $ctaLabel }}</x-button>
+                                    <x-button color="{{ in_array($status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true) ? 'green' : 'blue' }}" sm>{{ $ctaLabel }}</x-button>
                                 </a>
                             @endif
 
@@ -131,4 +133,3 @@
         @endif
     </div>
 </div>
-

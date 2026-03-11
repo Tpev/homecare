@@ -205,6 +205,38 @@ class BookingTrustOpsTest extends TestCase
         $this->assertNotNull($booking->check_out_accuracy_meters);
     }
 
+    public function test_caregiver_can_pause_and_resume_shift_before_checkout(): void
+    {
+        [$family, $caregiver, $request, $application] = $this->seedHireScenario();
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        Livewire::actingAs($caregiver)
+            ->test(ApplyToCareRequest::class, ['careRequest' => $request->id])
+            ->call('acceptBookingAgreement')
+            ->call('startBookingWithGeo', 35.7796, -78.6382, 18.4)
+            ->call('pauseBooking')
+            ->call('resumeBooking')
+            ->call('completeBookingWithGeo', 35.7795, -78.6381, 16.2);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+
+        $this->assertSame(CareBooking::STATUS_COMPLETED, $booking->status);
+        $this->assertNull($booking->paused_at);
+        $this->assertGreaterThanOrEqual(0, (int) $booking->total_paused_seconds);
+
+        $this->assertDatabaseHas('care_booking_events', [
+            'care_booking_id' => $booking->id,
+            'event_type' => 'shift_paused_by_caregiver',
+        ]);
+        $this->assertDatabaseHas('care_booking_events', [
+            'care_booking_id' => $booking->id,
+            'event_type' => 'shift_resumed_by_caregiver',
+        ]);
+    }
+
     /**
      * @return array{User,User,CareRequest,CareRequestApplication}
      */

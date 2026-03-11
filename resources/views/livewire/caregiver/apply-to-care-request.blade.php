@@ -10,13 +10,16 @@
         $canCheckIn = $booking
             && $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED
             && $booking->caregiver_terms_accepted_at !== null;
-        $canCheckOut = $booking && $booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS;
-        $canHeartbeat = $booking && $booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS;
+        $canPause = $booking && $booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS;
+        $canResume = $booking && $booking->status === \App\Models\CareBooking::STATUS_PAUSED;
+        $canCheckOut = $booking && in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true);
         $workedMinutes = (int) ($booking?->worked_minutes ?? 0);
         $workedHours = intdiv($workedMinutes, 60);
         $workedRemainingMinutes = $workedMinutes % 60;
         $workedLabel = sprintf('%02d:%02d', $workedHours, $workedRemainingMinutes);
         $estimatedEarnings = $workedMinutes > 0 ? round(($workedMinutes / 60) * $ratePerHour, 2) : 0;
+        $pausedSeconds = (int) ($booking?->total_paused_seconds ?? 0);
+        $pausedLabel = sprintf('%02d:%02d', intdiv($pausedSeconds, 3600), intdiv($pausedSeconds % 3600, 60));
     @endphp
 
     <x-card>
@@ -222,8 +225,13 @@
                     class="space-y-4 text-sm"
                     x-data="homecareShiftTracker({
                         startedAt: @js(optional($booking->started_at)?->toIso8601String()),
+                        pausedAt: @js(optional($booking->paused_at)?->toIso8601String()),
+                        totalPausedSeconds: @js((int) ($booking->total_paused_seconds ?? 0)),
+                        isPaused: @js((bool) ($booking->status === \App\Models\CareBooking::STATUS_PAUSED)),
                         ratePerHour: @js($ratePerHour),
                         canCheckIn: @js((bool) $canCheckIn),
+                        canPause: @js((bool) $canPause),
+                        canResume: @js((bool) $canResume),
                         canCheckOut: @js((bool) $canCheckOut),
                     })"
                     x-init="init()"
@@ -232,7 +240,7 @@
                         Scheduled: {{ optional($booking->scheduled_start_at)->format('M d, Y H:i') }} - {{ optional($booking->scheduled_end_at)->format('M d, Y H:i') }}
                     </p>
 
-                    @if ($booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS)
+                    @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true))
                         <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
                             <p class="text-xs uppercase tracking-[0.12em] text-emerald-700 font-semibold">Shift live</p>
                             <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -273,7 +281,11 @@
                         </div>
                     @elseif ($booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS)
                         <div class="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-                            Shift in progress. Send heartbeat updates and check out when done.
+                            Shift in progress. Pause for break or end when done.
+                        </div>
+                    @elseif ($booking->status === \App\Models\CareBooking::STATUS_PAUSED)
+                        <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                            Shift is paused. Resume when back or end shift directly.
                         </div>
                     @elseif ($booking->status === \App\Models\CareBooking::STATUS_COMPLETED)
                         <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
@@ -295,39 +307,44 @@
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2">
-                        <x-button
-                            color="blue"
-                            light
-                            :disabled="! $canCheckIn"
-                            x-bind:disabled="geoLoading || !canCheckIn"
-                            x-on:click.prevent="startWithGps()"
-                        >
-                            <span x-show="!geoLoading">Start shift</span>
-                            <span x-show="geoLoading">Capturing GPS...</span>
-                        </x-button>
-                        <x-button
-                            color="green"
-                            light
-                            :disabled="! $canCheckOut"
-                            x-bind:disabled="geoLoading || !canCheckOut"
-                            x-on:click.prevent="endWithGps()"
-                        >
-                            <span x-show="!geoLoading">End shift</span>
-                            <span x-show="geoLoading">Capturing GPS...</span>
-                        </x-button>
+                        @if ($canCheckIn)
+                            <x-button
+                                color="blue"
+                                light
+                                x-bind:disabled="geoLoading || !canCheckIn"
+                                x-on:click.prevent="startWithGps()"
+                            >
+                                <span x-show="!geoLoading">Start shift</span>
+                                <span x-show="geoLoading">Capturing GPS...</span>
+                            </x-button>
+                        @endif
+
+                        @if ($canPause)
+                            <x-button color="amber" light wire:click="pauseBooking">Pause shift</x-button>
+                        @endif
+
+                        @if ($canResume)
+                            <x-button color="blue" light wire:click="resumeBooking">Resume shift</x-button>
+                        @endif
+
+                        @if ($canCheckOut)
+                            <x-button
+                                color="green"
+                                light
+                                x-bind:disabled="geoLoading || !canCheckOut"
+                                x-on:click.prevent="endWithGps()"
+                            >
+                                <span x-show="!geoLoading">End shift</span>
+                                <span x-show="geoLoading">Capturing GPS...</span>
+                            </x-button>
+                        @endif
                     </div>
 
                     <p class="text-xs text-slate-500" x-show="geoMessage" x-text="geoMessage"></p>
 
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <x-input label="Heartbeat note" wire:model="heartbeatNote" />
-                        <div class="flex items-end">
-                            <x-button color="indigo" light wire:click="sendHeartbeat" :disabled="! $canHeartbeat">Send heartbeat</x-button>
-                        </div>
-                    </div>
-
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-6 text-xs text-slate-700">
                         <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Started: {{ optional($booking->started_at)->format('M d, H:i') ?: 'Pending' }}</div>
+                        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Paused at: {{ optional($booking->paused_at)->format('M d, H:i') ?: 'Not paused' }}</div>
                         <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Checked out: {{ optional($booking->completed_at)->format('M d, H:i') ?: 'Pending' }}</div>
                         <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">
                             Start GPS:
@@ -352,7 +369,7 @@
                             @endif
                         </div>
                         <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Family confirmed: {{ optional($booking->family_confirmed_at)->format('M d, H:i') ?: 'Pending' }}</div>
-                        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Heartbeat: {{ optional($booking->heartbeat_pinged_at)->format('M d, H:i') ?: 'None' }}</div>
+                        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Break time: {{ $pausedLabel }}</div>
                     </div>
 
                     @if ($booking->expected_minutes || $booking->worked_minutes)
@@ -364,7 +381,7 @@
                     @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED, \App\Models\CareBooking::STATUS_DISPUTED], true))
                         <div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
                             <p class="text-xs uppercase tracking-[0.12em] text-blue-700 font-semibold">Shift recap</p>
-                            <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+                            <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5 text-sm">
                                 <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
                                     <p class="text-xs text-slate-500">Worked time</p>
                                     <p class="font-semibold text-slate-900">{{ $workedLabel }}</p>
@@ -376,6 +393,10 @@
                                 <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
                                     <p class="text-xs text-slate-500">Estimated earnings</p>
                                     <p class="font-semibold text-slate-900">${{ number_format($estimatedEarnings, 2) }}</p>
+                                </div>
+                                <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
+                                    <p class="text-xs text-slate-500">Break time</p>
+                                    <p class="font-semibold text-slate-900">{{ $pausedLabel }}</p>
                                 </div>
                                 <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
                                     <p class="text-xs text-slate-500">GPS verification</p>
@@ -550,8 +571,13 @@
         window.homecareShiftTracker = function (config) {
             return {
                 startedAt: config.startedAt || null,
+                pausedAt: config.pausedAt || null,
+                totalPausedSeconds: Number(config.totalPausedSeconds || 0),
+                isPaused: Boolean(config.isPaused),
                 ratePerHour: Number(config.ratePerHour || 0),
                 canCheckIn: Boolean(config.canCheckIn),
+                canPause: Boolean(config.canPause),
+                canResume: Boolean(config.canResume),
                 canCheckOut: Boolean(config.canCheckOut),
                 geoLoading: false,
                 geoMessage: '',
@@ -572,7 +598,15 @@
                         return 0;
                     }
 
-                    return Math.max(0, Math.floor((Date.now() - start) / 1000));
+                    let totalPaused = this.totalPausedSeconds;
+                    if (this.isPaused && this.pausedAt) {
+                        const pausedAtMs = new Date(this.pausedAt).getTime();
+                        if (Number.isFinite(pausedAtMs)) {
+                            totalPaused += Math.max(0, Math.floor((Date.now() - pausedAtMs) / 1000));
+                        }
+                    }
+
+                    return Math.max(0, Math.floor((Date.now() - start) / 1000) - totalPaused);
                 },
                 updateLiveCounters() {
                     const elapsed = this.elapsedSeconds();

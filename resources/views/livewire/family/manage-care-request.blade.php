@@ -386,6 +386,10 @@
                         <div class="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
                             Shift is in progress. If the shift is done, mark it complete.
                         </div>
+                    @elseif ($booking->status === \App\Models\CareBooking::STATUS_PAUSED)
+                        <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                            Caregiver paused the shift for a break. They can resume or end the shift.
+                        </div>
                     @elseif ($booking->status === \App\Models\CareBooking::STATUS_COMPLETED && ! $booking->family_confirmed_at)
                         <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
                             Caregiver submitted completion. Review details and confirm timesheet.
@@ -411,7 +415,7 @@
                             </a>
                         @endif
 
-                        @if ($booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS)
+                        @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true))
                             <x-button color="green" wire:click="completeBooking">Mark shift complete</x-button>
                         @endif
 

@@ -47,7 +47,6 @@ class ApplyToCareRequest extends Component
     public ?float $checkOutLat = null;
     public ?float $checkOutLng = null;
     public ?float $checkOutAccuracy = null;
-    public string $heartbeatNote = '';
     public array $shiftRecap = [];
 
     public string $incidentTitle = '';
@@ -190,7 +189,8 @@ class ApplyToCareRequest extends Component
             'check_in_accuracy_meters' => $this->checkInAccuracy,
             'check_in_source' => $capturedByGps ? 'browser_gps' : 'manual',
             'check_in_note' => trim($this->checkInNote) ?: null,
-            'heartbeat_pinged_at' => now(),
+            'paused_at' => null,
+            'total_paused_seconds' => (int) ($booking->total_paused_seconds ?? 0),
         ]);
 
         app(BookingTrustService::class)->recordEvent(
@@ -227,6 +227,57 @@ class ApplyToCareRequest extends Component
         session()->flash('status', $capturedByGps ? 'Shift started with GPS check-in.' : 'Shift started.');
     }
 
+    public function pauseBooking(): void
+    {
+        $booking = $this->getManagedBooking();
+        if (! $booking || $booking->status !== CareBooking::STATUS_IN_PROGRESS) {
+            return;
+        }
+
+        $booking->update([
+            'status' => CareBooking::STATUS_PAUSED,
+            'paused_at' => now(),
+        ]);
+
+        app(BookingTrustService::class)->recordEvent(
+            $booking,
+            auth()->id(),
+            'caregiver',
+            'shift_paused_by_caregiver'
+        );
+
+        $this->refreshExistingApplication();
+        session()->flash('status', 'Shift paused.');
+    }
+
+    public function resumeBooking(): void
+    {
+        $booking = $this->getManagedBooking();
+        if (! $booking || $booking->status !== CareBooking::STATUS_PAUSED || ! $booking->paused_at) {
+            return;
+        }
+
+        $additionalPause = $booking->paused_at->diffInSeconds(now());
+        $updatedPausedSeconds = (int) ($booking->total_paused_seconds ?? 0) + $additionalPause;
+
+        $booking->update([
+            'status' => CareBooking::STATUS_IN_PROGRESS,
+            'paused_at' => null,
+            'total_paused_seconds' => $updatedPausedSeconds,
+        ]);
+
+        app(BookingTrustService::class)->recordEvent(
+            $booking,
+            auth()->id(),
+            'caregiver',
+            'shift_resumed_by_caregiver',
+            ['added_paused_seconds' => $additionalPause]
+        );
+
+        $this->refreshExistingApplication();
+        session()->flash('status', 'Shift resumed.');
+    }
+
     public function completeBooking(): void
     {
         $booking = $this->getManagedBooking();
@@ -234,8 +285,8 @@ class ApplyToCareRequest extends Component
             return;
         }
 
-        if ($booking->status !== CareBooking::STATUS_IN_PROGRESS) {
-            session()->flash('status', 'Check in first before checking out.');
+        if (! in_array($booking->status, [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED], true)) {
+            session()->flash('status', 'Start shift first before checking out.');
             return;
         }
 
@@ -246,12 +297,8 @@ class ApplyToCareRequest extends Component
             'checkOutNote' => ['nullable', 'string', 'max:1500'],
         ]);
 
-        $workedMinutes = null;
-        if ($booking->started_at) {
-            $workedMinutes = $booking->started_at->diffInMinutes(now());
-        } elseif ($booking->scheduled_start_at) {
-            $workedMinutes = $booking->scheduled_start_at->diffInMinutes(now());
-        }
+        $totalPausedSeconds = $this->finalizePausedSeconds($booking);
+        $workedMinutes = $this->computeWorkedMinutes($booking, $totalPausedSeconds);
 
         $capturedByGps = ! is_null($this->checkOutLat) && ! is_null($this->checkOutLng);
         $ratePerHour = (float) ($this->existingApplication?->proposed_rate
@@ -269,6 +316,8 @@ class ApplyToCareRequest extends Component
             'check_out_source' => $capturedByGps ? 'browser_gps' : 'manual',
             'check_out_note' => trim($this->checkOutNote) ?: null,
             'worked_minutes' => $workedMinutes,
+            'paused_at' => null,
+            'total_paused_seconds' => $totalPausedSeconds,
         ]);
 
         app(BookingTrustService::class)->recordEvent(
@@ -283,6 +332,7 @@ class ApplyToCareRequest extends Component
                 'source' => $capturedByGps ? 'browser_gps' : 'manual',
                 'note' => trim($this->checkOutNote) ?: null,
                 'worked_minutes' => $workedMinutes,
+                'paused_seconds' => $totalPausedSeconds,
                 'estimated_earnings' => $estimatedEarnings,
             ]
         );
@@ -307,6 +357,7 @@ class ApplyToCareRequest extends Component
             'worked_label' => $this->formatWorkedDuration((int) ($workedMinutes ?? 0)),
             'rate' => $ratePerHour,
             'estimated_earnings' => $estimatedEarnings,
+            'paused_seconds' => $totalPausedSeconds,
             'gps_started' => ! is_null($booking->check_in_lat) && ! is_null($booking->check_in_lng),
             'gps_completed' => $capturedByGps,
         ];
@@ -353,34 +404,6 @@ class ApplyToCareRequest extends Component
 
         $this->refreshExistingApplication();
         session()->flash('status', 'Booking agreement accepted.');
-    }
-
-    public function sendHeartbeat(): void
-    {
-        $booking = $this->getManagedBooking();
-        if (! $booking || $booking->status !== CareBooking::STATUS_IN_PROGRESS) {
-            return;
-        }
-
-        $this->validate([
-            'heartbeatNote' => ['nullable', 'string', 'max:500'],
-        ]);
-
-        $booking->update([
-            'heartbeat_pinged_at' => now(),
-        ]);
-
-        app(BookingTrustService::class)->recordEvent(
-            $booking,
-            auth()->id(),
-            'caregiver',
-            'heartbeat_sent',
-            ['note' => trim($this->heartbeatNote) ?: null]
-        );
-
-        $this->heartbeatNote = '';
-        $this->refreshExistingApplication();
-        session()->flash('status', 'Heartbeat sent.');
     }
 
     public function toggleTaskCheck(int $taskCheckId): void
@@ -795,7 +818,7 @@ class ApplyToCareRequest extends Component
             ->where('caregiver_user_id', auth()->id())
             ->with([
                 'conversation:id,care_request_application_id,care_request_id,caregiver_user_id',
-                'booking:id,care_request_id,care_request_application_id,family_user_id,caregiver_user_id,status,scheduled_start_at,scheduled_end_at,agreement_snapshot,family_terms_accepted_at,caregiver_terms_accepted_at,started_at,check_in_lat,check_in_lng,check_in_accuracy_meters,check_in_source,check_in_note,heartbeat_pinged_at,completed_at,check_out_lat,check_out_lng,check_out_accuracy_meters,check_out_source,check_out_note,timesheet_submitted_at,expected_minutes,worked_minutes,family_confirmed_at,dispute_opened_at,dispute_opened_by_user_id,dispute_reason,dispute_status,no_show_flag,late_cancel_flag,reviewed_at,cancelled_at,cancelled_by_user_id,cancellation_reason',
+                'booking:id,care_request_id,care_request_application_id,family_user_id,caregiver_user_id,status,scheduled_start_at,scheduled_end_at,agreement_snapshot,family_terms_accepted_at,caregiver_terms_accepted_at,started_at,check_in_lat,check_in_lng,check_in_accuracy_meters,check_in_source,check_in_note,paused_at,total_paused_seconds,completed_at,check_out_lat,check_out_lng,check_out_accuracy_meters,check_out_source,check_out_note,timesheet_submitted_at,expected_minutes,worked_minutes,family_confirmed_at,dispute_opened_at,dispute_opened_by_user_id,dispute_reason,dispute_status,no_show_flag,late_cancel_flag,reviewed_at,cancelled_at,cancelled_by_user_id,cancellation_reason',
                 'booking.changeRequests',
                 'booking.reviews',
                 'booking.taskChecks',
@@ -812,6 +835,29 @@ class ApplyToCareRequest extends Component
         }
 
         return round(($workedMinutes / 60) * $ratePerHour, 2);
+    }
+
+    private function finalizePausedSeconds(CareBooking $booking): int
+    {
+        $totalPausedSeconds = (int) ($booking->total_paused_seconds ?? 0);
+
+        if ($booking->status === CareBooking::STATUS_PAUSED && $booking->paused_at) {
+            $totalPausedSeconds += $booking->paused_at->diffInSeconds(now());
+        }
+
+        return max(0, $totalPausedSeconds);
+    }
+
+    private function computeWorkedMinutes(CareBooking $booking, int $pausedSeconds): int
+    {
+        $anchor = $booking->started_at ?: $booking->scheduled_start_at;
+        if (! $anchor) {
+            return 0;
+        }
+
+        $elapsedSeconds = max(0, $anchor->diffInSeconds(now()) - $pausedSeconds);
+
+        return (int) floor($elapsedSeconds / 60);
     }
 
     private function formatWorkedDuration(int $workedMinutes): string

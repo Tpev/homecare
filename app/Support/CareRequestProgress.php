@@ -80,7 +80,7 @@ class CareRequestProgress
             $booking = $request->relationLoaded('booking')
                 ? $request->booking
                 : $request->booking()->first();
-            if ($booking && in_array($booking->status, [CareBooking::STATUS_SCHEDULED, CareBooking::STATUS_IN_PROGRESS], true)) {
+            if ($booking && in_array($booking->status, [CareBooking::STATUS_SCHEDULED, CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED], true)) {
                 return [
                     'title' => 'Shift is active',
                     'action' => 'Track shift operations',

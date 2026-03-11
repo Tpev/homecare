@@ -13,6 +13,7 @@ class CareBooking extends Model
 
     public const STATUS_SCHEDULED = 'scheduled';
     public const STATUS_IN_PROGRESS = 'in_progress';
+    public const STATUS_PAUSED = 'paused';
     public const STATUS_COMPLETED = 'completed';
     public const STATUS_DISPUTED = 'disputed';
     public const STATUS_REVIEWED = 'reviewed';
@@ -35,7 +36,8 @@ class CareBooking extends Model
         'check_in_accuracy_meters',
         'check_in_source',
         'check_in_note',
-        'heartbeat_pinged_at',
+        'paused_at',
+        'total_paused_seconds',
         'completed_at',
         'check_out_lat',
         'check_out_lng',
@@ -72,7 +74,8 @@ class CareBooking extends Model
             'check_in_lat' => 'decimal:7',
             'check_in_lng' => 'decimal:7',
             'check_in_accuracy_meters' => 'decimal:2',
-            'heartbeat_pinged_at' => 'datetime',
+            'paused_at' => 'datetime',
+            'total_paused_seconds' => 'integer',
             'completed_at' => 'datetime',
             'check_out_lat' => 'decimal:7',
             'check_out_lng' => 'decimal:7',
