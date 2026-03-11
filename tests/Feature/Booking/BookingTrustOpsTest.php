@@ -237,6 +237,41 @@ class BookingTrustOpsTest extends TestCase
         ]);
     }
 
+    public function test_caregiver_review_form_is_replaced_after_submission(): void
+    {
+        [$family, $caregiver, $request, $application] = $this->seedHireScenario();
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $booking->update([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'timesheet_submitted_at' => now(),
+        ]);
+
+        Livewire::actingAs($caregiver)
+            ->test(ApplyToCareRequest::class, ['careRequest' => $request->id])
+            ->assertSee('Tap stars to rate this shift.')
+            ->set('reviewRating', 5)
+            ->set('reviewComment', 'Clear request, smooth shift, and respectful communication.')
+            ->call('submitReview');
+
+        $this->assertDatabaseHas('care_reviews', [
+            'care_booking_id' => $booking->id,
+            'reviewer_user_id' => $caregiver->id,
+            'rating' => 5,
+        ]);
+
+        Livewire::actingAs($caregiver)
+            ->test(ApplyToCareRequest::class, ['careRequest' => $request->id])
+            ->assertSee('Your review')
+            ->assertSee('Review submitted successfully.')
+            ->assertDontSee('Submit review');
+    }
+
     /**
      * @return array{User,User,CareRequest,CareRequestApplication}
      */

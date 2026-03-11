@@ -5,6 +5,10 @@
 
     @php
         $booking = $existingApplication?->booking;
+        $caregiverReview = $booking?->reviews?->firstWhere('reviewer_user_id', (int) auth()->id());
+        $canLeaveReview = $booking
+            && in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true)
+            && ! $caregiverReview;
         $ratePerHour = (float) ($existingApplication?->proposed_rate ?? auth()->user()->caregiverProfile?->resolvePlatformHourlyRate() ?? 0);
         $canEditApplication = $requestItem->status === \App\Models\CareRequest::STATUS_OPEN;
         $canCheckIn = $booking
@@ -56,40 +60,40 @@
             </div>
         </x-slot:header>
 
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
             <button
                 type="button"
                 wire:click="setActiveTab('overview')"
-                class="{{ $activeTab === 'overview' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-lg border px-4 py-3 text-left transition"
+                class="{{ $activeTab === 'overview' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-lg border px-3 py-2 text-left transition"
             >
-                <p class="font-display text-base font-semibold">Overview</p>
+                <p class="font-display text-sm font-semibold md:text-base">Overview</p>
                 <p class="text-xs opacity-80">Request details and tasks</p>
             </button>
 
             <button
                 type="button"
                 wire:click="setActiveTab('application')"
-                class="{{ $activeTab === 'application' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-lg border px-4 py-3 text-left transition"
+                class="{{ $activeTab === 'application' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-lg border px-3 py-2 text-left transition"
             >
-                <p class="font-display text-base font-semibold">Application</p>
+                <p class="font-display text-sm font-semibold md:text-base">Application</p>
                 <p class="text-xs opacity-80">{{ $existingApplication ? 'Your proposal' : 'Apply to this request' }}</p>
             </button>
 
             <button
                 type="button"
                 wire:click="setActiveTab('shift')"
-                class="{{ $activeTab === 'shift' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-lg border px-4 py-3 text-left transition"
+                class="{{ $activeTab === 'shift' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-lg border px-3 py-2 text-left transition"
             >
-                <p class="font-display text-base font-semibold">Shift</p>
+                <p class="font-display text-sm font-semibold md:text-base">Shift</p>
                 <p class="text-xs opacity-80">{{ $booking ? 'Check in, track, complete' : 'Not hired yet' }}</p>
             </button>
 
             <button
                 type="button"
                 wire:click="setActiveTab('support')"
-                class="{{ $activeTab === 'support' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-lg border px-4 py-3 text-left transition"
+                class="{{ $activeTab === 'support' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-lg border px-3 py-2 text-left transition"
             >
-                <p class="font-display text-base font-semibold">Support</p>
+                <p class="font-display text-sm font-semibold md:text-base">Support</p>
                 <p class="text-xs opacity-80">Changes, incidents, disputes</p>
             </button>
         </div>
@@ -215,14 +219,17 @@
         @else
             <x-card>
                 <x-slot:header>
-                    <div class="flex items-center justify-between">
-                        <h2 class="font-display text-lg font-semibold">Shift focus mode</h2>
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <h2 class="font-display text-lg font-semibold">Shift focus mode</h2>
+                            <p class="text-xs text-slate-500">Fast mobile controls for check-in, breaks, and checkout.</p>
+                        </div>
                         <x-badge :text="strtoupper($booking->status)" color="green" />
                     </div>
                 </x-slot:header>
 
                 <div
-                    class="space-y-4 text-sm"
+                    class="space-y-3 text-sm"
                     x-data="homecareShiftFocus({
                         startedAt: @js(optional($booking->started_at)?->toIso8601String()),
                         pausedAt: @js(optional($booking->paused_at)?->toIso8601String()),
@@ -251,14 +258,15 @@
                         </button>
                     </div>
 
-                    <p class="text-slate-600" x-show="panel === 'live'" x-transition>
-                        Scheduled: {{ optional($booking->scheduled_start_at)->format('M d, Y H:i') }} - {{ optional($booking->scheduled_end_at)->format('M d, Y H:i') }}
-                    </p>
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700" x-show="panel === 'live'" x-transition>
+                        <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Scheduled window</p>
+                        <p class="font-medium">{{ optional($booking->scheduled_start_at)->format('M d, Y H:i') }} - {{ optional($booking->scheduled_end_at)->format('M d, Y H:i') }}</p>
+                    </div>
 
                     @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true))
-                        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4" x-show="panel === 'live'" x-transition>
+                        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3.5" x-show="panel === 'live'" x-transition>
                             <p class="text-xs uppercase tracking-[0.12em] text-emerald-700 font-semibold">Shift live</p>
-                            <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                                 <div class="rounded-lg border border-emerald-200 bg-white px-3 py-2">
                                     <p class="text-xs text-slate-500">Timer</p>
                                     <p class="text-xl font-semibold text-slate-900 tabular-nums" x-text="timerLabel">00:00</p>
@@ -317,14 +325,12 @@
                         @endif
                     </div>
 
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2" x-show="panel === 'details'" x-transition>
-                        <x-input label="Start note (optional)" wire:model="checkInNote" />
-                        <x-input label="End note (optional)" wire:model="checkOutNote" />
-                    </div>
-
-                    <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600" x-show="panel === 'details'" x-transition>
-                        We capture phone GPS when you start and end the shift to timestamp on-site activity.
-                    </div>
+                    @if ($canCheckIn || $canCheckOut)
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-2" x-show="panel === 'details'" x-transition>
+                            <x-input label="Start note (optional)" wire:model="checkInNote" />
+                            <x-input label="End note (optional)" wire:model="checkOutNote" />
+                        </div>
+                    @endif
 
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2" x-show="panel === 'live'" x-transition>
                         @if ($canCheckIn)
@@ -359,6 +365,9 @@
                     </div>
 
                     <p class="text-xs text-slate-500" x-show="panel === 'live' && geoMessage" x-text="geoMessage"></p>
+                    <p class="text-xs text-slate-500" x-show="panel === 'details'" x-transition>
+                        Start and end use phone GPS to verify on-site timestamps.
+                    </p>
 
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-6 text-xs text-slate-700" x-show="panel === 'details'" x-transition>
                         <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Started: {{ optional($booking->started_at)->format('M d, H:i') ?: 'Pending' }}</div>
@@ -397,9 +406,9 @@
                     @endif
 
                     @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED, \App\Models\CareBooking::STATUS_DISPUTED], true))
-                        <div class="rounded-xl border border-blue-200 bg-blue-50 p-4" x-show="panel === 'live'" x-transition>
+                        <div class="rounded-xl border border-blue-200 bg-blue-50 p-3.5" x-show="panel === 'live'" x-transition>
                             <p class="text-xs uppercase tracking-[0.12em] text-blue-700 font-semibold">Shift recap</p>
-                            <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5 text-sm">
+                            <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 text-sm">
                                 <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
                                     <p class="text-xs text-slate-500">Worked time</p>
                                     <p class="font-semibold text-slate-900">{{ $workedLabel }}</p>
@@ -487,13 +496,70 @@
 
             @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true))
                 <x-card>
-                    <x-slot:header><h2 class="font-display text-lg font-semibold">Leave a review</h2></x-slot:header>
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <x-input type="number" min="1" max="5" label="Rating (1-5)" wire:model="reviewRating" />
-                        <x-textarea label="Review comment" wire:model="reviewComment" />
-                    </div>
+                    <x-slot:header>
+                        @if ($canLeaveReview)
+                            <h2 class="font-display text-lg font-semibold">Leave a review</h2>
+                            <p class="text-xs text-slate-500">Tap stars to rate this shift.</p>
+                        @else
+                            <h2 class="font-display text-lg font-semibold">Your review</h2>
+                            <p class="text-xs text-emerald-600">Review submitted successfully.</p>
+                        @endif
+                    </x-slot:header>
+
+                    @if ($canLeaveReview)
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm font-medium text-slate-800">Rating</p>
+                                <div class="mt-2 flex items-center gap-1">
+                                    @for ($star = 1; $star <= 5; $star++)
+                                        <button
+                                            type="button"
+                                            wire:click="$set('reviewRating', {{ $star }})"
+                                            class="rounded-md p-1 transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                            aria-label="Rate {{ $star }} out of 5"
+                                        >
+                                            <svg viewBox="0 0 20 20" class="h-8 w-8 {{ ($reviewRating ?? 0) >= $star ? 'text-amber-400' : 'text-slate-300' }}" fill="currentColor" aria-hidden="true">
+                                                <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.14 3.5a1 1 0 00.95.69h3.68c.97 0 1.38 1.24.6 1.81l-2.98 2.17a1 1 0 00-.36 1.12l1.14 3.5c.3.92-.75 1.68-1.54 1.12l-2.98-2.17a1 1 0 00-1.18 0l-2.98 2.17c-.79.57-1.84-.2-1.54-1.12l1.14-3.5a1 1 0 00-.36-1.12L2.68 8.93c-.78-.57-.37-1.81.6-1.81h3.68a1 1 0 00.95-.69l1.14-3.5z"/>
+                                            </svg>
+                                        </button>
+                                    @endfor
+                                </div>
+                                <p class="mt-1 text-xs text-slate-500">
+                                    @if ($reviewRating)
+                                        Selected rating: {{ $reviewRating }}/5
+                                    @else
+                                        No rating selected yet.
+                                    @endif
+                                </p>
+                                @error('reviewRating') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                            </div>
+
+                            <x-textarea label="Review comment" wire:model="reviewComment" />
+                            @error('reviewComment') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                    @else
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-1">
+                                @for ($star = 1; $star <= 5; $star++)
+                                    <svg viewBox="0 0 20 20" class="h-6 w-6 {{ ((int) ($caregiverReview?->rating ?? 0)) >= $star ? 'text-amber-400' : 'text-slate-300' }}" fill="currentColor" aria-hidden="true">
+                                        <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.14 3.5a1 1 0 00.95.69h3.68c.97 0 1.38 1.24.6 1.81l-2.98 2.17a1 1 0 00-.36 1.12l1.14 3.5c.3.92-.75 1.68-1.54 1.12l-2.98-2.17a1 1 0 00-1.18 0l-2.98 2.17c-.79.57-1.84-.2-1.54-1.12l1.14-3.5a1 1 0 00-.36-1.12L2.68 8.93c-.78-.57-.37-1.81.6-1.81h3.68a1 1 0 00.95-.69l1.14-3.5z"/>
+                                    </svg>
+                                @endfor
+                                <span class="ml-1 text-sm font-medium text-slate-700">{{ (int) ($caregiverReview?->rating ?? 0) }}/5</span>
+                            </div>
+
+                            @if ($caregiverReview?->comment)
+                                <p class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">{{ $caregiverReview->comment }}</p>
+                            @else
+                                <p class="text-sm text-slate-500">No additional comment was provided.</p>
+                            @endif
+                        </div>
+                    @endif
+
                     <x-slot:footer>
-                        <x-button color="amber" wire:click="submitReview">Submit review</x-button>
+                        @if ($canLeaveReview)
+                            <x-button color="amber" wire:click="submitReview">Submit review</x-button>
+                        @endif
                     </x-slot:footer>
                 </x-card>
             @endif
