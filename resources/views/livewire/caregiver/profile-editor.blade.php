@@ -12,7 +12,7 @@
         </x-slot:header>
 
         @if ($profile->status === 'under_review')
-            <x-alert color="yellow">Under review. Typical review time: a few hours.</x-alert>
+            <x-alert color="yellow">Under review. Typical review time: up to 1 business day.</x-alert>
         @endif
 
         @if ($profile->rejection_reason)
@@ -38,8 +38,15 @@
 
         <div class="space-y-4">
             <x-textarea label="Bio" wire:model="bio" />
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <x-input type="number" step="0.01" label="Hourly rate" wire:model="hourly_rate" />
+            <div class="rounded-lg border border-cyan-200 bg-cyan-50 p-3">
+                <p class="text-sm font-semibold text-cyan-900">Platform hourly rate</p>
+                <p class="text-xs text-cyan-800 mt-1">
+                    {{ $profile->platformRateLabel() }} tier ·
+                    <span class="font-semibold">${{ number_format((float) $profile->resolvePlatformHourlyRate(), 2) }}/hr</span>
+                    (managed by HomeCare).
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <x-input type="number" label="Years experience" wire:model="years_experience" />
                 <x-input label="ZIP" wire:model="service_area_zip" />
             </div>

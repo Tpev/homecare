@@ -49,8 +49,15 @@ class CycleOneOperationsTest extends TestCase
 
         Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $request->id])
-            ->call('hire', $application->id)
-            ->call('startBooking')
+            ->call('hire', $application->id);
+
+        Livewire::actingAs($caregiver)
+            ->test(ApplyToCareRequest::class, ['careRequest' => $request->id])
+            ->call('acceptBookingAgreement')
+            ->call('startBooking');
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
             ->call('completeBooking')
             ->set('reviewRating', 5)
             ->set('reviewComment', 'Reliable and kind caregiver.')
@@ -200,11 +207,14 @@ class CycleOneOperationsTest extends TestCase
             'user_id' => $caregiver->id,
             'status' => 'active',
             'bio' => str_repeat('Experienced non-medical caregiver. ', 3),
-            'hourly_rate' => 28,
+            'platform_hourly_rate' => 28,
             'years_experience' => 5,
             'service_area_zip' => '27601',
             'service_radius_miles' => 10,
             'slug' => 'ready-caregiver-'.$caregiver->id,
+            'insurance_status' => CaregiverProfile::INSURANCE_NO,
+            'identity_verified_at' => now(),
+            'identity_verification_status' => 'approved',
         ]);
 
         $skill = Skill::query()->create(['name' => 'Companionship']);

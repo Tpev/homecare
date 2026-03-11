@@ -131,4 +131,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(CaregiverIdentityVerification::class);
     }
+
+    public function notificationPreferences(): HasMany
+    {
+        return $this->hasMany(UserNotificationPreference::class);
+    }
+
+    public function notificationDeliveries(): HasMany
+    {
+        return $this->hasMany(MarketplaceNotificationDelivery::class);
+    }
 }

@@ -57,3 +57,29 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## HomeCare E2E (Playwright)
+
+Playwright end-to-end tests are configured for HomeCare core flows.
+
+Run:
+
+```bash
+npm run test:e2e
+```
+
+Headed:
+
+```bash
+npm run test:e2e:headed
+```
+
+Interactive UI mode:
+
+```bash
+npm run test:e2e:ui
+```
+
+See detailed test coverage and seeded test accounts in:
+
+- `tests/e2e/README.md`

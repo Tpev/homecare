@@ -31,7 +31,7 @@ class CaregiverOnboardingTest extends TestCase
             ->set('accept_terms', true)
             ->set('accept_independent_contractor', true)
             ->call('register')
-            ->assertRedirect(route('caregiver.onboarding', absolute: false));
+            ->assertRedirect(route('dashboard', absolute: false));
 
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', [

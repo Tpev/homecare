@@ -6,6 +6,7 @@ use App\Models\CaregiverProfile;
 use App\Models\CaregiverProfileVersion;
 use App\Models\Language;
 use App\Models\Skill;
+use App\Support\MarketplacePricing;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -15,7 +16,6 @@ class ProfileEditor extends Component
 {
     public CaregiverProfile $profile;
     public string $bio = '';
-    public ?float $hourly_rate = null;
     public ?int $years_experience = null;
     public string $city = '';
     public string $state = '';
@@ -26,6 +26,7 @@ class ProfileEditor extends Component
     public array $selectedLanguages = [];
     public array $skillOptions = [];
     public array $languageOptions = [];
+    public array $pricingTiers = [];
 
     public function mount(): void
     {
@@ -36,9 +37,9 @@ class ProfileEditor extends Component
 
         $this->skillOptions = Skill::query()->orderBy('name')->get(['id','name'])->toArray();
         $this->languageOptions = Language::query()->orderBy('name')->get(['id','name'])->toArray();
+        $this->pricingTiers = app(MarketplacePricing::class)->tiers();
 
         $this->bio = (string) $this->profile->bio;
-        $this->hourly_rate = $this->profile->hourly_rate ? (float)$this->profile->hourly_rate : null;
         $this->years_experience = $this->profile->years_experience;
         $this->city = (string)$user->city;
         $this->state = (string)$user->state;
@@ -53,7 +54,6 @@ class ProfileEditor extends Component
     {
         $this->validate([
             'bio' => ['required', 'string', 'min:40'],
-            'hourly_rate' => ['required', 'numeric', 'min:15'],
             'years_experience' => ['required', 'integer', 'min:0'],
             'city' => ['required', 'string'],
             'state' => ['required', 'string', 'size:2'],
@@ -73,7 +73,6 @@ class ProfileEditor extends Component
 
             $this->profile->update([
                 'bio' => $this->bio,
-                'hourly_rate' => $this->hourly_rate,
                 'years_experience' => $this->years_experience,
                 'service_area_zip' => $this->service_area_zip,
                 'service_radius_miles' => $this->service_radius_miles,
@@ -104,7 +103,6 @@ class ProfileEditor extends Component
         $completeness = 0;
         $checks = [
             !empty($this->bio),
-            !empty($this->hourly_rate),
             !empty($this->years_experience),
             !empty($this->service_area_zip),
             count($this->selectedSkills) > 0,

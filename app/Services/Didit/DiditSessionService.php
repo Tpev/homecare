@@ -6,6 +6,7 @@ use App\Models\CaregiverIdentityVerification;
 use App\Models\CaregiverProfile;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class DiditSessionService
@@ -17,15 +18,45 @@ class DiditSessionService
 
     public function createForCaregiver(User $user): CaregiverIdentityVerification
     {
-        $workflowId = (string) config('services.didit.workflow_id');
-        if ($workflowId === '') {
-            throw new RuntimeException('DIDIT_WORKFLOW_ID is not configured.');
-        }
-
         $profile = CaregiverProfile::query()->firstOrCreate(
             ['user_id' => $user->id],
             ['status' => 'draft']
         );
+
+        if ((bool) config('services.didit.bypass', false)) {
+            $sessionId = 'bypass_'.Str::uuid()->toString();
+            $verificationUrl = route('caregiver.verification.return');
+
+            return DB::transaction(function () use ($profile, $user, $sessionId, $verificationUrl) {
+                $verification = CaregiverIdentityVerification::query()->create([
+                    'caregiver_profile_id' => $profile->id,
+                    'user_id' => $user->id,
+                    'didit_session_id' => $sessionId,
+                    'status' => CaregiverIdentityVerification::STATUS_APPROVED,
+                    'verification_url' => $verificationUrl,
+                    'vendor_data' => 'didit_bypass',
+                    'session_payload' => ['bypass' => true],
+                    'decision_payload' => ['status' => 'Approved', 'provider' => 'didit_bypass'],
+                    'started_at' => now(),
+                    'completed_at' => now(),
+                    'approved_at' => now(),
+                ]);
+
+                $profile->forceFill([
+                    'identity_verification_status' => CaregiverIdentityVerification::STATUS_APPROVED,
+                    'identity_verification_session_id' => $sessionId,
+                    'identity_verification_checked_at' => now(),
+                    'identity_verified_at' => $profile->identity_verified_at ?: now(),
+                ])->save();
+
+                return $verification;
+            });
+        }
+
+        $workflowId = (string) config('services.didit.workflow_id');
+        if ($workflowId === '') {
+            throw new RuntimeException('DIDIT_WORKFLOW_ID is not configured.');
+        }
 
         $vendorData = 'caregiver_user_'.$user->id.'_profile_'.$profile->id;
         $callback = (string) config('services.didit.callback_url');

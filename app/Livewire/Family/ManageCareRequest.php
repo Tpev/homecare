@@ -11,9 +11,12 @@ use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
 use App\Models\CareReview;
 use App\Models\SupportTicket;
-use App\Notifications\MarketplaceAlert;
 use App\Services\Booking\BookingTrustService;
+use App\Services\Matching\CaregiverSuggestionService;
+use App\Services\Notifications\MarketplaceNotificationService;
+use App\Support\CareRequestProgress;
 use App\Support\FunnelTracker;
+use App\Support\MarketplaceEvent;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -73,7 +76,7 @@ class ManageCareRequest extends Component
                 'invitations' => fn ($query) => $query->with(['caregiver:id,name']),
                 'applications' => fn ($query) => $query->with([
                     'caregiver:id,name,email,phone,city,state',
-                    'caregiver.caregiverProfile:id,user_id,status,average_rating,reviews_count,hourly_rate',
+                    'caregiver.caregiverProfile:id,user_id,status,average_rating,reviews_count,platform_hourly_rate',
                     'conversation:id,care_request_application_id,care_request_id,caregiver_user_id',
                     'booking:id,care_request_id,care_request_application_id,status,scheduled_start_at,scheduled_end_at',
                 ]),
@@ -110,6 +113,9 @@ class ManageCareRequest extends Component
         }
 
         $application->update(['status' => CareRequestApplication::STATUS_SHORTLISTED]);
+        if (! $this->requestItem->first_shortlist_at) {
+            $this->requestItem->update(['first_shortlist_at' => now()]);
+        }
         $this->refreshRequestItem();
         session()->flash('status', 'Applicant shortlisted for follow-up.');
     }
@@ -149,6 +155,9 @@ class ManageCareRequest extends Component
                 ->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]);
 
             $this->requestItem->update(['status' => CareRequest::STATUS_FILLED]);
+            if (! $this->requestItem->first_hire_at) {
+                $this->requestItem->update(['first_hire_at' => now()]);
+            }
 
             $startAt = $this->deriveScheduledStartAt();
             $endAt = $this->deriveScheduledEndAt();
@@ -184,12 +193,17 @@ class ManageCareRequest extends Component
             );
         });
 
-        $application->caregiver?->notify(new MarketplaceAlert(
-            'You were hired',
-            'A family selected you for this care request.',
-            route('care-requests.apply', $this->requestItem->id),
-            'caregiver_hired'
-        ));
+        if ($application->caregiver) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $application->caregiver,
+                eventKey: MarketplaceEvent::CAREGIVER_HIRED,
+                title: 'You were hired',
+                body: 'A family selected you for this care request.',
+                url: route('care-requests.apply', $this->requestItem->id),
+                payload: ['care_request_id' => $this->requestItem->id],
+                subject: $application
+            );
+        }
 
         FunnelTracker::track('caregiver_hired', auth()->user(), $application, [
             'care_request_id' => $this->requestItem->id,
@@ -242,12 +256,18 @@ class ManageCareRequest extends Component
             return;
         }
 
-        $booking->caregiver?->notify(new MarketplaceAlert(
-            'Care shift completed',
-            auth()->user()->name.' marked this shift as completed.',
-            route('care-requests.apply', $this->requestItem->id),
-            'booking_completed'
-        ));
+        if ($booking->caregiver) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $booking->caregiver,
+                eventKey: MarketplaceEvent::SHIFT_COMPLETED,
+                title: 'Care shift completed',
+                body: auth()->user()->name.' marked this shift as completed.',
+                url: route('care-requests.apply', $this->requestItem->id),
+                payload: ['care_booking_id' => $booking->id],
+                subject: $booking,
+                dedupeKey: 'shift-completed:booking-'.$booking->id.'-user-'.$booking->caregiver->id
+            );
+        }
 
         FunnelTracker::track('care_booking_completed', auth()->user(), $booking);
         app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
@@ -309,12 +329,17 @@ class ManageCareRequest extends Component
             ['rating' => $this->reviewRating]
         );
 
-        $booking->caregiver?->notify(new MarketplaceAlert(
-            'New family review',
-            auth()->user()->name.' left a review after the shift.',
-            route('care-requests.apply', $this->requestItem->id),
-            'review_submitted'
-        ));
+        if ($booking->caregiver) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $booking->caregiver,
+                eventKey: MarketplaceEvent::SHIFT_COMPLETED,
+                title: 'New family review',
+                body: auth()->user()->name.' left a review after the shift.',
+                url: route('care-requests.apply', $this->requestItem->id),
+                payload: ['care_booking_id' => $booking->id, 'rating' => $this->reviewRating],
+                subject: $booking
+            );
+        }
 
         FunnelTracker::track('care_review_submitted', auth()->user(), $booking, [
             'rating' => $this->reviewRating,
@@ -366,12 +391,17 @@ class ManageCareRequest extends Component
             ]
         );
 
-        $booking->caregiver?->notify(new MarketplaceAlert(
-            'Booking change request',
-            auth()->user()->name.' requested to '.$this->changeType.' this booking.',
-            route('care-requests.apply', $this->requestItem->id),
-            'booking_change_request'
-        ));
+        if ($booking->caregiver) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $booking->caregiver,
+                eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
+                title: 'Booking change request',
+                body: auth()->user()->name.' requested to '.$this->changeType.' this booking.',
+                url: route('care-requests.apply', $this->requestItem->id),
+                payload: ['care_booking_id' => $booking->id, 'change_type' => $this->changeType],
+                subject: $changeRequest
+            );
+        }
 
         FunnelTracker::track('booking_change_requested', auth()->user(), $changeRequest, [
             'type' => $this->changeType,
@@ -411,12 +441,17 @@ class ManageCareRequest extends Component
                 'booking_change_rejected',
                 ['change_request_id' => $changeRequest->id]
             );
-            $changeRequest->requester?->notify(new MarketplaceAlert(
-                'Change request rejected',
-                'Your booking change request was rejected.',
-                route('care-requests.apply', $this->requestItem->id),
-                'booking_change_rejected'
-            ));
+            if ($changeRequest->requester) {
+                app(MarketplaceNotificationService::class)->notify(
+                    recipients: $changeRequest->requester,
+                    eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
+                    title: 'Change request rejected',
+                    body: 'Your booking change request was rejected.',
+                    url: route('care-requests.apply', $this->requestItem->id),
+                    payload: ['care_booking_id' => $booking->id, 'change_request_id' => $changeRequest->id],
+                    subject: $changeRequest
+                );
+            }
 
             $this->refreshRequestItem();
             session()->flash('status', 'Change request rejected.');
@@ -464,12 +499,17 @@ class ManageCareRequest extends Component
         );
         app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
 
-        $changeRequest->requester?->notify(new MarketplaceAlert(
-            'Change request accepted',
-            'Your booking change request was accepted.',
-            route('care-requests.apply', $this->requestItem->id),
-            'booking_change_accepted'
-        ));
+        if ($changeRequest->requester) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $changeRequest->requester,
+                eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
+                title: 'Change request accepted',
+                body: 'Your booking change request was accepted.',
+                url: route('care-requests.apply', $this->requestItem->id),
+                payload: ['care_booking_id' => $booking->id, 'change_request_id' => $changeRequest->id],
+                subject: $changeRequest
+            );
+        }
 
         $this->refreshRequestItem();
         session()->flash('status', 'Change request accepted and booking updated.');
@@ -741,6 +781,52 @@ class ManageCareRequest extends Component
         $this->redirect(route('messages.show', $conversation->id, false), navigate: true);
     }
 
+    public function inviteSuggestedCaregiver(int $caregiverUserId): void
+    {
+        if ($this->requestItem->status !== CareRequest::STATUS_OPEN) {
+            session()->flash('status', 'Invitations are available only for open requests.');
+            return;
+        }
+
+        $existsInFlow = $this->requestItem->applications()->where('caregiver_user_id', $caregiverUserId)->exists()
+            || $this->requestItem->invitations()->where('caregiver_user_id', $caregiverUserId)->exists();
+
+        if ($existsInFlow) {
+            session()->flash('status', 'Caregiver already in this request flow.');
+            return;
+        }
+
+        $invitation = CareRequestInvitation::query()->create([
+            'care_request_id' => $this->requestItem->id,
+            'family_user_id' => auth()->id(),
+            'caregiver_user_id' => $caregiverUserId,
+            'status' => CareRequestInvitation::STATUS_PENDING,
+            'message' => 'We think your profile could be a strong fit for this request.',
+            'expires_at' => now()->addHours(72),
+        ]);
+
+        $caregiver = $invitation->caregiver;
+        if ($caregiver) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $caregiver,
+                eventKey: MarketplaceEvent::MATCHING_REQUEST_REMINDER,
+                title: 'You have a new invitation',
+                body: 'A family invited you to review and apply to their request.',
+                url: route('caregiver.invitations.index'),
+                payload: ['care_request_id' => $this->requestItem->id],
+                subject: $invitation
+            );
+        }
+
+        FunnelTracker::track('care_request_invitation_sent', auth()->user(), $invitation, [
+            'care_request_id' => $this->requestItem->id,
+            'caregiver_user_id' => $caregiverUserId,
+        ]);
+
+        $this->refreshRequestItem();
+        session()->flash('status', 'Invitation sent to caregiver.');
+    }
+
     private function deriveScheduledStartAt(): ?Carbon
     {
         if ($this->requestItem->request_type === CareRequest::TYPE_ONE_TIME) {
@@ -821,7 +907,7 @@ class ManageCareRequest extends Component
             'invitations' => fn ($query) => $query->with(['caregiver:id,name']),
             'applications' => fn ($query) => $query->with([
                 'caregiver:id,name,email,phone,city,state',
-                'caregiver.caregiverProfile:id,user_id,status,average_rating,reviews_count,hourly_rate',
+                'caregiver.caregiverProfile:id,user_id,status,average_rating,reviews_count,platform_hourly_rate',
                 'conversation:id,care_request_application_id,care_request_id,caregiver_user_id',
                 'booking:id,care_request_id,care_request_application_id,status,scheduled_start_at,scheduled_end_at',
             ]),
@@ -846,6 +932,17 @@ class ManageCareRequest extends Component
 
     public function render()
     {
-        return view('livewire.family.manage-care-request');
+        $suggestedCaregivers = collect();
+        if ($this->requestItem->status === CareRequest::STATUS_OPEN) {
+            $suggestedCaregivers = app(CaregiverSuggestionService::class)
+                ->topMatchesForRequest($this->requestItem, 3);
+        }
+
+        $bestNextAction = CareRequestProgress::bestNextAction($this->requestItem);
+
+        return view('livewire.family.manage-care-request', [
+            'suggestedCaregivers' => $suggestedCaregivers,
+            'bestNextAction' => $bestNextAction,
+        ]);
     }
 }

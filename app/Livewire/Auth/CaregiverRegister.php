@@ -66,7 +66,7 @@ class CaregiverRegister extends Component
 
         Auth::login($user);
 
-        $this->redirect(route('caregiver.onboarding', absolute: false), navigate: true);
+        $this->redirect(route('dashboard', absolute: false), navigate: true);
     }
 
     public function render()

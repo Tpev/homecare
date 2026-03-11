@@ -27,7 +27,6 @@ class OnboardingWizard extends Component
     public $profile_photo = null;
 
     public string $bio = '';
-    public ?float $hourly_rate = null;
     public ?int $years_experience = null;
     public string $date_of_birth = '';
     public string $city = '';
@@ -74,7 +73,6 @@ class OnboardingWizard extends Component
         $this->languageOptions = Language::query()->orderBy('name')->get(['id', 'name'])->toArray();
 
         $this->bio = (string) $this->profile->bio;
-        $this->hourly_rate = $this->profile->hourly_rate ? (float) $this->profile->hourly_rate : null;
         $this->years_experience = $this->profile->years_experience;
         $this->date_of_birth = $user->date_of_birth?->format('Y-m-d') ?? '';
         $this->city = (string) $user->city;
@@ -96,6 +94,11 @@ class OnboardingWizard extends Component
                 'start' => substr($slot->start_time, 0, 5),
                 'end' => substr($slot->end_time, 0, 5),
             ];
+        }
+
+        $requestedStep = request()->integer('step');
+        if ($requestedStep >= 1 && $requestedStep <= $this->totalSteps) {
+            $this->step = $requestedStep;
         }
     }
 
@@ -125,7 +128,7 @@ class OnboardingWizard extends Component
     public function submitForReview(): void
     {
         $this->step = $this->totalSteps;
-        $this->validateStep();
+        $this->validateForSubmission();
 
         if (! $this->identityIsApproved()) {
             $this->addError('identity_verification', 'Please complete identity verification before submitting for review.');
@@ -133,9 +136,15 @@ class OnboardingWizard extends Component
             return;
         }
 
+        if (! $this->taskPreferencesAreComplete()) {
+            $this->addError('task_preferences', 'Select the tasks you are comfortable with before submitting.');
+
+            return;
+        }
+
         $this->saveDraft(true);
 
-        session()->flash('status', 'Profile submitted. Review usually takes a few hours.');
+        session()->flash('status', 'Profile submitted. Review usually takes up to 1 business day.');
         $this->redirect(route('dashboard', absolute: false), navigate: true);
     }
 
@@ -153,11 +162,8 @@ class OnboardingWizard extends Component
                 'selectedLanguages.*' => ['integer', Rule::exists('languages', 'id')],
             ],
             2 => [
-                'hourly_rate' => ['required', 'numeric', 'min:15', 'max:80'],
                 'service_area_zip' => ['required', 'string', 'max:15'],
                 'service_radius_miles' => ['required', 'integer', 'min:1', 'max:60'],
-                'selectedSkills' => ['required', 'array', 'min:1'],
-                'selectedSkills.*' => ['integer', Rule::exists('skills', 'id')],
             ],
             3 => [
                 'availability' => ['required', 'array'],
@@ -263,7 +269,6 @@ class OnboardingWizard extends Component
             $this->profile->fill([
                 'profile_photo_path' => $this->profile_photo_path,
                 'bio' => trim($this->bio),
-                'hourly_rate' => $this->hourly_rate,
                 'years_experience' => $this->years_experience,
                 'service_area_zip' => trim($this->service_area_zip),
                 'service_radius_miles' => $this->service_radius_miles,
@@ -330,10 +335,45 @@ class OnboardingWizard extends Component
             || $this->profile->identity_verification_status === 'approved';
     }
 
+    private function taskPreferencesAreComplete(): bool
+    {
+        $this->profile->refresh();
+
+        return $this->profile->skills()->exists();
+    }
+
+    private function insuranceIsComplete(): bool
+    {
+        $this->profile->refresh();
+
+        return $this->profile->insuranceIsComplete();
+    }
+
+    private function validateForSubmission(): void
+    {
+        $this->validate([
+            'bio' => ['required', 'string', 'min:40', 'max:2000'],
+            'years_experience' => ['required', 'integer', 'min:0', 'max:60'],
+            'date_of_birth' => ['required', 'date', 'before_or_equal:'.now()->subYears(18)->toDateString()],
+            'city' => ['required', 'string', 'max:120'],
+            'state' => ['required', Rule::in(array_keys($this->usStates))],
+            'selectedLanguages' => ['required', 'array', 'min:1'],
+            'selectedLanguages.*' => ['integer', Rule::exists('languages', 'id')],
+            'service_area_zip' => ['required', 'string', 'max:15'],
+            'service_radius_miles' => ['required', 'integer', 'min:1', 'max:60'],
+            'availability' => ['required', 'array'],
+            'is_accepting_new_clients' => ['required', 'boolean'],
+        ]);
+
+        $this->validateAvailabilityRanges();
+    }
+
     public function render()
     {
         return view('livewire.caregiver.onboarding-wizard', [
             'days' => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+            'taskPreferencesComplete' => $this->taskPreferencesAreComplete(),
+            'insuranceComplete' => $this->insuranceIsComplete(),
         ]);
     }
 }

@@ -1,0 +1,30 @@
+<?php
+
+return [
+    /*
+    |--------------------------------------------------------------------------
+    | Platform Pricing Tiers
+    |--------------------------------------------------------------------------
+    |
+    | Caregivers no longer set individual hourly pricing. The platform assigns
+    | one of these tiers. Rates are in USD/hour.
+    |
+    */
+    'default_pricing_tier' => 'standard',
+
+    'pricing_tiers' => [
+        'starter' => [
+            'label' => 'Starter',
+            'rate' => 24.00,
+        ],
+        'standard' => [
+            'label' => 'Standard',
+            'rate' => 27.00,
+        ],
+        'premium' => [
+            'label' => 'Premium',
+            'rate' => 31.00,
+        ],
+    ],
+];
+

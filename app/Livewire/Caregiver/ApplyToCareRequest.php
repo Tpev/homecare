@@ -11,9 +11,10 @@ use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\CareReview;
 use App\Models\SupportTicket;
-use App\Notifications\MarketplaceAlert;
 use App\Services\Booking\BookingTrustService;
+use App\Services\Notifications\MarketplaceNotificationService;
 use App\Support\FunnelTracker;
+use App\Support\MarketplaceEvent;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -23,7 +24,6 @@ class ApplyToCareRequest extends Component
 {
     public CareRequest $requestItem;
     public string $activeTab = 'overview';
-    public ?float $proposed_rate = null;
     public string $cover_note = '';
     public ?CareRequestApplication $existingApplication = null;
 
@@ -43,9 +43,12 @@ class ApplyToCareRequest extends Component
     public string $checkOutNote = '';
     public ?float $checkInLat = null;
     public ?float $checkInLng = null;
+    public ?float $checkInAccuracy = null;
     public ?float $checkOutLat = null;
     public ?float $checkOutLng = null;
+    public ?float $checkOutAccuracy = null;
     public string $heartbeatNote = '';
+    public array $shiftRecap = [];
 
     public string $incidentTitle = '';
     public string $incidentDescription = '';
@@ -67,7 +70,6 @@ class ApplyToCareRequest extends Component
         }
 
         if ($this->existingApplication) {
-            $this->proposed_rate = $this->existingApplication->proposed_rate ? (float) $this->existingApplication->proposed_rate : null;
             $this->cover_note = (string) $this->existingApplication->cover_note;
         }
 
@@ -98,9 +100,15 @@ class ApplyToCareRequest extends Component
         }
 
         $this->validate([
-            'proposed_rate' => ['required', 'numeric', 'min:15', 'max:200'],
             'cover_note' => ['required', 'string', 'min:40', 'max:2500'],
         ]);
+
+        $platformRate = (float) (auth()->user()->caregiverProfile?->resolvePlatformHourlyRate() ?? 0);
+        if ($platformRate <= 0) {
+            session()->flash('status', 'Your platform rate is not configured yet. Please contact support.');
+
+            return;
+        }
 
         $existing = CareRequestApplication::query()
             ->where('care_request_id', $this->requestItem->id)
@@ -121,17 +129,29 @@ class ApplyToCareRequest extends Component
             ],
             [
                 'status' => $status,
-                'proposed_rate' => $this->proposed_rate,
+                'proposed_rate' => $platformRate,
                 'cover_note' => trim($this->cover_note),
             ],
         );
 
-        $this->requestItem->family?->notify(new MarketplaceAlert(
-            'New caregiver application',
-            auth()->user()->name.' applied to your request.',
-            route('family.requests.show', $this->requestItem->id),
-            'application_submitted'
-        ));
+        if (! $this->requestItem->first_applicant_at) {
+            $this->requestItem->update(['first_applicant_at' => now()]);
+        }
+
+        if ($this->requestItem->family) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $this->requestItem->family,
+                eventKey: MarketplaceEvent::NEW_APPLICANT,
+                title: 'New caregiver application',
+                body: auth()->user()->name.' applied to your request.',
+                url: route('family.requests.show', $this->requestItem->id),
+                payload: [
+                    'care_request_id' => $this->requestItem->id,
+                    'caregiver_user_id' => (int) auth()->id(),
+                ],
+                subject: $this->existingApplication
+            );
+        }
 
         FunnelTracker::track('care_request_application_submitted', auth()->user(), $this->existingApplication, [
             'care_request_id' => $this->requestItem->id,
@@ -156,14 +176,19 @@ class ApplyToCareRequest extends Component
         $this->validate([
             'checkInLat' => ['nullable', 'numeric', 'between:-90,90'],
             'checkInLng' => ['nullable', 'numeric', 'between:-180,180'],
+            'checkInAccuracy' => ['nullable', 'numeric', 'min:0', 'max:10000'],
             'checkInNote' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $capturedByGps = ! is_null($this->checkInLat) && ! is_null($this->checkInLng);
 
         $booking->update([
             'status' => CareBooking::STATUS_IN_PROGRESS,
             'started_at' => now(),
             'check_in_lat' => $this->checkInLat,
             'check_in_lng' => $this->checkInLng,
+            'check_in_accuracy_meters' => $this->checkInAccuracy,
+            'check_in_source' => $capturedByGps ? 'browser_gps' : 'manual',
             'check_in_note' => trim($this->checkInNote) ?: null,
             'heartbeat_pinged_at' => now(),
         ]);
@@ -176,22 +201,30 @@ class ApplyToCareRequest extends Component
             [
                 'lat' => $this->checkInLat,
                 'lng' => $this->checkInLng,
+                'accuracy_meters' => $this->checkInAccuracy,
+                'source' => $capturedByGps ? 'browser_gps' : 'manual',
                 'note' => trim($this->checkInNote) ?: null,
             ]
         );
 
-        $booking->family?->notify(new MarketplaceAlert(
-            'Care shift started',
-            auth()->user()->name.' marked this shift as in progress.',
-            route('family.requests.show', $this->requestItem->id),
-            'booking_in_progress'
-        ));
+        if ($booking->family) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $booking->family,
+                eventKey: MarketplaceEvent::SHIFT_STARTED,
+                title: 'Care shift started',
+                body: auth()->user()->name.' checked in and started this shift.',
+                url: route('family.requests.show', $this->requestItem->id),
+                payload: ['care_booking_id' => $booking->id],
+                subject: $booking,
+                dedupeKey: 'shift-started:booking-'.$booking->id.'-user-'.$booking->family->id
+            );
+        }
 
         FunnelTracker::track('care_booking_started', auth()->user(), $booking);
         app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
-        $this->reset(['checkInNote', 'checkInLat', 'checkInLng']);
+        $this->reset(['checkInNote', 'checkInLat', 'checkInLng', 'checkInAccuracy']);
         $this->refreshExistingApplication();
-        session()->flash('status', 'Shift marked in progress.');
+        session()->flash('status', $capturedByGps ? 'Shift started with GPS check-in.' : 'Shift started.');
     }
 
     public function completeBooking(): void
@@ -209,6 +242,7 @@ class ApplyToCareRequest extends Component
         $this->validate([
             'checkOutLat' => ['nullable', 'numeric', 'between:-90,90'],
             'checkOutLng' => ['nullable', 'numeric', 'between:-180,180'],
+            'checkOutAccuracy' => ['nullable', 'numeric', 'min:0', 'max:10000'],
             'checkOutNote' => ['nullable', 'string', 'max:1500'],
         ]);
 
@@ -219,12 +253,20 @@ class ApplyToCareRequest extends Component
             $workedMinutes = $booking->scheduled_start_at->diffInMinutes(now());
         }
 
+        $capturedByGps = ! is_null($this->checkOutLat) && ! is_null($this->checkOutLng);
+        $ratePerHour = (float) ($this->existingApplication?->proposed_rate
+            ?: auth()->user()->caregiverProfile?->resolvePlatformHourlyRate()
+            ?: 0);
+        $estimatedEarnings = $this->calculateShiftEarnings((int) ($workedMinutes ?? 0), $ratePerHour);
+
         $booking->update([
             'status' => CareBooking::STATUS_COMPLETED,
             'completed_at' => now(),
             'timesheet_submitted_at' => now(),
             'check_out_lat' => $this->checkOutLat,
             'check_out_lng' => $this->checkOutLng,
+            'check_out_accuracy_meters' => $this->checkOutAccuracy,
+            'check_out_source' => $capturedByGps ? 'browser_gps' : 'manual',
             'check_out_note' => trim($this->checkOutNote) ?: null,
             'worked_minutes' => $workedMinutes,
         ]);
@@ -237,23 +279,58 @@ class ApplyToCareRequest extends Component
             [
                 'lat' => $this->checkOutLat,
                 'lng' => $this->checkOutLng,
+                'accuracy_meters' => $this->checkOutAccuracy,
+                'source' => $capturedByGps ? 'browser_gps' : 'manual',
                 'note' => trim($this->checkOutNote) ?: null,
                 'worked_minutes' => $workedMinutes,
+                'estimated_earnings' => $estimatedEarnings,
             ]
         );
 
-        $booking->family?->notify(new MarketplaceAlert(
-            'Care shift completed',
-            auth()->user()->name.' marked this shift as completed.',
-            route('family.requests.show', $this->requestItem->id),
-            'booking_completed'
-        ));
+        if ($booking->family) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $booking->family,
+                eventKey: MarketplaceEvent::SHIFT_COMPLETED,
+                title: 'Care shift completed',
+                body: auth()->user()->name.' checked out and submitted timesheet.',
+                url: route('family.requests.show', $this->requestItem->id),
+                payload: ['care_booking_id' => $booking->id],
+                subject: $booking,
+                dedupeKey: 'shift-completed:booking-'.$booking->id.'-user-'.$booking->family->id
+            );
+        }
 
         FunnelTracker::track('care_booking_completed', auth()->user(), $booking);
         app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
-        $this->reset(['checkOutNote', 'checkOutLat', 'checkOutLng']);
+        $this->shiftRecap = [
+            'worked_minutes' => (int) ($workedMinutes ?? 0),
+            'worked_label' => $this->formatWorkedDuration((int) ($workedMinutes ?? 0)),
+            'rate' => $ratePerHour,
+            'estimated_earnings' => $estimatedEarnings,
+            'gps_started' => ! is_null($booking->check_in_lat) && ! is_null($booking->check_in_lng),
+            'gps_completed' => $capturedByGps,
+        ];
+        $this->reset(['checkOutNote', 'checkOutLat', 'checkOutLng', 'checkOutAccuracy']);
         $this->refreshExistingApplication();
-        session()->flash('status', 'Shift marked completed and timesheet submitted.');
+        session()->flash('status', 'Shift completed. Review your recap below.');
+    }
+
+    public function startBookingWithGeo($lat, $lng, $accuracy = null): void
+    {
+        $this->checkInLat = is_numeric($lat) ? (float) $lat : null;
+        $this->checkInLng = is_numeric($lng) ? (float) $lng : null;
+        $this->checkInAccuracy = is_numeric($accuracy) ? (float) $accuracy : null;
+
+        $this->startBooking();
+    }
+
+    public function completeBookingWithGeo($lat, $lng, $accuracy = null): void
+    {
+        $this->checkOutLat = is_numeric($lat) ? (float) $lat : null;
+        $this->checkOutLng = is_numeric($lng) ? (float) $lng : null;
+        $this->checkOutAccuracy = is_numeric($accuracy) ? (float) $accuracy : null;
+
+        $this->completeBooking();
     }
 
     public function acceptBookingAgreement(): void
@@ -464,12 +541,17 @@ class ApplyToCareRequest extends Component
             ['rating' => $this->reviewRating]
         );
 
-        $booking->family?->notify(new MarketplaceAlert(
-            'New review submitted',
-            auth()->user()->name.' left a review after the shift.',
-            route('family.requests.show', $this->requestItem->id),
-            'review_submitted'
-        ));
+        if ($booking->family) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $booking->family,
+                eventKey: MarketplaceEvent::SHIFT_COMPLETED,
+                title: 'New caregiver review',
+                body: auth()->user()->name.' left a review after the shift.',
+                url: route('family.requests.show', $this->requestItem->id),
+                payload: ['care_booking_id' => $booking->id, 'rating' => $this->reviewRating],
+                subject: $booking
+            );
+        }
 
         FunnelTracker::track('care_review_submitted', auth()->user(), $booking, [
             'rating' => $this->reviewRating,
@@ -521,12 +603,17 @@ class ApplyToCareRequest extends Component
             ]
         );
 
-        $booking->family?->notify(new MarketplaceAlert(
-            'Booking change request',
-            auth()->user()->name.' requested to '.$this->changeType.' this booking.',
-            route('family.requests.show', $this->requestItem->id),
-            'booking_change_request'
-        ));
+        if ($booking->family) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $booking->family,
+                eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
+                title: 'Booking change request',
+                body: auth()->user()->name.' requested to '.$this->changeType.' this booking.',
+                url: route('family.requests.show', $this->requestItem->id),
+                payload: ['care_booking_id' => $booking->id, 'change_type' => $this->changeType],
+                subject: $changeRequest
+            );
+        }
 
         FunnelTracker::track('booking_change_requested', auth()->user(), $changeRequest, [
             'type' => $this->changeType,
@@ -568,12 +655,17 @@ class ApplyToCareRequest extends Component
                 ['change_request_id' => $changeRequest->id]
             );
 
-            $changeRequest->requester?->notify(new MarketplaceAlert(
-                'Change request rejected',
-                'Your booking change request was rejected.',
-                route('care-requests.apply', $this->requestItem->id),
-                'booking_change_rejected'
-            ));
+            if ($changeRequest->requester) {
+                app(MarketplaceNotificationService::class)->notify(
+                    recipients: $changeRequest->requester,
+                    eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
+                    title: 'Change request rejected',
+                    body: 'Your booking change request was rejected.',
+                    url: route('care-requests.apply', $this->requestItem->id),
+                    payload: ['care_booking_id' => $booking->id, 'change_request_id' => $changeRequest->id],
+                    subject: $changeRequest
+                );
+            }
 
             $this->refreshExistingApplication();
             session()->flash('status', 'Change request rejected.');
@@ -621,12 +713,17 @@ class ApplyToCareRequest extends Component
         );
         app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
 
-        $changeRequest->requester?->notify(new MarketplaceAlert(
-            'Change request accepted',
-            'Your booking change request was accepted.',
-            route('care-requests.apply', $this->requestItem->id),
-            'booking_change_accepted'
-        ));
+        if ($changeRequest->requester) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $changeRequest->requester,
+                eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
+                title: 'Change request accepted',
+                body: 'Your booking change request was accepted.',
+                url: route('care-requests.apply', $this->requestItem->id),
+                payload: ['care_booking_id' => $booking->id, 'change_request_id' => $changeRequest->id],
+                subject: $changeRequest
+            );
+        }
 
         $this->refreshExistingApplication();
         session()->flash('status', 'Change request accepted and booking updated.');
@@ -698,7 +795,7 @@ class ApplyToCareRequest extends Component
             ->where('caregiver_user_id', auth()->id())
             ->with([
                 'conversation:id,care_request_application_id,care_request_id,caregiver_user_id',
-                'booking:id,care_request_id,care_request_application_id,family_user_id,caregiver_user_id,status,scheduled_start_at,scheduled_end_at,agreement_snapshot,family_terms_accepted_at,caregiver_terms_accepted_at,started_at,check_in_lat,check_in_lng,check_in_note,heartbeat_pinged_at,completed_at,check_out_lat,check_out_lng,check_out_note,timesheet_submitted_at,expected_minutes,worked_minutes,family_confirmed_at,dispute_opened_at,dispute_opened_by_user_id,dispute_reason,dispute_status,no_show_flag,late_cancel_flag,reviewed_at,cancelled_at,cancelled_by_user_id,cancellation_reason',
+                'booking:id,care_request_id,care_request_application_id,family_user_id,caregiver_user_id,status,scheduled_start_at,scheduled_end_at,agreement_snapshot,family_terms_accepted_at,caregiver_terms_accepted_at,started_at,check_in_lat,check_in_lng,check_in_accuracy_meters,check_in_source,check_in_note,heartbeat_pinged_at,completed_at,check_out_lat,check_out_lng,check_out_accuracy_meters,check_out_source,check_out_note,timesheet_submitted_at,expected_minutes,worked_minutes,family_confirmed_at,dispute_opened_at,dispute_opened_by_user_id,dispute_reason,dispute_status,no_show_flag,late_cancel_flag,reviewed_at,cancelled_at,cancelled_by_user_id,cancellation_reason',
                 'booking.changeRequests',
                 'booking.reviews',
                 'booking.taskChecks',
@@ -706,6 +803,24 @@ class ApplyToCareRequest extends Component
                 'booking.incidents.reporter:id,name',
             ])
             ->first();
+    }
+
+    private function calculateShiftEarnings(int $workedMinutes, float $ratePerHour): float
+    {
+        if ($workedMinutes <= 0 || $ratePerHour <= 0) {
+            return 0.0;
+        }
+
+        return round(($workedMinutes / 60) * $ratePerHour, 2);
+    }
+
+    private function formatWorkedDuration(int $workedMinutes): string
+    {
+        $workedMinutes = max(0, $workedMinutes);
+        $hours = intdiv($workedMinutes, 60);
+        $minutes = $workedMinutes % 60;
+
+        return sprintf('%02d:%02d', $hours, $minutes);
     }
 
     public function render()

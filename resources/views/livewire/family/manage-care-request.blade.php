@@ -12,6 +12,9 @@
             && $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED
             && $noShowEligibleAt
             && now()->gte($noShowEligibleAt);
+        $postedAgo = \App\Support\CareRequestProgress::postedAgoLabel($requestItem);
+        $firstResponse = \App\Support\CareRequestProgress::firstResponseLabel($requestItem);
+        $firstHire = \App\Support\CareRequestProgress::firstHireLabel($requestItem);
     @endphp
 
     <x-card>
@@ -44,6 +47,26 @@
                     @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN)
                         <x-button color="blue" light wire:click="setActiveTab('applicants')">Review applicants</x-button>
                     @endif
+                </div>
+            </div>
+
+            <div class="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Best next action</p>
+                    <p class="mt-1 font-display text-base font-semibold text-slate-900">{{ $bestNextAction['title'] }}</p>
+                    <p class="mt-1 text-sm text-slate-600">{{ $bestNextAction['action'] }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-3">
+                    <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Response metrics</p>
+                    <p class="mt-1 text-sm text-slate-700">Posted: <span class="font-semibold text-slate-900">{{ $postedAgo }}</span></p>
+                    <p class="text-sm text-slate-700">First response: <span class="font-semibold text-slate-900">{{ $firstResponse }}</span></p>
+                    <p class="text-sm text-slate-700">First hire: <span class="font-semibold text-slate-900">{{ $firstHire }}</span></p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-3">
+                    <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Pipeline status</p>
+                    <p class="mt-1 text-sm text-slate-700">Applicants: <span class="font-semibold text-slate-900">{{ $requestItem->applications->count() }}</span></p>
+                    <p class="text-sm text-slate-700">Invites sent: <span class="font-semibold text-slate-900">{{ $requestItem->invitations->count() }}</span></p>
+                    <p class="text-sm text-slate-700">Shift: <span class="font-semibold text-slate-900">{{ strtoupper($booking?->status ?? 'NONE') }}</span></p>
                 </div>
             </div>
         </x-slot:header>
@@ -169,7 +192,7 @@
                         <div>
                             <p class="font-display text-lg font-semibold text-slate-900">{{ $hiredApplication->caregiver->name }}</p>
                             <p class="text-sm text-slate-600">
-                                Proposed rate: ${{ number_format((float) $hiredApplication->proposed_rate, 2) }}/hr
+                                Platform rate: ${{ number_format((float) $hiredApplication->proposed_rate, 2) }}/hr
                             </p>
                         </div>
                         <div class="flex items-center gap-2">
@@ -202,6 +225,64 @@
             </x-slot:header>
 
             @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN)
+                <div class="mb-5 rounded-xl border border-cyan-200 bg-cyan-50 p-4">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-xs uppercase tracking-[0.12em] text-cyan-700">Smart shortlist</p>
+                            <h3 class="font-display text-lg font-semibold text-slate-900">Top suggested caregivers for this request</h3>
+                            <p class="text-sm text-slate-600">Invite individually to accelerate first response.</p>
+                        </div>
+                    </div>
+
+                    @if ($suggestedCaregivers->isNotEmpty())
+                        <div class="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-3">
+                            @foreach ($suggestedCaregivers as $suggestion)
+                                <div class="rounded-xl border border-cyan-200 bg-white p-3">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div>
+                                            <p class="font-display font-semibold text-slate-900">{{ $suggestion['name'] }}</p>
+                                            <p class="text-xs text-slate-600">{{ $suggestion['proximity'] }} • Match score {{ $suggestion['score'] }}</p>
+                                        </div>
+                                        <span class="inline-flex rounded-full bg-cyan-100 px-2 py-1 text-[11px] font-medium text-cyan-700">
+                                            ${{ number_format((float) $suggestion['hourly_rate'], 2) }}/hr
+                                        </span>
+                                    </div>
+
+                                    <div class="mt-2 flex flex-wrap gap-1">
+                                        @if ($suggestion['identity_verified'])
+                                            <span class="inline-flex rounded-full bg-sky-100 px-2 py-1 text-[11px] font-medium text-sky-700">Identity verified</span>
+                                        @endif
+                                        @if ($suggestion['background_check'])
+                                            <span class="inline-flex rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-medium text-emerald-700">Background check</span>
+                                        @endif
+                                        @if ($suggestion['top_caregiver'])
+                                            <span class="inline-flex rounded-full bg-amber-100 px-2 py-1 text-[11px] font-medium text-amber-700">Top caregiver</span>
+                                        @endif
+                                    </div>
+
+                                    <p class="mt-2 text-xs text-slate-600">
+                                        Rating {{ number_format((float) $suggestion['average_rating'], 1) }} ({{ (int) $suggestion['reviews_count'] }} reviews)
+                                    </p>
+
+                                    <p class="mt-2 text-xs text-slate-500">{{ implode(' • ', array_slice($suggestion['reasons'], 0, 2)) }}</p>
+
+                                    <div class="mt-3">
+                                        <x-button color="blue" light wire:click="inviteSuggestedCaregiver({{ $suggestion['user_id'] }})">
+                                            Invite caregiver
+                                        </x-button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="mt-3 rounded-lg border border-dashed border-cyan-300 bg-white px-3 py-3 text-sm text-slate-600">
+                            No auto-suggestions yet. You can still review incoming applicants as they arrive.
+                        </div>
+                    @endif
+                </div>
+            @endif
+
+            @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN)
                 <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                     <x-select.styled label="Status" wire:model.live="applicationStatus" :options="$applicationStatusOptions" />
                     <x-select.styled
@@ -230,7 +311,7 @@
                                 <p class="text-sm text-slate-600">
                                     {{ $application->caregiver->city }}, {{ $application->caregiver->state }}
                                     @if ($application->caregiver->caregiverProfile)
-                                        • Profile rate ${{ number_format((float) $application->caregiver->caregiverProfile->hourly_rate, 2) }}/hr
+                                        • Platform rate ${{ number_format((float) ($application->caregiver->caregiverProfile?->platform_hourly_rate ?? 0), 2) }}/hr
                                     @endif
                                 </p>
                             </div>
@@ -238,7 +319,7 @@
                         </div>
 
                         @if ($application->proposed_rate)
-                            <p class="mt-2 text-sm"><span class="font-medium">Proposed:</span> ${{ number_format((float) $application->proposed_rate, 2) }}/hr</p>
+                            <p class="mt-2 text-sm"><span class="font-medium">Platform rate:</span> ${{ number_format((float) $application->proposed_rate, 2) }}/hr</p>
                         @endif
 
                         <p class="mt-2 whitespace-pre-line text-sm text-slate-700">{{ $application->cover_note }}</p>

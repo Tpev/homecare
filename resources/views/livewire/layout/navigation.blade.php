@@ -132,7 +132,11 @@ new class extends Component
             $primaryLinks[] = [
                 'label' => 'My Caregiver Profile',
                 'href' => route('caregiver.profile.edit'),
-                'active' => request()->routeIs('caregiver.profile.edit') || request()->routeIs('caregiver.onboarding'),
+                'active' => request()->routeIs('caregiver.profile.edit')
+                    || request()->routeIs('caregiver.onboarding')
+                    || request()->routeIs('caregiver.tasks.edit')
+                    || request()->routeIs('caregiver.insurance.edit')
+                    || request()->routeIs('caregiver.video.edit'),
             ];
         }
 

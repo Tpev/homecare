@@ -5,12 +5,18 @@
 
     @php
         $booking = $existingApplication?->booking;
+        $ratePerHour = (float) ($existingApplication?->proposed_rate ?? auth()->user()->caregiverProfile?->resolvePlatformHourlyRate() ?? 0);
         $canEditApplication = $requestItem->status === \App\Models\CareRequest::STATUS_OPEN;
         $canCheckIn = $booking
             && $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED
             && $booking->caregiver_terms_accepted_at !== null;
         $canCheckOut = $booking && $booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS;
         $canHeartbeat = $booking && $booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS;
+        $workedMinutes = (int) ($booking?->worked_minutes ?? 0);
+        $workedHours = intdiv($workedMinutes, 60);
+        $workedRemainingMinutes = $workedMinutes % 60;
+        $workedLabel = sprintf('%02d:%02d', $workedHours, $workedRemainingMinutes);
+        $estimatedEarnings = $workedMinutes > 0 ? round(($workedMinutes / 60) * $ratePerHour, 2) : 0;
     @endphp
 
     <x-card>
@@ -167,8 +173,12 @@
 
             @if ($canEditApplication)
                 <div class="space-y-4">
-                    <x-input type="number" step="0.01" min="15" max="200" label="Your proposed hourly rate ($)" wire:model="proposed_rate" />
-                    @error('proposed_rate') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                    <div class="rounded-md border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm text-cyan-900">
+                        Platform rate applied automatically:
+                        <span class="font-semibold">
+                            ${{ number_format((float) (auth()->user()->caregiverProfile?->resolvePlatformHourlyRate() ?? 0), 2) }}/hr
+                        </span>
+                    </div>
 
                     <x-textarea label="Cover note" wire:model="cover_note" hint="Explain your relevant experience for this request." />
                     @error('cover_note') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
@@ -182,7 +192,7 @@
             @elseif ($existingApplication)
                 <div class="space-y-3 text-sm">
                     <p><span class="font-medium">Status:</span> {{ strtoupper($existingApplication->status) }}</p>
-                    <p><span class="font-medium">Proposed rate:</span> ${{ number_format((float) $existingApplication->proposed_rate, 2) }}/hr</p>
+                    <p><span class="font-medium">Platform rate:</span> ${{ number_format((float) $existingApplication->proposed_rate, 2) }}/hr</p>
                     <p class="whitespace-pre-line text-slate-700">{{ $existingApplication->cover_note ?: '-' }}</p>
                 </div>
             @else
@@ -208,10 +218,35 @@
                     </div>
                 </x-slot:header>
 
-                <div class="space-y-4 text-sm">
+                <div
+                    class="space-y-4 text-sm"
+                    x-data="homecareShiftTracker({
+                        startedAt: @js(optional($booking->started_at)?->toIso8601String()),
+                        ratePerHour: @js($ratePerHour),
+                        canCheckIn: @js((bool) $canCheckIn),
+                        canCheckOut: @js((bool) $canCheckOut),
+                    })"
+                    x-init="init()"
+                >
                     <p class="text-slate-600">
                         Scheduled: {{ optional($booking->scheduled_start_at)->format('M d, Y H:i') }} - {{ optional($booking->scheduled_end_at)->format('M d, Y H:i') }}
                     </p>
+
+                    @if ($booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS)
+                        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                            <p class="text-xs uppercase tracking-[0.12em] text-emerald-700 font-semibold">Shift live</p>
+                            <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <div class="rounded-lg border border-emerald-200 bg-white px-3 py-2">
+                                    <p class="text-xs text-slate-500">Timer</p>
+                                    <p class="text-xl font-semibold text-slate-900 tabular-nums" x-text="timerLabel">00:00</p>
+                                </div>
+                                <div class="rounded-lg border border-emerald-200 bg-white px-3 py-2">
+                                    <p class="text-xs text-slate-500">Estimated earnings so far</p>
+                                    <p class="text-xl font-semibold text-slate-900 tabular-nums" x-text="earningsLabel">$0.00</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
 
                     <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
                         <p class="font-medium text-slate-900">Agreement</p>
@@ -251,25 +286,38 @@
                     @endif
 
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <x-input label="Check-in note" wire:model="checkInNote" />
-                        <div class="grid grid-cols-2 gap-2">
-                            <x-input type="number" step="0.0000001" label="Check-in lat" wire:model="checkInLat" />
-                            <x-input type="number" step="0.0000001" label="Check-in lng" wire:model="checkInLng" />
-                        </div>
+                        <x-input label="Start note (optional)" wire:model="checkInNote" />
+                        <x-input label="End note (optional)" wire:model="checkOutNote" />
                     </div>
 
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <x-input label="Check-out note" wire:model="checkOutNote" />
-                        <div class="grid grid-cols-2 gap-2">
-                            <x-input type="number" step="0.0000001" label="Check-out lat" wire:model="checkOutLat" />
-                            <x-input type="number" step="0.0000001" label="Check-out lng" wire:model="checkOutLng" />
-                        </div>
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                        We capture phone GPS when you start and end the shift to timestamp on-site activity.
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2">
-                        <x-button color="blue" light wire:click="startBooking" :disabled="! $canCheckIn">Check in / Start</x-button>
-                        <x-button color="green" light wire:click="completeBooking" :disabled="! $canCheckOut">Check out / Submit timesheet</x-button>
+                        <x-button
+                            color="blue"
+                            light
+                            :disabled="! $canCheckIn"
+                            x-bind:disabled="geoLoading || !canCheckIn"
+                            x-on:click.prevent="startWithGps()"
+                        >
+                            <span x-show="!geoLoading">Start shift</span>
+                            <span x-show="geoLoading">Capturing GPS...</span>
+                        </x-button>
+                        <x-button
+                            color="green"
+                            light
+                            :disabled="! $canCheckOut"
+                            x-bind:disabled="geoLoading || !canCheckOut"
+                            x-on:click.prevent="endWithGps()"
+                        >
+                            <span x-show="!geoLoading">End shift</span>
+                            <span x-show="geoLoading">Capturing GPS...</span>
+                        </x-button>
                     </div>
+
+                    <p class="text-xs text-slate-500" x-show="geoMessage" x-text="geoMessage"></p>
 
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                         <x-input label="Heartbeat note" wire:model="heartbeatNote" />
@@ -278,9 +326,31 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-4 text-xs text-slate-700">
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-6 text-xs text-slate-700">
                         <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Started: {{ optional($booking->started_at)->format('M d, H:i') ?: 'Pending' }}</div>
                         <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Checked out: {{ optional($booking->completed_at)->format('M d, H:i') ?: 'Pending' }}</div>
+                        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                            Start GPS:
+                            @if ($booking->check_in_lat && $booking->check_in_lng)
+                                Captured
+                                @if ($booking->check_in_accuracy_meters)
+                                    ({{ number_format((float) $booking->check_in_accuracy_meters, 0) }}m)
+                                @endif
+                            @else
+                                Missing
+                            @endif
+                        </div>
+                        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                            End GPS:
+                            @if ($booking->check_out_lat && $booking->check_out_lng)
+                                Captured
+                                @if ($booking->check_out_accuracy_meters)
+                                    ({{ number_format((float) $booking->check_out_accuracy_meters, 0) }}m)
+                                @endif
+                            @else
+                                Pending
+                            @endif
+                        </div>
                         <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Family confirmed: {{ optional($booking->family_confirmed_at)->format('M d, H:i') ?: 'Pending' }}</div>
                         <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Heartbeat: {{ optional($booking->heartbeat_pinged_at)->format('M d, H:i') ?: 'None' }}</div>
                     </div>
@@ -289,6 +359,32 @@
                         <p class="text-xs text-slate-600">
                             Minutes: expected {{ $booking->expected_minutes ?? '-' }} • worked {{ $booking->worked_minutes ?? '-' }}
                         </p>
+                    @endif
+
+                    @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED, \App\Models\CareBooking::STATUS_DISPUTED], true))
+                        <div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                            <p class="text-xs uppercase tracking-[0.12em] text-blue-700 font-semibold">Shift recap</p>
+                            <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+                                <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
+                                    <p class="text-xs text-slate-500">Worked time</p>
+                                    <p class="font-semibold text-slate-900">{{ $workedLabel }}</p>
+                                </div>
+                                <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
+                                    <p class="text-xs text-slate-500">Rate</p>
+                                    <p class="font-semibold text-slate-900">${{ number_format($ratePerHour, 2) }}/hr</p>
+                                </div>
+                                <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
+                                    <p class="text-xs text-slate-500">Estimated earnings</p>
+                                    <p class="font-semibold text-slate-900">${{ number_format($estimatedEarnings, 2) }}</p>
+                                </div>
+                                <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
+                                    <p class="text-xs text-slate-500">GPS verification</p>
+                                    <p class="font-semibold text-slate-900">
+                                        {{ ($booking->check_in_lat && $booking->check_in_lng && $booking->check_out_lat && $booking->check_out_lng) ? 'Start + End captured' : 'Partial capture' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     @endif
 
                     <details class="rounded-lg border border-slate-200 bg-white p-3">
@@ -448,3 +544,90 @@
         @endif
     @endif
 </div>
+
+<script>
+    if (! window.homecareShiftTracker) {
+        window.homecareShiftTracker = function (config) {
+            return {
+                startedAt: config.startedAt || null,
+                ratePerHour: Number(config.ratePerHour || 0),
+                canCheckIn: Boolean(config.canCheckIn),
+                canCheckOut: Boolean(config.canCheckOut),
+                geoLoading: false,
+                geoMessage: '',
+                timerLabel: '00:00',
+                earningsLabel: '$0.00',
+                tickHandle: null,
+                init() {
+                    this.updateLiveCounters();
+                    this.tickHandle = setInterval(() => this.updateLiveCounters(), 1000);
+                },
+                elapsedSeconds() {
+                    if (!this.startedAt) {
+                        return 0;
+                    }
+
+                    const start = new Date(this.startedAt).getTime();
+                    if (!Number.isFinite(start)) {
+                        return 0;
+                    }
+
+                    return Math.max(0, Math.floor((Date.now() - start) / 1000));
+                },
+                updateLiveCounters() {
+                    const elapsed = this.elapsedSeconds();
+                    const hours = Math.floor(elapsed / 3600);
+                    const minutes = Math.floor((elapsed % 3600) / 60);
+                    this.timerLabel = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
+                    const earned = (elapsed / 3600) * this.ratePerHour;
+                    this.earningsLabel = `$${earned.toFixed(2)}`;
+                },
+                startWithGps() {
+                    if (!this.canCheckIn || this.geoLoading) {
+                        return;
+                    }
+
+                    this.capturePositionAndCall('startBookingWithGeo', 'Starting shift...');
+                },
+                endWithGps() {
+                    if (!this.canCheckOut || this.geoLoading) {
+                        return;
+                    }
+
+                    this.capturePositionAndCall('completeBookingWithGeo', 'Ending shift...');
+                },
+                capturePositionAndCall(methodName, successMessage) {
+                    if (!navigator.geolocation) {
+                        this.geoMessage = 'GPS is not available on this device/browser.';
+                        return;
+                    }
+
+                    this.geoLoading = true;
+                    this.geoMessage = 'Capturing GPS location...';
+
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const lat = Number(position.coords.latitude);
+                            const lng = Number(position.coords.longitude);
+                            const accuracy = Number(position.coords.accuracy || 0);
+
+                            this.geoMessage = successMessage;
+                            this.$wire[methodName](lat, lng, accuracy);
+                            this.geoLoading = false;
+                        },
+                        () => {
+                            this.geoMessage = 'Could not capture GPS. Enable location permissions and retry.';
+                            this.geoLoading = false;
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 15000,
+                            maximumAge: 0,
+                        }
+                    );
+                },
+            };
+        };
+    }
+</script>

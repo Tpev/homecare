@@ -5,9 +5,10 @@ namespace App\Livewire\Caregiver;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
-use App\Notifications\MarketplaceAlert;
+use App\Services\Notifications\MarketplaceNotificationService;
 use App\Support\CaregiverResponseMetrics;
 use App\Support\FunnelTracker;
+use App\Support\MarketplaceEvent;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -67,17 +68,29 @@ class InvitationsIndex extends Component
                 'care_request_application_id' => $application->id,
             ]);
 
+            if ($invitation->careRequest) {
+                $invitation->careRequest->forceFill([
+                    'first_applicant_at' => $invitation->careRequest->first_applicant_at ?: now(),
+                    'first_shortlist_at' => $invitation->careRequest->first_shortlist_at ?: now(),
+                ])->save();
+            }
+
             return CareRequestConversation::findOrCreateForApplication($application->loadMissing('careRequest'), auth()->id());
         });
 
         CaregiverResponseMetrics::recomputeForCaregiver((int) auth()->id());
 
-        $invitation->family?->notify(new MarketplaceAlert(
-            'Invitation accepted',
-            auth()->user()->name.' accepted your invitation.',
-            route('family.requests.show', $invitation->care_request_id),
-            'invitation_accepted'
-        ));
+        if ($invitation->family) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $invitation->family,
+                eventKey: MarketplaceEvent::INVITE_ACCEPTED,
+                title: 'Invitation accepted',
+                body: auth()->user()->name.' accepted your invitation.',
+                url: route('family.requests.show', $invitation->care_request_id),
+                payload: ['care_request_id' => $invitation->care_request_id],
+                subject: $invitation
+            );
+        }
 
         FunnelTracker::track('care_request_invitation_accepted', auth()->user(), $invitation, [
             'care_request_id' => $invitation->care_request_id,
@@ -102,12 +115,17 @@ class InvitationsIndex extends Component
 
         CaregiverResponseMetrics::recomputeForCaregiver((int) auth()->id());
 
-        $invitation->family?->notify(new MarketplaceAlert(
-            'Invitation declined',
-            auth()->user()->name.' declined your invitation.',
-            route('family.requests.show', $invitation->care_request_id),
-            'invitation_declined'
-        ));
+        if ($invitation->family) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $invitation->family,
+                eventKey: MarketplaceEvent::INVITE_DECLINED,
+                title: 'Invitation declined',
+                body: auth()->user()->name.' declined your invitation.',
+                url: route('family.requests.show', $invitation->care_request_id),
+                payload: ['care_request_id' => $invitation->care_request_id],
+                subject: $invitation
+            );
+        }
 
         FunnelTracker::track('care_request_invitation_declined', auth()->user(), $invitation, [
             'care_request_id' => $invitation->care_request_id,

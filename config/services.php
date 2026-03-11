@@ -49,6 +49,7 @@ return [
         'callback_url' => env('DIDIT_CALLBACK_URL'),
         'base_url' => env('DIDIT_BASE_URL', 'https://verification.didit.me'),
         'timeout' => (int) env('DIDIT_TIMEOUT_SECONDS', 20),
+        'bypass' => filter_var(env('DIDIT_BYPASS', false), FILTER_VALIDATE_BOOL),
     ],
 
 ];

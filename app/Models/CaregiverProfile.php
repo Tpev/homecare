@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\MarketplacePricing;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,16 +15,27 @@ class CaregiverProfile extends Model
 {
     use HasFactory;
 
+    public const INSURANCE_NOT_PROVIDED = 'not_provided';
+    public const INSURANCE_NO = 'no_insurance';
+    public const INSURANCE_YES = 'insured';
+
     protected $fillable = [
         'user_id',
         'slug',
         'profile_photo_path',
+        'intro_video_path',
+        'intro_video_uploaded_at',
         'bio',
         'hourly_rate',
+        'pricing_tier',
+        'platform_hourly_rate',
         'years_experience',
         'service_area_zip',
         'service_radius_miles',
         'is_accepting_new_clients',
+        'insurance_status',
+        'insurance_document_path',
+        'insurance_verified_at',
         'status',
         'review_submitted_at',
         'reviewed_at',
@@ -51,7 +63,10 @@ class CaregiverProfile extends Model
     {
         return [
             'hourly_rate' => 'decimal:2',
+            'platform_hourly_rate' => 'decimal:2',
             'is_accepting_new_clients' => 'boolean',
+            'intro_video_uploaded_at' => 'datetime',
+            'insurance_verified_at' => 'datetime',
             'review_submitted_at' => 'datetime',
             'reviewed_at' => 'datetime',
             'identity_verified_at' => 'datetime',
@@ -74,6 +89,17 @@ class CaregiverProfile extends Model
         static::saving(function (self $profile): void {
             if (! $profile->slug && $profile->relationLoaded('user')) {
                 $profile->slug = Str::slug($profile->user->name . '-' . $profile->user_id);
+            }
+
+            $pricing = app(MarketplacePricing::class);
+            $profile->pricing_tier = $pricing->normalizeTier($profile->pricing_tier);
+
+            if (! $profile->platform_hourly_rate || (float) $profile->platform_hourly_rate <= 0) {
+                $profile->platform_hourly_rate = $pricing->rateForTier($profile->pricing_tier);
+            }
+
+            if (! $profile->insurance_status) {
+                $profile->insurance_status = self::INSURANCE_NOT_PROVIDED;
             }
         });
     }
@@ -149,13 +175,13 @@ class CaregiverProfile extends Model
     {
         return [
             'bio' => filled($this->bio),
-            'hourly_rate' => ! is_null($this->hourly_rate),
             'years_experience' => ! is_null($this->years_experience),
             'service_area_zip' => filled($this->service_area_zip),
             'service_radius_miles' => ! is_null($this->service_radius_miles),
-            'skills' => $this->skills()->exists(),
+            'tasks' => $this->skills()->exists(),
             'languages' => $this->languages()->exists(),
             'availability' => $this->availabilities()->exists(),
+            'identity_verification' => $this->hasIdentityVerifiedBadge(),
         ];
     }
 
@@ -170,5 +196,32 @@ class CaregiverProfile extends Model
     {
         return $this->status === 'active'
             && $this->marketplaceCompletenessPercent() >= 100;
+    }
+
+    public function insuranceIsComplete(): bool
+    {
+        if ($this->insurance_status === self::INSURANCE_NO) {
+            return true;
+        }
+
+        if ($this->insurance_status === self::INSURANCE_YES) {
+            return filled($this->insurance_document_path);
+        }
+
+        return false;
+    }
+
+    public function resolvePlatformHourlyRate(): float
+    {
+        if ($this->platform_hourly_rate && (float) $this->platform_hourly_rate > 0) {
+            return (float) $this->platform_hourly_rate;
+        }
+
+        return app(MarketplacePricing::class)->rateForTier($this->pricing_tier);
+    }
+
+    public function platformRateLabel(): string
+    {
+        return app(MarketplacePricing::class)->labelForTier($this->pricing_tier);
     }
 }

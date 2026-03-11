@@ -18,6 +18,9 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/playwright-report
+/test-results
+/database/playwright.sqlite
 /vendor
 Homestead.json
 Homestead.yaml

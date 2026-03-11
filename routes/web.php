@@ -13,9 +13,12 @@ use App\Livewire\Admin\SupportTicketsQueue;
 use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Caregiver\BrowseCareRequests;
 use App\Livewire\Caregiver\BrowseCaregivers;
+use App\Livewire\Caregiver\InsuranceSetup;
+use App\Livewire\Caregiver\IntroVideoSetup;
 use App\Livewire\Caregiver\InvitationsIndex;
 use App\Livewire\Caregiver\ProfileEditor;
 use App\Livewire\Caregiver\ShowCaregiver;
+use App\Livewire\Caregiver\TaskComfortSetup;
 use App\Livewire\Dashboard\Home as DashboardHome;
 use App\Livewire\Family\AiRequestCopilot;
 use App\Livewire\Family\CreateCareRequestWizard;
@@ -70,6 +73,9 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth', 'caregiver.role'])->group(function () {
     Route::get('/caregiver/profile/edit', ProfileEditor::class)->name('caregiver.profile.edit');
+    Route::get('/caregiver/profile/tasks', TaskComfortSetup::class)->name('caregiver.tasks.edit');
+    Route::get('/caregiver/profile/insurance', InsuranceSetup::class)->name('caregiver.insurance.edit');
+    Route::get('/caregiver/profile/intro-video', IntroVideoSetup::class)->name('caregiver.video.edit');
     Route::get('/caregiver/verification', [CaregiverIdentityVerificationController::class, 'show'])
         ->name('caregiver.verification.show');
     Route::post('/caregiver/verification/session', [CaregiverIdentityVerificationController::class, 'store'])

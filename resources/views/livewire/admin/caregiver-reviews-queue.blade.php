@@ -11,7 +11,7 @@
             </x-slot:header>
 
             <p class="text-sm text-slate-600">{{ $profile->bio }}</p>
-            <p class="text-sm mt-2">Rate: ${{ $profile->hourly_rate }}/hr</p>
+            <p class="text-sm mt-2">Platform rate: ${{ number_format((float) $profile->resolvePlatformHourlyRate(), 2) }}/hr</p>
             <p class="text-xs text-slate-500 mt-1">
                 Identity status:
                 <span class="font-semibold uppercase">{{ str_replace('_', ' ', $profile->identity_verification_status ?? 'not_started') }}</span>

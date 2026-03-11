@@ -110,9 +110,12 @@ class CareRequestMessagingTest extends TestCase
         CaregiverProfile::query()->create([
             'user_id' => $caregiver->id,
             'status' => 'active',
-            'hourly_rate' => 26,
+            'platform_hourly_rate' => 26,
             'service_area_zip' => '27601',
             'service_radius_miles' => 10,
+            'insurance_status' => CaregiverProfile::INSURANCE_NO,
+            'identity_verified_at' => now(),
+            'identity_verification_status' => 'approved',
         ]);
 
         $request = CareRequest::query()->create([

@@ -91,6 +91,10 @@ class CaregiverIdentityVerificationController extends Controller
 
     private function preflightValidationMessage(): ?string
     {
+        if ((bool) config('services.didit.bypass', false)) {
+            return null;
+        }
+
         if ((string) config('services.didit.api_key') === '') {
             return 'Didit is not configured: missing DIDIT_API_KEY.';
         }

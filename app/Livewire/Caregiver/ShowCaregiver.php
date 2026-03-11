@@ -6,8 +6,9 @@ use App\Models\CareRequest;
 use App\Models\CareRequestInvitation;
 use App\Models\CaregiverProfile;
 use App\Models\FamilyCaregiverFavorite;
-use App\Notifications\MarketplaceAlert;
+use App\Services\Notifications\MarketplaceNotificationService;
 use App\Support\FunnelTracker;
+use App\Support\MarketplaceEvent;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -76,12 +77,15 @@ class ShowCaregiver extends Component
             ]
         );
 
-        $this->caregiver->user->notify(new MarketplaceAlert(
-            'You have a new invitation',
-            'A family invited you to a care request. Please respond within 12 hours for best visibility.',
-            route('caregiver.invitations.index'),
-            'invitation_received'
-        ));
+        app(MarketplaceNotificationService::class)->notify(
+            recipients: $this->caregiver->user,
+            eventKey: MarketplaceEvent::MATCHING_REQUEST_REMINDER,
+            title: 'You have a new invitation',
+            body: 'A family invited you to a care request. Please respond within 12 hours for best visibility.',
+            url: route('caregiver.invitations.index'),
+            payload: ['care_request_id' => (int) $this->selectedCareRequestId],
+            subject: $invitation
+        );
 
         FunnelTracker::track('care_request_invitation_sent', $user, $invitation, [
             'care_request_id' => $this->selectedCareRequestId,

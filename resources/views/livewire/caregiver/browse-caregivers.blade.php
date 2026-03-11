@@ -2,7 +2,7 @@
     <section class="hc-hero">
         <p class="text-xs uppercase tracking-[0.2em] text-cyan-100">Find Caregivers</p>
         <h1 class="mt-2 text-2xl md:text-3xl font-display font-semibold">Find trusted non-medical caregivers</h1>
-        <p class="mt-2 text-sm text-cyan-100">Filter by trust badges, skills, language, and rate to shortlist faster.</p>
+        <p class="mt-2 text-sm text-cyan-100">Filter by trust badges, skills, language, and platform rate to shortlist faster.</p>
     </section>
 
     <div class="grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)] gap-6">
@@ -66,7 +66,7 @@
                                 <h3 class="font-display text-lg font-semibold text-slate-900 truncate">{{ $c->user->name }}</h3>
                                 <p class="text-sm text-slate-600">{{ $c->user->city }}, {{ $c->user->state }}</p>
                         <div class="mt-2 flex items-center gap-3 text-sm">
-                            <p class="font-semibold text-slate-900">${{ number_format((float) $c->hourly_rate, 2) }}/hr</p>
+                            <p class="font-semibold text-slate-900">${{ number_format((float) $c->resolvePlatformHourlyRate(), 2) }}/hr</p>
                             <p class="text-slate-600">⭐ {{ number_format((float) $c->average_rating, 1) }} ({{ $c->reviews_count }})</p>
                         </div>
                         @if (! is_null($c->invite_response_rate))

@@ -180,6 +180,31 @@ class BookingTrustOpsTest extends TestCase
         ]);
     }
 
+    public function test_caregiver_can_start_and_end_shift_with_browser_gps_capture(): void
+    {
+        [$family, $caregiver, $request, $application] = $this->seedHireScenario();
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        Livewire::actingAs($caregiver)
+            ->test(ApplyToCareRequest::class, ['careRequest' => $request->id])
+            ->call('acceptBookingAgreement')
+            ->call('startBookingWithGeo', 35.7796, -78.6382, 18.4)
+            ->call('completeBookingWithGeo', 35.7795, -78.6381, 16.2);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+
+        $this->assertSame(CareBooking::STATUS_COMPLETED, $booking->status);
+        $this->assertSame('browser_gps', $booking->check_in_source);
+        $this->assertSame('browser_gps', $booking->check_out_source);
+        $this->assertNotNull($booking->check_in_lat);
+        $this->assertNotNull($booking->check_out_lat);
+        $this->assertNotNull($booking->check_in_accuracy_meters);
+        $this->assertNotNull($booking->check_out_accuracy_meters);
+    }
+
     /**
      * @return array{User,User,CareRequest,CareRequestApplication}
      */
@@ -191,10 +216,11 @@ class BookingTrustOpsTest extends TestCase
             'user_id' => $caregiver->id,
             'status' => 'active',
             'bio' => str_repeat('Experienced caregiver. ', 4),
-            'hourly_rate' => 30,
+            'platform_hourly_rate' => 30,
             'years_experience' => 6,
             'service_area_zip' => '27601',
             'service_radius_miles' => 10,
+            'insurance_status' => CaregiverProfile::INSURANCE_NO,
             'identity_verified_at' => now(),
             'identity_verification_status' => 'approved',
         ]);
@@ -236,4 +262,3 @@ class BookingTrustOpsTest extends TestCase
         return [$family, $caregiver, $request, $application];
     }
 }
-

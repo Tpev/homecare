@@ -29,6 +29,7 @@ class CaregiverRegressionTest extends TestCase
             'status' => 'draft',
             'identity_verified_at' => now(),
             'identity_verification_status' => 'approved',
+            'insurance_status' => CaregiverProfile::INSURANCE_NO,
         ]);
 
         Livewire::actingAs($user)
@@ -40,7 +41,6 @@ class CaregiverRegressionTest extends TestCase
             ->set('state', 'NC')
             ->set('selectedLanguages', [$language->id])
             ->call('nextStep')
-            ->set('hourly_rate', 25)
             ->set('service_area_zip', '27601')
             ->set('service_radius_miles', 10)
             ->set('selectedSkills', [$skill->id])
@@ -104,6 +104,40 @@ class CaregiverRegressionTest extends TestCase
             ->set('selectedLanguages', [$language->id])
             ->call('nextStep')
             ->assertHasErrors(['date_of_birth']);
+    }
+
+    public function test_onboarding_requires_task_preferences_before_submit(): void
+    {
+        $language = Language::query()->create(['name' => 'English']);
+        $user = User::factory()->create(['role' => 'caregiver', 'city' => 'Raleigh', 'state' => 'NC']);
+
+        CaregiverProfile::query()->create([
+            'user_id' => $user->id,
+            'status' => 'draft',
+            'identity_verified_at' => now(),
+            'identity_verification_status' => 'approved',
+            'insurance_status' => CaregiverProfile::INSURANCE_NOT_PROVIDED,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(OnboardingWizard::class)
+            ->set('bio', str_repeat('Great caregiver profile. ', 4))
+            ->set('years_experience', 3)
+            ->set('date_of_birth', now()->subYears(25)->toDateString())
+            ->set('city', 'Raleigh')
+            ->set('state', 'NC')
+            ->set('selectedLanguages', [$language->id])
+            ->call('nextStep')
+            ->set('service_area_zip', '27601')
+            ->set('service_radius_miles', 10)
+            ->call('nextStep')
+            ->call('addRange', 1)
+            ->set('availability.1.0.start', '09:00')
+            ->set('availability.1.0.end', '12:00')
+            ->call('nextStep')
+            ->set('is_accepting_new_clients', true)
+            ->call('submitForReview')
+            ->assertHasErrors(['task_preferences']);
     }
 
     public function test_admin_can_approve_under_review_profile(): void
@@ -228,7 +262,6 @@ class CaregiverRegressionTest extends TestCase
             'user_id' => $caregiver->id,
             'status' => 'active',
             'bio' => str_repeat('Bio ', 15),
-            'hourly_rate' => 22,
             'years_experience' => 2,
             'service_area_zip' => '27601',
             'service_radius_miles' => 10,
@@ -239,7 +272,6 @@ class CaregiverRegressionTest extends TestCase
         Livewire::actingAs($caregiver)
             ->test(ProfileEditor::class)
             ->set('bio', str_repeat('Updated profile content. ', 4))
-            ->set('hourly_rate', 30)
             ->set('years_experience', 5)
             ->set('city', 'Raleigh')
             ->set('state', 'NC')
@@ -252,7 +284,6 @@ class CaregiverRegressionTest extends TestCase
         $this->assertDatabaseHas('caregiver_profiles', [
             'id' => $profile->id,
             'status' => 'active',
-            'hourly_rate' => 30.00,
         ]);
 
         $this->assertDatabaseHas('caregiver_profile_versions', [
@@ -272,10 +303,12 @@ class CaregiverRegressionTest extends TestCase
             'slug' => 'active-caregiver-1',
             'status' => 'active',
             'bio' => str_repeat('Bio ', 12),
-            'hourly_rate' => 28,
+            'platform_hourly_rate' => 28,
             'years_experience' => 4,
             'service_area_zip' => '27601',
             'service_radius_miles' => 10,
+            'insurance_status' => CaregiverProfile::INSURANCE_NO,
+            'identity_verified_at' => now(),
         ]);
         $this->markProfileMarketplaceReady($activeProfile, 'active');
 
@@ -301,13 +334,14 @@ class CaregiverRegressionTest extends TestCase
             'slug' => 'trusted-caregiver-1',
             'status' => 'active',
             'bio' => str_repeat('Bio ', 12),
-            'hourly_rate' => 30,
+            'platform_hourly_rate' => 30,
             'years_experience' => 6,
             'service_area_zip' => '27601',
             'service_radius_miles' => 10,
             'identity_verified_at' => now(),
             'background_check_verified_at' => now(),
             'top_caregiver' => true,
+            'insurance_status' => CaregiverProfile::INSURANCE_NO,
         ]);
         $this->markProfileMarketplaceReady(
             CaregiverProfile::query()->where('user_id', $caregiverUser->id)->firstOrFail(),
@@ -385,5 +419,11 @@ class CaregiverRegressionTest extends TestCase
             'start_time' => '09:00',
             'end_time' => '12:00',
         ]);
+
+        $profile->forceFill([
+            'insurance_status' => CaregiverProfile::INSURANCE_NO,
+            'identity_verified_at' => $profile->identity_verified_at ?: now(),
+            'identity_verification_status' => 'approved',
+        ])->save();
     }
 }

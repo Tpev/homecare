@@ -8,7 +8,7 @@
                 </div>
 
                 <div class="grid grid-cols-4 gap-2">
-                    @foreach ([1 => 'Profile', 2 => 'Services', 3 => 'Availability', 4 => 'Review'] as $index => $label)
+                    @foreach ([1 => 'Profile', 2 => 'Service area', 3 => 'Availability', 4 => 'Review'] as $index => $label)
                         <div class="rounded-md px-3 py-2 text-xs md:text-sm border {{ $step >= $index ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-500 border-slate-200' }}">
                             {{ $label }}
                         </div>
@@ -48,17 +48,9 @@
         @elseif ($step === 2)
             <div class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <x-input type="number" step="0.01" min="15" max="80" label="Hourly rate ($)" wire:model="hourly_rate" />
                     <x-input label="ZIP" wire:model="service_area_zip" />
                     <x-input type="number" min="1" max="60" label="Radius (miles)" wire:model="service_radius_miles" />
                 </div>
-
-                <x-select.styled
-                    wire:model="selectedSkills"
-                    multiple
-                    label="Skills"
-                    :options="collect($skillOptions)->map(fn($item)=>['label'=>$item['name'],'value'=>$item['id']])->values()->all()"
-                />
             </div>
         @elseif ($step === 3)
             <div class="space-y-4">
@@ -91,7 +83,7 @@
             <div class="space-y-4">
                 <x-checkbox label="I am accepting new clients" wire:model="is_accepting_new_clients" />
                 <div class="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                    After submit, profile goes under review for a few hours before it can go live.
+                    After submit, your profile goes under review. Expect a decision within 1 business day.
                 </div>
 
                 <div class="rounded-md border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700">
@@ -111,7 +103,43 @@
                     </div>
                 </div>
 
+                <div class="rounded-md border {{ $taskPreferencesComplete ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50' }} px-3 py-3 text-sm">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="font-medium text-slate-900">Task comfort selection</p>
+                            <p class="text-xs text-slate-600 mt-1">
+                                {{ $taskPreferencesComplete ? 'Completed. Task preferences saved.' : 'Required before submit.' }}
+                            </p>
+                        </div>
+                        <a href="{{ route('caregiver.tasks.edit') }}" wire:navigate>
+                            <x-button color="blue" sm light>Set comfortable tasks</x-button>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="rounded-md border {{ $insuranceComplete ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50' }} px-3 py-3 text-sm">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="font-medium text-slate-900">Insurance setup</p>
+                            <p class="text-xs text-slate-600 mt-1">
+                                {{ $insuranceComplete ? 'Completed. Insurance answer recorded.' : 'Optional, but recommended.' }}
+                            </p>
+                        </div>
+                        <a href="{{ route('caregiver.insurance.edit') }}" wire:navigate>
+                            <x-button color="blue" sm light>Open insurance step</x-button>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700">
+                    Optional: add an intro video to improve profile conversion.
+                    <a href="{{ route('caregiver.video.edit') }}" wire:navigate class="font-medium underline underline-offset-2 ml-1">Record / upload intro video</a>
+                </div>
+
                 @error('identity_verification')
+                    <p class="text-sm text-red-600">{{ $message }}</p>
+                @enderror
+                @error('task_preferences')
                     <p class="text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>

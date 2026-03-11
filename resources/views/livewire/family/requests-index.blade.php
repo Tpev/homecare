@@ -4,6 +4,7 @@
             <div>
                 <h1 class="text-2xl font-display font-semibold">My care requests</h1>
                 <p class="text-sm text-slate-600">Track applicants, shortlist, and hire caregivers.</p>
+                <p class="text-xs text-slate-500 mt-1">Average first response: {{ $avgFirstResponseLabel ?? '-' }}</p>
             </div>
             <div class="flex items-center gap-2">
                 <a href="{{ route('family.requests.create_ai') }}" wire:navigate>
@@ -29,6 +30,9 @@
 
         <div class="grid grid-cols-1 gap-4">
             @forelse ($requests as $request)
+                @php
+                    $nextAction = \App\Support\CareRequestProgress::bestNextAction($request);
+                @endphp
                 <x-card>
                     <div class="flex items-start justify-between gap-3">
                         <div class="space-y-1">
@@ -44,8 +48,19 @@
                             <p class="text-sm text-slate-500">
                                 Recipient: {{ $request->recipient?->full_name ?? 'Not set' }}
                             </p>
+                            <p class="text-xs text-slate-500">
+                                Posted {{ \App\Support\CareRequestProgress::postedAgoLabel($request) }}
+                                • First response {{ \App\Support\CareRequestProgress::firstResponseLabel($request) }}
+                                • First hire {{ \App\Support\CareRequestProgress::firstHireLabel($request) }}
+                            </p>
                         </div>
                         <x-badge :text="strtoupper($request->status)" color="blue" />
+                    </div>
+
+                    <div class="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                        <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Best next action</p>
+                        <p class="font-medium text-slate-900">{{ $nextAction['title'] }}</p>
+                        <p class="text-sm text-slate-600">{{ $nextAction['action'] }}</p>
                     </div>
 
                     <div class="mt-4 flex items-center justify-between">

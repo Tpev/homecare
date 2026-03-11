@@ -30,10 +30,13 @@ class CareRequestInvitationTest extends TestCase
             'slug' => 'caregiver-profile-1',
             'status' => 'active',
             'bio' => str_repeat('Experienced caregiver. ', 4),
-            'hourly_rate' => 28,
+            'platform_hourly_rate' => 28,
             'years_experience' => 5,
             'service_area_zip' => '27601',
             'service_radius_miles' => 10,
+            'insurance_status' => CaregiverProfile::INSURANCE_NO,
+            'identity_verified_at' => now(),
+            'identity_verification_status' => 'approved',
         ]);
         $skill = Skill::query()->create(['name' => 'Companionship']);
         $language = Language::query()->create(['name' => 'English']);
@@ -178,10 +181,13 @@ class CareRequestInvitationTest extends TestCase
             'status' => 'active',
             'slug' => 'caregiver-'.$caregiver->id,
             'bio' => str_repeat('Experienced caregiver. ', 4),
-            'hourly_rate' => 26,
+            'platform_hourly_rate' => 26,
             'years_experience' => 5,
             'service_area_zip' => '27601',
             'service_radius_miles' => 10,
+            'insurance_status' => CaregiverProfile::INSURANCE_NO,
+            'identity_verified_at' => now(),
+            'identity_verification_status' => 'approved',
         ]);
         $profile = CaregiverProfile::query()->where('user_id', $caregiver->id)->firstOrFail();
         $skill = Skill::query()->create(['name' => 'Companionship '.$caregiver->id]);

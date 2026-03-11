@@ -69,7 +69,7 @@ class BrowseCaregivers extends Component
             ->with(['user','skills','languages'])
             ->where('status', 'active')
             ->whereNotNull('bio')
-            ->whereNotNull('hourly_rate')
+            ->whereNotNull('platform_hourly_rate')
             ->whereNotNull('years_experience')
             ->whereNotNull('service_area_zip')
             ->whereNotNull('service_radius_miles')
@@ -93,11 +93,11 @@ class BrowseCaregivers extends Component
         }
 
         if ($this->rate_min !== null) {
-            $query->where('hourly_rate', '>=', $this->rate_min);
+            $query->where('platform_hourly_rate', '>=', $this->rate_min);
         }
 
         if ($this->rate_max !== null) {
-            $query->where('hourly_rate', '<=', $this->rate_max);
+            $query->where('platform_hourly_rate', '<=', $this->rate_max);
         }
 
         if (!empty($this->skills)) {
@@ -119,8 +119,8 @@ class BrowseCaregivers extends Component
         }
 
         match ($this->sort) {
-            'price_low' => $query->orderBy('hourly_rate'),
-            'price_high' => $query->orderByDesc('hourly_rate'),
+            'price_low' => $query->orderBy('platform_hourly_rate'),
+            'price_high' => $query->orderByDesc('platform_hourly_rate'),
             'experience' => $query->orderByDesc('years_experience'),
             'reliability' => $query->orderByDesc('reliability_score')->orderByDesc('reviews_count'),
             'top' => $query->orderByDesc('top_caregiver')->orderByDesc('average_rating')->orderByDesc('reviews_count'),

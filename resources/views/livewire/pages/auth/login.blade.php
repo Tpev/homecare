@@ -17,13 +17,6 @@ new #[Layout('layouts.guest')] class extends Component
 
         Session::regenerate();
 
-        $user = auth()->user();
-
-        if ($user && $user->role === 'caregiver' && ! $user->onboarding_completed_at) {
-            $this->redirect(route('caregiver.onboarding', absolute: false), navigate: true);
-            return;
-        }
-
         $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
     }
 }; ?>

@@ -3,6 +3,7 @@
 namespace App\Livewire\Family;
 
 use App\Models\CareRequest;
+use App\Support\CareRequestProgress;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -60,7 +61,7 @@ class RequestsIndex extends Component
     public function render()
     {
         $requests = CareRequest::query()
-            ->with(['recipient'])
+            ->with(['recipient', 'booking'])
             ->withCount(['applications'])
             ->where('family_user_id', auth()->id())
             ->when($this->status !== 'all', fn ($q) => $q->where('status', $this->status))
@@ -72,8 +73,19 @@ class RequestsIndex extends Component
             default => $requests->orderByDesc('created_at'),
         };
 
+        $paginated = $requests->paginate(10);
+
+        $avgFirstResponseMinutes = CareRequest::query()
+            ->where('family_user_id', auth()->id())
+            ->whereNotNull('first_applicant_at')
+            ->get(['created_at', 'first_applicant_at'])
+            ->avg(fn (CareRequest $request) => (int) $request->created_at->diffInMinutes($request->first_applicant_at));
+
         return view('livewire.family.requests-index', [
-            'requests' => $requests->paginate(10),
+            'requests' => $paginated,
+            'avgFirstResponseLabel' => CareRequestProgress::minutesLabel(
+                $avgFirstResponseMinutes !== null ? (int) round($avgFirstResponseMinutes) : null
+            ),
         ]);
     }
 }

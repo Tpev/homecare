@@ -97,10 +97,13 @@ class CareRequestFlowTest extends TestCase
             'user_id' => $caregiver->id,
             'status' => 'active',
             'bio' => str_repeat('Experienced caregiver. ', 4),
-            'hourly_rate' => 28,
+            'platform_hourly_rate' => 28.50,
             'years_experience' => 5,
             'service_area_zip' => '27601',
             'service_radius_miles' => 10,
+            'insurance_status' => CaregiverProfile::INSURANCE_NO,
+            'identity_verified_at' => now(),
+            'identity_verification_status' => 'approved',
         ]);
         $skill = Skill::query()->create(['name' => 'Companionship']);
         $language = Language::query()->create(['name' => 'English']);
@@ -130,7 +133,6 @@ class CareRequestFlowTest extends TestCase
 
         Livewire::actingAs($caregiver)
             ->test(ApplyToCareRequest::class, ['careRequest' => $request->id])
-            ->set('proposed_rate', 28.50)
             ->set('cover_note', str_repeat('I have relevant home care experience. ', 3))
             ->call('submit');
 

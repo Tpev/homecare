@@ -206,35 +206,100 @@
                 </div>
             </section>
         @elseif ($mode === 'caregiver')
+            @php
+                $profile = $caregiverData['profile'] ?? null;
+                $setupCards = $caregiverData['setup_cards'] ?? [];
+                $requiredCompleted = (int) ($caregiverData['required_setup_completed'] ?? 0);
+                $requiredTotal = (int) ($caregiverData['required_setup_total'] ?? 0);
+                $readyForReview = (bool) ($caregiverData['ready_for_review'] ?? false);
+                $canSubmitForReview = (bool) ($caregiverData['can_submit_for_review'] ?? false);
+            @endphp
+
             <section class="hc-hero">
                 <p class="text-xs uppercase tracking-[0.2em] text-emerald-100">Caregiver Dashboard</p>
-                <h1 class="text-2xl md:text-3xl font-display font-semibold mt-2">Welcome back, {{ auth()->user()->name }}</h1>
-                <p class="mt-2 text-emerald-100">Track your applications, messages, and profile readiness.</p>
-                <div class="mt-4 flex flex-wrap gap-2">
-                    <a href="{{ route('care-requests.index') }}" wire:navigate><x-button color="white">Browse Requests</x-button></a>
-                    <a href="{{ route('messages.index') }}" wire:navigate><x-button color="white" light>Messages</x-button></a>
-                    <a href="{{ route('caregiver.profile.edit') }}" wire:navigate><x-button color="white" light>Edit Profile</x-button></a>
+                <div class="mt-3 grid grid-cols-1 gap-5 lg:grid-cols-5">
+                    <div class="lg:col-span-3">
+                        <h1 class="text-3xl md:text-4xl font-display font-semibold leading-tight">Build a trusted profile and go live.</h1>
+                        <p class="mt-3 text-emerald-100 max-w-2xl">
+                            Complete the remaining setup cards below, then submit your profile. Reviews usually complete within 1 business day.
+                        </p>
+                        <div class="mt-5 flex flex-wrap gap-2">
+                            <a href="{{ route('care-requests.index') }}" wire:navigate><x-button color="white">Browse Requests</x-button></a>
+                            <a href="{{ route('messages.index') }}" wire:navigate><x-button color="white" light>Messages</x-button></a>
+                            <a href="{{ route('caregiver.profile.edit') }}" wire:navigate><x-button color="white" light>Edit Profile</x-button></a>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 grid grid-cols-2 gap-3">
+                        <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
+                            <p class="text-[11px] uppercase tracking-[0.14em] text-emerald-100">Required done</p>
+                            <p class="mt-1 text-3xl font-semibold">{{ $requiredCompleted }}/{{ $requiredTotal }}</p>
+                        </div>
+                        <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
+                            <p class="text-[11px] uppercase tracking-[0.14em] text-emerald-100">Profile status</p>
+                            <p class="mt-1 text-sm font-semibold uppercase">{{ str_replace('_', ' ', (string) ($profile?->status ?? 'draft')) }}</p>
+                        </div>
+                        <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
+                            <p class="text-[11px] uppercase tracking-[0.14em] text-emerald-100">Unread messages</p>
+                            <p class="mt-1 text-3xl font-semibold">{{ $caregiverData['stats']['unread_messages'] }}</p>
+                        </div>
+                        <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
+                            <p class="text-[11px] uppercase tracking-[0.14em] text-emerald-100">Pending invites</p>
+                            <p class="mt-1 text-3xl font-semibold">{{ $caregiverData['stats']['invitations_pending'] }}</p>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            @php
-                $identityStatus = $caregiverData['profile']?->identity_verification_status ?? 'not_started';
-                $identityApproved = ($caregiverData['profile']?->identity_verified_at !== null) || $identityStatus === 'approved';
-            @endphp
-
-            @unless ($identityApproved)
-                <section class="rounded-2xl border border-amber-300 bg-amber-50 p-4">
-                    <div class="flex flex-wrap items-center justify-between gap-3">
+            <section class="space-y-4">
+                @if ($canSubmitForReview)
+                    <div class="rounded-2xl border border-cyan-200 bg-cyan-50 p-4 flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <p class="font-semibold text-amber-900">Identity verification required</p>
-                            <p class="text-sm text-amber-800">Current status: {{ strtoupper(str_replace('_', ' ', $identityStatus)) }}. Complete this to be eligible for activation.</p>
+                            <p class="font-semibold text-cyan-900">Ready to submit.</p>
+                            <p class="text-sm text-cyan-800">Open the review step, confirm your details, and submit now.</p>
                         </div>
-                        <a href="{{ route('caregiver.verification.show') }}" wire:navigate>
-                            <x-button color="amber" sm>Verify identity</x-button>
+                        <a href="{{ route('caregiver.onboarding', ['step' => 4]) }}" wire:navigate>
+                            <x-button color="blue" sm>Submit profile for review</x-button>
                         </a>
                     </div>
-                </section>
-            @endunless
+                @elseif ($readyForReview)
+                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <p class="font-semibold text-emerald-900">Setup complete.</p>
+                            <p class="text-sm text-emerald-800">Your profile is already submitted or active.</p>
+                        </div>
+                        <x-badge color="green" text="{{ strtoupper(str_replace('_', ' ', (string) ($profile?->status ?? 'draft'))) }}" />
+                    </div>
+                @endif
+
+                @if (count($setupCards) > 0)
+                    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                        @foreach ($setupCards as $card)
+                            <div class="rounded-2xl border {{ $card['required'] ? 'border-amber-200 bg-amber-50/60' : 'border-slate-200 bg-white' }} p-4 shadow-sm">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <p class="text-xs uppercase tracking-[0.12em] {{ $card['required'] ? 'text-slate-600' : 'text-slate-500' }}">
+                                            {{ $card['required'] ? 'Required' : 'Optional' }}
+                                        </p>
+                                        <h3 class="mt-1 font-display text-lg font-semibold text-slate-900">{{ $card['title'] }}</h3>
+                                        <p class="mt-1 text-sm text-slate-600">{{ $card['description'] }}</p>
+                                    </div>
+                                    <x-badge :color="$card['required'] ? 'amber' : 'slate'" text="PENDING" />
+                                </div>
+                                <div class="mt-4">
+                                    <a href="{{ $card['route'] }}" wire:navigate>
+                                        <x-button color="blue" light sm>{{ $card['cta'] }}</x-button>
+                                    </a>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                        <p class="font-semibold text-emerald-900">All setup cards are complete.</p>
+                        <p class="text-sm text-emerald-800 mt-1">If your profile is still draft, open the review step and submit.</p>
+                    </div>
+                @endif
+            </section>
 
             @if (!empty($caregiverData['profile']))
                 <section class="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -247,12 +312,12 @@
                         <p class="text-xl font-semibold text-slate-900">{{ (int) $caregiverData['profile']->completed_bookings_count }}</p>
                     </div>
                     <div class="rounded-xl border border-slate-200 bg-white p-3">
-                        <p class="text-xs text-slate-500">Cancellations</p>
-                        <p class="text-xl font-semibold text-slate-900">{{ (int) $caregiverData['profile']->cancellation_count }}</p>
+                        <p class="text-xs text-slate-500">Platform rate</p>
+                        <p class="text-xl font-semibold text-slate-900">${{ number_format((float) $caregiverData['profile']->resolvePlatformHourlyRate(), 2) }}/hr</p>
                     </div>
                     <div class="rounded-xl border border-slate-200 bg-white p-3">
-                        <p class="text-xs text-slate-500">Disputes</p>
-                        <p class="text-xl font-semibold text-slate-900">{{ (int) $caregiverData['profile']->dispute_count }}</p>
+                        <p class="text-xs text-slate-500">Hired</p>
+                        <p class="text-xl font-semibold text-slate-900">{{ $caregiverData['stats']['hired'] }}</p>
                     </div>
                 </section>
             @endif
@@ -264,54 +329,6 @@
                 <div class="hc-kpi"><p class="hc-kpi-label">Pending Invites</p><p class="hc-kpi-value">{{ $caregiverData['stats']['invitations_pending'] }}</p></div>
                 <div class="hc-kpi"><p class="hc-kpi-label">Unread Messages</p><p class="hc-kpi-value">{{ $caregiverData['stats']['unread_messages'] }}</p></div>
             </section>
-
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <x-card>
-                    <x-slot:header>
-                        <div class="flex items-center justify-between">
-                            <h2 class="font-display font-semibold">Recent Applications</h2>
-                            <a href="{{ route('care-requests.index') }}" wire:navigate class="hc-link">Browse open requests</a>
-                        </div>
-                    </x-slot:header>
-
-                    <div class="space-y-3">
-                        @forelse ($caregiverData['recent_applications'] as $application)
-                            <div class="rounded-lg border border-slate-200 p-3 flex items-start justify-between gap-3">
-                                <div>
-                                    <p class="font-semibold text-slate-900">{{ $application->careRequest?->title }}</p>
-                                    <p class="text-sm text-slate-600">{{ $application->careRequest?->city }}, {{ $application->careRequest?->state }}</p>
-                                </div>
-                                <x-badge :text="strtoupper($application->status)" color="blue" />
-                            </div>
-                        @empty
-                            <p class="text-sm text-slate-600">No applications yet.</p>
-                        @endforelse
-                    </div>
-                </x-card>
-
-                <x-card>
-                    <x-slot:header>
-                        <div class="flex items-center justify-between">
-                            <h2 class="font-display font-semibold">Latest Invitations</h2>
-                            <a href="{{ route('caregiver.invitations.index') }}" wire:navigate class="hc-link">Open invitations</a>
-                        </div>
-                    </x-slot:header>
-
-                    <div class="space-y-3">
-                        @forelse ($caregiverData['recent_invitations'] as $invitation)
-                            <div class="rounded-lg border border-slate-200 p-3 flex items-start justify-between gap-3">
-                                <div>
-                                    <p class="font-semibold text-slate-900">{{ $invitation->careRequest?->title }}</p>
-                                    <p class="text-sm text-slate-600">From {{ $invitation->family?->name }}</p>
-                                </div>
-                                <x-badge :text="strtoupper($invitation->status)" color="blue" />
-                            </div>
-                        @empty
-                            <p class="text-sm text-slate-600">No invitations yet.</p>
-                        @endforelse
-                    </div>
-                </x-card>
-            </div>
         @else
             <x-card>
                 <h1 class="text-xl font-semibold">Dashboard</h1>

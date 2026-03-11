@@ -4,8 +4,9 @@ namespace App\Livewire\Messaging;
 
 use App\Models\CareRequestConversation;
 use App\Models\CareRequestMessage;
-use App\Notifications\MarketplaceAlert;
+use App\Services\Notifications\MarketplaceNotificationService;
 use App\Support\FunnelTracker;
+use App\Support\MarketplaceEvent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -92,12 +93,18 @@ class Inbox extends Component
             ? $conversation->caregiver
             : $conversation->family;
 
-        $recipient?->notify(new MarketplaceAlert(
-            'New message',
-            auth()->user()->name.' sent you a new message.',
-            route('messages.show', $conversation->id),
-            'message_received'
-        ));
+        if ($recipient) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $recipient,
+                eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
+                title: 'New message',
+                body: auth()->user()->name.' sent you a new message.',
+                url: route('messages.show', $conversation->id),
+                payload: ['conversation_id' => $conversation->id],
+                subject: $conversation,
+                dedupeKey: 'message:conversation-'.$conversation->id.'-message-'.($conversation->messages()->max('id') ?? now()->timestamp)
+            );
+        }
 
         FunnelTracker::track('message_sent', auth()->user(), $conversation, [
             'conversation_id' => $conversation->id,

@@ -53,11 +53,13 @@ class HomeCareDemoSeeder extends Seeder
             [
                 'slug' => Str::slug($caregiver->name.'-'.$caregiver->id),
                 'bio' => 'Non-medical caregiver with experience in companionship, meal prep, mobility support, and daily routines.',
-                'hourly_rate' => 28.00,
+                'pricing_tier' => 'standard',
+                'platform_hourly_rate' => 28.00,
                 'years_experience' => 6,
                 'service_area_zip' => '27601',
                 'service_radius_miles' => 15,
                 'is_accepting_new_clients' => true,
+                'insurance_status' => CaregiverProfile::INSURANCE_NO,
                 'status' => 'active',
                 'review_submitted_at' => now()->subDays(5),
                 'reviewed_at' => now()->subDays(4),
@@ -160,7 +162,7 @@ class HomeCareDemoSeeder extends Seeder
             ],
             [
                 'status' => CareRequestApplication::STATUS_SHORTLISTED,
-                'proposed_rate' => 29.00,
+                'proposed_rate' => 28.00,
                 'cover_note' => 'I have 6 years of non-medical home care experience and can cover this schedule consistently.',
             ]
         );

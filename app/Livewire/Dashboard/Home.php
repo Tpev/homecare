@@ -114,8 +114,10 @@ class Home extends Component
 
         if ($mode === 'caregiver') {
             $caregiverData['profile'] = CaregiverProfile::query()
-                ->where('user_id', $user->id)
-                ->first();
+                ->firstOrCreate(
+                    ['user_id' => $user->id],
+                    ['status' => 'draft']
+                );
 
             $caregiverData['stats'] = [
                 'applications_total' => CareRequestApplication::query()->where('caregiver_user_id', $user->id)->count(),
@@ -150,6 +152,77 @@ class Home extends Component
                 ->latest()
                 ->limit(6)
                 ->get();
+
+            $profile = $caregiverData['profile'];
+            $identityComplete = $profile->hasIdentityVerifiedBadge();
+            $tasksComplete = $profile->skills()->exists();
+            $insuranceComplete = $profile->insuranceIsComplete();
+            $videoComplete = filled($profile->intro_video_path);
+
+            $basicsComplete = filled($profile->bio)
+                && ! is_null($profile->years_experience)
+                && filled($profile->service_area_zip)
+                && ! is_null($profile->service_radius_miles)
+                && $profile->languages()->exists()
+                && $profile->availabilities()->exists();
+
+            $caregiverData['setup_cards'] = [
+                [
+                    'title' => 'Complete profile basics',
+                    'description' => 'Bio, location, languages, and precise availability.',
+                    'route' => route('caregiver.onboarding'),
+                    'cta' => 'Open basics',
+                    'required' => true,
+                    'done' => $basicsComplete,
+                ],
+                [
+                    'title' => 'Identity verification',
+                    'description' => 'Required to be review-eligible and searchable.',
+                    'route' => route('caregiver.verification.show'),
+                    'cta' => 'Start KYC',
+                    'required' => true,
+                    'done' => $identityComplete,
+                ],
+                [
+                    'title' => 'Task comfort selection',
+                    'description' => 'Pick exactly which care tasks you are comfortable doing.',
+                    'route' => route('caregiver.tasks.edit'),
+                    'cta' => 'Select tasks',
+                    'required' => true,
+                    'done' => $tasksComplete,
+                ],
+                [
+                    'title' => 'Insurance setup',
+                    'description' => 'Tell families whether you are insured and upload proof if yes.',
+                    'route' => route('caregiver.insurance.edit'),
+                    'cta' => 'Set insurance',
+                    'required' => false,
+                    'done' => $insuranceComplete,
+                ],
+                [
+                    'title' => 'Intro video',
+                    'description' => 'Optional, but usually improves profile conversion.',
+                    'route' => route('caregiver.video.edit'),
+                    'cta' => 'Upload video',
+                    'required' => false,
+                    'done' => $videoComplete,
+                ],
+            ];
+
+            $caregiverData['setup_cards'] = collect($caregiverData['setup_cards'])
+                ->filter(fn ($card) => ! $card['done'])
+                ->values()
+                ->all();
+
+            $requiredCards = collect($caregiverData['setup_cards'])->filter(fn ($card) => $card['required']);
+            $requiredTotal = 3;
+            $requiredCompleted = $requiredTotal - $requiredCards->count();
+
+            $caregiverData['required_setup_total'] = $requiredTotal;
+            $caregiverData['required_setup_completed'] = $requiredCompleted;
+            $caregiverData['ready_for_review'] = $requiredCompleted >= $requiredTotal;
+            $caregiverData['can_submit_for_review'] = $caregiverData['ready_for_review']
+                && in_array((string) $profile->status, ['draft', 'suspended'], true);
         }
 
         return view('livewire.dashboard.home', compact('mode', 'familyData', 'caregiverData'));
