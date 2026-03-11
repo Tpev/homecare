@@ -216,14 +216,14 @@
             <x-card>
                 <x-slot:header>
                     <div class="flex items-center justify-between">
-                        <h2 class="font-display text-lg font-semibold">Shift command center</h2>
+                        <h2 class="font-display text-lg font-semibold">Shift focus mode</h2>
                         <x-badge :text="strtoupper($booking->status)" color="green" />
                     </div>
                 </x-slot:header>
 
                 <div
                     class="space-y-4 text-sm"
-                    x-data="homecareShiftTracker({
+                    x-data="homecareShiftFocus({
                         startedAt: @js(optional($booking->started_at)?->toIso8601String()),
                         pausedAt: @js(optional($booking->paused_at)?->toIso8601String()),
                         totalPausedSeconds: @js((int) ($booking->total_paused_seconds ?? 0)),
@@ -236,12 +236,27 @@
                     })"
                     x-init="init()"
                 >
-                    <p class="text-slate-600">
+                    <div class="grid grid-cols-3 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1">
+                        <button type="button" @click="panel = 'live'" class="rounded-lg px-3 py-2 text-sm font-medium transition"
+                            :class="panel === 'live' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'">
+                            Live
+                        </button>
+                        <button type="button" @click="panel = 'tasks'" class="rounded-lg px-3 py-2 text-sm font-medium transition"
+                            :class="panel === 'tasks' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'">
+                            Tasks
+                        </button>
+                        <button type="button" @click="panel = 'details'" class="rounded-lg px-3 py-2 text-sm font-medium transition"
+                            :class="panel === 'details' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'">
+                            Details
+                        </button>
+                    </div>
+
+                    <p class="text-slate-600" x-show="panel === 'live'" x-transition>
                         Scheduled: {{ optional($booking->scheduled_start_at)->format('M d, Y H:i') }} - {{ optional($booking->scheduled_end_at)->format('M d, Y H:i') }}
                     </p>
 
                     @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true))
-                        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4" x-show="panel === 'live'" x-transition>
                             <p class="text-xs uppercase tracking-[0.12em] text-emerald-700 font-semibold">Shift live</p>
                             <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div class="rounded-lg border border-emerald-200 bg-white px-3 py-2">
@@ -256,7 +271,7 @@
                         </div>
                     @endif
 
-                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3" x-show="panel === 'details'" x-transition>
                         <p class="font-medium text-slate-900">Agreement</p>
                         <p class="mt-1 text-xs text-slate-600">
                             Family accepted:
@@ -271,46 +286,50 @@
                         @endif
                     </div>
 
-                    @if ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED && ! $booking->caregiver_terms_accepted_at)
-                        <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                            Accept the agreement first, then check in when you arrive.
-                        </div>
-                    @elseif ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED)
-                        <div class="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
-                            Ready to start. Check in when you arrive at the care location.
-                        </div>
-                    @elseif ($booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS)
-                        <div class="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-                            Shift in progress. Pause for break or end when done.
-                        </div>
-                    @elseif ($booking->status === \App\Models\CareBooking::STATUS_PAUSED)
-                        <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                            Shift is paused. Resume when back or end shift directly.
-                        </div>
-                    @elseif ($booking->status === \App\Models\CareBooking::STATUS_COMPLETED)
-                        <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                            Timesheet submitted. Waiting for family confirmation.
-                        </div>
-                    @elseif ($booking->status === \App\Models\CareBooking::STATUS_REVIEWED)
-                        <div class="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-                            Shift closed and reviewed.
-                        </div>
-                    @endif
+                    <div x-show="panel === 'live'" x-transition class="space-y-2">
+                        @if ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED && ! $booking->caregiver_terms_accepted_at)
+                            <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                                Accept the agreement first, then check in when you arrive.
+                            </div>
+                            <button type="button" @click="panel = 'details'" class="text-xs font-medium text-amber-800 underline underline-offset-2">
+                                Open details to accept agreement
+                            </button>
+                        @elseif ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED)
+                            <div class="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
+                                Ready to start. Check in when you arrive at the care location.
+                            </div>
+                        @elseif ($booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS)
+                            <div class="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+                                Shift in progress. Pause for break or end when done.
+                            </div>
+                        @elseif ($booking->status === \App\Models\CareBooking::STATUS_PAUSED)
+                            <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                                Shift is paused. Resume when back or end shift directly.
+                            </div>
+                        @elseif ($booking->status === \App\Models\CareBooking::STATUS_COMPLETED)
+                            <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                                Timesheet submitted. Waiting for family confirmation.
+                            </div>
+                        @elseif ($booking->status === \App\Models\CareBooking::STATUS_REVIEWED)
+                            <div class="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+                                Shift closed and reviewed.
+                            </div>
+                        @endif
+                    </div>
 
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2" x-show="panel === 'details'" x-transition>
                         <x-input label="Start note (optional)" wire:model="checkInNote" />
                         <x-input label="End note (optional)" wire:model="checkOutNote" />
                     </div>
 
-                    <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600" x-show="panel === 'details'" x-transition>
                         We capture phone GPS when you start and end the shift to timestamp on-site activity.
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-2">
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2" x-show="panel === 'live'" x-transition>
                         @if ($canCheckIn)
                             <x-button
                                 color="blue"
-                                light
                                 x-bind:disabled="geoLoading || !canCheckIn"
                                 x-on:click.prevent="startWithGps()"
                             >
@@ -320,17 +339,16 @@
                         @endif
 
                         @if ($canPause)
-                            <x-button color="amber" light wire:click="pauseBooking">Pause shift</x-button>
+                            <x-button color="amber" wire:click="pauseBooking">Pause shift</x-button>
                         @endif
 
                         @if ($canResume)
-                            <x-button color="blue" light wire:click="resumeBooking">Resume shift</x-button>
+                            <x-button color="blue" wire:click="resumeBooking">Resume shift</x-button>
                         @endif
 
                         @if ($canCheckOut)
                             <x-button
                                 color="green"
-                                light
                                 x-bind:disabled="geoLoading || !canCheckOut"
                                 x-on:click.prevent="endWithGps()"
                             >
@@ -340,9 +358,9 @@
                         @endif
                     </div>
 
-                    <p class="text-xs text-slate-500" x-show="geoMessage" x-text="geoMessage"></p>
+                    <p class="text-xs text-slate-500" x-show="panel === 'live' && geoMessage" x-text="geoMessage"></p>
 
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-6 text-xs text-slate-700">
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-6 text-xs text-slate-700" x-show="panel === 'details'" x-transition>
                         <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Started: {{ optional($booking->started_at)->format('M d, H:i') ?: 'Pending' }}</div>
                         <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Paused at: {{ optional($booking->paused_at)->format('M d, H:i') ?: 'Not paused' }}</div>
                         <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Checked out: {{ optional($booking->completed_at)->format('M d, H:i') ?: 'Pending' }}</div>
@@ -373,13 +391,13 @@
                     </div>
 
                     @if ($booking->expected_minutes || $booking->worked_minutes)
-                        <p class="text-xs text-slate-600">
+                        <p class="text-xs text-slate-600" x-show="panel === 'details'" x-transition>
                             Minutes: expected {{ $booking->expected_minutes ?? '-' }} • worked {{ $booking->worked_minutes ?? '-' }}
                         </p>
                     @endif
 
                     @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED, \App\Models\CareBooking::STATUS_DISPUTED], true))
-                        <div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                        <div class="rounded-xl border border-blue-200 bg-blue-50 p-4" x-show="panel === 'live'" x-transition>
                             <p class="text-xs uppercase tracking-[0.12em] text-blue-700 font-semibold">Shift recap</p>
                             <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5 text-sm">
                                 <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
@@ -408,7 +426,7 @@
                         </div>
                     @endif
 
-                    <details class="rounded-lg border border-slate-200 bg-white p-3">
+                    <details class="rounded-lg border border-slate-200 bg-white p-3" x-show="panel === 'tasks'" x-transition>
                         <summary class="cursor-pointer font-medium text-slate-900">Shift checklist</summary>
                         <div class="mt-3 space-y-2">
                             @forelse ($booking->taskChecks as $taskCheck)
@@ -429,7 +447,7 @@
                         </div>
                     </details>
 
-                    <details class="rounded-lg border border-slate-200 bg-white p-3">
+                    <details class="rounded-lg border border-slate-200 bg-white p-3" x-show="panel === 'details'" x-transition>
                         <summary class="cursor-pointer font-medium text-slate-900">Timeline</summary>
                         <div class="mt-3 max-h-52 space-y-1 overflow-auto text-xs text-slate-600">
                             @forelse ($booking->events->take(20) as $event)
@@ -441,7 +459,7 @@
                     </details>
 
                     @if ($booking->changeRequests->count() > 0)
-                        <details class="rounded-lg border border-slate-200 bg-white p-3">
+                        <details class="rounded-lg border border-slate-200 bg-white p-3" x-show="panel === 'details'" x-transition>
                             <summary class="cursor-pointer font-medium text-slate-900">Change requests</summary>
                             <div class="mt-3 space-y-2">
                                 @foreach ($booking->changeRequests as $change)
@@ -459,6 +477,11 @@
                             </div>
                         </details>
                     @endif
+
+                    <div class="flex flex-wrap gap-2" x-show="panel === 'details'" x-transition>
+                        <x-button color="indigo" light wire:click="openChat">Open chat</x-button>
+                        <x-button color="slate" light wire:click="setActiveTab('support')">Open support tools</x-button>
+                    </div>
                 </div>
             </x-card>
 
@@ -662,6 +685,12 @@
                     );
                 },
             };
+        };
+    }
+
+    if (! window.homecareShiftFocus) {
+        window.homecareShiftFocus = function (config) {
+            return Object.assign({ panel: 'live' }, window.homecareShiftTracker(config));
         };
     }
 </script>
