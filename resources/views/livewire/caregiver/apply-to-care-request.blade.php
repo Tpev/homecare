@@ -24,9 +24,10 @@
         $estimatedEarnings = $workedMinutes > 0 ? round(($workedMinutes / 60) * $ratePerHour, 2) : 0;
         $pausedSeconds = (int) ($booking?->total_paused_seconds ?? 0);
         $pausedLabel = sprintf('%02d:%02d', intdiv($pausedSeconds, 3600), intdiv($pausedSeconds % 3600, 60));
+        $isShiftWorkspace = $activeTab === 'shift';
     @endphp
 
-    <section class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+    <section class="{{ $isShiftWorkspace ? 'space-y-3' : 'rounded-3xl border border-slate-200 bg-white p-4 shadow-sm space-y-3' }}">
         @if ($activeTab !== 'shift')
             <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
@@ -63,33 +64,41 @@
             </div>
         @endif
 
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-1">
+        <div class="{{ $isShiftWorkspace ? 'rounded-2xl border border-slate-900/80 bg-slate-950 p-1 shadow-sm' : 'rounded-2xl border border-slate-200 bg-slate-50 p-1' }}">
             <div class="grid grid-cols-2 gap-1 sm:grid-cols-4">
                 <button
                     type="button"
                     wire:click="setActiveTab('overview')"
-                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'overview' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}"
+                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'overview'
+                        ? ($isShiftWorkspace ? 'bg-white text-slate-900 shadow-sm' : 'bg-slate-900 text-white shadow-sm')
+                        : ($isShiftWorkspace ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900') }}"
                 >
                     Overview
                 </button>
                 <button
                     type="button"
                     wire:click="setActiveTab('application')"
-                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'application' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}"
+                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'application'
+                        ? ($isShiftWorkspace ? 'bg-white text-slate-900 shadow-sm' : 'bg-slate-900 text-white shadow-sm')
+                        : ($isShiftWorkspace ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900') }}"
                 >
                     Application
                 </button>
                 <button
                     type="button"
                     wire:click="setActiveTab('shift')"
-                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'shift' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}"
+                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'shift'
+                        ? ($isShiftWorkspace ? 'bg-white text-slate-900 shadow-sm' : 'bg-slate-900 text-white shadow-sm')
+                        : ($isShiftWorkspace ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900') }}"
                 >
                     Shift
                 </button>
                 <button
                     type="button"
                     wire:click="setActiveTab('support')"
-                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'support' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}"
+                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'support'
+                        ? ($isShiftWorkspace ? 'bg-white text-slate-900 shadow-sm' : 'bg-slate-900 text-white shadow-sm')
+                        : ($isShiftWorkspace ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900') }}"
                 >
                     Support
                 </button>
@@ -588,11 +597,11 @@
                         </div>
                     @endif
 
-                    <x-slot:footer>
-                        @if ($canLeaveReview)
+                    @if ($canLeaveReview)
+                        <x-slot:footer>
                             <x-button color="amber" wire:click="submitReview">Submit review</x-button>
-                        @endif
-                    </x-slot:footer>
+                        </x-slot:footer>
+                    @endif
                 </x-card>
             @endif
         @endif
