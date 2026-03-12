@@ -8,6 +8,7 @@ use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
 use App\Models\CaregiverProfile;
+use App\Support\CaregiverWorkInboxBuilder;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -115,6 +116,8 @@ class Home extends Component
         }
 
         if ($mode === 'caregiver') {
+            $workInboxBuilder = app(CaregiverWorkInboxBuilder::class);
+
             $caregiverData['profile'] = CaregiverProfile::query()
                 ->firstOrCreate(
                     ['user_id' => $user->id],
@@ -140,6 +143,10 @@ class Home extends Component
                     ->count(),
                 'unread_messages' => $this->unreadMessagesCount($user->id, 'caregiver'),
             ];
+
+            $caregiverData['work_inbox_counts'] = $workInboxBuilder->countsForUser($user);
+            $caregiverData['work_inbox_preview'] = $workInboxBuilder->buildForUser($user, 'all', 'priority', 5);
+            $caregiverData['stats']['needs_response'] = (int) ($caregiverData['work_inbox_counts']['needs_response'] ?? 0);
 
             $caregiverData['recent_applications'] = CareRequestApplication::query()
                 ->with(['careRequest:id,title,status,city,state,requested_start_at'])

@@ -115,6 +115,11 @@ new class extends Component
 
         if ($isCaregiver) {
             $primaryLinks[] = [
+                'label' => $invitationUnread > 0 ? "Work Inbox ($invitationUnread)" : 'Work Inbox',
+                'href' => route('caregiver.work-inbox.index'),
+                'active' => request()->routeIs('caregiver.work-inbox.*'),
+            ];
+            $primaryLinks[] = [
                 'label' => $identityApproved ? 'Identity Verified' : 'Verify Identity',
                 'href' => route('caregiver.verification.show'),
                 'active' => request()->routeIs('caregiver.verification.*'),
@@ -227,6 +232,9 @@ new class extends Component
                 <a href="{{ route('support.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Support Center</a>
 
                 @if ($isCaregiver)
+                    <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                        {{ $invitationUnread > 0 ? 'Work Inbox ('.$invitationUnread.')' : 'Work Inbox' }}
+                    </a>
                     <a href="{{ route('caregiver.shifts.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                         My Shifts
                     </a>
@@ -286,6 +294,9 @@ new class extends Component
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('support.index')" wire:navigate>{{ __('Support Center') }}</x-responsive-nav-link>
                 @if ($isCaregiver)
+                    <x-responsive-nav-link :href="route('caregiver.work-inbox.index')" wire:navigate>
+                        {{ $invitationUnread > 0 ? __('Work Inbox').' ('.$invitationUnread.')' : __('Work Inbox') }}
+                    </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('caregiver.shifts.index')" wire:navigate>
                         {{ __('My Shifts') }}
                     </x-responsive-nav-link>

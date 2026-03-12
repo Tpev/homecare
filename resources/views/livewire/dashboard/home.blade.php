@@ -224,9 +224,9 @@
                             Complete the remaining setup cards below, then submit your profile. Reviews usually complete within 1 business day.
                         </p>
                         <div class="mt-5 flex flex-wrap gap-2">
+                            <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate><x-button color="white">Work Inbox</x-button></a>
                             <a href="{{ route('caregiver.shifts.index') }}" wire:navigate><x-button color="white">My shifts</x-button></a>
                             <a href="{{ route('caregiver.earnings.index') }}" wire:navigate><x-button color="white">Earnings</x-button></a>
-                            <a href="{{ route('care-requests.index') }}" wire:navigate><x-button color="white">Browse Requests</x-button></a>
                             <a href="{{ route('messages.index') }}" wire:navigate><x-button color="white" light>Messages</x-button></a>
                             <a href="{{ route('caregiver.profile.edit') }}" wire:navigate><x-button color="white" light>Edit Profile</x-button></a>
                         </div>
@@ -245,12 +245,89 @@
                             <p class="mt-1 text-3xl font-semibold">{{ $caregiverData['stats']['unread_messages'] }}</p>
                         </div>
                         <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
-                            <p class="text-[11px] uppercase tracking-[0.14em] text-emerald-100">Pending invites</p>
-                            <p class="mt-1 text-3xl font-semibold">{{ $caregiverData['stats']['invitations_pending'] }}</p>
+                            <p class="text-[11px] uppercase tracking-[0.14em] text-emerald-100">Needs response</p>
+                            <p class="mt-1 text-3xl font-semibold">{{ $caregiverData['stats']['needs_response'] ?? 0 }}</p>
                         </div>
                     </div>
                 </div>
             </section>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-3">
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Step 1</p>
+                        <p class="mt-1 text-sm font-semibold text-slate-900">Respond in Work Inbox</p>
+                        <p class="mt-1 text-xs text-slate-600">Accept invites and open top matches first.</p>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Step 2</p>
+                        <p class="mt-1 text-sm font-semibold text-slate-900">Get hired and align in chat</p>
+                        <p class="mt-1 text-xs text-slate-600">Confirm details before the scheduled start.</p>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Step 3</p>
+                        <p class="mt-1 text-sm font-semibold text-slate-900">Run the shift command flow</p>
+                        <p class="mt-1 text-xs text-slate-600">Start, pause/resume, end, then submit timesheet.</p>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Step 4</p>
+                        <p class="mt-1 text-sm font-semibold text-slate-900">Review and track earnings</p>
+                        <p class="mt-1 text-xs text-slate-600">Build trust and monitor your next payout.</p>
+                    </div>
+                </div>
+            </div>
+
+            <x-card>
+                <x-slot:header>
+                    <div class="flex items-center justify-between gap-3">
+                        <h2 class="font-display font-semibold">Work inbox</h2>
+                        <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate class="hc-link">Open full inbox</a>
+                    </div>
+                </x-slot:header>
+                <div class="space-y-3">
+                    @php
+                        $previewItems = $caregiverData['work_inbox_preview'] ?? collect();
+                        $inboxStatusStyles = [
+                            'success' => 'bg-emerald-100 text-emerald-700',
+                            'warning' => 'bg-amber-100 text-amber-800',
+                            'danger' => 'bg-rose-100 text-rose-700',
+                            'info' => 'bg-sky-100 text-sky-700',
+                            'neutral' => 'bg-slate-100 text-slate-700',
+                        ];
+                    @endphp
+
+                    @forelse ($previewItems as $item)
+                        <div class="rounded-xl border border-slate-200 bg-white p-3">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <p class="font-medium text-slate-900">{{ $item['title'] }}</p>
+                                    <p class="text-xs text-slate-500 mt-1">{{ $item['location'] }} · {{ $item['schedule'] }}</p>
+                                    <p class="text-xs text-slate-600 mt-1">{{ $item['fit_reason'] }}</p>
+                                </div>
+                                <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $inboxStatusStyles[$item['status_tone'] ?? 'neutral'] ?? $inboxStatusStyles['neutral'] }}">
+                                    {{ strtoupper((string) $item['status_label']) }}
+                                </span>
+                            </div>
+
+                            <div class="mt-3 flex items-center gap-2">
+                                @if (($item['primary_action']['kind'] ?? null) === 'link')
+                                    <a href="{{ $item['primary_action']['href'] }}" wire:navigate>
+                                        <x-button color="blue" light sm>{{ $item['primary_action']['label'] }}</x-button>
+                                    </a>
+                                @else
+                                    <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate>
+                                        <x-button color="blue" light sm>Respond now</x-button>
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <div class="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-600">
+                            No active inbox items right now.
+                        </div>
+                    @endforelse
+                </div>
+            </x-card>
 
             <section class="space-y-4">
                 @if (!empty($caregiverData['active_shift']))
@@ -385,7 +462,7 @@
             </section>
 
             @if (!empty($caregiverData['profile']))
-                <section class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <section class="grid grid-cols-2 gap-3 md:grid-cols-4">
                     <div class="rounded-xl border border-slate-200 bg-white p-3">
                         <p class="text-xs text-slate-500">Reliability score</p>
                         <p class="text-xl font-semibold text-slate-900">{{ number_format((float) $caregiverData['profile']->reliability_score, 0) }}%</p>
@@ -395,23 +472,15 @@
                         <p class="text-xl font-semibold text-slate-900">{{ (int) $caregiverData['profile']->completed_bookings_count }}</p>
                     </div>
                     <div class="rounded-xl border border-slate-200 bg-white p-3">
-                        <p class="text-xs text-slate-500">Platform rate</p>
-                        <p class="text-xl font-semibold text-slate-900">${{ number_format((float) $caregiverData['profile']->resolvePlatformHourlyRate(), 2) }}/hr</p>
-                    </div>
-                    <div class="rounded-xl border border-slate-200 bg-white p-3">
                         <p class="text-xs text-slate-500">Hired</p>
                         <p class="text-xl font-semibold text-slate-900">{{ $caregiverData['stats']['hired'] }}</p>
                     </div>
+                    <div class="rounded-xl border border-slate-200 bg-white p-3">
+                        <p class="text-xs text-slate-500">Unread messages</p>
+                        <p class="text-xl font-semibold text-slate-900">{{ $caregiverData['stats']['unread_messages'] }}</p>
+                    </div>
                 </section>
             @endif
-
-            <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-                <div class="hc-kpi"><p class="hc-kpi-label">Applications</p><p class="hc-kpi-value">{{ $caregiverData['stats']['applications_total'] }}</p></div>
-                <div class="hc-kpi"><p class="hc-kpi-label">Shortlisted</p><p class="hc-kpi-value">{{ $caregiverData['stats']['shortlisted'] }}</p></div>
-                <div class="hc-kpi"><p class="hc-kpi-label">Hired</p><p class="hc-kpi-value">{{ $caregiverData['stats']['hired'] }}</p></div>
-                <div class="hc-kpi"><p class="hc-kpi-label">Pending Invites</p><p class="hc-kpi-value">{{ $caregiverData['stats']['invitations_pending'] }}</p></div>
-                <div class="hc-kpi"><p class="hc-kpi-label">Unread Messages</p><p class="hc-kpi-value">{{ $caregiverData['stats']['unread_messages'] }}</p></div>
-            </section>
         @else
             <x-card>
                 <h1 class="text-xl font-semibold">Dashboard</h1>
