@@ -42,6 +42,11 @@ class BlogPagesTest extends TestCase
         if (($post['paragraphs'] ?? []) !== []) {
             $response->assertSee($post['paragraphs'][0]);
         }
+
+        if (! empty($post['cover_media_path'])) {
+            $this->get(route('blog.cover', ['blogSlug' => $post['slug']]))
+                ->assertOk();
+        }
     }
 
     public function test_sitemap_includes_blog_urls(): void

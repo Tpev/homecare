@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminLeadsController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\BlogCoverController;
 use App\Http\Controllers\CaregiverIdentityVerificationController;
 use App\Http\Controllers\CaregiverStripeConnectController;
 use App\Http\Controllers\DiditWebhookController;
@@ -56,6 +57,7 @@ Route::get('/families', [MarketingPagesController::class, 'family'])->name('land
 Route::get('/caregivers', [MarketingPagesController::class, 'caregiver'])->name('landing.caregiver');
 Route::get('/agencies', [MarketingPagesController::class, 'agency'])->name('landing.agency');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{blogSlug}/cover', BlogCoverController::class)->name('blog.cover');
 Route::get('/blog/{blogSlug}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
 Route::get('/robots.txt', [RobotsController::class, 'index'])->name('robots.txt');
