@@ -80,6 +80,7 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
             'shift_starting_soon' => 'Shift reminder',
             'shift_started' => 'Shift started',
             'shift_completed' => 'Shift completed',
+            'review_received' => 'New review',
             'matching_request_reminder' => 'Recommended request',
             default => 'Marketplace update',
         };
@@ -96,6 +97,7 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
             'shift_starting_soon' => 'Open shift plan',
             'shift_started' => 'Track shift',
             'shift_completed' => 'Review shift',
+            'review_received' => 'View shift',
             'matching_request_reminder' => 'Review request',
             default => 'Open HomeCare',
         };

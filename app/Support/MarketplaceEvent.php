@@ -12,6 +12,7 @@ class MarketplaceEvent
     public const SHIFT_STARTING_SOON = 'shift_starting_soon';
     public const SHIFT_STARTED = 'shift_started';
     public const SHIFT_COMPLETED = 'shift_completed';
+    public const REVIEW_RECEIVED = 'review_received';
     public const MATCHING_REQUEST_REMINDER = 'matching_request_reminder';
 
     /**
@@ -28,6 +29,7 @@ class MarketplaceEvent
             self::SHIFT_STARTING_SOON,
             self::SHIFT_STARTED,
             self::SHIFT_COMPLETED,
+            self::REVIEW_RECEIVED,
             self::MATCHING_REQUEST_REMINDER,
         ];
     }

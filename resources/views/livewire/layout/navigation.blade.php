@@ -28,6 +28,7 @@ new class extends Component
 
         $messageUnread = 0;
         $invitationUnread = 0;
+        $notificationUnread = 0;
 
         if (\Illuminate\Support\Facades\Schema::hasTable('care_request_conversations')) {
             if ($isFamily) {
@@ -59,6 +60,10 @@ new class extends Component
                             $query->whereNull('expires_at')->orWhere('expires_at', '>=', now());
                         })
                         ->count();
+                }
+
+                if (\Illuminate\Support\Facades\Schema::hasTable('notifications')) {
+                    $notificationUnread = $user->unreadNotifications()->count();
                 }
             }
         }
@@ -118,9 +123,9 @@ new class extends Component
                 'active' => request()->routeIs('caregiver.shifts.*'),
             ];
             $primaryLinks[] = [
-                'label' => 'My Earnings',
-                'href' => route('caregiver.earnings.index'),
-                'active' => request()->routeIs('caregiver.earnings.*'),
+                'label' => $notificationUnread > 0 ? "Notifications ($notificationUnread)" : 'Notifications',
+                'href' => route('caregiver.notifications.index'),
+                'active' => request()->routeIs('caregiver.notifications.*'),
             ];
             $primaryLinks[] = [
                 'label' => $messageUnread > 0 ? "Messages ($messageUnread)" : 'Messages',
@@ -209,6 +214,9 @@ new class extends Component
                     <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                         {{ $invitationUnread > 0 ? 'Work Inbox ('.$invitationUnread.')' : 'Work Inbox' }}
                     </a>
+                    <a href="{{ route('caregiver.notifications.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                        {{ $notificationUnread > 0 ? 'Notifications ('.$notificationUnread.')' : 'Notifications' }}
+                    </a>
                     <a href="{{ route('caregiver.shifts.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                         My Shifts
                     </a>
@@ -270,6 +278,9 @@ new class extends Component
                 @if ($isCaregiver)
                     <x-responsive-nav-link :href="route('caregiver.work-inbox.index')" wire:navigate>
                         {{ $invitationUnread > 0 ? __('Work Inbox').' ('.$invitationUnread.')' : __('Work Inbox') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('caregiver.notifications.index')" wire:navigate>
+                        {{ $notificationUnread > 0 ? __('Notifications').' ('.$notificationUnread.')' : __('Notifications') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('caregiver.shifts.index')" wire:navigate>
                         {{ __('My Shifts') }}

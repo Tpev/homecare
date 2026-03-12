@@ -333,7 +333,7 @@ class ManageCareRequest extends Component
         if ($booking->caregiver) {
             app(MarketplaceNotificationService::class)->notify(
                 recipients: $booking->caregiver,
-                eventKey: MarketplaceEvent::SHIFT_COMPLETED,
+                eventKey: MarketplaceEvent::REVIEW_RECEIVED,
                 title: 'New family review',
                 body: auth()->user()->name.' left a review after the shift.',
                 url: route('care-requests.apply', $this->requestItem->id),
