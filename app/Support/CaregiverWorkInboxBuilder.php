@@ -49,6 +49,7 @@ class CaregiverWorkInboxBuilder
             }
 
             $invitationMinutes = $this->estimatedShiftMinutes($request);
+            $invitationCompensation = $this->compensationPayload($invitationMinutes, $defaultRate);
 
             $items->push([
                 'id' => 'invite-'.$invitation->id,
@@ -60,7 +61,8 @@ class CaregiverWorkInboxBuilder
                 'title' => $request->title,
                 'location' => $request->city.', '.$request->state,
                 'schedule' => $this->scheduleLabel($request),
-                'compensation_line' => $this->compensationLine($invitationMinutes, $defaultRate),
+                'compensation' => $invitationCompensation,
+                'compensation_line' => $invitationCompensation['line'] ?? null,
                 'status_label' => 'Invited',
                 'status_tone' => 'info',
                 'fit_reason' => 'Family invited you directly.',
@@ -130,6 +132,7 @@ class CaregiverWorkInboxBuilder
             }
 
             $recommendedMinutes = $this->estimatedShiftMinutes($request);
+            $recommendedCompensation = $this->compensationPayload($recommendedMinutes, $defaultRate);
 
             $items->push([
                 'id' => 'recommended-'.$request->id,
@@ -141,7 +144,8 @@ class CaregiverWorkInboxBuilder
                 'title' => $request->title,
                 'location' => $request->city.', '.$request->state,
                 'schedule' => $this->scheduleLabel($request),
-                'compensation_line' => $this->compensationLine($recommendedMinutes, $defaultRate),
+                'compensation' => $recommendedCompensation,
+                'compensation_line' => $recommendedCompensation['line'] ?? null,
                 'status_label' => 'Open',
                 'status_tone' => 'neutral',
                 'fit_reason' => $this->recommendationReason($request, $user, $skillIds),
@@ -219,6 +223,7 @@ class CaregiverWorkInboxBuilder
         if ($status === CareRequestApplication::STATUS_APPLIED) {
             $minutes = $this->estimatedShiftMinutes($request, $booking);
             $rate = (float) ($application->proposed_rate ?: $defaultRate);
+            $compensation = $this->compensationPayload($minutes, $rate);
 
             return [
                 'id' => 'application-'.$application->id,
@@ -230,7 +235,8 @@ class CaregiverWorkInboxBuilder
                 'title' => $request->title,
                 'location' => $request->city.', '.$request->state,
                 'schedule' => $this->scheduleLabel($request),
-                'compensation_line' => $this->compensationLine($minutes, $rate),
+                'compensation' => $compensation,
+                'compensation_line' => $compensation['line'] ?? null,
                 'status_label' => 'Applied',
                 'status_tone' => 'neutral',
                 'fit_reason' => 'Waiting for family review.',
@@ -252,6 +258,7 @@ class CaregiverWorkInboxBuilder
                 : route('care-requests.apply', $request->id);
             $minutes = $this->estimatedShiftMinutes($request, $booking);
             $rate = (float) ($application->proposed_rate ?: $defaultRate);
+            $compensation = $this->compensationPayload($minutes, $rate);
 
             return [
                 'id' => 'application-'.$application->id,
@@ -263,7 +270,8 @@ class CaregiverWorkInboxBuilder
                 'title' => $request->title,
                 'location' => $request->city.', '.$request->state,
                 'schedule' => $this->scheduleLabel($request),
-                'compensation_line' => $this->compensationLine($minutes, $rate),
+                'compensation' => $compensation,
+                'compensation_line' => $compensation['line'] ?? null,
                 'status_label' => 'Shortlisted',
                 'status_tone' => 'success',
                 'fit_reason' => 'Family shortlisted you. Chat now to increase hire odds.',
@@ -287,6 +295,7 @@ class CaregiverWorkInboxBuilder
             if (! $booking) {
                 $minutes = $this->estimatedShiftMinutes($request);
                 $rate = (float) ($application->proposed_rate ?: $defaultRate);
+                $compensation = $this->compensationPayload($minutes, $rate);
 
                 return [
                     'id' => 'application-'.$application->id,
@@ -298,7 +307,8 @@ class CaregiverWorkInboxBuilder
                     'title' => $request->title,
                     'location' => $request->city.', '.$request->state,
                     'schedule' => $this->scheduleLabel($request),
-                    'compensation_line' => $this->compensationLine($minutes, $rate),
+                    'compensation' => $compensation,
+                    'compensation_line' => $compensation['line'] ?? null,
                     'status_label' => 'Hired',
                     'status_tone' => 'success',
                     'fit_reason' => 'You were hired. Open shift details and confirm agreement.',
@@ -333,6 +343,7 @@ class CaregiverWorkInboxBuilder
             };
             $minutes = $this->estimatedShiftMinutes($request, $booking);
             $rate = (float) ($application->proposed_rate ?: $defaultRate);
+            $compensation = $this->compensationPayload($minutes, $rate);
 
             return [
                 'id' => 'booking-'.$booking->id,
@@ -344,7 +355,8 @@ class CaregiverWorkInboxBuilder
                 'title' => $request->title,
                 'location' => $request->city.', '.$request->state,
                 'schedule' => $this->scheduleLabel($request, $booking),
-                'compensation_line' => $this->compensationLine($minutes, $rate),
+                'compensation' => $compensation,
+                'compensation_line' => $compensation['line'] ?? null,
                 'status_label' => $label,
                 'status_tone' => $tone,
                 'fit_reason' => $fitReason,
@@ -420,7 +432,10 @@ class CaregiverWorkInboxBuilder
         return 'Good profile fit based on your service settings.';
     }
 
-    private function compensationLine(?int $minutes, float $hourlyRate): ?string
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function compensationPayload(?int $minutes, float $hourlyRate): ?array
     {
         if (! $minutes || $minutes <= 0 || $hourlyRate <= 0) {
             return null;
@@ -432,12 +447,24 @@ class CaregiverWorkInboxBuilder
             ? (string) (int) round($hours)
             : number_format($hours, 1);
 
-        return sprintf(
-            '%sh @ $%s/hr • $%s total shift',
-            $hoursLabel,
-            number_format($hourlyRate, 2),
-            number_format($total, 2)
-        );
+        return [
+            'minutes' => $minutes,
+            'hours' => $hours,
+            'hours_label' => $hoursLabel,
+            'hourly_rate' => round($hourlyRate, 2),
+            'total' => $total,
+            'line' => sprintf(
+                '%sh @ $%s/hr • $%s total shift',
+                $hoursLabel,
+                number_format($hourlyRate, 2),
+                number_format($total, 2)
+            ),
+        ];
+    }
+
+    private function compensationLine(?int $minutes, float $hourlyRate): ?string
+    {
+        return $this->compensationPayload($minutes, $hourlyRate)['line'] ?? null;
     }
 
     private function estimatedShiftMinutes(CareRequest $request, ?CareBooking $booking = null): ?int
