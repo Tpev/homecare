@@ -23,6 +23,9 @@ class CaregiverWorkInboxBuilder
 
         $caregiverId = (int) $user->id;
         $now = now();
+        $profile = $user->caregiverProfile()->with('skills:id')->first();
+        $skillIds = $profile?->skills?->pluck('id')->map(fn ($id) => (int) $id)->all() ?? [];
+        $defaultRate = (float) ($profile?->resolvePlatformHourlyRate() ?? 0);
 
         $items = collect();
 
@@ -45,6 +48,8 @@ class CaregiverWorkInboxBuilder
                 continue;
             }
 
+            $invitationMinutes = $this->estimatedShiftMinutes($request);
+
             $items->push([
                 'id' => 'invite-'.$invitation->id,
                 'scope' => 'needs_response',
@@ -55,6 +60,7 @@ class CaregiverWorkInboxBuilder
                 'title' => $request->title,
                 'location' => $request->city.', '.$request->state,
                 'schedule' => $this->scheduleLabel($request),
+                'compensation_line' => $this->compensationLine($invitationMinutes, $defaultRate),
                 'status_label' => 'Invited',
                 'status_tone' => 'info',
                 'fit_reason' => 'Family invited you directly.',
@@ -97,7 +103,7 @@ class CaregiverWorkInboxBuilder
                 continue;
             }
 
-            $item = $this->buildApplicationItem($application);
+            $item = $this->buildApplicationItem($application, $defaultRate);
             if ($item) {
                 $items->push($item);
             }
@@ -108,9 +114,6 @@ class CaregiverWorkInboxBuilder
             ->merge($applications->pluck('care_request_id'))
             ->unique()
             ->values();
-
-        $profile = $user->caregiverProfile()->with('skills:id')->first();
-        $skillIds = $profile?->skills?->pluck('id')->map(fn ($id) => (int) $id)->all() ?? [];
 
         $recommendedRequests = CareRequest::query()
             ->with(['tasks:id,name'])
@@ -126,6 +129,8 @@ class CaregiverWorkInboxBuilder
                 continue;
             }
 
+            $recommendedMinutes = $this->estimatedShiftMinutes($request);
+
             $items->push([
                 'id' => 'recommended-'.$request->id,
                 'scope' => 'recommended',
@@ -136,6 +141,7 @@ class CaregiverWorkInboxBuilder
                 'title' => $request->title,
                 'location' => $request->city.', '.$request->state,
                 'schedule' => $this->scheduleLabel($request),
+                'compensation_line' => $this->compensationLine($recommendedMinutes, $defaultRate),
                 'status_label' => 'Open',
                 'status_tone' => 'neutral',
                 'fit_reason' => $this->recommendationReason($request, $user, $skillIds),
@@ -200,7 +206,7 @@ class CaregiverWorkInboxBuilder
     /**
      * @return array<string, mixed>|null
      */
-    private function buildApplicationItem(CareRequestApplication $application): ?array
+    private function buildApplicationItem(CareRequestApplication $application, float $defaultRate): ?array
     {
         $request = $application->careRequest;
         if (! $request) {
@@ -211,6 +217,9 @@ class CaregiverWorkInboxBuilder
         $status = (string) $application->status;
 
         if ($status === CareRequestApplication::STATUS_APPLIED) {
+            $minutes = $this->estimatedShiftMinutes($request, $booking);
+            $rate = (float) ($application->proposed_rate ?: $defaultRate);
+
             return [
                 'id' => 'application-'.$application->id,
                 'scope' => 'applied',
@@ -221,6 +230,7 @@ class CaregiverWorkInboxBuilder
                 'title' => $request->title,
                 'location' => $request->city.', '.$request->state,
                 'schedule' => $this->scheduleLabel($request),
+                'compensation_line' => $this->compensationLine($minutes, $rate),
                 'status_label' => 'Applied',
                 'status_tone' => 'neutral',
                 'fit_reason' => 'Waiting for family review.',
@@ -240,6 +250,8 @@ class CaregiverWorkInboxBuilder
             $chatHref = $application->conversation
                 ? route('messages.show', $application->conversation->id)
                 : route('care-requests.apply', $request->id);
+            $minutes = $this->estimatedShiftMinutes($request, $booking);
+            $rate = (float) ($application->proposed_rate ?: $defaultRate);
 
             return [
                 'id' => 'application-'.$application->id,
@@ -251,6 +263,7 @@ class CaregiverWorkInboxBuilder
                 'title' => $request->title,
                 'location' => $request->city.', '.$request->state,
                 'schedule' => $this->scheduleLabel($request),
+                'compensation_line' => $this->compensationLine($minutes, $rate),
                 'status_label' => 'Shortlisted',
                 'status_tone' => 'success',
                 'fit_reason' => 'Family shortlisted you. Chat now to increase hire odds.',
@@ -272,6 +285,9 @@ class CaregiverWorkInboxBuilder
 
         if ($status === CareRequestApplication::STATUS_HIRED) {
             if (! $booking) {
+                $minutes = $this->estimatedShiftMinutes($request);
+                $rate = (float) ($application->proposed_rate ?: $defaultRate);
+
                 return [
                     'id' => 'application-'.$application->id,
                     'scope' => 'hired',
@@ -282,6 +298,7 @@ class CaregiverWorkInboxBuilder
                     'title' => $request->title,
                     'location' => $request->city.', '.$request->state,
                     'schedule' => $this->scheduleLabel($request),
+                    'compensation_line' => $this->compensationLine($minutes, $rate),
                     'status_label' => 'Hired',
                     'status_tone' => 'success',
                     'fit_reason' => 'You were hired. Open shift details and confirm agreement.',
@@ -314,6 +331,8 @@ class CaregiverWorkInboxBuilder
                 CareBooking::STATUS_CANCELLED => ['completed', 100, 'Cancelled', 'neutral', 'Shift was cancelled.', 'View shift'],
                 default => ['hired', 300, 'Hired', 'success', 'Shift ready.', 'Open shift'],
             };
+            $minutes = $this->estimatedShiftMinutes($request, $booking);
+            $rate = (float) ($application->proposed_rate ?: $defaultRate);
 
             return [
                 'id' => 'booking-'.$booking->id,
@@ -325,6 +344,7 @@ class CaregiverWorkInboxBuilder
                 'title' => $request->title,
                 'location' => $request->city.', '.$request->state,
                 'schedule' => $this->scheduleLabel($request, $booking),
+                'compensation_line' => $this->compensationLine($minutes, $rate),
                 'status_label' => $label,
                 'status_tone' => $tone,
                 'fit_reason' => $fitReason,
@@ -398,6 +418,74 @@ class CaregiverWorkInboxBuilder
         }
 
         return 'Good profile fit based on your service settings.';
+    }
+
+    private function compensationLine(?int $minutes, float $hourlyRate): ?string
+    {
+        if (! $minutes || $minutes <= 0 || $hourlyRate <= 0) {
+            return null;
+        }
+
+        $hours = $minutes / 60;
+        $total = round($hours * $hourlyRate, 2);
+        $hoursLabel = abs($hours - round($hours)) < 0.01
+            ? (string) (int) round($hours)
+            : number_format($hours, 1);
+
+        return sprintf(
+            '%sh @ $%s/hr • $%s total shift',
+            $hoursLabel,
+            number_format($hourlyRate, 2),
+            number_format($total, 2)
+        );
+    }
+
+    private function estimatedShiftMinutes(CareRequest $request, ?CareBooking $booking = null): ?int
+    {
+        if ($booking?->scheduled_start_at && $booking->scheduled_end_at) {
+            $minutes = (int) $booking->scheduled_start_at->diffInMinutes($booking->scheduled_end_at, false);
+
+            return $minutes > 0 ? $minutes : null;
+        }
+
+        if ($request->request_type === CareRequest::TYPE_ONE_TIME && $request->requested_start_at && $request->requested_end_at) {
+            $minutes = (int) $request->requested_start_at->diffInMinutes($request->requested_end_at, false);
+
+            return $minutes > 0 ? $minutes : null;
+        }
+
+        if ($request->request_type === CareRequest::TYPE_RECURRING) {
+            $startMinutes = $this->timeStringToMinutes($request->recurring_start_time);
+            $endMinutes = $this->timeStringToMinutes($request->recurring_end_time);
+
+            if ($startMinutes === null || $endMinutes === null) {
+                return null;
+            }
+
+            $diff = $endMinutes - $startMinutes;
+            if ($diff <= 0) {
+                $diff += 24 * 60;
+            }
+
+            return $diff > 0 ? $diff : null;
+        }
+
+        return null;
+    }
+
+    private function timeStringToMinutes(?string $time): ?int
+    {
+        if (! $time) {
+            return null;
+        }
+
+        try {
+            $parsed = Carbon::parse($time);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return ((int) $parsed->format('H') * 60) + (int) $parsed->format('i');
     }
 
     private function scheduleLabel(CareRequest $request, ?CareBooking $booking = null): string

@@ -128,6 +128,11 @@ new class extends Component
                 'active' => request()->routeIs('caregiver.shifts.*'),
             ];
             $primaryLinks[] = [
+                'label' => 'My Earnings',
+                'href' => route('caregiver.earnings.index'),
+                'active' => request()->routeIs('caregiver.earnings.*'),
+            ];
+            $primaryLinks[] = [
                 'label' => $notificationUnread > 0 ? "Notifications ($notificationUnread)" : 'Notifications',
                 'href' => route('caregiver.notifications.index'),
                 'active' => request()->routeIs('caregiver.notifications.*'),

@@ -18,7 +18,6 @@ class ProfileCompletenessCard extends Component
     {
         $checks = [
             'Bio added' => filled($this->profile->bio),
-            'Platform rate assigned' => (float) $this->profile->resolvePlatformHourlyRate() > 0,
             'Experience set' => ! is_null($this->profile->years_experience),
             'ZIP set' => filled($this->profile->service_area_zip),
             'Skills selected' => $this->profile->skills()->exists(),

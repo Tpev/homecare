@@ -78,6 +78,8 @@ class CaregiverWorkInboxTest extends TestCase
         $response->assertSee('Open application');
         $response->assertSee('Start shift');
         $response->assertSee('Apply now');
+        $response->assertSee('3h @ $27.00/hr');
+        $response->assertSee('$81.00 total shift');
     }
 
     public function test_caregiver_can_accept_invitation_from_work_inbox(): void

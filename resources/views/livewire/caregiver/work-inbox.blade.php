@@ -96,6 +96,9 @@
                     <div>
                         <p class="font-display text-lg font-semibold text-slate-900 leading-snug">{{ $item['title'] }}</p>
                         <p class="mt-1 text-sm text-slate-600">{{ $item['location'] }} · {{ $item['schedule'] }}</p>
+                        @if (!empty($item['compensation_line']))
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ $item['compensation_line'] }}</p>
+                        @endif
                         <p class="mt-1 text-xs text-slate-500">{{ $item['meta'] }}</p>
                     </div>
                     <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusStyles[$item['status_tone'] ?? 'neutral'] ?? $statusStyles['neutral'] }}">
