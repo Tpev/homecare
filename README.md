@@ -83,3 +83,10 @@ npm run test:e2e:ui
 See detailed test coverage and seeded test accounts in:
 
 - `tests/e2e/README.md`
+
+## HomeCare Design Guidelines
+
+Caregiver-side UI/UX standards are documented in:
+
+- `docs/caregiver-design-guidelines.md`
+- `docs/caregiver-journey-v2-spec.md`
