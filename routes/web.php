@@ -1,13 +1,18 @@
 <?php
 
 use App\Http\Controllers\AdminLeadsController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CaregiverIdentityVerificationController;
+use App\Http\Controllers\CaregiverStripeConnectController;
 use App\Http\Controllers\DiditWebhookController;
+use App\Http\Controllers\FamilyBillingController;
 use App\Http\Controllers\MarketingPagesController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SeoPagesController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Livewire\Admin\FunnelAnalytics;
+use App\Livewire\Admin\PaymentsQueue;
 use App\Livewire\Admin\CaregiverReviewsQueue;
 use App\Livewire\Admin\SupportTicketsQueue;
 use App\Livewire\Caregiver\ApplyToCareRequest;
@@ -42,6 +47,7 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/caregivers/moderation-logs', \App\Livewire\Admin\CaregiverModerationLogs::class)
             ->name('caregivers.moderation_logs');
         Route::get('/support/tickets', SupportTicketsQueue::class)->name('support.tickets');
+        Route::get('/payments/ops', PaymentsQueue::class)->name('payments.ops');
         Route::get('/analytics/funnel', FunnelAnalytics::class)->name('analytics.funnel');
     });
 
@@ -49,11 +55,16 @@ Route::get('/', [MarketingPagesController::class, 'landing'])->name('landing');
 Route::get('/families', [MarketingPagesController::class, 'family'])->name('landing.family');
 Route::get('/caregivers', [MarketingPagesController::class, 'caregiver'])->name('landing.caregiver');
 Route::get('/agencies', [MarketingPagesController::class, 'agency'])->name('landing.agency');
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{blogSlug}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
 Route::get('/robots.txt', [RobotsController::class, 'index'])->name('robots.txt');
 Route::post('/webhooks/didit/identity', DiditWebhookController::class)
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('webhooks.didit.identity');
+Route::post('/webhooks/stripe', StripeWebhookController::class)
+    ->withoutMiddleware([VerifyCsrfToken::class])
+    ->name('webhooks.stripe');
 Route::get('/{seoSlug}', [SeoPagesController::class, 'show'])
     ->whereIn('seoSlug', array_keys(config('seo_pages.pages', [])))
     ->name('seo.page');
@@ -86,6 +97,12 @@ Route::middleware(['auth', 'caregiver.role'])->group(function () {
         ->name('caregiver.verification.session');
     Route::get('/caregiver/verification/return', [CaregiverIdentityVerificationController::class, 'returned'])
         ->name('caregiver.verification.return');
+    Route::get('/caregiver/payouts/connect', [CaregiverStripeConnectController::class, 'show'])
+        ->name('caregiver.payouts.connect.show');
+    Route::post('/caregiver/payouts/connect/start', [CaregiverStripeConnectController::class, 'start'])
+        ->name('caregiver.payouts.connect.start');
+    Route::get('/caregiver/payouts/connect/return', [CaregiverStripeConnectController::class, 'returned'])
+        ->name('caregiver.payouts.connect.return');
     Route::get('/caregiver/invitations', InvitationsIndex::class)->name('caregiver.invitations.index');
     Route::get('/caregiver/work-inbox', WorkInbox::class)->name('caregiver.work-inbox.index');
     Route::get('/caregiver/notifications', NotificationsCenter::class)->name('caregiver.notifications.index');
@@ -101,6 +118,8 @@ Route::middleware(['auth', 'family.role'])->prefix('family')->name('family.')->g
     Route::get('/requests', RequestsIndex::class)->name('requests.index');
     Route::get('/requests/create', CreateCareRequestWizard::class)->name('requests.create');
     Route::get('/requests/create/ai', AiRequestCopilot::class)->name('requests.create_ai');
+    Route::get('/billing', [FamilyBillingController::class, 'show'])->name('billing.show');
+    Route::post('/billing/checkout', [FamilyBillingController::class, 'createCheckout'])->name('billing.checkout');
     Route::get('/requests/{careRequest}', ManageCareRequest::class)
         ->whereNumber('careRequest')
         ->name('requests.show');

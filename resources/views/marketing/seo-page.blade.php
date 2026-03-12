@@ -3,6 +3,7 @@
 @section('title', $page['meta_title'] ?? ($page['h1'] ?? 'HomeCare Raleigh'))
 @section('meta_description', $page['meta_description'] ?? 'HomeCare Raleigh non-medical care marketplace.')
 @section('canonical', url($page['path'] ?? request()->path()))
+@section('og_image', $page['hero_image'] ?? 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1600&q=80')
 
 @section('structured_data')
     @php
@@ -79,6 +80,7 @@
                     <a href="{{ route('landing.caregiver') }}" class="transition hover:text-slate-900">Caregivers</a>
                     <a href="{{ route('landing.agency') }}" class="transition hover:text-slate-900">Agencies</a>
                     <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-home-care']) }}" class="transition hover:text-slate-900">Raleigh Guides</a>
+                    <a href="{{ route('blog.index') }}" class="transition hover:text-slate-900">Blog</a>
                 </nav>
 
                 <div class="flex items-center gap-2">
@@ -186,6 +188,9 @@
                             <p class="text-sm font-semibold text-slate-900">{{ $related['title'] }}</p>
                         </a>
                     @endforeach
+                    <a href="{{ route('blog.index') }}" class="rounded-2xl border border-slate-200 bg-blue-50 p-4 transition hover:bg-white hover:shadow-sm">
+                        <p class="text-sm font-semibold text-blue-900">Raleigh HomeCare Blog</p>
+                    </a>
                 </div>
             </div>
         </section>

@@ -105,6 +105,11 @@ new class extends Component
                 'active' => request()->routeIs('caregivers.search') || request()->routeIs('caregivers.show'),
             ];
             $primaryLinks[] = [
+                'label' => 'Billing',
+                'href' => route('family.billing.show'),
+                'active' => request()->routeIs('family.billing.*'),
+            ];
+            $primaryLinks[] = [
                 'label' => $messageUnread > 0 ? "Messages ($messageUnread)" : 'Messages',
                 'href' => route('messages.index'),
                 'active' => request()->routeIs('messages.*'),
@@ -144,6 +149,11 @@ new class extends Component
                 'label' => 'Admin Support',
                 'href' => route('admin.support.tickets'),
                 'active' => request()->routeIs('admin.support.tickets'),
+            ];
+            $primaryLinks[] = [
+                'label' => 'Admin Payments',
+                'href' => route('admin.payments.ops'),
+                'active' => request()->routeIs('admin.payments.ops'),
             ];
         }
     @endphp
@@ -209,6 +219,9 @@ new class extends Component
                     {{ $messageUnread > 0 ? 'Messages ('.$messageUnread.')' : 'Messages' }}
                 </a>
                 <a href="{{ route('support.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Support Center</a>
+                @if ($isFamily)
+                    <a href="{{ route('family.billing.show') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Billing & Payments</a>
+                @endif
 
                 @if ($isCaregiver)
                     <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
@@ -223,6 +236,9 @@ new class extends Component
                     <a href="{{ route('caregiver.earnings.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                         My Earnings
                     </a>
+                    <a href="{{ route('caregiver.payouts.connect.show') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                        Payout Setup
+                    </a>
                     <a href="{{ route('caregiver.verification.show') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                         {{ $identityApproved ? 'Identity Verified' : 'Verify Identity' }}
                     </a>
@@ -234,6 +250,7 @@ new class extends Component
                 @if ($isAdmin)
                     <a href="{{ route('admin.caregivers.reviews') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Admin Reviews</a>
                     <a href="{{ route('admin.support.tickets') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Support Queue</a>
+                    <a href="{{ route('admin.payments.ops') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Payments Ops</a>
                     <a href="{{ route('admin.analytics.funnel') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Funnel Analytics</a>
                 @endif
 
@@ -275,6 +292,9 @@ new class extends Component
                     {{ $messageUnread > 0 ? __('Messages').' ('.$messageUnread.')' : __('Messages') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('support.index')" wire:navigate>{{ __('Support Center') }}</x-responsive-nav-link>
+                @if ($isFamily)
+                    <x-responsive-nav-link :href="route('family.billing.show')" wire:navigate>{{ __('Billing & Payments') }}</x-responsive-nav-link>
+                @endif
                 @if ($isCaregiver)
                     <x-responsive-nav-link :href="route('caregiver.work-inbox.index')" wire:navigate>
                         {{ $invitationUnread > 0 ? __('Work Inbox').' ('.$invitationUnread.')' : __('Work Inbox') }}
@@ -288,9 +308,18 @@ new class extends Component
                     <x-responsive-nav-link :href="route('caregiver.earnings.index')" wire:navigate>
                         {{ __('My Earnings') }}
                     </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('caregiver.payouts.connect.show')" wire:navigate>
+                        {{ __('Payout Setup') }}
+                    </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('caregiver.verification.show')" wire:navigate>
                         {{ $identityApproved ? __('Identity Verified') : __('Verify Identity') }}
                     </x-responsive-nav-link>
+                @endif
+                @if ($isAdmin)
+                    <x-responsive-nav-link :href="route('admin.caregivers.reviews')" wire:navigate>{{ __('Admin Reviews') }}</x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.support.tickets')" wire:navigate>{{ __('Support Queue') }}</x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.payments.ops')" wire:navigate>{{ __('Payments Ops') }}</x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.analytics.funnel')" wire:navigate>{{ __('Funnel Analytics') }}</x-responsive-nav-link>
                 @endif
                 <button wire:click="logout" class="w-full text-start">
                     <x-responsive-nav-link>{{ __('Log Out') }}</x-responsive-nav-link>

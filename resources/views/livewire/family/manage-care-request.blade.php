@@ -5,6 +5,7 @@
 
     @php
         $booking = $requestItem->booking;
+        $payment = $booking?->payment;
         $hiredApplication = $requestItem->applications->firstWhere('status', \App\Models\CareRequestApplication::STATUS_HIRED);
         $hiredConversation = $hiredApplication?->conversation;
         $noShowEligibleAt = $booking?->scheduled_start_at?->copy()->addMinutes(30);
@@ -24,10 +25,13 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <h1 class="text-2xl font-display font-semibold text-slate-900">{{ $requestItem->title }}</h1>
                         <x-badge :text="strtoupper($requestItem->status)" color="blue" />
-                        @if ($booking)
-                            <x-badge :text="'SHIFT '.strtoupper($booking->status)" color="green" />
-                        @endif
-                    </div>
+                    @if ($booking)
+                        <x-badge :text="'SHIFT '.strtoupper($booking->status)" color="green" />
+                    @endif
+                    @if ($payment)
+                        <x-badge :text="'PAYMENT '.strtoupper($payment->status)" color="amber" />
+                    @endif
+                </div>
                     <p class="mt-1 text-sm text-slate-600">
                         {{ $requestItem->city }}, {{ $requestItem->state }}
                         @if ($requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME)
@@ -371,6 +375,23 @@
                 </x-slot:header>
 
                 <div class="space-y-4 text-sm">
+                    @if (! $payment)
+                        <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                            Payment authorization is not ready yet. Add or update your card in
+                            <a href="{{ route('family.billing.show') }}" wire:navigate class="underline underline-offset-2 font-medium">Billing & Payments</a>.
+                        </div>
+                    @else
+                        <div class="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                            Payment status: <span class="font-semibold text-slate-900">{{ strtoupper($payment->status) }}</span>
+                            @if ($payment->amount_authorized_cents)
+                                • Authorized ${{ number_format($payment->amount_authorized_cents / 100, 2) }}
+                            @endif
+                            @if ($payment->amount_captured_cents)
+                                • Captured ${{ number_format($payment->amount_captured_cents / 100, 2) }}
+                            @endif
+                        </div>
+                    @endif
+
                     <p class="text-slate-600">
                         Scheduled: {{ optional($booking->scheduled_start_at)->format('M d, Y H:i') }} - {{ optional($booking->scheduled_end_at)->format('M d, Y H:i') }}
                     </p>

@@ -15,6 +15,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'stripe_customer_id',
         'password',
         'role',
         'phone',
@@ -150,5 +151,15 @@ class User extends Authenticatable
     public function notificationDeliveries(): HasMany
     {
         return $this->hasMany(MarketplaceNotificationDelivery::class);
+    }
+
+    public function familyBookingPayments(): HasMany
+    {
+        return $this->hasMany(CareBookingPayment::class, 'family_user_id');
+    }
+
+    public function caregiverBookingPayments(): HasMany
+    {
+        return $this->hasMany(CareBookingPayment::class, 'caregiver_user_id');
     }
 }

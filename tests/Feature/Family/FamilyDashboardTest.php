@@ -36,8 +36,9 @@ class FamilyDashboardTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Caregiver Dashboard');
-        $response->assertSee('Browse Requests');
+        $response->assertSee('Work inbox');
         $response->assertSee('Task comfort selection');
+        $response->assertSee('Payout setup');
         $response->assertSee('Insurance setup');
     }
 }

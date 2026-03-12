@@ -14,6 +14,13 @@ class MarketplaceEvent
     public const SHIFT_COMPLETED = 'shift_completed';
     public const REVIEW_RECEIVED = 'review_received';
     public const MATCHING_REQUEST_REMINDER = 'matching_request_reminder';
+    public const PAYMENT_AUTHORIZED = 'payment_authorized';
+    public const PAYMENT_AUTHORIZATION_FAILED = 'payment_authorization_failed';
+    public const PAYMENT_ACTION_REQUIRED = 'payment_action_required';
+    public const PAYMENT_CAPTURED = 'payment_captured';
+    public const PAYMENT_REFUNDED = 'payment_refunded';
+    public const PAYOUT_TRANSFERRED = 'payout_transferred';
+    public const PAYOUT_TRANSFER_FAILED = 'payout_transfer_failed';
 
     /**
      * @return list<string>
@@ -31,6 +38,13 @@ class MarketplaceEvent
             self::SHIFT_COMPLETED,
             self::REVIEW_RECEIVED,
             self::MATCHING_REQUEST_REMINDER,
+            self::PAYMENT_AUTHORIZED,
+            self::PAYMENT_AUTHORIZATION_FAILED,
+            self::PAYMENT_ACTION_REQUIRED,
+            self::PAYMENT_CAPTURED,
+            self::PAYMENT_REFUNDED,
+            self::PAYOUT_TRANSFERRED,
+            self::PAYOUT_TRANSFER_FAILED,
         ];
     }
 }

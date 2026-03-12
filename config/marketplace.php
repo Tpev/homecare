@@ -3,6 +3,11 @@
 return [
     'family_estimate_hourly_rate' => 30.00,
 
+    'payments' => [
+        'platform_fee_percent' => (float) env('MARKETPLACE_PLATFORM_FEE_PERCENT', 10),
+        'authorization_buffer_percent' => (float) env('MARKETPLACE_AUTH_BUFFER_PERCENT', 20),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Platform Pricing Tiers

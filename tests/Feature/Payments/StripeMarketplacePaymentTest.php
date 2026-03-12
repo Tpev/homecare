@@ -1,0 +1,441 @@
+<?php
+
+namespace Tests\Feature\Payments;
+
+use App\Livewire\Family\ManageCareRequest;
+use App\Livewire\Admin\PaymentsQueue;
+use App\Models\CareBooking;
+use App\Models\CareBookingPayment;
+use App\Models\CareRequest;
+use App\Models\CareRequestApplication;
+use App\Models\CaregiverProfile;
+use App\Models\User;
+use App\Services\Payments\BookingPaymentService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class StripeMarketplacePaymentTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_hire_fails_when_billing_is_not_configured(): void
+    {
+        config()->set('services.stripe.bypass', false);
+        config()->set('services.stripe.secret', null);
+
+        [$family, $request, $application] = $this->seedScenario();
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $this->assertDatabaseHas('care_requests', [
+            'id' => $request->id,
+            'status' => CareRequest::STATUS_OPEN,
+        ]);
+        $this->assertDatabaseMissing('care_bookings', [
+            'care_request_id' => $request->id,
+        ]);
+        $this->assertDatabaseCount('care_booking_payments', 0);
+    }
+
+    public function test_hire_authorizes_payment_in_bypass_mode(): void
+    {
+        config()->set('services.stripe.bypass', true);
+
+        [$family, $request, $application] = $this->seedScenario();
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+
+        $this->assertDatabaseHas('care_booking_payments', [
+            'care_booking_id' => $booking->id,
+            'status' => 'authorized',
+            'family_user_id' => $family->id,
+        ]);
+    }
+
+    public function test_family_confirmation_captures_and_transfers_when_connect_ready(): void
+    {
+        config()->set('services.stripe.bypass', true);
+
+        [$family, $request, $application, $caregiverProfile] = $this->seedScenario(returnProfile: true);
+        $caregiverProfile->update([
+            'stripe_connect_account_id' => 'acct_test_ready',
+            'stripe_charges_enabled' => true,
+            'stripe_payouts_enabled' => true,
+            'stripe_connect_onboarding_completed_at' => now(),
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $booking->update([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'timesheet_submitted_at' => now(),
+            'worked_minutes' => 120,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('completeBooking');
+
+        $this->assertDatabaseHas('care_booking_payments', [
+            'care_booking_id' => $booking->id,
+            'status' => 'transferred',
+        ]);
+        $this->assertDatabaseHas('caregiver_payout_items', [
+            'care_booking_id' => $booking->id,
+            'status' => 'paid',
+        ]);
+        $this->assertNotNull($booking->fresh()?->family_confirmed_at);
+    }
+
+    public function test_family_billing_checkout_in_bypass_mode_sets_customer_profile(): void
+    {
+        config()->set('services.stripe.bypass', true);
+
+        $family = User::factory()->create(['role' => 'family']);
+
+        $this->actingAs($family)
+            ->get(route('family.billing.show', ['checkout_session_id' => 'bypass-session']))
+            ->assertRedirect(route('family.billing.show'));
+
+        $this->assertNotNull($family->fresh()->stripe_customer_id);
+    }
+
+    public function test_caregiver_connect_onboarding_bypass_sets_connect_ready(): void
+    {
+        config()->set('services.stripe.bypass', true);
+
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'draft',
+        ]);
+
+        $this->actingAs($caregiver)
+            ->post(route('caregiver.payouts.connect.start'))
+            ->assertRedirect(route('caregiver.payouts.connect.return'));
+
+        $this->actingAs($caregiver)
+            ->get(route('caregiver.payouts.connect.return'))
+            ->assertRedirect(route('caregiver.payouts.connect.show'));
+
+        $profile = CaregiverProfile::query()->where('user_id', $caregiver->id)->firstOrFail();
+        $this->assertTrue($profile->stripeConnectIsReady());
+    }
+
+    public function test_stripe_webhook_updates_booking_payment_state(): void
+    {
+        config()->set('services.stripe.bypass', true);
+
+        [$family, $request, $application] = $this->seedScenario();
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+
+        $payload = [
+            'id' => 'evt_test_payment_cancelled',
+            'object' => 'event',
+            'type' => 'payment_intent.canceled',
+            'data' => [
+                'object' => [
+                    'id' => 'pi_bypass_booking_'.$booking->id,
+                    'status' => 'canceled',
+                ],
+            ],
+        ];
+
+        $this->postJson(route('webhooks.stripe'), $payload)->assertOk();
+
+        $this->assertDatabaseHas('care_booking_payments', [
+            'care_booking_id' => $booking->id,
+            'status' => 'cancelled',
+        ]);
+    }
+
+    public function test_capture_handles_overage_with_second_charge(): void
+    {
+        config()->set('services.stripe.bypass', true);
+
+        [$family, $request, $application, $caregiverProfile] = $this->seedScenario(returnProfile: true);
+        $caregiverProfile->update([
+            'stripe_connect_account_id' => 'acct_test_ready_overage',
+            'stripe_charges_enabled' => true,
+            'stripe_payouts_enabled' => true,
+            'stripe_connect_onboarding_completed_at' => now(),
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        CareBookingPayment::query()->where('care_booking_id', $booking->id)->update([
+            'amount_authorized_cents' => 100,
+        ]);
+
+        $booking->update([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'timesheet_submitted_at' => now(),
+            'worked_minutes' => 300,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('completeBooking');
+
+        $payment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->firstOrFail();
+        $this->assertGreaterThan(0, (int) $payment->amount_overage_cents);
+        $this->assertNotNull($payment->stripe_overage_payment_intent_id);
+    }
+
+    public function test_expired_authorization_reauthorizes_before_capture(): void
+    {
+        config()->set('services.stripe.bypass', true);
+
+        [$family, $request, $application, $caregiverProfile] = $this->seedScenario(returnProfile: true);
+        $caregiverProfile->update([
+            'stripe_connect_account_id' => 'acct_test_ready_reauth',
+            'stripe_charges_enabled' => true,
+            'stripe_payouts_enabled' => true,
+            'stripe_connect_onboarding_completed_at' => now(),
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        CareBookingPayment::query()->where('care_booking_id', $booking->id)->update([
+            'authorization_expires_at' => now()->subMinute(),
+        ]);
+
+        $booking->update([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'timesheet_submitted_at' => now(),
+            'worked_minutes' => 120,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('completeBooking');
+
+        $payment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->firstOrFail();
+        $this->assertNotNull($payment->reauthorized_at);
+    }
+
+    public function test_refund_marks_payment_refunded_and_reverses_payout_item(): void
+    {
+        config()->set('services.stripe.bypass', true);
+
+        [$family, $request, $application, $caregiverProfile] = $this->seedScenario(returnProfile: true);
+        $caregiverProfile->update([
+            'stripe_connect_account_id' => 'acct_test_ready_refund',
+            'stripe_charges_enabled' => true,
+            'stripe_payouts_enabled' => true,
+            'stripe_connect_onboarding_completed_at' => now(),
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $booking->update([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'timesheet_submitted_at' => now(),
+            'worked_minutes' => 180,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('completeBooking');
+
+        app(BookingPaymentService::class)->refundForBooking($booking->fresh(['payment']));
+
+        $payment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->firstOrFail();
+        $this->assertSame(CareBookingPayment::STATUS_REFUNDED, $payment->status);
+        $this->assertGreaterThan(0, (int) $payment->amount_refunded_cents);
+        $this->assertNotNull($payment->stripe_last_refund_id);
+        $this->assertNotNull($payment->stripe_last_transfer_reversal_id);
+
+        $this->assertDatabaseHas('caregiver_payout_items', [
+            'care_booking_id' => $booking->id,
+            'status' => 'reversed',
+        ]);
+    }
+
+    public function test_stripe_webhook_checkout_completed_syncs_family_billing(): void
+    {
+        config()->set('services.stripe.bypass', true);
+
+        $family = User::factory()->create(['role' => 'family']);
+        $payload = [
+            'id' => 'evt_checkout_completed',
+            'object' => 'event',
+            'type' => 'checkout.session.completed',
+            'data' => [
+                'object' => [
+                    'id' => 'cs_test_billing',
+                    'mode' => 'setup',
+                    'status' => 'complete',
+                    'metadata' => [
+                        'family_user_id' => (string) $family->id,
+                    ],
+                ],
+            ],
+        ];
+
+        $this->postJson(route('webhooks.stripe'), $payload)->assertOk();
+        $this->assertNotNull($family->fresh()->stripe_customer_id);
+    }
+
+    public function test_stripe_webhook_account_updated_syncs_caregiver_connect_state(): void
+    {
+        config()->set('services.stripe.bypass', true);
+
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        $profile = CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'active',
+            'stripe_connect_account_id' => 'acct_sync_test',
+            'stripe_charges_enabled' => false,
+            'stripe_payouts_enabled' => false,
+        ]);
+
+        $payload = [
+            'id' => 'evt_account_updated',
+            'object' => 'event',
+            'type' => 'account.updated',
+            'data' => [
+                'object' => [
+                    'id' => 'acct_sync_test',
+                    'charges_enabled' => true,
+                    'payouts_enabled' => true,
+                ],
+            ],
+        ];
+
+        $this->postJson(route('webhooks.stripe'), $payload)->assertOk();
+
+        $profile->refresh();
+        $this->assertTrue((bool) $profile->stripe_charges_enabled);
+        $this->assertTrue((bool) $profile->stripe_payouts_enabled);
+    }
+
+    public function test_admin_payments_queue_can_retry_transfer_and_refund(): void
+    {
+        config()->set('services.stripe.bypass', true);
+
+        [$family, $request, $application, $caregiverProfile] = $this->seedScenario(returnProfile: true);
+        $caregiverProfile->update([
+            'stripe_connect_account_id' => 'acct_admin_retry',
+            'stripe_charges_enabled' => true,
+            'stripe_payouts_enabled' => true,
+            'stripe_connect_onboarding_completed_at' => now(),
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $booking->update([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'timesheet_submitted_at' => now(),
+            'worked_minutes' => 90,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('completeBooking');
+
+        $payment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->firstOrFail();
+        $payment->update([
+            'status' => CareBookingPayment::STATUS_TRANSFER_FAILED,
+            'stripe_transfer_id' => null,
+        ]);
+
+        $admin = User::factory()->create([
+            'email' => 'test@test.com',
+            'role' => 'family',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(PaymentsQueue::class)
+            ->set('refundAmountCents.'.$payment->id, '500')
+            ->set('refundReason.'.$payment->id, 'requested_by_customer')
+            ->call('retryTransfer', $payment->id)
+            ->call('refund', $payment->id);
+
+        $this->assertDatabaseHas('care_booking_payments', [
+            'id' => $payment->id,
+            'status' => CareBookingPayment::STATUS_PARTIALLY_REFUNDED,
+        ]);
+    }
+
+    /**
+     * @return array{User,CareRequest,CareRequestApplication,CaregiverProfile|null}
+     */
+    private function seedScenario(bool $returnProfile = false): array
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+
+        $caregiverProfile = CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'active',
+            'bio' => str_repeat('Experienced caregiver. ', 4),
+            'platform_hourly_rate' => 28.00,
+            'years_experience' => 5,
+            'service_area_zip' => '27601',
+            'service_radius_miles' => 10,
+            'insurance_status' => CaregiverProfile::INSURANCE_NO,
+            'identity_verified_at' => now(),
+            'identity_verification_status' => 'approved',
+        ]);
+
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Morning companionship',
+            'status' => CareRequest::STATUS_OPEN,
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'requested_start_at' => now()->addDay()->setTime(9, 0),
+            'requested_end_at' => now()->addDay()->setTime(13, 0),
+            'address_line1' => '123 Main St',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+        ]);
+        $request->recipient()->create([
+            'full_name' => 'Mary Doe',
+            'relationship_to_family' => 'Mother',
+        ]);
+
+        $application = CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_APPLIED,
+            'proposed_rate' => 28.00,
+            'cover_note' => str_repeat('Can provide safe and reliable care. ', 3),
+        ]);
+
+        return [$family, $request, $application, $returnProfile ? $caregiverProfile : null];
+    }
+}

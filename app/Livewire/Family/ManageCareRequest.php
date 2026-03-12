@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Family;
 
+use App\Exceptions\Payments\PaymentException;
 use App\Models\CareBooking;
 use App\Models\CareBookingChangeRequest;
 use App\Models\CareBookingIncident;
@@ -14,6 +15,7 @@ use App\Models\SupportTicket;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Matching\CaregiverSuggestionService;
 use App\Services\Notifications\MarketplaceNotificationService;
+use App\Services\Payments\BookingPaymentService;
 use App\Support\CareRequestProgress;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
@@ -68,6 +70,7 @@ class ManageCareRequest extends Component
                 'thirdPartyContact',
                 'tasks',
                 'booking',
+                'booking.payment',
                 'booking.taskChecks',
                 'booking.events.actor:id,name',
                 'booking.incidents.reporter:id,name',
@@ -140,58 +143,65 @@ class ManageCareRequest extends Component
         }
 
         $application = $this->findOwnedApplication($applicationId);
+        try {
+            DB::transaction(function () use ($application) {
+                $application->update(['status' => CareRequestApplication::STATUS_HIRED]);
 
-        DB::transaction(function () use ($application) {
-            $application->update(['status' => CareRequestApplication::STATUS_HIRED]);
+                CareRequestConversation::findOrCreateForApplication($application->loadMissing('careRequest'), auth()->id());
 
-            CareRequestConversation::findOrCreateForApplication($application->loadMissing('careRequest'), auth()->id());
+                $this->requestItem->applications()
+                    ->where('id', '!=', $application->id)
+                    ->whereIn('status', [
+                        CareRequestApplication::STATUS_APPLIED,
+                        CareRequestApplication::STATUS_SHORTLISTED,
+                    ])
+                    ->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]);
 
-            $this->requestItem->applications()
-                ->where('id', '!=', $application->id)
-                ->whereIn('status', [
-                    CareRequestApplication::STATUS_APPLIED,
-                    CareRequestApplication::STATUS_SHORTLISTED,
-                ])
-                ->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]);
+                $this->requestItem->update(['status' => CareRequest::STATUS_FILLED]);
+                if (! $this->requestItem->first_hire_at) {
+                    $this->requestItem->update(['first_hire_at' => now()]);
+                }
 
-            $this->requestItem->update(['status' => CareRequest::STATUS_FILLED]);
-            if (! $this->requestItem->first_hire_at) {
-                $this->requestItem->update(['first_hire_at' => now()]);
-            }
+                $startAt = $this->deriveScheduledStartAt();
+                $endAt = $this->deriveScheduledEndAt();
+                $expectedMinutes = ($startAt && $endAt)
+                    ? (int) max(0, $startAt->diffInMinutes($endAt, false))
+                    : null;
 
-            $startAt = $this->deriveScheduledStartAt();
-            $endAt = $this->deriveScheduledEndAt();
-            $expectedMinutes = ($startAt && $endAt)
-                ? (int) max(0, $startAt->diffInMinutes($endAt, false))
-                : null;
+                $booking = CareBooking::query()->updateOrCreate(
+                    ['care_request_id' => $this->requestItem->id],
+                    [
+                        'care_request_application_id' => $application->id,
+                        'family_user_id' => (int) auth()->id(),
+                        'caregiver_user_id' => (int) $application->caregiver_user_id,
+                        'agreement_snapshot' => app(BookingTrustService::class)->buildAgreementSnapshot(
+                            $this->requestItem->fresh(['recipient', 'tasks']),
+                            $application
+                        ),
+                        'family_terms_accepted_at' => now(),
+                        'status' => CareBooking::STATUS_SCHEDULED,
+                        'scheduled_start_at' => $startAt,
+                        'scheduled_end_at' => $endAt,
+                        'expected_minutes' => $expectedMinutes,
+                    ]
+                );
 
-            $booking = CareBooking::query()->updateOrCreate(
-                ['care_request_id' => $this->requestItem->id],
-                [
-                    'care_request_application_id' => $application->id,
-                    'family_user_id' => (int) auth()->id(),
-                    'caregiver_user_id' => (int) $application->caregiver_user_id,
-                    'agreement_snapshot' => app(BookingTrustService::class)->buildAgreementSnapshot(
-                        $this->requestItem->fresh(['recipient', 'tasks']),
-                        $application
-                    ),
-                    'family_terms_accepted_at' => now(),
-                    'status' => CareBooking::STATUS_SCHEDULED,
-                    'scheduled_start_at' => $startAt,
-                    'scheduled_end_at' => $endAt,
-                    'expected_minutes' => $expectedMinutes,
-                ]
-            );
+                app(BookingTrustService::class)->seedTaskChecks($booking, $this->requestItem->fresh(['tasks']));
+                app(BookingTrustService::class)->recordEvent(
+                    $booking,
+                    auth()->id(),
+                    'family',
+                    'booking_hired',
+                    ['application_id' => $application->id]
+                );
 
-            app(BookingTrustService::class)->seedTaskChecks($booking, $this->requestItem->fresh(['tasks']));
-            app(BookingTrustService::class)->recordEvent(
-                $booking,
-                auth()->id(),
-                'family',
-                'booking_hired',
-                ['application_id' => $application->id]
-            );
-        });
+                app(BookingPaymentService::class)->authorizeForBooking($booking);
+            });
+        } catch (PaymentException $e) {
+            session()->flash('status', $e->userMessage);
+
+            return;
+        }
 
         if ($application->caregiver) {
             app(MarketplaceNotificationService::class)->notify(
@@ -235,6 +245,14 @@ class ManageCareRequest extends Component
                 'booking_completed_by_family'
             );
         } elseif ($booking->status === CareBooking::STATUS_COMPLETED && ! $booking->family_confirmed_at) {
+            try {
+                app(BookingPaymentService::class)->captureForBooking($booking);
+            } catch (PaymentException $e) {
+                session()->flash('status', $e->userMessage);
+
+                return;
+            }
+
             $booking->update([
                 'family_confirmed_at' => now(),
             ]);
@@ -287,6 +305,16 @@ class ManageCareRequest extends Component
             'reviewRating' => ['required', 'integer', 'min:1', 'max:5'],
             'reviewComment' => ['nullable', 'string', 'max:1500'],
         ]);
+
+        if (! $booking->family_confirmed_at) {
+            try {
+                app(BookingPaymentService::class)->captureForBooking($booking);
+            } catch (PaymentException $e) {
+                session()->flash('status', $e->userMessage);
+
+                return;
+            }
+        }
 
         CareReview::query()->updateOrCreate(
             [
@@ -474,6 +502,7 @@ class ManageCareRequest extends Component
                 'cancellation_reason' => $changeRequest->reason,
                 'late_cancel_flag' => $lateCancel,
             ]);
+            app(BookingPaymentService::class)->cancelForBooking($booking);
             FunnelTracker::track('care_booking_cancelled', auth()->user(), $booking);
         } else {
             $booking->update([
@@ -611,6 +640,7 @@ class ManageCareRequest extends Component
             'cancellation_reason' => 'Marked as caregiver no-show by family.',
             'no_show_flag' => true,
         ]);
+        app(BookingPaymentService::class)->cancelForBooking($booking);
 
         app(BookingTrustService::class)->recordEvent(
             $booking,
@@ -900,6 +930,7 @@ class ManageCareRequest extends Component
             'thirdPartyContact',
             'tasks',
             'booking',
+            'booking.payment',
             'booking.taskChecks',
             'booking.events.actor:id,name',
             'booking.incidents.reporter:id,name',

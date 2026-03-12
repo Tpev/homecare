@@ -64,6 +64,7 @@ class Home extends Component
                 'active_shifts' => $activeShiftCount,
                 'unread_messages' => $this->unreadMessagesCount($user->id, 'family'),
             ];
+            $familyData['billing_ready'] = filled($user->stripe_customer_id);
 
             $familyData['urgent_open_requests'] = (clone $openRequestQuery)
                 ->whereDoesntHave('applications')
@@ -200,6 +201,7 @@ class Home extends Component
             $tasksComplete = $profile->skills()->exists();
             $insuranceComplete = $profile->insuranceIsComplete();
             $videoComplete = filled($profile->intro_video_path);
+            $payoutSetupComplete = $profile->stripeConnectIsReady();
 
             $basicsComplete = filled($profile->bio)
                 && ! is_null($profile->years_experience)
@@ -234,6 +236,14 @@ class Home extends Component
                     'done' => $tasksComplete,
                 ],
                 [
+                    'title' => 'Payout setup',
+                    'description' => 'Connect Stripe so completed shifts can be paid out to you.',
+                    'route' => route('caregiver.payouts.connect.show'),
+                    'cta' => 'Connect payouts',
+                    'required' => true,
+                    'done' => $payoutSetupComplete,
+                ],
+                [
                     'title' => 'Insurance setup',
                     'description' => 'Tell families whether you are insured and upload proof if yes.',
                     'route' => route('caregiver.insurance.edit'),
@@ -257,7 +267,7 @@ class Home extends Component
                 ->all();
 
             $requiredCards = collect($caregiverData['setup_cards'])->filter(fn ($card) => $card['required']);
-            $requiredTotal = 3;
+            $requiredTotal = 4;
             $requiredCompleted = $requiredTotal - $requiredCards->count();
 
             $caregiverData['required_setup_total'] = $requiredTotal;

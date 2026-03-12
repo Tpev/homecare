@@ -13,6 +13,7 @@ use App\Models\CareReview;
 use App\Models\SupportTicket;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Notifications\MarketplaceNotificationService;
+use App\Services\Payments\BookingPaymentService;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
 use Illuminate\Validation\Rule;
@@ -710,6 +711,7 @@ class ApplyToCareRequest extends Component
                 'cancellation_reason' => $changeRequest->reason,
                 'late_cancel_flag' => $lateCancel,
             ]);
+            app(BookingPaymentService::class)->cancelForBooking($booking);
             FunnelTracker::track('care_booking_cancelled', auth()->user(), $booking);
         } else {
             $booking->update([

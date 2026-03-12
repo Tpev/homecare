@@ -31,6 +31,9 @@ class NotificationsCenter extends Component
         MarketplaceEvent::SHIFT_COMPLETED,
         MarketplaceEvent::REVIEW_RECEIVED,
         MarketplaceEvent::MESSAGE_RECEIVED,
+        MarketplaceEvent::PAYOUT_TRANSFERRED,
+        MarketplaceEvent::PAYOUT_TRANSFER_FAILED,
+        MarketplaceEvent::PAYMENT_REFUNDED,
     ];
 
     public function mount(): void
@@ -202,6 +205,9 @@ class NotificationsCenter extends Component
             MarketplaceEvent::SHIFT_COMPLETED => 'Shift completed',
             MarketplaceEvent::REVIEW_RECEIVED => 'Review received',
             MarketplaceEvent::MESSAGE_RECEIVED => 'Message',
+            MarketplaceEvent::PAYOUT_TRANSFERRED => 'Payout sent',
+            MarketplaceEvent::PAYOUT_TRANSFER_FAILED => 'Payout issue',
+            MarketplaceEvent::PAYMENT_REFUNDED => 'Refund update',
             default => 'Update',
         };
     }
@@ -216,6 +222,9 @@ class NotificationsCenter extends Component
             MarketplaceEvent::MESSAGE_RECEIVED => 'neutral',
             MarketplaceEvent::MATCHING_REQUEST_REMINDER => 'info',
             MarketplaceEvent::SHIFT_COMPLETED => 'neutral',
+            MarketplaceEvent::PAYOUT_TRANSFERRED => 'success',
+            MarketplaceEvent::PAYOUT_TRANSFER_FAILED => 'warning',
+            MarketplaceEvent::PAYMENT_REFUNDED => 'warning',
             default => 'neutral',
         };
     }

@@ -24,6 +24,7 @@
         $estimatedEarnings = $workedMinutes > 0 ? round(($workedMinutes / 60) * $ratePerHour, 2) : 0;
         $pausedSeconds = (int) ($booking?->total_paused_seconds ?? 0);
         $pausedLabel = sprintf('%02d:%02d', intdiv($pausedSeconds, 3600), intdiv($pausedSeconds % 3600, 60));
+        $payoutReady = (bool) (auth()->user()->caregiverProfile?->stripeConnectIsReady() ?? false);
         $isShiftWorkspace = $activeTab === 'shift';
     @endphp
 
@@ -265,6 +266,13 @@
                             </span>
                         </div>
                     </div>
+
+                    @if (! $payoutReady)
+                        <div class="mb-3 rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+                            Payout setup is incomplete. Connect Stripe to receive earnings from completed shifts.
+                            <a href="{{ route('caregiver.payouts.connect.show') }}" wire:navigate class="font-semibold underline underline-offset-2">Complete setup</a>
+                        </div>
+                    @endif
 
                 <div
                     class="space-y-3 text-sm text-white"

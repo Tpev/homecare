@@ -12,6 +12,7 @@
                         && (int) ($request->pending_candidate_count ?? 0) > 0;
                 })->values();
                 $activeShifts = $familyData['active_shifts'] ?? collect();
+                $billingReady = (bool) ($familyData['billing_ready'] ?? false);
             @endphp
 
             <section class="hc-hero">
@@ -26,6 +27,12 @@
                             <a href="{{ route('family.requests.create_ai') }}" wire:navigate><x-button color="white">Post with AI Copilot</x-button></a>
                             <a href="{{ route('family.requests.create') }}" wire:navigate><x-button color="white" light>Use manual form</x-button></a>
                         </div>
+                        @unless($billingReady)
+                            <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                                Add a payment method now so hiring is instant when you find the right caregiver.
+                                <a href="{{ route('family.billing.show') }}" wire:navigate class="ml-1 font-semibold underline underline-offset-2">Open billing</a>
+                            </div>
+                        @endunless
                     </div>
                     <div class="lg:col-span-2 grid grid-cols-2 gap-3">
                         <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
@@ -176,6 +183,10 @@
                             <a href="{{ route('messages.index') }}" wire:navigate class="block rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-100 transition">
                                 <p class="font-medium text-slate-900">Respond in chat now</p>
                                 <p class="text-xs text-slate-500 mt-1">Faster replies increase hire conversion.</p>
+                            </a>
+                            <a href="{{ route('family.billing.show') }}" wire:navigate class="block rounded-lg border {{ $billingReady ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50' }} px-4 py-3 hover:bg-slate-100 transition">
+                                <p class="font-medium text-slate-900">{{ $billingReady ? 'Billing is ready' : 'Complete billing setup' }}</p>
+                                <p class="text-xs text-slate-600 mt-1">{{ $billingReady ? 'Card on file for fast hiring.' : 'Add your card once before hiring.' }}</p>
                             </a>
                         </div>
                     </x-card>

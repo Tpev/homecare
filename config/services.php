@@ -52,4 +52,12 @@ return [
         'bypass' => filter_var(env('DIDIT_BYPASS', false), FILTER_VALIDATE_BOOL),
     ],
 
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+        'publishable_key' => env('STRIPE_KEY'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'currency' => strtolower((string) env('STRIPE_CURRENCY', 'usd')),
+        'bypass' => filter_var(env('STRIPE_BYPASS', false), FILTER_VALIDATE_BOOL),
+    ],
+
 ];

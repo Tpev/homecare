@@ -151,4 +151,9 @@ class CareBooking extends Model
     {
         return $this->hasOne(CaregiverPayoutItem::class, 'care_booking_id');
     }
+
+    public function payment(): HasOne
+    {
+        return $this->hasOne(CareBookingPayment::class, 'care_booking_id');
+    }
 }

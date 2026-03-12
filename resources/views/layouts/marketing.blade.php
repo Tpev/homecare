@@ -7,13 +7,19 @@
 
     <title>@yield('title', config('app.name', 'HomeCare'))</title>
     <meta name="description" content="@yield('meta_description', 'HomeCare connects families and caregivers for non-medical home care in Raleigh, NC.')">
-    <meta name="robots" content="index,follow">
+    <meta name="robots" content="@yield('robots', 'index,follow')">
     <link rel="canonical" href="@yield('canonical', request()->url())">
 
     <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ config('app.name', 'HomeCare') }}">
     <meta property="og:title" content="@yield('title', config('app.name', 'HomeCare'))">
     <meta property="og:description" content="@yield('meta_description', 'HomeCare connects families and caregivers for non-medical home care in Raleigh, NC.')">
     <meta property="og:url" content="@yield('canonical', request()->url())">
+    <meta property="og:image" content="@yield('og_image', 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1600&q=80')">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('title', config('app.name', 'HomeCare'))">
+    <meta name="twitter:description" content="@yield('meta_description', 'HomeCare connects families and caregivers for non-medical home care in Raleigh, NC.')">
+    <meta name="twitter:image" content="@yield('og_image', 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1600&q=80')">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800|outfit:500,600,700&display=swap" rel="stylesheet" />

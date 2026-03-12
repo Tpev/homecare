@@ -47,6 +47,11 @@ class CaregiverProfile extends Model
         'identity_verification_status',
         'identity_verification_session_id',
         'identity_verification_checked_at',
+        'stripe_connect_account_id',
+        'stripe_connect_onboarding_completed_at',
+        'stripe_charges_enabled',
+        'stripe_payouts_enabled',
+        'stripe_connect_last_synced_at',
         'background_check_verified_at',
         'top_caregiver',
         'invite_response_rate',
@@ -71,6 +76,10 @@ class CaregiverProfile extends Model
             'reviewed_at' => 'datetime',
             'identity_verified_at' => 'datetime',
             'identity_verification_checked_at' => 'datetime',
+            'stripe_connect_onboarding_completed_at' => 'datetime',
+            'stripe_charges_enabled' => 'boolean',
+            'stripe_payouts_enabled' => 'boolean',
+            'stripe_connect_last_synced_at' => 'datetime',
             'background_check_verified_at' => 'datetime',
             'top_caregiver' => 'boolean',
             'invite_response_rate' => 'decimal:2',
@@ -209,6 +218,13 @@ class CaregiverProfile extends Model
         }
 
         return false;
+    }
+
+    public function stripeConnectIsReady(): bool
+    {
+        return filled($this->stripe_connect_account_id)
+            && (bool) $this->stripe_charges_enabled
+            && (bool) $this->stripe_payouts_enabled;
     }
 
     public function resolvePlatformHourlyRate(): float

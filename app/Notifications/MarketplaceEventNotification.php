@@ -82,6 +82,13 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
             'shift_completed' => 'Shift completed',
             'review_received' => 'New review',
             'matching_request_reminder' => 'Recommended request',
+            'payment_authorized' => 'Payment authorized',
+            'payment_authorization_failed' => 'Payment authorization failed',
+            'payment_action_required' => 'Payment action required',
+            'payment_captured' => 'Payment captured',
+            'payment_refunded' => 'Payment refunded',
+            'payout_transferred' => 'Payout transferred',
+            'payout_transfer_failed' => 'Payout transfer delayed',
             default => 'Marketplace update',
         };
     }
@@ -99,6 +106,13 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
             'shift_completed' => 'Review shift',
             'review_received' => 'View shift',
             'matching_request_reminder' => 'Review request',
+            'payment_authorized' => 'View request',
+            'payment_authorization_failed' => 'Open billing',
+            'payment_action_required' => 'Open billing',
+            'payment_captured' => 'View request',
+            'payment_refunded' => 'View request',
+            'payout_transferred' => 'View shift',
+            'payout_transfer_failed' => 'View request',
             default => 'Open HomeCare',
         };
     }
