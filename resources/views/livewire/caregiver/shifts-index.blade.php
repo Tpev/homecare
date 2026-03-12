@@ -1,124 +1,185 @@
 <div>
-    <div class="hc-page py-8 space-y-6">
+    <div class="hc-page py-6 space-y-5">
         @if (session('status'))
             <x-alert color="green">{{ session('status') }}</x-alert>
         @endif
 
-        <section class="hc-hero">
-            <p class="text-xs uppercase tracking-[0.2em] text-emerald-100">My shifts</p>
-            <div class="mt-3 flex flex-wrap items-center justify-between gap-4">
-                <div class="max-w-2xl">
-                    <h1 class="text-3xl font-display font-semibold leading-tight">Start and manage your hired shifts.</h1>
-                    <p class="mt-2 text-sm text-emerald-100">
-                        Open any shift to check in, run your live timer, and check out with recap.
-                    </p>
+        @php
+            $statusTone = fn (string $value) => match ($value) {
+                \App\Models\CareBooking::STATUS_IN_PROGRESS => 'bg-emerald-100 text-emerald-700',
+                \App\Models\CareBooking::STATUS_PAUSED => 'bg-amber-100 text-amber-800',
+                \App\Models\CareBooking::STATUS_SCHEDULED => 'bg-sky-100 text-sky-700',
+                \App\Models\CareBooking::STATUS_COMPLETED => 'bg-indigo-100 text-indigo-700',
+                \App\Models\CareBooking::STATUS_REVIEWED => 'bg-emerald-100 text-emerald-700',
+                \App\Models\CareBooking::STATUS_DISPUTED => 'bg-rose-100 text-rose-700',
+                \App\Models\CareBooking::STATUS_CANCELLED => 'bg-slate-200 text-slate-700',
+                default => 'bg-slate-100 text-slate-700',
+            };
+
+            $filterOptions = [
+                ['label' => 'All', 'value' => 'all'],
+                ['label' => 'Scheduled', 'value' => \App\Models\CareBooking::STATUS_SCHEDULED],
+                ['label' => 'In progress', 'value' => \App\Models\CareBooking::STATUS_IN_PROGRESS],
+                ['label' => 'Paused', 'value' => \App\Models\CareBooking::STATUS_PAUSED],
+                ['label' => 'Completed', 'value' => \App\Models\CareBooking::STATUS_COMPLETED],
+                ['label' => 'Reviewed', 'value' => \App\Models\CareBooking::STATUS_REVIEWED],
+                ['label' => 'Issues', 'value' => \App\Models\CareBooking::STATUS_DISPUTED],
+            ];
+        @endphp
+
+        <section class="relative overflow-hidden rounded-3xl border border-slate-900/80 bg-slate-950 p-5 text-white shadow-xl">
+            <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-500/20 blur-2xl"></div>
+            <div class="pointer-events-none absolute -left-10 -bottom-12 h-40 w-40 rounded-full bg-cyan-500/20 blur-2xl"></div>
+
+            <div class="relative space-y-4">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">My shifts</p>
+                        <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Run every shift with confidence.</h1>
+                        <p class="mt-1 text-sm text-slate-300">Start, pause, resume, and close shifts from one command view.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate>
+                            <x-button color="white" light sm>Work Inbox</x-button>
+                        </a>
+                        <a href="{{ route('caregiver.earnings.index') }}" wire:navigate>
+                            <x-button color="white" light sm>Earnings</x-button>
+                        </a>
+                    </div>
                 </div>
-                <div class="flex flex-wrap gap-2">
-                    <a href="{{ route('caregiver.earnings.index') }}" wire:navigate>
-                        <x-button color="white">Earnings</x-button>
-                    </a>
-                    <a href="{{ route('care-requests.index') }}" wire:navigate>
-                        <x-button color="white" light>Browse requests</x-button>
-                    </a>
-                    <a href="{{ route('caregiver.invitations.index') }}" wire:navigate>
-                        <x-button color="white" light>Invitations</x-button>
-                    </a>
+
+                <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div class="rounded-xl border border-white/15 bg-white/5 px-3 py-2">
+                        <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Active</p>
+                        <p class="mt-1 text-lg font-semibold">{{ (int) ($counts['active'] ?? 0) }}</p>
+                    </div>
+                    <div class="rounded-xl border border-white/15 bg-white/5 px-3 py-2">
+                        <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Scheduled</p>
+                        <p class="mt-1 text-lg font-semibold">{{ (int) ($counts['scheduled'] ?? 0) }}</p>
+                    </div>
+                    <div class="rounded-xl border border-white/15 bg-white/5 px-3 py-2">
+                        <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Completed</p>
+                        <p class="mt-1 text-lg font-semibold">{{ (int) ($counts['completed'] ?? 0) }}</p>
+                    </div>
+                    <div class="rounded-xl border border-white/15 bg-white/5 px-3 py-2">
+                        <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Issues</p>
+                        <p class="mt-1 text-lg font-semibold">{{ (int) ($counts['issues'] ?? 0) }}</p>
+                    </div>
                 </div>
+
+                @if (!empty($nextShift))
+                    <div class="rounded-2xl border border-cyan-300/40 bg-cyan-500/10 px-3 py-3">
+                        <p class="text-xs uppercase tracking-[0.14em] text-cyan-100">Next shift</p>
+                        <p class="mt-1 text-sm font-semibold text-cyan-50">{{ $nextShift->careRequest?->title ?? 'Upcoming shift' }}</p>
+                        <p class="text-xs text-cyan-100/90">
+                            {{ optional($nextShift->scheduled_start_at)->format('D, M d \\a\\t H:i') }}
+                            · {{ $nextShift->careRequest?->city }}, {{ $nextShift->careRequest?->state }}
+                        </p>
+                    </div>
+                @endif
             </div>
         </section>
 
-        <x-card>
-            <x-slot:header>
-                <div class="flex items-center justify-between gap-3">
-                    <h2 class="font-display text-lg font-semibold">Shift list</h2>
-                    <x-select.styled
-                        wire:model.live="status"
-                        :options="[
-                            ['label' => 'All statuses', 'value' => 'all'],
-                            ['label' => 'In progress', 'value' => \App\Models\CareBooking::STATUS_IN_PROGRESS],
-                            ['label' => 'Paused', 'value' => \App\Models\CareBooking::STATUS_PAUSED],
-                            ['label' => 'Scheduled', 'value' => \App\Models\CareBooking::STATUS_SCHEDULED],
-                            ['label' => 'Completed', 'value' => \App\Models\CareBooking::STATUS_COMPLETED],
-                            ['label' => 'Reviewed', 'value' => \App\Models\CareBooking::STATUS_REVIEWED],
-                            ['label' => 'Disputed', 'value' => \App\Models\CareBooking::STATUS_DISPUTED],
-                            ['label' => 'Cancelled', 'value' => \App\Models\CareBooking::STATUS_CANCELLED],
-                        ]"
-                    />
+        <div class="sticky top-16 z-20 -mx-1 px-1">
+            <div class="rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur">
+                <div class="overflow-x-auto">
+                    <div class="flex min-w-max gap-1">
+                        @foreach ($filterOptions as $option)
+                            <button
+                                type="button"
+                                wire:click="$set('status', '{{ $option['value'] }}')"
+                                class="h-11 rounded-xl px-3 text-sm font-medium transition {{ $status === $option['value'] ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
+                            >
+                                {{ $option['label'] }}
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
-            </x-slot:header>
-
-            <div class="space-y-3">
-                @forelse ($bookings as $booking)
-                    @php
-                        $request = $booking->careRequest;
-                        $status = (string) $booking->status;
-                        $ctaLabel = match ($status) {
-                            \App\Models\CareBooking::STATUS_SCHEDULED => 'Start shift',
-                            \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Continue shift',
-                            \App\Models\CareBooking::STATUS_PAUSED => 'Resume shift',
-                            \App\Models\CareBooking::STATUS_COMPLETED => 'View recap',
-                            \App\Models\CareBooking::STATUS_REVIEWED => 'View shift',
-                            \App\Models\CareBooking::STATUS_DISPUTED => 'Open dispute view',
-                            \App\Models\CareBooking::STATUS_CANCELLED => 'View details',
-                            default => 'Open shift',
-                        };
-                    @endphp
-
-                    <div class="rounded-xl border border-slate-200 bg-white p-4">
-                        <div class="flex flex-wrap items-start justify-between gap-3">
-                            <div>
-                                <p class="font-display text-lg font-semibold text-slate-900">{{ $request?->title ?? 'Care request' }}</p>
-                                <p class="text-sm text-slate-600">
-                                    Family: {{ $booking->family?->name ?? 'Unknown' }}
-                                    · {{ $request?->city ?? '-' }}, {{ $request?->state ?? '-' }}
-                                </p>
-                            </div>
-                            <x-badge :text="strtoupper($status)" color="{{ in_array($status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true) ? 'green' : 'blue' }}" />
-                        </div>
-
-                        <div class="mt-3 grid grid-cols-1 gap-2 text-xs text-slate-600 md:grid-cols-3">
-                            <p>
-                                Scheduled:
-                                {{ optional($booking->scheduled_start_at)->format('M d, Y H:i') ?: '-' }}
-                                -
-                                {{ optional($booking->scheduled_end_at)->format('H:i') ?: '-' }}
-                            </p>
-                            <p>Started: {{ optional($booking->started_at)->format('M d, H:i') ?: 'Pending' }}</p>
-                            <p>Completed: {{ optional($booking->completed_at)->format('M d, H:i') ?: 'Pending' }}</p>
-                        </div>
-
-                        <div class="mt-4 flex flex-wrap items-center gap-2">
-                            @if ($request)
-                                <a href="{{ route('care-requests.apply', $request->id) }}" wire:navigate>
-                                    <x-button color="{{ in_array($status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true) ? 'green' : 'blue' }}" sm>{{ $ctaLabel }}</x-button>
-                                </a>
-                            @endif
-
-                            @if ($booking->application?->conversation)
-                                <a href="{{ route('messages.show', $booking->application->conversation->id) }}" wire:navigate>
-                                    <x-button color="slate" light sm>Open chat</x-button>
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                @empty
-                    <div class="rounded-lg border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-600">
-                        No shifts yet. Once a family hires you, your shift actions appear here.
-                    </div>
-                @endforelse
             </div>
+        </div>
 
-            @if ($bookings->hasPages())
-                <div class="mt-4">
-                    {{ $bookings->links() }}
+        <section class="space-y-3">
+            @forelse ($bookings as $booking)
+                @php
+                    $request = $booking->careRequest;
+                    $bookingStatus = (string) $booking->status;
+                    $ctaLabel = match ($bookingStatus) {
+                        \App\Models\CareBooking::STATUS_SCHEDULED => 'Start shift',
+                        \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Continue shift',
+                        \App\Models\CareBooking::STATUS_PAUSED => 'Resume shift',
+                        \App\Models\CareBooking::STATUS_COMPLETED => 'View recap',
+                        \App\Models\CareBooking::STATUS_REVIEWED => 'View shift',
+                        \App\Models\CareBooking::STATUS_DISPUTED => 'Open dispute view',
+                        \App\Models\CareBooking::STATUS_CANCELLED => 'View details',
+                        default => 'Open shift',
+                    };
+                @endphp
+
+                <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <p class="font-display text-lg font-semibold text-slate-900">{{ $request?->title ?? 'Care request' }}</p>
+                            <p class="mt-1 text-sm text-slate-600">{{ $request?->city ?? '-' }}, {{ $request?->state ?? '-' }} · Family: {{ $booking->family?->name ?? 'Unknown' }}</p>
+                        </div>
+                        <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusTone($bookingStatus) }}">
+                            {{ strtoupper($bookingStatus) }}
+                        </span>
+                    </div>
+
+                    <div class="mt-3 grid grid-cols-1 gap-2 text-xs text-slate-600 sm:grid-cols-3">
+                        <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                            Scheduled:
+                            {{ optional($booking->scheduled_start_at)->format('M d, H:i') ?: '-' }}
+                            -
+                            {{ optional($booking->scheduled_end_at)->format('H:i') ?: '-' }}
+                        </div>
+                        <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                            Started: {{ optional($booking->started_at)->format('M d, H:i') ?: 'Pending' }}
+                        </div>
+                        <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                            Completed: {{ optional($booking->completed_at)->format('M d, H:i') ?: 'Pending' }}
+                        </div>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+                        @if ($request)
+                            <a
+                                href="{{ route('care-requests.apply', $request->id) }}"
+                                wire:navigate
+                                class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 sm:w-auto"
+                            >
+                                {{ $ctaLabel }}
+                            </a>
+                        @endif
+
+                        @if ($booking->application?->conversation)
+                            <a
+                                href="{{ route('messages.show', $booking->application->conversation->id) }}"
+                                wire:navigate
+                                class="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:w-auto"
+                            >
+                                Open chat
+                            </a>
+                        @endif
+                    </div>
+                </article>
+            @empty
+                <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-600">
+                    No shifts yet. Once a family hires you, your shift actions appear here.
                 </div>
-            @endif
-        </x-card>
+            @endforelse
+        </section>
+
+        @if ($bookings->hasPages())
+            <div>
+                {{ $bookings->links() }}
+            </div>
+        @endif
 
         @if ($hiredWithoutBooking->count() > 0)
             <x-card>
                 <x-slot:header>
-                    <h2 class="font-display text-lg font-semibold">Hired requests pending shift setup</h2>
+                    <h2 class="font-display text-lg font-semibold">Pending shift setup</h2>
                 </x-slot:header>
                 <div class="space-y-2">
                     @foreach ($hiredWithoutBooking as $application)

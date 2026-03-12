@@ -77,23 +77,11 @@ new class extends Component
         $initials = collect($nameParts)->filter()->map(fn ($part) => strtoupper(substr($part, 0, 1)))->take(2)->implode('');
         $initials = $initials !== '' ? $initials : strtoupper(substr((string) $user->name, 0, 1));
 
-        $primaryLinks = [
-            [
-                'label' => 'Dashboard',
-                'href' => route('dashboard'),
-                'active' => request()->routeIs('dashboard'),
-            ],
-            [
-                'label' => $messageUnread > 0 ? "Messages ($messageUnread)" : 'Messages',
-                'href' => route('messages.index'),
-                'active' => request()->routeIs('messages.*'),
-            ],
-            [
-                'label' => 'Support',
-                'href' => route('support.index'),
-                'active' => request()->routeIs('support.*'),
-            ],
-        ];
+        $primaryLinks = [[
+            'label' => 'Dashboard',
+            'href' => route('dashboard'),
+            'active' => request()->routeIs('dashboard'),
+        ]];
 
         if ($isFamily) {
             $primaryLinks[] = [
@@ -111,6 +99,11 @@ new class extends Component
                 'href' => route('caregivers.search'),
                 'active' => request()->routeIs('caregivers.search') || request()->routeIs('caregivers.show'),
             ];
+            $primaryLinks[] = [
+                'label' => $messageUnread > 0 ? "Messages ($messageUnread)" : 'Messages',
+                'href' => route('messages.index'),
+                'active' => request()->routeIs('messages.*'),
+            ];
         }
 
         if ($isCaregiver) {
@@ -118,11 +111,6 @@ new class extends Component
                 'label' => $invitationUnread > 0 ? "Work Inbox ($invitationUnread)" : 'Work Inbox',
                 'href' => route('caregiver.work-inbox.index'),
                 'active' => request()->routeIs('caregiver.work-inbox.*'),
-            ];
-            $primaryLinks[] = [
-                'label' => $identityApproved ? 'Identity Verified' : 'Verify Identity',
-                'href' => route('caregiver.verification.show'),
-                'active' => request()->routeIs('caregiver.verification.*'),
             ];
             $primaryLinks[] = [
                 'label' => 'My Shifts',
@@ -135,23 +123,9 @@ new class extends Component
                 'active' => request()->routeIs('caregiver.earnings.*'),
             ];
             $primaryLinks[] = [
-                'label' => 'Open Requests',
-                'href' => route('care-requests.index'),
-                'active' => request()->routeIs('care-requests.*'),
-            ];
-            $primaryLinks[] = [
-                'label' => $invitationUnread > 0 ? "Invitations ($invitationUnread)" : 'Invitations',
-                'href' => route('caregiver.invitations.index'),
-                'active' => request()->routeIs('caregiver.invitations.*'),
-            ];
-            $primaryLinks[] = [
-                'label' => 'My Caregiver Profile',
-                'href' => route('caregiver.profile.edit'),
-                'active' => request()->routeIs('caregiver.profile.edit')
-                    || request()->routeIs('caregiver.onboarding')
-                    || request()->routeIs('caregiver.tasks.edit')
-                    || request()->routeIs('caregiver.insurance.edit')
-                    || request()->routeIs('caregiver.video.edit'),
+                'label' => $messageUnread > 0 ? "Messages ($messageUnread)" : 'Messages',
+                'href' => route('messages.index'),
+                'active' => request()->routeIs('messages.*'),
             ];
         }
 

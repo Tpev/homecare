@@ -213,69 +213,77 @@
                 $requiredTotal = (int) ($caregiverData['required_setup_total'] ?? 0);
                 $readyForReview = (bool) ($caregiverData['ready_for_review'] ?? false);
                 $canSubmitForReview = (bool) ($caregiverData['can_submit_for_review'] ?? false);
+                $hasActiveShift = !empty($caregiverData['active_shift']);
+                $hasNextShift = !empty($caregiverData['next_shift']);
+                $needsResponseCount = (int) ($caregiverData['stats']['needs_response'] ?? 0);
+
+                $nextActionTitle = 'Respond to your inbox';
+                $nextActionDescription = 'Open Work Inbox and answer pending invites first.';
+                $nextActionHref = route('caregiver.work-inbox.index');
+                $nextActionLabel = 'Open Work Inbox';
+
+                if ($hasActiveShift && $caregiverData['active_shift']->careRequest) {
+                    $nextActionTitle = 'Continue active shift';
+                    $nextActionDescription = 'You have a shift in progress. Continue from shift command center.';
+                    $nextActionHref = route('care-requests.apply', $caregiverData['active_shift']->careRequest->id);
+                    $nextActionLabel = $caregiverData['active_shift']->status === \App\Models\CareBooking::STATUS_PAUSED ? 'Resume shift' : 'Continue shift';
+                } elseif ($needsResponseCount > 0) {
+                    $nextActionTitle = 'Answer new opportunities';
+                    $nextActionDescription = $needsResponseCount.' item(s) need a response in Work Inbox.';
+                } elseif ($hasNextShift && $caregiverData['next_shift']->careRequest) {
+                    $nextActionTitle = 'Prepare next shift';
+                    $nextActionDescription = 'Review details before your next scheduled shift.';
+                    $nextActionHref = route('care-requests.apply', $caregiverData['next_shift']->careRequest->id);
+                    $nextActionLabel = 'Open next shift';
+                } elseif (count($setupCards) > 0) {
+                    $nextActionTitle = 'Complete profile setup';
+                    $nextActionDescription = 'Finish setup cards to stay visible and trustworthy to families.';
+                    $nextActionHref = route('caregiver.profile.edit');
+                    $nextActionLabel = 'Continue setup';
+                }
             @endphp
 
-            <section class="hc-hero">
-                <p class="text-xs uppercase tracking-[0.2em] text-emerald-100">Caregiver Dashboard</p>
-                <div class="mt-3 grid grid-cols-1 gap-5 lg:grid-cols-5">
+            <section class="relative overflow-hidden rounded-3xl border border-slate-900/80 bg-slate-950 p-5 text-white shadow-xl">
+                <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-500/20 blur-2xl"></div>
+                <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-cyan-500/20 blur-2xl"></div>
+
+                <div class="relative grid grid-cols-1 gap-5 lg:grid-cols-5">
                     <div class="lg:col-span-3">
-                        <h1 class="text-3xl md:text-4xl font-display font-semibold leading-tight">Build a trusted profile and go live.</h1>
-                        <p class="mt-3 text-emerald-100 max-w-2xl">
-                            Complete the remaining setup cards below, then submit your profile. Reviews usually complete within 1 business day.
-                        </p>
-                        <div class="mt-5 flex flex-wrap gap-2">
-                            <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate><x-button color="white">Work Inbox</x-button></a>
-                            <a href="{{ route('caregiver.shifts.index') }}" wire:navigate><x-button color="white">My shifts</x-button></a>
-                            <a href="{{ route('caregiver.earnings.index') }}" wire:navigate><x-button color="white">Earnings</x-button></a>
-                            <a href="{{ route('messages.index') }}" wire:navigate><x-button color="white" light>Messages</x-button></a>
-                            <a href="{{ route('caregiver.profile.edit') }}" wire:navigate><x-button color="white" light>Edit Profile</x-button></a>
+                        <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Caregiver Dashboard</p>
+                        <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Focus on the next best move.</h1>
+                        <p class="mt-2 text-sm text-slate-300">{{ $nextActionDescription }}</p>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <a href="{{ $nextActionHref }}" wire:navigate><x-button color="white">{{ $nextActionLabel }}</x-button></a>
+                            <a href="{{ route('caregiver.shifts.index') }}" wire:navigate><x-button color="white" light>My shifts</x-button></a>
+                            <a href="{{ route('caregiver.earnings.index') }}" wire:navigate><x-button color="white" light>Earnings</x-button></a>
                         </div>
                     </div>
-                    <div class="lg:col-span-2 grid grid-cols-2 gap-3">
-                        <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
-                            <p class="text-[11px] uppercase tracking-[0.14em] text-emerald-100">Required done</p>
-                            <p class="mt-1 text-3xl font-semibold">{{ $requiredCompleted }}/{{ $requiredTotal }}</p>
+                    <div class="lg:col-span-2 space-y-2">
+                        <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-2">
+                            <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Best next action</p>
+                            <p class="mt-1 text-sm font-semibold text-white">{{ $nextActionTitle }}</p>
                         </div>
-                        <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
-                            <p class="text-[11px] uppercase tracking-[0.14em] text-emerald-100">Profile status</p>
-                            <p class="mt-1 text-sm font-semibold uppercase">{{ str_replace('_', ' ', (string) ($profile?->status ?? 'draft')) }}</p>
-                        </div>
-                        <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
-                            <p class="text-[11px] uppercase tracking-[0.14em] text-emerald-100">Unread messages</p>
-                            <p class="mt-1 text-3xl font-semibold">{{ $caregiverData['stats']['unread_messages'] }}</p>
-                        </div>
-                        <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
-                            <p class="text-[11px] uppercase tracking-[0.14em] text-emerald-100">Needs response</p>
-                            <p class="mt-1 text-3xl font-semibold">{{ $caregiverData['stats']['needs_response'] ?? 0 }}</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-2">
+                                <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Needs response</p>
+                                <p class="mt-1 text-lg font-semibold">{{ $needsResponseCount }}</p>
+                            </div>
+                            <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-2">
+                                <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Profile status</p>
+                                <p class="mt-1 text-xs font-semibold uppercase">{{ str_replace('_', ' ', (string) ($profile?->status ?? 'draft')) }}</p>
+                            </div>
+                            <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-2">
+                                <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Setup done</p>
+                                <p class="mt-1 text-lg font-semibold">{{ $requiredCompleted }}/{{ $requiredTotal }}</p>
+                            </div>
+                            <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-2">
+                                <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Unread messages</p>
+                                <p class="mt-1 text-lg font-semibold">{{ $caregiverData['stats']['unread_messages'] }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
-
-            <div class="rounded-2xl border border-slate-200 bg-white p-3">
-                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                        <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Step 1</p>
-                        <p class="mt-1 text-sm font-semibold text-slate-900">Respond in Work Inbox</p>
-                        <p class="mt-1 text-xs text-slate-600">Accept invites and open top matches first.</p>
-                    </div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                        <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Step 2</p>
-                        <p class="mt-1 text-sm font-semibold text-slate-900">Get hired and align in chat</p>
-                        <p class="mt-1 text-xs text-slate-600">Confirm details before the scheduled start.</p>
-                    </div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                        <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Step 3</p>
-                        <p class="mt-1 text-sm font-semibold text-slate-900">Run the shift command flow</p>
-                        <p class="mt-1 text-xs text-slate-600">Start, pause/resume, end, then submit timesheet.</p>
-                    </div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                        <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Step 4</p>
-                        <p class="mt-1 text-sm font-semibold text-slate-900">Review and track earnings</p>
-                        <p class="mt-1 text-xs text-slate-600">Build trust and monitor your next payout.</p>
-                    </div>
-                </div>
-            </div>
 
             <x-card>
                 <x-slot:header>
