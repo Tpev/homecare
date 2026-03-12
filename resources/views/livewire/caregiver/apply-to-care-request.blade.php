@@ -26,73 +26,76 @@
         $pausedLabel = sprintf('%02d:%02d', intdiv($pausedSeconds, 3600), intdiv($pausedSeconds % 3600, 60));
     @endphp
 
-    <x-card>
-        <x-slot:header>
-            <div class="space-y-3">
-                <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                    <div>
-                        <p class="text-[11px] uppercase tracking-[0.14em] text-slate-500">Request workspace</p>
-                        <h1 class="mt-1 text-2xl font-display font-semibold text-slate-900">{{ $requestItem->title }}</h1>
-                        <p class="mt-1 text-sm text-slate-600">
-                            {{ $requestItem->city }}, {{ $requestItem->state }}
-                            • {{ $requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME ? 'One-time' : 'Recurring' }}
-                        </p>
-                        <p class="mt-1 text-xs text-slate-500">
-                            @if ($existingApplication)
-                                Application: {{ strtoupper($existingApplication->status) }}
-                            @endif
-                            @if ($existingApplication && $booking)
-                                •
-                            @endif
-                            @if ($booking)
-                                Shift: {{ strtoupper($booking->status) }}
-                            @endif
-                        </p>
-                    </div>
-
-                    <div class="flex flex-wrap items-center gap-2">
-                        <a href="{{ route('care-requests.index') }}" wire:navigate>
-                            <x-button color="white" light>Back to requests</x-button>
-                        </a>
-                        @if ($existingApplication && in_array($existingApplication->status, ['shortlisted', 'hired'], true))
-                            <x-button color="indigo" light wire:click="openChat">Open chat</x-button>
+    <section class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+        @if ($activeTab !== 'shift')
+            <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div>
+                    <h1 class="text-2xl font-display font-semibold text-slate-900">{{ $requestItem->title }}</h1>
+                    <p class="mt-1 text-sm text-slate-600">
+                        {{ $requestItem->city }}, {{ $requestItem->state }}
+                        • {{ $requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME ? 'One-time' : 'Recurring' }}
+                        @if ($existingApplication)
+                            • App {{ strtoupper($existingApplication->status) }}
                         @endif
-                    </div>
+                        @if ($booking)
+                            • Shift {{ strtoupper($booking->status) }}
+                        @endif
+                    </p>
                 </div>
 
-                <div class="grid grid-cols-4 gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1">
-                    <button
-                        type="button"
-                        wire:click="setActiveTab('overview')"
-                        class="rounded-xl px-3 py-2 text-sm font-medium transition {{ $activeTab === 'overview' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}"
-                    >
-                        Overview
-                    </button>
-                    <button
-                        type="button"
-                        wire:click="setActiveTab('application')"
-                        class="rounded-xl px-3 py-2 text-sm font-medium transition {{ $activeTab === 'application' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}"
-                    >
-                        Application
-                    </button>
-                    <button
-                        type="button"
-                        wire:click="setActiveTab('shift')"
-                        class="rounded-xl px-3 py-2 text-sm font-medium transition {{ $activeTab === 'shift' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}"
-                    >
-                        Shift
-                    </button>
-                    <button
-                        type="button"
-                        wire:click="setActiveTab('support')"
-                        class="rounded-xl px-3 py-2 text-sm font-medium transition {{ $activeTab === 'support' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}"
-                    >
-                        Support
-                    </button>
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="{{ route('care-requests.index') }}" wire:navigate>
+                        <x-button color="white" light>Back to requests</x-button>
+                    </a>
+                    @if ($existingApplication && in_array($existingApplication->status, ['shortlisted', 'hired'], true))
+                        <x-button color="indigo" light wire:click="openChat">Open chat</x-button>
+                    @endif
                 </div>
             </div>
-        </x-slot:header>
-    </x-card>
+        @else
+            <div class="flex items-center justify-between gap-2">
+                <a href="{{ route('care-requests.index') }}" wire:navigate>
+                    <x-button color="white" light sm>Back to requests</x-button>
+                </a>
+                @if ($existingApplication && in_array($existingApplication->status, ['shortlisted', 'hired'], true))
+                    <x-button color="indigo" light sm wire:click="openChat">Open chat</x-button>
+                @endif
+            </div>
+        @endif
+
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-1">
+            <div class="grid grid-cols-2 gap-1 sm:grid-cols-4">
+                <button
+                    type="button"
+                    wire:click="setActiveTab('overview')"
+                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'overview' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}"
+                >
+                    Overview
+                </button>
+                <button
+                    type="button"
+                    wire:click="setActiveTab('application')"
+                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'application' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}"
+                >
+                    Application
+                </button>
+                <button
+                    type="button"
+                    wire:click="setActiveTab('shift')"
+                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'shift' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}"
+                >
+                    Shift
+                </button>
+                <button
+                    type="button"
+                    wire:click="setActiveTab('support')"
+                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'support' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}"
+                >
+                    Support
+                </button>
+            </div>
+        </div>
+    </section>
 
     @if ($activeTab === 'overview')
         <x-card>
