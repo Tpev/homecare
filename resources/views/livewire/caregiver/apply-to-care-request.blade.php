@@ -210,26 +210,57 @@
 
     @if ($activeTab === 'shift')
         @if (! $booking)
-            <x-card>
-                <x-slot:header><h2 class="font-display text-lg font-semibold">Shift operations</h2></x-slot:header>
-                <div class="rounded-md border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-600">
-                    Shift operations become available once you are hired.
+            <section class="rounded-3xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center shadow-sm">
+                <p class="text-xs uppercase tracking-[0.16em] text-slate-500">Shift command</p>
+                <h2 class="mt-2 font-display text-2xl font-semibold text-slate-900">No active shift yet</h2>
+                <p class="mt-2 text-sm text-slate-600">
+                    Once you are hired, start and resume controls will appear here.
+                </p>
+                <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+                    <a href="{{ route('caregiver.shifts.index') }}" wire:navigate>
+                        <x-button color="blue" sm>My shifts</x-button>
+                    </a>
+                    <a href="{{ route('care-requests.index') }}" wire:navigate>
+                        <x-button color="white" light sm>Browse requests</x-button>
+                    </a>
                 </div>
-            </x-card>
+            </section>
         @else
-            <x-card>
-                <x-slot:header>
-                    <div class="flex items-start justify-between gap-2">
-                        <div>
-                            <h2 class="font-display text-lg font-semibold">Shift focus mode</h2>
-                            <p class="text-xs text-slate-500">Fast mobile controls for check-in, breaks, and checkout.</p>
+            @php
+                $shiftStatus = (string) $booking->status;
+                $statusBadgeClass = match ($shiftStatus) {
+                    \App\Models\CareBooking::STATUS_IN_PROGRESS => 'bg-emerald-100 text-emerald-800',
+                    \App\Models\CareBooking::STATUS_PAUSED => 'bg-amber-100 text-amber-800',
+                    \App\Models\CareBooking::STATUS_SCHEDULED => 'bg-sky-100 text-sky-800',
+                    \App\Models\CareBooking::STATUS_COMPLETED => 'bg-indigo-100 text-indigo-800',
+                    \App\Models\CareBooking::STATUS_REVIEWED => 'bg-cyan-100 text-cyan-800',
+                    \App\Models\CareBooking::STATUS_DISPUTED => 'bg-rose-100 text-rose-800',
+                    default => 'bg-slate-100 text-slate-700',
+                };
+            @endphp
+            <section class="relative overflow-hidden rounded-3xl border border-slate-900/80 bg-slate-950 p-5 shadow-xl">
+                <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-500/20 blur-2xl"></div>
+                <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-cyan-500/20 blur-2xl"></div>
+
+                <div class="relative">
+                    <div class="mb-4">
+                        <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Shift command center</p>
+                        <div class="mt-2 flex items-start justify-between gap-3">
+                            <div>
+                                <h2 class="font-display text-2xl font-semibold leading-tight text-white">{{ $requestItem->title }}</h2>
+                                <p class="mt-1 text-sm text-slate-300">
+                                    {{ $requestItem->city }}, {{ $requestItem->state }}
+                                    • {{ $requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME ? 'One-time' : 'Recurring' }}
+                                </p>
+                            </div>
+                            <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusBadgeClass }}">
+                                {{ strtoupper(str_replace('_', ' ', $shiftStatus)) }}
+                            </span>
                         </div>
-                        <x-badge :text="strtoupper($booking->status)" color="green" />
                     </div>
-                </x-slot:header>
 
                 <div
-                    class="space-y-3 text-sm"
+                    class="space-y-3 text-sm text-white"
                     x-data="homecareShiftFocus({
                         startedAt: @js(optional($booking->started_at)?->toIso8601String()),
                         pausedAt: @js(optional($booking->paused_at)?->toIso8601String()),
@@ -243,45 +274,45 @@
                     })"
                     x-init="init()"
                 >
-                    <div class="grid grid-cols-3 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1">
+                    <div class="grid grid-cols-3 gap-2 rounded-xl border border-white/15 bg-white/5 p-1">
                         <button type="button" @click="panel = 'live'" class="rounded-lg px-3 py-2 text-sm font-medium transition"
-                            :class="panel === 'live' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'">
+                            :class="panel === 'live' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-300 hover:text-white'">
                             Live
                         </button>
                         <button type="button" @click="panel = 'tasks'" class="rounded-lg px-3 py-2 text-sm font-medium transition"
-                            :class="panel === 'tasks' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'">
+                            :class="panel === 'tasks' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-300 hover:text-white'">
                             Tasks
                         </button>
                         <button type="button" @click="panel = 'details'" class="rounded-lg px-3 py-2 text-sm font-medium transition"
-                            :class="panel === 'details' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'">
+                            :class="panel === 'details' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-300 hover:text-white'">
                             Details
                         </button>
                     </div>
 
-                    <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700" x-show="panel === 'live'" x-transition>
-                        <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Scheduled window</p>
-                        <p class="font-medium">{{ optional($booking->scheduled_start_at)->format('M d, Y H:i') }} - {{ optional($booking->scheduled_end_at)->format('M d, Y H:i') }}</p>
+                    <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-3 text-white" x-show="panel === 'live'" x-transition>
+                        <p class="text-xs uppercase tracking-[0.12em] text-slate-200">Scheduled window</p>
+                        <p class="mt-1 font-medium">{{ optional($booking->scheduled_start_at)->format('M d, Y H:i') }} - {{ optional($booking->scheduled_end_at)->format('M d, Y H:i') }}</p>
                     </div>
 
                     @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true))
-                        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3.5" x-show="panel === 'live'" x-transition>
-                            <p class="text-xs uppercase tracking-[0.12em] text-emerald-700 font-semibold">Shift live</p>
+                        <div class="rounded-xl border border-emerald-300/40 bg-emerald-500/10 p-3.5" x-show="panel === 'live'" x-transition>
+                            <p class="text-xs uppercase tracking-[0.12em] text-emerald-100 font-semibold">Live counters</p>
                             <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                <div class="rounded-lg border border-emerald-200 bg-white px-3 py-2">
-                                    <p class="text-xs text-slate-500">Timer</p>
-                                    <p class="text-xl font-semibold text-slate-900 tabular-nums" x-text="timerLabel">00:00</p>
+                                <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+                                    <p class="text-xs uppercase tracking-[0.12em] text-slate-300">Timer</p>
+                                    <p class="text-2xl font-semibold tabular-nums" x-text="timerLabel">00:00</p>
                                 </div>
-                                <div class="rounded-lg border border-emerald-200 bg-white px-3 py-2">
-                                    <p class="text-xs text-slate-500">Estimated earnings so far</p>
-                                    <p class="text-xl font-semibold text-slate-900 tabular-nums" x-text="earningsLabel">$0.00</p>
+                                <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+                                    <p class="text-xs uppercase tracking-[0.12em] text-slate-300">Earned</p>
+                                    <p class="text-2xl font-semibold tabular-nums" x-text="earningsLabel">$0.00</p>
                                 </div>
                             </div>
                         </div>
                     @endif
 
-                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3" x-show="panel === 'details'" x-transition>
-                        <p class="font-medium text-slate-900">Agreement</p>
-                        <p class="mt-1 text-xs text-slate-600">
+                    <div class="rounded-xl border border-white/20 bg-white/10 p-3" x-show="panel === 'details'" x-transition>
+                        <p class="font-medium text-white">Agreement</p>
+                        <p class="mt-1 text-xs text-slate-300">
                             Family accepted:
                             {{ $booking->family_terms_accepted_at ? $booking->family_terms_accepted_at->format('M d, H:i') : '-' }}
                             • Caregiver accepted:
@@ -296,30 +327,30 @@
 
                     <div x-show="panel === 'live'" x-transition class="space-y-2">
                         @if ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED && ! $booking->caregiver_terms_accepted_at)
-                            <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                            <div class="rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-3 text-sm text-amber-100">
                                 Accept the agreement first, then check in when you arrive.
                             </div>
-                            <button type="button" @click="panel = 'details'" class="text-xs font-medium text-amber-800 underline underline-offset-2">
+                            <button type="button" @click="panel = 'details'" class="text-xs font-medium text-amber-200 underline underline-offset-2">
                                 Open details to accept agreement
                             </button>
                         @elseif ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED)
-                            <div class="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
+                            <div class="rounded-xl border border-sky-300/40 bg-sky-500/10 px-3 py-3 text-sm text-sky-100">
                                 Ready to start. Check in when you arrive at the care location.
                             </div>
                         @elseif ($booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS)
-                            <div class="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+                            <div class="rounded-xl border border-emerald-300/40 bg-emerald-500/10 px-3 py-3 text-sm text-emerald-100">
                                 Shift in progress. Pause for break or end when done.
                             </div>
                         @elseif ($booking->status === \App\Models\CareBooking::STATUS_PAUSED)
-                            <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                            <div class="rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-3 text-sm text-amber-100">
                                 Shift is paused. Resume when back or end shift directly.
                             </div>
                         @elseif ($booking->status === \App\Models\CareBooking::STATUS_COMPLETED)
-                            <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                            <div class="rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-3 text-sm text-amber-100">
                                 Timesheet submitted. Waiting for family confirmation.
                             </div>
                         @elseif ($booking->status === \App\Models\CareBooking::STATUS_REVIEWED)
-                            <div class="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+                            <div class="rounded-xl border border-emerald-300/40 bg-emerald-500/10 px-3 py-3 text-sm text-emerald-100">
                                 Shift closed and reviewed.
                             </div>
                         @endif
@@ -332,10 +363,11 @@
                         </div>
                     @endif
 
-                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2" x-show="panel === 'live'" x-transition>
+                    <div class="space-y-2" x-show="panel === 'live'" x-transition>
                         @if ($canCheckIn)
                             <x-button
                                 color="blue"
+                                class="w-full"
                                 x-bind:disabled="geoLoading || !canCheckIn"
                                 x-on:click.prevent="startWithGps()"
                             >
@@ -345,16 +377,17 @@
                         @endif
 
                         @if ($canPause)
-                            <x-button color="amber" wire:click="pauseBooking">Pause shift</x-button>
+                            <x-button color="amber" class="w-full" wire:click="pauseBooking">Pause shift</x-button>
                         @endif
 
                         @if ($canResume)
-                            <x-button color="blue" wire:click="resumeBooking">Resume shift</x-button>
+                            <x-button color="blue" class="w-full" wire:click="resumeBooking">Resume shift</x-button>
                         @endif
 
                         @if ($canCheckOut)
                             <x-button
                                 color="green"
+                                class="w-full"
                                 x-bind:disabled="geoLoading || !canCheckOut"
                                 x-on:click.prevent="endWithGps()"
                             >
@@ -364,16 +397,16 @@
                         @endif
                     </div>
 
-                    <p class="text-xs text-slate-500" x-show="panel === 'live' && geoMessage" x-text="geoMessage"></p>
-                    <p class="text-xs text-slate-500" x-show="panel === 'details'" x-transition>
+                    <p class="text-xs text-slate-300" x-show="panel === 'live' && geoMessage" x-text="geoMessage"></p>
+                    <p class="text-xs text-slate-300" x-show="panel === 'details'" x-transition>
                         Start and end use phone GPS to verify on-site timestamps.
                     </p>
 
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-6 text-xs text-slate-700" x-show="panel === 'details'" x-transition>
-                        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Started: {{ optional($booking->started_at)->format('M d, H:i') ?: 'Pending' }}</div>
-                        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Paused at: {{ optional($booking->paused_at)->format('M d, H:i') ?: 'Not paused' }}</div>
-                        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Checked out: {{ optional($booking->completed_at)->format('M d, H:i') ?: 'Pending' }}</div>
-                        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 text-xs text-slate-200" x-show="panel === 'details'" x-transition>
+                        <div class="rounded-lg border border-white/15 bg-white/5 px-3 py-2">Started: {{ optional($booking->started_at)->format('M d, H:i') ?: 'Pending' }}</div>
+                        <div class="rounded-lg border border-white/15 bg-white/5 px-3 py-2">Paused at: {{ optional($booking->paused_at)->format('M d, H:i') ?: 'Not paused' }}</div>
+                        <div class="rounded-lg border border-white/15 bg-white/5 px-3 py-2">Checked out: {{ optional($booking->completed_at)->format('M d, H:i') ?: 'Pending' }}</div>
+                        <div class="rounded-lg border border-white/15 bg-white/5 px-3 py-2">
                             Start GPS:
                             @if ($booking->check_in_lat && $booking->check_in_lng)
                                 Captured
@@ -384,7 +417,7 @@
                                 Missing
                             @endif
                         </div>
-                        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                        <div class="rounded-lg border border-white/15 bg-white/5 px-3 py-2">
                             End GPS:
                             @if ($booking->check_out_lat && $booking->check_out_lng)
                                 Captured
@@ -395,39 +428,39 @@
                                 Pending
                             @endif
                         </div>
-                        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Family confirmed: {{ optional($booking->family_confirmed_at)->format('M d, H:i') ?: 'Pending' }}</div>
-                        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2">Break time: {{ $pausedLabel }}</div>
+                        <div class="rounded-lg border border-white/15 bg-white/5 px-3 py-2">Family confirmed: {{ optional($booking->family_confirmed_at)->format('M d, H:i') ?: 'Pending' }}</div>
+                        <div class="rounded-lg border border-white/15 bg-white/5 px-3 py-2">Break time: {{ $pausedLabel }}</div>
                     </div>
 
                     @if ($booking->expected_minutes || $booking->worked_minutes)
-                        <p class="text-xs text-slate-600" x-show="panel === 'details'" x-transition>
+                        <p class="text-xs text-slate-300" x-show="panel === 'details'" x-transition>
                             Minutes: expected {{ $booking->expected_minutes ?? '-' }} • worked {{ $booking->worked_minutes ?? '-' }}
                         </p>
                     @endif
 
                     @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED, \App\Models\CareBooking::STATUS_DISPUTED], true))
-                        <div class="rounded-xl border border-blue-200 bg-blue-50 p-3.5" x-show="panel === 'live'" x-transition>
-                            <p class="text-xs uppercase tracking-[0.12em] text-blue-700 font-semibold">Shift recap</p>
+                        <div class="rounded-xl border border-indigo-300/40 bg-indigo-500/10 p-3.5" x-show="panel === 'live'" x-transition>
+                            <p class="text-xs uppercase tracking-[0.12em] text-indigo-100 font-semibold">Shift recap</p>
                             <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 text-sm">
-                                <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
-                                    <p class="text-xs text-slate-500">Worked time</p>
-                                    <p class="font-semibold text-slate-900">{{ $workedLabel }}</p>
+                                <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+                                    <p class="text-xs text-slate-300">Worked time</p>
+                                    <p class="font-semibold text-white">{{ $workedLabel }}</p>
                                 </div>
-                                <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
-                                    <p class="text-xs text-slate-500">Rate</p>
-                                    <p class="font-semibold text-slate-900">${{ number_format($ratePerHour, 2) }}/hr</p>
+                                <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+                                    <p class="text-xs text-slate-300">Rate</p>
+                                    <p class="font-semibold text-white">${{ number_format($ratePerHour, 2) }}/hr</p>
                                 </div>
-                                <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
-                                    <p class="text-xs text-slate-500">Estimated earnings</p>
-                                    <p class="font-semibold text-slate-900">${{ number_format($estimatedEarnings, 2) }}</p>
+                                <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+                                    <p class="text-xs text-slate-300">Estimated earnings</p>
+                                    <p class="font-semibold text-white">${{ number_format($estimatedEarnings, 2) }}</p>
                                 </div>
-                                <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
-                                    <p class="text-xs text-slate-500">Break time</p>
-                                    <p class="font-semibold text-slate-900">{{ $pausedLabel }}</p>
+                                <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+                                    <p class="text-xs text-slate-300">Break time</p>
+                                    <p class="font-semibold text-white">{{ $pausedLabel }}</p>
                                 </div>
-                                <div class="rounded-lg border border-blue-200 bg-white px-3 py-2">
-                                    <p class="text-xs text-slate-500">GPS verification</p>
-                                    <p class="font-semibold text-slate-900">
+                                <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+                                    <p class="text-xs text-slate-300">GPS verification</p>
+                                    <p class="font-semibold text-white">
                                         {{ ($booking->check_in_lat && $booking->check_in_lng && $booking->check_out_lat && $booking->check_out_lng) ? 'Start + End captured' : 'Partial capture' }}
                                     </p>
                                 </div>
@@ -435,15 +468,15 @@
                         </div>
                     @endif
 
-                    <details class="rounded-lg border border-slate-200 bg-white p-3" x-show="panel === 'tasks'" x-transition>
-                        <summary class="cursor-pointer font-medium text-slate-900">Shift checklist</summary>
+                    <details class="rounded-xl border border-white/20 bg-white/10 p-3" x-show="panel === 'tasks'" x-transition>
+                        <summary class="cursor-pointer font-medium text-white">Shift checklist</summary>
                         <div class="mt-3 space-y-2">
                             @forelse ($booking->taskChecks as $taskCheck)
-                                <div class="flex items-center justify-between gap-3 rounded border border-slate-200 px-3 py-2">
+                                <div class="flex items-center justify-between gap-3 rounded border border-white/15 bg-white/5 px-3 py-2">
                                     <div>
-                                        <p class="{{ $taskCheck->is_completed ? 'line-through text-slate-500' : 'text-slate-900' }}">{{ $taskCheck->label }}</p>
+                                        <p class="{{ $taskCheck->is_completed ? 'line-through text-slate-400' : 'text-white' }}">{{ $taskCheck->label }}</p>
                                         @if ($taskCheck->notes)
-                                            <p class="text-xs text-slate-500">{{ $taskCheck->notes }}</p>
+                                            <p class="text-xs text-slate-300">{{ $taskCheck->notes }}</p>
                                         @endif
                                     </div>
                                     <x-button color="{{ $taskCheck->is_completed ? 'slate' : 'green' }}" sm light wire:click="toggleTaskCheck({{ $taskCheck->id }})">
@@ -451,14 +484,14 @@
                                     </x-button>
                                 </div>
                             @empty
-                                <p class="text-xs text-slate-600">No checklist items yet.</p>
+                                <p class="text-xs text-slate-300">No checklist items yet.</p>
                             @endforelse
                         </div>
                     </details>
 
-                    <details class="rounded-lg border border-slate-200 bg-white p-3" x-show="panel === 'details'" x-transition>
-                        <summary class="cursor-pointer font-medium text-slate-900">Timeline</summary>
-                        <div class="mt-3 max-h-52 space-y-1 overflow-auto text-xs text-slate-600">
+                    <details class="rounded-xl border border-white/20 bg-white/10 p-3" x-show="panel === 'details'" x-transition>
+                        <summary class="cursor-pointer font-medium text-white">Timeline</summary>
+                        <div class="mt-3 max-h-52 space-y-1 overflow-auto text-xs text-slate-300">
                             @forelse ($booking->events->take(20) as $event)
                                 <p>{{ optional($event->happened_at)->format('M d H:i') }} • {{ strtoupper(str_replace('_', ' ', $event->event_type)) }}</p>
                             @empty
@@ -468,13 +501,13 @@
                     </details>
 
                     @if ($booking->changeRequests->count() > 0)
-                        <details class="rounded-lg border border-slate-200 bg-white p-3" x-show="panel === 'details'" x-transition>
-                            <summary class="cursor-pointer font-medium text-slate-900">Change requests</summary>
+                        <details class="rounded-xl border border-white/20 bg-white/10 p-3" x-show="panel === 'details'" x-transition>
+                            <summary class="cursor-pointer font-medium text-white">Change requests</summary>
                             <div class="mt-3 space-y-2">
                                 @foreach ($booking->changeRequests as $change)
-                                    <div class="rounded border border-slate-200 px-3 py-2">
-                                        <p class="font-medium">{{ strtoupper($change->type) }} • {{ strtoupper($change->status) }}</p>
-                                        <p class="text-slate-600">{{ $change->reason }}</p>
+                                    <div class="rounded border border-white/15 bg-white/5 px-3 py-2">
+                                        <p class="font-medium text-white">{{ strtoupper($change->type) }} • {{ strtoupper($change->status) }}</p>
+                                        <p class="text-slate-300">{{ $change->reason }}</p>
                                         @if ($change->status === 'pending' && (int) $change->requester_user_id !== (int) auth()->id())
                                             <div class="mt-2 flex gap-2">
                                                 <x-button color="green" light wire:click="resolveChangeRequest({{ $change->id }}, 'accept')">Accept</x-button>
@@ -488,11 +521,12 @@
                     @endif
 
                     <div class="flex flex-wrap gap-2" x-show="panel === 'details'" x-transition>
-                        <x-button color="indigo" light wire:click="openChat">Open chat</x-button>
-                        <x-button color="slate" light wire:click="setActiveTab('support')">Open support tools</x-button>
+                        <x-button color="white" light wire:click="openChat">Open chat</x-button>
+                        <x-button color="white" light wire:click="setActiveTab('support')">Open support tools</x-button>
                     </div>
                 </div>
-            </x-card>
+                </div>
+            </section>
 
             @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true))
                 <x-card>
