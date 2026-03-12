@@ -5,7 +5,9 @@ namespace App\Livewire\Family;
 use App\Models\CareRequest;
 use App\Models\CareTask;
 use App\Support\FunnelTracker;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -14,7 +16,10 @@ use Livewire\Component;
 class CreateCareRequestWizard extends Component
 {
     public int $step = 1;
-    public int $totalSteps = 4;
+    public int $totalSteps = 3;
+    public ?int $lastRequestId = null;
+    public array $lastRequestSummary = [];
+    public bool $prefillApplied = false;
 
     public string $title = '';
     public string $additional_info = '';
@@ -107,6 +112,154 @@ class CreateCareRequestWizard extends Component
 
         $this->city = (string) ($user->city ?? '');
         $this->state = (string) ($user->state ?? '');
+
+        $lastRequest = CareRequest::query()
+            ->where('family_user_id', $user->id)
+            ->with(['recipient:id,care_request_id,full_name,relationship_to_family', 'thirdPartyContact:id,care_request_id,full_name'])
+            ->latest('id')
+            ->first();
+
+        if ($lastRequest) {
+            $this->lastRequestId = (int) $lastRequest->id;
+            $this->lastRequestSummary = [
+                'title' => (string) $lastRequest->title,
+                'location' => trim(((string) $lastRequest->city).', '.((string) $lastRequest->state)),
+                'request_type' => (string) $lastRequest->request_type,
+                'recipient' => (string) ($lastRequest->recipient?->full_name ?? 'Care recipient'),
+            ];
+        }
+    }
+
+    public function getResolvedTitleProperty(): string
+    {
+        return trim($this->title) !== '' ? trim($this->title) : $this->buildDefaultTitle();
+    }
+
+    public function getEstimateHourlyRateProperty(): float
+    {
+        $configuredRate = config('marketplace.family_estimate_hourly_rate');
+
+        if (is_numeric($configuredRate) && (float) $configuredRate > 0) {
+            return round((float) $configuredRate, 2);
+        }
+
+        return 30.00;
+    }
+
+    public function getEstimatedHoursProperty(): ?float
+    {
+        if ($this->request_type === CareRequest::TYPE_ONE_TIME) {
+            if (trim($this->requested_start_at) === '' || trim($this->requested_end_at) === '') {
+                return null;
+            }
+
+            try {
+                $start = Carbon::parse($this->requested_start_at);
+                $end = Carbon::parse($this->requested_end_at);
+            } catch (Throwable) {
+                return null;
+            }
+
+            if ($end->lte($start)) {
+                return null;
+            }
+
+            return round($start->diffInMinutes($end) / 60, 2);
+        }
+
+        $hoursPerShift = $this->recurringHoursPerShift();
+        if ($hoursPerShift === null) {
+            return null;
+        }
+
+        $daysCount = count($this->normalizedRecurringDays());
+        if ($daysCount < 1) {
+            return null;
+        }
+
+        return round($hoursPerShift * $daysCount, 2);
+    }
+
+    public function getEstimatedCostProperty(): ?float
+    {
+        if ($this->estimatedHours === null) {
+            return null;
+        }
+
+        return round($this->estimatedHours * $this->estimateHourlyRate, 2);
+    }
+
+    public function prefillFromLastRequest(): void
+    {
+        if (! $this->lastRequestId) {
+            return;
+        }
+
+        $request = CareRequest::query()
+            ->where('family_user_id', auth()->id())
+            ->with(['tasks:id,name', 'recipient', 'thirdPartyContact'])
+            ->find($this->lastRequestId);
+
+        if (! $request) {
+            return;
+        }
+
+        $this->request_type = (string) ($request->request_type ?: CareRequest::TYPE_ONE_TIME);
+        $this->title = (string) ($request->title ?? '');
+        $this->additional_info = (string) ($request->additional_info ?? '');
+        $this->scope_of_work = (string) ($request->scope_of_work ?? '');
+        $this->time_expectations = (string) ($request->time_expectations ?? '');
+        $this->home_access_notes = (string) ($request->home_access_notes ?? '');
+        $this->preferred_response_hours = (int) ($request->preferred_response_hours ?: 12);
+
+        if ($this->request_type === CareRequest::TYPE_ONE_TIME) {
+            $this->requested_start_at = '';
+            $this->requested_end_at = '';
+            $this->recurring_days = [];
+            $this->recurring_start_time = '';
+            $this->recurring_end_time = '';
+            $this->recurring_starts_on = '';
+            $this->recurring_ends_on = '';
+        } else {
+            $this->requested_start_at = '';
+            $this->requested_end_at = '';
+            $this->recurring_days = collect($request->recurring_days ?? [])->map(fn ($day) => (int) $day)->values()->all();
+            $this->recurring_start_time = $this->normalizeTimeForInput((string) ($request->recurring_start_time ?? ''));
+            $this->recurring_end_time = $this->normalizeTimeForInput((string) ($request->recurring_end_time ?? ''));
+            $this->recurring_starts_on = '';
+            $this->recurring_ends_on = '';
+        }
+
+        $this->address_line1 = (string) ($request->address_line1 ?? '');
+        $this->address_line2 = (string) ($request->address_line2 ?? '');
+        $this->city = (string) ($request->city ?? '');
+        $this->state = (string) ($request->state ?? '');
+        $this->zip = (string) ($request->zip ?? '');
+
+        $this->selectedTasks = $request->tasks->pluck('id')->map(fn ($id) => (int) $id)->values()->all();
+        $this->taskNotes = [];
+        foreach ($request->tasks as $task) {
+            $note = trim((string) ($task->pivot?->task_note ?? ''));
+            if ($note !== '') {
+                $this->taskNotes[(int) $task->id] = $note;
+            }
+        }
+
+        $this->recipient_full_name = (string) ($request->recipient?->full_name ?? '');
+        $this->recipient_date_of_birth = (string) ($request->recipient?->date_of_birth ?? '');
+        $this->recipient_gender = (string) ($request->recipient?->gender ?? '');
+        $this->recipient_mobility_level = (string) ($request->recipient?->mobility_level ?? '');
+        $this->recipient_relationship_to_family = (string) ($request->recipient?->relationship_to_family ?? '');
+        $this->recipient_care_notes = (string) ($request->recipient?->care_notes ?? '');
+
+        $this->includeThirdPartyContact = $request->thirdPartyContact !== null;
+        $this->third_party_full_name = (string) ($request->thirdPartyContact?->full_name ?? '');
+        $this->third_party_relationship_to_recipient = (string) ($request->thirdPartyContact?->relationship_to_recipient ?? '');
+        $this->third_party_phone = (string) ($request->thirdPartyContact?->phone ?? '');
+        $this->third_party_email = (string) ($request->thirdPartyContact?->email ?? '');
+
+        $this->prefillApplied = true;
+        session()->flash('status', 'Last request loaded. Update schedule and publish.');
     }
 
     public function nextStep(): void
@@ -143,11 +296,11 @@ class CreateCareRequestWizard extends Component
         $careRequest = DB::transaction(function () {
             $careRequest = CareRequest::query()->create([
                 'family_user_id' => auth()->id(),
-                'title' => trim($this->title),
+                'title' => $this->resolvedTitle,
                 'additional_info' => trim($this->additional_info) ?: null,
-                'scope_of_work' => trim($this->scope_of_work),
-                'time_expectations' => trim($this->time_expectations),
-                'home_access_notes' => trim($this->home_access_notes),
+                'scope_of_work' => $this->buildDefaultScope(),
+                'time_expectations' => trim($this->time_expectations) !== '' ? trim($this->time_expectations) : 'Flexible schedule. Exact timing can be confirmed in chat.',
+                'home_access_notes' => trim($this->home_access_notes) !== '' ? trim($this->home_access_notes) : 'Home access details will be shared after hire.',
                 'preferred_response_hours' => $this->preferred_response_hours,
                 'status' => CareRequest::STATUS_OPEN,
                 'request_type' => $this->request_type,
@@ -173,12 +326,12 @@ class CreateCareRequestWizard extends Component
             $careRequest->tasks()->sync($attachPayload);
 
             $careRequest->recipient()->create([
-                'full_name' => trim($this->recipient_full_name),
+                'full_name' => trim($this->recipient_full_name) !== '' ? trim($this->recipient_full_name) : 'Care recipient',
                 'date_of_birth' => $this->recipient_date_of_birth ?: null,
                 'gender' => $this->recipient_gender ?: null,
                 'mobility_level' => $this->recipient_mobility_level ?: null,
-                'relationship_to_family' => trim($this->recipient_relationship_to_family),
-                'care_notes' => trim($this->recipient_care_notes) ?: null,
+                'relationship_to_family' => trim($this->recipient_relationship_to_family) !== '' ? trim($this->recipient_relationship_to_family) : 'Family member',
+                'care_notes' => trim($this->recipient_care_notes) !== '' ? trim($this->recipient_care_notes) : (trim($this->additional_info) ?: null),
             ]);
 
             if ($this->includeThirdPartyContact) {
@@ -216,7 +369,6 @@ class CreateCareRequestWizard extends Component
         $rules = match ($step) {
             1 => $this->rulesForBasics(),
             2 => $this->rulesForRecipient(),
-            3 => $this->rulesForThirdParty(),
             default => [],
         };
 
@@ -229,11 +381,11 @@ class CreateCareRequestWizard extends Component
     {
         $rules = [
             'request_type' => ['required', Rule::in([CareRequest::TYPE_ONE_TIME, CareRequest::TYPE_RECURRING])],
-            'title' => ['required', 'string', 'min:8', 'max:140'],
-            'additional_info' => ['required', 'string', 'min:30', 'max:3000'],
-            'scope_of_work' => ['required', 'string', 'min:30', 'max:3000'],
-            'time_expectations' => ['required', 'string', 'min:8', 'max:255'],
-            'home_access_notes' => ['required', 'string', 'min:8', 'max:3000'],
+            'title' => ['nullable', 'string', 'max:140'],
+            'additional_info' => ['required', 'string', 'min:12', 'max:3000'],
+            'scope_of_work' => ['nullable', 'string', 'max:3000'],
+            'time_expectations' => ['nullable', 'string', 'max:255'],
+            'home_access_notes' => ['nullable', 'string', 'max:3000'],
             'preferred_response_hours' => ['required', 'integer', 'min:1', 'max:72'],
             'address_line1' => ['required', 'string', 'max:255'],
             'address_line2' => ['nullable', 'string', 'max:255'],
@@ -273,12 +425,12 @@ class CreateCareRequestWizard extends Component
     private function rulesForRecipient(): array
     {
         return [
-            'recipient_full_name' => ['required', 'string', 'max:120'],
+            'recipient_full_name' => ['nullable', 'string', 'max:120'],
             'recipient_date_of_birth' => ['nullable', 'date', 'before:today'],
             'recipient_gender' => ['nullable', Rule::in(array_column($this->genderOptions, 'value'))],
             'recipient_mobility_level' => ['nullable', Rule::in(array_column($this->mobilityOptions, 'value'))],
-            'recipient_relationship_to_family' => ['required', 'string', 'max:120'],
-            'recipient_care_notes' => ['required', 'string', 'min:20', 'max:2000'],
+            'recipient_relationship_to_family' => ['nullable', 'string', 'max:120'],
+            'recipient_care_notes' => ['nullable', 'string', 'max:2000'],
         ];
     }
 
@@ -295,6 +447,108 @@ class CreateCareRequestWizard extends Component
             'third_party_phone' => ['required', 'string', 'max:30'],
             'third_party_email' => ['nullable', 'email', 'max:255'],
         ];
+    }
+
+    private function buildDefaultTitle(): string
+    {
+        $taskPart = collect($this->selectedTaskLabels())->take(2)->implode(' and ');
+
+        $timingPart = match ($this->request_type) {
+            CareRequest::TYPE_RECURRING => 'Recurring care support',
+            default => 'One-time care support',
+        };
+
+        if ($taskPart !== '') {
+            return $timingPart.' for '.$taskPart;
+        }
+
+        return $timingPart.' request';
+    }
+
+    private function buildDefaultScope(): string
+    {
+        if (trim($this->scope_of_work) !== '') {
+            return trim($this->scope_of_work);
+        }
+
+        $tasks = $this->selectedTaskLabels();
+
+        if ($tasks !== []) {
+            return 'Primary tasks: '.implode(', ', $tasks).'.';
+        }
+
+        return 'Non-medical home care support based on family instructions.';
+    }
+
+    private function recurringHoursPerShift(): ?float
+    {
+        $startMinutes = $this->timeStringToMinutes($this->recurring_start_time);
+        $endMinutes = $this->timeStringToMinutes($this->recurring_end_time);
+
+        if ($startMinutes === null || $endMinutes === null || $endMinutes <= $startMinutes) {
+            return null;
+        }
+
+        return round(($endMinutes - $startMinutes) / 60, 2);
+    }
+
+    private function timeStringToMinutes(string $time): ?int
+    {
+        $value = trim($time);
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/^(\d{2}):(\d{2})(?::\d{2})?$/', $value, $matches) !== 1) {
+            return null;
+        }
+
+        $hours = (int) $matches[1];
+        $minutes = (int) $matches[2];
+
+        if ($hours > 23 || $minutes > 59) {
+            return null;
+        }
+
+        return ($hours * 60) + $minutes;
+    }
+
+    private function normalizeTimeForInput(string $time): string
+    {
+        $trimmed = trim($time);
+        if ($trimmed === '') {
+            return '';
+        }
+
+        if (preg_match('/^\d{2}:\d{2}$/', $trimmed) === 1) {
+            return $trimmed;
+        }
+
+        if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $trimmed) === 1) {
+            return substr($trimmed, 0, 5);
+        }
+
+        try {
+            return Carbon::parse($trimmed)->format('H:i');
+        } catch (Throwable) {
+            return '';
+        }
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function selectedTaskLabels(): array
+    {
+        $selected = collect($this->selectedTasks)
+            ->map(fn ($value) => (int) $value)
+            ->all();
+
+        return collect($this->taskOptions)
+            ->whereIn('id', $selected)
+            ->pluck('name')
+            ->values()
+            ->all();
     }
 
     public function render()

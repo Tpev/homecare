@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'family_estimate_hourly_rate' => 30.00,
+
     /*
     |--------------------------------------------------------------------------
     | Platform Pricing Tiers
@@ -27,4 +29,3 @@ return [
         ],
     ],
 ];
-

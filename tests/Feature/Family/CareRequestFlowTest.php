@@ -359,4 +359,116 @@ class CareRequestFlowTest extends TestCase
         $this->assertNull($careRequest->requested_start_at);
         $this->assertNull($careRequest->requested_end_at);
     }
+
+    public function test_family_can_publish_without_custom_title_and_request_gets_generated_title(): void
+    {
+        $family = User::factory()->create([
+            'role' => 'family',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+        ]);
+
+        $task = CareTask::query()->create(['name' => 'Companionship']);
+        $startAt = now()->addDay()->setTime(10, 0)->format('Y-m-d\TH:i');
+        $endAt = now()->addDay()->setTime(14, 0)->format('Y-m-d\TH:i');
+
+        Livewire::actingAs($family)
+            ->test(CreateCareRequestWizard::class)
+            ->set('title', '')
+            ->set('additional_info', 'Need someone to stay with my mom and help with lunch setup.')
+            ->set('requested_start_at', $startAt)
+            ->set('requested_end_at', $endAt)
+            ->set('address_line1', '100 Main St')
+            ->set('city', 'Raleigh')
+            ->set('state', 'NC')
+            ->set('zip', '27601')
+            ->set('selectedTasks', [$task->id])
+            ->call('nextStep')
+            ->call('nextStep')
+            ->call('publish');
+
+        $careRequest = CareRequest::query()->latest('id')->first();
+
+        $this->assertNotNull($careRequest);
+        $this->assertNotSame('', trim((string) $careRequest->title));
+        $this->assertStringContainsString('care support', strtolower((string) $careRequest->title));
+    }
+
+    public function test_family_can_prefill_from_last_request(): void
+    {
+        $family = User::factory()->create([
+            'role' => 'family',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+        ]);
+
+        $task = CareTask::query()->create(['name' => 'Meal preparation']);
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Previous request title',
+            'additional_info' => 'Need support for mom during lunch.',
+            'scope_of_work' => 'Meal prep and companionship.',
+            'time_expectations' => 'Arrive on time.',
+            'home_access_notes' => 'Use front door lockbox.',
+            'preferred_response_hours' => 8,
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'requested_start_at' => now()->addDay()->setTime(10, 0),
+            'requested_end_at' => now()->addDay()->setTime(12, 0),
+            'address_line1' => '12 River St',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+            'status' => CareRequest::STATUS_OPEN,
+        ]);
+        $request->tasks()->sync([$task->id => ['task_note' => 'Soft diet only']]);
+        $request->recipient()->create([
+            'full_name' => 'Margaret Johnson',
+            'relationship_to_family' => 'Mother',
+            'care_notes' => 'Needs help with meal setup.',
+        ]);
+        $request->thirdPartyContact()->create([
+            'full_name' => 'Daniel Johnson',
+            'relationship_to_recipient' => 'Son',
+            'phone' => '+1 919 555 1111',
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(CreateCareRequestWizard::class)
+            ->call('prefillFromLastRequest')
+            ->assertSet('title', 'Previous request title')
+            ->assertSet('address_line1', '12 River St')
+            ->assertSet('city', 'Raleigh')
+            ->assertSet('state', 'NC')
+            ->assertSet('zip', '27601')
+            ->assertSet('preferred_response_hours', 8)
+            ->assertSet('recipient_full_name', 'Margaret Johnson')
+            ->assertSet('includeThirdPartyContact', true)
+            ->assertSet('requested_start_at', '')
+            ->assertSet('requested_end_at', '')
+            ->assertSet('selectedTasks', [$task->id]);
+    }
+
+    public function test_family_sees_one_time_estimated_cost_preview(): void
+    {
+        $family = User::factory()->create([
+            'role' => 'family',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+        ]);
+
+        $task = CareTask::query()->create(['name' => 'Companionship']);
+        $startAt = now()->addDay()->setTime(9, 0)->format('Y-m-d\TH:i');
+        $endAt = now()->addDay()->setTime(13, 0)->format('Y-m-d\TH:i');
+
+        Livewire::actingAs($family)
+            ->test(CreateCareRequestWizard::class)
+            ->set('request_type', CareRequest::TYPE_ONE_TIME)
+            ->set('selectedTasks', [$task->id])
+            ->set('requested_start_at', $startAt)
+            ->set('requested_end_at', $endAt)
+            ->assertSee('Estimated one-time cost')
+            ->assertSee('4.00h')
+            ->assertSee('$30.00/hr')
+            ->assertSee('$120.00');
+    }
 }
