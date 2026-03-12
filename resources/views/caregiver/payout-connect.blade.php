@@ -43,7 +43,7 @@
                 <div class="flex flex-wrap gap-2 pt-1">
                     <form method="POST" action="{{ route('caregiver.payouts.connect.start') }}">
                         @csrf
-                        <x-button color="blue">
+                        <x-button color="blue" type="submit">
                             {{ $profile->stripe_connect_account_id ? 'Continue Stripe onboarding' : 'Start Stripe onboarding' }}
                         </x-button>
                     </form>
@@ -55,4 +55,3 @@
         </x-card>
     </div>
 </x-app-layout>
-
