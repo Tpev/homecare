@@ -30,23 +30,32 @@
 
 @section('content')
     <div class="min-h-screen bg-slate-50 text-slate-900">
-        <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
-            <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+        <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
+            <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
                 <a href="{{ route('landing') }}" class="flex items-center gap-3">
-                    <div class="h-10 w-10 rounded-2xl bg-gradient-to-br from-cyan-700 via-blue-700 to-emerald-600"></div>
+                    <div class="h-10 w-10 rounded-2xl bg-gradient-to-br from-teal-600 via-cyan-700 to-blue-700 shadow-sm ring-1 ring-black/5"></div>
                     <div class="leading-tight">
                         <div class="text-lg font-extrabold tracking-tight">HomeCare</div>
                         <div class="text-xs text-slate-500">Raleigh, NC</div>
                     </div>
                 </a>
-                <nav class="hidden lg:flex items-center gap-5 text-sm font-medium text-slate-600">
-                    <a href="{{ route('landing.family') }}" class="hover:text-slate-900">Families</a>
-                    <a href="{{ route('landing.caregiver') }}" class="hover:text-slate-900">Caregivers</a>
-                    <a href="{{ route('blog.index') }}" class="text-slate-900">Blog</a>
+
+                <nav class="hidden items-center gap-6 text-sm font-medium text-slate-600 lg:flex">
+                    <a href="{{ route('landing.family') }}" class="transition hover:text-slate-900">Families</a>
+                    <a href="{{ route('landing.caregiver') }}" class="transition hover:text-slate-900">Caregivers</a>
+                    <a href="{{ route('landing.agency') }}" class="transition hover:text-slate-900">Agencies</a>
                 </nav>
+
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('login') }}"><x-button color="slate" sm light>Sign in</x-button></a>
-                    <a href="{{ route('register') }}"><x-button color="blue" sm>Get care fast</x-button></a>
+                    <a href="{{ route('login') }}">
+                        <x-button color="slate" sm light>Sign in</x-button>
+                    </a>
+                    <a href="{{ route('register') }}">
+                        <x-button color="blue" sm>Family sign up</x-button>
+                    </a>
+                    <a href="{{ route('caregiver.register') }}" class="hidden sm:block">
+                        <x-button color="emerald" sm outline>Caregiver sign up</x-button>
+                    </a>
                 </div>
             </div>
         </header>
