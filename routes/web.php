@@ -13,6 +13,7 @@ use App\Livewire\Admin\SupportTicketsQueue;
 use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Caregiver\BrowseCareRequests;
 use App\Livewire\Caregiver\BrowseCaregivers;
+use App\Livewire\Caregiver\EarningsDashboard;
 use App\Livewire\Caregiver\InsuranceSetup;
 use App\Livewire\Caregiver\IntroVideoSetup;
 use App\Livewire\Caregiver\InvitationsIndex;
@@ -85,6 +86,7 @@ Route::middleware(['auth', 'caregiver.role'])->group(function () {
         ->name('caregiver.verification.return');
     Route::get('/caregiver/invitations', InvitationsIndex::class)->name('caregiver.invitations.index');
     Route::get('/caregiver/shifts', ShiftsIndex::class)->name('caregiver.shifts.index');
+    Route::get('/caregiver/earnings', EarningsDashboard::class)->name('caregiver.earnings.index');
     Route::get('/care-requests', BrowseCareRequests::class)->name('care-requests.index');
     Route::get('/care-requests/{careRequest}/apply', ApplyToCareRequest::class)
         ->whereNumber('careRequest')

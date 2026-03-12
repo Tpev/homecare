@@ -125,6 +125,11 @@ new class extends Component
                 'active' => request()->routeIs('caregiver.shifts.*'),
             ];
             $primaryLinks[] = [
+                'label' => 'My Earnings',
+                'href' => route('caregiver.earnings.index'),
+                'active' => request()->routeIs('caregiver.earnings.*'),
+            ];
+            $primaryLinks[] = [
                 'label' => 'Open Requests',
                 'href' => route('care-requests.index'),
                 'active' => request()->routeIs('care-requests.*'),
@@ -225,6 +230,9 @@ new class extends Component
                     <a href="{{ route('caregiver.shifts.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                         My Shifts
                     </a>
+                    <a href="{{ route('caregiver.earnings.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                        My Earnings
+                    </a>
                     <a href="{{ route('caregiver.verification.show') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                         {{ $identityApproved ? 'Identity Verified' : 'Verify Identity' }}
                     </a>
@@ -280,6 +288,9 @@ new class extends Component
                 @if ($isCaregiver)
                     <x-responsive-nav-link :href="route('caregiver.shifts.index')" wire:navigate>
                         {{ __('My Shifts') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('caregiver.earnings.index')" wire:navigate>
+                        {{ __('My Earnings') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('caregiver.verification.show')" wire:navigate>
                         {{ $identityApproved ? __('Identity Verified') : __('Verify Identity') }}

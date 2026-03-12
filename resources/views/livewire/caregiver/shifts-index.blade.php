@@ -14,8 +14,11 @@
                     </p>
                 </div>
                 <div class="flex flex-wrap gap-2">
+                    <a href="{{ route('caregiver.earnings.index') }}" wire:navigate>
+                        <x-button color="white">Earnings</x-button>
+                    </a>
                     <a href="{{ route('care-requests.index') }}" wire:navigate>
-                        <x-button color="white">Browse requests</x-button>
+                        <x-button color="white" light>Browse requests</x-button>
                     </a>
                     <a href="{{ route('caregiver.invitations.index') }}" wire:navigate>
                         <x-button color="white" light>Invitations</x-button>

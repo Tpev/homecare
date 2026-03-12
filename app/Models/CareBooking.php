@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CareBooking extends Model
 {
@@ -144,5 +145,10 @@ class CareBooking extends Model
     public function incidents(): HasMany
     {
         return $this->hasMany(CareBookingIncident::class)->orderByDesc('reported_at');
+    }
+
+    public function payoutItem(): HasOne
+    {
+        return $this->hasOne(CaregiverPayoutItem::class, 'care_booking_id');
     }
 }

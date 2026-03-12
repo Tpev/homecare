@@ -132,6 +132,16 @@ class User extends Authenticatable
         return $this->hasMany(CaregiverIdentityVerification::class);
     }
 
+    public function caregiverPayouts(): HasMany
+    {
+        return $this->hasMany(CaregiverPayout::class, 'caregiver_user_id');
+    }
+
+    public function caregiverPayoutItems(): HasMany
+    {
+        return $this->hasMany(CaregiverPayoutItem::class, 'caregiver_user_id');
+    }
+
     public function notificationPreferences(): HasMany
     {
         return $this->hasMany(UserNotificationPreference::class);

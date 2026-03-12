@@ -225,6 +225,7 @@
                         </p>
                         <div class="mt-5 flex flex-wrap gap-2">
                             <a href="{{ route('caregiver.shifts.index') }}" wire:navigate><x-button color="white">My shifts</x-button></a>
+                            <a href="{{ route('caregiver.earnings.index') }}" wire:navigate><x-button color="white">Earnings</x-button></a>
                             <a href="{{ route('care-requests.index') }}" wire:navigate><x-button color="white">Browse Requests</x-button></a>
                             <a href="{{ route('messages.index') }}" wire:navigate><x-button color="white" light>Messages</x-button></a>
                             <a href="{{ route('caregiver.profile.edit') }}" wire:navigate><x-button color="white" light>Edit Profile</x-button></a>
