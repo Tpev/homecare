@@ -4,6 +4,7 @@ namespace App\Livewire\Caregiver;
 
 use App\Models\CareRequest;
 use App\Models\CareTask;
+use App\Support\CaregiverPrelaunch;
 use Carbon\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -75,6 +76,11 @@ class BrowseCareRequests extends Component
             ])
             ->where('status', CareRequest::STATUS_OPEN);
 
+        $prelaunchMode = CaregiverPrelaunch::enabled();
+        if ($prelaunchMode) {
+            $query->whereRaw('1 = 0');
+        }
+
         if ($this->requestType !== 'all') {
             $query->where('request_type', $this->requestType);
         }
@@ -106,6 +112,7 @@ class BrowseCareRequests extends Component
         };
 
         return view('livewire.caregiver.browse-care-requests', [
+            'prelaunchMode' => $prelaunchMode,
             'requests' => $query->paginate(10),
         ]);
     }

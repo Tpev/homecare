@@ -1,4 +1,10 @@
 <div class="hc-page py-8 space-y-6">
+    @if (!empty($prelaunchMode))
+        <x-alert color="yellow">
+            Caregiver marketplace is in pre-launch mode. Profiles are not publicly available yet.
+        </x-alert>
+    @endif
+
     <section class="hc-hero">
         <p class="text-xs uppercase tracking-[0.2em] text-cyan-100">Find Caregivers</p>
         <h1 class="mt-2 text-2xl md:text-3xl font-display font-semibold">Find trusted non-medical caregivers</h1>
@@ -106,7 +112,9 @@
                     </article>
                 @empty
                     <div class="md:col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <p class="text-sm text-slate-600">No caregiver matches these filters yet.</p>
+                        <p class="text-sm text-slate-600">
+                            {{ !empty($prelaunchMode) ? 'Caregiver profiles will appear here when launch opens.' : 'No caregiver matches these filters yet.' }}
+                        </p>
                     </div>
                 @endforelse
             </div>

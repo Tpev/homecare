@@ -4,6 +4,12 @@
             <x-alert color="green">{{ session('status') }}</x-alert>
         @endif
 
+        @if (!empty($prelaunchMode))
+            <x-alert color="yellow">
+                Caregiver pre-launch mode is active. You can review invitations now, but acceptance opens at launch.
+            </x-alert>
+        @endif
+
         <div class="flex items-center justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-display font-semibold">Invitations</h1>
@@ -61,7 +67,9 @@
 
                     @if ($invitation->status === \App\Models\CareRequestInvitation::STATUS_PENDING)
                         <div class="mt-4 flex items-center gap-2">
-                            <x-button color="green" wire:click="accept({{ $invitation->id }})">Accept</x-button>
+                            <x-button color="green" wire:click="accept({{ $invitation->id }})" :disabled="!empty($prelaunchMode)">
+                                {{ !empty($prelaunchMode) ? 'Accept at launch' : 'Accept' }}
+                            </x-button>
                             <x-button color="red" outline wire:click="decline({{ $invitation->id }})">Decline</x-button>
                         </div>
                     @elseif ($invitation->status === \App\Models\CareRequestInvitation::STATUS_ACCEPTED && $invitation->care_request_application_id)

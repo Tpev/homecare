@@ -16,6 +16,7 @@ use App\Services\Booking\BookingTrustService;
 use App\Services\Matching\CaregiverSuggestionService;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
+use App\Support\CaregiverPrelaunch;
 use App\Support\CareRequestProgress;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
@@ -138,6 +139,12 @@ class ManageCareRequest extends Component
 
     public function hire(int $applicationId): void
     {
+        if (CaregiverPrelaunch::enabled()) {
+            session()->flash('status', CaregiverPrelaunch::message());
+
+            return;
+        }
+
         if ($this->requestItem->status !== CareRequest::STATUS_OPEN) {
             return;
         }
@@ -702,6 +709,12 @@ class ManageCareRequest extends Component
 
     public function rebookHiredCaregiver(): void
     {
+        if (CaregiverPrelaunch::enabled()) {
+            session()->flash('status', CaregiverPrelaunch::message());
+
+            return;
+        }
+
         $hiredApplication = $this->requestItem->applications
             ->firstWhere('status', CareRequestApplication::STATUS_HIRED);
 
@@ -814,6 +827,12 @@ class ManageCareRequest extends Component
 
     public function inviteSuggestedCaregiver(int $caregiverUserId): void
     {
+        if (CaregiverPrelaunch::enabled()) {
+            session()->flash('status', CaregiverPrelaunch::message());
+
+            return;
+        }
+
         if ($this->requestItem->status !== CareRequest::STATUS_OPEN) {
             session()->flash('status', 'Invitations are available only for open requests.');
             return;

@@ -8,6 +8,7 @@ use App\Models\CareRequestInvitation;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Support\CaregiverResponseMetrics;
 use App\Support\CaregiverWorkInboxBuilder;
+use App\Support\CaregiverPrelaunch;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
 use Illuminate\Support\Facades\DB;
@@ -44,6 +45,12 @@ class WorkInbox extends Component
 
     public function acceptInvitation(int $invitationId): void
     {
+        if (CaregiverPrelaunch::enabled()) {
+            session()->flash('status', CaregiverPrelaunch::message());
+
+            return;
+        }
+
         $invitation = $this->findOwnInvitation($invitationId);
         $caregiverProfile = auth()->user()?->caregiverProfile;
 
@@ -173,6 +180,7 @@ class WorkInbox extends Component
         $user = auth()->user();
 
         return view('livewire.caregiver.work-inbox', [
+            'prelaunchMode' => CaregiverPrelaunch::enabled(),
             'counts' => $builder->countsForUser($user),
             'items' => $builder->buildForUser($user, $this->scope, $this->sort, 50),
         ]);

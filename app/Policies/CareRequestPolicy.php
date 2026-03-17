@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\CareRequest;
 use App\Models\User;
+use App\Support\CaregiverPrelaunch;
 
 class CareRequestPolicy
 {
@@ -62,6 +63,7 @@ class CareRequestPolicy
         $profile = $user->caregiverProfile;
 
         return $user->role === 'caregiver'
+            && ! CaregiverPrelaunch::enabled()
             && $careRequest->status === CareRequest::STATUS_OPEN
             && $profile?->status === 'active'
             && $profile->isMarketplaceReady();

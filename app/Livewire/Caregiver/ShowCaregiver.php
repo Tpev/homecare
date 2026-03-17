@@ -7,6 +7,7 @@ use App\Models\CareRequestInvitation;
 use App\Models\CaregiverProfile;
 use App\Models\FamilyCaregiverFavorite;
 use App\Services\Notifications\MarketplaceNotificationService;
+use App\Support\CaregiverPrelaunch;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
 use Illuminate\Validation\Rule;
@@ -25,6 +26,8 @@ class ShowCaregiver extends Component
 
     public function mount(string $slug): void
     {
+        abort_if(CaregiverPrelaunch::enabled(), 404);
+
         $this->caregiver = CaregiverProfile::query()
             ->with(['user','skills','languages','availabilities'])
             ->where('slug', $slug)
@@ -44,6 +47,12 @@ class ShowCaregiver extends Component
 
     public function sendInvite(): void
     {
+        if (CaregiverPrelaunch::enabled()) {
+            session()->flash('status', CaregiverPrelaunch::message());
+
+            return;
+        }
+
         $user = auth()->user();
         abort_unless($user && $user->role === 'family', 403);
 

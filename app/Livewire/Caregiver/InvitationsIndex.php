@@ -6,6 +6,7 @@ use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
 use App\Services\Notifications\MarketplaceNotificationService;
+use App\Support\CaregiverPrelaunch;
 use App\Support\CaregiverResponseMetrics;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
@@ -25,6 +26,12 @@ class InvitationsIndex extends Component
 
     public function accept(int $invitationId): void
     {
+        if (CaregiverPrelaunch::enabled()) {
+            session()->flash('status', CaregiverPrelaunch::message());
+
+            return;
+        }
+
         $invitation = $this->findOwnInvitation($invitationId);
         $caregiverProfile = auth()->user()?->caregiverProfile;
 
@@ -168,6 +175,9 @@ class InvitationsIndex extends Component
             ->latest()
             ->get();
 
-        return view('livewire.caregiver.invitations-index', compact('invitations'));
+        return view('livewire.caregiver.invitations-index', [
+            'invitations' => $invitations,
+            'prelaunchMode' => CaregiverPrelaunch::enabled(),
+        ]);
     }
 }

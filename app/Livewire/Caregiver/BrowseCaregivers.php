@@ -5,6 +5,7 @@ namespace App\Livewire\Caregiver;
 use App\Models\CaregiverProfile;
 use App\Models\Language;
 use App\Models\Skill;
+use App\Support\CaregiverPrelaunch;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -65,6 +66,8 @@ class BrowseCaregivers extends Component
 
     public function render()
     {
+        $prelaunchMode = CaregiverPrelaunch::enabled();
+
         $query = CaregiverProfile::query()
             ->with(['user','skills','languages'])
             ->where('status', 'active')
@@ -76,6 +79,10 @@ class BrowseCaregivers extends Component
             ->whereHas('skills')
             ->whereHas('languages')
             ->whereHas('availabilities');
+
+        if ($prelaunchMode) {
+            $query->whereRaw('1 = 0');
+        }
 
         if ($this->search !== '') {
             $term = trim($this->search);
@@ -128,6 +135,7 @@ class BrowseCaregivers extends Component
         };
 
         return view('livewire.caregiver.browse-caregivers', [
+            'prelaunchMode' => $prelaunchMode,
             'caregivers' => $query->paginate(12),
             'skillOptions' => Skill::query()->orderBy('name')->get(['id','name']),
             'languageOptions' => Language::query()->orderBy('name')->get(['id','name']),

@@ -3,6 +3,12 @@
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
 
+    @if (!empty($prelaunchMode))
+        <x-alert color="yellow">
+            Caregiver pre-launch mode is active. Complete your profile now and we will notify you when matching opens.
+        </x-alert>
+    @endif
+
     @php
         $statusStyles = [
             'success' => 'bg-emerald-100 text-emerald-700',

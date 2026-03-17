@@ -14,6 +14,7 @@ use App\Models\SupportTicket;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
+use App\Support\CaregiverPrelaunch;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
 use Illuminate\Validation\Rule;
@@ -94,6 +95,12 @@ class ApplyToCareRequest extends Component
 
     public function submit(): void
     {
+        if (CaregiverPrelaunch::enabled()) {
+            session()->flash('status', CaregiverPrelaunch::message());
+
+            return;
+        }
+
         if (! auth()->user()->caregiverProfile?->isMarketplaceReady()) {
             session()->flash('status', 'Complete your profile before applying to requests.');
             return;

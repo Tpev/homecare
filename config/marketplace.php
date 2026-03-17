@@ -2,6 +2,7 @@
 
 return [
     'family_estimate_hourly_rate' => 30.00,
+    'caregiver_prelaunch_mode' => filter_var(env('MARKETPLACE_CAREGIVER_PRELAUNCH_MODE', false), FILTER_VALIDATE_BOOL),
 
     'payments' => [
         'platform_fee_percent' => (float) env('MARKETPLACE_PLATFORM_FEE_PERCENT', 10),

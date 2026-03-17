@@ -78,15 +78,19 @@ new class extends Component
             $avatarUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($caregiverProfile->profile_photo_path);
         }
 
-        $nameParts = preg_split('/\s+/', trim((string) $user->name));
+        $nameParts = preg_split('/\s+/', trim((string) ($user?->name ?? 'Guest')));
         $initials = collect($nameParts)->filter()->map(fn ($part) => strtoupper(substr($part, 0, 1)))->take(2)->implode('');
-        $initials = $initials !== '' ? $initials : strtoupper(substr((string) $user->name, 0, 1));
+        $initials = $initials !== '' ? $initials : strtoupper(substr((string) ($user?->name ?? 'G'), 0, 1));
 
-        $primaryLinks = [[
-            'label' => 'Dashboard',
-            'href' => route('dashboard'),
-            'active' => request()->routeIs('dashboard'),
-        ]];
+        $primaryLinks = [];
+
+        if ($user) {
+            $primaryLinks[] = [
+                'label' => 'Dashboard',
+                'href' => route('dashboard'),
+                'active' => request()->routeIs('dashboard'),
+            ];
+        }
 
         if ($isFamily) {
             $primaryLinks[] = [
@@ -166,7 +170,7 @@ new class extends Component
     <div class="hc-page relative">
         <div class="flex h-16 items-center">
             <div class="shrink-0 flex items-center">
-                <a href="{{ route('dashboard') }}" wire:navigate class="inline-flex items-center gap-2">
+                <a href="{{ $user ? route('dashboard') : route('landing') }}" wire:navigate class="inline-flex items-center gap-2">
                     <x-application-logo class="block h-9 w-auto fill-current text-cyan-800" />
                     <span class="hidden md:inline text-sm font-display font-semibold text-slate-800">HomeCare</span>
                 </a>
@@ -182,85 +186,93 @@ new class extends Component
         </div>
 
         <div class="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2" x-data="{ accountOpen: false }">
-            <button
-                type="button"
-                @click="accountOpen = !accountOpen"
-                class="inline-flex items-center gap-3 px-3 py-2 border border-slate-200 rounded-xl text-sm text-slate-700 bg-white hover:bg-slate-50 shadow-sm"
-            >
-                @if ($avatarUrl)
-                    <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="h-8 w-8 rounded-full object-cover border border-slate-200">
-                @else
-                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-cyan-100 text-cyan-700 text-xs font-semibold">
-                        {{ $initials }}
+            @if ($user)
+                <button
+                    type="button"
+                    @click="accountOpen = !accountOpen"
+                    class="inline-flex items-center gap-3 px-3 py-2 border border-slate-200 rounded-xl text-sm text-slate-700 bg-white hover:bg-slate-50 shadow-sm"
+                >
+                    @if ($avatarUrl)
+                        <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="h-8 w-8 rounded-full object-cover border border-slate-200">
+                    @else
+                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-cyan-100 text-cyan-700 text-xs font-semibold">
+                            {{ $initials }}
+                        </span>
+                    @endif
+
+                    <span class="hidden md:block text-left">
+                        <span class="block text-sm font-semibold leading-tight">{{ $user->name }}</span>
+                        <span class="block text-xs text-slate-500 leading-tight">{{ ucfirst((string) $user->role) }}</span>
                     </span>
-                @endif
 
-                <span class="hidden md:block text-left">
-                    <span class="block text-sm font-semibold leading-tight">{{ $user->name }}</span>
-                    <span class="block text-xs text-slate-500 leading-tight">{{ ucfirst((string) $user->role) }}</span>
-                </span>
+                    <svg class="h-4 w-4 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.12l3.71-3.89a.75.75 0 111.08 1.04l-4.25 4.46a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                    </svg>
+                </button>
 
-                <svg class="h-4 w-4 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.12l3.71-3.89a.75.75 0 111.08 1.04l-4.25 4.46a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                </svg>
-            </button>
+                <div
+                    x-show="accountOpen"
+                    x-transition
+                    @click.outside="accountOpen = false"
+                    class="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 bg-white shadow-lg p-2 space-y-1"
+                    style="display: none;"
+                >
+                    <a href="{{ $myProfileHref }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">{{ $myProfileLabel }}</a>
 
-            <div
-                x-show="accountOpen"
-                x-transition
-                @click.outside="accountOpen = false"
-                class="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 bg-white shadow-lg p-2 space-y-1"
-                style="display: none;"
-            >
-                <a href="{{ $myProfileHref }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">{{ $myProfileLabel }}</a>
+                    @if ($publicProfileHref)
+                        <a href="{{ $publicProfileHref }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">View Public Profile</a>
+                    @endif
 
-                @if ($publicProfileHref)
-                    <a href="{{ $publicProfileHref }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">View Public Profile</a>
-                @endif
-
-                <a href="{{ route('profile') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Account Settings</a>
-                <a href="{{ $securityHref }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Change Password</a>
-                <a href="{{ route('messages.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                    {{ $messageUnread > 0 ? 'Messages ('.$messageUnread.')' : 'Messages' }}
-                </a>
-                <a href="{{ route('support.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Support Center</a>
-                @if ($isFamily)
-                    <a href="{{ route('family.billing.show') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Billing & Payments</a>
-                @endif
-
-                @if ($isCaregiver)
-                    <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                        {{ $invitationUnread > 0 ? 'Work Inbox ('.$invitationUnread.')' : 'Work Inbox' }}
+                    <a href="{{ route('profile') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Account Settings</a>
+                    <a href="{{ $securityHref }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Change Password</a>
+                    <a href="{{ route('messages.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                        {{ $messageUnread > 0 ? 'Messages ('.$messageUnread.')' : 'Messages' }}
                     </a>
-                    <a href="{{ route('caregiver.notifications.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                        {{ $notificationUnread > 0 ? 'Notifications ('.$notificationUnread.')' : 'Notifications' }}
-                    </a>
-                    <a href="{{ route('caregiver.shifts.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                        My Shifts
-                    </a>
-                    <a href="{{ route('caregiver.earnings.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                        My Earnings
-                    </a>
-                    <a href="{{ route('caregiver.payouts.connect.show') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                        Payout Setup
-                    </a>
-                    <a href="{{ route('caregiver.verification.show') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                        {{ $identityApproved ? 'Identity Verified' : 'Verify Identity' }}
-                    </a>
-                    <a href="{{ route('caregiver.invitations.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                        {{ $invitationUnread > 0 ? 'Invitations ('.$invitationUnread.')' : 'Invitations' }}
-                    </a>
-                @endif
+                    <a href="{{ route('support.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Support Center</a>
+                    @if ($isFamily)
+                        <a href="{{ route('family.billing.show') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Billing & Payments</a>
+                    @endif
 
-                @if ($isAdmin)
-                    <a href="{{ route('admin.caregivers.reviews') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Admin Reviews</a>
-                    <a href="{{ route('admin.support.tickets') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Support Queue</a>
-                    <a href="{{ route('admin.payments.ops') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Payments Ops</a>
-                    <a href="{{ route('admin.analytics.funnel') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Funnel Analytics</a>
-                @endif
+                    @if ($isCaregiver)
+                        <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                            {{ $invitationUnread > 0 ? 'Work Inbox ('.$invitationUnread.')' : 'Work Inbox' }}
+                        </a>
+                        <a href="{{ route('caregiver.notifications.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                            {{ $notificationUnread > 0 ? 'Notifications ('.$notificationUnread.')' : 'Notifications' }}
+                        </a>
+                        <a href="{{ route('caregiver.shifts.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                            My Shifts
+                        </a>
+                        <a href="{{ route('caregiver.earnings.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                            My Earnings
+                        </a>
+                        <a href="{{ route('caregiver.payouts.connect.show') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                            Payout Setup
+                        </a>
+                        <a href="{{ route('caregiver.verification.show') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                            {{ $identityApproved ? 'Identity Verified' : 'Verify Identity' }}
+                        </a>
+                        <a href="{{ route('caregiver.invitations.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                            {{ $invitationUnread > 0 ? 'Invitations ('.$invitationUnread.')' : 'Invitations' }}
+                        </a>
+                    @endif
 
-                <button wire:click="logout" class="w-full text-left rounded-lg px-3 py-2 text-sm text-red-700 hover:bg-red-50">Log Out</button>
-            </div>
+                    @if ($isAdmin)
+                        <a href="{{ route('admin.caregivers.reviews') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Admin Reviews</a>
+                        <a href="{{ route('admin.support.tickets') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Support Queue</a>
+                        <a href="{{ route('admin.payments.ops') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Payments Ops</a>
+                        <a href="{{ route('admin.analytics.funnel') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Funnel Analytics</a>
+                    @endif
+
+                    <button wire:click="logout" class="w-full text-left rounded-lg px-3 py-2 text-sm text-red-700 hover:bg-red-50">Log Out</button>
+                </div>
+            @else
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('landing.family') }}" class="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Families</a>
+                    <a href="{{ route('landing.caregiver') }}" class="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Caregivers</a>
+                    <a href="{{ route('login') }}" class="inline-flex items-center rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">Sign in</a>
+                </div>
+            @endif
         </div>
 
         <div class="sm:hidden absolute right-0 top-1/2 -translate-y-1/2">
@@ -283,53 +295,61 @@ new class extends Component
         </div>
 
         <div class="pt-4 pb-2 border-t border-slate-200">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ $user->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ $user->email }}</div>
-                <div class="font-medium text-xs text-gray-500 mt-1">{{ ucfirst((string) $user->role) }}</div>
-            </div>
+            @if ($user)
+                <div class="px-4">
+                    <div class="font-medium text-base text-gray-800">{{ $user->name }}</div>
+                    <div class="font-medium text-sm text-gray-500">{{ $user->email }}</div>
+                    <div class="font-medium text-xs text-gray-500 mt-1">{{ ucfirst((string) $user->role) }}</div>
+                </div>
 
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="$myProfileHref" wire:navigate>{{ __($myProfileLabel) }}</x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('profile')" wire:navigate>{{ __('Account Settings') }}</x-responsive-nav-link>
-                <x-responsive-nav-link :href="$securityHref">{{ __('Change Password') }}</x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('messages.index')" wire:navigate>
-                    {{ $messageUnread > 0 ? __('Messages').' ('.$messageUnread.')' : __('Messages') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('support.index')" wire:navigate>{{ __('Support Center') }}</x-responsive-nav-link>
-                @if ($isFamily)
-                    <x-responsive-nav-link :href="route('family.billing.show')" wire:navigate>{{ __('Billing & Payments') }}</x-responsive-nav-link>
-                @endif
-                @if ($isCaregiver)
-                    <x-responsive-nav-link :href="route('caregiver.work-inbox.index')" wire:navigate>
-                        {{ $invitationUnread > 0 ? __('Work Inbox').' ('.$invitationUnread.')' : __('Work Inbox') }}
+                <div class="mt-3 space-y-1">
+                    <x-responsive-nav-link :href="$myProfileHref" wire:navigate>{{ __($myProfileLabel) }}</x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('profile')" wire:navigate>{{ __('Account Settings') }}</x-responsive-nav-link>
+                    <x-responsive-nav-link :href="$securityHref">{{ __('Change Password') }}</x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('messages.index')" wire:navigate>
+                        {{ $messageUnread > 0 ? __('Messages').' ('.$messageUnread.')' : __('Messages') }}
                     </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('caregiver.notifications.index')" wire:navigate>
-                        {{ $notificationUnread > 0 ? __('Notifications').' ('.$notificationUnread.')' : __('Notifications') }}
-                    </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('caregiver.shifts.index')" wire:navigate>
-                        {{ __('My Shifts') }}
-                    </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('caregiver.earnings.index')" wire:navigate>
-                        {{ __('My Earnings') }}
-                    </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('caregiver.payouts.connect.show')" wire:navigate>
-                        {{ __('Payout Setup') }}
-                    </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('caregiver.verification.show')" wire:navigate>
-                        {{ $identityApproved ? __('Identity Verified') : __('Verify Identity') }}
-                    </x-responsive-nav-link>
-                @endif
-                @if ($isAdmin)
-                    <x-responsive-nav-link :href="route('admin.caregivers.reviews')" wire:navigate>{{ __('Admin Reviews') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('admin.support.tickets')" wire:navigate>{{ __('Support Queue') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('admin.payments.ops')" wire:navigate>{{ __('Payments Ops') }}</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('admin.analytics.funnel')" wire:navigate>{{ __('Funnel Analytics') }}</x-responsive-nav-link>
-                @endif
-                <button wire:click="logout" class="w-full text-start">
-                    <x-responsive-nav-link>{{ __('Log Out') }}</x-responsive-nav-link>
-                </button>
-            </div>
+                    <x-responsive-nav-link :href="route('support.index')" wire:navigate>{{ __('Support Center') }}</x-responsive-nav-link>
+                    @if ($isFamily)
+                        <x-responsive-nav-link :href="route('family.billing.show')" wire:navigate>{{ __('Billing & Payments') }}</x-responsive-nav-link>
+                    @endif
+                    @if ($isCaregiver)
+                        <x-responsive-nav-link :href="route('caregiver.work-inbox.index')" wire:navigate>
+                            {{ $invitationUnread > 0 ? __('Work Inbox').' ('.$invitationUnread.')' : __('Work Inbox') }}
+                        </x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('caregiver.notifications.index')" wire:navigate>
+                            {{ $notificationUnread > 0 ? __('Notifications').' ('.$notificationUnread.')' : __('Notifications') }}
+                        </x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('caregiver.shifts.index')" wire:navigate>
+                            {{ __('My Shifts') }}
+                        </x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('caregiver.earnings.index')" wire:navigate>
+                            {{ __('My Earnings') }}
+                        </x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('caregiver.payouts.connect.show')" wire:navigate>
+                            {{ __('Payout Setup') }}
+                        </x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('caregiver.verification.show')" wire:navigate>
+                            {{ $identityApproved ? __('Identity Verified') : __('Verify Identity') }}
+                        </x-responsive-nav-link>
+                    @endif
+                    @if ($isAdmin)
+                        <x-responsive-nav-link :href="route('admin.caregivers.reviews')" wire:navigate>{{ __('Admin Reviews') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('admin.support.tickets')" wire:navigate>{{ __('Support Queue') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('admin.payments.ops')" wire:navigate>{{ __('Payments Ops') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('admin.analytics.funnel')" wire:navigate>{{ __('Funnel Analytics') }}</x-responsive-nav-link>
+                    @endif
+                    <button wire:click="logout" class="w-full text-start">
+                        <x-responsive-nav-link>{{ __('Log Out') }}</x-responsive-nav-link>
+                    </button>
+                </div>
+            @else
+                <div class="space-y-1">
+                    <x-responsive-nav-link :href="route('landing.family')" wire:navigate>{{ __('Families') }}</x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('landing.caregiver')" wire:navigate>{{ __('Caregivers') }}</x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('login')" wire:navigate>{{ __('Sign in') }}</x-responsive-nav-link>
+                </div>
+            @endif
         </div>
     </div>
 </nav>

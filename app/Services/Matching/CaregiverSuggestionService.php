@@ -4,6 +4,7 @@ namespace App\Services\Matching;
 
 use App\Models\CareRequest;
 use App\Models\CaregiverProfile;
+use App\Support\CaregiverPrelaunch;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
@@ -14,6 +15,10 @@ class CaregiverSuggestionService
      */
     public function topMatchesForRequest(CareRequest $request, int $limit = 3): Collection
     {
+        if (CaregiverPrelaunch::enabled()) {
+            return collect();
+        }
+
         $excluded = collect()
             ->merge($request->applications()->pluck('caregiver_user_id'))
             ->merge($request->invitations()->pluck('caregiver_user_id'))

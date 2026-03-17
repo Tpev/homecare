@@ -227,13 +227,20 @@
                 $hasActiveShift = !empty($caregiverData['active_shift']);
                 $hasNextShift = !empty($caregiverData['next_shift']);
                 $needsResponseCount = (int) ($caregiverData['stats']['needs_response'] ?? 0);
+                $prelaunchMode = (bool) ($caregiverData['prelaunch_mode'] ?? false);
+                $prelaunchMessage = (string) ($caregiverData['prelaunch_message'] ?? 'HomeCare is currently in caregiver pre-launch mode. Complete your setup now and we will notify you as soon as matching opens.');
 
                 $nextActionTitle = 'Respond to your inbox';
                 $nextActionDescription = 'Open Work Inbox and answer pending invites first.';
                 $nextActionHref = route('caregiver.work-inbox.index');
                 $nextActionLabel = 'Open Work Inbox';
 
-                if ($hasActiveShift && $caregiverData['active_shift']->careRequest) {
+                if ($prelaunchMode) {
+                    $nextActionTitle = 'Finish setup and get launch-ready';
+                    $nextActionDescription = $prelaunchMessage;
+                    $nextActionHref = route('caregiver.profile.edit');
+                    $nextActionLabel = 'Complete setup';
+                } elseif ($hasActiveShift && $caregiverData['active_shift']->careRequest) {
                     $nextActionTitle = 'Continue active shift';
                     $nextActionDescription = 'You have a shift in progress. Continue from shift command center.';
                     $nextActionHref = route('care-requests.apply', $caregiverData['active_shift']->careRequest->id);
@@ -253,6 +260,13 @@
                     $nextActionLabel = 'Continue setup';
                 }
             @endphp
+
+            @if ($prelaunchMode)
+                <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                    <p class="text-sm font-semibold text-amber-900">Caregiver pre-launch is active.</p>
+                    <p class="mt-1 text-sm text-amber-800">{{ $prelaunchMessage }}</p>
+                </div>
+            @endif
 
             <section class="relative overflow-hidden rounded-3xl border border-slate-900/80 bg-slate-950 p-5 text-white shadow-xl">
                 <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-500/20 blur-2xl"></div>

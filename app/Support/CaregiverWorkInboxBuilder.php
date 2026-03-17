@@ -21,6 +21,10 @@ class CaregiverWorkInboxBuilder
             return collect();
         }
 
+        if (CaregiverPrelaunch::enabled()) {
+            return collect();
+        }
+
         $caregiverId = (int) $user->id;
         $now = now();
         $profile = $user->caregiverProfile()->with('skills:id')->first();

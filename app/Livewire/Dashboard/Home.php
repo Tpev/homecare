@@ -8,6 +8,7 @@ use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
 use App\Models\CaregiverProfile;
+use App\Support\CaregiverPrelaunch;
 use App\Support\CaregiverWorkInboxBuilder;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Layout;
@@ -118,12 +119,15 @@ class Home extends Component
 
         if ($mode === 'caregiver') {
             $workInboxBuilder = app(CaregiverWorkInboxBuilder::class);
+            $prelaunchMode = CaregiverPrelaunch::enabled();
 
             $caregiverData['profile'] = CaregiverProfile::query()
                 ->firstOrCreate(
                     ['user_id' => $user->id],
                     ['status' => 'draft']
                 );
+            $caregiverData['prelaunch_mode'] = $prelaunchMode;
+            $caregiverData['prelaunch_message'] = CaregiverPrelaunch::message();
 
             $caregiverData['stats'] = [
                 'applications_total' => CareRequestApplication::query()->where('caregiver_user_id', $user->id)->count(),

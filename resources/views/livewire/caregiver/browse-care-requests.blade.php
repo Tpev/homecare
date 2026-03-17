@@ -48,6 +48,12 @@
             <x-alert color="green">{{ session('status') }}</x-alert>
         @endif
 
+        @if (!empty($prelaunchMode))
+            <x-alert color="yellow">
+                Caregiver pre-launch mode is active. Keep building your profile and we will notify you when applications open.
+            </x-alert>
+        @endif
+
         @forelse ($requests as $request)
             <x-card>
                 <div class="flex items-start justify-between gap-4">
@@ -115,7 +121,9 @@
             </x-card>
         @empty
             <x-card>
-                <p class="text-sm text-slate-600">No open requests match your current filters.</p>
+                <p class="text-sm text-slate-600">
+                    {{ !empty($prelaunchMode) ? 'Applications are paused during pre-launch. You will be notified when Raleigh goes live.' : 'No open requests match your current filters.' }}
+                </p>
             </x-card>
         @endforelse
 
