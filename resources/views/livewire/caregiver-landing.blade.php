@@ -2,7 +2,7 @@
     <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
             <a href="{{ route('landing') }}" class="flex items-center gap-3">
-                <div class="h-10 w-10 rounded-2xl bg-gradient-to-br from-emerald-700 via-cyan-700 to-blue-700 shadow-sm ring-1 ring-black/5"></div>
+                <x-application-logo class="h-10 w-10 text-cyan-800" />
                 <div class="leading-tight">
                     <div class="text-lg font-extrabold tracking-tight">HomeCare</div>
                     <div class="text-xs text-slate-500">For caregivers</div>
