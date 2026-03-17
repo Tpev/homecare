@@ -24,28 +24,37 @@
 
     <section class="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-14 sm:px-6 lg:grid-cols-2 lg:px-8 lg:pt-20">
         <div>
-            <x-badge color="emerald" text="Earn more • Work on your terms" round light />
+            <x-badge color="emerald" text="Raleigh + Wake County pre-launch" round light />
             <h1 class="mt-4 text-4xl font-black leading-tight tracking-tight sm:text-5xl">
-                Earn more money.
+                Get in early.
                 <span class="bg-gradient-to-r from-emerald-700 via-cyan-700 to-blue-700 bg-clip-text text-transparent">
-                    Be your own boss.
+                    Be first in line for family requests.
                 </span>
             </h1>
             <p class="mt-6 max-w-xl text-lg text-slate-600">
-                HomeCare helps independent caregivers work directly with families, choose the requests they want, and build a reputation that grows over time.
+                We are launching caregiver supply first in Raleigh and Wake County. Create your account today, complete onboarding and KYC, and your profile will be ready to activate as soon as matching opens.
             </p>
 
             <div class="mt-8 flex flex-wrap gap-3">
                 <a href="{{ route('caregiver.register') }}">
-                    <x-button color="emerald" lg icon="user-plus" position="left">Become a caregiver</x-button>
+                    <x-button color="emerald" lg icon="user-plus" position="left">Join pre-launch</x-button>
                 </a>
                 <a href="{{ route('login') }}">
                     <x-button color="slate" lg light icon="arrow-right-circle" position="left">Already registered? Sign in</x-button>
                 </a>
             </div>
 
+            <div class="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                <p class="text-sm font-semibold text-emerald-900">Pre-launch priority access (Raleigh + Wake County)</p>
+                <ul class="mt-2 space-y-1 text-sm text-emerald-800">
+                    <li>Complete profile + KYC now</li>
+                    <li>Go into the first activation wave</li>
+                    <li>First complete profiles are first routed to family demand</li>
+                </ul>
+            </div>
+
             <div class="mt-8 grid gap-3 text-sm sm:grid-cols-2">
-                <div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700">Keep more per hour by working directly</div>
+                <div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700">Priority activation for early completed profiles</div>
                 <div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700">Choose your clients and your schedule</div>
                 <div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700">Apply to requests or receive direct invites</div>
                 <div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700">Build reputation with reviews and trust badges</div>
@@ -61,8 +70,8 @@
                 />
             </div>
             <x-card class="ring-1 ring-black/5 shadow-sm">
-                <x-slot:header><div class="font-bold">Your profile becomes your brand</div></x-slot:header>
-                <p class="text-sm text-slate-600">Profiles are moderated for quality, and top caregivers stand out with trust badges and strong review history.</p>
+                <x-slot:header><div class="font-bold">Pre-launch in Raleigh & Wake County</div></x-slot:header>
+                <p class="text-sm text-slate-600">Complete onboarding now so your profile is in the first caregiver wave we connect with families at launch.</p>
             </x-card>
         </div>
     </section>
@@ -76,7 +85,7 @@
             <div class="grid gap-6 md:grid-cols-3">
                 <x-card class="ring-1 ring-black/5">
                     <x-slot:header><div class="font-bold">Earn more money</div></x-slot:header>
-                    <p class="text-sm text-slate-600">Set your own rate, accept the work you want, and keep more of what you earn.</p>
+                    <p class="text-sm text-slate-600">Platform rates are transparent, and you keep strong hourly earnings while staying independent.</p>
                 </x-card>
                 <x-card class="ring-1 ring-black/5">
                     <x-slot:header><div class="font-bold">Be autonomous</div></x-slot:header>
@@ -104,17 +113,17 @@
                 <div class="rounded-2xl border border-slate-200 bg-white p-5">
                     <div class="text-xs font-bold uppercase tracking-wider text-emerald-700">Step 2</div>
                     <div class="mt-2 font-bold">Complete onboarding</div>
-                    <p class="mt-1 text-sm text-slate-600">Add rate, skills, languages, and availability ranges.</p>
+                    <p class="mt-1 text-sm text-slate-600">Add skills, languages, availability, and complete identity verification.</p>
                 </div>
                 <div class="rounded-2xl border border-slate-200 bg-white p-5">
                     <div class="text-xs font-bold uppercase tracking-wider text-emerald-700">Step 3</div>
                     <div class="mt-2 font-bold">Under review</div>
-                    <p class="mt-1 text-sm text-slate-600">Admin checks profile quality before activation.</p>
+                    <p class="mt-1 text-sm text-slate-600">We review profile quality so families get trusted caregivers from day one.</p>
                 </div>
                 <div class="rounded-2xl border border-slate-200 bg-white p-5">
                     <div class="text-xs font-bold uppercase tracking-wider text-emerald-700">Step 4</div>
-                    <div class="mt-2 font-bold">Go live</div>
-                    <p class="mt-1 text-sm text-slate-600">Start receiving invites, applying fast, and building your independent business.</p>
+                    <div class="mt-2 font-bold">Launch priority</div>
+                    <p class="mt-1 text-sm text-slate-600">Early completed profiles are activated first and routed to first family requests.</p>
                 </div>
             </div>
         </div>
@@ -124,8 +133,8 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex items-end justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-extrabold tracking-tight">Raleigh caregiver opportunity guides</h2>
-                    <p class="mt-1 text-sm text-slate-600">See where demand is growing and what families are requesting most.</p>
+                    <h2 class="text-2xl font-extrabold tracking-tight">Raleigh & Wake County caregiver opportunity guides</h2>
+                    <p class="mt-1 text-sm text-slate-600">See where demand is growing and what families are requesting most before launch.</p>
                 </div>
                 <a href="{{ route('seo.page', ['seoSlug' => 'caregiver-jobs-raleigh-nc']) }}" class="text-sm font-semibold text-emerald-700 hover:underline">
                     Caregiver jobs in Raleigh
@@ -144,11 +153,11 @@
         <div class="rounded-3xl bg-gradient-to-r from-emerald-700 via-cyan-700 to-blue-700 p-7 text-white shadow-2xl sm:p-10">
             <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <h3 class="text-3xl font-extrabold tracking-tight">Start earning on your terms</h3>
-                    <p class="mt-2 text-white/90">Create your caregiver account, complete onboarding, and go live.</p>
+                    <h3 class="text-3xl font-extrabold tracking-tight">Get pre-launch priority now</h3>
+                    <p class="mt-2 text-white/90">Complete your profile today to be among the first caregivers we connect with families in Raleigh and Wake County.</p>
                 </div>
                 <a href="{{ route('caregiver.register') }}">
-                    <x-button color="white" lg>Become a caregiver</x-button>
+                    <x-button color="white" lg>Join caregiver pre-launch</x-button>
                 </a>
             </div>
         </div>

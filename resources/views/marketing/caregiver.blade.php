@@ -1,7 +1,7 @@
 @extends('layouts.marketing')
 
-@section('title', 'For Caregivers | Independent Caregiver Jobs in Raleigh')
-@section('meta_description', 'Join HomeCare as an independent caregiver in Raleigh. Set your rates, choose your schedule, and build your reputation with real families.')
+@section('title', 'For Caregivers | Raleigh & Wake County Pre-Launch | HomeCare')
+@section('meta_description', 'Join HomeCare caregiver pre-launch in Raleigh and Wake County. Complete profile, verification, and setup now to get priority access to first family requests.')
 @section('canonical', route('landing.caregiver'))
 
 @section('content')
