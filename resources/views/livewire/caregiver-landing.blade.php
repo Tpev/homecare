@@ -1,5 +1,5 @@
-<div class="min-h-screen bg-slate-50 text-slate-900">
-    <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
+<div class="min-h-screen bg-[#f3f6f8] text-slate-900">
+    <header class="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur">
         <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
             <a href="{{ route('landing') }}" class="flex items-center gap-3">
                 <x-application-logo class="h-10 w-10 text-cyan-800" />
@@ -22,144 +22,159 @@
         </div>
     </header>
 
-    <section class="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-14 sm:px-6 lg:grid-cols-2 lg:px-8 lg:pt-20">
+    <section class="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-12 sm:px-6 lg:grid-cols-2 lg:px-8 lg:pb-24 lg:pt-20">
         <div>
-            <x-badge color="emerald" text="Raleigh + Wake County pre-launch" round light />
-            <h1 class="mt-4 text-4xl font-black leading-tight tracking-tight sm:text-5xl">
-                Get in early.
-                <span class="bg-gradient-to-r from-emerald-700 via-cyan-700 to-blue-700 bg-clip-text text-transparent">
-                    Be first in line for family requests.
-                </span>
+            <div class="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                Raleigh · Durham · Chapel Hill
+            </div>
+            <h1 class="mt-5 text-4xl font-black leading-tight tracking-tight text-slate-900 sm:text-6xl">
+                Flexible caregiving
+                <br>
+                work, on your
+                <br>
+                schedule.
             </h1>
-            <p class="mt-6 max-w-xl text-lg text-slate-600">
-                We are launching caregiver supply first in Raleigh and Wake County. Create your account today, complete onboarding and KYC, and your profile will be ready to activate as soon as matching opens.
+            <p class="mt-5 max-w-xl text-lg text-slate-600">
+                Join early access in the Triangle area. Complete your profile now and be first to receive care requests when we launch. First complete profiles are activated first.
             </p>
 
             <div class="mt-8 flex flex-wrap gap-3">
                 <a href="{{ route('caregiver.register') }}">
-                    <x-button color="emerald" lg icon="user-plus" position="left">Join pre-launch</x-button>
+                    <x-button color="emerald" lg icon="user-plus" position="right">Create your profile</x-button>
                 </a>
-                <a href="{{ route('login') }}">
-                    <x-button color="slate" lg light icon="arrow-right-circle" position="left">Already registered? Sign in</x-button>
+                <a href="#how-it-works">
+                    <x-button color="slate" lg light>Learn how it works</x-button>
                 </a>
             </div>
 
-            <div class="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                <p class="text-sm font-semibold text-emerald-900">Pre-launch priority access (Raleigh + Wake County)</p>
-                <ul class="mt-2 space-y-1 text-sm text-emerald-800">
-                    <li>Complete profile + KYC now</li>
-                    <li>Go into the first activation wave</li>
-                    <li>First complete profiles are first routed to family demand</li>
-                </ul>
-            </div>
-
-            <div class="mt-8 grid gap-3 text-sm sm:grid-cols-2">
-                <div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700">Priority activation for early completed profiles</div>
-                <div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700">Choose your clients and your schedule</div>
-                <div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700">Apply to requests or receive direct invites</div>
-                <div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700">Build reputation with reviews and trust badges</div>
-            </div>
+            <p class="mt-4 text-sm font-medium text-emerald-800">Pre-launch now: Raleigh + Wake County priority cohort</p>
         </div>
 
-        <div class="space-y-4">
-            <div class="overflow-hidden rounded-3xl ring-1 ring-black/10 shadow-xl">
+        <div
+            x-data="{
+                index: 0,
+                offers: [
+                    { title: 'Companionship morning shift', meta: '3.0h · Raleigh · $30/hr' },
+                    { title: 'Meal prep + light housekeeping', meta: '4.5h · Cary · $30/hr' },
+                    { title: 'Mobility support and errands', meta: '2.5h · Durham · $30/hr' },
+                    { title: 'Medication reminders + check-in', meta: '2.0h · Chapel Hill · $30/hr' }
+                ],
+                start() { setInterval(() => { this.index = (this.index + 1) % this.offers.length }, 3200) }
+            }"
+            x-init="start()"
+            class="relative"
+        >
+            <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white p-2 shadow-2xl">
                 <img
-                    src="https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&w=1400&q=80"
-                    alt="Caregiver smiling while assisting at home"
-                    class="h-72 w-full object-cover sm:h-80"
+                    src="{{ asset('images/marketing/caregiver-hero-raleigh.jpg') }}"
+                    onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1516302752625-fcc3c50ae61f?auto=format&fit=crop&w=1200&q=80';"
+                    alt="Caregiver supporting an older adult"
+                    class="h-[540px] w-full rounded-2xl object-cover"
                 />
             </div>
-            <x-card class="ring-1 ring-black/5 shadow-sm">
-                <x-slot:header><div class="font-bold">Pre-launch in Raleigh & Wake County</div></x-slot:header>
-                <p class="text-sm text-slate-600">Complete onboarding now so your profile is in the first caregiver wave we connect with families at launch.</p>
-            </x-card>
+
+            <div class="absolute bottom-5 right-5 w-[250px] rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-xl backdrop-blur">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">New request</p>
+                <p class="mt-1 text-sm font-semibold text-slate-900" x-text="offers[index].title"></p>
+                <p class="mt-1 text-xs text-slate-500" x-text="offers[index].meta"></p>
+
+                <div class="mt-2 flex items-center gap-1">
+                    <template x-for="(offer, dotIndex) in offers" :key="dotIndex">
+                        <span
+                            class="h-1.5 w-1.5 rounded-full transition"
+                            :class="dotIndex === index ? 'bg-emerald-500' : 'bg-slate-300'"
+                        ></span>
+                    </template>
+                </div>
+            </div>
         </div>
     </section>
 
-    <section class="border-y border-slate-200 bg-white py-14">
+    <section class="border-y border-slate-200 bg-white py-16">
+        <div class="mx-auto grid max-w-7xl gap-5 px-4 sm:px-6 md:grid-cols-3 lg:px-8">
+            <div class="rounded-2xl border border-slate-200 p-6 shadow-sm">
+                <div class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">$</div>
+                <h3 class="mt-4 text-xl font-bold">Make money</h3>
+                <p class="mt-2 text-sm text-slate-600">Earn strong hourly pay for meaningful work that improves lives daily.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 p-6 shadow-sm">
+                <div class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700">◷</div>
+                <h3 class="mt-4 text-xl font-bold">Your schedule</h3>
+                <p class="mt-2 text-sm text-slate-600">Choose when and how often you work. You stay fully flexible.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 p-6 shadow-sm">
+                <div class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-700">♥</div>
+                <h3 class="mt-4 text-xl font-bold">Make an impact</h3>
+                <p class="mt-2 text-sm text-slate-600">Help older adults stay independent at home with trusted support.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="bg-[#f3f6f8] py-16">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="mb-8">
-                <h2 class="text-3xl font-extrabold tracking-tight">Why caregivers choose HomeCare</h2>
-                <p class="mt-2 text-slate-600">More income potential, more control, and a reputation you own.</p>
+            <div class="text-center">
+                <h2 class="text-4xl font-black tracking-tight text-slate-900">How it works</h2>
+                <p class="mt-2 text-slate-600">Get started in four simple steps.</p>
             </div>
-            <div class="grid gap-6 md:grid-cols-3">
-                <x-card class="ring-1 ring-black/5">
-                    <x-slot:header><div class="font-bold">Earn more money</div></x-slot:header>
-                    <p class="text-sm text-slate-600">Platform rates are transparent, and you keep strong hourly earnings while staying independent.</p>
-                </x-card>
-                <x-card class="ring-1 ring-black/5">
-                    <x-slot:header><div class="font-bold">Be autonomous</div></x-slot:header>
-                    <p class="text-sm text-slate-600">Decide your availability, service area, and who you work with. You stay in control.</p>
-                </x-card>
-                <x-card class="ring-1 ring-black/5">
-                    <x-slot:header><div class="font-bold">Build your reputation</div></x-slot:header>
-                    <p class="text-sm text-slate-600">Reviews, response score, and trust badges help you win better requests and repeat clients.</p>
-                </x-card>
-            </div>
-        </div>
-    </section>
 
-    <section class="border-b border-slate-200 bg-slate-100 py-14">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="mb-8">
-                <h2 class="text-3xl font-extrabold tracking-tight">How caregiver onboarding works</h2>
-            </div>
-            <div class="grid gap-5 md:grid-cols-4">
+            <div class="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <div class="rounded-2xl border border-slate-200 bg-white p-5">
-                    <div class="text-xs font-bold uppercase tracking-wider text-emerald-700">Step 1</div>
-                    <div class="mt-2 font-bold">Create account</div>
-                    <p class="mt-1 text-sm text-slate-600">Register with your base profile and location.</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-emerald-600">Step 01</p>
+                    <h3 class="mt-3 text-lg font-bold">Create your profile</h3>
+                    <p class="mt-2 text-sm text-slate-600">Add availability, skills, and preferences.</p>
                 </div>
                 <div class="rounded-2xl border border-slate-200 bg-white p-5">
-                    <div class="text-xs font-bold uppercase tracking-wider text-emerald-700">Step 2</div>
-                    <div class="mt-2 font-bold">Complete onboarding</div>
-                    <p class="mt-1 text-sm text-slate-600">Add skills, languages, availability, and complete identity verification.</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-emerald-600">Step 02</p>
+                    <h3 class="mt-3 text-lg font-bold">Get verified</h3>
+                    <p class="mt-2 text-sm text-slate-600">Complete identity check and onboarding setup.</p>
                 </div>
                 <div class="rounded-2xl border border-slate-200 bg-white p-5">
-                    <div class="text-xs font-bold uppercase tracking-wider text-emerald-700">Step 3</div>
-                    <div class="mt-2 font-bold">Under review</div>
-                    <p class="mt-1 text-sm text-slate-600">We review profile quality so families get trusted caregivers from day one.</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-emerald-600">Step 03</p>
+                    <h3 class="mt-3 text-lg font-bold">Get matched</h3>
+                    <p class="mt-2 text-sm text-slate-600">Receive care requests that fit your schedule.</p>
                 </div>
                 <div class="rounded-2xl border border-slate-200 bg-white p-5">
-                    <div class="text-xs font-bold uppercase tracking-wider text-emerald-700">Step 4</div>
-                    <div class="mt-2 font-bold">Launch priority</div>
-                    <p class="mt-1 text-sm text-slate-600">Early completed profiles are activated first and routed to first family requests.</p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-emerald-600">Step 04</p>
+                    <h3 class="mt-3 text-lg font-bold">Start earning</h3>
+                    <p class="mt-2 text-sm text-slate-600">Accept jobs and get paid for completed shifts.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="bg-white py-14">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="flex items-end justify-between gap-4">
-                <div>
-                    <h2 class="text-2xl font-extrabold tracking-tight">Raleigh & Wake County caregiver opportunity guides</h2>
-                    <p class="mt-1 text-sm text-slate-600">See where demand is growing and what families are requesting most before launch.</p>
-                </div>
-                <a href="{{ route('seo.page', ['seoSlug' => 'caregiver-jobs-raleigh-nc']) }}" class="text-sm font-semibold text-emerald-700 hover:underline">
-                    Caregiver jobs in Raleigh
-                </a>
-            </div>
-            <div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-home-care']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">Raleigh home care demand</a>
-                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-overnight-caregiver']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">Overnight caregiver requests</a>
-                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-senior-transportation-help']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">Senior transportation requests</a>
-                <a href="{{ route('seo.page', ['seoSlug' => 'trusted-caregiver-screening']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">Trust badges and screening</a>
+    <section class="bg-[#0a4a45] py-16 text-white">
+        <div class="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-black tracking-tight">A new way to do caregiving</h2>
+            <div class="mx-auto mt-7 grid max-w-2xl gap-3 text-left sm:grid-cols-2">
+                <p class="rounded-xl bg-white/10 px-4 py-3 text-sm">✓ No fixed schedules</p>
+                <p class="rounded-xl bg-white/10 px-4 py-3 text-sm">✓ No long-term commitments</p>
+                <p class="rounded-xl bg-white/10 px-4 py-3 text-sm">✓ Choose the work you want</p>
+                <p class="rounded-xl bg-white/10 px-4 py-3 text-sm">✓ Build your reputation over time</p>
             </div>
         </div>
     </section>
 
-    <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div class="rounded-3xl bg-gradient-to-r from-emerald-700 via-cyan-700 to-blue-700 p-7 text-white shadow-2xl sm:p-10">
-            <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                    <h3 class="text-3xl font-extrabold tracking-tight">Get pre-launch priority now</h3>
-                    <p class="mt-2 text-white/90">Complete your profile today to be among the first caregivers we connect with families in Raleigh and Wake County.</p>
-                </div>
+    <section class="bg-white py-16">
+        <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+            <div class="rounded-3xl border border-slate-200 px-7 py-10 text-center shadow-sm">
+                <div class="mx-auto inline-flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">⌁</div>
+                <h3 class="mt-4 text-3xl font-black tracking-tight">Great for students and future healthcare professionals</h3>
+                <p class="mt-3 text-slate-600">Gain real-world experience, build hours, and work on your own schedule.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="border-t border-slate-200 bg-[#f3f6f8] py-16">
+        <div class="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-black tracking-tight text-slate-900">Get early access to caregiving opportunities</h2>
+            <p class="mx-auto mt-3 max-w-2xl text-slate-600">Complete your profile now to be part of the first caregiver group we activate in Raleigh and Wake County.</p>
+            <div class="mt-8">
                 <a href="{{ route('caregiver.register') }}">
-                    <x-button color="white" lg>Join caregiver pre-launch</x-button>
+                    <x-button color="emerald" lg icon="arrow-right" position="right">Create your profile</x-button>
                 </a>
             </div>
+            <p class="mt-3 text-sm text-slate-500">Takes just a few minutes to get started.</p>
         </div>
     </section>
 </div>
