@@ -18,6 +18,7 @@ use App\Livewire\Admin\PaymentsQueue;
 use App\Livewire\Admin\CaregiverReviewsQueue;
 use App\Livewire\Admin\SupportTicketsQueue;
 use App\Livewire\Admin\UsersIndex;
+use App\Livewire\Admin\UserShow;
 use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Caregiver\BrowseCareRequests;
 use App\Livewire\Caregiver\BrowseCaregivers;
@@ -53,6 +54,7 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/payments/ops', PaymentsQueue::class)->name('payments.ops');
         Route::get('/analytics/funnel', FunnelAnalytics::class)->name('analytics.funnel');
         Route::get('/users', UsersIndex::class)->name('users.index');
+        Route::get('/users/{user}', UserShow::class)->name('users.show');
     });
 
 Route::get('/', [MarketingPagesController::class, 'landing'])->name('landing');

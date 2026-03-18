@@ -35,6 +35,12 @@ class AdminUsersAndFunnelTest extends TestCase
         $response->assertSee('User Management');
         $response->assertSee('Family Demo');
         $response->assertSee('Caregiver Demo');
+        $response->assertSee(route('admin.users.show', $family), false);
+
+        $profileResponse = $this->actingAs($admin)->get(route('admin.users.show', $caregiver));
+        $profileResponse->assertOk();
+        $profileResponse->assertSee('User Profile Review');
+        $profileResponse->assertSee('Caregiver Demo');
 
         Livewire::actingAs($admin)
             ->test(UsersIndex::class)
@@ -53,8 +59,10 @@ class AdminUsersAndFunnelTest extends TestCase
     public function test_non_admin_cannot_access_admin_users_or_funnel_pages(): void
     {
         $user = User::factory()->create(['role' => 'caregiver']);
+        $anotherUser = User::factory()->create(['role' => 'family']);
 
         $this->actingAs($user)->get('/admin/users')->assertForbidden();
+        $this->actingAs($user)->get(route('admin.users.show', $anotherUser))->assertForbidden();
         $this->actingAs($user)->get('/admin/analytics/funnel')->assertForbidden();
     }
 

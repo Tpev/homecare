@@ -69,19 +69,25 @@
                                 {{ optional($user->created_at)->format('M d, Y H:i') }}
                             </td>
                             <td class="px-4 py-3 text-right">
-                                @if($isProtectedAdmin)
-                                    <span class="text-xs text-slate-500">Protected</span>
-                                @else
-                                    <x-button
-                                        color="red"
-                                        light
-                                        sm
-                                        wire:click="deleteUser({{ $user->id }})"
-                                        onclick="if (!confirm('Delete this user account? This action cannot be undone.')) return false;"
-                                    >
-                                        Delete
-                                    </x-button>
-                                @endif
+                                <div class="flex items-center justify-end gap-2">
+                                    <a href="{{ route('admin.users.show', $user) }}" wire:navigate>
+                                        <x-button color="cyan" light sm>View profile</x-button>
+                                    </a>
+
+                                    @if($isProtectedAdmin)
+                                        <span class="text-xs text-slate-500">Protected</span>
+                                    @else
+                                        <x-button
+                                            color="red"
+                                            light
+                                            sm
+                                            wire:click="deleteUser({{ $user->id }})"
+                                            onclick="if (!confirm('Delete this user account? This action cannot be undone.')) return false;"
+                                        >
+                                            Delete
+                                        </x-button>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -98,4 +104,3 @@
         </x-slot:footer>
     </x-card>
 </div>
-
