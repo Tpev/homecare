@@ -53,10 +53,7 @@
             <div class="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <p class="text-xs font-semibold uppercase tracking-[0.14em] text-cyan-700">No experience required</p>
                 <p class="mt-2 text-sm text-slate-700">
-                    You do not need formal caregiving experience to start. People skills matter most: companionship, being present at home with an older adult, and sometimes helping with simple lunch prep or daily routines.
-                </p>
-                <p class="mt-2 text-sm text-slate-700">
-                    Think of it like helping an elder family member, but getting paid for your time.
+                    You don't need formal caregiving experience to get started. What matters most is being reliable, kind, and willing to help with simple, everyday tasks, like spending time with someone, assisting with light routines, or just being present. Think of it like helping a family member, but on your schedule and getting paid for your time.
                 </p>
             </div>
         </div>
