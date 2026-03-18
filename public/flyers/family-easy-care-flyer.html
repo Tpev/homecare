@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HomeCare Family Flyer</title>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=manrope:500,700,800|outfit:600,700,800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #081f32;
+            --muted: #557183;
+            --cyan: #0f8fb3;
+            --deep: #0a5e86;
+            --mint: #17b879;
+            --paper: #f4fbff;
+            --card: #ffffff;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 1.25rem;
+            font-family: "Manrope", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 8% 8%, rgba(15, 143, 179, 0.2), transparent 32%),
+                radial-gradient(circle at 94% 92%, rgba(23, 184, 121, 0.18), transparent 35%),
+                linear-gradient(145deg, #eaf5fb 0%, #ebf8f2 100%);
+        }
+
+        .flyer {
+            width: min(8.5in, 95vw);
+            min-height: 11in;
+            background: var(--paper);
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: 0 24px 56px rgba(8, 31, 50, 0.2);
+            position: relative;
+        }
+
+        .flyer::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 94% 0, rgba(255, 224, 165, 0.28), transparent 34%),
+                linear-gradient(120deg, rgba(8, 31, 50, 0.03), rgba(8, 31, 50, 0));
+            pointer-events: none;
+        }
+
+        .inner {
+            position: relative;
+            z-index: 1;
+            padding: 0.6in 0.56in 0.5in;
+            display: grid;
+            gap: 0.66rem;
+            min-height: 11in;
+            grid-template-rows: auto auto auto 1fr auto;
+        }
+
+        .top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.56rem;
+        }
+
+        .brand img {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            background: #fff;
+            padding: 0.28rem;
+            box-shadow: 0 8px 18px rgba(8, 31, 50, 0.1);
+        }
+
+        .brand h1 {
+            margin: 0;
+            font: 800 1.12rem/1 "Outfit", sans-serif;
+        }
+
+        .brand p {
+            margin: 0.18rem 0 0;
+            font-size: 0.73rem;
+            color: var(--muted);
+        }
+
+        .tag {
+            border: 1px solid #c9eaf7;
+            background: #ecf8fe;
+            color: #0d6489;
+            border-radius: 999px;
+            padding: 0.36rem 0.72rem;
+            font-size: 0.66rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: 1.08fr 0.92fr;
+            gap: 0.62rem;
+        }
+
+        .hero-main {
+            border-radius: 22px;
+            overflow: hidden;
+            position: relative;
+            min-height: 4.8in;
+            background: #d3e9f4;
+        }
+
+        .hero-main img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            padding: 0.82rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: end;
+            background:
+                linear-gradient(to top, rgba(6, 34, 52, 0.9) 0%, rgba(6, 34, 52, 0.38) 52%, rgba(6, 34, 52, 0.02) 100%),
+                linear-gradient(135deg, rgba(15, 143, 179, 0.46), rgba(23, 184, 121, 0.3));
+            color: #fff;
+        }
+
+        .hero-kicker {
+            margin: 0;
+            font-size: 0.66rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            font-weight: 800;
+            opacity: 0.96;
+        }
+
+        .hero-title {
+            margin: 0.36rem 0 0;
+            font: 800 2.58rem/0.93 "Outfit", sans-serif;
+            letter-spacing: -0.02em;
+            max-width: 11ch;
+        }
+
+        .hero-sub {
+            margin: 0.48rem 0 0;
+            font-size: 0.82rem;
+            max-width: 37ch;
+            color: rgba(255, 255, 255, 0.92);
+        }
+
+        .hero-side {
+            display: grid;
+            gap: 0.46rem;
+            grid-template-rows: repeat(4, auto);
+            align-content: start;
+        }
+
+        .card {
+            border-radius: 16px;
+            background: var(--card);
+            border: 1px solid rgba(8, 31, 50, 0.1);
+            padding: 0.62rem 0.68rem;
+            box-shadow: 0 8px 18px rgba(8, 31, 50, 0.08);
+        }
+
+        .problem {
+            background: linear-gradient(135deg, #08283f 0%, #0d5f82 65%, #0e7059 100%);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .problem p {
+            margin: 0;
+            font-size: 0.79rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .problem strong {
+            display: block;
+            margin-bottom: 0.26rem;
+            font: 800 1.02rem/1.02 "Outfit", sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        .solve b {
+            font: 800 0.64rem/1 "Outfit", sans-serif;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #11749b;
+            display: block;
+            margin-bottom: 0.22rem;
+        }
+
+        .solve p {
+            margin: 0;
+            font-size: 0.79rem;
+            color: #2e4b5f;
+            font-weight: 700;
+        }
+
+        .section-title {
+            margin: 0;
+            font: 800 1.22rem/1 "Outfit", sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        .section-title .accent {
+            color: #0f7ea6;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.46rem;
+        }
+
+        .step {
+            border-radius: 14px;
+            background: #fff;
+            border: 1px solid #d2e8f3;
+            padding: 0.58rem;
+        }
+
+        .step .n {
+            margin: 0;
+            font: 800 0.62rem/1 "Outfit", sans-serif;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #11749b;
+        }
+
+        .step h3 {
+            margin: 0.28rem 0 0;
+            font: 800 0.95rem/1.06 "Outfit", sans-serif;
+        }
+
+        .step p {
+            margin: 0.26rem 0 0;
+            font-size: 0.74rem;
+            color: #5b7789;
+        }
+
+        .chips {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.4rem;
+        }
+
+        .chip {
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid #d5e9f3;
+            text-align: center;
+            padding: 0.36rem 0.3rem;
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: #0d6287;
+        }
+
+        .cta {
+            border-radius: 17px;
+            background: linear-gradient(125deg, #062740 0%, #0e5570 66%, #0f6d58 100%);
+            color: #fff;
+            padding: 0.66rem;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.6rem;
+            align-items: center;
+        }
+
+        .cta h4 {
+            margin: 0;
+            font: 800 1.3rem/1 "Outfit", sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        .cta p {
+            margin: 0.24rem 0 0;
+            font-size: 0.76rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .cta .link {
+            margin-top: 0.28rem;
+            font: 700 0.79rem/1 "Outfit", sans-serif;
+            color: #9cf0cb;
+            word-break: break-all;
+        }
+
+        .qr {
+            border-radius: 13px;
+            background: #fff;
+            padding: 0.34rem;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+        }
+
+        .qr img {
+            width: 106px;
+            height: 106px;
+            display: block;
+            border-radius: 8px;
+            background: #ecf5f9;
+        }
+
+        @media (max-width: 900px) {
+            .flyer {
+                width: min(740px, 95vw);
+                min-height: auto;
+            }
+
+            .inner {
+                min-height: auto;
+                padding: 1.1rem;
+                grid-template-rows: auto;
+            }
+
+            .hero,
+            .steps,
+            .chips,
+            .cta {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-main {
+                min-height: 22rem;
+            }
+        }
+
+        @media print {
+            @page { size: Letter; margin: 0.25in; }
+            body { background: #fff; padding: 0; }
+            .flyer {
+                width: 100%;
+                min-height: 10.5in;
+                border-radius: 0;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="flyer">
+        <div class="inner">
+            <header class="top">
+                <div class="brand">
+                    <img src="/images/marketing/logo.png" alt="HomeCare logo">
+                    <div>
+                        <h1>HomeCare</h1>
+                        <p>For families</p>
+                    </div>
+                </div>
+                <div class="tag">Trusted care, made easy</div>
+            </header>
+
+            <section class="hero">
+                <article class="hero-main">
+                    <img src="/images/marketing/caregiver-hero-raleigh.jpg" alt="Caregiver supporting an older adult at home">
+                    <div class="hero-overlay">
+                        <p class="hero-kicker">Help for your family</p>
+                        <h2 class="hero-title">NEED HELP FOR YOUR MOM?</h2>
+                        <p class="hero-sub">We make it easy to find trusted home care fast, without callback delays.</p>
+                    </div>
+                </article>
+
+                <aside class="hero-side">
+                    <div class="card problem">
+                        <strong>Need help for your mom this week?</strong>
+                        <p>Skip phone-tag and waiting lists. Get caregiver replies quickly in one place.</p>
+                    </div>
+                    <div class="card solve">
+                        <b>We solve it</b>
+                        <p>Tell us what she needs. We bring you trusted caregiver options fast.</p>
+                    </div>
+                    <div class="card solve">
+                        <b>Clear trust signals</b>
+                        <p>See profiles, reviews, and trust details before you choose.</p>
+                    </div>
+                    <div class="card solve">
+                        <b>Built for real life</b>
+                        <p>One-time support or recurring care for mom or dad.</p>
+                    </div>
+                </aside>
+            </section>
+
+            <h2 class="section-title">How to get help for your mom <span class="accent">fast</span></h2>
+
+            <section class="steps">
+                <article class="step">
+                    <p class="n">Step 01</p>
+                    <h3>Share what she needs</h3>
+                    <p>Tell us schedule, tasks, and care details in minutes.</p>
+                </article>
+                <article class="step">
+                    <p class="n">Step 02</p>
+                    <h3>Review and chat</h3>
+                    <p>Get replies quickly and message caregivers directly.</p>
+                </article>
+                <article class="step">
+                    <p class="n">Step 03</p>
+                    <h3>Start care quickly</h3>
+                    <p>Choose the best fit and get support in place fast.</p>
+                </article>
+            </section>
+
+            <section class="chips" aria-label="Common family pain points we solve">
+                <div class="chip">Help for mom</div>
+                <div class="chip">Help for dad</div>
+                <div class="chip">Fast caregiver replies</div>
+                <div class="chip">Simple and trusted</div>
+            </section>
+
+            <section class="cta">
+                <div>
+                    <h4>Scan to get help for your mom now</h4>
+                    <p>Post once, get replies fast, and start care with confidence.</p>
+                    <p class="link" id="signupUrlText">https://YOUR-DOMAIN.com/register</p>
+                </div>
+                <div class="qr">
+                    <img id="signupQr" src="" alt="QR code to family signup">
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        (function () {
+            var fallback = "https://YOUR-DOMAIN.com/register";
+            var signup = location.protocol === "file:" ? fallback : new URL("/register", location.origin).toString();
+            document.getElementById("signupUrlText").textContent = signup;
+            document.getElementById("signupQr").src =
+                "https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=" + encodeURIComponent(signup);
+        })();
+    </script>
+</body>
+</html>

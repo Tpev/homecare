@@ -244,7 +244,7 @@ class Home extends Component
                     'description' => 'Connect Stripe so completed shifts can be paid out to you.',
                     'route' => route('caregiver.payouts.connect.show'),
                     'cta' => 'Connect payouts',
-                    'required' => true,
+                    'required' => false,
                     'done' => $payoutSetupComplete,
                 ],
                 [
@@ -271,7 +271,7 @@ class Home extends Component
                 ->all();
 
             $requiredCards = collect($caregiverData['setup_cards'])->filter(fn ($card) => $card['required']);
-            $requiredTotal = 4;
+            $requiredTotal = 3;
             $requiredCompleted = $requiredTotal - $requiredCards->count();
 
             $caregiverData['required_setup_total'] = $requiredTotal;

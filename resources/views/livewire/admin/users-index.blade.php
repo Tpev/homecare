@@ -37,6 +37,9 @@
         @error('delete')
             <x-alert color="red" class="mt-3">{{ $message }}</x-alert>
         @enderror
+        @error('loginAs')
+            <x-alert color="red" class="mt-3">{{ $message }}</x-alert>
+        @enderror
 
         <div class="mt-4 overflow-x-auto rounded-xl border border-slate-200">
             <table class="min-w-full divide-y divide-slate-200 text-sm">
@@ -77,6 +80,15 @@
                                     @if($isProtectedAdmin)
                                         <span class="text-xs text-slate-500">Protected</span>
                                     @else
+                                        <x-button
+                                            color="amber"
+                                            light
+                                            sm
+                                            wire:click="loginAs({{ $user->id }})"
+                                            onclick="if (!confirm('Log in as this user now?')) return false;"
+                                        >
+                                            Login as
+                                        </x-button>
                                         <x-button
                                             color="red"
                                             light

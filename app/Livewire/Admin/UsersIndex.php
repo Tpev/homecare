@@ -64,6 +64,31 @@ class UsersIndex extends Component
         }
     }
 
+    public function loginAs(int $userId): void
+    {
+        $admin = auth()->user();
+        abort_unless($admin && $this->isAdminUser($admin), 403);
+
+        $target = User::query()->findOrFail($userId);
+
+        if ((int) $target->id === (int) $admin->id) {
+            $this->addError('loginAs', 'You are already logged in as this admin account.');
+
+            return;
+        }
+
+        if ($this->isAdminUser($target)) {
+            $this->addError('loginAs', 'Login as is only available for caregiver/family accounts.');
+
+            return;
+        }
+
+        auth()->login($target);
+        session()->regenerate();
+
+        $this->redirect(route('dashboard', absolute: false), navigate: true);
+    }
+
     public function render(): View
     {
         $query = User::query();
@@ -101,4 +126,3 @@ class UsersIndex extends Component
         return $user->role === 'admin' || strtolower((string) $user->email) === 'test@test.com';
     }
 }
-

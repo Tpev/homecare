@@ -162,4 +162,43 @@ class CaregiverQualitySetupTest extends TestCase
         $response->assertDontSee('Complete profile basics');
         $response->assertSee('Insurance setup');
     }
+
+    public function test_caregiver_can_be_ready_to_submit_without_payout_setup(): void
+    {
+        $skill = Skill::query()->create(['name' => 'Companionship']);
+        $language = Language::query()->create(['name' => 'English']);
+
+        $caregiver = User::factory()->create([
+            'role' => 'caregiver',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+        ]);
+
+        $profile = CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'draft',
+            'bio' => str_repeat('Reliable caregiver profile. ', 4),
+            'years_experience' => 3,
+            'service_area_zip' => '27601',
+            'service_radius_miles' => 10,
+            'identity_verified_at' => now(),
+            'identity_verification_status' => 'approved',
+            'stripe_connect_account_id' => null,
+            'stripe_charges_enabled' => false,
+            'stripe_payouts_enabled' => false,
+        ]);
+        $profile->skills()->sync([$skill->id]);
+        $profile->languages()->sync([$language->id]);
+        $profile->availabilities()->create([
+            'day_of_week' => 1,
+            'start_time' => '09:00',
+            'end_time' => '12:00',
+        ]);
+
+        $response = $this->actingAs($caregiver)->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertSee('Ready to submit.');
+        $response->assertSee('Submit profile for review');
+    }
 }

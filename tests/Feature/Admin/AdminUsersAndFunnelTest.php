@@ -66,6 +66,45 @@ class AdminUsersAndFunnelTest extends TestCase
         $this->actingAs($user)->get('/admin/analytics/funnel')->assertForbidden();
     }
 
+    public function test_admin_can_login_as_non_admin_user_from_users_table(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'test@test.com',
+            'role' => 'admin',
+        ]);
+        $family = User::factory()->create(['role' => 'family']);
+
+        Livewire::actingAs($admin)
+            ->test(UsersIndex::class)
+            ->call('loginAs', $family->id)
+            ->assertRedirect(route('dashboard', absolute: false));
+
+        $this->assertAuthenticatedAs($family);
+        $this->get('/dashboard')->assertOk();
+    }
+
+    public function test_admin_cannot_login_as_self_or_another_admin_from_users_table(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'test@test.com',
+            'role' => 'admin',
+        ]);
+        $otherAdmin = User::factory()->create([
+            'role' => 'admin',
+            'email' => 'admin2@example.com',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(UsersIndex::class)
+            ->call('loginAs', $admin->id)
+            ->assertHasErrors(['loginAs']);
+
+        Livewire::actingAs($admin)
+            ->test(UsersIndex::class)
+            ->call('loginAs', $otherAdmin->id)
+            ->assertHasErrors(['loginAs']);
+    }
+
     public function test_funnel_page_renders_caregiver_lifecycle_steps_with_admin_nav_only(): void
     {
         $admin = User::factory()->create([
