@@ -4,7 +4,7 @@
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 class="text-xl font-semibold">Caregiver Lifecycle Funnel</h1>
-                    <p class="mt-1 text-sm text-slate-600">Cohort based on caregiver registrations since {{ $start->format('M d, Y') }}.</p>
+                    <p class="mt-1 text-sm text-slate-600">Cohort based on unique caregiver landing visitors since {{ $start->format('M d, Y') }}.</p>
                 </div>
                 <x-select.styled
                     wire:model.live="days"
@@ -19,20 +19,29 @@
             </div>
         </x-slot:header>
 
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Landing Visitors</p>
+                <p class="mt-1 text-3xl font-black text-slate-900">{{ number_format($summary['landing_visitors']) }}</p>
+                <p class="text-xs text-slate-500">
+                    {{ number_format($summary['landing_authenticated']) }} authenticated ·
+                    {{ number_format($summary['landing_anonymous']) }} anonymous
+                </p>
+            </div>
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Registered</p>
                 <p class="mt-1 text-3xl font-black text-slate-900">{{ number_format($summary['registered']) }}</p>
+                <p class="text-xs text-slate-500">{{ number_format($summary['registration_rate'], 1) }}% of landing visitors</p>
             </div>
             <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
                 <p class="text-xs uppercase tracking-[0.14em] text-emerald-700">Activated</p>
                 <p class="mt-1 text-3xl font-black text-emerald-900">{{ number_format($summary['activated']) }}</p>
-                <p class="text-xs text-emerald-700">{{ number_format($summary['activation_rate'], 1) }}% of registrations</p>
+                <p class="text-xs text-emerald-700">{{ number_format($summary['activation_rate'], 1) }}% of landing visitors</p>
             </div>
             <div class="rounded-xl border border-cyan-200 bg-cyan-50 p-4">
                 <p class="text-xs uppercase tracking-[0.14em] text-cyan-700">Completed Shift</p>
                 <p class="mt-1 text-3xl font-black text-cyan-900">{{ number_format($summary['completed_shift']) }}</p>
-                <p class="text-xs text-cyan-700">{{ number_format($summary['completion_rate'], 1) }}% of registrations</p>
+                <p class="text-xs text-cyan-700">{{ number_format($summary['completion_rate'], 1) }}% of landing visitors</p>
             </div>
         </div>
 
@@ -87,9 +96,9 @@
             </table>
         </div>
 
-        @if(($summary['registered'] ?? 0) === 0)
+        @if(($summary['landing_visitors'] ?? 0) === 0)
             <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                No caregiver registrations found in this date range yet.
+                No caregiver landing visitors found in this date range yet.
             </div>
         @endif
     </x-card>

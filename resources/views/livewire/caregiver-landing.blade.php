@@ -220,6 +220,11 @@
                 </a>
             </div>
             <p class="mt-3 text-sm text-slate-500">Takes just a few minutes to get started.</p>
+            <p class="mt-2 text-xs text-slate-500">
+                We use first-party analytics cookies to understand page performance and improve caregiver onboarding.
+                See our
+                <a class="underline hover:text-slate-700" href="{{ route('legal.show', ['slug' => 'privacy-policy']) }}">Privacy Policy</a>.
+            </p>
         </div>
     </section>
 </div>

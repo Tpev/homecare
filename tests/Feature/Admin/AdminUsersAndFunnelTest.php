@@ -8,8 +8,10 @@ use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CaregiverProfile;
 use App\Models\Language;
+use App\Models\PageViewEvent;
 use App\Models\Skill;
 use App\Models\User;
+use App\Services\Analytics\PageViewTracker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -62,6 +64,16 @@ class AdminUsersAndFunnelTest extends TestCase
             'email' => 'test@test.com',
             'role' => 'admin',
         ]);
+        PageViewEvent::query()->create([
+            'event_name' => PageViewTracker::CAREGIVER_LANDING_EVENT,
+            'anon_id' => (string) \Illuminate\Support\Str::uuid(),
+            'url' => 'https://homecare.test/caregivers',
+        ]);
+        PageViewEvent::query()->create([
+            'event_name' => PageViewTracker::CAREGIVER_LANDING_EVENT,
+            'anon_id' => (string) \Illuminate\Support\Str::uuid(),
+            'url' => 'https://homecare.test/caregivers',
+        ]);
 
         $skill = Skill::query()->create(['name' => 'Companionship']);
         $language = Language::query()->create(['name' => 'English']);
@@ -106,6 +118,7 @@ class AdminUsersAndFunnelTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Caregiver Lifecycle Funnel');
+        $response->assertSee('Visited Landing Page');
         $response->assertSee('Registered');
         $response->assertSee('Profile Info Filled');
         $response->assertSee('Under Review');
@@ -150,4 +163,3 @@ class AdminUsersAndFunnelTest extends TestCase
         return $profile;
     }
 }
-

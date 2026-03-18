@@ -5,7 +5,9 @@ namespace App\Livewire\Admin;
 use App\Models\CareBooking;
 use App\Models\CareRequestApplication;
 use App\Models\CaregiverProfile;
+use App\Models\PageViewEvent;
 use App\Models\User;
+use App\Services\Analytics\PageViewTracker;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -22,6 +24,40 @@ class FunnelAnalytics extends Component
 
     public function render()
     {
+        $landingIdentityKeys = PageViewEvent::query()
+            ->where('event_name', PageViewTracker::CAREGIVER_LANDING_EVENT)
+            ->where('created_at', '>=', $this->start)
+            ->get(['user_id', 'anon_id'])
+            ->map(function (PageViewEvent $event): ?string {
+                if ($event->user_id) {
+                    return 'u:'.$event->user_id;
+                }
+
+                if ($event->anon_id) {
+                    return 'a:'.$event->anon_id;
+                }
+
+                return null;
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $landingAuthenticatedCount = PageViewEvent::query()
+            ->where('event_name', PageViewTracker::CAREGIVER_LANDING_EVENT)
+            ->where('created_at', '>=', $this->start)
+            ->whereNotNull('user_id')
+            ->distinct('user_id')
+            ->count('user_id');
+
+        $landingAnonymousCount = PageViewEvent::query()
+            ->where('event_name', PageViewTracker::CAREGIVER_LANDING_EVENT)
+            ->where('created_at', '>=', $this->start)
+            ->whereNotNull('anon_id')
+            ->distinct('anon_id')
+            ->count('anon_id');
+
         $registeredIds = User::query()
             ->where('role', 'caregiver')
             ->where('created_at', '>=', $this->start)
@@ -78,6 +114,7 @@ class FunnelAnalytics extends Component
             ->all();
 
         $steps = [
+            ['label' => 'Visited Landing Page', 'ids' => $landingIdentityKeys],
             ['label' => 'Registered', 'ids' => $registeredIds],
             ['label' => 'Profile Info Filled', 'ids' => $filledProfileIds],
             ['label' => 'Under Review', 'ids' => $underReviewIds],
@@ -86,8 +123,11 @@ class FunnelAnalytics extends Component
             ['label' => 'Completed a Shift', 'ids' => $completedShiftIds],
         ];
 
-        $baseCount = count($registeredIds);
-        $maxCount = max($baseCount, 1);
+        $baseCount = count($landingIdentityKeys);
+        $maxCount = max(
+            1,
+            ...collect($steps)->map(fn (array $step): int => count($step['ids']))->all(),
+        );
 
         foreach ($steps as $index => &$step) {
             $currentCount = count($step['ids']);
@@ -106,17 +146,21 @@ class FunnelAnalytics extends Component
                 ? 0.0
                 : ($previousCount > 0 ? round(($dropoff / $previousCount) * 100, 1) : 0.0);
             $step['visual_width'] = $currentCount > 0
-                ? max((int) round(($currentCount / $maxCount) * 100), 26)
+                ? min(100, max((int) round(($currentCount / $maxCount) * 100), 26))
                 : 26;
         }
         unset($step);
 
         $summary = [
-            'registered' => $baseCount,
-            'activated' => $steps[3]['count'] ?? 0,
-            'completed_shift' => $steps[5]['count'] ?? 0,
-            'activation_rate' => $steps[3]['overall_conversion_percent'] ?? 0.0,
-            'completion_rate' => $steps[5]['overall_conversion_percent'] ?? 0.0,
+            'landing_visitors' => $baseCount,
+            'landing_authenticated' => $landingAuthenticatedCount,
+            'landing_anonymous' => $landingAnonymousCount,
+            'registered' => $steps[1]['count'] ?? 0,
+            'activated' => $steps[4]['count'] ?? 0,
+            'completed_shift' => $steps[6]['count'] ?? 0,
+            'registration_rate' => $steps[1]['overall_conversion_percent'] ?? 0.0,
+            'activation_rate' => $steps[4]['overall_conversion_percent'] ?? 0.0,
+            'completion_rate' => $steps[6]['overall_conversion_percent'] ?? 0.0,
         ];
 
         return view('livewire.admin.funnel-analytics', [

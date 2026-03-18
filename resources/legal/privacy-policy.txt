@@ -105,6 +105,7 @@ improve security and site performance;
 support communications, analytics, and marketing activities;
 measure campaign performance and audience behavior; and
 help us improve user experience and business operations.
+For caregiver pre-launch marketing pages, HUB may also use first-party analytics events and a first-party anonymous identifier cookie to measure unique visits, understand conversion to signup, and improve onboarding flow quality. These records may include hashed IP and hashed user-agent values, URL/referrer context, and campaign parameters (such as UTM tags) for operational analytics purposes.
 The Platform may use analytics tools, advertising technologies, retargeting tools, and similar services provided by third parties. These tools may collect information about your device, browser, IP address, activity on the Platform, pages viewed, clicks, session information, and referral sources.
 The Platform may also use session replay or similar diagnostic tools to help us understand usability issues, troubleshoot technical problems, improve workflows, and optimize the user experience. Where used, these tools are intended to support product improvement, operations, and security.
 Depending on the jurisdiction and the way the Platform is configured, HUB may also use cookie banners, consent management tools, or similar mechanisms to provide notice and obtain or record user consent for certain tracking activities.
