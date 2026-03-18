@@ -7,6 +7,7 @@ use App\Http\Controllers\CaregiverIdentityVerificationController;
 use App\Http\Controllers\CaregiverStripeConnectController;
 use App\Http\Controllers\DiditWebhookController;
 use App\Http\Controllers\FamilyBillingController;
+use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\MarketingPagesController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SeoPagesController;
@@ -59,6 +60,10 @@ Route::get('/agencies', [MarketingPagesController::class, 'agency'])->name('land
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{blogSlug}/cover', BlogCoverController::class)->name('blog.cover');
 Route::get('/blog/{blogSlug}', [BlogController::class, 'show'])->name('blog.show');
+Route::get('/legal', [LegalPageController::class, 'index'])->name('legal.index');
+Route::get('/legal/{slug}', [LegalPageController::class, 'show'])
+    ->whereIn('slug', array_keys(config('legal_pages.pages', [])))
+    ->name('legal.show');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
 Route::get('/robots.txt', [RobotsController::class, 'index'])->name('robots.txt');
 Route::post('/webhooks/didit/identity', DiditWebhookController::class)

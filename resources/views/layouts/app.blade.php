@@ -38,6 +38,15 @@
             <main>
                 {{ $slot }}
             </main>
+
+            <footer class="border-t border-slate-200 bg-white">
+                <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <p class="text-xs text-slate-500">© {{ now()->year }} HomeCare / HUB Healthcare, LLC</p>
+                        <x-legal-links />
+                    </div>
+                </div>
+            </footer>
         </div>
 
         {{-- Livewire scripts MUST be present --}}

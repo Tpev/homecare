@@ -24,11 +24,16 @@ class SitemapController extends Controller
             ->map(fn (string $slug) => route('seo.page', ['seoSlug' => $slug]))
             ->all();
 
+        $legalUrls = collect(array_keys(config('legal_pages.pages', [])))
+            ->map(fn (string $slug) => route('legal.show', ['slug' => $slug]))
+            ->prepend(route('legal.index'))
+            ->all();
+
         $blogUrls = collect($blogs->all())
             ->map(fn (array $post) => route('blog.show', ['blogSlug' => (string) $post['slug']]))
             ->all();
 
-        $urls = collect(array_merge($baseUrls, $seoUrls, $blogUrls))
+        $urls = collect(array_merge($baseUrls, $seoUrls, $legalUrls, $blogUrls))
             ->unique()
             ->values();
 

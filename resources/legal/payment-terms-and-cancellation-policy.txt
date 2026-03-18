@@ -1,0 +1,116 @@
+HUB Healthcare, LLC
+Payment Terms and Cancellation Policy
+Effective Date: March 13, 2026 | Last Updated: March 13, 2026
+This Payment Terms and Cancellation Policy (“Payment Policy”) governs payment processing, fees, cancellations, refunds, and financial transactions that may occur through the HUB Healthcare platform (the “Platform”).
+This Policy forms part of and is incorporated into the HUB Platform Terms of Service. If there is a conflict between this Policy and the Terms of Service, the Terms of Service control unless this Policy specifically states otherwise.
+1. Payment Processing
+Payments made through the Platform may be processed through third‑party payment processors. HUB currently anticipates using processors such as Stripe or similar financial service providers.
+By using payment features of the Platform, you agree that:
+payment processors may collect, process, and store payment information;
+you may be required to agree to the processor’s terms of service and privacy policy;
+HUB does not store full payment card numbers or banking credentials when third‑party processors handle payment transactions; and
+financial transactions are subject to the policies and operational rules of the payment processor.
+HUB may change payment processors at any time.
+2. Platform Fees
+HUB may charge various fees for use of the Platform, which may include:
+service fees
+marketplace facilitation fees
+subscription fees
+processing fees
+cancellation or no‑show fees
+premium feature fees
+enterprise or organizational service fees
+All fees will be disclosed on the Platform or through applicable agreements before being charged.
+HUB reserves the right to modify fee structures, provided changes are communicated through the Platform or through updated policies.
+3. Pricing for Services
+Caregivers, service providers, or organizations using the Platform may set their own service pricing where permitted by the Platform.
+Unless otherwise specified:
+HUB does not set service prices
+HUB does not negotiate service rates
+HUB does not control compensation arrangements between users
+Users are responsible for understanding and agreeing to any rates or pricing before confirming a booking or service request.
+4. Authorization and Payment Collection
+When a user confirms a service request or booking through the Platform, the user may be required to authorize payment.
+Authorization may include:
+pre‑authorization holds
+advance charges
+deposits
+milestone payments
+final payment following service completion
+Payment timing may vary depending on the workflow, service type, or marketplace configuration.
+5. Caregiver or Provider Payouts
+Where the Platform facilitates payments to caregivers or service providers:
+payouts may be issued through third‑party processors;
+payout timing may vary depending on processor schedules, fraud checks, or compliance reviews;
+HUB may delay or withhold payouts where necessary for dispute resolution, fraud prevention, or policy enforcement.
+Caregivers and providers are responsible for:
+accurate payout information
+tax reporting
+compliance with applicable laws.
+6. Taxes
+Users are responsible for determining and fulfilling their own tax obligations related to payments received or made through the Platform.
+HUB does not provide tax advice and does not guarantee tax treatment of any payments.
+Where required by law, HUB or its payment processor may collect tax information, issue tax forms, or report financial activity.
+7. Cancellations
+The Platform may permit users to cancel scheduled services.
+Cancellation rules may vary depending on the workflow, but generally:
+cancellations made sufficiently in advance may not incur fees;
+late cancellations may result in partial charges; and
+repeated cancellations may result in account restrictions.
+Specific cancellation windows may be defined within the booking workflow.
+8. No‑Shows
+If a user fails to appear for a scheduled service without cancelling in accordance with the Platform rules, the user may be charged a no‑show fee.
+No‑show policies are intended to protect the time and availability of service providers.
+HUB may determine the appropriate fee structure or delegate fee policies to marketplace participants depending on how the Platform is configured.
+9. Rescheduling
+Users may be permitted to reschedule services through the Platform when functionality allows.
+Rescheduling may be subject to:
+availability of the caregiver or provider
+timing rules
+cancellation windows
+Rescheduling requests made outside permitted windows may be treated as cancellations.
+10. Refunds
+Refund eligibility may depend on factors including:
+cancellation timing
+service completion status
+dispute outcomes
+payment processor rules
+Refunds may be issued through the original payment method when possible.
+Payment processor policies may affect refund timing.
+11. Disputes
+If a dispute arises regarding a payment, users should first attempt to resolve the matter directly with the other party where appropriate.
+HUB may, but is not obligated to:
+review disputes
+request documentation
+temporarily hold funds
+assist with dispute resolution
+HUB does not guarantee dispute outcomes.
+12. Chargebacks
+Users agree not to initiate chargebacks without first attempting to resolve the issue through the Platform.
+If a chargeback occurs:
+HUB may suspend accounts;
+HUB may recover amounts owed;
+additional administrative fees may apply.
+Chargebacks may also trigger payment processor investigations.
+13. Fraud Prevention
+To prevent fraud and protect users, HUB may:
+delay payments
+place transaction holds
+require identity verification
+request documentation
+cancel suspicious transactions
+These actions may occur without prior notice where necessary to protect the Platform.
+14. Payment Errors
+If a payment error occurs, users must notify HUB promptly.
+HUB may correct errors including:
+duplicate charges
+incorrect disbursements
+processor errors
+Corrections may involve reversals or adjustments.
+15. Changes to This Policy
+HUB may modify this Payment Policy at any time.
+Material changes may be communicated through the Platform, email notice, or updated policy postings.
+Continued use of the Platform after updates constitutes acceptance of the revised Policy.
+16. Contact Information
+HUB Healthcare, LLC8801 Fast Park DriveRaleigh, NC 27617admin@hub.healthcarewww.hub.healthcare
+For questions regarding payments, refunds, or this policy, please contact HUB using the information above.

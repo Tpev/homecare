@@ -43,6 +43,10 @@
                 <div class="bg-white border border-slate-200 shadow-xl shadow-slate-200/60 rounded-2xl p-6 md:p-8">
                     {{ $slot }}
                 </div>
+
+                <div class="mt-4 rounded-xl border border-slate-200 bg-white/70 p-3">
+                    <x-legal-links />
+                </div>
             </div>
         </main>
     </div>

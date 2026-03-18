@@ -48,10 +48,26 @@
             </div>
 
             <div class="space-y-2 pt-1">
-                <x-checkbox label="I agree to the Terms and Privacy Policy" wire:model="accept_terms" />
+                <label class="flex items-start gap-2 text-sm text-slate-700">
+                    <input type="checkbox" wire:model="accept_terms" class="mt-1 rounded border-slate-300 text-cyan-700 focus:ring-cyan-500">
+                    <span>
+                        I agree to the
+                        <a href="{{ route('legal.show', ['slug' => 'platform-terms-of-service']) }}" class="underline hover:text-slate-900" target="_blank" rel="noopener noreferrer">Terms of Service</a>
+                        and
+                        <a href="{{ route('legal.show', ['slug' => 'privacy-policy']) }}" class="underline hover:text-slate-900" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+                    </span>
+                </label>
                 <x-input-error :messages="$errors->get('accept_terms')" class="mt-1" />
 
-                <x-checkbox label="I understand I am an independent contractor, not an employee." wire:model="accept_independent_contractor" />
+                <label class="flex items-start gap-2 text-sm text-slate-700">
+                    <input type="checkbox" wire:model="accept_independent_contractor" class="mt-1 rounded border-slate-300 text-cyan-700 focus:ring-cyan-500">
+                    <span>
+                        I understand I am an independent contractor, not an employee, and I acknowledge the
+                        <a href="{{ route('legal.show', ['slug' => 'caregiver-terms']) }}" class="underline hover:text-slate-900" target="_blank" rel="noopener noreferrer">Caregiver Terms</a>
+                        and
+                        <a href="{{ route('legal.show', ['slug' => 'platform-participation-acknowledgment']) }}" class="underline hover:text-slate-900" target="_blank" rel="noopener noreferrer">Platform Participation Acknowledgment</a>.
+                    </span>
+                </label>
                 <x-input-error :messages="$errors->get('accept_independent_contractor')" class="mt-1" />
             </div>
 

@@ -14,6 +14,7 @@ new #[Layout('layouts.guest')] class extends Component
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
+    public bool $accept_terms = false;
 
     public function register(): void
     {
@@ -21,9 +22,11 @@ new #[Layout('layouts.guest')] class extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            'accept_terms' => ['accepted'],
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
+        unset($validated['accept_terms']);
 
         event(new Registered($user = User::create($validated)));
 
@@ -62,6 +65,20 @@ new #[Layout('layouts.guest')] class extends Component
                 <x-password label="Confirm password" wire:model="password_confirmation" required />
                 <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
             </div>
+        </div>
+
+        <div class="space-y-1 pt-1">
+            <label class="flex items-start gap-2 text-sm text-slate-700">
+                <input wire:model="accept_terms" id="accept_terms" type="checkbox" class="mt-1 rounded border-slate-300 text-cyan-700 shadow-sm focus:ring-cyan-500">
+                <span>
+                    I agree to the
+                    <a href="{{ route('legal.show', ['slug' => 'platform-terms-of-service']) }}" class="underline hover:text-slate-900" target="_blank" rel="noopener noreferrer">Terms of Service</a>,
+                    <a href="{{ route('legal.show', ['slug' => 'client-and-family-terms']) }}" class="underline hover:text-slate-900" target="_blank" rel="noopener noreferrer">Client & Family Terms</a>,
+                    and
+                    <a href="{{ route('legal.show', ['slug' => 'privacy-policy']) }}" class="underline hover:text-slate-900" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+                </span>
+            </label>
+            <x-input-error :messages="$errors->get('accept_terms')" class="mt-2" />
         </div>
 
         <div class="flex items-center justify-between pt-2">
