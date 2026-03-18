@@ -36,7 +36,7 @@
                 schedule.
             </h1>
             <p class="mt-5 max-w-xl text-lg text-slate-600">
-                Join early access in the Triangle area. Complete your profile now and be first to receive care requests when we launch. First complete profiles are activated first.
+                Join early access in the Triangle. Complete your profile now to be among the first caregivers matched when we launch.
             </p>
 
             <div class="mt-8 flex flex-wrap gap-3">
