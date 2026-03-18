@@ -49,6 +49,16 @@
             </div>
 
             <p class="mt-4 text-sm font-medium text-emerald-800">Pre-launch now: Raleigh + Wake County priority cohort</p>
+
+            <div class="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-cyan-700">No experience required</p>
+                <p class="mt-2 text-sm text-slate-700">
+                    You do not need formal caregiving experience to start. People skills matter most: companionship, being present at home with an older adult, and sometimes helping with simple lunch prep or daily routines.
+                </p>
+                <p class="mt-2 text-sm text-slate-700">
+                    Think of it like helping an elder family member, but getting paid for your time.
+                </p>
+            </div>
         </div>
 
         <div
@@ -111,6 +121,42 @@
         </div>
     </section>
 
+    <section class="bg-[#f3f6f8] py-16">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="mb-8 max-w-3xl">
+                <h2 class="text-4xl font-black tracking-tight text-slate-900">What you get with HomeCare pre-launch</h2>
+                <p class="mt-3 text-slate-600">Same simple gig logic people know from rideshare platforms, but focused on trusted non-medical care for older adults.</p>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+                <div class="rounded-2xl border border-emerald-200 bg-white p-6 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">Pay model</p>
+                    <h3 class="mt-2 text-2xl font-black text-slate-900">Up to $30/hr* + 25% on night gigs</h3>
+                    <p class="mt-2 text-sm text-slate-600">Night shifts are boosted to reward tougher hours. You see compensation before you accept a request.</p>
+                    <p class="mt-3 text-xs text-slate-500">*Gross shift rate shown before platform fees.</p>
+                </div>
+
+                <div class="rounded-2xl border border-cyan-200 bg-white p-6 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-cyan-700">Secure payouts</p>
+                    <h3 class="mt-2 text-2xl font-black text-slate-900">Family funds are secured before shift start</h3>
+                    <p class="mt-2 text-sm text-slate-600">HomeCare captures payment authorization before work begins, then releases payout for the work you completed.</p>
+                </div>
+
+                <div class="rounded-2xl border border-blue-200 bg-white p-6 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">Your comfort, your rules</p>
+                    <h3 class="mt-2 text-2xl font-black text-slate-900">Choose exactly which tasks you accept</h3>
+                    <p class="mt-2 text-sm text-slate-600">Set what you are comfortable doing and what you do not do. Families only see you for matching tasks.</p>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-slate-950 p-6 text-white shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">Gig experience</p>
+                    <h3 class="mt-2 text-2xl font-black">Uber-style workflow for elder care</h3>
+                    <p class="mt-2 text-sm text-slate-200">Get requests, accept what fits, chat in-app, complete shifts, and build your rating over time.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section id="how-it-works" class="bg-[#f3f6f8] py-16">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="text-center">
@@ -151,6 +197,8 @@
                 <p class="rounded-xl bg-white/10 px-4 py-3 text-sm">✓ No long-term commitments</p>
                 <p class="rounded-xl bg-white/10 px-4 py-3 text-sm">✓ Choose the work you want</p>
                 <p class="rounded-xl bg-white/10 px-4 py-3 text-sm">✓ Build your reputation over time</p>
+                <p class="rounded-xl bg-white/10 px-4 py-3 text-sm">✓ Up to $30/hr gross + 25% night premium</p>
+                <p class="rounded-xl bg-white/10 px-4 py-3 text-sm">✓ Money secured before the shift starts</p>
             </div>
         </div>
     </section>

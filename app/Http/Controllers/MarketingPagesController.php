@@ -2,10 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\RedirectResponse;
+
 class MarketingPagesController extends Controller
 {
-    public function landing()   { return view('marketing.landing'); }
-    public function family()    { return view('marketing.family'); }
+    public function landing(): RedirectResponse
+    {
+        return redirect()->route('landing.caregiver');
+    }
+
+    public function family(): RedirectResponse
+    {
+        return redirect()->route('landing.caregiver');
+    }
+
     public function caregiver() { return view('marketing.caregiver'); }
-    public function agency()    { return view('marketing.agency'); }
+
+    public function agency(): RedirectResponse
+    {
+        return redirect()->route('landing.caregiver');
+    }
 }
