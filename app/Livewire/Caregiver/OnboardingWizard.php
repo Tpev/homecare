@@ -7,6 +7,7 @@ use App\Models\CaregiverProfile;
 use App\Models\CaregiverProfileVersion;
 use App\Models\Language;
 use App\Models\Skill;
+use App\Services\Ops\OpsAlertService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -143,6 +144,7 @@ class OnboardingWizard extends Component
         }
 
         $this->saveDraft(true);
+        app(OpsAlertService::class)->notifyCaregiverReadyForReview(auth()->user(), $this->profile->fresh());
 
         session()->flash('status', 'Profile submitted. Review usually takes up to 1 business day.');
         $this->redirect(route('dashboard', absolute: false), navigate: true);

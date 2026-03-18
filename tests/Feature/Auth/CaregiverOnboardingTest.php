@@ -3,9 +3,11 @@
 namespace Tests\Feature\Auth;
 
 use App\Livewire\Auth\CaregiverRegister;
+use App\Mail\Ops\UserRegisteredOpsAlertMail;
 use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -20,6 +22,14 @@ class CaregiverOnboardingTest extends TestCase
 
     public function test_new_caregiver_can_register(): void
     {
+        config([
+            'marketplace.ops_alert_recipients' => [
+                'peverelli.t@gmail.com',
+                'cpetrinipoli@hub.healthcare',
+            ],
+        ]);
+        Mail::fake();
+
         Livewire::test(CaregiverRegister::class)
             ->set('name', 'Care Giver')
             ->set('email', 'caregiver@example.com')
@@ -38,6 +48,12 @@ class CaregiverOnboardingTest extends TestCase
             'email' => 'caregiver@example.com',
             'role' => 'caregiver',
         ]);
+
+        Mail::assertSent(UserRegisteredOpsAlertMail::class, function (UserRegisteredOpsAlertMail $mail) {
+            return $mail->hasTo('peverelli.t@gmail.com')
+                && $mail->hasTo('cpetrinipoli@hub.healthcare')
+                && $mail->user->email === 'caregiver@example.com';
+        });
     }
 
     public function test_onboarding_route_requires_caregiver_role(): void

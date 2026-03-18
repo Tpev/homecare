@@ -3,12 +3,15 @@
 namespace App\Providers;
 
 use App\Contracts\AiCopilotResponder;
+use App\Listeners\SendOpsUserRegisteredAlert;
 use App\Models\CareRequest;
 use App\Models\CareRequestConversation;
 use App\Policies\CareRequestConversationPolicy;
 use App\Policies\CareRequestPolicy;
 use App\Services\AiCopilot\OpenAiCopilotResponder;
 use App\Services\AiCopilot\RuleBasedCopilotResponder;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -39,5 +42,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(CareRequest::class, CareRequestPolicy::class);
         Gate::policy(CareRequestConversation::class, CareRequestConversationPolicy::class);
+
+        Event::listen(Registered::class, SendOpsUserRegisteredAlert::class);
     }
 }

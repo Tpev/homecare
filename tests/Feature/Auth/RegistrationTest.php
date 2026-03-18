@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Mail\Ops\UserRegisteredOpsAlertMail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Volt\Volt;
 use Tests\TestCase;
 
@@ -21,6 +23,14 @@ class RegistrationTest extends TestCase
 
     public function test_new_users_can_register(): void
     {
+        config([
+            'marketplace.ops_alert_recipients' => [
+                'peverelli.t@gmail.com',
+                'cpetrinipoli@hub.healthcare',
+            ],
+        ]);
+        Mail::fake();
+
         $component = Volt::test('pages.auth.register')
             ->set('name', 'Test User')
             ->set('email', 'test@example.com')
@@ -32,5 +42,11 @@ class RegistrationTest extends TestCase
         $component->assertRedirect(route('dashboard', absolute: false));
 
         $this->assertAuthenticated();
+
+        Mail::assertSent(UserRegisteredOpsAlertMail::class, function (UserRegisteredOpsAlertMail $mail) {
+            return $mail->hasTo('peverelli.t@gmail.com')
+                && $mail->hasTo('cpetrinipoli@hub.healthcare')
+                && $mail->user->email === 'test@example.com';
+        });
     }
 }

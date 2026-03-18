@@ -6,12 +6,14 @@ use App\Livewire\Admin\CaregiverModerationLogs;
 use App\Livewire\Admin\CaregiverReviewsQueue;
 use App\Livewire\Caregiver\OnboardingWizard;
 use App\Livewire\Caregiver\ProfileEditor;
+use App\Mail\Ops\CaregiverReadyForReviewOpsAlertMail;
 use App\Models\CaregiverModerationLog;
 use App\Models\CaregiverProfile;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -21,6 +23,14 @@ class CaregiverRegressionTest extends TestCase
 
     public function test_onboarding_submit_sets_under_review_and_creates_audit_records(): void
     {
+        config([
+            'marketplace.ops_alert_recipients' => [
+                'peverelli.t@gmail.com',
+                'cpetrinipoli@hub.healthcare',
+            ],
+        ]);
+        Mail::fake();
+
         $skill = Skill::query()->create(['name' => 'Companionship']);
         $language = Language::query()->create(['name' => 'English']);
         $user = User::factory()->create(['role' => 'caregiver', 'city' => 'Raleigh', 'state' => 'NC']);
@@ -66,6 +76,13 @@ class CaregiverRegressionTest extends TestCase
             'caregiver_profile_id' => $profile->id,
             'action' => 'submitted',
         ]);
+
+        Mail::assertSent(CaregiverReadyForReviewOpsAlertMail::class, function (CaregiverReadyForReviewOpsAlertMail $mail) use ($user, $profile) {
+            return $mail->hasTo('peverelli.t@gmail.com')
+                && $mail->hasTo('cpetrinipoli@hub.healthcare')
+                && $mail->user->is($user)
+                && $mail->profile->id === $profile->id;
+        });
     }
 
     public function test_onboarding_rejects_overlapping_availability_ranges(): void

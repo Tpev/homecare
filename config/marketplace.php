@@ -3,6 +3,10 @@
 return [
     'family_estimate_hourly_rate' => 30.00,
     'caregiver_prelaunch_mode' => filter_var(env('MARKETPLACE_CAREGIVER_PRELAUNCH_MODE', false), FILTER_VALIDATE_BOOL),
+    'ops_alert_recipients' => array_values(array_filter(array_map(
+        static fn (string $email): string => trim($email),
+        explode(',', (string) env('MARKETPLACE_OPS_ALERT_RECIPIENTS', 'peverelli.t@gmail.com,cpetrinipoli@hub.healthcare'))
+    ))),
 
     'payments' => [
         'platform_fee_percent' => (float) env('MARKETPLACE_PLATFORM_FEE_PERCENT', 10),
