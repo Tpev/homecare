@@ -16,6 +16,17 @@
         $postedAgo = \App\Support\CareRequestProgress::postedAgoLabel($requestItem);
         $firstResponse = \App\Support\CareRequestProgress::firstResponseLabel($requestItem);
         $firstHire = \App\Support\CareRequestProgress::firstHireLabel($requestItem);
+        $serviceAddress = trim(collect([
+            $requestItem->address_line1,
+            $requestItem->address_line2,
+            trim($requestItem->city.', '.$requestItem->state.' '.$requestItem->zip),
+        ])->filter()->implode(', '));
+        $serviceMapEmbedUrl = $serviceAddress !== ''
+            ? 'https://www.google.com/maps?q='.rawurlencode($serviceAddress).'&output=embed'
+            : null;
+        $serviceMapOpenUrl = $serviceAddress !== ''
+            ? 'https://www.google.com/maps/search/?api=1&query='.rawurlencode($serviceAddress)
+            : null;
     @endphp
 
     <x-card>
@@ -140,6 +151,22 @@
                             {{ $requestItem->address_line1 }}{{ $requestItem->address_line2 ? ', '.$requestItem->address_line2 : '' }},
                             {{ $requestItem->city }}, {{ $requestItem->state }} {{ $requestItem->zip }}
                         </p>
+                        @if ($serviceMapEmbedUrl)
+                            <div class="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                                <iframe
+                                    title="Service location map"
+                                    src="{{ $serviceMapEmbedUrl }}"
+                                    loading="lazy"
+                                    referrerpolicy="no-referrer-when-downgrade"
+                                    class="h-44 w-full"
+                                ></iframe>
+                            </div>
+                            @if ($serviceMapOpenUrl)
+                                <a href="{{ $serviceMapOpenUrl }}" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-xs font-medium text-cyan-700 underline underline-offset-2">
+                                    Open full map
+                                </a>
+                            @endif
+                        @endif
                     </div>
                 </div>
 
