@@ -121,11 +121,11 @@
 
             <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <p class="text-xs uppercase tracking-[0.14em] text-slate-500">User signups</p>
+                    <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Caregiver signups</p>
                     <p class="mt-1 text-2xl font-black text-slate-900">{{ number_format($trend['signup_total']) }}</p>
                 </div>
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Landing/page views tracked</p>
+                    <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Landing page views</p>
                     <p class="mt-1 text-2xl font-black text-slate-900">{{ number_format($trend['landing_views_total']) }}</p>
                 </div>
                 <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
@@ -137,7 +137,7 @@
             <div class="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-sm font-semibold text-slate-900">User signups</h3>
+                        <h3 class="text-sm font-semibold text-slate-900">Caregiver signups</h3>
                         <p class="text-xs text-slate-500">Peak {{ number_format($trend['max_signups']) }}</p>
                     </div>
                     <div class="mt-3 h-44">
@@ -148,7 +148,7 @@
                                         ? max(8, (int) round(($point['count'] / $trend['max_signups']) * 100))
                                         : 8;
                                 @endphp
-                                <div class="flex min-w-0 flex-1 flex-col items-center justify-end">
+                                <div class="flex h-full min-w-0 flex-1 flex-col items-center justify-end">
                                     <div
                                         class="w-full rounded-t-md bg-indigo-500/80 hover:bg-indigo-500"
                                         style="height: {{ $height }}%;"
@@ -168,7 +168,7 @@
 
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-sm font-semibold text-slate-900">Landing/page views tracked</h3>
+                        <h3 class="text-sm font-semibold text-slate-900">Landing page views</h3>
                         <p class="text-xs text-slate-500">Peak {{ number_format($trend['max_landing_views']) }}</p>
                     </div>
                     <div class="mt-3 h-44">
@@ -179,7 +179,7 @@
                                         ? max(8, (int) round(($point['count'] / $trend['max_landing_views']) * 100))
                                         : 8;
                                 @endphp
-                                <div class="flex min-w-0 flex-1 flex-col items-center justify-end">
+                                <div class="flex h-full min-w-0 flex-1 flex-col items-center justify-end">
                                     <div
                                         class="w-full rounded-t-md bg-cyan-500/80 hover:bg-cyan-500"
                                         style="height: {{ $height }}%;"

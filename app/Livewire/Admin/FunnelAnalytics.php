@@ -182,6 +182,7 @@ class FunnelAnalytics extends Component
         $landingViewBuckets = $this->initializeTrendBuckets($trendStart, $trendEnd);
 
         User::query()
+            ->where('role', 'caregiver')
             ->where('created_at', '>=', $trendStart)
             ->pluck('created_at')
             ->each(function ($createdAt) use (&$signupBuckets): void {
@@ -189,6 +190,7 @@ class FunnelAnalytics extends Component
             });
 
         PageViewEvent::query()
+            ->where('event_name', PageViewTracker::CAREGIVER_LANDING_EVENT)
             ->where('created_at', '>=', $trendStart)
             ->pluck('created_at')
             ->each(function ($createdAt) use (&$landingViewBuckets): void {

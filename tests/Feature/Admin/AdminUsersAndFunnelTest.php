@@ -174,8 +174,8 @@ class AdminUsersAndFunnelTest extends TestCase
         $response->assertSee('Applied for a Shift');
         $response->assertSee('Completed a Shift');
         $response->assertSee('Traffic & Signup Trends', false);
-        $response->assertSee('User signups');
-        $response->assertSee('Landing/page views tracked');
+        $response->assertSee('Caregiver signups');
+        $response->assertSee('Landing page views');
 
         $response->assertSee('Admin Users');
         $response->assertDontSee('My Requests');
