@@ -36,6 +36,7 @@ class AdminUsersAndFunnelTest extends TestCase
         $response->assertSee('User Management');
         $response->assertSee('Family Demo');
         $response->assertSee('Caregiver Demo');
+        $response->assertSee('Missing: Profile basics, Identity verification, Task comfort selection');
         $response->assertSee(route('admin.users.show', $family), false);
 
         $profileResponse = $this->actingAs($admin)->get(route('admin.users.show', $caregiver));

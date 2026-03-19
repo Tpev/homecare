@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
 use Livewire\Attributes\Layout;
@@ -91,7 +92,11 @@ class UsersIndex extends Component
 
     public function render(): View
     {
-        $query = User::query();
+        $query = User::query()
+            ->with([
+                'caregiverProfile' => fn ($profileQuery) => $profileQuery
+                    ->withCount(['skills', 'languages', 'availabilities']),
+            ]);
 
         if ($this->role !== 'all') {
             $query->where('role', $this->role);
@@ -109,9 +114,11 @@ class UsersIndex extends Component
         }
 
         $users = $query->latest('created_at')->paginate($this->perPage);
+        $reviewReadiness = $this->buildReviewReadinessMap($users->getCollection());
 
         return view('livewire.admin.users-index', [
             'users' => $users,
+            'reviewReadiness' => $reviewReadiness,
             'roleOptions' => [
                 ['label' => 'All user types', 'value' => 'all'],
                 ['label' => 'Caregivers', 'value' => 'caregiver'],
@@ -119,6 +126,69 @@ class UsersIndex extends Component
                 ['label' => 'Admins', 'value' => 'admin'],
             ],
         ]);
+    }
+
+    /**
+     * @param Collection<int, User> $users
+     * @return array<int, array{status: string, status_label: string, missing: array<int, string>}>
+     */
+    private function buildReviewReadinessMap(Collection $users): array
+    {
+        $map = [];
+
+        foreach ($users as $user) {
+            if ((string) $user->role !== 'caregiver') {
+                continue;
+            }
+
+            $profile = $user->caregiverProfile;
+            $missing = [];
+
+            if (! $profile) {
+                $missing = ['Profile basics', 'Identity verification', 'Task comfort selection'];
+            } else {
+                $basicsComplete = filled($profile->bio)
+                    && ! is_null($profile->years_experience)
+                    && filled($profile->service_area_zip)
+                    && ! is_null($profile->service_radius_miles)
+                    && (int) ($profile->languages_count ?? 0) > 0
+                    && (int) ($profile->availabilities_count ?? 0) > 0;
+                $identityComplete = $profile->hasIdentityVerifiedBadge();
+                $tasksComplete = (int) ($profile->skills_count ?? 0) > 0;
+
+                if (! $basicsComplete) {
+                    $missing[] = 'Profile basics';
+                }
+                if (! $identityComplete) {
+                    $missing[] = 'Identity verification';
+                }
+                if (! $tasksComplete) {
+                    $missing[] = 'Task comfort selection';
+                }
+            }
+
+            $status = 'missing';
+            $statusLabel = 'Missing required steps';
+
+            if ($profile && $profile->status === 'under_review') {
+                $status = 'under_review';
+                $statusLabel = 'Under review';
+            } elseif ($profile && $profile->status === 'active') {
+                $status = 'active';
+                $statusLabel = 'Active profile';
+            } elseif ($missing === []) {
+                $status = 'ready';
+                $statusLabel = 'Ready for review submission';
+            }
+
+            $map[(int) $user->id] = [
+                'status' => $status,
+                'status_label' => $statusLabel,
+                'missing' => $missing,
+            ];
+        }
+
+        return $map;
     }
 
     private function isAdminUser(User $user): bool

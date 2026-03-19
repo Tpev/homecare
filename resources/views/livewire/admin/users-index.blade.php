@@ -47,6 +47,7 @@
                     <tr class="text-left text-xs uppercase tracking-wide text-slate-500">
                         <th class="px-4 py-3">User</th>
                         <th class="px-4 py-3">Type</th>
+                        <th class="px-4 py-3">Review readiness</th>
                         <th class="px-4 py-3">Location</th>
                         <th class="px-4 py-3">Registered</th>
                         <th class="px-4 py-3 text-right">Actions</th>
@@ -64,6 +65,33 @@
                             </td>
                             <td class="px-4 py-3">
                                 <x-badge :text="strtoupper((string) ($user->role ?: 'user'))" color="blue" />
+                            </td>
+                            <td class="px-4 py-3 text-slate-700">
+                                @if((string) $user->role === 'caregiver')
+                                    @php
+                                        $readiness = $reviewReadiness[$user->id] ?? null;
+                                        $statusClasses = match ($readiness['status'] ?? 'missing') {
+                                            'active' => 'text-emerald-700',
+                                            'under_review' => 'text-cyan-700',
+                                            'ready' => 'text-indigo-700',
+                                            default => 'text-amber-700',
+                                        };
+                                    @endphp
+                                    @if($readiness)
+                                        <p class="text-xs font-semibold uppercase tracking-[0.12em] {{ $statusClasses }}">
+                                            {{ $readiness['status_label'] }}
+                                        </p>
+                                        @if(($readiness['missing'] ?? []) !== [])
+                                            <p class="mt-1 text-xs text-rose-700">
+                                                Missing: {{ implode(', ', $readiness['missing']) }}
+                                            </p>
+                                        @endif
+                                    @else
+                                        <p class="text-xs text-slate-500">No profile data</p>
+                                    @endif
+                                @else
+                                    <span class="text-xs text-slate-500">—</span>
+                                @endif
                             </td>
                             <td class="px-4 py-3 text-slate-700">
                                 {{ $user->city ?: '—' }}{{ $user->state ? ', '.$user->state : '' }}
@@ -104,7 +132,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-6 text-center text-slate-500">No users found for the current filters.</td>
+                            <td colspan="6" class="px-4 py-6 text-center text-slate-500">No users found for the current filters.</td>
                         </tr>
                     @endforelse
                 </tbody>
