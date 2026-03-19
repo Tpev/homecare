@@ -6,16 +6,28 @@
                     <h1 class="text-xl font-semibold">Caregiver Lifecycle Funnel</h1>
                     <p class="mt-1 text-sm text-slate-600">Cohort based on unique caregiver landing visitors since {{ $start->format('M d, Y') }}.</p>
                 </div>
-                <x-select.styled
-                    wire:model.live="days"
-                    :options="[
-                        ['label' => 'Last 7 days', 'value' => 7],
-                        ['label' => 'Last 14 days', 'value' => 14],
-                        ['label' => 'Last 30 days', 'value' => 30],
-                        ['label' => 'Last 60 days', 'value' => 60],
-                        ['label' => 'Last 90 days', 'value' => 90],
-                    ]"
-                />
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <x-select.styled
+                        wire:model.live="days"
+                        label="Range"
+                        :options="[
+                            ['label' => 'Last 7 days', 'value' => 7],
+                            ['label' => 'Last 14 days', 'value' => 14],
+                            ['label' => 'Last 30 days', 'value' => 30],
+                            ['label' => 'Last 60 days', 'value' => 60],
+                            ['label' => 'Last 90 days', 'value' => 90],
+                        ]"
+                    />
+                    <x-select.styled
+                        wire:model.live="trendGranularity"
+                        label="Histogram grouping"
+                        :options="[
+                            ['label' => 'Daily', 'value' => 'day'],
+                            ['label' => 'Weekly', 'value' => 'week'],
+                            ['label' => 'Monthly', 'value' => 'month'],
+                        ]"
+                    />
+                </div>
             </div>
         </x-slot:header>
 
@@ -94,6 +106,89 @@
                 @endforeach
                 </tbody>
             </table>
+        </div>
+
+        <div class="mt-6 rounded-2xl border border-slate-200 bg-white p-4 md:p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-base font-semibold text-slate-900">Traffic & Signup Trends</h2>
+                    <p class="text-xs text-slate-500">Histogram grouping: {{ $trend['bucket_label'] }} buckets.</p>
+                </div>
+                <div class="text-xs text-slate-500">Same date range as funnel filters</div>
+            </div>
+
+            <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Caregiver signups</p>
+                    <p class="mt-1 text-2xl font-black text-slate-900">{{ number_format($trend['signup_total']) }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Landing page views</p>
+                    <p class="mt-1 text-2xl font-black text-slate-900">{{ number_format($trend['landing_views_total']) }}</p>
+                </div>
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                    <p class="text-xs uppercase tracking-[0.14em] text-emerald-700">Signup / view ratio</p>
+                    <p class="mt-1 text-2xl font-black text-emerald-900">{{ number_format($trend['signup_from_views_rate'], 1) }}%</p>
+                </div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-slate-900">Caregiver signups</h3>
+                        <p class="text-xs text-slate-500">Peak {{ number_format($trend['max_signups']) }}</p>
+                    </div>
+                    <div class="mt-3 h-44">
+                        <div class="flex h-full items-end gap-1">
+                            @foreach($trend['signups'] as $point)
+                                @php
+                                    $height = $trend['max_signups'] > 0
+                                        ? max(8, (int) round(($point['count'] / $trend['max_signups']) * 100))
+                                        : 8;
+                                @endphp
+                                <div class="flex min-w-0 flex-1 flex-col items-center justify-end">
+                                    <div
+                                        class="w-full rounded-t-md bg-indigo-500/80 hover:bg-indigo-500"
+                                        style="height: {{ $height }}%;"
+                                        title="{{ $point['label_full'] }}: {{ number_format($point['count']) }} signups"
+                                    ></div>
+                                    <p class="mt-1 h-4 text-[10px] leading-4 text-slate-500">
+                                        {{ $point['show_label'] ? $point['label_short'] : '' }}
+                                    </p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-slate-900">Landing page views</h3>
+                        <p class="text-xs text-slate-500">Peak {{ number_format($trend['max_landing_views']) }}</p>
+                    </div>
+                    <div class="mt-3 h-44">
+                        <div class="flex h-full items-end gap-1">
+                            @foreach($trend['landing_views'] as $point)
+                                @php
+                                    $height = $trend['max_landing_views'] > 0
+                                        ? max(8, (int) round(($point['count'] / $trend['max_landing_views']) * 100))
+                                        : 8;
+                                @endphp
+                                <div class="flex min-w-0 flex-1 flex-col items-center justify-end">
+                                    <div
+                                        class="w-full rounded-t-md bg-cyan-500/80 hover:bg-cyan-500"
+                                        style="height: {{ $height }}%;"
+                                        title="{{ $point['label_full'] }}: {{ number_format($point['count']) }} views"
+                                    ></div>
+                                    <p class="mt-1 h-4 text-[10px] leading-4 text-slate-500">
+                                        {{ $point['show_label'] ? $point['label_short'] : '' }}
+                                    </p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         @if(($summary['landing_visitors'] ?? 0) === 0)

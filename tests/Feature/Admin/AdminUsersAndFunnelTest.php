@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin;
 
 use App\Livewire\Admin\UsersIndex;
+use App\Livewire\Admin\FunnelAnalytics as FunnelAnalyticsComponent;
 use App\Models\CareBooking;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
@@ -172,6 +173,9 @@ class AdminUsersAndFunnelTest extends TestCase
         $response->assertSee('Fully Validated Profile');
         $response->assertSee('Applied for a Shift');
         $response->assertSee('Completed a Shift');
+        $response->assertSee('Traffic & Signup Trends', false);
+        $response->assertSee('Caregiver signups');
+        $response->assertSee('Landing page views');
 
         $response->assertSee('Admin Users');
         $response->assertDontSee('My Requests');
@@ -179,6 +183,36 @@ class AdminUsersAndFunnelTest extends TestCase
         $response->assertDontSee('Find Caregivers');
 
         $this->assertNotNull($activeProfile->fresh());
+    }
+
+    public function test_funnel_histogram_can_toggle_granularity(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'test@test.com',
+            'role' => 'admin',
+        ]);
+
+        PageViewEvent::query()->create([
+            'event_name' => PageViewTracker::CAREGIVER_LANDING_EVENT,
+            'anon_id' => (string) \Illuminate\Support\Str::uuid(),
+            'url' => 'https://homecare.test/caregivers',
+            'created_at' => now()->subDays(10),
+            'updated_at' => now()->subDays(10),
+        ]);
+
+        User::factory()->create([
+            'role' => 'caregiver',
+            'created_at' => now()->subDays(9),
+            'updated_at' => now()->subDays(9),
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(FunnelAnalyticsComponent::class)
+            ->set('days', 90)
+            ->set('trendGranularity', 'week')
+            ->assertSee('Histogram grouping: weekly buckets.')
+            ->set('trendGranularity', 'month')
+            ->assertSee('Histogram grouping: monthly buckets.');
     }
 
     private function createFilledProfile(

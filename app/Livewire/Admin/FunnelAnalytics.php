@@ -16,10 +16,23 @@ use Livewire\Component;
 class FunnelAnalytics extends Component
 {
     public int $days = 30;
+    public string $trendGranularity = 'day';
+
+    protected array $allowedTrendGranularities = ['day', 'week', 'month'];
+
+    protected $queryString = [
+        'days' => ['except' => 30],
+        'trendGranularity' => ['except' => 'day'],
+    ];
 
     public function getStartProperty(): Carbon
     {
         return now()->subDays($this->days)->startOfDay();
+    }
+
+    public function updatedTrendGranularity(): void
+    {
+        $this->trendGranularity = $this->normalizedTrendGranularity();
     }
 
     public function render()
@@ -163,10 +176,161 @@ class FunnelAnalytics extends Component
             'completion_rate' => $steps[6]['overall_conversion_percent'] ?? 0.0,
         ];
 
+        $trendStart = $this->start;
+        $trendEnd = now();
+        $signupBuckets = $this->initializeTrendBuckets($trendStart, $trendEnd);
+        $landingViewBuckets = $this->initializeTrendBuckets($trendStart, $trendEnd);
+
+        User::query()
+            ->where('role', 'caregiver')
+            ->where('created_at', '>=', $trendStart)
+            ->pluck('created_at')
+            ->each(function ($createdAt) use (&$signupBuckets): void {
+                $this->incrementTrendBucket($signupBuckets, Carbon::parse($createdAt));
+            });
+
+        PageViewEvent::query()
+            ->where('event_name', PageViewTracker::CAREGIVER_LANDING_EVENT)
+            ->where('created_at', '>=', $trendStart)
+            ->pluck('created_at')
+            ->each(function ($createdAt) use (&$landingViewBuckets): void {
+                $this->incrementTrendBucket($landingViewBuckets, Carbon::parse($createdAt));
+            });
+
+        $signupSeries = $this->buildTrendSeries($signupBuckets);
+        $landingViewSeries = $this->buildTrendSeries($landingViewBuckets);
+        $signupTotal = array_sum(array_map(fn (array $point): int => (int) $point['count'], $signupSeries));
+        $landingViewsTotal = array_sum(array_map(fn (array $point): int => (int) $point['count'], $landingViewSeries));
+        $signupFromViewsRate = $landingViewsTotal > 0
+            ? round(($signupTotal / $landingViewsTotal) * 100, 1)
+            : 0.0;
+        $maxSignups = max(1, ...array_map(fn (array $point): int => (int) $point['count'], $signupSeries));
+        $maxLandingViews = max(1, ...array_map(fn (array $point): int => (int) $point['count'], $landingViewSeries));
+
+        $trend = [
+            'granularity' => $this->normalizedTrendGranularity(),
+            'bucket_label' => match ($this->normalizedTrendGranularity()) {
+                'week' => 'weekly',
+                'month' => 'monthly',
+                default => 'daily',
+            },
+            'signups' => $signupSeries,
+            'landing_views' => $landingViewSeries,
+            'max_signups' => $maxSignups,
+            'max_landing_views' => $maxLandingViews,
+            'signup_total' => $signupTotal,
+            'landing_views_total' => $landingViewsTotal,
+            'signup_from_views_rate' => $signupFromViewsRate,
+        ];
+
         return view('livewire.admin.funnel-analytics', [
             'start' => $this->start,
             'steps' => $steps,
             'summary' => $summary,
+            'trend' => $trend,
         ]);
+    }
+
+    private function normalizedTrendGranularity(): string
+    {
+        return in_array($this->trendGranularity, $this->allowedTrendGranularities, true)
+            ? $this->trendGranularity
+            : 'day';
+    }
+
+    /**
+     * @return array<string, array{label_short: string, label_full: string, count: int}>
+     */
+    private function initializeTrendBuckets(Carbon $start, Carbon $end): array
+    {
+        $buckets = [];
+        $granularity = $this->normalizedTrendGranularity();
+
+        $cursor = match ($granularity) {
+            'week' => $start->copy()->startOfWeek(),
+            'month' => $start->copy()->startOfMonth(),
+            default => $start->copy()->startOfDay(),
+        };
+
+        $last = match ($granularity) {
+            'week' => $end->copy()->startOfWeek(),
+            'month' => $end->copy()->startOfMonth(),
+            default => $end->copy()->startOfDay(),
+        };
+
+        while ($cursor->lte($last)) {
+            $bucketStart = $cursor->copy();
+            $key = $this->trendBucketKey($bucketStart);
+            $buckets[$key] = [
+                'label_short' => $this->trendBucketShortLabel($bucketStart),
+                'label_full' => $this->trendBucketFullLabel($bucketStart),
+                'count' => 0,
+            ];
+
+            $cursor = match ($granularity) {
+                'week' => $cursor->addWeek(),
+                'month' => $cursor->addMonth(),
+                default => $cursor->addDay(),
+            };
+        }
+
+        return $buckets;
+    }
+
+    /**
+     * @param array<string, array{label_short: string, label_full: string, count: int}> $buckets
+     */
+    private function incrementTrendBucket(array &$buckets, Carbon $at): void
+    {
+        $key = $this->trendBucketKey($at);
+
+        if (isset($buckets[$key])) {
+            $buckets[$key]['count']++;
+        }
+    }
+
+    private function trendBucketKey(Carbon $date): string
+    {
+        return match ($this->normalizedTrendGranularity()) {
+            'week' => $date->copy()->startOfWeek()->toDateString(),
+            'month' => $date->copy()->startOfMonth()->format('Y-m'),
+            default => $date->copy()->startOfDay()->toDateString(),
+        };
+    }
+
+    private function trendBucketShortLabel(Carbon $bucketStart): string
+    {
+        return match ($this->normalizedTrendGranularity()) {
+            'week' => $bucketStart->format('M d'),
+            'month' => $bucketStart->format('M'),
+            default => $bucketStart->format('M d'),
+        };
+    }
+
+    private function trendBucketFullLabel(Carbon $bucketStart): string
+    {
+        return match ($this->normalizedTrendGranularity()) {
+            'week' => $bucketStart->format('M d, Y').' - '.$bucketStart->copy()->endOfWeek()->format('M d, Y'),
+            'month' => $bucketStart->format('F Y'),
+            default => $bucketStart->format('M d, Y'),
+        };
+    }
+
+    /**
+     * @param array<string, array{label_short: string, label_full: string, count: int}> $buckets
+     * @return array<int, array{label_short: string, label_full: string, count: int, show_label: bool}>
+     */
+    private function buildTrendSeries(array $buckets): array
+    {
+        $series = array_values($buckets);
+        $total = count($series);
+        $labelStep = max(1, (int) ceil($total / 8));
+
+        foreach ($series as $index => &$bucket) {
+            $bucket['show_label'] = $index % $labelStep === 0 || $index === $total - 1;
+        }
+        unset($bucket);
+
+        return $series;
     }
 }
