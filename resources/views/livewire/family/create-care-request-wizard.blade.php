@@ -23,6 +23,11 @@
                     <div class="h-2 rounded-full bg-cyan-300 transition-all duration-300" style="width: {{ $this->progressPercent }}%"></div>
                 </div>
                 <p class="mt-2 text-xs text-slate-300">{{ $this->progressPercent }}% complete</p>
+                <div class="mt-2 flex items-center gap-2">
+                    @for ($index = 1; $index <= $totalSteps; $index++)
+                        <span class="h-1.5 flex-1 rounded-full {{ $step >= $index ? 'bg-cyan-300' : 'bg-white/25' }}"></span>
+                    @endfor
+                </div>
             </div>
         </section>
 
@@ -47,17 +52,42 @@
 
         <x-card>
             <x-slot:header>
-                <div class="grid grid-cols-2 gap-2 lg:grid-cols-4">
-                    @foreach ([1 => 'Care need', 2 => 'Schedule + location', 3 => 'Recipient + contacts', 4 => 'Review + publish'] as $index => $label)
-                        <div class="rounded-lg border px-3 py-2 text-xs sm:text-sm {{ $step >= $index ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-slate-50 text-slate-500' }}">
-                            {{ $label }}
-                        </div>
-                    @endforeach
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Guided flow</p>
+                        <p class="text-xs font-semibold text-slate-600">Step {{ $step }} / {{ $totalSteps }}</p>
+                    </div>
+                    <div class="flex snap-x gap-2 overflow-x-auto pb-1">
+                        @foreach ([1 => 'Care need', 2 => 'Schedule + location', 3 => 'Recipient + contacts', 4 => 'Review + publish'] as $index => $label)
+                            <div class="min-w-[160px] shrink-0 snap-start rounded-lg border px-3 py-2 text-xs sm:text-sm {{ $step >= $index ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-slate-50 text-slate-500' }}">
+                                {{ $label }}
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </x-slot:header>
 
+            <div class="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                    <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Type</p>
+                    <p class="mt-1 text-sm font-semibold text-slate-900">{{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring' : 'One-time' }}</p>
+                </div>
+                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                    <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Services</p>
+                    <p class="mt-1 text-sm font-semibold text-slate-900">{{ count($selectedTasks) }}</p>
+                </div>
+                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                    <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Location</p>
+                    <p class="mt-1 text-sm font-semibold text-slate-900">{{ trim($city) !== '' && trim($state) !== '' ? $city.', '.$state : 'Pending' }}</p>
+                </div>
+                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                    <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Target reply</p>
+                    <p class="mt-1 text-sm font-semibold text-slate-900">{{ $preferred_response_hours }}h</p>
+                </div>
+            </div>
+
             @if ($step === 1)
-                <div class="space-y-5">
+                <div class="hc-wizard-step space-y-5">
                     <div class="rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900">
                         Start with your care need. Keep it simple. We will handle schedule and location in the next step.
                     </div>
@@ -95,7 +125,7 @@
                     </details>
                 </div>
             @elseif ($step === 2)
-                <div class="space-y-5">
+                <div class="hc-wizard-step space-y-5">
                     <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
                         {{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring request selected. We only ask recurring schedule fields.' : 'One-time request selected. We only ask one start/end window.' }}
                     </div>
@@ -208,7 +238,7 @@
                     </div>
                 </div>
             @elseif ($step === 3)
-                <div class="space-y-5">
+                <div class="hc-wizard-step space-y-5">
                     <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
                         Recipient details are optional except when a third-party contact is booking on their behalf.
                     </div>
@@ -271,7 +301,7 @@
                     </div>
                 </div>
             @else
-                <div class="space-y-4">
+                <div class="hc-wizard-step space-y-4">
                     @php
                         $taskLookup = collect($taskOptions)->keyBy(fn ($task) => (int) $task['id']);
                         $selectedTaskNames = collect($selectedTasks)
@@ -349,13 +379,19 @@
             @endif
 
             <x-slot:footer>
-                <div class="flex items-center justify-between">
-                    <x-button color="slate" light wire:click="previousStep" :disabled="$step === 1">Back</x-button>
+                <div class="sticky bottom-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-lg backdrop-blur-sm sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
+                    <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <x-button color="slate" light wire:click="previousStep" :disabled="$step === 1" class="w-full sm:w-auto" wire:loading.attr="disabled" wire:target="previousStep,nextStep,publish">Back</x-button>
                     @if ($step < $totalSteps)
-                        <x-button color="blue" wire:click="nextStep">Continue</x-button>
+                        <x-button color="blue" wire:click="nextStep" class="w-full sm:w-auto" wire:loading.attr="disabled" wire:target="nextStep,publish,previousStep">
+                            Continue
+                        </x-button>
                     @else
-                        <x-button color="green" wire:click="publish">Publish request</x-button>
+                        <x-button color="green" wire:click="publish" class="w-full sm:w-auto" wire:loading.attr="disabled" wire:target="publish,nextStep,previousStep">
+                            Publish request
+                        </x-button>
                     @endif
+                    </div>
                 </div>
             </x-slot:footer>
         </x-card>
