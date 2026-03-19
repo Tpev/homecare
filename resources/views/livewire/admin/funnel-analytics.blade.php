@@ -16,6 +16,8 @@
                             ['label' => 'Last 30 days', 'value' => 30],
                             ['label' => 'Last 60 days', 'value' => 60],
                             ['label' => 'Last 90 days', 'value' => 90],
+                            ['label' => 'Last 180 days', 'value' => 180],
+                            ['label' => 'Last 365 days', 'value' => 365],
                         ]"
                     />
                     <x-select.styled
@@ -119,11 +121,11 @@
 
             <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Caregiver signups</p>
+                    <p class="text-xs uppercase tracking-[0.14em] text-slate-500">User signups</p>
                     <p class="mt-1 text-2xl font-black text-slate-900">{{ number_format($trend['signup_total']) }}</p>
                 </div>
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Landing page views</p>
+                    <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Landing/page views tracked</p>
                     <p class="mt-1 text-2xl font-black text-slate-900">{{ number_format($trend['landing_views_total']) }}</p>
                 </div>
                 <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
@@ -135,7 +137,7 @@
             <div class="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-sm font-semibold text-slate-900">Caregiver signups</h3>
+                        <h3 class="text-sm font-semibold text-slate-900">User signups</h3>
                         <p class="text-xs text-slate-500">Peak {{ number_format($trend['max_signups']) }}</p>
                     </div>
                     <div class="mt-3 h-44">
@@ -155,6 +157,9 @@
                                     <p class="mt-1 h-4 text-[10px] leading-4 text-slate-500">
                                         {{ $point['show_label'] ? $point['label_short'] : '' }}
                                     </p>
+                                    @if($point['count'] > 0 && $point['show_label'])
+                                        <p class="h-3 text-[9px] leading-3 font-semibold text-slate-700">{{ $point['count'] }}</p>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
@@ -163,7 +168,7 @@
 
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-sm font-semibold text-slate-900">Landing page views</h3>
+                        <h3 class="text-sm font-semibold text-slate-900">Landing/page views tracked</h3>
                         <p class="text-xs text-slate-500">Peak {{ number_format($trend['max_landing_views']) }}</p>
                     </div>
                     <div class="mt-3 h-44">
@@ -183,12 +188,21 @@
                                     <p class="mt-1 h-4 text-[10px] leading-4 text-slate-500">
                                         {{ $point['show_label'] ? $point['label_short'] : '' }}
                                     </p>
+                                    @if($point['count'] > 0 && $point['show_label'])
+                                        <p class="h-3 text-[9px] leading-3 font-semibold text-slate-700">{{ $point['count'] }}</p>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
                     </div>
                 </div>
             </div>
+
+            @if(($trend['signup_total'] ?? 0) === 0 && ($trend['landing_views_total'] ?? 0) === 0)
+                <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    No signup or page-view data found in this range. Try switching to Last 365 days.
+                </div>
+            @endif
         </div>
 
         @if(($summary['landing_visitors'] ?? 0) === 0)
