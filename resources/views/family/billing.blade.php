@@ -48,7 +48,7 @@
 
                 <form method="POST" action="{{ route('family.billing.checkout') }}">
                     @csrf
-                    <x-button color="blue">
+                    <x-button color="blue" type="submit">
                         {{ $billing['ready'] ? 'Update card' : 'Add card with Stripe' }}
                     </x-button>
                 </form>
@@ -67,4 +67,3 @@
         </x-card>
     </div>
 </x-app-layout>
-

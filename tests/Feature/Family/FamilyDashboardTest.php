@@ -21,8 +21,11 @@ class FamilyDashboardTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Family Dashboard');
-        $response->assertSee('Post with AI Copilot');
+        $response->assertSee('Create request');
+        $response->assertSee('Start with AI Copilot');
+        $response->assertSee('Use manual form');
         $response->assertSee('Priority request board');
+        $response->assertSee('Operations signal');
     }
 
     public function test_caregiver_user_sees_caregiver_dashboard_sections(): void

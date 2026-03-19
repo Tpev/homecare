@@ -13,19 +13,27 @@
                 })->values();
                 $activeShifts = $familyData['active_shifts'] ?? collect();
                 $billingReady = (bool) ($familyData['billing_ready'] ?? false);
+                $urgentOpenRequests = (int) ($familyData['urgent_open_requests'] ?? 0);
             @endphp
 
-            <section class="hc-hero">
-                <p class="text-xs uppercase tracking-[0.2em] text-blue-100">Family Dashboard</p>
-                <div class="mt-3 grid grid-cols-1 gap-5 lg:grid-cols-5">
+            <section class="relative overflow-hidden rounded-3xl border border-slate-900/80 bg-slate-950 p-5 text-white shadow-xl">
+                <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-cyan-500/20 blur-2xl"></div>
+                <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-emerald-500/20 blur-2xl"></div>
+
+                <div class="relative mt-3 grid grid-cols-1 gap-5 lg:grid-cols-5">
                     <div class="lg:col-span-3">
-                        <h1 class="text-3xl md:text-4xl font-display font-semibold leading-tight">Find reliable care quickly.</h1>
-                        <p class="mt-3 text-blue-100 max-w-2xl">
-                            Start with AI, review candidates in one place, and move to hire and chat without losing context.
+                        <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Family Dashboard</p>
+                        <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Get trusted caregiver support fast.</h1>
+                        <p class="mt-2 text-sm text-slate-300 max-w-2xl">
+                            Create one request, choose AI Copilot or manual steps, then review, hire, and chat in one flow.
                         </p>
-                        <div class="mt-5 flex flex-wrap gap-2">
-                            <a href="{{ route('family.requests.create_ai') }}" wire:navigate><x-button color="white">Post with AI Copilot</x-button></a>
-                            <a href="{{ route('family.requests.create') }}" wire:navigate><x-button color="white" light>Use manual form</x-button></a>
+                        <div class="mt-4 flex flex-wrap items-center gap-3">
+                            <a href="{{ route('family.requests.create_ai') }}" wire:navigate><x-button color="white">Create request</x-button></a>
+                            <p class="text-xs text-slate-300">Step 1: choose your start mode.</p>
+                        </div>
+                        <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                            <a href="{{ route('family.requests.create_ai') }}" wire:navigate class="font-medium text-cyan-300 underline underline-offset-2 hover:text-cyan-200">Start with AI Copilot</a>
+                            <a href="{{ route('family.requests.create') }}" wire:navigate class="font-medium text-cyan-300 underline underline-offset-2 hover:text-cyan-200">Use manual form</a>
                         </div>
                         @unless($billingReady)
                             <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
@@ -35,21 +43,27 @@
                         @endunless
                     </div>
                     <div class="lg:col-span-2 grid grid-cols-2 gap-3">
-                        <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
-                            <p class="text-[11px] uppercase tracking-[0.14em] text-blue-100">Ready to review</p>
-                            <p class="mt-1 text-3xl font-semibold">{{ $familyData['stats']['ready_to_review'] }}</p>
+                        <div class="col-span-2 rounded-xl border {{ $urgentOpenRequests > 0 ? 'border-amber-300 bg-amber-50 text-amber-900' : 'border-white/25 bg-white/10 text-white' }} p-3 backdrop-blur-sm">
+                            <p class="text-[11px] uppercase tracking-[0.14em] {{ $urgentOpenRequests > 0 ? 'text-amber-700' : 'text-slate-300' }}">Priority now</p>
+                            <p class="mt-1 text-sm font-semibold">
+                                {{ $urgentOpenRequests > 0 ? $urgentOpenRequests.' request(s) need follow-up now.' : 'No urgent request follow-up right now.' }}
+                            </p>
                         </div>
                         <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
-                            <p class="text-[11px] uppercase tracking-[0.14em] text-blue-100">Waiting applicants</p>
-                            <p class="mt-1 text-3xl font-semibold">{{ $familyData['stats']['waiting_for_applicants'] }}</p>
+                            <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Ready to review</p>
+                            <p class="mt-1 text-2xl font-semibold">{{ $familyData['stats']['ready_to_review'] }}</p>
                         </div>
                         <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
-                            <p class="text-[11px] uppercase tracking-[0.14em] text-blue-100">Active shifts</p>
-                            <p class="mt-1 text-3xl font-semibold">{{ $familyData['stats']['active_shifts'] }}</p>
+                            <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Waiting applicants</p>
+                            <p class="mt-1 text-2xl font-semibold">{{ $familyData['stats']['waiting_for_applicants'] }}</p>
                         </div>
                         <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
-                            <p class="text-[11px] uppercase tracking-[0.14em] text-blue-100">Unread messages</p>
-                            <p class="mt-1 text-3xl font-semibold">{{ $familyData['stats']['unread_messages'] }}</p>
+                            <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Active shifts</p>
+                            <p class="mt-1 text-2xl font-semibold">{{ $familyData['stats']['active_shifts'] }}</p>
+                        </div>
+                        <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
+                            <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Unread messages</p>
+                            <p class="mt-1 text-2xl font-semibold">{{ $familyData['stats']['unread_messages'] }}</p>
                         </div>
                     </div>
                 </div>
@@ -172,47 +186,58 @@
                     <x-card>
                         <x-slot:header><h2 class="font-display font-semibold">Fast actions</h2></x-slot:header>
                         <div class="space-y-3">
-                            <a href="{{ route('family.requests.create_ai') }}" wire:navigate class="block rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-100 transition">
-                                <p class="font-medium text-slate-900">Create request with AI</p>
-                                <p class="text-xs text-slate-500 mt-1">Fastest way to publish a complete request.</p>
-                            </a>
-                            <a href="{{ route('caregivers.search') }}" wire:navigate class="block rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-100 transition">
-                                <p class="font-medium text-slate-900">Invite caregivers directly</p>
-                                <p class="text-xs text-slate-500 mt-1">Don’t wait for applications when request is urgent.</p>
-                            </a>
-                            <a href="{{ route('messages.index') }}" wire:navigate class="block rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-100 transition">
-                                <p class="font-medium text-slate-900">Respond in chat now</p>
-                                <p class="text-xs text-slate-500 mt-1">Faster replies increase hire conversion.</p>
-                            </a>
-                            <a href="{{ route('family.billing.show') }}" wire:navigate class="block rounded-lg border {{ $billingReady ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50' }} px-4 py-3 hover:bg-slate-100 transition">
-                                <p class="font-medium text-slate-900">{{ $billingReady ? 'Billing is ready' : 'Complete billing setup' }}</p>
-                                <p class="text-xs text-slate-600 mt-1">{{ $billingReady ? 'Card on file for fast hiring.' : 'Add your card once before hiring.' }}</p>
-                            </a>
+                            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                                <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Primary action</p>
+                                <p class="mt-2 text-sm text-slate-600">Create a new request and pick your preferred intake path.</p>
+                                <div class="mt-3">
+                                    <a href="{{ route('family.requests.create_ai') }}" wire:navigate><x-button color="blue">Create request</x-button></a>
+                                </div>
+                                <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                                    <a href="{{ route('family.requests.create_ai') }}" wire:navigate class="font-medium text-cyan-700 underline underline-offset-2">AI Copilot</a>
+                                    <a href="{{ route('family.requests.create') }}" wire:navigate class="font-medium text-cyan-700 underline underline-offset-2">Manual form</a>
+                                </div>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <a href="{{ route('caregivers.search') }}" wire:navigate class="block font-medium text-cyan-700 underline underline-offset-2">Invite caregivers directly</a>
+                                <a href="{{ route('messages.index') }}" wire:navigate class="block font-medium text-cyan-700 underline underline-offset-2">Respond in chat now</a>
+                                <a href="{{ route('family.billing.show') }}" wire:navigate class="block font-medium {{ $billingReady ? 'text-emerald-700' : 'text-amber-700' }} underline underline-offset-2">
+                                    {{ $billingReady ? 'Billing is ready' : 'Complete billing setup' }}
+                                </a>
+                            </div>
                         </div>
                     </x-card>
 
                     <x-card>
-                        <x-slot:header><h2 class="font-display font-semibold">Operations signal</h2></x-slot:header>
-                        <div class="space-y-3 text-sm">
-                            <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                                <p class="font-medium text-slate-900">Open requests</p>
-                                <p class="text-slate-600">{{ $familyData['stats']['open_requests'] }} currently running.</p>
-                            </div>
-                            <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                                <p class="font-medium text-slate-900">Ready to review</p>
-                                <p class="text-slate-600">{{ $familyData['stats']['ready_to_review'] }} request(s) need a shortlist decision.</p>
-                            </div>
-                            <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                                <p class="font-medium text-slate-900">Waiting applicants</p>
-                                <p class="text-slate-600">{{ $familyData['stats']['waiting_for_applicants'] }} request(s) may need proactive invite.</p>
-                            </div>
-                            @if (($familyData['urgent_open_requests'] ?? 0) > 0)
-                                <div class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-amber-900">
-                                    <p class="font-medium">Urgent follow-up</p>
-                                    <p class="text-xs mt-1">{{ $familyData['urgent_open_requests'] }} request(s) have no applicants after 6+ hours.</p>
+                        <details class="group" {{ $urgentOpenRequests > 0 ? 'open' : '' }}>
+                            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                                <div>
+                                    <h2 class="font-display font-semibold">Operations signal</h2>
+                                    <p class="text-xs text-slate-500 mt-1">Compact view of request health and follow-up risk.</p>
                                 </div>
-                            @endif
-                        </div>
+                                <span class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 group-open:hidden">Expand</span>
+                                <span class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 hidden group-open:inline">Collapse</span>
+                            </summary>
+                            <div class="mt-3 space-y-3 border-t border-slate-200 pt-3 text-sm">
+                                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                                    <p class="font-medium text-slate-900">Open requests</p>
+                                    <p class="text-slate-600">{{ $familyData['stats']['open_requests'] }} currently running.</p>
+                                </div>
+                                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                                    <p class="font-medium text-slate-900">Ready to review</p>
+                                    <p class="text-slate-600">{{ $familyData['stats']['ready_to_review'] }} request(s) need a shortlist decision.</p>
+                                </div>
+                                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                                    <p class="font-medium text-slate-900">Waiting applicants</p>
+                                    <p class="text-slate-600">{{ $familyData['stats']['waiting_for_applicants'] }} request(s) may need proactive invite.</p>
+                                </div>
+                                @if ($urgentOpenRequests > 0)
+                                    <div class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-amber-900">
+                                        <p class="font-medium">Urgent follow-up</p>
+                                        <p class="text-xs mt-1">{{ $urgentOpenRequests }} request(s) have no applicants after 6+ hours.</p>
+                                    </div>
+                                @endif
+                            </div>
+                        </details>
                     </x-card>
                 </div>
             </section>

@@ -111,6 +111,17 @@ class StripeMarketplacePaymentTest extends TestCase
         $this->assertNotNull($family->fresh()->stripe_customer_id);
     }
 
+    public function test_family_billing_page_renders_checkout_button_as_submit(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+
+        $this->actingAs($family)
+            ->get(route('family.billing.show'))
+            ->assertOk()
+            ->assertSee('Add card with Stripe')
+            ->assertSee('type="submit"', false);
+    }
+
     public function test_caregiver_connect_onboarding_bypass_sets_connect_ready(): void
     {
         config()->set('services.stripe.bypass', true);
