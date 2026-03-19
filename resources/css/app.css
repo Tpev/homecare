@@ -82,6 +82,28 @@
     .hc-wizard-step {
         animation: hc-wizard-enter 220ms ease-out;
     }
+
+    .hc-map-count-badge {
+        background: transparent;
+        border: 0;
+    }
+
+    .hc-map-count-badge span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 30px;
+        height: 18px;
+        border-radius: 999px;
+        padding: 0 6px;
+        background: rgba(15, 23, 42, 0.9);
+        color: #f8fafc;
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 1;
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        box-shadow: 0 1px 6px rgba(2, 6, 23, 0.24);
+    }
 }
 
 @keyframes hc-wizard-enter {

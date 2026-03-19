@@ -65,6 +65,7 @@ class AdminUsersAndFunnelTest extends TestCase
         $this->actingAs($user)->get('/admin/users')->assertForbidden();
         $this->actingAs($user)->get(route('admin.users.show', $anotherUser))->assertForbidden();
         $this->actingAs($user)->get('/admin/analytics/funnel')->assertForbidden();
+        $this->actingAs($user)->get('/admin/analytics/caregiver-map')->assertForbidden();
     }
 
     public function test_admin_can_login_as_non_admin_user_from_users_table(): void
@@ -216,6 +217,38 @@ class AdminUsersAndFunnelTest extends TestCase
             ->assertSee('Histogram grouping: weekly buckets.')
             ->set('trendGranularity', 'month')
             ->assertSee('Histogram grouping: monthly buckets.');
+    }
+
+    public function test_admin_can_view_caregiver_coverage_map_page(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'test@test.com',
+            'role' => 'admin',
+        ]);
+
+        User::factory()->create([
+            'role' => 'caregiver',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'created_at' => now()->subDays(3),
+            'updated_at' => now()->subDays(3),
+        ]);
+        User::factory()->create([
+            'role' => 'caregiver',
+            'city' => 'Charlotte',
+            'state' => 'NC',
+            'created_at' => now()->subDays(2),
+            'updated_at' => now()->subDays(2),
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/analytics/caregiver-map');
+
+        $response->assertOk();
+        $response->assertSee('Caregiver Coverage Map');
+        $response->assertSee('US coverage intensity map');
+        $response->assertSee('Top cities');
+        $response->assertSee('Raleigh, NC');
+        $response->assertSee('Admin Coverage');
     }
 
     private function createFilledProfile(

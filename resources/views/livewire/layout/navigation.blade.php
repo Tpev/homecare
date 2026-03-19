@@ -108,6 +108,11 @@ new class extends Component
                 'href' => route('admin.analytics.funnel'),
                 'active' => request()->routeIs('admin.analytics.funnel'),
             ],
+            [
+                'label' => 'Admin Coverage',
+                'href' => route('admin.analytics.caregiver-map'),
+                'active' => request()->routeIs('admin.analytics.caregiver-map'),
+            ],
         ];
 
         $primaryLinks = [];

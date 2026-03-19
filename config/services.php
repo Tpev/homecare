@@ -60,4 +60,8 @@ return [
         'bypass' => filter_var(env('STRIPE_BYPASS', false), FILTER_VALIDATE_BOOL),
     ],
 
+    'maptiler' => [
+        'key' => env('MAPTILER_KEY'),
+    ],
+
 ];
