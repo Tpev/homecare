@@ -4,16 +4,25 @@
             <x-alert color="green">{{ session('status') }}</x-alert>
         @endif
 
-        <section class="hc-hero">
-            <p class="text-xs uppercase tracking-[0.2em] text-blue-100">Quick post</p>
-            <div class="mt-3 flex flex-wrap items-start justify-between gap-4">
+        <section class="relative overflow-hidden rounded-3xl border border-slate-900/80 bg-slate-950 p-5 text-white shadow-xl">
+            <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-cyan-500/20 blur-2xl"></div>
+            <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-emerald-500/20 blur-2xl"></div>
+
+            <div class="relative mt-3 flex flex-wrap items-start justify-between gap-4">
                 <div class="max-w-2xl">
-                    <h1 class="text-3xl font-display font-semibold leading-tight">Post a care request in under 2 minutes.</h1>
-                    <p class="mt-2 text-sm text-blue-100">
-                        Only essential details are required. You can refine the request later while chatting with caregivers.
+                    <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Family Request Wizard</p>
+                    <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Create a care request in small, clear steps.</h1>
+                    <p class="mt-2 text-sm text-slate-300">
+                        We only ask what matters now. Optional details come last so you can publish faster.
                     </p>
                 </div>
                 <span class="rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-sm text-white">Step {{ $step }} of {{ $totalSteps }}</span>
+            </div>
+            <div class="relative mt-4">
+                <div class="h-2 rounded-full bg-white/20">
+                    <div class="h-2 rounded-full bg-cyan-300 transition-all duration-300" style="width: {{ $this->progressPercent }}%"></div>
+                </div>
+                <p class="mt-2 text-xs text-slate-300">{{ $this->progressPercent }}% complete</p>
             </div>
         </section>
 
@@ -38,8 +47,8 @@
 
         <x-card>
             <x-slot:header>
-                <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    @foreach ([1 => 'Need + schedule', 2 => 'Recipient + contacts', 3 => 'Review + publish'] as $index => $label)
+                <div class="grid grid-cols-2 gap-2 lg:grid-cols-4">
+                    @foreach ([1 => 'Care need', 2 => 'Schedule + location', 3 => 'Recipient + contacts', 4 => 'Review + publish'] as $index => $label)
                         <div class="rounded-lg border px-3 py-2 text-xs sm:text-sm {{ $step >= $index ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-slate-50 text-slate-500' }}">
                             {{ $label }}
                         </div>
@@ -49,6 +58,10 @@
 
             @if ($step === 1)
                 <div class="space-y-5">
+                    <div class="rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900">
+                        Start with your care need. Keep it simple. We will handle schedule and location in the next step.
+                    </div>
+
                     <div class="grid grid-cols-1 gap-4">
                         <x-textarea
                             label="What help do you need?"
@@ -71,6 +84,20 @@
                             :options="collect($taskOptions)->map(fn($item)=>['label'=>$item['name'],'value'=>$item['id']])->values()->all()"
                         />
                         @error('selectedTasks') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <details class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                        <summary class="cursor-pointer text-sm font-semibold text-slate-800">Optional now: add a custom request title</summary>
+                        <div class="mt-4">
+                            <x-input label="Request title (optional)" wire:model="title" hint="If empty, HomeCare creates one automatically." />
+                            @error('title') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                    </details>
+                </div>
+            @elseif ($step === 2)
+                <div class="space-y-5">
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                        {{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring request selected. We only ask recurring schedule fields.' : 'One-time request selected. We only ask one start/end window.' }}
                     </div>
 
                     @if ($request_type === \App\Models\CareRequest::TYPE_ONE_TIME)
@@ -120,6 +147,10 @@
                         <div class="md:col-span-2">
                             <x-input label="Address line 1" wire:model="address_line1" />
                             @error('address_line1') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <x-input label="Address line 2 (optional)" wire:model="address_line2" />
+                            @error('address_line2') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <x-input label="City" wire:model="city" />
@@ -175,26 +206,13 @@
 
                         <p class="mt-1 text-xs text-emerald-700">Final total is based on confirmed worked time.</p>
                     </div>
-
-                    <details class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                        <summary class="cursor-pointer text-sm font-semibold text-slate-800">Optional: refine matching details</summary>
-                        <div class="mt-4 space-y-4">
-                            <x-input label="Custom title (optional)" wire:model="title" hint="If empty, HomeCare generates one automatically." />
-                            @error('title') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-
-                            <x-textarea label="Scope of work (optional)" wire:model="scope_of_work" hint="If empty, generated from selected services." />
-                            @error('scope_of_work') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-
-                            <x-input label="Time expectations (optional)" wire:model="time_expectations" hint="Example: Arrive 10 minutes early." />
-                            @error('time_expectations') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-
-                            <x-textarea label="Home access notes (optional)" wire:model="home_access_notes" hint="Gate, parking, lockbox, etc." />
-                            @error('home_access_notes') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                    </details>
                 </div>
-            @elseif ($step === 2)
+            @elseif ($step === 3)
                 <div class="space-y-5">
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                        Recipient details are optional except when a third-party contact is booking on their behalf.
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <x-input label="Recipient full name (optional)" wire:model="recipient_full_name" />
@@ -254,6 +272,14 @@
                 </div>
             @else
                 <div class="space-y-4">
+                    @php
+                        $taskLookup = collect($taskOptions)->keyBy(fn ($task) => (int) $task['id']);
+                        $selectedTaskNames = collect($selectedTasks)
+                            ->map(fn ($id) => $taskLookup->get((int) $id)['name'] ?? null)
+                            ->filter()
+                            ->values();
+                    @endphp
+
                     <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
                         <p class="font-semibold text-slate-900">{{ $this->resolvedTitle }}</p>
                         <p class="text-sm text-slate-600 mt-1">{{ $city }}, {{ $state }} {{ $zip }}</p>
@@ -298,8 +324,23 @@
 
                     <div class="rounded-lg border border-slate-200 p-4">
                         <p class="text-sm"><span class="font-medium">Care need:</span> {{ $additional_info }}</p>
+                        <p class="mt-2 text-sm"><span class="font-medium">Services:</span> {{ $selectedTaskNames->implode(', ') ?: 'None selected' }}</p>
                         <p class="mt-2 text-sm"><span class="font-medium">Recipient:</span> {{ $recipient_full_name ?: 'Care recipient' }} ({{ $recipient_relationship_to_family ?: 'Family member' }})</p>
                     </div>
+
+                    <details class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                        <summary class="cursor-pointer text-sm font-semibold text-slate-800">Optional: refine matching details before publish</summary>
+                        <div class="mt-4 space-y-4">
+                            <x-textarea label="Scope of work (optional)" wire:model="scope_of_work" hint="If empty, this will be generated from selected services." />
+                            @error('scope_of_work') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+                            <x-input label="Time expectations (optional)" wire:model="time_expectations" hint="Example: Arrive 10 minutes early." />
+                            @error('time_expectations') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+                            <x-textarea label="Home access notes (optional)" wire:model="home_access_notes" hint="Gate, parking, lockbox, etc." />
+                            @error('home_access_notes') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                    </details>
 
                     <div class="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
                         Once published, active caregivers can apply and you can invite specific profiles directly.

@@ -25,15 +25,11 @@
                         <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Family Dashboard</p>
                         <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Get trusted caregiver support fast.</h1>
                         <p class="mt-2 text-sm text-slate-300 max-w-2xl">
-                            Create one request, choose AI Copilot or manual steps, then review, hire, and chat in one flow.
+                            Create one request in a clear step-by-step wizard, then review, hire, and chat in one flow.
                         </p>
                         <div class="mt-4 flex flex-wrap items-center gap-3">
-                            <a href="{{ route('family.requests.create_ai') }}" wire:navigate><x-button color="white">Create request</x-button></a>
-                            <p class="text-xs text-slate-300">Step 1: choose your start mode.</p>
-                        </div>
-                        <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                            <a href="{{ route('family.requests.create_ai') }}" wire:navigate class="font-medium text-cyan-300 underline underline-offset-2 hover:text-cyan-200">Start with AI Copilot</a>
-                            <a href="{{ route('family.requests.create') }}" wire:navigate class="font-medium text-cyan-300 underline underline-offset-2 hover:text-cyan-200">Use manual form</a>
+                            <a href="{{ route('family.requests.create') }}" wire:navigate><x-button color="white">Create request</x-button></a>
+                            <p class="text-xs text-slate-300">Short wizard. Only essential questions first.</p>
                         </div>
                         @unless($billingReady)
                             <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
@@ -188,13 +184,9 @@
                         <div class="space-y-3">
                             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
                                 <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Primary action</p>
-                                <p class="mt-2 text-sm text-slate-600">Create a new request and pick your preferred intake path.</p>
+                                <p class="mt-2 text-sm text-slate-600">Create a new request with the guided wizard.</p>
                                 <div class="mt-3">
-                                    <a href="{{ route('family.requests.create_ai') }}" wire:navigate><x-button color="blue">Create request</x-button></a>
-                                </div>
-                                <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                                    <a href="{{ route('family.requests.create_ai') }}" wire:navigate class="font-medium text-cyan-700 underline underline-offset-2">AI Copilot</a>
-                                    <a href="{{ route('family.requests.create') }}" wire:navigate class="font-medium text-cyan-700 underline underline-offset-2">Manual form</a>
+                                    <a href="{{ route('family.requests.create') }}" wire:navigate><x-button color="blue">Create request</x-button></a>
                                 </div>
                             </div>
                             <div class="space-y-2 text-sm">

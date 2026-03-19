@@ -16,7 +16,7 @@ use Livewire\Component;
 class CreateCareRequestWizard extends Component
 {
     public int $step = 1;
-    public int $totalSteps = 3;
+    public int $totalSteps = 4;
     public ?int $lastRequestId = null;
     public array $lastRequestSummary = [];
     public bool $prefillApplied = false;
@@ -189,6 +189,11 @@ class CreateCareRequestWizard extends Component
         return round($this->estimatedHours * $this->estimateHourlyRate, 2);
     }
 
+    public function getProgressPercentProperty(): int
+    {
+        return (int) round(($this->step / max($this->totalSteps, 1)) * 100);
+    }
+
     public function prefillFromLastRequest(): void
     {
         if (! $this->lastRequestId) {
@@ -358,7 +363,8 @@ class CreateCareRequestWizard extends Component
     private function validateAll(): void
     {
         $this->validate(array_merge(
-            $this->rulesForBasics(),
+            $this->rulesForNeedAndServices(),
+            $this->rulesForScheduleAndLocation(),
             $this->rulesForRecipient(),
             $this->rulesForThirdParty()
         ));
@@ -367,8 +373,9 @@ class CreateCareRequestWizard extends Component
     private function validateStep(int $step): void
     {
         $rules = match ($step) {
-            1 => $this->rulesForBasics(),
-            2 => $this->rulesForRecipient(),
+            1 => $this->rulesForNeedAndServices(),
+            2 => $this->rulesForScheduleAndLocation(),
+            3 => array_merge($this->rulesForRecipient(), $this->rulesForThirdParty()),
             default => [],
         };
 
@@ -377,24 +384,31 @@ class CreateCareRequestWizard extends Component
         }
     }
 
-    private function rulesForBasics(): array
+    private function rulesForNeedAndServices(): array
     {
-        $rules = [
+        return [
             'request_type' => ['required', Rule::in([CareRequest::TYPE_ONE_TIME, CareRequest::TYPE_RECURRING])],
             'title' => ['nullable', 'string', 'max:140'],
             'additional_info' => ['required', 'string', 'min:12', 'max:3000'],
             'scope_of_work' => ['nullable', 'string', 'max:3000'],
             'time_expectations' => ['nullable', 'string', 'max:255'],
             'home_access_notes' => ['nullable', 'string', 'max:3000'],
+            'selectedTasks' => ['required', 'array', 'min:1'],
+            'selectedTasks.*' => ['integer', Rule::exists('care_tasks', 'id')],
+            'taskNotes.*' => ['nullable', 'string', 'max:500'],
+        ];
+    }
+
+    private function rulesForScheduleAndLocation(): array
+    {
+        $rules = [
+            'request_type' => ['required', Rule::in([CareRequest::TYPE_ONE_TIME, CareRequest::TYPE_RECURRING])],
             'preferred_response_hours' => ['required', 'integer', 'min:1', 'max:72'],
             'address_line1' => ['required', 'string', 'max:255'],
             'address_line2' => ['nullable', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:120'],
             'state' => ['required', Rule::in(array_keys($this->usStates))],
             'zip' => ['required', 'string', 'max:15'],
-            'selectedTasks' => ['required', 'array', 'min:1'],
-            'selectedTasks.*' => ['integer', Rule::exists('care_tasks', 'id')],
-            'taskNotes.*' => ['nullable', 'string', 'max:500'],
         ];
 
         if ($this->request_type === CareRequest::TYPE_ONE_TIME) {

@@ -6,12 +6,9 @@
                 <p class="text-sm text-slate-600">Track applicants, shortlist, and hire caregivers.</p>
                 <p class="text-xs text-slate-500 mt-1">Average first response: {{ $avgFirstResponseLabel ?? '-' }}</p>
             </div>
-            <div class="flex items-center gap-2">
-                <a href="{{ route('family.requests.create_ai') }}" wire:navigate>
-                    <x-button color="emerald" icon="sparkles" position="left">New request with AI</x-button>
-                </a>
+            <div>
                 <a href="{{ route('family.requests.create') }}" wire:navigate>
-                    <x-button color="blue" light>Manual form</x-button>
+                    <x-button color="blue">Create request</x-button>
                 </a>
             </div>
         </div>

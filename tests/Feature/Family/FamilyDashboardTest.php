@@ -22,8 +22,7 @@ class FamilyDashboardTest extends TestCase
         $response->assertOk();
         $response->assertSee('Family Dashboard');
         $response->assertSee('Create request');
-        $response->assertSee('Start with AI Copilot');
-        $response->assertSee('Use manual form');
+        $response->assertSee('Short wizard. Only essential questions first.');
         $response->assertSee('Priority request board');
         $response->assertSee('Operations signal');
     }
