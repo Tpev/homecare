@@ -20,6 +20,10 @@ class MarketplaceNotificationDelivery extends Model
         'dedupe_key',
         'payload',
         'sent_at',
+        'open_count',
+        'click_count',
+        'opened_at',
+        'clicked_at',
     ];
 
     protected function casts(): array
@@ -27,6 +31,8 @@ class MarketplaceNotificationDelivery extends Model
         return [
             'payload' => 'array',
             'sent_at' => 'datetime',
+            'opened_at' => 'datetime',
+            'clicked_at' => 'datetime',
         ];
     }
 

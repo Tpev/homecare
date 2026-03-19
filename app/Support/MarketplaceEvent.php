@@ -21,6 +21,8 @@ class MarketplaceEvent
     public const PAYMENT_REFUNDED = 'payment_refunded';
     public const PAYOUT_TRANSFERRED = 'payout_transferred';
     public const PAYOUT_TRANSFER_FAILED = 'payout_transfer_failed';
+    public const CAREGIVER_WELCOME = 'caregiver_welcome';
+    public const CAREGIVER_ONBOARDING_REMINDER_24H = 'caregiver_onboarding_reminder_24h';
 
     /**
      * @return list<string>
@@ -45,6 +47,8 @@ class MarketplaceEvent
             self::PAYMENT_REFUNDED,
             self::PAYOUT_TRANSFERRED,
             self::PAYOUT_TRANSFER_FAILED,
+            self::CAREGIVER_WELCOME,
+            self::CAREGIVER_ONBOARDING_REMINDER_24H,
         ];
     }
 }

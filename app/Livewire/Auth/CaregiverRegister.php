@@ -4,6 +4,7 @@ namespace App\Livewire\Auth;
 
 use App\Models\CaregiverProfile;
 use App\Models\User;
+use App\Services\Caregiver\CaregiverOnboardingEmailService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -63,6 +64,7 @@ class CaregiverRegister extends Component
             ['user_id' => $user->id],
             ['status' => 'draft']
         );
+        app(CaregiverOnboardingEmailService::class)->sendWelcome($user);
 
         Auth::login($user);
 

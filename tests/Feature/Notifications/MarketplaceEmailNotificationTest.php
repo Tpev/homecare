@@ -36,8 +36,12 @@ class MarketplaceEmailNotificationTest extends TestCase
                 && is_array($mail->view)
                 && ($mail->view['html'] ?? null) === 'emails.notifications.marketplace-event-html'
                 && ($mail->view['text'] ?? null) === 'emails.notifications.marketplace-event-text'
-                && ($mail->viewData['url'] ?? null) === route('messages.index')
+                && is_string($mail->viewData['url'] ?? null)
+                && str_contains((string) $mail->viewData['url'], '/notifications/email/click/')
+                && ($mail->viewData['rawUrl'] ?? null) === route('messages.index')
                 && ($mail->viewData['supportUrl'] ?? null) === route('support.index')
+                && is_string($mail->viewData['openTrackingUrl'] ?? null)
+                && str_contains((string) $mail->viewData['openTrackingUrl'], '/notifications/email/open/')
                 && ($mail->viewData['ctaLabel'] ?? null) === 'Open conversation';
         });
 
@@ -46,6 +50,8 @@ class MarketplaceEmailNotificationTest extends TestCase
             'event_key' => MarketplaceEvent::MESSAGE_RECEIVED,
             'channel' => 'email',
             'status' => 'sent',
+            'open_count' => 0,
+            'click_count' => 0,
         ]);
     }
 

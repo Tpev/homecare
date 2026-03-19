@@ -6,6 +6,7 @@ use App\Livewire\Auth\CaregiverRegister;
 use App\Mail\Ops\UserRegisteredOpsAlertMail;
 use App\Models\Skill;
 use App\Models\User;
+use App\Support\MarketplaceEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
@@ -47,6 +48,12 @@ class CaregiverOnboardingTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => 'caregiver@example.com',
             'role' => 'caregiver',
+        ]);
+        $this->assertDatabaseHas('marketplace_notification_deliveries', [
+            'user_id' => User::query()->where('email', 'caregiver@example.com')->value('id'),
+            'event_key' => MarketplaceEvent::CAREGIVER_WELCOME,
+            'channel' => 'email',
+            'status' => 'sent',
         ]);
 
         Mail::assertSent(UserRegisteredOpsAlertMail::class, function (UserRegisteredOpsAlertMail $mail) {

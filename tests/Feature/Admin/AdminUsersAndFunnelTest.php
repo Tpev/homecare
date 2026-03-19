@@ -176,6 +176,9 @@ class AdminUsersAndFunnelTest extends TestCase
         $response->assertSee('Traffic & Signup Trends', false);
         $response->assertSee('Caregiver signups');
         $response->assertSee('Landing page views');
+        $response->assertSee('Onboarding Email Performance');
+        $response->assertSee('Welcome email');
+        $response->assertSee('24h incomplete reminder');
 
         $response->assertSee('Admin Users');
         $response->assertDontSee('My Requests');

@@ -200,9 +200,52 @@
 
             @if(($trend['signup_total'] ?? 0) === 0 && ($trend['landing_views_total'] ?? 0) === 0)
                 <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                    No signup or page-view data found in this range. Try switching to Last 365 days.
+                    No caregiver signup or landing-view data found in this range. Try switching to Last 365 days.
                 </div>
             @endif
+        </div>
+
+        <div class="mt-6 rounded-2xl border border-slate-200 bg-white p-4 md:p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-base font-semibold text-slate-900">Onboarding Email Performance</h2>
+                    <p class="text-xs text-slate-500">Welcome + 24h reminder campaigns for caregivers.</p>
+                </div>
+                <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                    Completion after reminder: {{ number_format($emailPerformance['completion_rate_after_reminder'], 1) }}%
+                    ({{ number_format($emailPerformance['completed_after_reminder']) }}/{{ number_format($emailPerformance['reminder_recipients']) }})
+                </div>
+            </div>
+
+            <div class="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                        <tr>
+                            <th class="px-4 py-3">Campaign</th>
+                            <th class="px-4 py-3">Sent</th>
+                            <th class="px-4 py-3">Opened</th>
+                            <th class="px-4 py-3">Clicked</th>
+                            <th class="px-4 py-3">Open rate</th>
+                            <th class="px-4 py-3">Click rate</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 bg-white">
+                        @foreach($emailPerformance['campaigns'] as $campaign)
+                            <tr>
+                                <td class="px-4 py-3">
+                                    <p class="font-semibold text-slate-900">{{ $campaign['label'] }}</p>
+                                    <p class="text-xs text-slate-500 mt-1">{{ $campaign['description'] }}</p>
+                                </td>
+                                <td class="px-4 py-3 text-slate-800">{{ number_format($campaign['sent']) }}</td>
+                                <td class="px-4 py-3 text-slate-800">{{ number_format($campaign['opened']) }}</td>
+                                <td class="px-4 py-3 text-slate-800">{{ number_format($campaign['clicked']) }}</td>
+                                <td class="px-4 py-3 text-slate-700">{{ number_format($campaign['open_rate'], 1) }}%</td>
+                                <td class="px-4 py-3 text-slate-700">{{ number_format($campaign['click_rate'], 1) }}%</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         @if(($summary['landing_visitors'] ?? 0) === 0)

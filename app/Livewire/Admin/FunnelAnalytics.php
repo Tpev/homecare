@@ -5,9 +5,11 @@ namespace App\Livewire\Admin;
 use App\Models\CareBooking;
 use App\Models\CareRequestApplication;
 use App\Models\CaregiverProfile;
+use App\Models\MarketplaceNotificationDelivery;
 use App\Models\PageViewEvent;
 use App\Models\User;
 use App\Services\Analytics\PageViewTracker;
+use App\Support\MarketplaceEvent;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -223,11 +225,81 @@ class FunnelAnalytics extends Component
             'signup_from_views_rate' => $signupFromViewsRate,
         ];
 
+        $campaignKeys = [
+            MarketplaceEvent::CAREGIVER_WELCOME,
+            MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H,
+        ];
+
+        $emailDeliveries = MarketplaceNotificationDelivery::query()
+            ->where('channel', 'email')
+            ->whereIn('event_key', $campaignKeys)
+            ->where('sent_at', '>=', $this->start)
+            ->get([
+                'id',
+                'user_id',
+                'event_key',
+                'status',
+                'open_count',
+                'click_count',
+                'sent_at',
+            ]);
+
+        $campaignStats = collect([
+            [
+                'event_key' => MarketplaceEvent::CAREGIVER_WELCOME,
+                'label' => 'Welcome email',
+                'description' => 'Sent immediately after caregiver signup.',
+            ],
+            [
+                'event_key' => MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H,
+                'label' => '24h incomplete reminder',
+                'description' => 'Sent if profile/KYC is still incomplete after 24h.',
+            ],
+        ])->map(function (array $campaign) use ($emailDeliveries): array {
+            $rows = $emailDeliveries
+                ->where('event_key', $campaign['event_key'])
+                ->where('status', 'sent')
+                ->values();
+
+            $sent = $rows->count();
+            $opened = $rows->filter(fn ($row) => (int) $row->open_count > 0)->count();
+            $clicked = $rows->filter(fn ($row) => (int) $row->click_count > 0)->count();
+
+            $campaign['sent'] = $sent;
+            $campaign['opened'] = $opened;
+            $campaign['clicked'] = $clicked;
+            $campaign['open_rate'] = $sent > 0 ? round(($opened / $sent) * 100, 1) : 0.0;
+            $campaign['click_rate'] = $sent > 0 ? round(($clicked / $sent) * 100, 1) : 0.0;
+
+            return $campaign;
+        })->values()->all();
+
+        $reminderRecipientIds = $emailDeliveries
+            ->where('event_key', MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H)
+            ->where('status', 'sent')
+            ->pluck('user_id')
+            ->unique()
+            ->values()
+            ->all();
+
+        $completedAfterReminder = $this->countProfileAndKycCompleteUsers($reminderRecipientIds);
+        $reminderRecipients = count($reminderRecipientIds);
+
+        $emailPerformance = [
+            'campaigns' => $campaignStats,
+            'reminder_recipients' => $reminderRecipients,
+            'completed_after_reminder' => $completedAfterReminder,
+            'completion_rate_after_reminder' => $reminderRecipients > 0
+                ? round(($completedAfterReminder / $reminderRecipients) * 100, 1)
+                : 0.0,
+        ];
+
         return view('livewire.admin.funnel-analytics', [
             'start' => $this->start,
             'steps' => $steps,
             'summary' => $summary,
             'trend' => $trend,
+            'emailPerformance' => $emailPerformance,
         ]);
     }
 
@@ -332,5 +404,32 @@ class FunnelAnalytics extends Component
         unset($bucket);
 
         return $series;
+    }
+
+    /**
+     * @param list<int> $userIds
+     */
+    private function countProfileAndKycCompleteUsers(array $userIds): int
+    {
+        if ($userIds === []) {
+            return 0;
+        }
+
+        return CaregiverProfile::query()
+            ->whereIn('user_id', $userIds)
+            ->whereNotNull('bio')
+            ->where('bio', '!=', '')
+            ->whereNotNull('years_experience')
+            ->whereNotNull('service_area_zip')
+            ->where('service_area_zip', '!=', '')
+            ->whereNotNull('service_radius_miles')
+            ->whereHas('skills')
+            ->whereHas('languages')
+            ->whereHas('availabilities')
+            ->where(function ($query) {
+                $query->whereNotNull('identity_verified_at')
+                    ->orWhere('identity_verification_status', 'approved');
+            })
+            ->count();
     }
 }

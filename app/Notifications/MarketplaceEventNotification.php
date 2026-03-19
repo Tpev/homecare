@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Support\MarketplaceEvent;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -36,22 +37,35 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
         $homeUrl = route('dashboard');
         $supportUrl = route('support.index');
         $resolvedUrl = $this->url ?: $homeUrl;
+        $trackedUrl = $this->resolveTrackedClickUrl($resolvedUrl);
+        $openTrackingUrl = $this->resolveOpenTrackingUrl();
+        $view = $this->isCaregiverOnboardingEmail()
+            ? [
+                'html' => 'emails.notifications.caregiver-onboarding-html',
+                'text' => 'emails.notifications.caregiver-onboarding-text',
+            ]
+            : [
+                'html' => 'emails.notifications.marketplace-event-html',
+                'text' => 'emails.notifications.marketplace-event-text',
+            ];
 
         return (new MailMessage)
             ->subject('['.$appName.'] '.$this->title)
-            ->view([
-                'html' => 'emails.notifications.marketplace-event-html',
-                'text' => 'emails.notifications.marketplace-event-text',
-            ], [
+            ->view($view, [
                 'appName' => $appName,
                 'eventLabel' => $this->eventLabel(),
                 'title' => $this->title,
                 'body' => $this->body,
-                'url' => $resolvedUrl,
+                'url' => $trackedUrl,
+                'rawUrl' => $resolvedUrl,
                 'ctaLabel' => $this->actionLabel(),
                 'supportUrl' => $supportUrl,
                 'homeUrl' => $homeUrl,
                 'year' => now()->year,
+                'openTrackingUrl' => $openTrackingUrl,
+                'preheader' => (string) ($this->payload['preheader'] ?? $this->title),
+                'checklist' => array_values(array_filter((array) ($this->payload['checklist'] ?? []), fn ($item) => is_string($item) && trim($item) !== '')),
+                'firstName' => (string) ($this->payload['first_name'] ?? ''),
             ]);
     }
 
@@ -89,6 +103,8 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
             'payment_refunded' => 'Payment refunded',
             'payout_transferred' => 'Payout transferred',
             'payout_transfer_failed' => 'Payout transfer delayed',
+            MarketplaceEvent::CAREGIVER_WELCOME => 'Welcome to HomeCare',
+            MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H => 'Setup reminder',
             default => 'Marketplace update',
         };
     }
@@ -113,7 +129,47 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
             'payment_refunded' => 'View request',
             'payout_transferred' => 'View shift',
             'payout_transfer_failed' => 'View request',
+            MarketplaceEvent::CAREGIVER_WELCOME => 'Complete my profile',
+            MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H => 'Finish setup now',
             default => 'Open HomeCare',
         };
+    }
+
+    private function isCaregiverOnboardingEmail(): bool
+    {
+        return in_array($this->eventKey, [
+            MarketplaceEvent::CAREGIVER_WELCOME,
+            MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H,
+        ], true);
+    }
+
+    private function resolveTrackedClickUrl(string $resolvedUrl): string
+    {
+        $deliveryId = data_get($this->payload, 'tracking.delivery_id');
+        $token = data_get($this->payload, 'tracking.token');
+
+        if (! is_numeric($deliveryId) || ! is_string($token) || trim($token) === '') {
+            return $resolvedUrl;
+        }
+
+        return route('notifications.email.click', [
+            'delivery' => (int) $deliveryId,
+            'token' => $token,
+        ]);
+    }
+
+    private function resolveOpenTrackingUrl(): ?string
+    {
+        $deliveryId = data_get($this->payload, 'tracking.delivery_id');
+        $token = data_get($this->payload, 'tracking.token');
+
+        if (! is_numeric($deliveryId) || ! is_string($token) || trim($token) === '') {
+            return null;
+        }
+
+        return route('notifications.email.open', [
+            'delivery' => (int) $deliveryId,
+            'token' => $token,
+        ]);
     }
 }

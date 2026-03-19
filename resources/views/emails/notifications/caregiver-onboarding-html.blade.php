@@ -5,28 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title }}</title>
 </head>
-<body style="margin:0;padding:0;background:#f1f6fb;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
+<body style="margin:0;padding:0;background:#eef5f8;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
     <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">
         {{ $preheader ?? ($title.' - '.$body) }}
     </span>
 
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f6fb;padding:24px 12px;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eef5f8;padding:24px 12px;">
         <tr>
             <td align="center">
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #d7e2ee;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #d7e2ee;">
                     <tr>
-                        <td style="padding:24px;background:linear-gradient(120deg,#0c4a6e,#0ea5e9 55%,#10b981);color:#ffffff;">
-                            <p style="margin:0 0 8px 0;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;opacity:0.9;">{{ $eventLabel }}</p>
-                            <h1 style="margin:0;font-size:28px;line-height:1.2;">{{ $appName }}</h1>
-                            <p style="margin:10px 0 0 0;font-size:15px;line-height:1.5;max-width:520px;">
-                                Real-time care marketplace updates for faster decisions.
+                        <td style="padding:26px 24px;background:linear-gradient(130deg,#0a4a6e 0%,#0f8fb3 55%,#17b879 100%);color:#ffffff;">
+                            <p style="margin:0 0 10px 0;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;opacity:0.92;">{{ $eventLabel }}</p>
+                            <h1 style="margin:0;font-size:30px;line-height:1.15;">{{ $appName }}</h1>
+                            <p style="margin:12px 0 0 0;font-size:15px;line-height:1.6;max-width:520px;">
+                                {{ $firstName !== '' ? 'Hi '.$firstName.',' : 'Hi,' }} {{ $body }}
                             </p>
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding:28px 24px 18px 24px;">
-                            <h2 style="margin:0 0 10px 0;font-size:24px;line-height:1.25;color:#0f172a;">{{ $title }}</h2>
-                            <p style="margin:0 0 20px 0;font-size:15px;line-height:1.65;color:#334155;">{{ $body }}</p>
+                        <td style="padding:26px 24px 18px;">
+                            <h2 style="margin:0 0 12px 0;font-size:24px;line-height:1.25;color:#0f172a;">{{ $title }}</h2>
+
+                            @if(!empty($checklist))
+                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px 0;">
+                                    @foreach($checklist as $item)
+                                        <tr>
+                                            <td style="padding:7px 0;font-size:15px;line-height:1.5;color:#334155;">
+                                                <span style="display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;border-radius:999px;background:#dcfce7;color:#047857;font-weight:bold;margin-right:8px;">✓</span>
+                                                {{ $item }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </table>
+                            @endif
 
                             <table role="presentation" cellspacing="0" cellpadding="0">
                                 <tr>
@@ -46,9 +58,9 @@
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding:18px 24px 24px 24px;background:#f8fbff;border-top:1px solid #dbe7f3;">
+                        <td style="padding:18px 24px 24px;background:#f8fbff;border-top:1px solid #dbe7f3;">
                             <p style="margin:0 0 8px 0;font-size:13px;color:#334155;">
-                                Need help now? Open support:
+                                Need help? We’re happy to guide you:
                                 <a href="{{ $supportUrl }}" style="color:#0369a1;text-decoration:underline;">{{ $supportUrl }}</a>
                             </p>
                             <p style="margin:0;font-size:12px;color:#64748b;">
@@ -65,3 +77,4 @@
     @endif
 </body>
 </html>
+

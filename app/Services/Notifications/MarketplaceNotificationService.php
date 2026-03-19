@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Notifications\MarketplaceEventNotification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use Throwable;
 
 class MarketplaceNotificationService
 {
@@ -58,6 +60,8 @@ class MarketplaceNotificationService
         $channels = $this->preferences->resolve($user, $eventKey);
         $subjectType = $subject?->getMorphClass();
         $subjectId = $subject?->getKey();
+        $notificationPayload = $payload;
+        $mailDelivery = null;
 
         $laravelChannels = [];
         if ($channels[NotificationChannels::IN_APP] ?? false) {
@@ -68,28 +72,79 @@ class MarketplaceNotificationService
         }
 
         if ($laravelChannels !== [] && $this->shouldDispatchForLaravelChannels($user->id, $dedupeKey, $laravelChannels)) {
-            $user->notify(new MarketplaceEventNotification(
-                eventKey: $eventKey,
-                title: $title,
-                body: $body,
-                url: $normalizedUrl,
-                channels: $laravelChannels,
-                payload: $payload,
-            ));
+            if (in_array('mail', $laravelChannels, true)) {
+                $trackingToken = Str::random(48);
+                $mailPayload = array_merge($payload, [
+                    'tracking' => [
+                        'token' => $trackingToken,
+                        'target_url' => $normalizedUrl,
+                    ],
+                ]);
+
+                $mailDelivery = MarketplaceNotificationDelivery::query()->create([
+                    'user_id' => $user->id,
+                    'event_key' => $eventKey,
+                    'channel' => NotificationChannels::EMAIL,
+                    'status' => 'queued',
+                    'notifiable_type' => $subjectType,
+                    'notifiable_id' => $subjectId,
+                    'dedupe_key' => $dedupeKey ? $dedupeKey.':'.NotificationChannels::EMAIL : null,
+                    'payload' => $mailPayload,
+                    'sent_at' => null,
+                ]);
+
+                $notificationPayload = array_merge($mailPayload, [
+                    'tracking' => [
+                        'token' => $trackingToken,
+                        'target_url' => $normalizedUrl,
+                        'delivery_id' => $mailDelivery->id,
+                    ],
+                ]);
+            }
+
+            try {
+                $user->notify(new MarketplaceEventNotification(
+                    eventKey: $eventKey,
+                    title: $title,
+                    body: $body,
+                    url: $normalizedUrl,
+                    channels: $laravelChannels,
+                    payload: $notificationPayload,
+                ));
+            } catch (Throwable $exception) {
+                if ($mailDelivery) {
+                    $mailDelivery->forceFill([
+                        'status' => 'failed',
+                        'payload' => array_merge($mailDelivery->payload ?? [], [
+                            'provider_error' => $exception->getMessage(),
+                        ]),
+                        'sent_at' => now(),
+                    ])->save();
+                }
+
+                report($exception);
+
+                return;
+            }
 
             foreach ($laravelChannels as $channel) {
-                $resolvedChannel = $channel === 'mail'
-                    ? NotificationChannels::EMAIL
-                    : NotificationChannels::IN_APP;
+                if ($channel === 'mail' && $mailDelivery) {
+                    $mailDelivery->forceFill([
+                        'status' => 'sent',
+                        'sent_at' => now(),
+                    ])->save();
+
+                    continue;
+                }
 
                 $this->logDelivery(
                     userId: $user->id,
                     eventKey: $eventKey,
-                    channel: $resolvedChannel,
+                    channel: NotificationChannels::IN_APP,
                     status: 'sent',
                     subjectType: $subjectType,
                     subjectId: $subjectId,
-                    dedupeKey: $dedupeKey ? $dedupeKey.':'.$resolvedChannel : null,
+                    dedupeKey: $dedupeKey ? $dedupeKey.':'.NotificationChannels::IN_APP : null,
                     payload: $payload
                 );
             }

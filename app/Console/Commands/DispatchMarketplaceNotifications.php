@@ -4,7 +4,9 @@ namespace App\Console\Commands;
 
 use App\Models\CareBooking;
 use App\Models\CareRequest;
+use App\Models\MarketplaceNotificationDelivery;
 use App\Models\User;
+use App\Services\Caregiver\CaregiverOnboardingEmailService;
 use App\Services\Matching\CaregiverSuggestionService;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Support\MarketplaceEvent;
@@ -12,18 +14,19 @@ use Illuminate\Console\Command;
 
 class DispatchMarketplaceNotifications extends Command
 {
-    protected $signature = 'homecare:dispatch-notifications {--type=all : all|matching|shift-soon}';
+    protected $signature = 'homecare:dispatch-notifications {--type=all : all|matching|shift-soon|onboarding}';
 
     protected $description = 'Dispatch marketplace reminders and lifecycle notifications.';
 
     public function handle(
         CaregiverSuggestionService $suggestions,
-        MarketplaceNotificationService $notifications
+        MarketplaceNotificationService $notifications,
+        CaregiverOnboardingEmailService $caregiverOnboardingEmails
     ): int {
         $type = (string) $this->option('type');
 
-        if (! in_array($type, ['all', 'matching', 'shift-soon'], true)) {
-            $this->error('Invalid --type. Use all, matching, or shift-soon.');
+        if (! in_array($type, ['all', 'matching', 'shift-soon', 'onboarding'], true)) {
+            $this->error('Invalid --type. Use all, matching, shift-soon, or onboarding.');
             return self::FAILURE;
         }
 
@@ -33,6 +36,10 @@ class DispatchMarketplaceNotifications extends Command
 
         if (in_array($type, ['all', 'shift-soon'], true)) {
             $this->dispatchShiftStartingSoon($notifications);
+        }
+
+        if (in_array($type, ['all', 'onboarding'], true)) {
+            $this->dispatchCaregiverOnboardingReminders($caregiverOnboardingEmails);
         }
 
         return self::SUCCESS;
@@ -120,5 +127,33 @@ class DispatchMarketplaceNotifications extends Command
                 );
             }
         }
+    }
+
+    private function dispatchCaregiverOnboardingReminders(CaregiverOnboardingEmailService $caregiverOnboardingEmails): void
+    {
+        $eligibleUserIds = MarketplaceNotificationDelivery::query()
+            ->where('event_key', MarketplaceEvent::CAREGIVER_WELCOME)
+            ->where('channel', 'email')
+            ->where('status', 'sent')
+            ->whereNotNull('sent_at')
+            ->where('sent_at', '<=', now()->subHours(24))
+            ->pluck('user_id')
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($eligibleUserIds === []) {
+            return;
+        }
+
+        User::query()
+            ->whereIn('id', $eligibleUserIds)
+            ->where('role', 'caregiver')
+            ->with('caregiverProfile')
+            ->chunkById(200, function ($users) use ($caregiverOnboardingEmails): void {
+                foreach ($users as $user) {
+                    $caregiverOnboardingEmails->send24HourReminderIfIncomplete($user);
+                }
+            });
     }
 }
