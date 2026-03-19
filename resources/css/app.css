@@ -84,11 +84,6 @@
     }
 
     .hc-map-count-badge {
-        background: transparent;
-        border: 0;
-    }
-
-    .hc-map-count-badge span {
         display: inline-flex;
         align-items: center;
         justify-content: center;

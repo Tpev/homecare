@@ -1,11 +1,4 @@
 <div class="hc-page py-8 space-y-6">
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin=""
-    />
-
     <x-card>
         <x-slot:header>
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -88,7 +81,7 @@
 
             <div class="xl:col-span-4 space-y-4">
                 <div class="rounded-2xl border border-slate-200 bg-white p-4">
-                    <h3 class="text-sm font-semibold text-slate-900">Color legend</h3>
+                    <h3 class="text-sm font-semibold text-slate-900">Border legend</h3>
                     <div class="mt-3 space-y-2 text-xs text-slate-600">
                         <div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full" style="background:#67e8f9"></span>Low density</div>
                         <div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full" style="background:#06b6d4"></span>Medium-low</div>
@@ -96,7 +89,7 @@
                         <div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full" style="background:#0e7490"></span>High</div>
                         <div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full" style="background:#155e75"></span>Very high</div>
                     </div>
-                    <p class="mt-3 text-xs text-slate-500">Each circle includes a count badge. Bigger + darker means more volume.</p>
+                    <p class="mt-3 text-xs text-slate-500">City borders are colored by density. Count badges show volume per highlighted city.</p>
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-4">
@@ -116,50 +109,130 @@
         </div>
     </x-card>
 
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""
-    ></script>
     <script id="admin-caregiver-coverage-map-payload" type="application/json">@json($mapPayload)</script>
     <script>
         (function () {
-            const boot = () => {
-                const container = document.getElementById('admin-caregiver-coverage-map');
-                const payloadNode = document.getElementById('admin-caregiver-coverage-map-payload');
+            const LEAFLET_CSS_PRIMARY = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            const LEAFLET_CSS_FALLBACK = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';
+            const LEAFLET_JS_PRIMARY = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+            const LEAFLET_JS_FALLBACK = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+            const CENSUS_PLACES_BASE = 'https://tigerweb.geo.census.gov/arcgis/rest/services/Census2020/Places_CouSub_ConCity_SubMCD/MapServer';
+            const CENSUS_CITY_LAYERS = [4, 5];
 
-                if (!container || !payloadNode || typeof L === 'undefined') {
+            const showMapError = (container, message) => {
+                if (!container) {
+                    return;
+                }
+                container.classList.add('flex', 'items-center', 'justify-center', 'bg-rose-50', 'px-4', 'text-center');
+                container.textContent = message;
+            };
+
+            const ensureStylesheet = (href) => {
+                const existing = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+                    .find((node) => node.href === href);
+                if (existing) {
                     return;
                 }
 
-                if (window.__hcCoverageMap && typeof window.__hcCoverageMap.remove === 'function') {
-                    window.__hcCoverageMap.remove();
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = href;
+                link.dataset.hcLeaflet = 'true';
+                document.head.appendChild(link);
+            };
+
+            const ensureLeaflet = () => {
+                if (window.L) {
+                    return Promise.resolve(window.L);
                 }
 
-                let payload = null;
-                try {
-                    payload = JSON.parse(payloadNode.textContent || '{}');
-                } catch (_error) {
-                    payload = { points: [] };
+                if (window.__hcLeafletPromise) {
+                    return window.__hcLeafletPromise;
                 }
 
-                const map = L.map(container, {
-                    zoomControl: true,
-                    minZoom: 3,
-                    maxZoom: 10,
+                ensureStylesheet(LEAFLET_CSS_PRIMARY);
+
+                window.__hcLeafletPromise = new Promise((resolve, reject) => {
+                    const loadScript = (src, onError) => {
+                        const existingScript = Array.from(document.querySelectorAll('script'))
+                            .find((node) => node.src === src);
+
+                        if (existingScript) {
+                            existingScript.addEventListener('load', () => resolve(window.L), { once: true });
+                            existingScript.addEventListener('error', onError, { once: true });
+                            return;
+                        }
+
+                        const script = document.createElement('script');
+                        script.src = src;
+                        script.async = true;
+                        script.dataset.hcLeaflet = 'true';
+                        script.onload = () => resolve(window.L);
+                        script.onerror = onError;
+                        document.head.appendChild(script);
+                    };
+
+                    loadScript(LEAFLET_JS_PRIMARY, () => {
+                        ensureStylesheet(LEAFLET_CSS_FALLBACK);
+                        loadScript(LEAFLET_JS_FALLBACK, () => reject(new Error('leaflet_load_failed')));
+                    });
+                }).finally(() => {
+                    // Allow future retries if loading failed.
+                    if (!window.L) {
+                        window.__hcLeafletPromise = null;
+                    }
                 });
 
-                window.__hcCoverageMap = map;
+                return window.__hcLeafletPromise;
+            };
 
-                L.tileLayer(payload.tile_url, {
-                    attribution: payload.tile_attribution,
-                    maxZoom: 18,
-                }).addTo(map);
+            const escapeSqlLiteral = (value) => String(value || '')
+                .trim()
+                .toUpperCase()
+                .replace(/'/g, "''");
 
-                const points = Array.isArray(payload.points) ? payload.points : [];
-                const bounds = [];
+            const fetchCityFeature = async (city, stateCode, stateFips) => {
+                if (!city || !stateCode || !stateFips) {
+                    return null;
+                }
 
-                points.forEach((point) => {
+                const cityToken = escapeSqlLiteral(city);
+                if (!cityToken) {
+                    return null;
+                }
+
+                for (const layerId of CENSUS_CITY_LAYERS) {
+                    const params = new URLSearchParams({
+                        where: `UPPER(BASENAME)='${cityToken}' AND STATE='${stateFips}'`,
+                        outFields: 'BASENAME,NAME,STATE',
+                        returnGeometry: 'true',
+                        outSR: '4326',
+                        f: 'geojson',
+                    });
+
+                    const url = `${CENSUS_PLACES_BASE}/${layerId}/query?${params.toString()}`;
+
+                    try {
+                        const response = await fetch(url, { method: 'GET' });
+                        if (!response.ok) {
+                            continue;
+                        }
+
+                        const geojson = await response.json();
+                        const features = Array.isArray(geojson?.features) ? geojson.features : [];
+                        if (features.length > 0) {
+                            return features[0];
+                        }
+                    } catch (_error) {
+                        // Continue silently and fallback later.
+                    }
+                }
+
+                return null;
+            };
+
+            const drawStateFallback = (leaflet, map, statePoints, bounds) => {
+                statePoints.forEach((point) => {
                     const lat = Number(point.lat);
                     const lng = Number(point.lng);
                     const count = Number(point.count || 0);
@@ -170,7 +243,7 @@
 
                     bounds.push([lat, lng]);
 
-                    L.circleMarker([lat, lng], {
+                    leaflet.circleMarker([lat, lng], {
                         radius: Number(point.radius || 16),
                         color: '#0f172a',
                         weight: 1,
@@ -183,25 +256,127 @@
                         })
                         .addTo(map);
 
-                    const label = L.divIcon({
+                    const label = leaflet.divIcon({
                         className: 'hc-map-count-badge',
-                        html: `<span>${count.toLocaleString()}</span>`,
+                        html: String(count.toLocaleString()),
                         iconSize: [42, 18],
                         iconAnchor: [21, 9],
                     });
 
-                    L.marker([lat, lng], {
+                    leaflet.marker([lat, lng], {
                         icon: label,
                         interactive: false,
                         keyboard: false,
                     }).addTo(map);
                 });
+            };
+
+            const boot = async () => {
+                const container = document.getElementById('admin-caregiver-coverage-map');
+                const payloadNode = document.getElementById('admin-caregiver-coverage-map-payload');
+
+                if (!container || !payloadNode) {
+                    return;
+                }
+
+                if (window.__hcCoverageMap && typeof window.__hcCoverageMap.remove === 'function') {
+                    window.__hcCoverageMap.remove();
+                }
+
+                let leaflet = null;
+                try {
+                    leaflet = await ensureLeaflet();
+                } catch (_error) {
+                    showMapError(container, 'Map libraries could not be loaded. Please retry or check CDN/network access.');
+                    return;
+                }
+
+                if (!leaflet) {
+                    showMapError(container, 'Map failed to initialize.');
+                    return;
+                }
+
+                let payload = null;
+                try {
+                    payload = JSON.parse(payloadNode.textContent || '{}');
+                } catch (_error) {
+                    payload = { points: [] };
+                }
+
+                const map = leaflet.map(container, {
+                    zoomControl: true,
+                    minZoom: 3,
+                    maxZoom: 10,
+                });
+
+                window.__hcCoverageMap = map;
+
+                leaflet.tileLayer(payload.tile_url, {
+                    attribution: payload.tile_attribution,
+                    maxZoom: 18,
+                }).addTo(map);
+
+                const bounds = [];
+                const statePoints = Array.isArray(payload.state_points || payload.points) ? (payload.state_points || payload.points) : [];
+                const cityItems = Array.isArray(payload.city_items) ? payload.city_items : [];
+                const stateFips = (payload.state_fips && typeof payload.state_fips === 'object') ? payload.state_fips : {};
+
+                let highlightedCityCount = 0;
+
+                for (const city of cityItems) {
+                    const stateCode = String(city.state_code || '').toUpperCase();
+                    const stateCodeFips = stateFips[stateCode];
+                    const feature = await fetchCityFeature(city.city, stateCode, stateCodeFips);
+                    if (!feature) {
+                        continue;
+                    }
+
+                    let geoLayer = null;
+                    try {
+                        geoLayer = leaflet.geoJSON(feature, {
+                            style: {
+                                color: city.color || '#0891b2',
+                                weight: 2,
+                                opacity: 0.95,
+                                fillColor: city.color || '#0891b2',
+                                fillOpacity: 0.14,
+                            },
+                        }).addTo(map);
+                    } catch (_error) {
+                        continue;
+                    }
+
+                    highlightedCityCount += 1;
+                    const label = `${city.city}, ${stateCode}: ${Number(city.count || 0).toLocaleString()}`;
+                    geoLayer.bindTooltip(label, { sticky: true });
+
+                    const center = geoLayer.getBounds().getCenter();
+                    bounds.push([center.lat, center.lng]);
+
+                    const badgeIcon = leaflet.divIcon({
+                        className: 'hc-map-count-badge',
+                        html: String(Number(city.count || 0).toLocaleString()),
+                        iconSize: [42, 18],
+                        iconAnchor: [21, 9],
+                    });
+
+                    leaflet.marker(center, {
+                        icon: badgeIcon,
+                        interactive: false,
+                        keyboard: false,
+                    }).addTo(map);
+                }
+
+                if (highlightedCityCount === 0) {
+                    drawStateFallback(leaflet, map, statePoints, bounds);
+                }
 
                 if (bounds.length > 0) {
-                    map.fitBounds(bounds, { padding: [26, 26], maxZoom: 6 });
-                } else {
-                    map.setView([39.5, -98.35], 4);
+                    map.fitBounds(bounds, { padding: [26, 26], maxZoom: 7 });
+                    return;
                 }
+
+                map.setView([39.5, -98.35], 4);
             };
 
             if (document.readyState === 'loading') {
