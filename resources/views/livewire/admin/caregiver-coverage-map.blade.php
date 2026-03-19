@@ -71,11 +71,6 @@
                         <p class="text-xs text-slate-500">Provider: {{ $mapPayload['provider'] }}</p>
                     </div>
                     <div id="admin-caregiver-coverage-map" class="mt-3 h-[480px] w-full rounded-xl border border-slate-200"></div>
-                    @if($mapPayload['provider'] === 'OpenStreetMap')
-                        <p class="mt-2 text-xs text-amber-700">
-                            Tip: set <code>MAPTILER_KEY</code> for production tile SLA and higher request limits.
-                        </p>
-                    @endif
                 </div>
             </div>
 
