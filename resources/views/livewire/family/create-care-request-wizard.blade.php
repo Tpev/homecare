@@ -16,58 +16,98 @@
                         We only ask what matters now. Optional details come last so you can publish faster.
                     </p>
                 </div>
-                <span class="rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-sm text-white">Step {{ $step }} of {{ $totalSteps }}</span>
+                @if ($modeChosen)
+                    <span class="rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-sm text-white">Step {{ $step }} of {{ $totalSteps }}</span>
+                @endif
             </div>
-            <div class="relative mt-4">
-                <div class="h-2 rounded-full bg-white/20">
-                    <div class="h-2 rounded-full bg-cyan-300 transition-all duration-300" style="width: {{ $this->progressPercent }}%"></div>
+            @if ($modeChosen)
+                <div class="relative mt-4">
+                    <div class="h-2 rounded-full bg-white/20">
+                        <div class="h-2 rounded-full bg-cyan-300 transition-all duration-300" style="width: {{ $this->progressPercent }}%"></div>
+                    </div>
+                    <p class="mt-2 text-xs text-slate-300">{{ $this->progressPercent }}% complete</p>
+                    <div class="mt-2 flex items-center gap-2">
+                        @for ($index = 1; $index <= $totalSteps; $index++)
+                            <span class="h-1.5 flex-1 rounded-full {{ $step >= $index ? 'bg-cyan-300' : 'bg-white/25' }}"></span>
+                        @endfor
+                    </div>
                 </div>
-                <p class="mt-2 text-xs text-slate-300">{{ $this->progressPercent }}% complete</p>
-                <div class="mt-2 flex items-center gap-2">
-                    @for ($index = 1; $index <= $totalSteps; $index++)
-                        <span class="h-1.5 flex-1 rounded-full {{ $step >= $index ? 'bg-cyan-300' : 'bg-white/25' }}"></span>
-                    @endfor
-                </div>
-            </div>
+            @else
+                <p class="relative mt-4 text-xs text-cyan-200">Choose a mode to start. You can publish in minutes.</p>
+            @endif
         </section>
 
-        @if ($lastRequestId)
-            <div class="rounded-2xl border border-cyan-200 bg-cyan-50 p-4 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <p class="text-xs uppercase tracking-[0.14em] text-cyan-700 font-semibold">Quick start</p>
-                    <p class="mt-1 text-sm text-cyan-900">
-                        Reuse your last request:
-                        <span class="font-semibold">{{ $lastRequestSummary['title'] ?? 'Recent request' }}</span>
-                        ({{ $lastRequestSummary['location'] ?? 'Raleigh, NC' }})
-                    </p>
-                    @if ($prefillApplied)
-                        <p class="mt-1 text-xs text-cyan-700">Fields loaded. Confirm schedule and publish.</p>
-                    @endif
+        @if (! $modeChosen)
+            <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                <div class="mb-4">
+                    <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Start here</p>
+                    <h2 class="mt-1 text-xl font-display font-semibold text-slate-900">Choose how you want to post this request</h2>
                 </div>
-                <button type="button" wire:click="prefillFromLastRequest">
-                    <x-button color="blue" light>Use last request</x-button>
-                </button>
-            </div>
-        @endif
 
-        @if ($hasSavedHouseholdProfile || $hasSavedRecipientProfile)
-            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <p class="text-xs uppercase tracking-[0.14em] text-emerald-700 font-semibold">Saved family profile</p>
-                    <p class="mt-1 text-sm text-emerald-900">
-                        Reuse saved household + care recipient details in one click.
-                    </p>
-                    @if ($savedProfilesApplied)
-                        <p class="mt-1 text-xs text-emerald-700">Saved profile loaded.</p>
-                    @endif
+                <div class="grid gap-4 md:grid-cols-2">
+                    <button type="button" wire:click="chooseFastTrack" class="group rounded-2xl border border-emerald-300 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                        <p class="text-xs uppercase tracking-[0.14em] text-emerald-700 font-semibold">Recommended</p>
+                        <h3 class="mt-2 text-2xl font-display font-semibold text-slate-900">Fast Track</h3>
+                        <p class="mt-2 text-sm text-slate-600">Essential fields only. Great when you want to post quickly and start receiving applicants fast.</p>
+                        <ul class="mt-4 space-y-1 text-xs text-slate-600">
+                            <li>Schedule window</li>
+                            <li>Address and city</li>
+                            <li>Services and recipient name</li>
+                        </ul>
+                        <p class="mt-4 text-sm font-semibold text-emerald-700 group-hover:text-emerald-800">Start fast track →</p>
+                    </button>
+
+                    <button type="button" wire:click="chooseCompleteSetup" class="group rounded-2xl border border-slate-300 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                        <p class="text-xs uppercase tracking-[0.14em] text-slate-600 font-semibold">More control</p>
+                        <h3 class="mt-2 text-2xl font-display font-semibold text-slate-900">Detailed Request</h3>
+                        <p class="mt-2 text-sm text-slate-600">Add extra context for tighter matching, including optional recipient and access details.</p>
+                        <ul class="mt-4 space-y-1 text-xs text-slate-600">
+                            <li>Optional access notes</li>
+                            <li>Recipient context and health details</li>
+                            <li>Extra matching preferences</li>
+                        </ul>
+                        <p class="mt-4 text-sm font-semibold text-slate-700 group-hover:text-slate-900">Start detailed request →</p>
+                    </button>
                 </div>
-                <button type="button" wire:click="applySavedProfiles">
-                    <x-button color="green" light>Use saved profiles</x-button>
-                </button>
-            </div>
-        @endif
+            </section>
+        @else
+            @if ($lastRequestId)
+                <div class="rounded-2xl border border-cyan-200 bg-cyan-50 p-4 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <p class="text-xs uppercase tracking-[0.14em] text-cyan-700 font-semibold">Quick start</p>
+                        <p class="mt-1 text-sm text-cyan-900">
+                            Reuse your last request:
+                            <span class="font-semibold">{{ $lastRequestSummary['title'] ?? 'Recent request' }}</span>
+                            ({{ $lastRequestSummary['location'] ?? 'Raleigh, NC' }})
+                        </p>
+                        @if ($prefillApplied)
+                            <p class="mt-1 text-xs text-cyan-700">Fields loaded. Confirm schedule and publish.</p>
+                        @endif
+                    </div>
+                    <button type="button" wire:click="prefillFromLastRequest">
+                        <x-button color="blue" light>Use last request</x-button>
+                    </button>
+                </div>
+            @endif
 
-        <x-card>
+            @if ($hasSavedHouseholdProfile || $hasSavedRecipientProfile)
+                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <p class="text-xs uppercase tracking-[0.14em] text-emerald-700 font-semibold">Saved family profile</p>
+                        <p class="mt-1 text-sm text-emerald-900">
+                            Reuse saved household + care recipient details in one click.
+                        </p>
+                        @if ($savedProfilesApplied)
+                            <p class="mt-1 text-xs text-emerald-700">Saved profile loaded.</p>
+                        @endif
+                    </div>
+                    <button type="button" wire:click="applySavedProfiles">
+                        <x-button color="green" light>Use saved profiles</x-button>
+                    </button>
+                </div>
+            @endif
+
+            <x-card>
             <x-slot:header>
                 <div class="space-y-3">
                     <div class="flex items-center justify-between gap-3">
@@ -109,20 +149,15 @@
                         Start with your care need. Keep it simple. We will handle schedule and location in the next step.
                     </div>
 
-                    <x-select.styled
-                        wire:model.live="request_mode"
-                        label="How would you like to post?"
-                        :options="$requestModeOptions"
-                    />
-                    @error('request_mode') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-
                     <div class="grid grid-cols-1 gap-4">
-                        <x-textarea
-                            label="{{ $request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_FAST_TRACK ? 'Anything else we should know? (optional)' : 'What help do you need?' }}"
-                            wire:model="additional_info"
-                            hint="Example: Need someone for my mom tomorrow from 9am to 1pm for companionship and meal prep."
-                        />
-                        @error('additional_info') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                        @if ($request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_COMPLETE_SETUP)
+                            <x-textarea
+                                label="What help do you need?"
+                                wire:model="additional_info"
+                                hint="Example: Need someone for my mom tomorrow from 9am to 1pm for companionship and meal prep."
+                            />
+                            @error('additional_info') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                        @endif
 
                         <x-select.styled
                             label="Request type"
@@ -140,13 +175,15 @@
                         @error('selectedTasks') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
 
-                    <details class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                        <summary class="cursor-pointer text-sm font-semibold text-slate-800">Optional now: add a custom request title</summary>
-                        <div class="mt-4">
-                            <x-input label="Request title (optional)" wire:model="title" hint="If empty, HomeCare creates one automatically." />
-                            @error('title') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                    </details>
+                    @if ($request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_COMPLETE_SETUP)
+                        <details class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                            <summary class="cursor-pointer text-sm font-semibold text-slate-800">Optional now: add a custom request title</summary>
+                            <div class="mt-4">
+                                <x-input label="Request title (optional)" wire:model="title" hint="If empty, HomeCare creates one automatically." />
+                                @error('title') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                        </details>
+                    @endif
                 </div>
             @elseif ($step === 2)
                 <div class="hc-wizard-step space-y-5">
@@ -189,10 +226,12 @@
                                     <x-input type="date" label="Starts on" wire:model="recurring_starts_on" />
                                     @error('recurring_starts_on') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
-                                <div>
-                                    <x-input type="date" label="Ends on (optional)" wire:model="recurring_ends_on" />
-                                    @error('recurring_ends_on') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                                </div>
+                                @if ($request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_COMPLETE_SETUP)
+                                    <div>
+                                        <x-input type="date" label="Ends on (optional)" wire:model="recurring_ends_on" />
+                                        @error('recurring_ends_on') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     @endif
@@ -202,10 +241,12 @@
                             <x-input label="Address line 1" wire:model="address_line1" />
                             @error('address_line1') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
-                        <div>
-                            <x-input label="Address line 2 (optional)" wire:model="address_line2" />
-                            @error('address_line2') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
+                        @if ($request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_COMPLETE_SETUP)
+                            <div>
+                                <x-input label="Address line 2 (optional)" wire:model="address_line2" />
+                                @error('address_line2') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                        @endif
                         <div>
                             <x-input label="City" wire:model="city" />
                             @error('city') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
@@ -222,16 +263,18 @@
                             <x-input label="ZIP" wire:model="zip" />
                             @error('zip') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
-                        <div>
-                            <x-input
-                                type="number"
-                                min="1"
-                                max="72"
-                                label="Preferred response (hours)"
-                                wire:model="preferred_response_hours"
-                            />
-                            @error('preferred_response_hours') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
+                        @if ($request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_COMPLETE_SETUP)
+                            <div>
+                                <x-input
+                                    type="number"
+                                    min="1"
+                                    max="72"
+                                    label="Preferred response (hours)"
+                                    wire:model="preferred_response_hours"
+                                />
+                                @error('preferred_response_hours') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                        @endif
                     </div>
 
                     <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
@@ -272,14 +315,18 @@
                             <x-input label="Recipient full name" wire:model="recipient_full_name" />
                             @error('recipient_full_name') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
-                        <div>
-                            <x-input label="Relationship to you (optional)" wire:model="recipient_relationship_to_family" hint="Mother, father, self, etc." />
-                            @error('recipient_relationship_to_family') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
+                        @if ($request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_COMPLETE_SETUP)
+                            <div>
+                                <x-input label="Relationship to you (optional)" wire:model="recipient_relationship_to_family" hint="Mother, father, self, etc." />
+                                @error('recipient_relationship_to_family') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                        @endif
                     </div>
 
-                    <x-textarea label="Recipient care notes (optional)" wire:model="recipient_care_notes" />
-                    @error('recipient_care_notes') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                    @if ($request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_COMPLETE_SETUP)
+                        <x-textarea label="Recipient care notes (optional)" wire:model="recipient_care_notes" />
+                        @error('recipient_care_notes') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                    @endif
 
                     @if ($request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_COMPLETE_SETUP)
                         <details class="rounded-lg border border-slate-200 bg-slate-50 p-4">
@@ -301,30 +348,32 @@
                         </details>
                     @endif
 
-                    <div class="rounded-lg border border-slate-200 p-4">
-                        <x-checkbox label="Booked by a third-party contact" wire:model="includeThirdPartyContact" />
+                    @if ($request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_COMPLETE_SETUP)
+                        <div class="rounded-lg border border-slate-200 p-4">
+                            <x-checkbox label="Booked by a third-party contact" wire:model="includeThirdPartyContact" />
 
-                        @if ($includeThirdPartyContact)
-                            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <x-input label="Contact full name" wire:model="third_party_full_name" />
-                                    @error('third_party_full_name') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                            @if ($includeThirdPartyContact)
+                                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <x-input label="Contact full name" wire:model="third_party_full_name" />
+                                        @error('third_party_full_name') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+                                    <div>
+                                        <x-input label="Relationship to recipient" wire:model="third_party_relationship_to_recipient" />
+                                        @error('third_party_relationship_to_recipient') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+                                    <div>
+                                        <x-input label="Phone" wire:model="third_party_phone" />
+                                        @error('third_party_phone') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+                                    <div>
+                                        <x-input type="email" label="Email (optional)" wire:model="third_party_email" />
+                                        @error('third_party_email') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
                                 </div>
-                                <div>
-                                    <x-input label="Relationship to recipient" wire:model="third_party_relationship_to_recipient" />
-                                    @error('third_party_relationship_to_recipient') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                                </div>
-                                <div>
-                                    <x-input label="Phone" wire:model="third_party_phone" />
-                                    @error('third_party_phone') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                                </div>
-                                <div>
-                                    <x-input type="email" label="Email (optional)" wire:model="third_party_email" />
-                                    @error('third_party_email') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                                </div>
-                            </div>
-                        @endif
-                    </div>
+                            @endif
+                        </div>
+                    @endif
                 </div>
             @else
                 <div class="hc-wizard-step space-y-4">
@@ -423,5 +472,6 @@
                 </div>
             </x-slot:footer>
         </x-card>
+        @endif
     </div>
 </div>

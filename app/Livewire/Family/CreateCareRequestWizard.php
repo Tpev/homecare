@@ -22,6 +22,7 @@ class CreateCareRequestWizard extends Component
 
     public int $step = 1;
     public int $totalSteps = 4;
+    public bool $modeChosen = false;
     public ?int $lastRequestId = null;
     public array $lastRequestSummary = [];
     public bool $prefillApplied = false;
@@ -325,6 +326,10 @@ class CreateCareRequestWizard extends Component
 
     public function nextStep(): void
     {
+        if (! $this->modeChosen) {
+            $this->modeChosen = true;
+        }
+
         $this->validateStep($this->step);
         $this->step = min($this->step + 1, $this->totalSteps);
     }
@@ -348,6 +353,18 @@ class CreateCareRequestWizard extends Component
         }
 
         $this->reset(['requested_start_at', 'requested_end_at']);
+    }
+
+    public function chooseFastTrack(): void
+    {
+        $this->request_mode = self::MODE_FAST_TRACK;
+        $this->modeChosen = true;
+    }
+
+    public function chooseCompleteSetup(): void
+    {
+        $this->request_mode = self::MODE_COMPLETE_SETUP;
+        $this->modeChosen = true;
     }
 
     public function publish(): void
