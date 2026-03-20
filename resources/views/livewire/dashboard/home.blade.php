@@ -14,6 +14,64 @@
                 $activeShifts = $familyData['active_shifts'] ?? collect();
                 $billingReady = (bool) ($familyData['billing_ready'] ?? false);
                 $urgentOpenRequests = (int) ($familyData['urgent_open_requests'] ?? 0);
+                $recentApplicants = $familyData['recent_applicants'] ?? collect();
+                $hasAnyPipelineData = $focusRequests->count() > 0 || $activeShifts->count() > 0 || $recentApplicants->count() > 0;
+
+                $nextActionTitle = 'Post your first request';
+                $nextActionDescription = 'Use Fast Track to post in minutes. You can edit details any time.';
+                $nextActionRoute = route('family.requests.create');
+                $nextActionLabel = 'Post request';
+
+                if (! $billingReady) {
+                    $nextActionTitle = 'Add payment method';
+                    $nextActionDescription = 'Payment is secured before shift start so hiring is instant when you choose a caregiver.';
+                    $nextActionRoute = route('family.billing.show');
+                    $nextActionLabel = 'Set up billing';
+                }
+
+                if ($focusRequests->count() > 0 || $activeShifts->count() > 0) {
+                    $nextActionTitle = 'Manage your active requests';
+                    $nextActionDescription = 'Review candidates, chat, and move to hire quickly.';
+                    $nextActionRoute = route('family.requests.index');
+                    $nextActionLabel = 'Open my requests';
+                }
+
+                if ($needsApplicants->count() > 0) {
+                    $nextActionTitle = 'Invite caregivers to get faster replies';
+                    $nextActionDescription = $needsApplicants->count().' request(s) are still waiting for applicants.';
+                    $nextActionRoute = route('caregivers.search');
+                    $nextActionLabel = 'Find caregivers';
+                }
+
+                if (($familyData['stats']['unread_messages'] ?? 0) > 0) {
+                    $nextActionTitle = 'Reply to caregiver messages';
+                    $nextActionDescription = $familyData['stats']['unread_messages'].' unread conversation(s) need your response.';
+                    $nextActionRoute = route('messages.index');
+                    $nextActionLabel = 'Open messages';
+                }
+
+                if ($readyToReview->count() > 0) {
+                    $reviewRequest = $readyToReview->first();
+                    $nextActionTitle = 'Review applicants and hire';
+                    $nextActionDescription = $readyToReview->count().' request(s) have candidates waiting for your decision.';
+                    $nextActionRoute = $reviewRequest ? route('family.requests.show', $reviewRequest->id) : route('family.requests.index');
+                    $nextActionLabel = 'Review now';
+                }
+
+                if ($activeShifts->count() > 0) {
+                    $activeRequest = $activeShifts->first();
+                    $nextActionTitle = 'Track your active shift';
+                    $nextActionDescription = 'Follow status, confirm timesheet, and leave a review when complete.';
+                    $nextActionRoute = $activeRequest ? route('family.requests.show', $activeRequest->id) : route('family.requests.index');
+                    $nextActionLabel = 'Open shift';
+                }
+
+                $journeySteps = [
+                    ['label' => 'Post request', 'done' => $focusRequests->count() > 0 || $activeShifts->count() > 0],
+                    ['label' => 'Get applicants', 'done' => $recentApplicants->count() > 0 || $readyToReview->count() > 0],
+                    ['label' => 'Chat and hire', 'done' => $focusRequests->where('status', \App\Models\CareRequest::STATUS_FILLED)->count() > 0 || $activeShifts->count() > 0],
+                    ['label' => 'Complete and review', 'done' => $focusRequests->filter(fn ($request) => in_array((string) ($request->booking?->status ?? ''), [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true))->count() > 0],
+                ];
             @endphp
 
             <section class="relative overflow-hidden rounded-3xl border border-slate-900/80 bg-slate-950 p-5 text-white shadow-xl">
@@ -23,13 +81,11 @@
                 <div class="relative mt-3 grid grid-cols-1 gap-5 lg:grid-cols-5">
                     <div class="lg:col-span-3">
                         <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Family Dashboard</p>
-                        <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Get trusted caregiver support fast.</h1>
-                        <p class="mt-2 text-sm text-slate-300 max-w-2xl">
-                            Create one request in a clear step-by-step wizard, then review, hire, and chat in one flow.
-                        </p>
+                        <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">{{ $nextActionTitle }}</h1>
+                        <p class="mt-2 text-sm text-slate-300 max-w-2xl">{{ $nextActionDescription }}</p>
                         <div class="mt-4 flex flex-wrap items-center gap-3">
-                            <a href="{{ route('family.requests.create') }}" wire:navigate><x-button color="white">Create request</x-button></a>
-                            <p class="text-xs text-slate-300">Short wizard. Only essential questions first.</p>
+                            <a href="{{ $nextActionRoute }}" wire:navigate><x-button color="white">{{ $nextActionLabel }}</x-button></a>
+                            <a href="{{ route('family.requests.create') }}" wire:navigate><x-button color="white" light>Post another request</x-button></a>
                         </div>
                         @unless($billingReady)
                             <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
@@ -39,11 +95,16 @@
                         @endunless
                     </div>
                     <div class="lg:col-span-2 grid grid-cols-2 gap-3">
-                        <div class="col-span-2 rounded-xl border {{ $urgentOpenRequests > 0 ? 'border-amber-300 bg-amber-50 text-amber-900' : 'border-white/25 bg-white/10 text-white' }} p-3 backdrop-blur-sm">
-                            <p class="text-[11px] uppercase tracking-[0.14em] {{ $urgentOpenRequests > 0 ? 'text-amber-700' : 'text-slate-300' }}">Priority now</p>
-                            <p class="mt-1 text-sm font-semibold">
-                                {{ $urgentOpenRequests > 0 ? $urgentOpenRequests.' request(s) need follow-up now.' : 'No urgent request follow-up right now.' }}
-                            </p>
+                        <div class="col-span-2 rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
+                            <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">How it works</p>
+                            <div class="mt-2 grid grid-cols-2 gap-2">
+                                @foreach ($journeySteps as $index => $journeyStep)
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold {{ $journeyStep['done'] ? 'bg-emerald-300 text-emerald-950' : 'bg-white/20 text-white' }}">{{ $index + 1 }}</span>
+                                        <span class="{{ $journeyStep['done'] ? 'text-emerald-100' : 'text-slate-200' }}">{{ $journeyStep['label'] }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                         <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
                             <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Ready to review</p>
@@ -65,12 +126,27 @@
                 </div>
             </section>
 
+            @if (! $hasAnyPipelineData)
+                <x-card>
+                    <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+                        <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Get started</p>
+                        <h2 class="mt-2 font-display text-2xl font-semibold text-slate-900">Post your first care request in minutes</h2>
+                        <p class="mx-auto mt-2 max-w-2xl text-sm text-slate-600">
+                            Start with Fast Track: schedule, address, services, and recipient name. Then review applicants, chat, and hire.
+                        </p>
+                        <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
+                            <a href="{{ route('family.requests.create') }}" wire:navigate><x-button color="blue">Start fast request</x-button></a>
+                            <a href="{{ route('caregivers.search') }}" wire:navigate><x-button color="slate" light>Browse caregivers</x-button></a>
+                        </div>
+                    </div>
+                </x-card>
+            @else
             <section class="grid grid-cols-1 gap-6 xl:grid-cols-12">
                 <div class="xl:col-span-8 space-y-6">
                     <x-card>
                         <x-slot:header>
                             <div class="flex items-center justify-between">
-                                <h2 class="font-display font-semibold">Priority request board</h2>
+                                <h2 class="font-display font-semibold">Request pipeline</h2>
                                 <a href="{{ route('family.requests.index') }}" wire:navigate class="hc-link">View all requests</a>
                             </div>
                         </x-slot:header>
@@ -144,13 +220,13 @@
                     <x-card>
                         <x-slot:header>
                             <div class="flex items-center justify-between">
-                                <h2 class="font-display font-semibold">Latest applicant activity</h2>
+                                <h2 class="font-display font-semibold">Recent applicant activity</h2>
                                 <a href="{{ route('messages.index') }}" wire:navigate class="hc-link">Open messages</a>
                             </div>
                         </x-slot:header>
 
                         <div class="space-y-3">
-                            @forelse ($familyData['recent_applicants'] as $application)
+                            @forelse ($recentApplicants as $application)
                                 <div class="rounded-xl border border-slate-200 p-4">
                                     <div class="flex items-start justify-between gap-3">
                                         <div>
@@ -180,18 +256,19 @@
 
                 <div class="xl:col-span-4 space-y-6">
                     <x-card>
-                        <x-slot:header><h2 class="font-display font-semibold">Fast actions</h2></x-slot:header>
+                        <x-slot:header><h2 class="font-display font-semibold">What to do now</h2></x-slot:header>
                         <div class="space-y-3">
                             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                                <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Primary action</p>
-                                <p class="mt-2 text-sm text-slate-600">Create a new request with the guided wizard.</p>
+                                <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Recommended</p>
+                                <p class="mt-2 text-sm text-slate-600">{{ $nextActionDescription }}</p>
                                 <div class="mt-3">
-                                    <a href="{{ route('family.requests.create') }}" wire:navigate><x-button color="blue">Create request</x-button></a>
+                                    <a href="{{ $nextActionRoute }}" wire:navigate><x-button color="blue">{{ $nextActionLabel }}</x-button></a>
                                 </div>
                             </div>
                             <div class="space-y-2 text-sm">
+                                <a href="{{ route('family.requests.create') }}" wire:navigate class="block font-medium text-cyan-700 underline underline-offset-2">Post with Fast Track</a>
                                 <a href="{{ route('caregivers.search') }}" wire:navigate class="block font-medium text-cyan-700 underline underline-offset-2">Invite caregivers directly</a>
-                                <a href="{{ route('messages.index') }}" wire:navigate class="block font-medium text-cyan-700 underline underline-offset-2">Respond in chat now</a>
+                                <a href="{{ route('messages.index') }}" wire:navigate class="block font-medium text-cyan-700 underline underline-offset-2">Open messages</a>
                                 <a href="{{ route('family.billing.show') }}" wire:navigate class="block font-medium {{ $billingReady ? 'text-emerald-700' : 'text-amber-700' }} underline underline-offset-2">
                                     {{ $billingReady ? 'Billing is ready' : 'Complete billing setup' }}
                                 </a>
@@ -203,24 +280,24 @@
                         <details class="group" {{ $urgentOpenRequests > 0 ? 'open' : '' }}>
                             <summary class="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
                                 <div>
-                                    <h2 class="font-display font-semibold">Operations signal</h2>
-                                    <p class="text-xs text-slate-500 mt-1">Compact view of request health and follow-up risk.</p>
+                                    <h2 class="font-display font-semibold">Clarity and timing</h2>
+                                    <p class="text-xs text-slate-500 mt-1">Quick guide to keep your request moving fast.</p>
                                 </div>
                                 <span class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 group-open:hidden">Expand</span>
                                 <span class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 hidden group-open:inline">Collapse</span>
                             </summary>
                             <div class="mt-3 space-y-3 border-t border-slate-200 pt-3 text-sm">
                                 <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                                    <p class="font-medium text-slate-900">Open requests</p>
-                                    <p class="text-slate-600">{{ $familyData['stats']['open_requests'] }} currently running.</p>
+                                    <p class="font-medium text-slate-900">Typical flow</p>
+                                    <p class="text-slate-600">Post request → applicants arrive → chat → hire → track shift.</p>
                                 </div>
                                 <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                                    <p class="font-medium text-slate-900">Ready to review</p>
-                                    <p class="text-slate-600">{{ $familyData['stats']['ready_to_review'] }} request(s) need a shortlist decision.</p>
+                                    <p class="font-medium text-slate-900">Payment safety</p>
+                                    <p class="text-slate-600">Payment method is authorized before shifts so caregiver payout is secured.</p>
                                 </div>
                                 <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                                    <p class="font-medium text-slate-900">Waiting applicants</p>
-                                    <p class="text-slate-600">{{ $familyData['stats']['waiting_for_applicants'] }} request(s) may need proactive invite.</p>
+                                    <p class="font-medium text-slate-900">Current status</p>
+                                    <p class="text-slate-600">{{ $familyData['stats']['ready_to_review'] }} ready to review, {{ $familyData['stats']['waiting_for_applicants'] }} waiting for applicants.</p>
                                 </div>
                                 @if ($urgentOpenRequests > 0)
                                     <div class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-amber-900">
@@ -233,6 +310,7 @@
                     </x-card>
                 </div>
             </section>
+            @endif
         @elseif ($mode === 'caregiver')
             @php
                 $profile = $caregiverData['profile'] ?? null;
