@@ -162,4 +162,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(CareBookingPayment::class, 'caregiver_user_id');
     }
+
+    public function familyHouseholdProfile(): HasOne
+    {
+        return $this->hasOne(FamilyHouseholdProfile::class, 'family_user_id');
+    }
+
+    public function familyRecipientProfile(): HasOne
+    {
+        return $this->hasOne(FamilyRecipientProfile::class, 'family_user_id');
+    }
 }

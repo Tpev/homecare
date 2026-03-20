@@ -50,6 +50,23 @@
             </div>
         @endif
 
+        @if ($hasSavedHouseholdProfile || $hasSavedRecipientProfile)
+            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <p class="text-xs uppercase tracking-[0.14em] text-emerald-700 font-semibold">Saved family profile</p>
+                    <p class="mt-1 text-sm text-emerald-900">
+                        Reuse saved household + care recipient details in one click.
+                    </p>
+                    @if ($savedProfilesApplied)
+                        <p class="mt-1 text-xs text-emerald-700">Saved profile loaded.</p>
+                    @endif
+                </div>
+                <button type="button" wire:click="applySavedProfiles">
+                    <x-button color="green" light>Use saved profiles</x-button>
+                </button>
+            </div>
+        @endif
+
         <x-card>
             <x-slot:header>
                 <div class="space-y-3">
@@ -92,9 +109,16 @@
                         Start with your care need. Keep it simple. We will handle schedule and location in the next step.
                     </div>
 
+                    <x-select.styled
+                        wire:model.live="request_mode"
+                        label="How would you like to post?"
+                        :options="$requestModeOptions"
+                    />
+                    @error('request_mode') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
                     <div class="grid grid-cols-1 gap-4">
                         <x-textarea
-                            label="What help do you need?"
+                            label="{{ $request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_FAST_TRACK ? 'Anything else we should know? (optional)' : 'What help do you need?' }}"
                             wire:model="additional_info"
                             hint="Example: Need someone for my mom tomorrow from 9am to 1pm for companionship and meal prep."
                         />
@@ -240,12 +264,12 @@
             @elseif ($step === 3)
                 <div class="hc-wizard-step space-y-5">
                     <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
-                        Recipient details are optional except when a third-party contact is booking on their behalf.
+                        Add who receives care. This helps caregivers decide quickly if they are a good fit.
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <x-input label="Recipient full name (optional)" wire:model="recipient_full_name" />
+                            <x-input label="Recipient full name" wire:model="recipient_full_name" />
                             @error('recipient_full_name') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
                         <div>
@@ -257,23 +281,25 @@
                     <x-textarea label="Recipient care notes (optional)" wire:model="recipient_care_notes" />
                     @error('recipient_care_notes') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-                    <details class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                        <summary class="cursor-pointer text-sm font-semibold text-slate-800">Optional: add health context</summary>
-                        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <x-input type="date" label="Date of birth" wire:model="recipient_date_of_birth" />
-                                @error('recipient_date_of_birth') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                    @if ($request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_COMPLETE_SETUP)
+                        <details class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                            <summary class="cursor-pointer text-sm font-semibold text-slate-800">Optional: add health context</summary>
+                            <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <x-input type="date" label="Date of birth" wire:model="recipient_date_of_birth" />
+                                    @error('recipient_date_of_birth') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <x-select.styled label="Gender" wire:model="recipient_gender" :options="$genderOptions" />
+                                    @error('recipient_gender') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <x-select.styled label="Mobility level" wire:model="recipient_mobility_level" :options="$mobilityOptions" />
+                                    @error('recipient_mobility_level') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
                             </div>
-                            <div>
-                                <x-select.styled label="Gender" wire:model="recipient_gender" :options="$genderOptions" />
-                                @error('recipient_gender') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                            </div>
-                            <div>
-                                <x-select.styled label="Mobility level" wire:model="recipient_mobility_level" :options="$mobilityOptions" />
-                                @error('recipient_mobility_level') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                            </div>
-                        </div>
-                    </details>
+                        </details>
+                    @endif
 
                     <div class="rounded-lg border border-slate-200 p-4">
                         <x-checkbox label="Booked by a third-party contact" wire:model="includeThirdPartyContact" />
@@ -353,24 +379,26 @@
                     </div>
 
                     <div class="rounded-lg border border-slate-200 p-4">
-                        <p class="text-sm"><span class="font-medium">Care need:</span> {{ $additional_info }}</p>
+                        <p class="text-sm"><span class="font-medium">Care need:</span> {{ $additional_info ?: 'No additional note provided.' }}</p>
                         <p class="mt-2 text-sm"><span class="font-medium">Services:</span> {{ $selectedTaskNames->implode(', ') ?: 'None selected' }}</p>
                         <p class="mt-2 text-sm"><span class="font-medium">Recipient:</span> {{ $recipient_full_name ?: 'Care recipient' }} ({{ $recipient_relationship_to_family ?: 'Family member' }})</p>
                     </div>
 
-                    <details class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                        <summary class="cursor-pointer text-sm font-semibold text-slate-800">Optional: refine matching details before publish</summary>
-                        <div class="mt-4 space-y-4">
-                            <x-textarea label="Scope of work (optional)" wire:model="scope_of_work" hint="If empty, this will be generated from selected services." />
-                            @error('scope_of_work') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                    @if ($request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_COMPLETE_SETUP)
+                        <details class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                            <summary class="cursor-pointer text-sm font-semibold text-slate-800">Optional: refine matching details before publish</summary>
+                            <div class="mt-4 space-y-4">
+                                <x-textarea label="Scope of work (optional)" wire:model="scope_of_work" hint="If empty, this will be generated from selected services." />
+                                @error('scope_of_work') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-                            <x-input label="Time expectations (optional)" wire:model="time_expectations" hint="Example: Arrive 10 minutes early." />
-                            @error('time_expectations') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                <x-input label="Time expectations (optional)" wire:model="time_expectations" hint="Example: Arrive 10 minutes early." />
+                                @error('time_expectations') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-                            <x-textarea label="Home access notes (optional)" wire:model="home_access_notes" hint="Gate, parking, lockbox, etc." />
-                            @error('home_access_notes') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                    </details>
+                                <x-textarea label="Home access notes (optional)" wire:model="home_access_notes" hint="Gate, parking, lockbox, etc." />
+                                @error('home_access_notes') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                        </details>
+                    @endif
 
                     <div class="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
                         Once published, active caregivers can apply and you can invite specific profiles directly.

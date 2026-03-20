@@ -64,6 +64,7 @@ Route::get('/', [MarketingPagesController::class, 'landing'])->name('landing');
 Route::get('/families', [MarketingPagesController::class, 'family'])->name('landing.family');
 Route::get('/caregivers', [MarketingPagesController::class, 'caregiver'])->name('landing.caregiver');
 Route::get('/agencies', [MarketingPagesController::class, 'agency'])->name('landing.agency');
+Route::view('/flyer/family', 'marketing.flyer-family')->name('marketing.flyer.family');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{blogSlug}/cover', BlogCoverController::class)->name('blog.cover');
 Route::get('/blog/{blogSlug}', [BlogController::class, 'show'])->name('blog.show');

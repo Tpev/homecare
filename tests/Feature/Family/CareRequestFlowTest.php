@@ -385,6 +385,7 @@ class CareRequestFlowTest extends TestCase
             ->set('selectedTasks', [$task->id])
             ->call('nextStep')
             ->call('nextStep')
+            ->set('recipient_full_name', 'Margaret Doe')
             ->call('publish');
 
         $careRequest = CareRequest::query()->latest('id')->first();
@@ -392,6 +393,59 @@ class CareRequestFlowTest extends TestCase
         $this->assertNotNull($careRequest);
         $this->assertNotSame('', trim((string) $careRequest->title));
         $this->assertStringContainsString('care support', strtolower((string) $careRequest->title));
+    }
+
+    public function test_family_can_save_and_reuse_household_and_recipient_profiles_in_one_click(): void
+    {
+        $family = User::factory()->create([
+            'role' => 'family',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+        ]);
+
+        $task = CareTask::query()->create(['name' => 'Companionship']);
+        $startAt = now()->addDay()->setTime(9, 0)->format('Y-m-d\TH:i');
+        $endAt = now()->addDay()->setTime(12, 0)->format('Y-m-d\TH:i');
+
+        Livewire::actingAs($family)
+            ->test(CreateCareRequestWizard::class)
+            ->set('request_mode', CreateCareRequestWizard::MODE_FAST_TRACK)
+            ->set('selectedTasks', [$task->id])
+            ->set('requested_start_at', $startAt)
+            ->set('requested_end_at', $endAt)
+            ->set('address_line1', '10 Oak Street')
+            ->set('city', 'Raleigh')
+            ->set('state', 'NC')
+            ->set('zip', '27601')
+            ->call('nextStep')
+            ->set('recipient_full_name', 'First Recipient')
+            ->set('recipient_relationship_to_family', 'Mother')
+            ->call('nextStep')
+            ->call('publish');
+
+        $this->assertDatabaseHas('family_household_profiles', [
+            'family_user_id' => $family->id,
+            'address_line1' => '10 Oak Street',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+        ]);
+
+        $this->assertDatabaseHas('family_recipient_profiles', [
+            'family_user_id' => $family->id,
+            'full_name' => 'First Recipient',
+            'relationship_to_family' => 'Mother',
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(CreateCareRequestWizard::class)
+            ->call('applySavedProfiles')
+            ->assertSet('address_line1', '10 Oak Street')
+            ->assertSet('city', 'Raleigh')
+            ->assertSet('state', 'NC')
+            ->assertSet('zip', '27601')
+            ->assertSet('recipient_full_name', 'First Recipient')
+            ->assertSet('recipient_relationship_to_family', 'Mother');
     }
 
     public function test_family_can_prefill_from_last_request(): void

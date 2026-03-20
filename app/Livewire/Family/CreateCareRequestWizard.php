@@ -4,6 +4,8 @@ namespace App\Livewire\Family;
 
 use App\Models\CareRequest;
 use App\Models\CareTask;
+use App\Models\FamilyHouseholdProfile;
+use App\Models\FamilyRecipientProfile;
 use App\Support\FunnelTracker;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -15,11 +17,19 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class CreateCareRequestWizard extends Component
 {
+    public const MODE_FAST_TRACK = 'fast_track';
+    public const MODE_COMPLETE_SETUP = 'complete_setup';
+
     public int $step = 1;
     public int $totalSteps = 4;
     public ?int $lastRequestId = null;
     public array $lastRequestSummary = [];
     public bool $prefillApplied = false;
+    public bool $savedProfilesApplied = false;
+    public bool $hasSavedHouseholdProfile = false;
+    public bool $hasSavedRecipientProfile = false;
+
+    public string $request_mode = self::MODE_FAST_TRACK;
 
     public string $title = '';
     public string $additional_info = '';
@@ -57,6 +67,10 @@ class CreateCareRequestWizard extends Component
     public string $third_party_email = '';
 
     public array $taskOptions = [];
+    public array $requestModeOptions = [
+        ['label' => 'Fast Track (recommended)', 'value' => self::MODE_FAST_TRACK],
+        ['label' => 'Complete Setup', 'value' => self::MODE_COMPLETE_SETUP],
+    ];
     public array $requestTypeOptions = [
         ['label' => 'One-time job', 'value' => CareRequest::TYPE_ONE_TIME],
         ['label' => 'Recurring job', 'value' => CareRequest::TYPE_RECURRING],
@@ -112,6 +126,8 @@ class CreateCareRequestWizard extends Component
 
         $this->city = (string) ($user->city ?? '');
         $this->state = (string) ($user->state ?? '');
+
+        $this->loadSavedProfiles();
 
         $lastRequest = CareRequest::query()
             ->where('family_user_id', $user->id)
@@ -267,6 +283,46 @@ class CreateCareRequestWizard extends Component
         session()->flash('status', 'Last request loaded. Update schedule and publish.');
     }
 
+    public function applySavedProfiles(): void
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return;
+        }
+
+        $user->load(['familyHouseholdProfile', 'familyRecipientProfile']);
+
+        $household = $user->familyHouseholdProfile;
+        if ($household) {
+            $this->address_line1 = (string) ($household->address_line1 ?? '');
+            $this->address_line2 = (string) ($household->address_line2 ?? '');
+            $this->city = (string) ($household->city ?? '');
+            $this->state = (string) ($household->state ?? '');
+            $this->zip = (string) ($household->zip ?? '');
+            $this->home_access_notes = (string) ($household->home_access_notes ?? '');
+            $this->time_expectations = (string) ($household->time_expectations ?? '');
+            $this->preferred_response_hours = (int) ($household->preferred_response_hours ?: 12);
+        }
+
+        $recipient = $user->familyRecipientProfile;
+        if ($recipient) {
+            $this->recipient_full_name = (string) ($recipient->full_name ?? '');
+            $this->recipient_date_of_birth = $recipient->date_of_birth?->toDateString() ?? '';
+            $this->recipient_gender = (string) ($recipient->gender ?? '');
+            $this->recipient_mobility_level = (string) ($recipient->mobility_level ?? '');
+            $this->recipient_relationship_to_family = (string) ($recipient->relationship_to_family ?? '');
+            $this->recipient_care_notes = (string) ($recipient->care_notes ?? '');
+            $this->includeThirdPartyContact = (bool) ($recipient->include_third_party_contact ?? false);
+            $this->third_party_full_name = (string) ($recipient->third_party_full_name ?? '');
+            $this->third_party_relationship_to_recipient = (string) ($recipient->third_party_relationship_to_recipient ?? '');
+            $this->third_party_phone = (string) ($recipient->third_party_phone ?? '');
+            $this->third_party_email = (string) ($recipient->third_party_email ?? '');
+        }
+
+        $this->savedProfilesApplied = true;
+        session()->flash('status', 'Saved household and recipient profiles loaded.');
+    }
+
     public function nextStep(): void
     {
         $this->validateStep($this->step);
@@ -351,6 +407,8 @@ class CreateCareRequestWizard extends Component
             return $careRequest;
         });
 
+        $this->saveFamilyProfiles();
+
         FunnelTracker::track('care_request_published', auth()->user(), $careRequest, [
             'request_type' => $careRequest->request_type,
             'tasks_count' => count($this->selectedTasks),
@@ -386,10 +444,15 @@ class CreateCareRequestWizard extends Component
 
     private function rulesForNeedAndServices(): array
     {
+        $additionalInfoRules = $this->request_mode === self::MODE_COMPLETE_SETUP
+            ? ['required', 'string', 'min:12', 'max:3000']
+            : ['nullable', 'string', 'max:3000'];
+
         return [
             'request_type' => ['required', Rule::in([CareRequest::TYPE_ONE_TIME, CareRequest::TYPE_RECURRING])],
+            'request_mode' => ['required', Rule::in([self::MODE_FAST_TRACK, self::MODE_COMPLETE_SETUP])],
             'title' => ['nullable', 'string', 'max:140'],
-            'additional_info' => ['required', 'string', 'min:12', 'max:3000'],
+            'additional_info' => $additionalInfoRules,
             'scope_of_work' => ['nullable', 'string', 'max:3000'],
             'time_expectations' => ['nullable', 'string', 'max:255'],
             'home_access_notes' => ['nullable', 'string', 'max:3000'],
@@ -438,8 +501,12 @@ class CreateCareRequestWizard extends Component
 
     private function rulesForRecipient(): array
     {
+        $recipientNameRules = $this->request_mode === self::MODE_FAST_TRACK
+            ? ['required', 'string', 'min:2', 'max:120']
+            : ['nullable', 'string', 'max:120'];
+
         return [
-            'recipient_full_name' => ['nullable', 'string', 'max:120'],
+            'recipient_full_name' => $recipientNameRules,
             'recipient_date_of_birth' => ['nullable', 'date', 'before:today'],
             'recipient_gender' => ['nullable', Rule::in(array_column($this->genderOptions, 'value'))],
             'recipient_mobility_level' => ['nullable', Rule::in(array_column($this->mobilityOptions, 'value'))],
@@ -492,6 +559,57 @@ class CreateCareRequestWizard extends Component
         }
 
         return 'Non-medical home care support based on family instructions.';
+    }
+
+    private function loadSavedProfiles(): void
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return;
+        }
+
+        $user->load(['familyHouseholdProfile', 'familyRecipientProfile']);
+        $this->hasSavedHouseholdProfile = $user->familyHouseholdProfile !== null;
+        $this->hasSavedRecipientProfile = $user->familyRecipientProfile !== null;
+    }
+
+    private function saveFamilyProfiles(): void
+    {
+        $familyUserId = (int) auth()->id();
+
+        FamilyHouseholdProfile::query()->updateOrCreate(
+            ['family_user_id' => $familyUserId],
+            [
+                'address_line1' => trim($this->address_line1) !== '' ? trim($this->address_line1) : null,
+                'address_line2' => trim($this->address_line2) !== '' ? trim($this->address_line2) : null,
+                'city' => trim($this->city) !== '' ? trim($this->city) : null,
+                'state' => trim($this->state) !== '' ? strtoupper(trim($this->state)) : null,
+                'zip' => trim($this->zip) !== '' ? trim($this->zip) : null,
+                'home_access_notes' => trim($this->home_access_notes) !== '' ? trim($this->home_access_notes) : null,
+                'time_expectations' => trim($this->time_expectations) !== '' ? trim($this->time_expectations) : null,
+                'preferred_response_hours' => (int) $this->preferred_response_hours,
+            ]
+        );
+
+        FamilyRecipientProfile::query()->updateOrCreate(
+            ['family_user_id' => $familyUserId],
+            [
+                'full_name' => trim($this->recipient_full_name) !== '' ? trim($this->recipient_full_name) : null,
+                'date_of_birth' => $this->recipient_date_of_birth ?: null,
+                'gender' => $this->recipient_gender ?: null,
+                'mobility_level' => $this->recipient_mobility_level ?: null,
+                'relationship_to_family' => trim($this->recipient_relationship_to_family) !== '' ? trim($this->recipient_relationship_to_family) : null,
+                'care_notes' => trim($this->recipient_care_notes) !== '' ? trim($this->recipient_care_notes) : null,
+                'include_third_party_contact' => (bool) $this->includeThirdPartyContact,
+                'third_party_full_name' => trim($this->third_party_full_name) !== '' ? trim($this->third_party_full_name) : null,
+                'third_party_relationship_to_recipient' => trim($this->third_party_relationship_to_recipient) !== '' ? trim($this->third_party_relationship_to_recipient) : null,
+                'third_party_phone' => trim($this->third_party_phone) !== '' ? trim($this->third_party_phone) : null,
+                'third_party_email' => trim($this->third_party_email) !== '' ? trim($this->third_party_email) : null,
+            ]
+        );
+
+        $this->hasSavedHouseholdProfile = true;
+        $this->hasSavedRecipientProfile = true;
     }
 
     private function recurringHoursPerShift(): ?float
