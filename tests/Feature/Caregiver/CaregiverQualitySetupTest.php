@@ -25,13 +25,18 @@ class CaregiverQualitySetupTest extends TestCase
             'role' => 'caregiver',
             'city' => 'Raleigh',
             'state' => 'NC',
+            'date_of_birth' => now()->subYears(30)->toDateString(),
         ]);
 
-        $response = $this->actingAs($caregiver)->get('/dashboard');
+        $this->actingAs($caregiver)
+            ->get('/dashboard')
+            ->assertRedirect(route('caregiver.setup.index', absolute: false));
+
+        $response = $this->actingAs($caregiver)->get('/caregiver/setup');
 
         $response->assertOk();
         $response->assertSee('Identity verification');
-        $response->assertSee('Task comfort selection');
+        $response->assertSee('Task comfort');
         $response->assertSee('Insurance setup');
         $response->assertSee('Intro video');
     }
@@ -45,6 +50,7 @@ class CaregiverQualitySetupTest extends TestCase
             'role' => 'caregiver',
             'city' => 'Raleigh',
             'state' => 'NC',
+            'date_of_birth' => now()->subYears(30)->toDateString(),
         ]);
 
         CaregiverProfile::query()->create([
@@ -76,6 +82,7 @@ class CaregiverQualitySetupTest extends TestCase
             'role' => 'caregiver',
             'city' => 'Raleigh',
             'state' => 'NC',
+            'date_of_birth' => now()->subYears(30)->toDateString(),
         ]);
 
         CaregiverProfile::query()->create([
@@ -107,6 +114,7 @@ class CaregiverQualitySetupTest extends TestCase
             'role' => 'caregiver',
             'city' => 'Raleigh',
             'state' => 'NC',
+            'date_of_birth' => now()->subYears(30)->toDateString(),
         ]);
 
         CaregiverProfile::query()->create([
@@ -126,7 +134,7 @@ class CaregiverQualitySetupTest extends TestCase
         $this->assertNotNull($profile?->intro_video_uploaded_at);
     }
 
-    public function test_completed_setup_card_is_hidden_from_dashboard(): void
+    public function test_completed_required_steps_are_marked_done_in_setup_hub(): void
     {
         $skill = Skill::query()->create(['name' => 'Companionship']);
         $language = Language::query()->create(['name' => 'English']);
@@ -135,6 +143,7 @@ class CaregiverQualitySetupTest extends TestCase
             'role' => 'caregiver',
             'city' => 'Raleigh',
             'state' => 'NC',
+            'date_of_birth' => now()->subYears(30)->toDateString(),
         ]);
 
         $profile = CaregiverProfile::query()->create([
@@ -155,11 +164,16 @@ class CaregiverQualitySetupTest extends TestCase
             'end_time' => '12:00',
         ]);
 
-        $response = $this->actingAs($caregiver)->get('/dashboard');
+        $this->actingAs($caregiver)
+            ->get('/dashboard')
+            ->assertRedirect(route('caregiver.setup.index', absolute: false));
+
+        $response = $this->actingAs($caregiver)->get('/caregiver/setup');
 
         $response->assertOk();
-        $response->assertDontSee('Task comfort selection');
-        $response->assertDontSee('Complete profile basics');
+        $response->assertSee('Profile basics');
+        $response->assertSee('Task comfort');
+        $response->assertSee('DONE');
         $response->assertSee('Insurance setup');
     }
 
@@ -172,6 +186,7 @@ class CaregiverQualitySetupTest extends TestCase
             'role' => 'caregiver',
             'city' => 'Raleigh',
             'state' => 'NC',
+            'date_of_birth' => now()->subYears(30)->toDateString(),
         ]);
 
         $profile = CaregiverProfile::query()->create([
@@ -195,10 +210,13 @@ class CaregiverQualitySetupTest extends TestCase
             'end_time' => '12:00',
         ]);
 
-        $response = $this->actingAs($caregiver)->get('/dashboard');
+        $this->actingAs($caregiver)
+            ->get('/dashboard')
+            ->assertRedirect(route('caregiver.setup.index', absolute: false));
+
+        $response = $this->actingAs($caregiver)->get('/caregiver/setup');
 
         $response->assertOk();
-        $response->assertSee('Ready to submit.');
-        $response->assertSee('Submit profile for review');
+        $response->assertSee('Submit for review');
     }
 }

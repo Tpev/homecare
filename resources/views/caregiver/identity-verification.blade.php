@@ -5,8 +5,8 @@
                 <h2 class="font-display text-2xl font-semibold text-slate-900">Identity Verification</h2>
                 <p class="text-sm text-slate-600 mt-1">Verify your ID and selfie through Didit to unlock activation.</p>
             </div>
-            <a href="{{ route('caregiver.profile.edit') }}">
-                <x-button color="slate" light sm>Back to profile</x-button>
+            <a href="{{ route('caregiver.setup.index') }}">
+                <x-button color="slate" light sm>Back to setup</x-button>
             </a>
         </div>
     </x-slot>
@@ -33,6 +33,16 @@
     @endphp
 
     <div class="hc-page py-8 space-y-6">
+        <div class="rounded-xl border border-slate-200 bg-white px-4 py-3">
+            <div class="flex items-center justify-between gap-3">
+                <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Required progress</p>
+                <p class="text-sm font-semibold text-slate-900">{{ $onboarding['required_completed'] }}/{{ $onboarding['required_total'] }}</p>
+            </div>
+            <div class="mt-2 h-2 rounded-full bg-slate-100">
+                <div class="h-2 rounded-full bg-cyan-500 transition-all duration-300" style="width: {{ $onboarding['progress_percent'] }}%"></div>
+            </div>
+        </div>
+
         @if (session('status'))
             <x-alert color="green">{{ session('status') }}</x-alert>
         @endif
@@ -64,6 +74,12 @@
             <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
                 You will be redirected to Didit to scan your ID and take a selfie. Results are synced automatically in a few seconds.
             </div>
+        </section>
+
+        <section class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+            <p class="font-semibold text-slate-900">Next step</p>
+            <p class="mt-1">Once approved, continue setup and submit for review from your setup hub.</p>
+            <a href="{{ route('caregiver.setup.index') }}" class="mt-2 inline-block font-semibold text-cyan-700 underline underline-offset-2">Open setup hub</a>
         </section>
 
         <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

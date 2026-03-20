@@ -3,15 +3,25 @@
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
 
+    <div class="rounded-xl border border-slate-200 bg-white px-4 py-3">
+        <div class="flex items-center justify-between gap-3">
+            <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Required progress</p>
+            <p class="text-sm font-semibold text-slate-900">{{ $onboarding['required_completed'] }}/{{ $onboarding['required_total'] }}</p>
+        </div>
+        <div class="mt-2 h-2 rounded-full bg-slate-100">
+            <div class="h-2 rounded-full bg-cyan-500 transition-all duration-300" style="width: {{ $onboarding['progress_percent'] }}%"></div>
+        </div>
+    </div>
+
     <x-card>
         <x-slot:header>
             <div class="flex items-center justify-between gap-3">
                 <div>
                     <h1 class="text-xl font-semibold">Insurance setup</h1>
-                    <p class="text-sm text-slate-600 mt-1">Required before profile submission. Tell us if you carry caregiver liability insurance.</p>
+                    <p class="text-sm text-slate-600 mt-1">Optional step. Tell us if you carry caregiver liability insurance.</p>
                 </div>
-                <a href="{{ route('dashboard') }}" wire:navigate>
-                    <x-button color="slate" light sm>Back to dashboard</x-button>
+                <a href="{{ route('caregiver.setup.index') }}" wire:navigate>
+                    <x-button color="slate" light sm>Back to setup</x-button>
                 </a>
             </div>
         </x-slot:header>
@@ -51,4 +61,8 @@
             <x-button color="blue" wire:click="save">Save insurance setup</x-button>
         </x-slot:footer>
     </x-card>
+
+    <div class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 p-3 backdrop-blur sm:hidden">
+        <x-button color="blue" class="w-full" wire:click="save">Save</x-button>
+    </div>
 </div>

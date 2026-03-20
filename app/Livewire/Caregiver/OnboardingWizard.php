@@ -8,10 +8,13 @@ use App\Models\CaregiverProfileVersion;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Services\Ops\OpsAlertService;
+use App\Support\CaregiverOnboardingState;
+use App\Support\FunnelTracker;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\WithFileUploads;
@@ -101,6 +104,8 @@ class OnboardingWizard extends Component
         if ($requestedStep >= 1 && $requestedStep <= $this->totalSteps) {
             $this->step = $requestedStep;
         }
+
+        app(CaregiverOnboardingState::class)->trackStepViewed($user, CaregiverOnboardingState::STEP_PROFILE_BASICS);
     }
 
     public function addRange(int $day): void
@@ -116,9 +121,28 @@ class OnboardingWizard extends Component
 
     public function nextStep(): void
     {
-        $this->validateStep();
+        $user = auth()->user();
+        abort_unless($user && $user->role === 'caregiver', 403);
+
+        try {
+            $this->validateStep();
+        } catch (ValidationException $exception) {
+            app(CaregiverOnboardingState::class)->trackStepError(
+                $user,
+                CaregiverOnboardingState::STEP_PROFILE_BASICS,
+                $exception->errors()
+            );
+
+            throw $exception;
+        }
+
         $this->saveDraft(false);
         $this->step = min($this->step + 1, $this->totalSteps);
+
+        FunnelTracker::track('caregiver_onboarding_step_completed', $user, $this->profile, [
+            'step_number' => $this->step - 1,
+            'flow' => 'profile_basics',
+        ]);
     }
 
     public function previousStep(): void
@@ -128,26 +152,46 @@ class OnboardingWizard extends Component
 
     public function submitForReview(): void
     {
+        $user = auth()->user();
+        abort_unless($user && $user->role === 'caregiver', 403);
+
         $this->step = $this->totalSteps;
-        $this->validateForSubmission();
+        try {
+            $this->validateForSubmission();
+        } catch (ValidationException $exception) {
+            app(CaregiverOnboardingState::class)->trackStepError(
+                $user,
+                CaregiverOnboardingState::STEP_PROFILE_BASICS,
+                $exception->errors()
+            );
+
+            throw $exception;
+        }
 
         if (! $this->identityIsApproved()) {
             $this->addError('identity_verification', 'Please complete identity verification before submitting for review.');
+            app(CaregiverOnboardingState::class)->trackStepError($user, CaregiverOnboardingState::STEP_PROFILE_BASICS, [
+                'identity_verification' => ['identity_verification'],
+            ]);
 
             return;
         }
 
         if (! $this->taskPreferencesAreComplete()) {
             $this->addError('task_preferences', 'Select the tasks you are comfortable with before submitting.');
+            app(CaregiverOnboardingState::class)->trackStepError($user, CaregiverOnboardingState::STEP_PROFILE_BASICS, [
+                'task_preferences' => ['task_preferences'],
+            ]);
 
             return;
         }
 
         $this->saveDraft(true);
-        app(OpsAlertService::class)->notifyCaregiverReadyForReview(auth()->user(), $this->profile->fresh());
+        app(OpsAlertService::class)->notifyCaregiverReadyForReview($user, $this->profile->fresh());
+        FunnelTracker::track('caregiver_onboarding_submitted_for_review', $user, $this->profile->fresh());
 
         session()->flash('status', 'Profile submitted. Review usually takes up to 1 business day.');
-        $this->redirect(route('dashboard', absolute: false), navigate: true);
+        $this->redirect(route('caregiver.setup.index', absolute: false), navigate: true);
     }
 
     private function validateStep(): void
@@ -372,10 +416,13 @@ class OnboardingWizard extends Component
 
     public function render()
     {
+        $onboarding = app(CaregiverOnboardingState::class)->build(auth()->user());
+
         return view('livewire.caregiver.onboarding-wizard', [
             'days' => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
             'taskPreferencesComplete' => $this->taskPreferencesAreComplete(),
             'insuranceComplete' => $this->insuranceIsComplete(),
+            'onboarding' => $onboarding,
         ]);
     }
 }

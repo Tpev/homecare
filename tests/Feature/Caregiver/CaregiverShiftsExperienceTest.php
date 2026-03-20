@@ -3,6 +3,7 @@
 namespace Tests\Feature\Caregiver;
 
 use App\Models\CareBooking;
+use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\User;
@@ -66,6 +67,11 @@ class CaregiverShiftsExperienceTest extends TestCase
             'email_verified_at' => now(),
         ]);
 
+        CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'active',
+        ]);
+
         $request = CareRequest::query()->create([
             'family_user_id' => $family->id,
             'title' => 'Afternoon companionship shift',
@@ -107,4 +113,3 @@ class CaregiverShiftsExperienceTest extends TestCase
         return [$caregiver, $request];
     }
 }
-

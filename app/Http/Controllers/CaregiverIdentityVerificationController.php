@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\CaregiverProfile;
 use App\Services\Didit\DiditSessionService;
+use App\Support\CaregiverOnboardingState;
+use App\Support\FunnelTracker;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -28,10 +30,15 @@ class CaregiverIdentityVerificationController extends Controller
             ->limit(5)
             ->get();
 
+        $onboardingState = app(CaregiverOnboardingState::class);
+        $onboarding = $onboardingState->build($user);
+        $onboardingState->trackStepViewed($user, CaregiverOnboardingState::STEP_IDENTITY);
+
         return view('caregiver.identity-verification', [
             'profile' => $profile,
             'latestAttempt' => $profile->latestIdentityVerification,
             'recentAttempts' => $recentAttempts,
+            'onboarding' => $onboarding,
         ]);
     }
 
@@ -57,6 +64,9 @@ class CaregiverIdentityVerificationController extends Controller
                 'user_id' => $user->id,
                 'message' => $exception->getMessage(),
             ]);
+            app(CaregiverOnboardingState::class)->trackStepError($user, CaregiverOnboardingState::STEP_IDENTITY, [
+                'verification' => [$exception->getMessage()],
+            ]);
 
             $errorMessage = $this->formatUserError($exception);
 
@@ -70,6 +80,10 @@ class CaregiverIdentityVerificationController extends Controller
                 'verification' => $errorMessage,
             ]);
         }
+
+        FunnelTracker::track('caregiver_onboarding_identity_started', $user, $verification->caregiverProfile, [
+            'didit_session_id' => $verification->didit_session_id,
+        ]);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -85,7 +99,7 @@ class CaregiverIdentityVerificationController extends Controller
     public function returned(): RedirectResponse
     {
         return redirect()
-            ->route('caregiver.verification.show')
+            ->route('caregiver.setup.index')
             ->with('status', 'Verification submitted. We will update your status shortly.');
     }
 

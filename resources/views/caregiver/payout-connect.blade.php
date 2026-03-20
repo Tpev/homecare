@@ -5,8 +5,8 @@
                 <h1 class="font-display text-2xl font-semibold text-slate-900">Payout Setup</h1>
                 <p class="mt-1 text-sm text-slate-600">Connect Stripe once so completed shifts can be paid out automatically.</p>
             </div>
-            <a href="{{ route('dashboard') }}" wire:navigate>
-                <x-button color="blue" light>Back to dashboard</x-button>
+            <a href="{{ route('caregiver.setup.index') }}" wire:navigate>
+                <x-button color="blue" light>Back to setup</x-button>
             </a>
         </div>
     </x-slot>

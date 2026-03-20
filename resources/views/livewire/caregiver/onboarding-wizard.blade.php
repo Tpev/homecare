@@ -1,4 +1,15 @@
 <div class="max-w-5xl mx-auto py-8 space-y-6">
+    <div class="rounded-xl border border-slate-200 bg-white px-4 py-3">
+        <div class="flex items-center justify-between gap-3">
+            <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Go-live progress</p>
+            <p class="text-sm font-semibold text-slate-900">{{ $onboarding['required_completed'] }}/{{ $onboarding['required_total'] }} required done</p>
+        </div>
+        <div class="mt-2 h-2 rounded-full bg-slate-100">
+            <div class="h-2 rounded-full bg-cyan-500 transition-all duration-300" style="width: {{ $onboarding['progress_percent'] }}%"></div>
+        </div>
+        <p class="mt-2 text-xs text-slate-600">Your profile is not searchable until active.</p>
+    </div>
+
     <x-card>
         <x-slot:header>
             <div class="space-y-4">
@@ -19,6 +30,12 @@
 
         @if (session('status'))
             <x-alert color="green">{{ session('status') }}</x-alert>
+        @endif
+
+        @if ($profile->rejection_reason)
+            <x-alert color="amber">
+                <span class="font-semibold">Fix and resubmit:</span> {{ $profile->rejection_reason }}
+            </x-alert>
         @endif
 
         @if ($step === 1)
@@ -146,7 +163,7 @@
         @endif
 
         <x-slot:footer>
-            <div class="flex items-center justify-between">
+            <div class="hidden sm:flex items-center justify-between">
                 <x-button color="slate" light wire:click="previousStep" :disabled="$step === 1">Back</x-button>
                 <div class="flex gap-2">
                     @if ($step < $totalSteps)
@@ -158,4 +175,15 @@
             </div>
         </x-slot:footer>
     </x-card>
+
+    <div class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 p-3 backdrop-blur sm:hidden">
+        <div class="flex items-center gap-2">
+            <x-button color="slate" light wire:click="previousStep" :disabled="$step === 1" class="flex-1">Back</x-button>
+            @if ($step < $totalSteps)
+                <x-button color="blue" wire:click="nextStep" class="flex-1">Continue</x-button>
+            @else
+                <x-button color="green" wire:click="submitForReview" class="flex-1">Submit</x-button>
+            @endif
+        </div>
+    </div>
 </div>

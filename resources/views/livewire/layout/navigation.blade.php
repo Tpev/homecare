@@ -21,6 +21,10 @@ new class extends Component
         $isFamily = $user?->role === 'family';
         $isAdmin = $user && ($user->role === 'admin' || strtolower($user->email) === 'test@test.com');
         $caregiverProfile = $isCaregiver ? $user?->caregiverProfile : null;
+        $caregiverOnboardingState = $isCaregiver
+            ? app(\App\Support\CaregiverOnboardingState::class)->build($user)
+            : null;
+        $caregiverOnboardingMode = $isCaregiver && (($caregiverOnboardingState['onboarding_mode'] ?? false) === true);
         $identityStatus = $isCaregiver ? (string) ($caregiverProfile?->identity_verification_status ?? 'not_started') : '';
         $identityApproved = $isCaregiver
             ? ((bool) $caregiverProfile?->identity_verified_at || $identityStatus === 'approved')
@@ -120,7 +124,7 @@ new class extends Component
         if ($isAdmin) {
             $primaryLinks = $adminLinks;
         } else {
-            if ($user) {
+            if ($user && ! $caregiverOnboardingMode) {
                 $primaryLinks[] = [
                     'label' => 'Dashboard',
                     'href' => route('dashboard'),
@@ -157,31 +161,50 @@ new class extends Component
             }
 
             if ($isCaregiver) {
-                $primaryLinks[] = [
-                    'label' => $invitationUnread > 0 ? "Work Inbox ($invitationUnread)" : 'Work Inbox',
-                    'href' => route('caregiver.work-inbox.index'),
-                    'active' => request()->routeIs('caregiver.work-inbox.*'),
-                ];
-                $primaryLinks[] = [
-                    'label' => 'My Shifts',
-                    'href' => route('caregiver.shifts.index'),
-                    'active' => request()->routeIs('caregiver.shifts.*'),
-                ];
-                $primaryLinks[] = [
-                    'label' => 'My Earnings',
-                    'href' => route('caregiver.earnings.index'),
-                    'active' => request()->routeIs('caregiver.earnings.*'),
-                ];
-                $primaryLinks[] = [
-                    'label' => $notificationUnread > 0 ? "Notifications ($notificationUnread)" : 'Notifications',
-                    'href' => route('caregiver.notifications.index'),
-                    'active' => request()->routeIs('caregiver.notifications.*'),
-                ];
-                $primaryLinks[] = [
-                    'label' => $messageUnread > 0 ? "Messages ($messageUnread)" : 'Messages',
-                    'href' => route('messages.index'),
-                    'active' => request()->routeIs('messages.*'),
-                ];
+                if ($caregiverOnboardingMode) {
+                    $primaryLinks[] = [
+                        'label' => 'Setup',
+                        'href' => route('caregiver.setup.index'),
+                        'active' => request()->routeIs('caregiver.setup.*')
+                            || request()->routeIs('caregiver.onboarding')
+                            || request()->routeIs('caregiver.verification.*')
+                            || request()->routeIs('caregiver.tasks.*')
+                            || request()->routeIs('caregiver.insurance.*')
+                            || request()->routeIs('caregiver.video.*')
+                            || request()->routeIs('caregiver.payouts.connect.*'),
+                    ];
+                    $primaryLinks[] = [
+                        'label' => 'Support',
+                        'href' => route('support.index'),
+                        'active' => request()->routeIs('support.*'),
+                    ];
+                } else {
+                    $primaryLinks[] = [
+                        'label' => $invitationUnread > 0 ? "Work Inbox ($invitationUnread)" : 'Work Inbox',
+                        'href' => route('caregiver.work-inbox.index'),
+                        'active' => request()->routeIs('caregiver.work-inbox.*'),
+                    ];
+                    $primaryLinks[] = [
+                        'label' => 'My Shifts',
+                        'href' => route('caregiver.shifts.index'),
+                        'active' => request()->routeIs('caregiver.shifts.*'),
+                    ];
+                    $primaryLinks[] = [
+                        'label' => 'My Earnings',
+                        'href' => route('caregiver.earnings.index'),
+                        'active' => request()->routeIs('caregiver.earnings.*'),
+                    ];
+                    $primaryLinks[] = [
+                        'label' => $notificationUnread > 0 ? "Notifications ($notificationUnread)" : 'Notifications',
+                        'href' => route('caregiver.notifications.index'),
+                        'active' => request()->routeIs('caregiver.notifications.*'),
+                    ];
+                    $primaryLinks[] = [
+                        'label' => $messageUnread > 0 ? "Messages ($messageUnread)" : 'Messages',
+                        'href' => route('messages.index'),
+                        'active' => request()->routeIs('messages.*'),
+                    ];
+                }
             }
         }
     @endphp
@@ -241,6 +264,9 @@ new class extends Component
                             <a href="{{ $adminLink['href'] }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">{{ $adminLink['label'] }}</a>
                         @endforeach
                     @else
+                        @if ($isCaregiver && $caregiverOnboardingMode)
+                            <a href="{{ route('caregiver.setup.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Setup Hub</a>
+                        @endif
                         <a href="{{ $myProfileHref }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">{{ $myProfileLabel }}</a>
 
                         @if ($publicProfileHref)
@@ -249,15 +275,17 @@ new class extends Component
 
                         <a href="{{ route('profile') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Account Settings</a>
                         <a href="{{ $securityHref }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Change Password</a>
-                        <a href="{{ route('messages.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                            {{ $messageUnread > 0 ? 'Messages ('.$messageUnread.')' : 'Messages' }}
-                        </a>
                         <a href="{{ route('support.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Support Center</a>
+                        @if (! ($isCaregiver && $caregiverOnboardingMode))
+                            <a href="{{ route('messages.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                {{ $messageUnread > 0 ? 'Messages ('.$messageUnread.')' : 'Messages' }}
+                            </a>
+                        @endif
                         @if ($isFamily)
                             <a href="{{ route('family.billing.show') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Billing & Payments</a>
                         @endif
 
-                        @if ($isCaregiver)
+                        @if ($isCaregiver && ! $caregiverOnboardingMode)
                             <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                                 {{ $invitationUnread > 0 ? 'Work Inbox ('.$invitationUnread.')' : 'Work Inbox' }}
                             </a>
@@ -326,17 +354,22 @@ new class extends Component
                             <x-responsive-nav-link :href="$adminLink['href']" wire:navigate>{{ __($adminLink['label']) }}</x-responsive-nav-link>
                         @endforeach
                     @else
+                        @if ($isCaregiver && $caregiverOnboardingMode)
+                            <x-responsive-nav-link :href="route('caregiver.setup.index')" wire:navigate>{{ __('Setup Hub') }}</x-responsive-nav-link>
+                        @endif
                         <x-responsive-nav-link :href="$myProfileHref" wire:navigate>{{ __($myProfileLabel) }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('profile')" wire:navigate>{{ __('Account Settings') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="$securityHref">{{ __('Change Password') }}</x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('messages.index')" wire:navigate>
-                            {{ $messageUnread > 0 ? __('Messages').' ('.$messageUnread.')' : __('Messages') }}
-                        </x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('support.index')" wire:navigate>{{ __('Support Center') }}</x-responsive-nav-link>
+                        @if (! ($isCaregiver && $caregiverOnboardingMode))
+                            <x-responsive-nav-link :href="route('messages.index')" wire:navigate>
+                                {{ $messageUnread > 0 ? __('Messages').' ('.$messageUnread.')' : __('Messages') }}
+                            </x-responsive-nav-link>
+                        @endif
                         @if ($isFamily)
                             <x-responsive-nav-link :href="route('family.billing.show')" wire:navigate>{{ __('Billing & Payments') }}</x-responsive-nav-link>
                         @endif
-                        @if ($isCaregiver)
+                        @if ($isCaregiver && ! $caregiverOnboardingMode)
                             <x-responsive-nav-link :href="route('caregiver.work-inbox.index')" wire:navigate>
                                 {{ $invitationUnread > 0 ? __('Work Inbox').' ('.$invitationUnread.')' : __('Work Inbox') }}
                             </x-responsive-nav-link>

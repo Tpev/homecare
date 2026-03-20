@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\CaregiverIdentityVerification;
 use App\Models\CaregiverModerationLog;
+use App\Support\CaregiverOnboardingState;
+use App\Support\FunnelTracker;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -86,6 +88,15 @@ class DiditWebhookController extends Controller
                     ],
                 ]);
             }
+
+            if ($normalizedStatus === CaregiverIdentityVerification::STATUS_APPROVED) {
+                FunnelTracker::track(
+                    'caregiver_onboarding_step_completed',
+                    $profile->user,
+                    $profile,
+                    ['step' => CaregiverOnboardingState::STEP_IDENTITY]
+                );
+            }
         });
 
         return response()->json(['ok' => true]);
@@ -111,4 +122,3 @@ class DiditWebhookController extends Controller
         return hash_equals($expected, $providedSignature);
     }
 }
-

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Caregiver;
 
 use App\Livewire\Caregiver\NotificationsCenter;
+use App\Models\CaregiverProfile;
 use App\Models\User;
 use App\Models\UserNotificationPreference;
 use App\Services\Notifications\NotificationChannels;
@@ -109,6 +110,10 @@ class CaregiverNotificationCenterTest extends TestCase
         $caregiver = User::factory()->create([
             'role' => 'caregiver',
             'email_verified_at' => now(),
+        ]);
+        CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'active',
         ]);
 
         $this->createNotification($caregiver, MarketplaceEvent::CAREGIVER_HIRED, 'You were hired');

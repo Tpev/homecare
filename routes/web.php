@@ -29,6 +29,8 @@ use App\Livewire\Caregiver\InsuranceSetup;
 use App\Livewire\Caregiver\IntroVideoSetup;
 use App\Livewire\Caregiver\InvitationsIndex;
 use App\Livewire\Caregiver\NotificationsCenter;
+use App\Livewire\Caregiver\OnboardingHub;
+use App\Livewire\Caregiver\OnboardingWizard;
 use App\Livewire\Caregiver\ProfileEditor;
 use App\Livewire\Caregiver\ShiftsIndex;
 use App\Livewire\Caregiver\ShowCaregiver;
@@ -108,6 +110,8 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth', 'caregiver.role'])->group(function () {
+    Route::get('/caregiver/setup', OnboardingHub::class)->name('caregiver.setup.index');
+    Route::get('/caregiver/onboarding', OnboardingWizard::class)->name('caregiver.onboarding');
     Route::get('/caregiver/profile/edit', ProfileEditor::class)->name('caregiver.profile.edit');
     Route::get('/caregiver/profile/tasks', TaskComfortSetup::class)->name('caregiver.tasks.edit');
     Route::get('/caregiver/profile/insurance', InsuranceSetup::class)->name('caregiver.insurance.edit');

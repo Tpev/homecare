@@ -9,6 +9,7 @@ use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
 use App\Models\CaregiverProfile;
 use App\Support\CaregiverPrelaunch;
+use App\Support\CaregiverOnboardingState;
 use App\Support\CaregiverWorkInboxBuilder;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Layout;
@@ -17,6 +18,19 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Home extends Component
 {
+    public function mount(CaregiverOnboardingState $onboardingState): void
+    {
+        $user = auth()->user();
+        if (! $user || $user->role !== 'caregiver') {
+            return;
+        }
+
+        $state = $onboardingState->build($user);
+        if (($state['onboarding_mode'] ?? false) === true) {
+            $this->redirect(route('caregiver.setup.index', absolute: false), navigate: true);
+        }
+    }
+
     public function render()
     {
         $user = auth()->user();

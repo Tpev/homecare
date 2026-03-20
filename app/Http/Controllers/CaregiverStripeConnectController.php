@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\Payments\PaymentException;
 use App\Services\Payments\CaregiverStripeConnectService;
+use App\Support\CaregiverOnboardingState;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -14,6 +15,8 @@ class CaregiverStripeConnectController extends Controller
     {
         $user = auth()->user();
         abort_unless($user && $user->role === 'caregiver', 403);
+        $onboardingState = app(CaregiverOnboardingState::class);
+        $onboardingState->trackStepViewed($user, CaregiverOnboardingState::STEP_PAYOUT);
 
         if ($request->boolean('sync', false)) {
             try {
@@ -30,6 +33,9 @@ class CaregiverStripeConnectController extends Controller
         }
 
         $profile = $connect->profileFor($user);
+        if ($profile->stripeConnectIsReady()) {
+            $onboardingState->trackStepCompleted($user, CaregiverOnboardingState::STEP_PAYOUT);
+        }
 
         return view('caregiver.payout-connect', [
             'profile' => $profile,
