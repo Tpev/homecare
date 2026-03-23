@@ -3,6 +3,27 @@
 return [
     'family_estimate_hourly_rate' => 30.00,
     'caregiver_prelaunch_mode' => filter_var(env('MARKETPLACE_CAREGIVER_PRELAUNCH_MODE', false), FILTER_VALIDATE_BOOL),
+    'family_prelaunch_auto_applicants' => [
+        'enabled' => filter_var(env('MARKETPLACE_FAMILY_PRELAUNCH_AUTO_APPLICANTS_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'emails' => array_values(array_filter(array_map(
+            static fn (string $email): string => trim($email),
+            explode(
+                ',',
+                (string) env(
+                    'MARKETPLACE_FAMILY_PRELAUNCH_AUTO_APPLICANT_EMAILS',
+                    'carolinepetrinipoli@gmail.com,charlespetrinipoli@gmail.com'
+                )
+            )
+        ))),
+        'delays_minutes' => array_values(array_filter(array_map(
+            static fn (string $minutes): int => max(0, (int) trim($minutes)),
+            explode(',', (string) env('MARKETPLACE_FAMILY_PRELAUNCH_AUTO_APPLICANT_DELAYS_MINUTES', '10,15'))
+        ), static fn (int $minutes): bool => $minutes >= 0)),
+        'cover_note' => (string) env(
+            'MARKETPLACE_FAMILY_PRELAUNCH_AUTO_APPLICANT_COVER_NOTE',
+            'I am available to support this request and can align timing details in chat.'
+        ),
+    ],
     'ops_alert_recipients' => array_values(array_filter(array_map(
         static fn (string $email): string => trim($email),
         explode(',', (string) env('MARKETPLACE_OPS_ALERT_RECIPIENTS', 'peverelli.t@gmail.com,cpetrinipoli@hub.healthcare'))
