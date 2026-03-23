@@ -28,14 +28,18 @@
             <div class="grid gap-8 p-6 lg:grid-cols-2 lg:p-8">
                 <div>
                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-900">
-                        Trusted home support in Raleigh, NC
+                        HUB HOME CARE | TRUSTED HOME SUPPORT IN RALEIGH, NC
                     </div>
                     <h1 class="mt-4 text-4xl font-black leading-tight tracking-tight sm:text-5xl">
                         Need help caring for your mom or dad?
                     </h1>
                     <p class="mt-4 text-lg text-slate-700">
                         Need support <span class="rounded-full bg-slate-200 px-2 py-0.5 text-sm font-semibold text-slate-900">now</span>?
-                        HomeCare helps Raleigh families find trusted caregivers quickly, with affordable options for companionship, meal prep, errands, and daily support.
+                        HomeCare helps Raleigh families find
+                        <span class="rounded-full bg-cyan-100 px-2 py-0.5 text-sm font-semibold text-cyan-900">trusted</span>
+                        caregivers quickly, with
+                        <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-sm font-semibold text-emerald-900">affordable</span>
+                        options for companionship, meal prep, errands, and daily support.
                     </p>
                     <p class="mt-4 text-base text-slate-600">
                         When you are juggling work, family, and worry, we help bring calm, dignity, and reliable support at home.
@@ -53,7 +57,7 @@
                 <div class="space-y-4">
                     <div class="overflow-hidden rounded-2xl border border-slate-200 shadow-lg">
                         <img
-                            src="https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&w=1400&q=80"
+                            src="{{ asset('images/marketing/flyer.png') }}"
                             alt="Adult daughter helping her older mother at home"
                             class="h-[420px] w-full object-cover"
                         />
@@ -77,6 +81,12 @@
                     <x-slot:header><div class="font-bold">Flexible care</div></x-slot:header>
                     <p class="text-sm text-slate-600">Book one-time help or ongoing weekly support based on your loved one’s real schedule and needs.</p>
                 </x-card>
+            </div>
+            <div class="border-t border-slate-200 bg-white px-6 pb-6 pt-5 lg:px-8">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p class="font-bold text-slate-900">Care is not just tasks. It is trust, comfort, and presence.</p>
+                    <p class="mt-1 text-sm text-slate-600">Our goal is to make sure your loved one feels safe and seen, and you feel less alone in the process.</p>
+                </div>
             </div>
         </div>
     </section>
@@ -115,6 +125,8 @@
                 <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">Secure checkout with transparent payment policies</div>
                 <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">Private in-platform messaging to protect your family</div>
                 <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">Responsive support team for urgent issues</div>
+                <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">Transparent profiles and accountability standards</div>
+                <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">Clear safety and quality policies across the platform</div>
             </div>
         </div>
     </section>
@@ -154,4 +166,3 @@
         </div>
     </section>
 </div>
-
