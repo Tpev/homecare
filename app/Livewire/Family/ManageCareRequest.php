@@ -12,6 +12,7 @@ use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
 use App\Models\CareReview;
 use App\Models\SupportTicket;
+use App\Models\User;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Matching\CaregiverSuggestionService;
 use App\Services\Notifications\MarketplaceNotificationService;
@@ -139,17 +140,17 @@ class ManageCareRequest extends Component
 
     public function hire(int $applicationId): void
     {
-        if (CaregiverPrelaunch::enabled()) {
+        if ($this->requestItem->status !== CareRequest::STATUS_OPEN) {
+            return;
+        }
+
+        $application = $this->findOwnedApplication($applicationId)->loadMissing('caregiver:id,email,name');
+        if (! CaregiverPrelaunch::familyCanProceedWithCaregiver($application->caregiver?->email)) {
             session()->flash('status', CaregiverPrelaunch::message());
 
             return;
         }
 
-        if ($this->requestItem->status !== CareRequest::STATUS_OPEN) {
-            return;
-        }
-
-        $application = $this->findOwnedApplication($applicationId);
         try {
             DB::transaction(function () use ($application) {
                 $application->update(['status' => CareRequestApplication::STATUS_HIRED]);
@@ -720,16 +721,17 @@ class ManageCareRequest extends Component
 
     public function rebookHiredCaregiver(): void
     {
-        if (CaregiverPrelaunch::enabled()) {
-            session()->flash('status', CaregiverPrelaunch::message());
-
-            return;
-        }
-
         $hiredApplication = $this->requestItem->applications
             ->firstWhere('status', CareRequestApplication::STATUS_HIRED);
 
         if (! $hiredApplication) {
+            return;
+        }
+
+        $hiredApplication->loadMissing('caregiver:id,email');
+        if (! CaregiverPrelaunch::familyCanProceedWithCaregiver($hiredApplication->caregiver?->email)) {
+            session()->flash('status', CaregiverPrelaunch::message());
+
             return;
         }
 
@@ -838,7 +840,8 @@ class ManageCareRequest extends Component
 
     public function inviteSuggestedCaregiver(int $caregiverUserId): void
     {
-        if (CaregiverPrelaunch::enabled()) {
+        $caregiver = User::query()->select(['id', 'email'])->find($caregiverUserId);
+        if (! CaregiverPrelaunch::familyCanProceedWithCaregiver($caregiver?->email)) {
             session()->flash('status', CaregiverPrelaunch::message());
 
             return;

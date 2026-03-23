@@ -48,15 +48,15 @@ return [
     'pricing_tiers' => [
         'starter' => [
             'label' => 'Starter',
-            'rate' => 24.00,
+            'rate' => 30.00,
         ],
         'standard' => [
             'label' => 'Standard',
-            'rate' => 27.00,
+            'rate' => 30.00,
         ],
         'premium' => [
             'label' => 'Premium',
-            'rate' => 31.00,
+            'rate' => 30.00,
         ],
     ],
 ];

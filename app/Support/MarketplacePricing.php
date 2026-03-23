@@ -42,7 +42,7 @@ class MarketplacePricing
         $tier = $this->normalizeTier($tier);
         $rate = data_get($this->tiers(), $tier.'.rate');
 
-        return is_numeric($rate) ? (float) $rate : 27.00;
+        return is_numeric($rate) ? (float) $rate : 30.00;
     }
 
     public function labelForTier(?string $tier): string
@@ -52,4 +52,3 @@ class MarketplacePricing
         return (string) data_get($this->tiers(), $tier.'.label', ucfirst($tier));
     }
 }
-
