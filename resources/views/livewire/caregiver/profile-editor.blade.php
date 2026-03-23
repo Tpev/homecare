@@ -25,7 +25,7 @@
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <p class="text-[11px] uppercase tracking-[0.16em] text-slate-300">Caregiver profile workspace</p>
-                    <h1 class="mt-1 text-2xl font-display font-semibold leading-tight">Keep your profile sharp and ready to go live.</h1>
+                    <h1 class="mt-1 text-2xl font-display font-semibold leading-tight">Your profile is ready.</h1>
                     <p class="mt-1 text-sm text-slate-300">Update your details, save once, and your profile quality is refreshed immediately.</p>
                 </div>
                 <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusTone }}">

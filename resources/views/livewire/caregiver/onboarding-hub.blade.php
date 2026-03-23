@@ -9,7 +9,7 @@
 
         <div class="relative space-y-4">
             <p class="text-[11px] uppercase tracking-[0.16em] text-slate-300">Caregiver setup</p>
-            <h1 class="text-2xl font-display font-semibold leading-tight sm:text-3xl">Finish required setup to go live.</h1>
+            <h1 class="text-2xl font-display font-semibold leading-tight sm:text-3xl">Finish setup to start getting booked.</h1>
             <p class="text-sm text-slate-300 max-w-2xl">
                 To be searchable by families, complete the 3 required steps, then submit for review.
                 Typical review time is up to 1 business day.
@@ -105,4 +105,3 @@
         </div>
     </div>
 </div>
-

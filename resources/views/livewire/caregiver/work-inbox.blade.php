@@ -5,7 +5,7 @@
 
     @if (!empty($prelaunchMode))
         <x-alert color="yellow">
-            Caregiver pre-launch mode is active. Complete your profile now and we will notify you when matching opens.
+            Matching opens soon in your area. Complete your profile now and we will notify you when matching opens.
         </x-alert>
     @endif
 
@@ -34,7 +34,7 @@
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Caregiver Work Inbox</p>
-                    <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Know what to do next, fast.</h1>
+                    <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Stay on top of new opportunities.</h1>
                     <p class="mt-1 text-sm text-slate-300">Offers, applications, hired shifts, and recaps in one place.</p>
                 </div>
                 <div class="flex flex-wrap gap-2">

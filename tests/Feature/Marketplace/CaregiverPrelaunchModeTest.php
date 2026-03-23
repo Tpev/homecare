@@ -103,7 +103,7 @@ class CaregiverPrelaunchModeTest extends TestCase
         $response = $this->actingAs($caregiver)->get('/dashboard');
 
         $response->assertOk();
-        $response->assertSee('Caregiver pre-launch is active.');
+        $response->assertSee('Matching opens soon in your area.');
         $response->assertSee('we will notify you as soon as matching opens');
     }
 
@@ -134,10 +134,14 @@ class CaregiverPrelaunchModeTest extends TestCase
 
         $this->actingAs($caregiver)
             ->get('/dashboard')
+            ->assertRedirect('/caregiver/setup');
+
+        $this->actingAs($caregiver)
+            ->get('/caregiver/setup')
             ->assertOk()
-            ->assertSee('Start KYC')
-            ->assertSee('Connect payouts')
-            ->assertSee('Complete profile basics');
+            ->assertSee('Finish setup to start getting booked.')
+            ->assertSee('Identity verification')
+            ->assertSee('Task comfort');
     }
 
     private function createOpenRequest(int $familyUserId, string $title): CareRequest

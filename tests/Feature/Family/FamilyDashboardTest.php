@@ -41,7 +41,7 @@ class FamilyDashboardTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Caregiver Dashboard');
-        $response->assertSee('Focus on the next best move.');
+        $response->assertSee("You're ready to start getting booked.", false);
         $response->assertSee('Work inbox');
         $response->assertSee('Open full inbox');
     }

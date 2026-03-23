@@ -399,7 +399,7 @@
 
             @if ($prelaunchMode)
                 <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-                    <p class="text-sm font-semibold text-amber-900">Caregiver pre-launch is active.</p>
+                    <p class="text-sm font-semibold text-amber-900">Matching opens soon in your area.</p>
                     <p class="mt-1 text-sm text-amber-800">{{ $prelaunchMessage }}</p>
                 </div>
             @endif
@@ -411,7 +411,7 @@
                 <div class="relative grid grid-cols-1 gap-5 lg:grid-cols-5">
                     <div class="lg:col-span-3">
                         <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Caregiver Dashboard</p>
-                        <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Focus on the next best move.</h1>
+                        <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">You're ready to start getting booked.</h1>
                         <p class="mt-2 text-sm text-slate-300">{{ $nextActionDescription }}</p>
                         <div class="mt-4 flex flex-wrap gap-2">
                             <a href="{{ $nextActionHref }}" wire:navigate><x-button color="white">{{ $nextActionLabel }}</x-button></a>

@@ -35,7 +35,7 @@
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
                         <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">My shifts</p>
-                        <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Run every shift with confidence.</h1>
+                        <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Get ready for your first shift.</h1>
                         <p class="mt-1 text-sm text-slate-300">Start, pause, resume, and close shifts from one command view.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
