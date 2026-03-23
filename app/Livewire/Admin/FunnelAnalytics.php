@@ -3,7 +3,9 @@
 namespace App\Livewire\Admin;
 
 use App\Models\CareBooking;
+use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
+use App\Models\CareReview;
 use App\Models\CaregiverProfile;
 use App\Models\MarketplaceNotificationDelivery;
 use App\Models\PageViewEvent;
@@ -139,32 +141,7 @@ class FunnelAnalytics extends Component
         ];
 
         $baseCount = count($landingIdentityKeys);
-        $maxCount = max(
-            1,
-            ...collect($steps)->map(fn (array $step): int => count($step['ids']))->all(),
-        );
-
-        foreach ($steps as $index => &$step) {
-            $currentCount = count($step['ids']);
-            $previousCount = $index > 0 ? count($steps[$index - 1]['ids']) : $currentCount;
-            $dropoff = $index > 0 ? max($previousCount - $currentCount, 0) : 0;
-
-            $step['count'] = $currentCount;
-            $step['step_conversion_percent'] = $index === 0
-                ? 100.0
-                : ($previousCount > 0 ? round(($currentCount / $previousCount) * 100, 1) : 0.0);
-            $step['overall_conversion_percent'] = $baseCount > 0
-                ? round(($currentCount / $baseCount) * 100, 1)
-                : 0.0;
-            $step['dropoff_count'] = $dropoff;
-            $step['dropoff_percent'] = $index === 0
-                ? 0.0
-                : ($previousCount > 0 ? round(($dropoff / $previousCount) * 100, 1) : 0.0);
-            $step['visual_width'] = $currentCount > 0
-                ? min(100, max((int) round(($currentCount / $maxCount) * 100), 26))
-                : 26;
-        }
-        unset($step);
+        $steps = $this->finalizeFunnelSteps($steps, $baseCount);
 
         $summary = [
             'landing_visitors' => $baseCount,
@@ -223,6 +200,173 @@ class FunnelAnalytics extends Component
             'signup_total' => $signupTotal,
             'landing_views_total' => $landingViewsTotal,
             'signup_from_views_rate' => $signupFromViewsRate,
+        ];
+
+        $familyLandingIdentityKeys = PageViewEvent::query()
+            ->where('event_name', PageViewTracker::FAMILY_LANDING_EVENT)
+            ->where('created_at', '>=', $this->start)
+            ->get(['user_id', 'anon_id'])
+            ->map(function (PageViewEvent $event): ?string {
+                if ($event->user_id) {
+                    return 'u:'.$event->user_id;
+                }
+
+                if ($event->anon_id) {
+                    return 'a:'.$event->anon_id;
+                }
+
+                return null;
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $familyLandingAuthenticatedCount = PageViewEvent::query()
+            ->where('event_name', PageViewTracker::FAMILY_LANDING_EVENT)
+            ->where('created_at', '>=', $this->start)
+            ->whereNotNull('user_id')
+            ->distinct('user_id')
+            ->count('user_id');
+
+        $familyLandingAnonymousCount = PageViewEvent::query()
+            ->where('event_name', PageViewTracker::FAMILY_LANDING_EVENT)
+            ->where('created_at', '>=', $this->start)
+            ->whereNotNull('anon_id')
+            ->distinct('anon_id')
+            ->count('anon_id');
+
+        $familyRegisteredIds = User::query()
+            ->where('role', 'family')
+            ->where('created_at', '>=', $this->start)
+            ->pluck('id')
+            ->values()
+            ->all();
+
+        $familyPostedRequestIds = CareRequest::query()
+            ->whereIn('family_user_id', $familyRegisteredIds)
+            ->where('created_at', '>=', $this->start)
+            ->select('family_user_id')
+            ->distinct()
+            ->pluck('family_user_id')
+            ->values()
+            ->all();
+
+        $familyReceivedApplicantIds = CareRequest::query()
+            ->whereIn('family_user_id', $familyPostedRequestIds)
+            ->where(function ($query) {
+                $query->whereNotNull('first_applicant_at')
+                    ->orWhereHas('applications');
+            })
+            ->select('family_user_id')
+            ->distinct()
+            ->pluck('family_user_id')
+            ->values()
+            ->all();
+
+        $familyHiredIds = CareRequest::query()
+            ->whereIn('family_user_id', $familyReceivedApplicantIds)
+            ->where(function ($query) {
+                $query->whereNotNull('first_hire_at')
+                    ->orWhere('status', CareRequest::STATUS_FILLED)
+                    ->orWhereHas('applications', fn ($applicationQuery) => $applicationQuery->where('status', CareRequestApplication::STATUS_HIRED))
+                    ->orWhereHas('booking');
+            })
+            ->select('family_user_id')
+            ->distinct()
+            ->pluck('family_user_id')
+            ->values()
+            ->all();
+
+        $familyCompletedShiftIds = CareBooking::query()
+            ->whereIn('family_user_id', $familyHiredIds)
+            ->whereNotNull('completed_at')
+            ->select('family_user_id')
+            ->distinct()
+            ->pluck('family_user_id')
+            ->values()
+            ->all();
+
+        $familyReviewedIds = CareReview::query()
+            ->whereIn('reviewer_user_id', $familyCompletedShiftIds)
+            ->select('reviewer_user_id')
+            ->distinct()
+            ->pluck('reviewer_user_id')
+            ->values()
+            ->all();
+
+        $familySteps = [
+            ['label' => 'Visited Family Landing', 'ids' => $familyLandingIdentityKeys],
+            ['label' => 'Registered', 'ids' => $familyRegisteredIds],
+            ['label' => 'Posted a Request', 'ids' => $familyPostedRequestIds],
+            ['label' => 'Received Applicants', 'ids' => $familyReceivedApplicantIds],
+            ['label' => 'Hired a Caregiver', 'ids' => $familyHiredIds],
+            ['label' => 'Completed a Shift', 'ids' => $familyCompletedShiftIds],
+            ['label' => 'Submitted a Review', 'ids' => $familyReviewedIds],
+        ];
+
+        $familyBaseCount = count($familyLandingIdentityKeys);
+        $familySteps = $this->finalizeFunnelSteps($familySteps, $familyBaseCount);
+
+        $familySummary = [
+            'landing_visitors' => $familyBaseCount,
+            'landing_authenticated' => $familyLandingAuthenticatedCount,
+            'landing_anonymous' => $familyLandingAnonymousCount,
+            'registered' => $familySteps[1]['count'] ?? 0,
+            'posted' => $familySteps[2]['count'] ?? 0,
+            'hired' => $familySteps[4]['count'] ?? 0,
+            'completed_shift' => $familySteps[5]['count'] ?? 0,
+            'reviewed' => $familySteps[6]['count'] ?? 0,
+            'registration_rate' => $familySteps[1]['overall_conversion_percent'] ?? 0.0,
+            'posted_rate' => $familySteps[2]['overall_conversion_percent'] ?? 0.0,
+            'hired_rate' => $familySteps[4]['overall_conversion_percent'] ?? 0.0,
+            'completion_rate' => $familySteps[5]['overall_conversion_percent'] ?? 0.0,
+            'review_rate' => $familySteps[6]['overall_conversion_percent'] ?? 0.0,
+        ];
+
+        $familySignupBuckets = $this->initializeTrendBuckets($trendStart, $trendEnd);
+        $familyLandingViewBuckets = $this->initializeTrendBuckets($trendStart, $trendEnd);
+
+        User::query()
+            ->where('role', 'family')
+            ->where('created_at', '>=', $trendStart)
+            ->pluck('created_at')
+            ->each(function ($createdAt) use (&$familySignupBuckets): void {
+                $this->incrementTrendBucket($familySignupBuckets, Carbon::parse($createdAt));
+            });
+
+        PageViewEvent::query()
+            ->where('event_name', PageViewTracker::FAMILY_LANDING_EVENT)
+            ->where('created_at', '>=', $trendStart)
+            ->pluck('created_at')
+            ->each(function ($createdAt) use (&$familyLandingViewBuckets): void {
+                $this->incrementTrendBucket($familyLandingViewBuckets, Carbon::parse($createdAt));
+            });
+
+        $familySignupSeries = $this->buildTrendSeries($familySignupBuckets);
+        $familyLandingViewSeries = $this->buildTrendSeries($familyLandingViewBuckets);
+        $familySignupTotal = array_sum(array_map(fn (array $point): int => (int) $point['count'], $familySignupSeries));
+        $familyLandingViewsTotal = array_sum(array_map(fn (array $point): int => (int) $point['count'], $familyLandingViewSeries));
+        $familySignupFromViewsRate = $familyLandingViewsTotal > 0
+            ? round(($familySignupTotal / $familyLandingViewsTotal) * 100, 1)
+            : 0.0;
+        $familyMaxSignups = max(1, ...array_map(fn (array $point): int => (int) $point['count'], $familySignupSeries));
+        $familyMaxLandingViews = max(1, ...array_map(fn (array $point): int => (int) $point['count'], $familyLandingViewSeries));
+
+        $familyTrend = [
+            'granularity' => $this->normalizedTrendGranularity(),
+            'bucket_label' => match ($this->normalizedTrendGranularity()) {
+                'week' => 'weekly',
+                'month' => 'monthly',
+                default => 'daily',
+            },
+            'signups' => $familySignupSeries,
+            'landing_views' => $familyLandingViewSeries,
+            'max_signups' => $familyMaxSignups,
+            'max_landing_views' => $familyMaxLandingViews,
+            'signup_total' => $familySignupTotal,
+            'landing_views_total' => $familyLandingViewsTotal,
+            'signup_from_views_rate' => $familySignupFromViewsRate,
         ];
 
         $campaignKeys = [
@@ -299,8 +443,56 @@ class FunnelAnalytics extends Component
             'steps' => $steps,
             'summary' => $summary,
             'trend' => $trend,
+            'familySteps' => $familySteps,
+            'familySummary' => $familySummary,
+            'familyTrend' => $familyTrend,
             'emailPerformance' => $emailPerformance,
         ]);
+    }
+
+    /**
+     * @param array<int, array{label: string, ids: array<int, int|string>}> $steps
+     * @return array<int, array{
+     *     label: string,
+     *     ids: array<int, int|string>,
+     *     count: int,
+     *     step_conversion_percent: float,
+     *     overall_conversion_percent: float,
+     *     dropoff_count: int,
+     *     dropoff_percent: float,
+     *     visual_width: int
+     * }>
+     */
+    private function finalizeFunnelSteps(array $steps, int $baseCount): array
+    {
+        $maxCount = max(
+            1,
+            ...collect($steps)->map(fn (array $step): int => count($step['ids']))->all(),
+        );
+
+        foreach ($steps as $index => &$step) {
+            $currentCount = count($step['ids']);
+            $previousCount = $index > 0 ? count($steps[$index - 1]['ids']) : $currentCount;
+            $dropoff = $index > 0 ? max($previousCount - $currentCount, 0) : 0;
+
+            $step['count'] = $currentCount;
+            $step['step_conversion_percent'] = $index === 0
+                ? 100.0
+                : ($previousCount > 0 ? round(($currentCount / $previousCount) * 100, 1) : 0.0);
+            $step['overall_conversion_percent'] = $baseCount > 0
+                ? round(($currentCount / $baseCount) * 100, 1)
+                : 0.0;
+            $step['dropoff_count'] = $dropoff;
+            $step['dropoff_percent'] = $index === 0
+                ? 0.0
+                : ($previousCount > 0 ? round(($dropoff / $previousCount) * 100, 1) : 0.0);
+            $step['visual_width'] = $currentCount > 0
+                ? min(100, max((int) round(($currentCount / $maxCount) * 100), 26))
+                : 26;
+        }
+        unset($step);
+
+        return $steps;
     }
 
     private function normalizedTrendGranularity(): string

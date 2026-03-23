@@ -15,6 +15,8 @@ use App\Http\Controllers\SeoPagesController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Livewire\Admin\FunnelAnalytics;
+use App\Livewire\Admin\CareRequestShow as AdminCareRequestShow;
+use App\Livewire\Admin\CareRequestsIndex;
 use App\Livewire\Admin\CaregiverCoverageMap;
 use App\Livewire\Admin\PaymentsQueue;
 use App\Livewire\Admin\CaregiverReviewsQueue;
@@ -61,6 +63,8 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/analytics/caregiver-map', CaregiverCoverageMap::class)->name('analytics.caregiver-map');
         Route::get('/users', UsersIndex::class)->name('users.index');
         Route::get('/users/{user}', UserShow::class)->name('users.show');
+        Route::get('/requests', CareRequestsIndex::class)->name('requests.index');
+        Route::get('/requests/{careRequest}', AdminCareRequestShow::class)->name('requests.show');
     });
 
 Route::get('/', [MarketingPagesController::class, 'landing'])->name('landing');

@@ -9,11 +9,28 @@ use Illuminate\Support\Str;
 class PageViewTracker
 {
     public const CAREGIVER_LANDING_EVENT = 'caregiver_landing_view';
+    public const FAMILY_LANDING_EVENT = 'family_landing_view';
 
     /**
      * @return array{tracked: bool, should_set_cookie: bool, anon_id: ?string}
      */
     public function trackCaregiverLandingView(Request $request): array
+    {
+        return $this->trackLandingView($request, self::CAREGIVER_LANDING_EVENT);
+    }
+
+    /**
+     * @return array{tracked: bool, should_set_cookie: bool, anon_id: ?string}
+     */
+    public function trackFamilyLandingView(Request $request): array
+    {
+        return $this->trackLandingView($request, self::FAMILY_LANDING_EVENT);
+    }
+
+    /**
+     * @return array{tracked: bool, should_set_cookie: bool, anon_id: ?string}
+     */
+    private function trackLandingView(Request $request, string $eventName): array
     {
         if ($this->shouldSkip($request)) {
             return [
@@ -37,7 +54,7 @@ class PageViewTracker
         }
 
         PageViewEvent::query()->create([
-            'event_name' => self::CAREGIVER_LANDING_EVENT,
+            'event_name' => $eventName,
             'user_id' => $user?->id,
             'anon_id' => $anonId,
             'url' => (string) $request->fullUrl(),
@@ -121,4 +138,3 @@ class PageViewTracker
         return Str::limit($trimmed, $limit, '');
     }
 }
-

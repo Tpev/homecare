@@ -10,23 +10,50 @@ use Illuminate\Support\Facades\Cookie;
 
 class MarketingPagesController extends Controller
 {
-    public function landing(): View
+    public function landing(Request $request, PageViewTracker $tracker): View|Response
     {
-        return view('marketing.family');
+        return $this->trackedLandingResponse(
+            request: $request,
+            tracker: $tracker,
+            view: 'marketing.family',
+            event: 'family'
+        );
     }
 
-    public function family(): View
+    public function family(Request $request, PageViewTracker $tracker): View|Response
     {
-        return view('marketing.family');
+        return $this->trackedLandingResponse(
+            request: $request,
+            tracker: $tracker,
+            view: 'marketing.family',
+            event: 'family'
+        );
     }
 
     public function caregiver(Request $request, PageViewTracker $tracker): View|Response
     {
-        $result = $tracker->trackCaregiverLandingView($request);
+        return $this->trackedLandingResponse(
+            request: $request,
+            tracker: $tracker,
+            view: 'marketing.caregiver',
+            event: 'caregiver'
+        );
+    }
 
-        $response = response()->view('marketing.caregiver');
+    public function agency(): View
+    {
+        return view('marketing.agency');
+    }
 
-        if ($result['should_set_cookie'] && $result['anon_id']) {
+    private function trackedLandingResponse(Request $request, PageViewTracker $tracker, string $view, string $event): View|Response
+    {
+        $result = $event === 'caregiver'
+            ? $tracker->trackCaregiverLandingView($request)
+            : $tracker->trackFamilyLandingView($request);
+
+        $response = response()->view($view);
+
+        if (($result['should_set_cookie'] ?? false) && ! empty($result['anon_id'])) {
             $response->cookie(
                 Cookie::make(
                     (string) config('analytics.anon_cookie_name', 'hc_anon_id'),
@@ -43,10 +70,5 @@ class MarketingPagesController extends Controller
         }
 
         return $response;
-    }
-
-    public function agency(): View
-    {
-        return view('marketing.agency');
     }
 }

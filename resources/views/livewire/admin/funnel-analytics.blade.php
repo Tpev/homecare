@@ -3,8 +3,8 @@
         <x-slot:header>
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h1 class="text-xl font-semibold">Caregiver Lifecycle Funnel</h1>
-                    <p class="mt-1 text-sm text-slate-600">Cohort based on unique caregiver landing visitors since {{ $start->format('M d, Y') }}.</p>
+                    <h1 class="text-xl font-semibold">Marketplace Funnel Analytics</h1>
+                    <p class="mt-1 text-sm text-slate-600">Caregiver + family lifecycle cohorts since {{ $start->format('M d, Y') }}.</p>
                 </div>
                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <x-select.styled
@@ -32,6 +32,11 @@
                 </div>
             </div>
         </x-slot:header>
+
+        <div class="mt-1">
+            <h2 class="text-base font-semibold text-slate-900">Caregiver lifecycle funnel</h2>
+            <p class="text-xs text-slate-500">Cohort starts from unique caregiver landing visitors.</p>
+        </div>
 
         <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -248,9 +253,131 @@
             </div>
         </div>
 
+        <div class="mt-8 border-t border-slate-200 pt-6">
+            <div>
+                <h2 class="text-base font-semibold text-slate-900">Family lifecycle funnel</h2>
+                <p class="text-xs text-slate-500">Cohort starts from unique family landing visitors.</p>
+            </div>
+
+            <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-5">
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Landing visitors</p>
+                    <p class="mt-1 text-3xl font-black text-slate-900">{{ number_format($familySummary['landing_visitors']) }}</p>
+                    <p class="text-xs text-slate-500">
+                        {{ number_format($familySummary['landing_authenticated']) }} authenticated ·
+                        {{ number_format($familySummary['landing_anonymous']) }} anonymous
+                    </p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Registered</p>
+                    <p class="mt-1 text-3xl font-black text-slate-900">{{ number_format($familySummary['registered']) }}</p>
+                    <p class="text-xs text-slate-500">{{ number_format($familySummary['registration_rate'], 1) }}% of landing visitors</p>
+                </div>
+                <div class="rounded-xl border border-sky-200 bg-sky-50 p-4">
+                    <p class="text-xs uppercase tracking-[0.14em] text-sky-700">Posted request</p>
+                    <p class="mt-1 text-3xl font-black text-sky-900">{{ number_format($familySummary['posted']) }}</p>
+                    <p class="text-xs text-sky-700">{{ number_format($familySummary['posted_rate'], 1) }}% of landing visitors</p>
+                </div>
+                <div class="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+                    <p class="text-xs uppercase tracking-[0.14em] text-indigo-700">Hired</p>
+                    <p class="mt-1 text-3xl font-black text-indigo-900">{{ number_format($familySummary['hired']) }}</p>
+                    <p class="text-xs text-indigo-700">{{ number_format($familySummary['hired_rate'], 1) }}% of landing visitors</p>
+                </div>
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                    <p class="text-xs uppercase tracking-[0.14em] text-emerald-700">Completed + reviewed</p>
+                    <p class="mt-1 text-3xl font-black text-emerald-900">{{ number_format($familySummary['reviewed']) }}</p>
+                    <p class="text-xs text-emerald-700">{{ number_format($familySummary['review_rate'], 1) }}% of landing visitors</p>
+                </div>
+            </div>
+
+            <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-950 px-4 py-6 md:px-8">
+                <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-300">Family Funnel Visualization</h3>
+                <div class="mt-4 space-y-3">
+                    @foreach($familySteps as $index => $step)
+                        <div class="mx-auto rounded-xl border border-slate-700 bg-gradient-to-r from-slate-900 via-cyan-900 to-emerald-800 px-4 py-3 text-white"
+                            style="width: {{ $step['visual_width'] }}%;">
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="text-sm font-semibold">Step {{ $index + 1 }} · {{ $step['label'] }}</p>
+                                <p class="text-sm font-black">{{ number_format($step['count']) }}</p>
+                            </div>
+                            @if($index > 0)
+                                <p class="mt-1 text-xs text-cyan-100">
+                                    {{ number_format($step['step_conversion_percent'], 1) }}% from previous step
+                                </p>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-slate-900">Family signups</h3>
+                        <p class="text-xs text-slate-500">Peak {{ number_format($familyTrend['max_signups']) }}</p>
+                    </div>
+                    <div class="mt-3 h-44">
+                        <div class="flex h-full items-end gap-1">
+                            @foreach($familyTrend['signups'] as $point)
+                                @php
+                                    $height = $familyTrend['max_signups'] > 0
+                                        ? max(8, (int) round(($point['count'] / $familyTrend['max_signups']) * 100))
+                                        : 8;
+                                @endphp
+                                <div class="flex h-full min-w-0 flex-1 flex-col items-center justify-end">
+                                    <div
+                                        class="w-full rounded-t-md bg-indigo-500/80 hover:bg-indigo-500"
+                                        style="height: {{ $height }}%;"
+                                        title="{{ $point['label_full'] }}: {{ number_format($point['count']) }} signups"
+                                    ></div>
+                                    <p class="mt-1 h-4 text-[10px] leading-4 text-slate-500">
+                                        {{ $point['show_label'] ? $point['label_short'] : '' }}
+                                    </p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-slate-900">Family landing views</h3>
+                        <p class="text-xs text-slate-500">Peak {{ number_format($familyTrend['max_landing_views']) }}</p>
+                    </div>
+                    <div class="mt-3 h-44">
+                        <div class="flex h-full items-end gap-1">
+                            @foreach($familyTrend['landing_views'] as $point)
+                                @php
+                                    $height = $familyTrend['max_landing_views'] > 0
+                                        ? max(8, (int) round(($point['count'] / $familyTrend['max_landing_views']) * 100))
+                                        : 8;
+                                @endphp
+                                <div class="flex h-full min-w-0 flex-1 flex-col items-center justify-end">
+                                    <div
+                                        class="w-full rounded-t-md bg-cyan-500/80 hover:bg-cyan-500"
+                                        style="height: {{ $height }}%;"
+                                        title="{{ $point['label_full'] }}: {{ number_format($point['count']) }} views"
+                                    ></div>
+                                    <p class="mt-1 h-4 text-[10px] leading-4 text-slate-500">
+                                        {{ $point['show_label'] ? $point['label_short'] : '' }}
+                                    </p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         @if(($summary['landing_visitors'] ?? 0) === 0)
             <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                 No caregiver landing visitors found in this date range yet.
+            </div>
+        @endif
+
+        @if(($familySummary['landing_visitors'] ?? 0) === 0)
+            <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                No family landing visitors found in this date range yet.
             </div>
         @endif
     </x-card>

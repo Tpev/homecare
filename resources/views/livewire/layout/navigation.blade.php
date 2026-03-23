@@ -94,6 +94,11 @@ new class extends Component
                 'active' => request()->routeIs('admin.users.index'),
             ],
             [
+                'label' => 'Admin Requests',
+                'href' => route('admin.requests.index'),
+                'active' => request()->routeIs('admin.requests.*'),
+            ],
+            [
                 'label' => 'Admin Reviews',
                 'href' => route('admin.caregivers.reviews'),
                 'active' => request()->routeIs('admin.caregivers.reviews'),
