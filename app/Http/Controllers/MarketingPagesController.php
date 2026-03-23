@@ -5,20 +5,19 @@ namespace App\Http\Controllers;
 use App\Services\Analytics\PageViewTracker;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cookie;
 
 class MarketingPagesController extends Controller
 {
-    public function landing(): RedirectResponse
+    public function landing(): View
     {
-        return redirect()->route('landing.caregiver');
+        return view('marketing.family');
     }
 
-    public function family(): RedirectResponse
+    public function family(): View
     {
-        return redirect()->route('landing.caregiver');
+        return view('marketing.family');
     }
 
     public function caregiver(Request $request, PageViewTracker $tracker): View|Response
@@ -46,8 +45,8 @@ class MarketingPagesController extends Controller
         return $response;
     }
 
-    public function agency(): RedirectResponse
+    public function agency(): View
     {
-        return redirect()->route('landing.caregiver');
+        return view('marketing.agency');
     }
 }

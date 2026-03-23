@@ -18,7 +18,12 @@ class SendOpsUserRegisteredAlert
             return;
         }
 
+        if ($event->user->role === 'family' || $event->user->role === null || $event->user->role === '') {
+            $this->opsAlertService->notifyFamilyRegistered($event->user);
+
+            return;
+        }
+
         $this->opsAlertService->notifyUserRegistered($event->user);
     }
 }
-

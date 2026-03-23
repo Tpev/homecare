@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Mail\Ops\UserRegisteredOpsAlertMail;
+use App\Mail\Ops\FamilyRegisteredOpsAlertMail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Volt\Volt;
@@ -44,7 +44,7 @@ class RegistrationTest extends TestCase
 
         $this->assertAuthenticated();
 
-        Mail::assertSent(UserRegisteredOpsAlertMail::class, function (UserRegisteredOpsAlertMail $mail) {
+        Mail::assertSent(FamilyRegisteredOpsAlertMail::class, function (FamilyRegisteredOpsAlertMail $mail) {
             return $mail->hasTo('peverelli.t@gmail.com')
                 && $mail->hasTo('cpetrinipoli@hub.healthcare')
                 && $mail->user->email === 'test@example.com';

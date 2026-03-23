@@ -3,7 +3,10 @@
 namespace App\Services\Ops;
 
 use App\Mail\Ops\CaregiverReadyForReviewOpsAlertMail;
+use App\Mail\Ops\FamilyRegisteredOpsAlertMail;
+use App\Mail\Ops\NewCareRequestOpsAlertMail;
 use App\Mail\Ops\UserRegisteredOpsAlertMail;
+use App\Models\CareRequest;
 use App\Models\CaregiverProfile;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
@@ -20,6 +23,34 @@ class OpsAlertService
 
         try {
             Mail::to($recipients)->send(new UserRegisteredOpsAlertMail($user));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+    }
+
+    public function notifyFamilyRegistered(User $user): void
+    {
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            return;
+        }
+
+        try {
+            Mail::to($recipients)->send(new FamilyRegisteredOpsAlertMail($user));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+    }
+
+    public function notifyCareRequestCreated(CareRequest $careRequest): void
+    {
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            return;
+        }
+
+        try {
+            Mail::to($recipients)->send(new NewCareRequestOpsAlertMail($careRequest));
         } catch (Throwable $exception) {
             report($exception);
         }
@@ -51,4 +82,3 @@ class OpsAlertService
             ->all();
     }
 }
-

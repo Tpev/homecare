@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Family;
 
+use App\Mail\Ops\NewCareRequestOpsAlertMail;
 use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Family\CreateCareRequestWizard;
 use App\Livewire\Family\ManageCareRequest;
@@ -15,6 +16,7 @@ use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -24,6 +26,8 @@ class CareRequestFlowTest extends TestCase
 
     public function test_family_can_publish_care_request_with_recipient_and_third_party_contact(): void
     {
+        Mail::fake();
+
         $family = User::factory()->create([
             'role' => 'family',
             'city' => 'Raleigh',
@@ -87,6 +91,12 @@ class CareRequestFlowTest extends TestCase
             'care_request_id' => $careRequest->id,
             'care_task_id' => $taskA->id,
         ]);
+
+        Mail::assertSent(NewCareRequestOpsAlertMail::class, function (NewCareRequestOpsAlertMail $mail) use ($careRequest) {
+            return $mail->careRequest->is($careRequest)
+                && $mail->hasTo('peverelli.t@gmail.com')
+                && $mail->hasTo('cpetrinipoli@hub.healthcare');
+        });
     }
 
     public function test_active_caregiver_can_apply_to_open_request(): void
