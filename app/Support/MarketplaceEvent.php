@@ -4,11 +4,14 @@ namespace App\Support;
 
 class MarketplaceEvent
 {
+    public const INVITATION_SENT = 'invitation_sent';
     public const NEW_APPLICANT = 'new_applicant';
+    public const APPLICATION_SUBMITTED = 'application_submitted';
     public const INVITE_ACCEPTED = 'invite_accepted';
     public const INVITE_DECLINED = 'invite_declined';
     public const MESSAGE_RECEIVED = 'message_received';
     public const CAREGIVER_HIRED = 'caregiver_hired';
+    public const HIRE_CONFIRMED = 'hire_confirmed';
     public const SHIFT_STARTING_SOON = 'shift_starting_soon';
     public const SHIFT_STARTED = 'shift_started';
     public const SHIFT_COMPLETED = 'shift_completed';
@@ -30,11 +33,14 @@ class MarketplaceEvent
     public static function all(): array
     {
         return [
+            self::INVITATION_SENT,
             self::NEW_APPLICANT,
+            self::APPLICATION_SUBMITTED,
             self::INVITE_ACCEPTED,
             self::INVITE_DECLINED,
             self::MESSAGE_RECEIVED,
             self::CAREGIVER_HIRED,
+            self::HIRE_CONFIRMED,
             self::SHIFT_STARTING_SOON,
             self::SHIFT_STARTED,
             self::SHIFT_COMPLETED,

@@ -66,9 +66,10 @@ new class extends Component
                         ->count();
                 }
 
-                if (\Illuminate\Support\Facades\Schema::hasTable('notifications')) {
-                    $notificationUnread = $user->unreadNotifications()->count();
-                }
+            }
+
+            if (($isCaregiver || $isFamily) && \Illuminate\Support\Facades\Schema::hasTable('notifications')) {
+                $notificationUnread = $user->unreadNotifications()->count();
             }
         }
 
@@ -152,6 +153,11 @@ new class extends Component
                     'label' => 'Billing',
                     'href' => route('family.billing.show'),
                     'active' => request()->routeIs('family.billing.*'),
+                ];
+                $primaryLinks[] = [
+                    'label' => $notificationUnread > 0 ? "Notifications ($notificationUnread)" : 'Notifications',
+                    'href' => route('family.notifications.index'),
+                    'active' => request()->routeIs('family.notifications.*'),
                 ];
                 $primaryLinks[] = [
                     'label' => $messageUnread > 0 ? "Messages ($messageUnread)" : 'Messages',
@@ -283,6 +289,9 @@ new class extends Component
                         @endif
                         @if ($isFamily)
                             <a href="{{ route('family.billing.show') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Billing & Payments</a>
+                            <a href="{{ route('family.notifications.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                {{ $notificationUnread > 0 ? 'Notifications ('.$notificationUnread.')' : 'Notifications' }}
+                            </a>
                         @endif
 
                         @if ($isCaregiver && ! $caregiverOnboardingMode)
@@ -368,6 +377,9 @@ new class extends Component
                         @endif
                         @if ($isFamily)
                             <x-responsive-nav-link :href="route('family.billing.show')" wire:navigate>{{ __('Billing & Payments') }}</x-responsive-nav-link>
+                            <x-responsive-nav-link :href="route('family.notifications.index')" wire:navigate>
+                                {{ $notificationUnread > 0 ? __('Notifications').' ('.$notificationUnread.')' : __('Notifications') }}
+                            </x-responsive-nav-link>
                         @endif
                         @if ($isCaregiver && ! $caregiverOnboardingMode)
                             <x-responsive-nav-link :href="route('caregiver.work-inbox.index')" wire:navigate>

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Caregiver;
+namespace App\Livewire\Family;
 
 use App\Models\UserNotificationPreference;
 use App\Services\Notifications\NotificationChannels;
@@ -24,22 +24,25 @@ class NotificationsCenter extends Component
      * @var list<string>
      */
     public array $eventKeys = [
-        MarketplaceEvent::MATCHING_REQUEST_REMINDER,
-        MarketplaceEvent::APPLICATION_SUBMITTED,
-        MarketplaceEvent::CAREGIVER_HIRED,
+        MarketplaceEvent::INVITATION_SENT,
+        MarketplaceEvent::NEW_APPLICANT,
+        MarketplaceEvent::INVITE_ACCEPTED,
+        MarketplaceEvent::INVITE_DECLINED,
+        MarketplaceEvent::HIRE_CONFIRMED,
         MarketplaceEvent::SHIFT_STARTING_SOON,
         MarketplaceEvent::SHIFT_STARTED,
         MarketplaceEvent::SHIFT_COMPLETED,
-        MarketplaceEvent::REVIEW_RECEIVED,
         MarketplaceEvent::MESSAGE_RECEIVED,
-        MarketplaceEvent::PAYOUT_TRANSFERRED,
-        MarketplaceEvent::PAYOUT_TRANSFER_FAILED,
+        MarketplaceEvent::PAYMENT_AUTHORIZED,
+        MarketplaceEvent::PAYMENT_ACTION_REQUIRED,
+        MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED,
+        MarketplaceEvent::PAYMENT_CAPTURED,
         MarketplaceEvent::PAYMENT_REFUNDED,
     ];
 
     public function mount(): void
     {
-        abort_unless(auth()->user()?->role === 'caregiver', 403);
+        abort_unless(auth()->user()?->role === 'family', 403);
         $this->loadPreferencesFromStore();
     }
 
@@ -82,6 +85,7 @@ class NotificationsCenter extends Component
         $url = (string) data_get($notification->data, 'url', '');
         if ($url !== '') {
             $this->redirect($url, navigate: true);
+
             return;
         }
 
@@ -186,7 +190,7 @@ class NotificationsCenter extends Component
                 ];
             });
 
-        return view('livewire.caregiver.notifications-center', [
+        return view('livewire.family.notifications-center', [
             'notifications' => $notifications,
             'unreadCount' => auth()->user()->unreadNotifications()->count(),
             'eventOptions' => collect($this->eventKeys)->map(fn (string $key) => [
@@ -199,17 +203,20 @@ class NotificationsCenter extends Component
     private function eventLabel(string $eventKey): string
     {
         return match ($eventKey) {
-            MarketplaceEvent::MATCHING_REQUEST_REMINDER => 'Invitation / match',
-            MarketplaceEvent::APPLICATION_SUBMITTED => 'Application submitted',
-            MarketplaceEvent::CAREGIVER_HIRED => 'Hired',
+            MarketplaceEvent::INVITATION_SENT => 'Invitation sent',
+            MarketplaceEvent::NEW_APPLICANT => 'New applicant',
+            MarketplaceEvent::INVITE_ACCEPTED => 'Invitation accepted',
+            MarketplaceEvent::INVITE_DECLINED => 'Invitation declined',
+            MarketplaceEvent::HIRE_CONFIRMED => 'Hire confirmed',
             MarketplaceEvent::SHIFT_STARTING_SOON => 'Shift reminder',
             MarketplaceEvent::SHIFT_STARTED => 'Shift started',
             MarketplaceEvent::SHIFT_COMPLETED => 'Shift completed',
-            MarketplaceEvent::REVIEW_RECEIVED => 'Review received',
             MarketplaceEvent::MESSAGE_RECEIVED => 'Message',
-            MarketplaceEvent::PAYOUT_TRANSFERRED => 'Payout sent',
-            MarketplaceEvent::PAYOUT_TRANSFER_FAILED => 'Payout issue',
-            MarketplaceEvent::PAYMENT_REFUNDED => 'Refund update',
+            MarketplaceEvent::PAYMENT_AUTHORIZED => 'Payment authorized',
+            MarketplaceEvent::PAYMENT_ACTION_REQUIRED => 'Payment action required',
+            MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED => 'Payment issue',
+            MarketplaceEvent::PAYMENT_CAPTURED => 'Payment captured',
+            MarketplaceEvent::PAYMENT_REFUNDED => 'Payment refunded',
             default => 'Update',
         };
     }
@@ -217,18 +224,19 @@ class NotificationsCenter extends Component
     private function eventTone(string $eventKey): string
     {
         return match ($eventKey) {
-            MarketplaceEvent::APPLICATION_SUBMITTED,
-            MarketplaceEvent::CAREGIVER_HIRED,
-            MarketplaceEvent::SHIFT_STARTED => 'success',
-            MarketplaceEvent::SHIFT_STARTING_SOON => 'info',
-            MarketplaceEvent::REVIEW_RECEIVED => 'warning',
-            MarketplaceEvent::MESSAGE_RECEIVED => 'neutral',
-            MarketplaceEvent::MATCHING_REQUEST_REMINDER => 'info',
-            MarketplaceEvent::SHIFT_COMPLETED => 'neutral',
-            MarketplaceEvent::PAYOUT_TRANSFERRED => 'success',
-            MarketplaceEvent::PAYOUT_TRANSFER_FAILED => 'warning',
+            MarketplaceEvent::INVITATION_SENT,
+            MarketplaceEvent::PAYMENT_AUTHORIZED,
+            MarketplaceEvent::PAYMENT_CAPTURED,
+            MarketplaceEvent::HIRE_CONFIRMED => 'success',
+            MarketplaceEvent::NEW_APPLICANT,
+            MarketplaceEvent::INVITE_ACCEPTED,
+            MarketplaceEvent::SHIFT_STARTED => 'info',
+            MarketplaceEvent::INVITE_DECLINED,
+            MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED,
+            MarketplaceEvent::PAYMENT_ACTION_REQUIRED,
             MarketplaceEvent::PAYMENT_REFUNDED => 'warning',
             default => 'neutral',
         };
     }
 }
+

@@ -11,6 +11,8 @@ use App\Models\CaregiverProfile;
 use App\Support\CaregiverPrelaunch;
 use App\Support\CaregiverOnboardingState;
 use App\Support\CaregiverWorkInboxBuilder;
+use App\Support\MarketplaceEvent;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -129,6 +131,8 @@ class Home extends Component
                 ->latest()
                 ->limit(6)
                 ->get();
+
+            $familyData['notification_digest'] = $this->notificationDigestForRole($user, 'family');
         }
 
         if ($mode === 'caregiver') {
@@ -293,6 +297,7 @@ class Home extends Component
             $caregiverData['ready_for_review'] = $requiredCompleted >= $requiredTotal;
             $caregiverData['can_submit_for_review'] = $caregiverData['ready_for_review']
                 && in_array((string) $profile->status, ['draft', 'suspended'], true);
+            $caregiverData['notification_digest'] = $this->notificationDigestForRole($user, 'caregiver');
         }
 
         return view('livewire.dashboard.home', compact('mode', 'familyData', 'caregiverData'));
@@ -325,5 +330,74 @@ class Home extends Component
                     ->orWhereColumn('last_message_at', '>', 'caregiver_last_read_at');
             })
             ->count();
+    }
+
+    /**
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function notificationDigestForRole($user, string $role): Collection
+    {
+        if (! Schema::hasTable('notifications')) {
+            return collect();
+        }
+
+        $eventMap = $this->notificationEventMapForRole($role);
+        $eventKeys = array_keys($eventMap);
+
+        return $user->unreadNotifications()
+            ->whereIn('data->event_key', $eventKeys)
+            ->latest()
+            ->limit(3)
+            ->get()
+            ->map(function ($notification) use ($eventMap): array {
+                $eventKey = (string) data_get($notification->data, 'event_key', '');
+                $eventMeta = $eventMap[$eventKey] ?? ['label' => 'Update', 'tone' => 'neutral'];
+
+                return [
+                    'id' => (string) $notification->id,
+                    'event_key' => $eventKey,
+                    'event_label' => (string) ($eventMeta['label'] ?? 'Update'),
+                    'tone' => (string) ($eventMeta['tone'] ?? 'neutral'),
+                    'title' => (string) data_get($notification->data, 'title', 'Notification'),
+                    'body' => (string) data_get($notification->data, 'body', ''),
+                    'url' => (string) data_get($notification->data, 'url', ''),
+                    'created_at' => $notification->created_at,
+                ];
+            });
+    }
+
+    /**
+     * @return array<string, array{label: string, tone: string}>
+     */
+    private function notificationEventMapForRole(string $role): array
+    {
+        if ($role === 'family') {
+            return [
+                MarketplaceEvent::NEW_APPLICANT => ['label' => 'Applicant', 'tone' => 'info'],
+                MarketplaceEvent::INVITE_ACCEPTED => ['label' => 'Invite accepted', 'tone' => 'success'],
+                MarketplaceEvent::INVITE_DECLINED => ['label' => 'Invite declined', 'tone' => 'warning'],
+                MarketplaceEvent::HIRE_CONFIRMED => ['label' => 'Hire confirmed', 'tone' => 'success'],
+                MarketplaceEvent::SHIFT_STARTING_SOON => ['label' => 'Shift soon', 'tone' => 'info'],
+                MarketplaceEvent::SHIFT_STARTED => ['label' => 'Shift started', 'tone' => 'info'],
+                MarketplaceEvent::SHIFT_COMPLETED => ['label' => 'Shift completed', 'tone' => 'success'],
+                MarketplaceEvent::MESSAGE_RECEIVED => ['label' => 'Message', 'tone' => 'neutral'],
+                MarketplaceEvent::PAYMENT_ACTION_REQUIRED => ['label' => 'Payment action', 'tone' => 'warning'],
+                MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED => ['label' => 'Payment issue', 'tone' => 'warning'],
+                MarketplaceEvent::PAYMENT_AUTHORIZED => ['label' => 'Payment secured', 'tone' => 'success'],
+            ];
+        }
+
+        return [
+            MarketplaceEvent::MATCHING_REQUEST_REMINDER => ['label' => 'New invite', 'tone' => 'info'],
+            MarketplaceEvent::APPLICATION_SUBMITTED => ['label' => 'Applied', 'tone' => 'success'],
+            MarketplaceEvent::CAREGIVER_HIRED => ['label' => 'Hired', 'tone' => 'success'],
+            MarketplaceEvent::SHIFT_STARTING_SOON => ['label' => 'Shift soon', 'tone' => 'info'],
+            MarketplaceEvent::SHIFT_STARTED => ['label' => 'Shift started', 'tone' => 'info'],
+            MarketplaceEvent::SHIFT_COMPLETED => ['label' => 'Shift completed', 'tone' => 'success'],
+            MarketplaceEvent::MESSAGE_RECEIVED => ['label' => 'Message', 'tone' => 'neutral'],
+            MarketplaceEvent::REVIEW_RECEIVED => ['label' => 'Review received', 'tone' => 'warning'],
+            MarketplaceEvent::PAYOUT_TRANSFERRED => ['label' => 'Payout sent', 'tone' => 'success'],
+            MarketplaceEvent::PAYOUT_TRANSFER_FAILED => ['label' => 'Payout issue', 'tone' => 'warning'],
+        ];
     }
 }

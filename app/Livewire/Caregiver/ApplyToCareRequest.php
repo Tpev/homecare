@@ -160,6 +160,20 @@ class ApplyToCareRequest extends Component
             );
         }
 
+        app(MarketplaceNotificationService::class)->notify(
+            recipients: auth()->user(),
+            eventKey: MarketplaceEvent::APPLICATION_SUBMITTED,
+            title: 'Application submitted',
+            body: 'Your application was sent to the family.',
+            url: route('care-requests.apply', $this->requestItem->id),
+            payload: [
+                'care_request_id' => $this->requestItem->id,
+                'caregiver_user_id' => (int) auth()->id(),
+            ],
+            subject: $this->existingApplication,
+            dedupeKey: 'application-submitted:request-'.$this->requestItem->id.'-user-'.auth()->id()
+        );
+
         FunnelTracker::track('care_request_application_submitted', auth()->user(), $this->existingApplication, [
             'care_request_id' => $this->requestItem->id,
         ]);

@@ -126,6 +126,47 @@
                 </div>
             </section>
 
+            @php
+                $familyDigest = $familyData['notification_digest'] ?? collect();
+                $digestToneStyles = [
+                    'success' => 'bg-emerald-100 text-emerald-700',
+                    'warning' => 'bg-amber-100 text-amber-800',
+                    'danger' => 'bg-rose-100 text-rose-700',
+                    'info' => 'bg-sky-100 text-sky-700',
+                    'neutral' => 'bg-slate-100 text-slate-700',
+                ];
+            @endphp
+
+            @if ($familyDigest->count() > 0)
+                <x-card>
+                    <x-slot:header>
+                        <div class="flex items-center justify-between gap-2">
+                            <h2 class="font-display font-semibold">Top unread updates</h2>
+                            <a href="{{ route('family.notifications.index') }}" wire:navigate class="hc-link">See all</a>
+                        </div>
+                    </x-slot:header>
+                    <div class="space-y-2">
+                        @foreach ($familyDigest as $digest)
+                            <a href="{{ $digest['url'] ?: route('family.notifications.index') }}" wire:navigate class="block rounded-xl border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:bg-slate-50">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $digestToneStyles[$digest['tone'] ?? 'neutral'] ?? $digestToneStyles['neutral'] }}">
+                                                {{ strtoupper($digest['event_label']) }}
+                                            </span>
+                                            <span class="text-xs text-slate-500">{{ optional($digest['created_at'])->diffForHumans() }}</span>
+                                        </div>
+                                        <p class="mt-2 text-sm font-semibold text-slate-900">{{ $digest['title'] }}</p>
+                                        <p class="mt-1 text-sm text-slate-600">{{ $digest['body'] }}</p>
+                                    </div>
+                                    <span class="inline-flex h-11 items-center rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700">Open</span>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </x-card>
+            @endif
+
             @if (! $hasAnyPipelineData)
                 <x-card>
                     <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
@@ -404,6 +445,47 @@
                     </div>
                 </div>
             </section>
+
+            @php
+                $caregiverDigest = $caregiverData['notification_digest'] ?? collect();
+                $caregiverDigestToneStyles = [
+                    'success' => 'bg-emerald-100 text-emerald-700',
+                    'warning' => 'bg-amber-100 text-amber-800',
+                    'danger' => 'bg-rose-100 text-rose-700',
+                    'info' => 'bg-sky-100 text-sky-700',
+                    'neutral' => 'bg-slate-100 text-slate-700',
+                ];
+            @endphp
+
+            @if ($caregiverDigest->count() > 0)
+                <x-card>
+                    <x-slot:header>
+                        <div class="flex items-center justify-between gap-2">
+                            <h2 class="font-display font-semibold">Top unread updates</h2>
+                            <a href="{{ route('caregiver.notifications.index') }}" wire:navigate class="hc-link">See all</a>
+                        </div>
+                    </x-slot:header>
+                    <div class="space-y-2">
+                        @foreach ($caregiverDigest as $digest)
+                            <a href="{{ $digest['url'] ?: route('caregiver.notifications.index') }}" wire:navigate class="block rounded-xl border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:bg-slate-50">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $caregiverDigestToneStyles[$digest['tone'] ?? 'neutral'] ?? $caregiverDigestToneStyles['neutral'] }}">
+                                                {{ strtoupper($digest['event_label']) }}
+                                            </span>
+                                            <span class="text-xs text-slate-500">{{ optional($digest['created_at'])->diffForHumans() }}</span>
+                                        </div>
+                                        <p class="mt-2 text-sm font-semibold text-slate-900">{{ $digest['title'] }}</p>
+                                        <p class="mt-1 text-sm text-slate-600">{{ $digest['body'] }}</p>
+                                    </div>
+                                    <span class="inline-flex h-11 items-center rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700">Open</span>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </x-card>
+            @endif
 
             <x-card>
                 <x-slot:header>

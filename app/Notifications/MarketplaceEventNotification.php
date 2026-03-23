@@ -86,11 +86,14 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
     private function eventLabel(): string
     {
         return match ($this->eventKey) {
+            'invitation_sent' => 'Invitation sent',
             'new_applicant' => 'New applicant',
+            'application_submitted' => 'Application submitted',
             'invite_accepted' => 'Invitation accepted',
             'invite_declined' => 'Invitation declined',
             'message_received' => 'New message',
             'caregiver_hired' => 'Caregiver hired',
+            'hire_confirmed' => 'Hire confirmed',
             'shift_starting_soon' => 'Shift reminder',
             'shift_started' => 'Shift started',
             'shift_completed' => 'Shift completed',
@@ -112,11 +115,14 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
     private function actionLabel(): string
     {
         return match ($this->eventKey) {
+            'invitation_sent' => 'View invitation',
             'new_applicant' => 'Review applicant',
+            'application_submitted' => 'Track application',
             'invite_accepted' => 'Open request',
             'invite_declined' => 'Open request',
             'message_received' => 'Open conversation',
             'caregiver_hired' => 'View booking',
+            'hire_confirmed' => 'Open shift details',
             'shift_starting_soon' => 'Open shift plan',
             'shift_started' => 'Track shift',
             'shift_completed' => 'Review shift',

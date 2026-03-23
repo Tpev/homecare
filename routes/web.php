@@ -40,6 +40,7 @@ use App\Livewire\Dashboard\Home as DashboardHome;
 use App\Livewire\Family\AiRequestCopilot;
 use App\Livewire\Family\CreateCareRequestWizard;
 use App\Livewire\Family\ManageCareRequest;
+use App\Livewire\Family\NotificationsCenter as FamilyNotificationsCenter;
 use App\Livewire\Family\RequestsIndex;
 use App\Livewire\Messaging\Inbox;
 use App\Livewire\Support\TicketsCenter;
@@ -143,6 +144,7 @@ Route::middleware(['auth', 'family.role'])->prefix('family')->name('family.')->g
     Route::get('/requests', RequestsIndex::class)->name('requests.index');
     Route::get('/requests/create', CreateCareRequestWizard::class)->name('requests.create');
     Route::get('/requests/create/ai', AiRequestCopilot::class)->name('requests.create_ai');
+    Route::get('/notifications', FamilyNotificationsCenter::class)->name('notifications.index');
     Route::get('/billing', [FamilyBillingController::class, 'show'])->name('billing.show');
     Route::post('/billing/checkout', [FamilyBillingController::class, 'createCheckout'])->name('billing.checkout');
     Route::get('/requests/{careRequest}', ManageCareRequest::class)

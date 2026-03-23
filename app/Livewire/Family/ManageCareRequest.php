@@ -222,6 +222,17 @@ class ManageCareRequest extends Component
             );
         }
 
+        app(MarketplaceNotificationService::class)->notify(
+            recipients: auth()->user(),
+            eventKey: MarketplaceEvent::HIRE_CONFIRMED,
+            title: 'Hire confirmed',
+            body: 'Caregiver hired and shift created for this request.',
+            url: route('family.requests.show', $this->requestItem->id),
+            payload: ['care_request_id' => $this->requestItem->id],
+            subject: $application,
+            dedupeKey: 'hire-confirmed:request-'.$this->requestItem->id.'-user-'.auth()->id()
+        );
+
         FunnelTracker::track('caregiver_hired', auth()->user(), $application, [
             'care_request_id' => $this->requestItem->id,
         ]);
@@ -867,6 +878,20 @@ class ManageCareRequest extends Component
                 subject: $invitation
             );
         }
+
+        app(MarketplaceNotificationService::class)->notify(
+            recipients: auth()->user(),
+            eventKey: MarketplaceEvent::INVITATION_SENT,
+            title: 'Invitation sent',
+            body: 'Your invitation was sent to the caregiver.',
+            url: route('family.requests.show', $this->requestItem->id),
+            payload: [
+                'care_request_id' => $this->requestItem->id,
+                'caregiver_user_id' => $caregiverUserId,
+            ],
+            subject: $invitation,
+            dedupeKey: 'invite-sent:invitation-'.$invitation->id.'-user-'.auth()->id()
+        );
 
         FunnelTracker::track('care_request_invitation_sent', auth()->user(), $invitation, [
             'care_request_id' => $this->requestItem->id,

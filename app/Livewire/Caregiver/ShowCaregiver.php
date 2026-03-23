@@ -96,6 +96,20 @@ class ShowCaregiver extends Component
             subject: $invitation
         );
 
+        app(MarketplaceNotificationService::class)->notify(
+            recipients: $user,
+            eventKey: MarketplaceEvent::INVITATION_SENT,
+            title: 'Invitation sent',
+            body: 'Your invitation was sent to '.$this->caregiver->user?->name.'.',
+            url: route('family.requests.show', (int) $this->selectedCareRequestId),
+            payload: [
+                'care_request_id' => (int) $this->selectedCareRequestId,
+                'caregiver_user_id' => (int) $this->caregiver->user_id,
+            ],
+            subject: $invitation,
+            dedupeKey: 'invite-sent:invitation-'.$invitation->id.'-user-'.$user->id
+        );
+
         FunnelTracker::track('care_request_invitation_sent', $user, $invitation, [
             'care_request_id' => $this->selectedCareRequestId,
             'caregiver_user_id' => $this->caregiver->user_id,
