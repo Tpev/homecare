@@ -11,14 +11,17 @@
         <x-alert color="red">{{ $message }}</x-alert>
     @enderror
 
-    <div class="flex flex-wrap items-center justify-between gap-2">
-        <h1 class="text-xl font-semibold">Request #{{ $careRequest->id }} Operations</h1>
-        <div class="flex items-center gap-2">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-xl font-semibold">Request #{{ $careRequest->id }} Operations</h1>
+            <p class="mt-1 text-sm text-slate-600">Admin view for full request lifecycle, applicants, booking, and payment state.</p>
+        </div>
+        <div class="grid grid-cols-1 gap-2 sm:flex sm:items-center">
             <a href="{{ route('admin.requests.index') }}" wire:navigate>
-                <x-button color="slate" light sm>Back to requests</x-button>
+                <x-button color="slate" light class="w-full justify-center sm:w-auto" sm>Back to requests</x-button>
             </a>
             <a href="{{ route('admin.users.show', $careRequest->family_user_id) }}" wire:navigate>
-                <x-button color="cyan" light sm>Open family profile</x-button>
+                <x-button color="cyan" light class="w-full justify-center sm:w-auto" sm>Open family profile</x-button>
             </a>
         </div>
     </div>
@@ -42,7 +45,7 @@
             </div>
         </x-slot:header>
 
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div class="rounded-lg border border-slate-200 p-3 text-sm">
                 <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Family</p>
                 <p class="mt-1 font-semibold text-slate-900">{{ $careRequest->family?->name ?: '—' }}</p>
@@ -71,7 +74,7 @@
         <div class="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
             <div class="rounded-xl border border-slate-200 p-3">
                 <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Admin request status override</p>
-                <div class="mt-2 flex flex-wrap gap-2">
+                <div class="mt-2 grid grid-cols-2 gap-2">
                     <button type="button" wire:click="forceRequestStatus('open')" class="rounded-lg border border-sky-200 px-3 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-50">Open</button>
                     <button type="button" wire:click="forceRequestStatus('filled')" class="rounded-lg border border-indigo-200 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-50">Filled</button>
                     <button type="button" wire:click="forceRequestStatus('cancelled')" class="rounded-lg border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-50">Cancelled</button>
@@ -81,7 +84,7 @@
             <div class="rounded-xl border border-slate-200 p-3">
                 <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Admin shift status override</p>
                 @if($careRequest->booking)
-                    <div class="mt-2 flex flex-wrap gap-2">
+                    <div class="mt-2 grid grid-cols-2 gap-2">
                         <button type="button" wire:click="forceBookingStatus('scheduled')" class="rounded-lg border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50">Scheduled</button>
                         <button type="button" wire:click="forceBookingStatus('in_progress')" class="rounded-lg border border-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-50">In progress</button>
                         <button type="button" wire:click="forceBookingStatus('completed')" class="rounded-lg border border-blue-200 px-3 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-50">Completed</button>
@@ -97,7 +100,7 @@
             <p class="text-xs uppercase tracking-[0.14em] text-rose-700">Danger zone</p>
             <p class="mt-1 text-sm text-rose-800">Delete this request and all linked records allowed by database constraints.</p>
             <div class="mt-2">
-                <x-button color="red" light sm wire:click="deleteRequest" onclick="if (!confirm('Delete request #{{ $careRequest->id }}? This cannot be undone.')) return false;">Delete request</x-button>
+                <x-button color="red" light class="w-full justify-center sm:w-auto" sm wire:click="deleteRequest" onclick="if (!confirm('Delete request #{{ $careRequest->id }}? This cannot be undone.')) return false;">Delete request</x-button>
             </div>
         </div>
     </x-card>
@@ -200,4 +203,3 @@
         </x-card>
     @endif
 </div>
-

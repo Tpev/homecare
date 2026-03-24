@@ -1,8 +1,11 @@
 <div class="hc-page py-8 space-y-6">
-    <div class="flex items-center justify-between">
-        <h1 class="text-xl font-semibold">User Profile Review</h1>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-xl font-semibold">User Profile Review</h1>
+            <p class="mt-1 text-sm text-slate-600">Full account context, activity, and moderation details in one place.</p>
+        </div>
         <a href="{{ route('admin.users.index') }}" wire:navigate>
-            <x-button color="slate" light sm>Back to users</x-button>
+            <x-button color="slate" light class="w-full justify-center sm:w-auto" sm>Back to users</x-button>
         </a>
     </div>
 
@@ -95,9 +98,9 @@
                 @if($caregiverProfile->availabilities->isEmpty())
                     <p class="mt-2 text-slate-500">No availability submitted.</p>
                 @else
-                    <ul class="mt-2 space-y-1 text-slate-900">
+                    <ul class="mt-2 grid grid-cols-1 gap-2 text-slate-900 sm:grid-cols-2">
                         @foreach($caregiverProfile->availabilities as $availability)
-                            <li>
+                            <li class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
                                 Day {{ $availability->day_of_week }} · {{ substr((string) $availability->start_time, 0, 5) }} - {{ substr((string) $availability->end_time, 0, 5) }}
                             </li>
                         @endforeach
@@ -170,4 +173,3 @@
         </x-card>
     @endif
 </div>
-

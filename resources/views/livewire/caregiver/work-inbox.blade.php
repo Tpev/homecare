@@ -1,4 +1,4 @@
-<div class="hc-page py-8 space-y-6">
+<div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -31,44 +31,44 @@
         <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-cyan-500/20 blur-2xl"></div>
 
         <div class="relative space-y-4">
-            <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
                 <div>
                     <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Caregiver Work Inbox</p>
                     <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Stay on top of new opportunities.</h1>
                     <p class="mt-1 text-sm text-slate-300">Offers, applications, hired shifts, and recaps in one place.</p>
                 </div>
-                <div class="flex flex-wrap gap-2">
+                <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <a href="{{ route('caregiver.shifts.index') }}" wire:navigate>
-                        <x-button color="white" light sm>My shifts</x-button>
+                        <x-button color="white" light class="w-full sm:w-auto" sm>My shifts</x-button>
                     </a>
                     <a href="{{ route('caregiver.earnings.index') }}" wire:navigate>
-                        <x-button color="white" light sm>Earnings</x-button>
+                        <x-button color="white" light class="w-full sm:w-auto" sm>Earnings</x-button>
                     </a>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-                <div class="rounded-xl border border-white/15 bg-white/5 px-3 py-2">
+            <div class="flex gap-2 overflow-x-auto pb-1 sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-6">
+                <div class="min-w-[122px] rounded-xl border border-white/15 bg-white/5 px-3 py-2 sm:min-w-0">
                     <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Needs response</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['needs_response'] ?? 0 }}</p>
                 </div>
-                <div class="rounded-xl border border-white/15 bg-white/5 px-3 py-2">
+                <div class="min-w-[122px] rounded-xl border border-white/15 bg-white/5 px-3 py-2 sm:min-w-0">
                     <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Recommended</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['recommended'] ?? 0 }}</p>
                 </div>
-                <div class="rounded-xl border border-white/15 bg-white/5 px-3 py-2">
+                <div class="min-w-[122px] rounded-xl border border-white/15 bg-white/5 px-3 py-2 sm:min-w-0">
                     <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Applied</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['applied'] ?? 0 }}</p>
                 </div>
-                <div class="rounded-xl border border-white/15 bg-white/5 px-3 py-2">
+                <div class="min-w-[122px] rounded-xl border border-white/15 bg-white/5 px-3 py-2 sm:min-w-0">
                     <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Hired</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['hired'] ?? 0 }}</p>
                 </div>
-                <div class="rounded-xl border border-white/15 bg-white/5 px-3 py-2">
+                <div class="min-w-[122px] rounded-xl border border-white/15 bg-white/5 px-3 py-2 sm:min-w-0">
                     <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Completed</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['completed'] ?? 0 }}</p>
                 </div>
-                <div class="rounded-xl border border-white/15 bg-white/5 px-3 py-2">
+                <div class="min-w-[122px] rounded-xl border border-white/15 bg-white/5 px-3 py-2 sm:min-w-0">
                     <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Total</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['all'] ?? 0 }}</p>
                 </div>

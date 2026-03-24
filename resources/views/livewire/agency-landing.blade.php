@@ -9,10 +9,10 @@
                 </div>
             </a>
             <div class="flex items-center gap-2">
-                <a href="{{ route('landing.family') }}">
+                <a href="{{ route('landing.family') }}" class="hidden sm:block">
                     <x-button color="slate" sm light>Families</x-button>
                 </a>
-                <a href="{{ route('landing.caregiver') }}">
+                <a href="{{ route('landing.caregiver') }}" class="hidden sm:block">
                     <x-button color="slate" sm light>Caregivers</x-button>
                 </a>
                 <a href="{{ route('login') }}">
@@ -31,12 +31,12 @@
             <p class="mt-6 max-w-xl text-lg text-slate-600">
                 HomeCare helps agencies win new demand and move faster when schedules are tight. Keep quality high while reducing coordination overhead.
             </p>
-            <div class="mt-8 flex flex-wrap gap-3">
+            <div class="mt-8 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
                 <a href="{{ route('register') }}">
-                    <x-button color="blue" lg icon="building-office-2" position="left">Create agency account</x-button>
+                    <x-button color="blue" lg icon="building-office-2" position="left" class="w-full justify-center sm:w-auto">Create agency account</x-button>
                 </a>
                 <a href="{{ route('caregiver.register') }}">
-                    <x-button color="emerald" lg outline icon="user-group" position="left">Onboard caregivers</x-button>
+                    <x-button color="emerald" lg outline icon="user-group" position="left" class="w-full justify-center sm:w-auto">Onboard caregivers</x-button>
                 </a>
             </div>
             <div class="mt-8 grid gap-3 text-sm sm:grid-cols-2">

@@ -50,7 +50,6 @@ class Inbox extends Component
     public function refreshThread(): void
     {
         $this->markActiveAsRead();
-        $this->dispatch('thread-refreshed');
     }
 
     public function loadMore(): void

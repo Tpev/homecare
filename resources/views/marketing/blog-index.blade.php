@@ -46,7 +46,7 @@
                     <a href="{{ route('landing.agency') }}" class="transition hover:text-slate-900">Agencies</a>
                 </nav>
 
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center justify-end gap-2">
                     <a href="{{ route('login') }}">
                         <x-button color="slate" sm light>Sign in</x-button>
                     </a>
@@ -61,9 +61,9 @@
         </header>
 
         <section class="border-b border-slate-200 bg-gradient-to-b from-white to-slate-100">
-            <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+            <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-16">
                 <x-badge color="blue" text="Raleigh Home Care Blog" round light />
-                <h1 class="mt-4 text-4xl font-black tracking-tight sm:text-5xl">Local guides to help families hire better and faster.</h1>
+                <h1 class="mt-4 text-3xl font-black tracking-tight sm:text-5xl">Local guides to help families hire better and faster.</h1>
                 <p class="mt-4 max-w-3xl text-lg text-slate-600">
                     Practical Raleigh-focused content on non-medical home care, caregiver hiring, costs, and day-to-day coordination.
                 </p>
@@ -95,7 +95,7 @@
                                         <span class="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-700">{{ strtoupper($topic) }}</span>
                                     @endforeach
                                 </div>
-                                <h2 class="text-xl font-bold tracking-tight">
+                                <h2 class="text-lg font-bold tracking-tight sm:text-xl">
                                     <a href="{{ route('blog.show', ['blogSlug' => $post['slug']]) }}" class="hover:text-blue-700">{{ $post['title'] }}</a>
                                 </h2>
                                 <p class="mt-2 text-sm text-slate-600">{{ $post['excerpt'] }}</p>

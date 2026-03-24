@@ -81,11 +81,11 @@ new #[Layout('layouts.guest')] class extends Component
             <x-input-error :messages="$errors->get('accept_terms')" class="mt-2" />
         </div>
 
-        <div class="flex items-center justify-between pt-2">
+        <div class="grid grid-cols-1 gap-3 pt-2 sm:flex sm:items-center sm:justify-between">
             <a class="text-sm text-slate-600 underline" href="{{ route('login') }}" wire:navigate>
                 {{ __('Already registered?') }}
             </a>
-            <x-button type="submit" color="blue">{{ __('Create account') }}</x-button>
+            <x-button type="submit" color="blue" class="w-full justify-center sm:w-auto">{{ __('Create account') }}</x-button>
         </div>
     </form>
 </div>

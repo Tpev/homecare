@@ -13,12 +13,12 @@
 
     <x-card>
         <x-slot:header>
-            <div class="flex items-start justify-between gap-3">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 class="text-xl font-semibold">Request Operations</h1>
                     <p class="mt-1 text-sm text-slate-600">Full admin visibility and controls across all job requests.</p>
                 </div>
-                <div class="text-xs text-slate-500">Showing {{ $requests->total() }} request(s)</div>
+                <div class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-500">Showing {{ $requests->total() }} request(s)</div>
             </div>
         </x-slot:header>
 
@@ -69,7 +69,67 @@
             </div>
         </div>
 
-        <div class="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+        <div class="mt-5 space-y-3 md:hidden">
+            @forelse($requests as $request)
+                @php
+                    $requestTone = match ($request->status) {
+                        \App\Models\CareRequest::STATUS_OPEN => 'blue',
+                        \App\Models\CareRequest::STATUS_FILLED => 'indigo',
+                        \App\Models\CareRequest::STATUS_CANCELLED => 'red',
+                        \App\Models\CareRequest::STATUS_EXPIRED => 'amber',
+                        default => 'slate',
+                    };
+                    $bookingTone = match ($request->booking?->status) {
+                        \App\Models\CareBooking::STATUS_IN_PROGRESS,
+                        \App\Models\CareBooking::STATUS_PAUSED => 'green',
+                        \App\Models\CareBooking::STATUS_COMPLETED,
+                        \App\Models\CareBooking::STATUS_REVIEWED => 'blue',
+                        \App\Models\CareBooking::STATUS_CANCELLED => 'red',
+                        \App\Models\CareBooking::STATUS_DISPUTED => 'amber',
+                        default => 'slate',
+                    };
+                @endphp
+                <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-base font-semibold text-slate-900">{{ $request->title ?: 'Untitled request' }}</p>
+                            <p class="mt-1 text-sm text-slate-500">{{ $request->family?->name ?: 'Unknown' }} · {{ $request->city }}, {{ $request->state }}</p>
+                            <p class="text-xs text-slate-500">{{ $request->request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring' : 'One-time' }} · #{{ $request->id }}</p>
+                        </div>
+                        <x-badge :text="strtoupper((string) $request->status)" :color="$requestTone" />
+                    </div>
+
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        @if($request->booking)
+                            <x-badge :text="'BOOKING '.strtoupper((string) $request->booking->status)" :color="$bookingTone" />
+                        @endif
+                        <span class="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                            {{ $request->applications_count }} app · {{ $request->invitations_count }} inv · {{ $request->conversations_count }} chat
+                        </span>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-2 gap-2">
+                        <button type="button" wire:click="forceRequestStatus({{ $request->id }}, 'open')" class="rounded-xl border border-sky-200 px-3 py-2 text-xs font-semibold text-sky-700 hover:bg-sky-50">Open</button>
+                        <button type="button" wire:click="forceRequestStatus({{ $request->id }}, 'filled')" class="rounded-xl border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50">Filled</button>
+                        <button type="button" wire:click="forceRequestStatus({{ $request->id }}, 'cancelled')" class="rounded-xl border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50">Cancel</button>
+                        <button type="button" wire:click="forceRequestStatus({{ $request->id }}, 'expired')" class="rounded-xl border border-amber-200 px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50">Expire</button>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-1 gap-2">
+                        <a href="{{ route('admin.requests.show', $request) }}" wire:navigate class="block">
+                            <x-button color="cyan" light class="w-full justify-center">Open request</x-button>
+                        </a>
+                        <x-button color="red" light class="w-full justify-center" wire:click="deleteRequest({{ $request->id }})" onclick="if (!confirm('Delete request #{{ $request->id }}? This cannot be undone.')) return false;">Delete</x-button>
+                    </div>
+                </article>
+            @empty
+                <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                    No requests found for the current filters.
+                </div>
+            @endforelse
+        </div>
+
+        <div class="mt-4 hidden overflow-x-auto rounded-xl border border-slate-200 md:block">
             <table class="min-w-full divide-y divide-slate-200 text-sm">
                 <thead class="bg-slate-50">
                     <tr class="text-left text-xs uppercase tracking-wide text-slate-500">
@@ -172,8 +232,9 @@
         </div>
 
         <x-slot:footer>
-            {{ $requests->links() }}
+            <div class="pt-2">
+                {{ $requests->links() }}
+            </div>
         </x-slot:footer>
     </x-card>
 </div>
-

@@ -6,6 +6,7 @@ use App\Models\CareBooking;
 use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
+use App\Models\CareReview;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -50,6 +51,36 @@ class CaregiverShiftsExperienceTest extends TestCase
         $response->assertSee('Shift quick access');
         $response->assertSee($request->title);
         $response->assertSee('/care-requests/'.$request->id.'/apply', false);
+    }
+
+    public function test_caregiver_can_see_family_review_feedback_on_shift_page(): void
+    {
+        [$caregiver, $request] = $this->seedScheduledShift();
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+
+        $booking->update([
+            'status' => CareBooking::STATUS_REVIEWED,
+            'started_at' => now()->subHours(4),
+            'completed_at' => now()->subHour(),
+            'timesheet_submitted_at' => now()->subHour(),
+            'worked_minutes' => 180,
+            'family_confirmed_at' => now()->subMinutes(45),
+        ]);
+
+        CareReview::query()->create([
+            'care_booking_id' => $booking->id,
+            'care_request_id' => $request->id,
+            'reviewer_user_id' => $booking->family_user_id,
+            'reviewee_user_id' => $caregiver->id,
+            'rating' => 5,
+            'comment' => 'Great caregiver, very punctual.',
+        ]);
+
+        $response = $this->actingAs($caregiver)->get('/care-requests/'.$request->id.'/apply');
+
+        $response->assertOk();
+        $response->assertSee('Family feedback on this shift');
+        $response->assertSee('Great caregiver, very punctual.');
     }
 
     /**

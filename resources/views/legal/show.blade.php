@@ -20,7 +20,7 @@
             </div>
         </header>
 
-        <main class="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:px-8">
+        <main class="mx-auto grid max-w-6xl gap-8 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:px-8 lg:py-8">
             <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
                 @if ($documentHeader)
                     <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{{ $documentHeader }}</p>
@@ -63,7 +63,7 @@
                 </div>
             </article>
 
-            <aside class="h-fit rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-20">
+            <aside class="order-first h-fit rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:order-none lg:sticky lg:top-20">
                 <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">More legal docs</p>
                 <div class="mt-3 space-y-1">
                     @foreach ($allPages as $item)
@@ -79,4 +79,3 @@
         </main>
     </div>
 @endsection
-

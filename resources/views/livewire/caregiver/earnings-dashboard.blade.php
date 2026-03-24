@@ -1,4 +1,4 @@
-<div class="hc-page py-6 space-y-5">
+<div class="hc-page space-y-5 py-5 sm:py-6">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -23,15 +23,20 @@
         <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-cyan-500/20 blur-2xl"></div>
 
         <div class="relative space-y-4">
-            <div class="flex items-start justify-between gap-3">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Earnings</p>
                     <h1 class="mt-1 text-3xl font-display font-semibold leading-tight">${{ number_format((float) ($summary['week_gross'] ?? 0), 2) }}</h1>
                     <p class="mt-1 text-sm text-slate-300">This week gross</p>
                 </div>
-                <a href="{{ route('caregiver.shifts.index') }}" wire:navigate>
-                    <x-button color="white" light sm>My shifts</x-button>
-                </a>
+                <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                    <a href="{{ route('caregiver.shifts.index') }}" wire:navigate>
+                        <x-button color="white" light class="w-full sm:w-auto" sm>My shifts</x-button>
+                    </a>
+                    <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate>
+                        <x-button color="white" light class="w-full sm:w-auto" sm>Find work</x-button>
+                    </a>
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -118,20 +123,26 @@
                 <x-slot:header>
                     <h2 class="font-display text-lg font-semibold">8-week trend</h2>
                 </x-slot:header>
-                <div class="grid grid-cols-8 items-end gap-2">
-                    @foreach ($trend as $point)
-                        @php
-                            $height = max(10, (int) round(($point['amount'] / $maxTrend) * 112));
-                        @endphp
-                        <div class="space-y-1 text-center">
-                            <div class="mx-auto flex h-32 w-full max-w-[28px] items-end rounded-md bg-slate-100">
-                                <div class="w-full rounded-md bg-gradient-to-t from-cyan-500 to-emerald-500" style="height: {{ $height }}px"></div>
+                @if ((float) collect($trend)->sum('amount') <= 0)
+                    <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-600">
+                        No earnings trend yet. Once you complete paid shifts, your weekly history will appear here.
+                    </div>
+                @else
+                    <div class="grid grid-cols-8 items-end gap-2">
+                        @foreach ($trend as $point)
+                            @php
+                                $height = max(10, (int) round(($point['amount'] / $maxTrend) * 112));
+                            @endphp
+                            <div class="space-y-1 text-center">
+                                <div class="mx-auto flex h-32 w-full max-w-[28px] items-end rounded-md bg-slate-100">
+                                    <div class="w-full rounded-md bg-gradient-to-t from-cyan-500 to-emerald-500" style="height: {{ $height }}px"></div>
+                                </div>
+                                <p class="text-[10px] text-slate-500">{{ $point['label'] }}</p>
+                                <p class="text-[10px] font-medium text-slate-700">${{ number_format((float) $point['amount'], 0) }}</p>
                             </div>
-                            <p class="text-[10px] text-slate-500">{{ $point['label'] }}</p>
-                            <p class="text-[10px] font-medium text-slate-700">${{ number_format((float) $point['amount'], 0) }}</p>
-                        </div>
-                    @endforeach
-                </div>
+                        @endforeach
+                    </div>
+                @endif
             </x-card>
         </section>
     @endif
@@ -278,4 +289,3 @@
         </section>
     @endif
 </div>
-

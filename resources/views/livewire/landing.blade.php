@@ -53,12 +53,12 @@
                     Families can post care requests in minutes, caregivers can apply or get invited, both sides chat in real-time, and shifts are tracked to completion with reviews.
                 </p>
 
-                <div class="mt-8 flex flex-wrap gap-3">
+                <div class="mt-8 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
                     <a href="{{ route('register') }}">
-                        <x-button color="blue" lg icon="heart" position="left">I need care</x-button>
+                        <x-button color="blue" lg icon="heart" position="left" class="w-full justify-center sm:w-auto">I need care</x-button>
                     </a>
                     <a href="{{ route('caregiver.register') }}">
-                        <x-button color="emerald" lg outline icon="user-plus" position="left">I provide care</x-button>
+                        <x-button color="emerald" lg outline icon="user-plus" position="left" class="w-full justify-center sm:w-auto">I provide care</x-button>
                     </a>
                 </div>
 
@@ -190,12 +190,12 @@
                     <h3 class="text-3xl font-extrabold tracking-tight">Ready to launch your first care cycle?</h3>
                     <p class="mt-2 text-white/90">Start as family or caregiver and get set up in minutes.</p>
                 </div>
-                <div class="flex flex-wrap gap-3">
+                <div class="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
                     <a href="{{ route('register') }}">
-                        <x-button color="white" lg>Family sign up</x-button>
+                        <x-button color="white" lg class="w-full justify-center sm:w-auto">Family sign up</x-button>
                     </a>
                     <a href="{{ route('caregiver.register') }}">
-                        <x-button color="white" lg light>Caregiver sign up</x-button>
+                        <x-button color="white" lg light class="w-full justify-center sm:w-auto">Caregiver sign up</x-button>
                     </a>
                 </div>
             </div>

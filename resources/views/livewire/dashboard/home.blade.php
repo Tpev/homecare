@@ -83,9 +83,13 @@
                         <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Family Dashboard</p>
                         <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">{{ $nextActionTitle }}</h1>
                         <p class="mt-2 text-sm text-slate-300 max-w-2xl">{{ $nextActionDescription }}</p>
-                        <div class="mt-4 flex flex-wrap items-center gap-3">
-                            <a href="{{ $nextActionRoute }}" wire:navigate><x-button color="white">{{ $nextActionLabel }}</x-button></a>
-                            <a href="{{ route('family.requests.create') }}" wire:navigate><x-button color="white" light>Post another request</x-button></a>
+                        <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+                            <a href="{{ $nextActionRoute }}" wire:navigate class="block">
+                                <x-button color="white" class="w-full sm:w-auto">{{ $nextActionLabel }}</x-button>
+                            </a>
+                            <a href="{{ route('family.requests.create') }}" wire:navigate class="block">
+                                <x-button color="white" light class="w-full sm:w-auto">Post another request</x-button>
+                            </a>
                         </div>
                         @unless($billingReady)
                             <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
@@ -182,7 +186,7 @@
                     </div>
                 </x-card>
             @else
-            <section class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+            <section class="grid grid-cols-1 gap-5 xl:grid-cols-12">
                 <div class="xl:col-span-8 space-y-6">
                     <x-card>
                         <x-slot:header>
@@ -193,7 +197,7 @@
                         </x-slot:header>
 
                         <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                            <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                            <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
                                 <div class="flex items-center justify-between">
                                     <p class="text-xs uppercase tracking-[0.14em] text-amber-700 font-semibold">Needs applicants</p>
                                     <span class="text-sm font-semibold text-amber-900">{{ $needsApplicants->count() }}</span>
@@ -214,7 +218,7 @@
                                 </div>
                             </div>
 
-                            <div class="rounded-xl border border-sky-200 bg-sky-50 p-4">
+                            <div class="rounded-2xl border border-sky-200 bg-sky-50 p-4">
                                 <div class="flex items-center justify-between">
                                     <p class="text-xs uppercase tracking-[0.14em] text-sky-700 font-semibold">Ready to review</p>
                                     <span class="text-sm font-semibold text-sky-900">{{ $readyToReview->count() }}</span>
@@ -235,7 +239,7 @@
                                 </div>
                             </div>
 
-                            <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
                                 <div class="flex items-center justify-between">
                                     <p class="text-xs uppercase tracking-[0.14em] text-emerald-700 font-semibold">Active shifts</p>
                                     <span class="text-sm font-semibold text-emerald-900">{{ $activeShifts->count() }}</span>
@@ -413,10 +417,10 @@
                         <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Caregiver Dashboard</p>
                         <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">You're ready to start getting booked.</h1>
                         <p class="mt-2 text-sm text-slate-300">{{ $nextActionDescription }}</p>
-                        <div class="mt-4 flex flex-wrap gap-2">
-                            <a href="{{ $nextActionHref }}" wire:navigate><x-button color="white">{{ $nextActionLabel }}</x-button></a>
-                            <a href="{{ route('caregiver.shifts.index') }}" wire:navigate><x-button color="white" light>My shifts</x-button></a>
-                            <a href="{{ route('caregiver.earnings.index') }}" wire:navigate><x-button color="white" light>Earnings</x-button></a>
+                        <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                            <a href="{{ $nextActionHref }}" wire:navigate class="block"><x-button color="white" class="w-full sm:w-auto">{{ $nextActionLabel }}</x-button></a>
+                            <a href="{{ route('caregiver.shifts.index') }}" wire:navigate class="block"><x-button color="white" light class="w-full sm:w-auto">My shifts</x-button></a>
+                            <a href="{{ route('caregiver.earnings.index') }}" wire:navigate class="block"><x-button color="white" light class="w-full sm:w-auto">Earnings</x-button></a>
                         </div>
                     </div>
                     <div class="lg:col-span-2 space-y-2">
@@ -642,7 +646,40 @@
                 @endif
 
                 @if (count($setupCards) > 0)
-                    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <details class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:hidden">
+                        <summary class="cursor-pointer list-none">
+                            <div class="flex items-center justify-between gap-3">
+                                <div>
+                                    <p class="font-display text-lg font-semibold text-slate-900">Optional profile boosters</p>
+                                    <p class="mt-1 text-sm text-slate-600">Nice to have, but not required to start getting booked.</p>
+                                </div>
+                                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700">{{ count($setupCards) }} left</span>
+                            </div>
+                        </summary>
+                        <div class="mt-4 grid grid-cols-1 gap-4">
+                            @foreach ($setupCards as $card)
+                                <div class="rounded-2xl border {{ $card['required'] ? 'border-amber-200 bg-amber-50/60' : 'border-slate-200 bg-white' }} p-4 shadow-sm">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p class="text-xs uppercase tracking-[0.12em] {{ $card['required'] ? 'text-slate-600' : 'text-slate-500' }}">
+                                                {{ $card['required'] ? 'Required' : 'Optional' }}
+                                            </p>
+                                            <h3 class="mt-1 font-display text-lg font-semibold text-slate-900">{{ $card['title'] }}</h3>
+                                            <p class="mt-1 text-sm text-slate-600">{{ $card['description'] }}</p>
+                                        </div>
+                                        <x-badge :color="$card['required'] ? 'amber' : 'slate'" text="PENDING" />
+                                    </div>
+                                    <div class="mt-4">
+                                        <a href="{{ $card['route'] }}" wire:navigate>
+                                            <x-button color="blue" light sm class="w-full">{{ $card['cta'] }}</x-button>
+                                        </a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </details>
+
+                    <div class="hidden lg:grid grid-cols-1 gap-4 lg:grid-cols-2">
                         @foreach ($setupCards as $card)
                             <div class="rounded-2xl border {{ $card['required'] ? 'border-amber-200 bg-amber-50/60' : 'border-slate-200 bg-white' }} p-4 shadow-sm">
                                 <div class="flex items-start justify-between gap-3">

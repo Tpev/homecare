@@ -6,6 +6,7 @@
     @php
         $booking = $existingApplication?->booking;
         $caregiverReview = $booking?->reviews?->firstWhere('reviewer_user_id', (int) auth()->id());
+        $familyReview = $booking?->reviews?->firstWhere('reviewer_user_id', (int) ($booking?->family_user_id ?? 0));
         $canLeaveReview = $booking
             && in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true)
             && ! $caregiverReview;
@@ -405,7 +406,7 @@
                         </div>
                     @endif
 
-                    <div class="space-y-2" x-show="panel === 'live'" x-transition>
+                    <div class="space-y-2">
                         @if ($canCheckIn)
                             <x-button
                                 color="blue"
@@ -439,7 +440,7 @@
                         @endif
                     </div>
 
-                    <p class="text-xs text-slate-300" x-show="panel === 'live' && geoMessage" x-text="geoMessage"></p>
+                    <p class="text-xs text-slate-300" x-show="geoMessage" x-text="geoMessage"></p>
                     <p class="text-xs text-slate-300" x-show="panel === 'details'" x-transition>
                         Start and end use phone GPS to verify on-site timestamps.
                     </p>
@@ -638,6 +639,31 @@
                         </x-slot:footer>
                     @endif
                 </x-card>
+
+                @if ($familyReview)
+                    <x-card>
+                        <x-slot:header>
+                            <h2 class="font-display text-lg font-semibold">Family feedback on this shift</h2>
+                        </x-slot:header>
+
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-1">
+                                @for ($star = 1; $star <= 5; $star++)
+                                    <svg viewBox="0 0 20 20" class="h-6 w-6 {{ ((int) ($familyReview->rating ?? 0)) >= $star ? 'text-amber-400' : 'text-slate-300' }}" fill="currentColor" aria-hidden="true">
+                                        <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.14 3.5a1 1 0 00.95.69h3.68c.97 0 1.38 1.24.6 1.81l-2.98 2.17a1 1 0 00-.36 1.12l1.14 3.5c.3.92-.75 1.68-1.54 1.12l-2.98-2.17a1 1 0 00-1.18 0l-2.98 2.17c-.79.57-1.84-.2-1.54-1.12l1.14-3.5a1 1 0 00-.36-1.12L2.68 8.93c-.78-.57-.37-1.81.6-1.81h3.68a1 1 0 00.95-.69l1.14-3.5z"/>
+                                    </svg>
+                                @endfor
+                                <span class="ml-1 text-sm font-medium text-slate-700">{{ (int) ($familyReview->rating ?? 0) }}/5</span>
+                            </div>
+
+                            @if ($familyReview->comment)
+                                <p class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">{{ $familyReview->comment }}</p>
+                            @else
+                                <p class="text-sm text-slate-500">No comment was provided by the family.</p>
+                            @endif
+                        </div>
+                    </x-card>
+                @endif
             @endif
         @endif
     @endif

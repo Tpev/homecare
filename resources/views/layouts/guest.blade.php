@@ -34,18 +34,28 @@
 
         <main class="flex items-center justify-center p-4 md:p-8">
             <div class="w-full max-w-3xl">
-                <div class="lg:hidden mb-6 text-center">
+                <div class="mb-5 text-center lg:hidden">
                     <a href="/" wire:navigate class="inline-flex items-center gap-2 text-slate-700">
                         <x-application-logo class="w-8 h-8 fill-current text-blue-700" />
                         <span class="text-xl font-semibold">HomeCare</span>
                     </a>
                 </div>
-                <div class="bg-white border border-slate-200 shadow-xl shadow-slate-200/60 rounded-2xl p-6 md:p-8">
+                <div class="bg-white border border-slate-200 shadow-xl shadow-slate-200/60 rounded-[28px] p-5 sm:p-6 md:p-8">
                     {{ $slot }}
                 </div>
 
-                <div class="mt-4 rounded-xl border border-slate-200 bg-white/70 p-3">
-                    <x-legal-links />
+                <div class="mt-4 rounded-2xl border border-slate-200 bg-white/80 p-3">
+                    <div class="sm:hidden">
+                        <details>
+                            <summary class="list-none text-xs font-medium text-slate-700">Legal links</summary>
+                            <div class="mt-2">
+                                <x-legal-links class="gap-x-3 gap-y-2 text-[11px]" />
+                            </div>
+                        </details>
+                    </div>
+                    <div class="hidden sm:block">
+                        <x-legal-links />
+                    </div>
                 </div>
             </div>
         </main>

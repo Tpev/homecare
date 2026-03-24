@@ -5,7 +5,7 @@
 
     <x-card>
         <x-slot:header>
-            <div class="flex items-start justify-between gap-3">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 class="text-xl font-semibold">Payment Operations</h1>
                     <p class="mt-1 text-sm text-slate-600">Review authorization, capture, transfer, and refund states.</p>
@@ -66,7 +66,7 @@
                         @endif
                     </div>
 
-                    <div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-2">
+                    <div class="mt-4 grid grid-cols-1 gap-2 md:grid-cols-4">
                         <x-input
                             wire:model.defer="refundAmountCents.{{ $payment->id }}"
                             placeholder="Refund cents (blank = full)"
@@ -80,6 +80,7 @@
                             light
                             wire:click="refund({{ $payment->id }})"
                             :disabled="$remaining <= 0"
+                            class="justify-center"
                         >
                             Refund
                         </x-button>
@@ -88,6 +89,7 @@
                             light
                             wire:click="retryTransfer({{ $payment->id }})"
                             :disabled="! in_array($payment->status, ['captured', 'transfer_failed'])"
+                            class="justify-center"
                         >
                             Retry transfer
                         </x-button>

@@ -4,6 +4,9 @@
             <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">Admin • Leads</h1>
             <p class="text-sm text-slate-500">Landing form submissions.</p>
         </div>
+        <div class="hidden rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 sm:block">
+            {{ $leads->total() }} leads
+        </div>
     </div>
 
     {{-- Filters --}}
@@ -65,8 +68,60 @@
         </div>
     </div>
 
+    {{-- Mobile cards --}}
+    <div class="space-y-3 lg:hidden">
+        @forelse($leads as $lead)
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900">{{ $lead->name ?? 'Unknown lead' }}</p>
+                        <p class="mt-1 text-xs text-slate-500">{{ $lead->created_at->format('Y-m-d H:i') }}</p>
+                    </div>
+                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs
+                        @if($lead->status === 'new') bg-blue-50 text-blue-700
+                        @elseif($lead->status === 'contacted') bg-amber-50 text-amber-700
+                        @elseif($lead->status === 'qualified') bg-emerald-50 text-emerald-700
+                        @else bg-slate-100 text-slate-700
+                        @endif
+                    ">
+                        {{ $lead->status }}
+                    </span>
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                        <p class="uppercase tracking-[0.14em] text-slate-500">Type</p>
+                        <p class="mt-1 font-medium text-slate-900">{{ $lead->lead_type }}</p>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                        <p class="uppercase tracking-[0.14em] text-slate-500">Location</p>
+                        <p class="mt-1 font-medium text-slate-900">{{ $lead->location ?? '—' }}</p>
+                    </div>
+                </div>
+                <div class="mt-3 space-y-1 text-sm text-slate-700">
+                    <p>{{ $lead->email ?? '—' }}</p>
+                    <p>{{ $lead->phone ?? '—' }}</p>
+                </div>
+                <div class="mt-4 grid grid-cols-2 gap-2">
+                    <button type="button" wire:click="openLead({{ $lead->id }})" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">
+                        View
+                    </button>
+                    <div class="grid grid-cols-2 gap-2 col-span-2">
+                        <button type="button" wire:click="updateStatus({{ $lead->id }}, 'contacted')" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm hover:bg-slate-50">
+                            Contacted
+                        </button>
+                        <button type="button" wire:click="updateStatus({{ $lead->id }}, 'qualified')" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm hover:bg-slate-50">
+                            Qualified
+                        </button>
+                    </div>
+                </div>
+            </article>
+        @empty
+            <div class="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">No leads found.</div>
+        @endforelse
+    </div>
+
     {{-- Table --}}
-    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+    <div class="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white lg:block">
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-slate-50 text-slate-600">
@@ -204,7 +259,7 @@
         <div x-show="show" class="fixed inset-0 z-50">
             <div class="absolute inset-0 bg-black/40" @click="$wire.closeLead()"></div>
 
-            <div class="relative mx-auto mt-10 w-full max-w-3xl rounded-2xl bg-white border border-slate-200 shadow-xl p-5">
+            <div class="relative mx-3 mt-4 h-[calc(100vh-2rem)] w-auto overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl sm:mx-auto sm:mt-10 sm:h-auto sm:max-h-[85vh] sm:w-full sm:max-w-3xl">
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <div class="text-lg font-bold text-slate-900">Lead details</div>

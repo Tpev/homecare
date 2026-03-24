@@ -1,4 +1,4 @@
-<div class="hc-page py-8 space-y-6">
+<div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -27,12 +27,24 @@
         $serviceMapOpenUrl = $serviceAddress !== ''
             ? 'https://www.google.com/maps/search/?api=1&query='.rawurlencode($serviceAddress)
             : null;
+        $familyReview = $booking?->reviews?->firstWhere('reviewer_user_id', (int) auth()->id());
+        $caregiverReview = $booking?->reviews?->firstWhere('reviewer_user_id', (int) ($booking?->caregiver_user_id ?? 0));
+        $canLeaveFamilyReview = $booking
+            && in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true)
+            && ! $familyReview;
+        $workedMinutes = (int) ($booking?->worked_minutes ?? 0);
+        $workedLabel = sprintf('%02d:%02d', intdiv($workedMinutes, 60), $workedMinutes % 60);
+        $shiftRate = (float) ($hiredApplication?->proposed_rate ?? 0);
+        $shiftEarnings = $workedMinutes > 0 && $shiftRate > 0
+            ? round(($workedMinutes / 60) * $shiftRate, 2)
+            : 0;
     @endphp
 
     <x-card>
         <x-slot:header>
-            <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div>
+            <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
                         <h1 class="text-2xl font-display font-semibold text-slate-900">{{ $requestItem->title }}</h1>
                         <x-badge :text="strtoupper($requestItem->status)" color="blue" />
@@ -53,44 +65,55 @@
                         • {{ $requestItem->preferred_response_hours ?: 12 }}h response target
                     </p>
                 </div>
-                <div class="flex flex-wrap items-center gap-2">
+                <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                    @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN)
+                        <x-button color="blue" wire:click="setActiveTab('applicants')" class="w-full sm:w-auto">Review applicants</x-button>
+                    @endif
                     @if ($hiredConversation)
                         <a href="{{ route('messages.show', $hiredConversation->id) }}" wire:navigate>
-                            <x-button color="indigo">Open chat</x-button>
+                            <x-button color="indigo" light class="w-full sm:w-auto">Open chat</x-button>
                         </a>
-                    @endif
-                    @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN)
-                        <x-button color="blue" light wire:click="setActiveTab('applicants')">Review applicants</x-button>
                     @endif
                 </div>
             </div>
 
-            <div class="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2 xl:col-span-1">
                     <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Best next action</p>
                     <p class="mt-1 font-display text-base font-semibold text-slate-900">{{ $bestNextAction['title'] }}</p>
                     <p class="mt-1 text-sm text-slate-600">{{ $bestNextAction['action'] }}</p>
                 </div>
-                <div class="rounded-xl border border-slate-200 bg-white p-3">
+                <div class="rounded-2xl border border-slate-200 bg-white p-4">
                     <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Response metrics</p>
                     <p class="mt-1 text-sm text-slate-700">Posted: <span class="font-semibold text-slate-900">{{ $postedAgo }}</span></p>
                     <p class="text-sm text-slate-700">First response: <span class="font-semibold text-slate-900">{{ $firstResponse }}</span></p>
                     <p class="text-sm text-slate-700">First hire: <span class="font-semibold text-slate-900">{{ $firstHire }}</span></p>
                 </div>
-                <div class="rounded-xl border border-slate-200 bg-white p-3">
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:col-span-2">
                     <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Pipeline status</p>
-                    <p class="mt-1 text-sm text-slate-700">Applicants: <span class="font-semibold text-slate-900">{{ $requestItem->applications->count() }}</span></p>
-                    <p class="text-sm text-slate-700">Invites sent: <span class="font-semibold text-slate-900">{{ $requestItem->invitations->count() }}</span></p>
-                    <p class="text-sm text-slate-700">Shift: <span class="font-semibold text-slate-900">{{ strtoupper($booking?->status ?? 'NONE') }}</span></p>
+                    <div class="mt-2 grid grid-cols-3 gap-2">
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Applicants</p>
+                            <p class="mt-1 text-lg font-semibold text-slate-900">{{ $requestItem->applications->count() }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Invites</p>
+                            <p class="mt-1 text-lg font-semibold text-slate-900">{{ $requestItem->invitations->count() }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                            <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Shift</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ strtoupper($booking?->status ?? 'NONE') }}</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </x-slot:header>
 
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
             <button
                 type="button"
                 wire:click="setActiveTab('overview')"
-                class="{{ $activeTab === 'overview' ? 'bg-sky-600 text-white border-sky-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-lg border px-4 py-3 text-left transition"
+                class="{{ $activeTab === 'overview' ? 'bg-sky-600 text-white border-sky-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-2xl border px-4 py-3 text-left transition"
             >
                 <p class="font-display text-base font-semibold">Overview</p>
                 <p class="text-xs opacity-80">Request details and contact context</p>
@@ -99,7 +122,7 @@
             <button
                 type="button"
                 wire:click="setActiveTab('applicants')"
-                class="{{ $activeTab === 'applicants' ? 'bg-sky-600 text-white border-sky-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-lg border px-4 py-3 text-left transition"
+                class="{{ $activeTab === 'applicants' ? 'bg-sky-600 text-white border-sky-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-2xl border px-4 py-3 text-left transition"
             >
                 <p class="font-display text-base font-semibold">Applicants</p>
                 <p class="text-xs opacity-80">{{ $requestItem->applications->count() }} candidate(s)</p>
@@ -108,7 +131,7 @@
             <button
                 type="button"
                 wire:click="setActiveTab('shift')"
-                class="{{ $activeTab === 'shift' ? 'bg-sky-600 text-white border-sky-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-lg border px-4 py-3 text-left transition"
+                class="{{ $activeTab === 'shift' ? 'bg-sky-600 text-white border-sky-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-2xl border px-4 py-3 text-left transition"
             >
                 <p class="font-display text-base font-semibold">Shift</p>
                 <p class="text-xs opacity-80">{{ $booking ? 'Live operations' : 'No booking yet' }}</p>
@@ -117,7 +140,7 @@
             <button
                 type="button"
                 wire:click="setActiveTab('support')"
-                class="{{ $activeTab === 'support' ? 'bg-sky-600 text-white border-sky-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-lg border px-4 py-3 text-left transition"
+                class="{{ $activeTab === 'support' ? 'bg-sky-600 text-white border-sky-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-2xl border px-4 py-3 text-left transition"
             >
                 <p class="font-display text-base font-semibold">Support</p>
                 <p class="text-xs opacity-80">Reschedule, incidents, disputes</p>
@@ -335,43 +358,49 @@
 
             <div class="space-y-3">
                 @forelse ($this->visibleApplications as $application)
-                    <div class="rounded-lg border border-slate-200 p-4">
-                        <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                            <div>
-                                <p class="font-display text-lg font-semibold text-slate-900">{{ $application->caregiver->name }}</p>
-                                <p class="text-sm text-slate-600">
+                    <div class="rounded-2xl border border-slate-200 p-4 shadow-sm">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <p class="font-display text-lg font-semibold text-slate-900">{{ $application->caregiver->name }}</p>
+                                    <x-badge :text="strtoupper($application->status)" color="blue" />
+                                </div>
+                                <p class="mt-1 text-sm text-slate-600">
                                     {{ $application->caregiver->city }}, {{ $application->caregiver->state }}
-                                    @if ($application->caregiver->caregiverProfile)
-                                        • Platform rate ${{ number_format((float) ($application->caregiver->caregiverProfile?->platform_hourly_rate ?? 0), 2) }}/hr
-                                    @endif
                                 </p>
                             </div>
-                            <x-badge :text="strtoupper($application->status)" color="blue" />
+                            @if ($application->proposed_rate)
+                                <div class="shrink-0 rounded-2xl bg-slate-50 px-3 py-2 text-right">
+                                    <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Rate</p>
+                                    <p class="text-base font-semibold text-slate-900">${{ number_format((float) $application->proposed_rate, 2) }}/hr</p>
+                                </div>
+                            @endif
                         </div>
 
-                        @if ($application->proposed_rate)
-                            <p class="mt-2 text-sm"><span class="font-medium">Platform rate:</span> ${{ number_format((float) $application->proposed_rate, 2) }}/hr</p>
+                        @if ($application->cover_note)
+                            <p class="mt-3 whitespace-pre-line text-sm text-slate-700">{{ $application->cover_note }}</p>
                         @endif
 
-                        <p class="mt-2 whitespace-pre-line text-sm text-slate-700">{{ $application->cover_note }}</p>
-
-                        <div class="mt-4 flex flex-wrap gap-2">
+                        <div class="mt-4 space-y-2">
                             @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN)
-                                <x-button color="blue" light wire:click="shortlist({{ $application->id }})">Shortlist</x-button>
-                                <x-button color="red" outline wire:click="reject({{ $application->id }})">Reject</x-button>
-                                <x-button color="green" wire:click="hire({{ $application->id }})">Hire caregiver</x-button>
-                            @endif
+                                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                    <x-button color="green" wire:click="hire({{ $application->id }})" class="w-full">Hire caregiver</x-button>
 
-                            @if (in_array($application->status, ['shortlisted', 'hired'], true))
-                                @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN)
-                                    <x-button color="indigo" light wire:click="startConversation({{ $application->id }})">
-                                        {{ $application->conversation ? 'Open chat' : 'Start chat' }}
-                                    </x-button>
-                                @elseif ($application->conversation)
-                                    <a href="{{ route('messages.show', $application->conversation->id) }}" wire:navigate>
-                                        <x-button color="indigo" light>Open chat</x-button>
-                                    </a>
-                                @endif
+                                    @if (in_array($application->status, ['shortlisted', 'hired'], true))
+                                        <x-button color="indigo" light wire:click="startConversation({{ $application->id }})" class="w-full">
+                                            {{ $application->conversation ? 'Open chat' : 'Start chat' }}
+                                        </x-button>
+                                    @endif
+                                </div>
+
+                                <div class="flex flex-wrap gap-2">
+                                    <x-button color="blue" light wire:click="shortlist({{ $application->id }})">Shortlist</x-button>
+                                    <x-button color="red" outline wire:click="reject({{ $application->id }})">Reject</x-button>
+                                </div>
+                            @elseif ($application->conversation)
+                                <a href="{{ route('messages.show', $application->conversation->id) }}" wire:navigate class="block sm:inline-block">
+                                    <x-button color="indigo" light class="w-full sm:w-auto">Open chat</x-button>
+                                </a>
                             @endif
                         </div>
                     </div>
@@ -438,7 +467,7 @@
                         <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
                             Caregiver paused the shift for a break. They can resume or end the shift.
                         </div>
-                    @elseif ($booking->status === \App\Models\CareBooking::STATUS_COMPLETED && ! $booking->family_confirmed_at)
+                    @elseif (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true) && ! $booking->family_confirmed_at)
                         <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
                             Caregiver submitted completion. Review details and confirm timesheet.
                         </div>
@@ -467,7 +496,7 @@
                             <x-button color="green" wire:click="completeBooking">Mark shift complete</x-button>
                         @endif
 
-                        @if ($booking->status === \App\Models\CareBooking::STATUS_COMPLETED && ! $booking->family_confirmed_at)
+                        @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true) && ! $booking->family_confirmed_at)
                             <x-button color="green" wire:click="completeBooking">Confirm timesheet</x-button>
                         @endif
 
@@ -476,8 +505,31 @@
                         @endif
                     </div>
 
-                    @if ($booking->status === \App\Models\CareBooking::STATUS_COMPLETED && ! $booking->family_confirmed_at)
+                    @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true) && ! $booking->family_confirmed_at)
                         <x-input label="Confirmation note (optional)" wire:model="confirmationNote" />
+                    @endif
+
+                    @if ($booking->timesheet_submitted_at || $booking->worked_minutes)
+                        <div class="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-3">
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Worked time</p>
+                                <p class="mt-1 text-base font-semibold text-slate-900">{{ $workedLabel }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Estimated shift total</p>
+                                <p class="mt-1 text-base font-semibold text-slate-900">${{ number_format($shiftEarnings, 2) }}</p>
+                                <p class="text-xs text-slate-500">{{ '$'.number_format($shiftRate, 2) }}/hr</p>
+                            </div>
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Timesheet</p>
+                                <p class="mt-1 text-base font-semibold text-slate-900">
+                                    {{ $booking->family_confirmed_at ? 'Confirmed' : 'Awaiting your confirmation' }}
+                                </p>
+                                <p class="text-xs text-slate-500">
+                                    Submitted {{ optional($booking->timesheet_submitted_at)->format('M d, H:i') ?: 'Pending' }}
+                                </p>
+                            </div>
+                        </div>
                     @endif
 
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-4 text-xs text-slate-700">
@@ -552,15 +604,94 @@
 
             @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true))
                 <x-card>
-                    <x-slot:header><h2 class="font-display text-lg font-semibold">Leave a review</h2></x-slot:header>
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <x-input type="number" min="1" max="5" label="Rating (1-5)" wire:model="reviewRating" />
-                        <x-textarea label="Review comment" wire:model="reviewComment" />
-                    </div>
-                    <x-slot:footer>
-                        <x-button color="amber" wire:click="submitReview">Submit review</x-button>
-                    </x-slot:footer>
+                    <x-slot:header>
+                        @if ($canLeaveFamilyReview)
+                            <h2 class="font-display text-lg font-semibold">Leave a caregiver review</h2>
+                            <p class="text-xs text-slate-500">Tap stars to rate this shift.</p>
+                        @else
+                            <h2 class="font-display text-lg font-semibold">Your caregiver review</h2>
+                            <p class="text-xs text-emerald-600">Review submitted successfully.</p>
+                        @endif
+                    </x-slot:header>
+
+                    @if ($canLeaveFamilyReview)
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm font-medium text-slate-800">Rating</p>
+                                <div class="mt-2 flex items-center gap-1">
+                                    @for ($star = 1; $star <= 5; $star++)
+                                        <button
+                                            type="button"
+                                            wire:click="$set('reviewRating', {{ $star }})"
+                                            class="rounded-md p-1 transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                            aria-label="Rate {{ $star }} out of 5"
+                                        >
+                                            <svg viewBox="0 0 20 20" class="h-8 w-8 {{ ($reviewRating ?? 0) >= $star ? 'text-amber-400' : 'text-slate-300' }}" fill="currentColor" aria-hidden="true">
+                                                <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.14 3.5a1 1 0 00.95.69h3.68c.97 0 1.38 1.24.6 1.81l-2.98 2.17a1 1 0 00-.36 1.12l1.14 3.5c.3.92-.75 1.68-1.54 1.12l-2.98-2.17a1 1 0 00-1.18 0l-2.98 2.17c-.79.57-1.84-.2-1.54-1.12l1.14-3.5a1 1 0 00-.36-1.12L2.68 8.93c-.78-.57-.37-1.81.6-1.81h3.68a1 1 0 00.95-.69l1.14-3.5z"/>
+                                            </svg>
+                                        </button>
+                                    @endfor
+                                </div>
+                                <p class="mt-1 text-xs text-slate-500">
+                                    @if ($reviewRating)
+                                        Selected rating: {{ $reviewRating }}/5
+                                    @else
+                                        No rating selected yet.
+                                    @endif
+                                </p>
+                                @error('reviewRating') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                            </div>
+
+                            <x-textarea label="Review comment" wire:model="reviewComment" />
+                            @error('reviewComment') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        <x-slot:footer>
+                            <x-button color="amber" wire:click="submitReview">Submit review</x-button>
+                        </x-slot:footer>
+                    @else
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-1">
+                                @for ($star = 1; $star <= 5; $star++)
+                                    <svg viewBox="0 0 20 20" class="h-6 w-6 {{ ((int) ($familyReview?->rating ?? 0)) >= $star ? 'text-amber-400' : 'text-slate-300' }}" fill="currentColor" aria-hidden="true">
+                                        <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.14 3.5a1 1 0 00.95.69h3.68c.97 0 1.38 1.24.6 1.81l-2.98 2.17a1 1 0 00-.36 1.12l1.14 3.5c.3.92-.75 1.68-1.54 1.12l-2.98-2.17a1 1 0 00-1.18 0l-2.98 2.17c-.79.57-1.84-.2-1.54-1.12l1.14-3.5a1 1 0 00-.36-1.12L2.68 8.93c-.78-.57-.37-1.81.6-1.81h3.68a1 1 0 00.95-.69l1.14-3.5z"/>
+                                    </svg>
+                                @endfor
+                                <span class="ml-1 text-sm font-medium text-slate-700">{{ (int) ($familyReview?->rating ?? 0) }}/5</span>
+                            </div>
+
+                            @if ($familyReview?->comment)
+                                <p class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">{{ $familyReview->comment }}</p>
+                            @else
+                                <p class="text-sm text-slate-500">No additional comment was provided.</p>
+                            @endif
+                        </div>
+                    @endif
                 </x-card>
+
+                @if ($caregiverReview)
+                    <x-card>
+                        <x-slot:header>
+                            <h2 class="font-display text-lg font-semibold">Caregiver feedback about this shift</h2>
+                        </x-slot:header>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-1">
+                                @for ($star = 1; $star <= 5; $star++)
+                                    <svg viewBox="0 0 20 20" class="h-6 w-6 {{ ((int) ($caregiverReview->rating ?? 0)) >= $star ? 'text-amber-400' : 'text-slate-300' }}" fill="currentColor" aria-hidden="true">
+                                        <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.14 3.5a1 1 0 00.95.69h3.68c.97 0 1.38 1.24.6 1.81l-2.98 2.17a1 1 0 00-.36 1.12l1.14 3.5c.3.92-.75 1.68-1.54 1.12l-2.98-2.17a1 1 0 00-1.18 0l-2.98 2.17c-.79.57-1.84-.2-1.54-1.12l1.14-3.5a1 1 0 00-.36-1.12L2.68 8.93c-.78-.57-.37-1.81.6-1.81h3.68a1 1 0 00.95-.69l1.14-3.5z"/>
+                                    </svg>
+                                @endfor
+                                <span class="ml-1 text-sm font-medium text-slate-700">{{ (int) $caregiverReview->rating }}/5</span>
+                            </div>
+
+                            @if ($caregiverReview->comment)
+                                <p class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">{{ $caregiverReview->comment }}</p>
+                            @else
+                                <p class="text-sm text-slate-500">No comment left by caregiver.</p>
+                            @endif
+                        </div>
+                    </x-card>
+                @endif
             @endif
         @endif
     @endif

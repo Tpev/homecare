@@ -15,7 +15,7 @@
                         <div class="text-xs text-slate-500">Legal Center</div>
                     </div>
                 </a>
-                <a href="{{ route('landing.caregiver') }}" class="text-sm font-semibold text-cyan-700 hover:underline">Back to pre-launch page</a>
+                <a href="{{ route('landing.caregiver') }}" class="text-sm font-semibold text-cyan-700 hover:underline">Back</a>
             </div>
         </header>
 
@@ -35,4 +35,3 @@
         </main>
     </div>
 @endsection
-

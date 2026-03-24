@@ -9,11 +9,11 @@ class LegalPagesTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_root_family_and_agency_routes_redirect_to_caregiver_landing(): void
+    public function test_root_family_and_agency_routes_are_publicly_accessible(): void
     {
-        $this->get('/')->assertRedirect(route('landing.caregiver'));
-        $this->get('/families')->assertRedirect(route('landing.caregiver'));
-        $this->get('/agencies')->assertRedirect(route('landing.caregiver'));
+        $this->get('/')->assertOk();
+        $this->get('/families')->assertOk();
+        $this->get('/agencies')->assertOk();
     }
 
     public function test_legal_index_and_pages_are_publicly_accessible(): void
@@ -42,4 +42,3 @@ class LegalPagesTest extends TestCase
             ->assertSee(route('legal.show', ['slug' => 'platform-participation-acknowledgment']), false);
     }
 }
-

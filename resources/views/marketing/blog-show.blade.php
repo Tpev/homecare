@@ -47,7 +47,7 @@
                     <a href="{{ route('landing.agency') }}" class="transition hover:text-slate-900">Agencies</a>
                 </nav>
 
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center justify-end gap-2">
                     <a href="{{ route('login') }}">
                         <x-button color="slate" sm light>Sign in</x-button>
                     </a>
@@ -61,7 +61,7 @@
             </div>
         </header>
 
-        <article class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <article class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
             <div class="mb-6 text-sm text-slate-500">
                 <a href="{{ route('blog.index') }}" class="hover:text-blue-700">Blog</a>
                 <span class="mx-1">/</span>
@@ -83,10 +83,10 @@
                                     <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700">{{ strtoupper($topic) }}</span>
                                 @endforeach
                             </div>
-                            <h1 class="text-3xl font-black tracking-tight sm:text-4xl">{{ $post['title'] }}</h1>
+                            <h1 class="text-2xl font-black tracking-tight sm:text-4xl">{{ $post['title'] }}</h1>
                             <p class="mt-3 text-sm text-slate-500">{{ $post['read_minutes'] }} min read</p>
 
-                            <div class="prose prose-slate max-w-none mt-6 prose-p:leading-7">
+                            <div class="prose prose-slate max-w-none mt-6 prose-p:leading-7 prose-headings:scroll-mt-24">
                                 @foreach($post['paragraphs'] as $paragraph)
                                     <p>{{ $paragraph }}</p>
                                 @endforeach

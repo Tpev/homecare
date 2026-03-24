@@ -44,14 +44,14 @@ new #[Layout('layouts.guest')] class extends Component
             </label>
         </div>
 
-        <div class="flex items-center justify-between pt-2">
+        <div class="grid grid-cols-1 gap-3 pt-2 sm:flex sm:items-center sm:justify-between">
             @if (Route::has('password.request'))
                 <a class="underline text-sm text-slate-600 hover:text-slate-900 rounded-md" href="{{ route('password.request') }}" wire:navigate>
                     {{ __('Forgot your password?') }}
                 </a>
             @endif
 
-            <x-button type="submit" color="blue">{{ __('Log in') }}</x-button>
+            <x-button type="submit" color="blue" class="w-full justify-center sm:w-auto">{{ __('Log in') }}</x-button>
         </div>
     </form>
 </div>

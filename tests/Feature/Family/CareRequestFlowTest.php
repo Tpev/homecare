@@ -7,17 +7,21 @@ use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Family\CreateCareRequestWizard;
 use App\Livewire\Family\ManageCareRequest;
 use App\Models\CareBooking;
+use App\Models\CareBookingPayment;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
+use App\Models\CareReview;
 use App\Models\CareTask;
 use App\Models\CaregiverProfile;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
+use App\Services\Payments\BookingPaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
+use Mockery;
 use Tests\TestCase;
 
 class CareRequestFlowTest extends TestCase
@@ -310,6 +314,136 @@ class CareRequestFlowTest extends TestCase
         $this->assertNotNull($booking);
         $this->assertSame(CareBooking::STATUS_SCHEDULED, $booking?->status);
         $this->assertNull($booking?->completed_at);
+    }
+
+    public function test_family_can_confirm_timesheet_when_booking_status_is_reviewed(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active']);
+
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Reviewed booking confirmation',
+            'status' => CareRequest::STATUS_FILLED,
+            'requested_start_at' => now()->addDay()->setTime(9, 0),
+            'requested_end_at' => now()->addDay()->setTime(12, 0),
+            'address_line1' => '44 Oak St',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+        ]);
+        $request->recipient()->create([
+            'full_name' => 'Recipient Person',
+            'relationship_to_family' => 'Mother',
+        ]);
+
+        $application = CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 30,
+            'cover_note' => 'Ready to help.',
+        ]);
+
+        $booking = CareBooking::query()->create([
+            'care_request_id' => $request->id,
+            'care_request_application_id' => $application->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_REVIEWED,
+            'scheduled_start_at' => now()->subHours(4),
+            'scheduled_end_at' => now()->subHour(),
+            'started_at' => now()->subHours(4),
+            'completed_at' => now()->subHour(),
+            'timesheet_submitted_at' => now()->subHour(),
+            'worked_minutes' => 180,
+            'family_confirmed_at' => null,
+        ]);
+
+        CareBookingPayment::query()->create([
+            'care_booking_id' => $booking->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => 'authorized',
+            'amount_authorized_cents' => 9000,
+            'amount_captured_cents' => 0,
+            'currency' => 'usd',
+        ]);
+
+        $paymentService = Mockery::mock(BookingPaymentService::class);
+        $paymentService->shouldReceive('captureForBooking')->once()->withArgs(function (CareBooking $capturedBooking) use ($booking) {
+            return $capturedBooking->id === $booking->id;
+        });
+        app()->instance(BookingPaymentService::class, $paymentService);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->assertSee('Confirm timesheet')
+            ->call('completeBooking');
+
+        $this->assertNotNull($booking->fresh()?->family_confirmed_at);
+    }
+
+    public function test_family_can_see_caregiver_review_feedback_in_shift_view(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active']);
+
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Review visibility request',
+            'status' => CareRequest::STATUS_FILLED,
+            'requested_start_at' => now()->subHours(5),
+            'requested_end_at' => now()->subHours(2),
+            'address_line1' => '300 Pine Ave',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+        ]);
+        $request->recipient()->create([
+            'full_name' => 'Elder Person',
+            'relationship_to_family' => 'Mother',
+        ]);
+
+        $application = CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 30,
+            'cover_note' => 'Experienced and available.',
+        ]);
+
+        $booking = CareBooking::query()->create([
+            'care_request_id' => $request->id,
+            'care_request_application_id' => $application->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_REVIEWED,
+            'scheduled_start_at' => now()->subHours(5),
+            'scheduled_end_at' => now()->subHours(2),
+            'started_at' => now()->subHours(5),
+            'completed_at' => now()->subHours(2),
+            'timesheet_submitted_at' => now()->subHours(2),
+            'worked_minutes' => 180,
+            'family_confirmed_at' => now()->subHours(1),
+        ]);
+
+        CareReview::query()->create([
+            'care_booking_id' => $booking->id,
+            'care_request_id' => $request->id,
+            'reviewer_user_id' => $caregiver->id,
+            'reviewee_user_id' => $family->id,
+            'rating' => 5,
+            'comment' => 'Family was clear and respectful.',
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->set('activeTab', 'shift')
+            ->assertSee('Caregiver feedback about this shift')
+            ->assertSee('Family was clear and respectful.');
     }
 
     public function test_non_family_user_cannot_access_family_routes(): void

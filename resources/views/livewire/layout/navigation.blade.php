@@ -221,7 +221,7 @@ new class extends Component
     @endphp
 
     <div class="hc-page relative">
-        <div class="flex h-16 items-center">
+        <div class="flex h-16 items-center justify-between gap-3">
             <div class="shrink-0 flex items-center">
                 <a href="{{ $user ? route('dashboard') : route('landing') }}" wire:navigate class="inline-flex items-center gap-2">
                     <x-application-logo class="block h-9 w-auto fill-current text-cyan-800" />
@@ -229,7 +229,7 @@ new class extends Component
                 </a>
             </div>
 
-            <div class="hidden sm:flex sm:ml-8 space-x-2">
+            <div class="hidden sm:flex sm:ml-8 space-x-2 overflow-x-auto">
                 @foreach ($primaryLinks as $link)
                     <x-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
                         {{ __($link['label']) }}
@@ -271,9 +271,11 @@ new class extends Component
                     style="display: none;"
                 >
                     @if ($isAdmin)
-                        @foreach($adminLinks as $adminLink)
-                            <a href="{{ $adminLink['href'] }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">{{ $adminLink['label'] }}</a>
-                        @endforeach
+                        <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700">
+                            <p class="font-semibold text-slate-900">{{ $user->name }}</p>
+                            <p class="mt-1 text-xs text-slate-500">{{ $user->email }}</p>
+                            <p class="mt-2 text-xs font-medium uppercase tracking-[0.14em] text-slate-500">Admin account</p>
+                        </div>
                     @else
                         @if ($isCaregiver && $caregiverOnboardingMode)
                             <a href="{{ route('caregiver.setup.index') }}" wire:navigate class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Setup Hub</a>
@@ -335,8 +337,8 @@ new class extends Component
             @endif
         </div>
 
-        <div class="sm:hidden absolute right-0 top-1/2 -translate-y-1/2">
-            <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100">
+        <div class="sm:hidden">
+            <button @click="open = ! open" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-slate-700 hover:bg-slate-100">
                 <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                     <path :class="{'hidden': open, 'inline-flex': !open}" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     <path :class="{'hidden': !open, 'inline-flex': open}" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -345,8 +347,13 @@ new class extends Component
         </div>
     </div>
 
-    <div :class="{'block': open, 'hidden': !open}" class="hidden sm:hidden bg-white border-t border-slate-200">
-        <div class="pt-2 pb-3 space-y-1">
+    <div
+        x-cloak
+        x-show="open"
+        x-transition.opacity
+        class="sm:hidden border-t border-slate-200 bg-white/98 backdrop-blur"
+    >
+        <div class="space-y-1 px-2 pb-3 pt-2">
             @foreach ($primaryLinks as $link)
                 <x-responsive-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
                     {{ __($link['label']) }}
@@ -354,7 +361,7 @@ new class extends Component
             @endforeach
         </div>
 
-        <div class="pt-4 pb-2 border-t border-slate-200">
+        <div class="border-t border-slate-200 pb-3 pt-4">
             @if ($user)
                 <div class="px-4">
                     <div class="font-medium text-base text-gray-800">{{ $user->name }}</div>
@@ -362,12 +369,8 @@ new class extends Component
                     <div class="font-medium text-xs text-gray-500 mt-1">{{ ucfirst((string) $user->role) }}</div>
                 </div>
 
-                <div class="mt-3 space-y-1">
-                    @if ($isAdmin)
-                        @foreach($adminLinks as $adminLink)
-                            <x-responsive-nav-link :href="$adminLink['href']" wire:navigate>{{ __($adminLink['label']) }}</x-responsive-nav-link>
-                        @endforeach
-                    @else
+                <div class="mt-3 space-y-1 px-2">
+                    @if (! $isAdmin)
                         @if ($isCaregiver && $caregiverOnboardingMode)
                             <x-responsive-nav-link :href="route('caregiver.setup.index')" wire:navigate>{{ __('Setup Hub') }}</x-responsive-nav-link>
                         @endif
@@ -412,7 +415,7 @@ new class extends Component
                     </button>
                 </div>
             @else
-                <div class="space-y-1">
+                <div class="space-y-1 px-2">
                     <x-responsive-nav-link :href="route('landing.family')" wire:navigate>{{ __('Families') }}</x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('landing.caregiver')" wire:navigate>{{ __('Caregivers') }}</x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('login')" wire:navigate>{{ __('Sign in') }}</x-responsive-nav-link>

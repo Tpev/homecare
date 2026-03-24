@@ -38,7 +38,7 @@
             <p class="text-xs text-slate-500">Cohort starts from unique caregiver landing visitors.</p>
         </div>
 
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Landing Visitors</p>
                 <p class="mt-1 text-3xl font-black text-slate-900">{{ number_format($summary['landing_visitors']) }}</p>
@@ -66,10 +66,10 @@
 
         <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-950 px-4 py-6 md:px-8">
             <h2 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-300">Funnel Visualization</h2>
-            <div class="mt-4 space-y-3">
+            <div class="mt-4 space-y-3 overflow-hidden">
                 @foreach($steps as $index => $step)
                     <div class="mx-auto rounded-xl border border-slate-700 bg-gradient-to-r from-slate-900 via-blue-900 to-cyan-800 px-4 py-3 text-white"
-                        style="width: {{ $step['visual_width'] }}%;">
+                        style="width: {{ max($step['visual_width'], 72) }}%;">
                         <div class="flex items-center justify-between gap-2">
                             <p class="text-sm font-semibold">Step {{ $index + 1 }} · {{ $step['label'] }}</p>
                             <p class="text-sm font-black">{{ number_format($step['count']) }}</p>
@@ -84,7 +84,31 @@
             </div>
         </div>
 
-        <div class="mt-6 overflow-x-auto rounded-xl border border-slate-200">
+        <div class="mt-6 space-y-3 md:hidden">
+            @foreach($steps as $index => $step)
+                <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="text-sm font-semibold text-slate-900">Step {{ $index + 1 }} · {{ $step['label'] }}</p>
+                        <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{{ number_format($step['count']) }}</span>
+                    </div>
+                    <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                        <div class="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-500" style="width: {{ max($step['overall_conversion_percent'], 6) }}%"></div>
+                    </div>
+                    <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                            <p class="text-[11px] uppercase tracking-[0.14em] text-slate-500">Step conv.</p>
+                            <p class="mt-1 font-semibold text-slate-900">{{ number_format($step['step_conversion_percent'], 1) }}%</p>
+                        </div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                            <p class="text-[11px] uppercase tracking-[0.14em] text-slate-500">Drop-off</p>
+                            <p class="mt-1 font-semibold text-slate-900">@if($index === 0) — @else {{ number_format($step['dropoff_percent'], 1) }}% @endif</p>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="mt-6 hidden overflow-x-auto rounded-xl border border-slate-200 md:block">
             <table class="min-w-full divide-y divide-slate-200 text-sm">
                 <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                     <tr>
@@ -259,7 +283,7 @@
                 <p class="text-xs text-slate-500">Cohort starts from unique family landing visitors.</p>
             </div>
 
-            <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-5">
+            <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Landing visitors</p>
                     <p class="mt-1 text-3xl font-black text-slate-900">{{ number_format($familySummary['landing_visitors']) }}</p>
@@ -292,10 +316,10 @@
 
             <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-950 px-4 py-6 md:px-8">
                 <h3 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-300">Family Funnel Visualization</h3>
-                <div class="mt-4 space-y-3">
+                <div class="mt-4 space-y-3 overflow-hidden">
                     @foreach($familySteps as $index => $step)
                         <div class="mx-auto rounded-xl border border-slate-700 bg-gradient-to-r from-slate-900 via-cyan-900 to-emerald-800 px-4 py-3 text-white"
-                            style="width: {{ $step['visual_width'] }}%;">
+                            style="width: {{ max($step['visual_width'], 72) }}%;">
                             <div class="flex items-center justify-between gap-2">
                                 <p class="text-sm font-semibold">Step {{ $index + 1 }} · {{ $step['label'] }}</p>
                                 <p class="text-sm font-black">{{ number_format($step['count']) }}</p>

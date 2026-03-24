@@ -35,7 +35,7 @@
             </div>
         </x-slot:header>
 
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <p class="text-xs uppercase tracking-[0.14em] text-slate-500">{{ $metricMeta['short_label'] }}</p>
                 <p class="mt-1 text-3xl font-black text-slate-900">{{ number_format($summary['total']) }}</p>
@@ -70,7 +70,7 @@
                         <h2 class="text-sm font-semibold text-slate-900">US coverage intensity map</h2>
                         <p class="text-xs text-slate-500">Provider: {{ $mapPayload['provider'] }}</p>
                     </div>
-                    <div id="admin-caregiver-coverage-map" class="mt-3 h-[480px] w-full rounded-xl border border-slate-200"></div>
+                    <div id="admin-caregiver-coverage-map" class="mt-3 h-[360px] w-full rounded-xl border border-slate-200 sm:h-[420px] md:h-[480px]"></div>
                 </div>
             </div>
 
@@ -274,104 +274,119 @@
                     return;
                 }
 
-                if (window.__hcCoverageMap && typeof window.__hcCoverageMap.remove === 'function') {
-                    window.__hcCoverageMap.remove();
-                }
-
-                let leaflet = null;
-                try {
-                    leaflet = await ensureLeaflet();
-                } catch (_error) {
-                    showMapError(container, 'Map libraries could not be loaded. Please retry or check CDN/network access.');
+                if (container.dataset.hcMapBooting === '1') {
                     return;
                 }
 
-                if (!leaflet) {
-                    showMapError(container, 'Map failed to initialize.');
-                    return;
-                }
+                container.dataset.hcMapBooting = '1';
 
-                let payload = null;
                 try {
-                    payload = JSON.parse(payloadNode.textContent || '{}');
-                } catch (_error) {
-                    payload = { points: [] };
-                }
-
-                const map = leaflet.map(container, {
-                    zoomControl: true,
-                    minZoom: 3,
-                    maxZoom: 10,
-                });
-
-                window.__hcCoverageMap = map;
-
-                leaflet.tileLayer(payload.tile_url, {
-                    attribution: payload.tile_attribution,
-                    maxZoom: 18,
-                }).addTo(map);
-
-                const bounds = [];
-                const statePoints = Array.isArray(payload.state_points || payload.points) ? (payload.state_points || payload.points) : [];
-                const cityItems = Array.isArray(payload.city_items) ? payload.city_items : [];
-                const stateFips = (payload.state_fips && typeof payload.state_fips === 'object') ? payload.state_fips : {};
-
-                let highlightedCityCount = 0;
-
-                for (const city of cityItems) {
-                    const stateCode = String(city.state_code || '').toUpperCase();
-                    const stateCodeFips = stateFips[stateCode];
-                    const feature = await fetchCityFeature(city.city, stateCode, stateCodeFips);
-                    if (!feature) {
-                        continue;
+                    if (window.__hcCoverageMap && typeof window.__hcCoverageMap.remove === 'function') {
+                        window.__hcCoverageMap.remove();
+                        window.__hcCoverageMap = null;
                     }
 
-                    let geoLayer = null;
+                    if (container._leaflet_id) {
+                        container._leaflet_id = null;
+                    }
+
+                    let leaflet = null;
                     try {
-                        geoLayer = leaflet.geoJSON(feature, {
-                            style: {
-                                color: city.color || '#0891b2',
-                                weight: 2,
-                                opacity: 0.95,
-                                fillColor: city.color || '#0891b2',
-                                fillOpacity: 0.14,
-                            },
-                        }).addTo(map);
+                        leaflet = await ensureLeaflet();
                     } catch (_error) {
-                        continue;
+                        showMapError(container, 'Map libraries could not be loaded. Please retry or check CDN/network access.');
+                        return;
                     }
 
-                    highlightedCityCount += 1;
-                    const label = `${city.city}, ${stateCode}: ${Number(city.count || 0).toLocaleString()}`;
-                    geoLayer.bindTooltip(label, { sticky: true });
+                    if (!leaflet) {
+                        showMapError(container, 'Map failed to initialize.');
+                        return;
+                    }
 
-                    const center = geoLayer.getBounds().getCenter();
-                    bounds.push([center.lat, center.lng]);
+                    let payload = null;
+                    try {
+                        payload = JSON.parse(payloadNode.textContent || '{}');
+                    } catch (_error) {
+                        payload = { points: [] };
+                    }
 
-                    const badgeIcon = leaflet.divIcon({
-                        className: 'hc-map-count-badge',
-                        html: String(Number(city.count || 0).toLocaleString()),
-                        iconSize: [42, 18],
-                        iconAnchor: [21, 9],
+                    const map = leaflet.map(container, {
+                        zoomControl: true,
+                        minZoom: 3,
+                        maxZoom: 10,
                     });
 
-                    leaflet.marker(center, {
-                        icon: badgeIcon,
-                        interactive: false,
-                        keyboard: false,
+                    window.__hcCoverageMap = map;
+
+                    leaflet.tileLayer(payload.tile_url, {
+                        attribution: payload.tile_attribution,
+                        maxZoom: 18,
                     }).addTo(map);
-                }
 
-                if (highlightedCityCount === 0) {
-                    drawStateFallback(leaflet, map, statePoints, bounds);
-                }
+                    const bounds = [];
+                    const statePoints = Array.isArray(payload.state_points || payload.points) ? (payload.state_points || payload.points) : [];
+                    const cityItems = Array.isArray(payload.city_items) ? payload.city_items : [];
+                    const stateFips = (payload.state_fips && typeof payload.state_fips === 'object') ? payload.state_fips : {};
 
-                if (bounds.length > 0) {
-                    map.fitBounds(bounds, { padding: [26, 26], maxZoom: 7 });
-                    return;
-                }
+                    let highlightedCityCount = 0;
 
-                map.setView([39.5, -98.35], 4);
+                    for (const city of cityItems) {
+                        const stateCode = String(city.state_code || '').toUpperCase();
+                        const stateCodeFips = stateFips[stateCode];
+                        const feature = await fetchCityFeature(city.city, stateCode, stateCodeFips);
+                        if (!feature) {
+                            continue;
+                        }
+
+                        let geoLayer = null;
+                        try {
+                            geoLayer = leaflet.geoJSON(feature, {
+                                style: {
+                                    color: city.color || '#0891b2',
+                                    weight: 2,
+                                    opacity: 0.95,
+                                    fillColor: city.color || '#0891b2',
+                                    fillOpacity: 0.14,
+                                },
+                            }).addTo(map);
+                        } catch (_error) {
+                            continue;
+                        }
+
+                        highlightedCityCount += 1;
+                        const label = `${city.city}, ${stateCode}: ${Number(city.count || 0).toLocaleString()}`;
+                        geoLayer.bindTooltip(label, { sticky: true });
+
+                        const center = geoLayer.getBounds().getCenter();
+                        bounds.push([center.lat, center.lng]);
+
+                        const badgeIcon = leaflet.divIcon({
+                            className: 'hc-map-count-badge',
+                            html: String(Number(city.count || 0).toLocaleString()),
+                            iconSize: [42, 18],
+                            iconAnchor: [21, 9],
+                        });
+
+                        leaflet.marker(center, {
+                            icon: badgeIcon,
+                            interactive: false,
+                            keyboard: false,
+                        }).addTo(map);
+                    }
+
+                    if (highlightedCityCount === 0) {
+                        drawStateFallback(leaflet, map, statePoints, bounds);
+                    }
+
+                    if (bounds.length > 0) {
+                        map.fitBounds(bounds, { padding: [26, 26], maxZoom: 7 });
+                        return;
+                    }
+
+                    map.setView([39.5, -98.35], 4);
+                } finally {
+                    container.dataset.hcMapBooting = '0';
+                }
             };
 
             if (document.readyState === 'loading') {

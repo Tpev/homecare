@@ -18,11 +18,17 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
+    @php
+        $compactFooter = request()->routeIs('messages.*')
+            || request()->routeIs('care-requests.apply')
+            || request()->routeIs('family.requests.show');
+    @endphp
+
     <body class="font-sans antialiased text-slate-900">
         {{-- TallStack Toasts --}}
         <x-toast />
 
-        <div class="min-h-screen">
+        <div class="min-h-screen flex flex-col">
             <livewire:layout.navigation />
 
             <!-- Page Heading -->
@@ -35,13 +41,34 @@
             @endif
 
             <!-- Page Content -->
-            <main>
+            <main class="flex-1">
                 {{ $slot }}
             </main>
 
-            <footer class="border-t border-slate-200 bg-white">
-                <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <footer class="border-t border-slate-200 bg-white/95 backdrop-blur">
+                <div class="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+                    <div class="sm:hidden">
+                        @if ($compactFooter)
+                            <div class="flex items-center justify-between gap-3">
+                                <p class="text-[11px] text-slate-500">© {{ now()->year }} HomeCare</p>
+                                <details class="group">
+                                    <summary class="list-none rounded-full border border-slate-200 px-3 py-1.5 text-[11px] font-medium text-slate-700">
+                                        Legal links
+                                    </summary>
+                                    <div class="mt-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                                        <x-legal-links class="flex-col items-start gap-2 text-[11px]" />
+                                    </div>
+                                </details>
+                            </div>
+                        @else
+                            <div class="space-y-2">
+                                <p class="text-[11px] text-slate-500">© {{ now()->year }} HomeCare / HUB Healthcare, LLC</p>
+                                <x-legal-links class="gap-x-3 gap-y-2 text-[11px]" />
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="hidden sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                         <p class="text-xs text-slate-500">© {{ now()->year }} HomeCare / HUB Healthcare, LLC</p>
                         <x-legal-links />
                     </div>

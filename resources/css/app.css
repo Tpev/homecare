@@ -18,6 +18,10 @@
 }
 
 @layer base {
+    [x-cloak] {
+        display: none !important;
+    }
+
     html,
     body {
         color: var(--color-hc-ink);

@@ -9,7 +9,7 @@
                 </div>
             </a>
             <div class="flex items-center gap-2">
-                <a href="{{ route('landing.caregiver') }}">
+                <a href="{{ route('landing.caregiver') }}" class="hidden sm:block">
                     <x-button color="slate" sm light>Caregivers</x-button>
                 </a>
                 <a href="{{ route('login') }}">
@@ -44,14 +44,17 @@
                     <p class="mt-4 text-base text-slate-600">
                         When you are juggling work, family, and worry, we help bring calm, dignity, and reliable support at home.
                     </p>
-                    <div class="mt-6 flex flex-wrap gap-3">
+                    <div class="mt-6 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
                         <a href="{{ route('register') }}">
-                            <x-button color="blue" lg icon="heart" position="left">Get trusted help today</x-button>
+                            <x-button color="blue" lg icon="heart" position="left" class="w-full justify-center sm:w-auto">Get trusted help today</x-button>
                         </a>
                         <a href="#how-it-works">
-                            <x-button color="slate" lg light icon="play-circle" position="left">How it works</x-button>
+                            <x-button color="slate" lg light icon="play-circle" position="left" class="w-full justify-center sm:w-auto">How it works</x-button>
                         </a>
                     </div>
+                    <a href="{{ route('landing.caregiver') }}" class="mt-3 inline-flex text-sm font-medium text-slate-600 underline decoration-slate-300 underline-offset-4 sm:hidden">
+                        Are you a caregiver? Learn more here
+                    </a>
                 </div>
 
                 <div class="space-y-4">

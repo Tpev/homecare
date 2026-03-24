@@ -1,4 +1,4 @@
-<div class="hc-page py-8 space-y-5">
+<div class="hc-page space-y-5 py-5 sm:py-8">
     @php
         $statusLabel = strtoupper(str_replace('_', ' ', (string) $profile->status));
         $statusTone = match ($profile->status) {
@@ -34,13 +34,8 @@
             </div>
 
             <div class="rounded-2xl border border-white/15 bg-white/10 p-3">
-                <div class="flex items-center justify-between gap-3">
-                    <p class="text-sm font-medium">Profile completeness</p>
-                    <p class="text-sm font-semibold">{{ $completeness }}%</p>
-                </div>
-                <div class="mt-2 h-2 overflow-hidden rounded-full bg-white/15">
-                    <div class="h-full rounded-full bg-emerald-400 transition-all" style="width: {{ $completeness }}%"></div>
-                </div>
+                <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">What happens after you save</p>
+                <p class="mt-2 text-sm text-white">Your profile updates immediately and stays ready for review or matching.</p>
             </div>
         </div>
     </section>
@@ -123,9 +118,14 @@
             </div>
         </div>
 
-        <div class="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p class="text-xs text-slate-500">Save updates to refresh your profile quality checks and moderation state.</p>
-            <x-button color="blue" wire:click="save">Save profile updates</x-button>
-        </div>
     </section>
+
+    <div class="h-20 sm:h-0"></div>
+
+    <div class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 p-3 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0">
+        <div class="mx-auto flex max-w-5xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-xs text-slate-500">Save updates to refresh profile quality checks and moderation state.</p>
+            <x-button color="blue" wire:click="save" class="w-full sm:w-auto">Save profile updates</x-button>
+        </div>
+    </div>
 </div>

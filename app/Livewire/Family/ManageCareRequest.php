@@ -263,7 +263,7 @@ class ManageCareRequest extends Component
                 'family',
                 'booking_completed_by_family'
             );
-        } elseif ($booking->status === CareBooking::STATUS_COMPLETED && ! $booking->family_confirmed_at) {
+        } elseif (in_array($booking->status, [CareBooking::STATUS_COMPLETED, CareBooking::STATUS_REVIEWED], true) && ! $booking->family_confirmed_at) {
             try {
                 app(BookingPaymentService::class)->captureForBooking($booking);
             } catch (PaymentException $e) {

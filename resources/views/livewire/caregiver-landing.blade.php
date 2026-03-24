@@ -9,7 +9,7 @@
                 </div>
             </a>
             <div class="flex items-center gap-2">
-                <a href="{{ route('landing.family') }}">
+                <a href="{{ route('landing.family') }}" class="hidden sm:block">
                     <x-button color="slate" sm light>Families</x-button>
                 </a>
                 <a href="{{ route('login') }}">
@@ -39,14 +39,17 @@
                 Join early access in the Triangle. Complete your profile now to be among the first caregivers matched when we launch.
             </p>
 
-            <div class="mt-8 flex flex-wrap gap-3">
+            <div class="mt-8 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
                 <a href="{{ route('caregiver.register') }}">
-                    <x-button color="emerald" lg icon="user-plus" position="right">Create your profile</x-button>
+                    <x-button color="emerald" lg icon="user-plus" position="right" class="w-full justify-center sm:w-auto">Create your profile</x-button>
                 </a>
                 <a href="#how-it-works">
-                    <x-button color="slate" lg light>Learn how it works</x-button>
+                    <x-button color="slate" lg light class="w-full justify-center sm:w-auto">Learn how it works</x-button>
                 </a>
             </div>
+            <a href="{{ route('landing.family') }}" class="mt-3 inline-flex text-sm font-medium text-slate-600 underline decoration-slate-300 underline-offset-4 sm:hidden">
+                Looking for care for a parent? See the family page
+            </a>
 
             <p class="mt-4 text-sm font-medium text-emerald-800">Pre-launch now: Raleigh + Wake County priority cohort</p>
 

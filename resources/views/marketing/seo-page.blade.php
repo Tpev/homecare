@@ -83,7 +83,7 @@
                     <a href="{{ route('blog.index') }}" class="transition hover:text-slate-900">Blog</a>
                 </nav>
 
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center justify-end gap-2">
                     <a href="{{ route('login') }}">
                         <x-button color="slate" sm light>Sign in</x-button>
                     </a>
@@ -108,13 +108,13 @@
                         {{ $page['intro'] ?? '' }}
                     </p>
 
-                    <div class="mt-7 flex flex-wrap gap-3">
+                    <div class="mt-7 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
                         <a href="{{ route($page['primary_cta']['route'], $page['primary_cta']['params'] ?? []) }}">
-                            <x-button color="blue" lg>{{ $page['primary_cta']['label'] ?? 'Get started' }}</x-button>
+                            <x-button color="blue" lg class="w-full justify-center sm:w-auto">{{ $page['primary_cta']['label'] ?? 'Get started' }}</x-button>
                         </a>
                         @if(!empty($page['secondary_cta']['route']))
                             <a href="{{ route($page['secondary_cta']['route'], $page['secondary_cta']['params'] ?? []) }}">
-                                <x-button color="emerald" lg outline>{{ $page['secondary_cta']['label'] ?? 'Learn more' }}</x-button>
+                                <x-button color="emerald" lg outline class="w-full justify-center sm:w-auto">{{ $page['secondary_cta']['label'] ?? 'Learn more' }}</x-button>
                             </a>
                         @endif
                     </div>
@@ -172,7 +172,7 @@
 
         <section class="bg-white py-14">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div class="flex items-end justify-between gap-4">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <h2 class="text-2xl font-extrabold tracking-tight">Related Raleigh care pages</h2>
                         <p class="mt-1 text-sm text-slate-600">Built to help families and caregivers find the right path quickly.</p>
@@ -215,12 +215,12 @@
                         <h3 class="text-3xl font-extrabold tracking-tight">Need help in Raleigh today?</h3>
                         <p class="mt-2 text-white/90">Post your request now and start coordinating care with better clarity and speed.</p>
                     </div>
-                    <div class="flex gap-3">
+                    <div class="grid grid-cols-1 gap-3 sm:flex sm:gap-3">
                         <a href="{{ route('register') }}">
-                            <x-button color="white" lg>Family sign up</x-button>
+                            <x-button color="white" lg class="w-full justify-center sm:w-auto">Family sign up</x-button>
                         </a>
                         <a href="{{ route('caregiver.register') }}">
-                            <x-button color="white" lg light>Caregiver sign up</x-button>
+                            <x-button color="white" lg light class="w-full justify-center sm:w-auto">Caregiver sign up</x-button>
                         </a>
                     </div>
                 </div>

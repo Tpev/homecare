@@ -1,4 +1,4 @@
-<div class="hc-page py-6 space-y-5">
+<div class="hc-page space-y-5 py-5 sm:py-6">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -30,15 +30,15 @@
                 </div>
             </div>
 
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                 <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate>
-                    <x-button color="white" light sm>Work Inbox</x-button>
+                    <x-button color="white" light class="w-full sm:w-auto" sm>Work Inbox</x-button>
                 </a>
                 <a href="{{ route('messages.index') }}" wire:navigate>
-                    <x-button color="white" light sm>Messages</x-button>
+                    <x-button color="white" light class="w-full sm:w-auto" sm>Messages</x-button>
                 </a>
                 <button type="button" wire:click="markAllRead">
-                    <x-button color="white" sm>Mark all read</x-button>
+                    <x-button color="white" class="w-full sm:w-auto" sm>Mark all read</x-button>
                 </button>
             </div>
         </div>
@@ -129,7 +129,51 @@
         </section>
 
         <aside class="xl:col-span-4">
-            <x-card>
+            <details class="xl:hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <summary class="cursor-pointer list-none">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="font-display text-lg font-semibold text-slate-900">Delivery preferences</p>
+                            <p class="mt-1 text-sm text-slate-600">Choose where important updates reach you.</p>
+                        </div>
+                        <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700">Edit</span>
+                    </div>
+                </summary>
+                <div class="mt-4 space-y-3">
+                    @foreach ($eventOptions as $eventOption)
+                        @php
+                            $eventKey = $eventOption['value'];
+                        @endphp
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                            <p class="text-sm font-semibold text-slate-900">{{ $eventOption['label'] }}</p>
+                            <div class="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-700">
+                                <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2">
+                                    <input type="checkbox" wire:model="preferences.{{ $eventKey }}.in_app">
+                                    <span>In-app</span>
+                                </label>
+                                <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2">
+                                    <input type="checkbox" wire:model="preferences.{{ $eventKey }}.email">
+                                    <span>Email</span>
+                                </label>
+                                <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2">
+                                    <input type="checkbox" wire:model="preferences.{{ $eventKey }}.sms">
+                                    <span>SMS (soon)</span>
+                                </label>
+                                <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2">
+                                    <input type="checkbox" wire:model="preferences.{{ $eventKey }}.push">
+                                    <span>Push (soon)</span>
+                                </label>
+                            </div>
+                        </div>
+                    @endforeach
+
+                    <button type="button" wire:click="savePreferences">
+                        <x-button color="blue" class="w-full">Save preferences</x-button>
+                    </button>
+                </div>
+            </details>
+
+            <x-card class="hidden xl:block">
                 <x-slot:header>
                     <h2 class="font-display text-lg font-semibold">Delivery preferences</h2>
                 </x-slot:header>
