@@ -1,8 +1,8 @@
 @extends('layouts.marketing')
 
-@section('title', 'For Families | HomeCare Raleigh')
-@section('meta_description', 'Get trusted non-medical home care in Raleigh without the callback delay. Post a request, compare caregivers, chat, and hire fast.')
-@section('canonical', route('landing.family'))
+@section('title', 'Need Help Caring for Your Mom or Dad? | HomeCare Raleigh')
+@section('meta_description', 'Get trusted help for an aging parent in Raleigh without the agency callback delay. Post a request, review caregivers, chat, and hire with more confidence.')
+@section('canonical', route('landing'))
 
 @section('content')
     <livewire:family-landing />

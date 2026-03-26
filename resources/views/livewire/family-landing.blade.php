@@ -1,6 +1,6 @@
 <div class="min-h-screen bg-slate-100 text-slate-900">
     <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
-        <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <a href="{{ route('landing') }}" class="flex items-center gap-3">
                 <x-application-logo class="h-10 w-10 text-cyan-800" />
                 <div class="leading-tight">
@@ -8,6 +8,7 @@
                     <div class="text-xs text-slate-500">For families</div>
                 </div>
             </a>
+
             <div class="flex items-center gap-2">
                 <a href="{{ route('landing.caregiver') }}" class="hidden sm:block">
                     <x-button color="slate" sm light>Caregivers</x-button>
@@ -22,73 +23,105 @@
         </div>
     </header>
 
-    <section class="mx-auto max-w-6xl px-4 pb-8 pt-10 sm:px-6 lg:px-8 lg:pt-14">
-        <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
-            <div class="h-4 bg-gradient-to-r from-cyan-800 via-blue-700 to-emerald-500"></div>
-            <div class="grid gap-8 p-6 lg:grid-cols-2 lg:p-8">
+    <section class="mx-auto max-w-6xl px-4 pb-8 pt-8 sm:px-6 lg:px-8 lg:pt-12">
+        <div class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+            <div class="h-4 bg-gradient-to-r from-cyan-900 via-blue-700 to-emerald-500"></div>
+
+            <div class="grid gap-8 p-5 sm:p-6 lg:grid-cols-[1.08fr_0.92fr] lg:gap-10 lg:p-8">
                 <div>
-                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-900">
-                        HUB HOME CARE | TRUSTED HOME SUPPORT IN RALEIGH, NC
+                    <div class="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-900 sm:text-xs">
+                        Trusted home support in Raleigh, NC
                     </div>
-                    <h1 class="mt-4 text-4xl font-black leading-tight tracking-tight sm:text-5xl">
+
+                    <h1 class="mt-4 max-w-2xl text-4xl font-black leading-[1.02] tracking-tight text-slate-950 sm:text-5xl lg:text-[3.6rem]">
                         Need help caring for your mom or dad?
                     </h1>
-                    <p class="mt-4 text-lg text-slate-700">
-                        Need support <span class="rounded-full bg-slate-200 px-2 py-0.5 text-sm font-semibold text-slate-900">now</span>?
-                        HomeCare helps Raleigh families find
-                        <span class="rounded-full bg-cyan-100 px-2 py-0.5 text-sm font-semibold text-cyan-900">trusted</span>
-                        caregivers quickly, with
-                        <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-sm font-semibold text-emerald-900">affordable</span>
-                        options for companionship, meal prep, errands, and daily support.
+
+                    <p class="mt-5 max-w-2xl text-lg leading-8 text-slate-700">
+                        HomeCare helps busy adult children find
+                        <span class="rounded-full bg-cyan-100 px-2 py-0.5 text-sm font-semibold text-cyan-900">trusted help fast</span>
+                        for an aging parent, without waiting days for agency callbacks or coordinating everything alone.
                     </p>
-                    <p class="mt-4 text-base text-slate-600">
-                        When you are juggling work, family, and worry, we help bring calm, dignity, and reliable support at home.
+
+                    <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+                        If your parent had a fall, just came home from the hospital, or you are realizing
+                        <span class="font-semibold text-slate-900">this cannot keep going like this</span>,
+                        we help you move quickly, stay informed, and feel confident about who is showing up.
                     </p>
-                    <div class="mt-6 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
+
+                    <div class="mt-7 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
                         <a href="{{ route('register') }}">
-                            <x-button color="blue" lg icon="heart" position="left" class="w-full justify-center sm:w-auto">Get trusted help today</x-button>
+                            <x-button color="blue" lg icon="heart" position="left" class="w-full justify-center sm:w-auto">
+                                Get trusted help for my parent
+                            </x-button>
                         </a>
                         <a href="#how-it-works">
-                            <x-button color="slate" lg light icon="play-circle" position="left" class="w-full justify-center sm:w-auto">How it works</x-button>
+                            <x-button color="slate" lg light icon="play-circle" position="left" class="w-full justify-center sm:w-auto">
+                                See how it works
+                            </x-button>
                         </a>
                     </div>
-                    <a href="{{ route('landing.caregiver') }}" class="mt-3 inline-flex text-sm font-medium text-slate-600 underline decoration-slate-300 underline-offset-4 sm:hidden">
+
+                    <div class="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700">Fast request posting</div>
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700">Direct chat with caregivers</div>
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700">Shift updates and clear review flow</div>
+                    </div>
+
+                    <div class="mt-6 grid gap-3 sm:grid-cols-2">
+                        <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-800">Built for Busy Ben</div>
+                            <p class="mt-2 text-sm leading-6 text-slate-700">Local son, primary payer, needs reliable help now without disrupting work and family life.</p>
+                        </div>
+                        <div class="rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3">
+                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-800">Also for Caring Carol</div>
+                            <p class="mt-2 text-sm leading-6 text-slate-700">Out-of-town daughter who needs visibility, updates, and confidence from a distance.</p>
+                        </div>
+                    </div>
+
+                    <a href="{{ route('landing.caregiver') }}" class="mt-4 inline-flex text-sm font-medium text-slate-600 underline decoration-slate-300 underline-offset-4 sm:hidden">
                         Are you a caregiver? Learn more here
                     </a>
                 </div>
 
                 <div class="space-y-4">
-                    <div class="overflow-hidden rounded-2xl border border-slate-200 shadow-lg">
+                    <div class="overflow-hidden rounded-[2rem] border border-slate-200 shadow-[0_24px_60px_rgba(15,23,42,0.14)]">
                         <img
                             src="{{ asset('images/marketing/flyer.png') }}"
-                            alt="Adult daughter helping her older mother at home"
-                            class="h-[420px] w-full object-cover"
+                            alt="Adult daughter supporting her mother at home"
+                            class="h-[220px] w-full object-cover object-center sm:h-[320px] lg:h-[430px]"
                         />
                     </div>
+
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
                         Real support. Real peace of mind.
                     </div>
                 </div>
             </div>
 
-            <div class="grid gap-4 border-t border-slate-200 bg-slate-50 p-6 md:grid-cols-3 lg:p-8">
+            <div class="grid gap-4 border-t border-slate-200 bg-slate-50 p-5 sm:p-6 lg:grid-cols-3 lg:p-8">
                 <x-card class="ring-1 ring-black/5">
-                    <x-slot:header><div class="font-bold">What we help with</div></x-slot:header>
-                    <p class="text-sm text-slate-600">Meal prep, companionship, groceries and errands, light housekeeping, rides to appointments, and routine daily support.</p>
+                    <x-slot:header><div class="font-bold">What you are really buying</div></x-slot:header>
+                    <p class="text-sm leading-6 text-slate-600">Speed, trust, and simplicity. Less scrambling, less uncertainty, and more confidence that your parent has reliable support at home.</p>
                 </x-card>
+
                 <x-card class="ring-1 ring-black/5">
                     <x-slot:header><div class="font-bold">Why families choose us</div></x-slot:header>
-                    <p class="text-sm text-slate-600">Raleigh-based, faster than traditional agency callbacks, and built around transparent profiles and direct communication.</p>
+                    <p class="text-sm leading-6 text-slate-600">Faster than traditional agency callback loops, with direct caregiver profiles, transparent communication, and a clear path from request to completed shift.</p>
                 </x-card>
+
                 <x-card class="ring-1 ring-black/5">
-                    <x-slot:header><div class="font-bold">Flexible care</div></x-slot:header>
-                    <p class="text-sm text-slate-600">Book one-time help or ongoing weekly support based on your loved one’s real schedule and needs.</p>
+                    <x-slot:header><div class="font-bold">Made for remote coordination too</div></x-slot:header>
+                    <p class="text-sm leading-6 text-slate-600">If you live out of town, you still get visibility into who was hired, what was scheduled, and what happened during the shift.</p>
                 </x-card>
             </div>
-            <div class="border-t border-slate-200 bg-white px-6 pb-6 pt-5 lg:px-8">
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p class="font-bold text-slate-900">Care is not just tasks. It is trust, comfort, and presence.</p>
-                    <p class="mt-1 text-sm text-slate-600">Our goal is to make sure your loved one feels safe and seen, and you feel less alone in the process.</p>
+
+            <div class="border-t border-slate-200 bg-white px-5 pb-6 pt-5 sm:px-6 lg:px-8">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                    <p class="text-base font-bold text-slate-900">Care is not just tasks. It is trust, comfort, and presence.</p>
+                    <p class="mt-2 text-sm leading-6 text-slate-600 sm:text-base">
+                        We are here for the son trying to keep work on track while helping his parents, and for the daughter trying to manage everything from another city without feeling in the dark.
+                    </p>
                 </div>
             </div>
         </div>
@@ -97,24 +130,29 @@
     <section id="how-it-works" class="border-y border-slate-200 bg-white py-14">
         <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div class="mb-8 text-center">
-                <h2 class="text-3xl font-extrabold tracking-tight">How it works</h2>
-                <p class="mt-2 text-slate-600">A simple flow designed to get your family real help quickly.</p>
+                <h2 class="text-3xl font-extrabold tracking-tight sm:text-4xl">How HomeCare works</h2>
+                <p class="mx-auto mt-3 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+                    The goal is simple: help you get trusted support in place quickly, with less back-and-forth and more confidence.
+                </p>
             </div>
+
             <div class="grid gap-5 md:grid-cols-3">
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                    <div class="text-xs font-bold uppercase tracking-wider text-cyan-800">Step 1</div>
-                    <div class="mt-2 text-lg font-bold">Tell us what you need</div>
-                    <p class="mt-2 text-sm text-slate-600">Share your schedule, support needs, and who is receiving care.</p>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6">
+                    <div class="text-xs font-bold uppercase tracking-[0.18em] text-cyan-800">Step 1</div>
+                    <div class="mt-2 text-lg font-bold">Tell us what is happening</div>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">Share the schedule, address, what kind of help your parent needs, and who should stay in the loop.</p>
                 </div>
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                    <div class="text-xs font-bold uppercase tracking-wider text-cyan-800">Step 2</div>
-                    <div class="mt-2 text-lg font-bold">Match and chat</div>
-                    <p class="mt-2 text-sm text-slate-600">Review caregiver profiles, compare trust signals, and message directly before hiring.</p>
+
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6">
+                    <div class="text-xs font-bold uppercase tracking-[0.18em] text-cyan-800">Step 2</div>
+                    <div class="mt-2 text-lg font-bold">Review, chat, and choose</div>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">See caregiver profiles, trust signals, and applications in one place, then message before you hire.</p>
                 </div>
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                    <div class="text-xs font-bold uppercase tracking-wider text-cyan-800">Step 3</div>
-                    <div class="mt-2 text-lg font-bold">Start care with confidence</div>
-                    <p class="mt-2 text-sm text-slate-600">Track the shift lifecycle in-app and keep everyone aligned from start to review.</p>
+
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6">
+                    <div class="text-xs font-bold uppercase tracking-[0.18em] text-cyan-800">Step 3</div>
+                    <div class="mt-2 text-lg font-bold">Keep visibility after the shift starts</div>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">Track progress, review the timesheet, and know what happened without chasing updates by phone.</p>
                 </div>
             </div>
         </div>
@@ -123,47 +161,85 @@
     <section class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
         <div class="rounded-3xl bg-gradient-to-r from-cyan-900 via-blue-800 to-emerald-700 p-6 text-white shadow-2xl sm:p-8">
             <h3 class="text-2xl font-extrabold tracking-tight sm:text-3xl">Trust and safety are our priority</h3>
+            <p class="mt-3 max-w-3xl text-sm leading-6 text-white/85 sm:text-base">
+                Families come to us because they need help quickly, but they still need to trust who is entering their parent’s home. The product should lower anxiety, not add to it.
+            </p>
+
             <div class="mt-5 grid gap-3 md:grid-cols-2">
                 <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">Caregiver identity verification before care begins</div>
                 <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">Secure checkout with transparent payment policies</div>
                 <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">Private in-platform messaging to protect your family</div>
-                <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">Responsive support team for urgent issues</div>
-                <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">Transparent profiles and accountability standards</div>
-                <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">Clear safety and quality policies across the platform</div>
+                <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">Responsive support when something changes or feels urgent</div>
+                <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">Transparent profiles, reviews, and accountability standards</div>
+                <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">Visibility for local and long-distance family decision-makers</div>
             </div>
         </div>
     </section>
 
     <section class="bg-white py-12">
         <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div class="grid gap-6 lg:grid-cols-2">
+                <div class="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">For Busy Ben</div>
+                    <h3 class="mt-3 text-2xl font-extrabold tracking-tight">You need to solve this fast and still make a smart decision.</h3>
+                    <ul class="mt-4 space-y-3 text-sm leading-6 text-slate-600">
+                        <li>Speed matters because work and family life are still moving.</li>
+                        <li>Trust matters because you do not want to gamble on a random caregiver.</li>
+                        <li>Simplicity matters because you are buying peace of mind, not just care hours.</li>
+                    </ul>
+                </div>
+
+                <div class="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">For Caring Carol</div>
+                    <h3 class="mt-3 text-2xl font-extrabold tracking-tight">You need visibility when you are managing everything from far away.</h3>
+                    <ul class="mt-4 space-y-3 text-sm leading-6 text-slate-600">
+                        <li>Know who applied, who was hired, and what was scheduled.</li>
+                        <li>Stay in the loop through direct messaging and shift status tracking.</li>
+                        <li>Reduce guilt and uncertainty by having one place to coordinate care.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-slate-50 py-12">
+        <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div class="flex items-end justify-between gap-4">
                 <div>
                     <h2 class="text-2xl font-extrabold tracking-tight">Raleigh family care guides</h2>
-                    <p class="mt-1 text-sm text-slate-600">Explore local guides before posting your request.</p>
+                    <p class="mt-1 text-sm text-slate-600">Local guides for families comparing options and trying to move quickly.</p>
                 </div>
-                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-home-care']) }}" class="text-sm font-semibold text-blue-700 hover:underline">
+                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-home-care']) }}" class="hidden text-sm font-semibold text-blue-700 hover:underline sm:inline">
                     View all Raleigh guides
                 </a>
             </div>
+
             <div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-companion-care']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">Companion care in Raleigh</a>
-                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-respite-care']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">Respite care in Raleigh</a>
-                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-post-hospital-home-help']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">Post-hospital home help</a>
-                <a href="{{ route('seo.page', ['seoSlug' => 'home-care-cost-raleigh-nc']) }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">Home care cost in Raleigh</a>
+                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-companion-care']) }}" class="rounded-2xl border border-slate-200 bg-white p-4 text-sm font-medium text-slate-800 hover:bg-slate-50">Companion care in Raleigh</a>
+                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-respite-care']) }}" class="rounded-2xl border border-slate-200 bg-white p-4 text-sm font-medium text-slate-800 hover:bg-slate-50">Respite care in Raleigh</a>
+                <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-post-hospital-home-help']) }}" class="rounded-2xl border border-slate-200 bg-white p-4 text-sm font-medium text-slate-800 hover:bg-slate-50">Post-hospital home help</a>
+                <a href="{{ route('seo.page', ['seoSlug' => 'home-care-cost-raleigh-nc']) }}" class="rounded-2xl border border-slate-200 bg-white p-4 text-sm font-medium text-slate-800 hover:bg-slate-50">Home care cost in Raleigh</a>
             </div>
+
+            <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-home-care']) }}" class="mt-4 inline-flex text-sm font-semibold text-blue-700 hover:underline sm:hidden">
+                View all Raleigh guides
+            </a>
         </div>
     </section>
 
     <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
         <div class="rounded-3xl border-2 border-dashed border-cyan-200 bg-white p-7 text-center shadow-lg sm:p-10">
-            <h3 class="text-3xl font-extrabold tracking-tight">Call HomeCare and get trusted help today.</h3>
-            <p class="mx-auto mt-2 max-w-3xl text-slate-600">Because your loved one deserves warm, reliable care and you deserve peace of mind.</p>
-            <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <h3 class="text-3xl font-extrabold tracking-tight">Get trusted help in place without doing all the coordination alone.</h3>
+            <p class="mx-auto mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+                Whether you live in Raleigh or you are organizing care from another city, HomeCare gives you a faster path to trusted home support for the parent who depends on you.
+            </p>
+
+            <div class="mt-6 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:justify-center">
                 <a href="{{ route('register') }}">
-                    <x-button color="blue" lg icon="phone" position="left">Get help now</x-button>
+                    <x-button color="blue" lg icon="phone" position="left" class="w-full justify-center sm:w-auto">Get help now</x-button>
                 </a>
                 <a href="{{ route('login') }}">
-                    <x-button color="slate" lg light>Already have an account</x-button>
+                    <x-button color="slate" lg light class="w-full justify-center sm:w-auto">Already have an account</x-button>
                 </a>
             </div>
         </div>
