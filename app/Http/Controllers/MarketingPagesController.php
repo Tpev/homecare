@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Cookie;
 
 class MarketingPagesController extends Controller
 {
+    private const FAMILY_VARIANTS = ['a', 'b', 'c', 'd'];
+
     public function landing(Request $request, PageViewTracker $tracker): View|Response
     {
         return $this->trackedLandingResponse(
@@ -26,6 +28,18 @@ class MarketingPagesController extends Controller
             request: $request,
             tracker: $tracker,
             view: 'marketing.family',
+            event: 'family'
+        );
+    }
+
+    public function familyVariant(Request $request, PageViewTracker $tracker, string $variant): View|Response
+    {
+        abort_unless(in_array($variant, self::FAMILY_VARIANTS, true), 404);
+
+        return $this->trackedLandingResponse(
+            request: $request,
+            tracker: $tracker,
+            view: "marketing.family-variants.{$variant}",
             event: 'family'
         );
     }
