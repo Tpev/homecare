@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Cookie;
 
 class MarketingPagesController extends Controller
 {
-    private const FAMILY_VARIANTS = ['a', 'b', 'c', 'd'];
+    private const FAMILY_VARIANTS = ['a', 'b', 'c', 'd', 'e'];
 
     public function landing(Request $request, PageViewTracker $tracker): View|Response
     {

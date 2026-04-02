@@ -70,7 +70,7 @@ Route::middleware(['web', 'auth', 'admin.email'])
 Route::get('/', [MarketingPagesController::class, 'landing'])->name('landing');
 Route::get('/families', [MarketingPagesController::class, 'family'])->name('landing.family');
 Route::get('/families/{variant}', [MarketingPagesController::class, 'familyVariant'])
-    ->whereIn('variant', ['a', 'b', 'c', 'd'])
+    ->whereIn('variant', ['a', 'b', 'c', 'd', 'e'])
     ->name('landing.family.variant');
 Route::get('/caregivers', [MarketingPagesController::class, 'caregiver'])->name('landing.caregiver');
 Route::get('/agencies', [MarketingPagesController::class, 'agency'])->name('landing.agency');
