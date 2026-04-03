@@ -1,7 +1,7 @@
 @extends('layouts.marketing')
 
-@section('title', 'Need Help Caring for Your Mom or Dad? | HomeCare Raleigh')
-@section('meta_description', 'Get trusted help for an aging parent in Raleigh without the agency callback delay. Post a request, review caregivers, chat, and hire with more confidence.')
+@section('title', 'HomeCare Raleigh | Trusted Home Care Support for Families')
+@section('meta_description', 'Help your family arrange non-medical home care in Raleigh with more clarity and confidence. Review caregivers, message directly, and stay informed in one place.')
 @section('canonical', route('landing'))
 
 @section('content')
