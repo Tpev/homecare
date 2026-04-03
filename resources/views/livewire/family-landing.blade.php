@@ -1,82 +1,93 @@
 @php
-    $steps = [
+    $serviceGroups = [
         [
-            'number' => '01',
-            'title' => 'Post your request',
-            'body' => 'Tell us where care is needed, what kind of help would make the day easier, and when you want support to begin.',
+            'title' => 'Companionship',
+            'accent' => 'blue',
+            'items' => ['Conversation and check-ins', 'Reading, games, and engagement', 'Supportive presence at home'],
+            'icon' => 'chat',
         ],
         [
-            'number' => '02',
-            'title' => 'Start receiving responses',
-            'body' => 'Available caregivers can respond quickly once your request is live, so you can start reviewing options without the usual callback delays.',
-        ],
-        [
-            'number' => '03',
-            'title' => 'Review, chat, and choose',
-            'body' => 'Compare caregiver profiles, message directly, ask questions, and select the person who feels like the right fit.',
-        ],
-        [
-            'number' => '04',
-            'title' => 'Get care started',
-            'body' => 'Confirm the visit, keep the family aligned, and stay informed as support begins at home.',
+            'title' => 'Everyday support',
+            'accent' => 'sky',
+            'items' => ['Errands and groceries', 'Meal prep and light household help', 'Help around a changing schedule'],
+            'icon' => 'clock',
         ],
     ];
 
-    $services = [
+    $supportPlans = [
         [
-            'title' => 'Companionship',
-            'body' => 'Warm conversation, check-ins, reading, games, and supportive presence that helps reduce isolation and makes the day feel lighter.',
+            'step' => '1',
+            'title' => 'Quick check-ins',
+            'body' => 'Short visits for reassurance, updates, or help with a very specific need.',
         ],
         [
-            'title' => 'Mobility support',
-            'body' => 'Help with walking, standing, steady movement around the home, and support with routines that call for extra care and attention.',
+            'step' => '2',
+            'title' => 'Standard support blocks',
+            'body' => 'A few focused hours for companionship, errands, meals, and home support.',
         ],
         [
-            'title' => 'Meal support',
-            'body' => 'Simple meal preparation, snacks, reheating food, basic kitchen setup, and cleanup that helps keep mealtimes easier and more consistent.',
+            'step' => '3',
+            'title' => 'Longer coverage',
+            'body' => 'More complete daytime support when your family needs broader coverage.',
+        ],
+    ];
+
+    $visibilityFeatures = [
+        [
+            'title' => 'Arrival and shift visibility',
+            'body' => 'See when care begins and keep the visit grounded in one clear workflow.',
         ],
         [
-            'title' => 'Light housekeeping',
-            'body' => 'Tidying, dishes, laundry folding, wiping surfaces, and small home tasks that keep the environment calmer, cleaner, and safer.',
+            'title' => 'Direct in-platform messaging',
+            'body' => 'Share context, preferences, and important details without scattered texts and callbacks.',
         ],
         [
-            'title' => 'Dressing and grooming',
-            'body' => 'Help with getting dressed, brushing hair, simple grooming routines, and personal appearance support that keeps someone comfortable and confident.',
+            'title' => 'Clear caregiver review flow',
+            'body' => 'Compare profiles, align on needs, and make a better decision before care starts.',
+        ],
+    ];
+
+    $profiles = [
+        [
+            'initials' => 'AL',
+            'name' => 'Alyssa L.',
+            'role' => 'Caregiver with companionship focus',
+            'quote' => 'Families want someone dependable, calm, and easy to communicate with. That is the part I take seriously.',
+            'tags' => ['Conversation', 'Check-ins'],
+            'accent' => 'blue',
         ],
         [
-            'title' => 'Light personal assistance',
-            'body' => 'Non-medical support such as hydration prompts, toileting reminders, and routine assistance that helps the day stay on track.',
+            'initials' => 'MP',
+            'name' => 'Maria P.',
+            'role' => 'Family support and errands',
+            'quote' => 'A great visit is not just helpful. It should make the whole family feel less alone carrying the plan.',
+            'tags' => ['Errands', 'Meal prep'],
+            'accent' => 'emerald',
         ],
         [
-            'title' => 'Activities and engagement',
-            'body' => 'Puzzles, music, crafts, conversation, and familiar activities that support focus, routine, and emotional well-being.',
-        ],
-        [
-            'title' => 'Pet help',
-            'body' => 'Support with feeding, walking, and small pet routines so beloved animals stay part of the daily rhythm.',
-        ],
-        [
-            'title' => 'Medication reminders',
-            'body' => 'Reminders for pre-filled medications and time-based routines that help care recipients stay organized and on schedule.',
-        ],
-        [
-            'title' => 'Errands',
-            'body' => 'Grocery pickup, prescription runs, mailing packages, and day-to-day errands that are hard to manage alone.',
-        ],
-        [
-            'title' => 'Technology help',
-            'body' => 'Assistance with video calls, streaming, phone basics, photos, and everyday tech tasks that can otherwise become frustrating.',
+            'initials' => 'DB',
+            'name' => 'David B.',
+            'role' => 'Experienced support professional',
+            'quote' => 'What matters most is consistency, kindness, and making sure the family knows what actually happened during the visit.',
+            'tags' => ['Routine support', 'Presence'],
+            'accent' => 'slate',
         ],
     ];
 
     $trustSignals = [
-        'Non-medical home care support',
-        'Direct caregiver messaging',
-        'Secure checkout flow',
         'Identity verification before work begins',
+        'Secure checkout and payment flow',
+        'Private in-platform communication',
+        'Profiles built for family review, not anonymous guessing',
     ];
 
     $podcast = config('marketing.podcast', []);
+    $defaultPodcastFile = 'How_HomeCare_fixes_senior_care.m4a';
+    $podcastAudioUrl = filled($podcast['audio_url'] ?? null)
+        ? $podcast['audio_url']
+        : asset($defaultPodcastFile);
+    $podcastTitle = $podcast['episode_title'] ?? 'How HomeCare fixes senior care';
+    $podcastSummary = $podcast['episode_summary'] ?? ($podcast['description'] ?? 'Listen to the HomeCare podcast directly from the homepage.');
     $podcastLinks = array_values(array_filter([
         ['label' => 'Spotify', 'url' => $podcast['spotify_url'] ?? null],
         ['label' => 'Apple Podcasts', 'url' => $podcast['apple_url'] ?? null],
@@ -114,17 +125,17 @@
         transform: translateY(0);
     }
 
+    .profile-card {
+        transition: transform 0.35s ease, box-shadow 0.35s ease;
+    }
+
+    .profile-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 26px 50px -24px rgba(15, 23, 42, 0.22);
+    }
+
     .podcast-card {
         background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
-    }
-
-    .service-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .service-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 24px 40px -24px rgba(15, 23, 42, 0.18);
     }
 </style>
 
@@ -141,10 +152,10 @@
             </a>
 
             <div class="hidden items-center gap-8 text-sm font-bold tracking-tight text-slate-600 md:flex">
-                <a href="#how-it-works" class="transition-colors hover:text-blue-600">How it works</a>
-                <a href="#services" class="transition-colors hover:text-blue-600">Services</a>
+                <a href="#services" class="transition-colors hover:text-blue-600">Our Services</a>
                 <a href="#podcast" class="transition-colors hover:text-blue-600">Podcast</a>
                 <a href="#safety" class="transition-colors hover:text-blue-600">Safety</a>
+                <a href="{{ route('caregivers.search') }}" class="transition-colors hover:text-blue-600">Browse caregivers</a>
                 <a href="{{ route('register') }}" class="rounded-2xl bg-blue-600 px-6 py-3 text-white shadow-md transition-all hover:bg-slate-950">
                     Get Started
                 </a>
@@ -163,26 +174,25 @@
             <div class="reveal active text-center">
                 <div class="mb-8 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-blue-600 shadow-sm">
                     <span class="flex h-2 w-2 rounded-full bg-blue-600"></span>
-                    Flexible non-medical support for families caring for parents in Raleigh
+                    Built for families coordinating non-medical home care in Raleigh
                 </div>
 
                 <h1 class="mx-auto max-w-5xl text-5xl font-black leading-[0.9] tracking-[-0.05em] text-slate-900 md:text-[5.4rem]">
-                    Post a request.<br>
-                    Get responses.<br>
-                    Choose help and get going.
+                    Stop managing care.<br>
+                    Start being a <span class="text-blue-600">daughter again.</span>
                 </h1>
 
                 <p class="mx-auto mt-8 max-w-3xl text-xl font-medium leading-relaxed text-slate-500">
-                    HomeCare helps families arrange non-medical support at home without the usual agency black box.
-                    Share the need, review responding caregivers, chat directly, and start care with better visibility.
+                    HomeCare gives families a more transparent path to non-medical support at home:
+                    review caregivers, message directly, track the visit, and keep everyone aligned without the usual black box.
                 </p>
 
                 <div class="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
                     <a href="{{ route('register') }}" class="w-full rounded-[1.25rem] bg-slate-950 px-12 py-5 text-lg font-bold text-white shadow-xl transition-all hover:bg-blue-600 sm:w-auto">
-                        Post a Care Request
+                        Find Help Now
                     </a>
-                    <a href="#how-it-works" class="w-full rounded-[1.25rem] border border-slate-200 bg-white px-12 py-5 text-lg font-bold text-slate-900 transition-all hover:bg-slate-50 sm:w-auto">
-                        See How It Works
+                    <a href="{{ route('caregivers.search') }}" class="w-full rounded-[1.25rem] border border-slate-200 bg-white px-12 py-5 text-lg font-bold text-slate-900 transition-all hover:bg-slate-50 sm:w-auto">
+                        Browse Local Pros
                     </a>
                 </div>
             </div>
@@ -191,16 +201,16 @@
                 <div class="reveal rounded-[2rem] border border-blue-100 bg-white p-8 shadow-[0_30px_70px_-28px_rgba(59,130,246,0.24)]">
                     <div class="grid gap-4 sm:grid-cols-3">
                         <div class="rounded-[1.4rem] border border-slate-100 bg-slate-50 p-4">
-                            <div class="text-[11px] font-black uppercase tracking-[0.16em] text-blue-600">Step one</div>
-                            <p class="mt-3 text-sm font-semibold leading-6 text-slate-700">Post the schedule, tasks, and context for your loved one.</p>
+                            <div class="text-[11px] font-black uppercase tracking-[0.16em] text-blue-600">Clearer fit</div>
+                            <p class="mt-3 text-sm font-semibold leading-6 text-slate-700">Review caregiver profiles before you make a hiring decision.</p>
                         </div>
                         <div class="rounded-[1.4rem] border border-slate-100 bg-slate-50 p-4">
-                            <div class="text-[11px] font-black uppercase tracking-[0.16em] text-blue-600">Step two</div>
-                            <p class="mt-3 text-sm font-semibold leading-6 text-slate-700">Review responses and message caregivers directly.</p>
+                            <div class="text-[11px] font-black uppercase tracking-[0.16em] text-blue-600">Direct chat</div>
+                            <p class="mt-3 text-sm font-semibold leading-6 text-slate-700">Handle care details in one place instead of scattered callbacks.</p>
                         </div>
                         <div class="rounded-[1.4rem] border border-slate-100 bg-slate-50 p-4">
-                            <div class="text-[11px] font-black uppercase tracking-[0.16em] text-blue-600">Step three</div>
-                            <p class="mt-3 text-sm font-semibold leading-6 text-slate-700">Choose the caregiver and begin support at home.</p>
+                            <div class="text-[11px] font-black uppercase tracking-[0.16em] text-blue-600">Better visibility</div>
+                            <p class="mt-3 text-sm font-semibold leading-6 text-slate-700">Keep the family informed once support at home begins.</p>
                         </div>
                     </div>
                 </div>
@@ -209,8 +219,8 @@
                     <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
                         <div class="mb-4 flex items-center justify-between">
                             <div>
-                                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-blue-300">Family view</p>
-                                <p class="mt-1 text-lg font-black tracking-tight">Request, review, hire</p>
+                                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-blue-300">Family dashboard</p>
+                                <p class="mt-1 text-lg font-black tracking-tight">Today’s care plan</p>
                             </div>
                             <div class="rounded-full bg-blue-600/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-blue-200">
                                 Live
@@ -222,31 +232,31 @@
                                 <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-sm font-black text-white">SM</div>
                                 <div>
                                     <p class="text-sm font-black">Sarah M.</p>
-                                    <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">Responded to your request</p>
+                                    <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">Active visit</p>
                                 </div>
                             </div>
 
                             <div class="mt-4 space-y-2">
                                 <div class="flex items-center gap-2 text-[11px] font-bold text-slate-500">
                                     <span class="h-2 w-2 rounded-full bg-green-500"></span>
-                                    Available for tomorrow morning
+                                    Caregiver has arrived
                                 </div>
                                 <div class="flex items-center gap-2 text-[11px] font-bold text-slate-500">
                                     <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-                                    Meal support, errands, companionship
+                                    Groceries and lunch support planned
                                 </div>
                             </div>
 
                             <button type="button" class="mt-4 w-full rounded-xl border border-blue-200 bg-blue-50 py-3 text-xs font-black uppercase tracking-[0.16em] text-blue-700">
-                                Review profile
+                                Message caregiver
                             </button>
                         </div>
                     </div>
 
                     <div class="mt-4 rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-                        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Built for family clarity</p>
+                        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">What families actually want</p>
                         <p class="mt-2 text-sm font-semibold leading-6 text-slate-200">
-                            One request, one place to compare caregivers, one clearer path to getting help started.
+                            Less chasing. Better context. More confidence in who is showing up and what is happening at home.
                         </p>
                     </div>
                 </div>
@@ -254,52 +264,77 @@
         </div>
     </section>
 
-    <section id="how-it-works" class="bg-white px-6 py-24">
+    <section id="services" class="bg-white px-6 py-24">
         <div class="mx-auto max-w-7xl">
-            <div class="mb-12 max-w-3xl">
-                <h2 class="text-4xl font-black uppercase italic tracking-tight text-slate-950 md:text-5xl">
-                    How HomeCare works.
-                </h2>
-                <p class="mt-6 text-lg font-medium leading-relaxed text-slate-500">
-                    The system is simple: post what help is needed, start hearing back from available caregivers, choose the right fit, and move into care with clearer communication.
-                </p>
-            </div>
+            <div class="grid items-start gap-20 lg:grid-cols-2">
+                <div class="reveal">
+                    <h2 class="text-4xl font-black uppercase italic tracking-tight text-slate-950 md:text-5xl">
+                        More than just a visit.
+                    </h2>
+                    <p class="mt-6 max-w-2xl text-lg font-medium leading-relaxed text-slate-500">
+                        Families are not just hiring time. They are trying to restore calm, coverage, and confidence at home.
+                    </p>
 
-            <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                @foreach ($steps as $step)
-                    <div class="rounded-[2rem] border border-slate-100 bg-slate-50 p-6">
-                        <div class="text-[11px] font-black uppercase tracking-[0.16em] text-blue-600">Step {{ $step['number'] }}</div>
-                        <h3 class="mt-3 text-2xl font-black tracking-tight text-slate-950">{{ $step['title'] }}</h3>
-                        <p class="mt-4 text-sm font-medium leading-7 text-slate-600">{{ $step['body'] }}</p>
+                    <div class="mt-12 grid gap-4 sm:grid-cols-2">
+                        @foreach ($serviceGroups as $group)
+                            <div class="rounded-[2rem] border border-slate-100 bg-slate-50 p-6">
+                                <div class="mb-4 flex h-11 w-11 items-center justify-center rounded-xl {{ $group['accent'] === 'blue' ? 'bg-blue-100 text-blue-600' : 'bg-sky-100 text-sky-600' }}">
+                                    @if ($group['icon'] === 'chat')
+                                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.95-1.325L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                        </svg>
+                                    @else
+                                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    @endif
+                                </div>
+                                <h4 class="text-xs font-black uppercase italic tracking-[0.2em] {{ $group['accent'] === 'blue' ? 'text-blue-600' : 'text-sky-600' }}">
+                                    {{ $group['title'] }}
+                                </h4>
+                                <ul class="mt-4 space-y-2 text-sm font-medium text-slate-600">
+                                    @foreach ($group['items'] as $item)
+                                        <li>{{ $item }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endforeach
                     </div>
-                @endforeach
+                </div>
+
+                <div class="reveal relative overflow-hidden rounded-[3rem] bg-slate-900 p-10 text-white">
+                    <div class="relative z-10">
+                        <h3 class="text-3xl font-black italic tracking-tight">Ultimate flexibility.</h3>
+                        <p class="mt-4 max-w-xl text-sm font-medium leading-7 text-slate-400">
+                            Families can start with a short visit, book a few focused hours, or arrange broader daytime support depending on what the week looks like.
+                        </p>
+
+                        <div class="mt-8 space-y-6">
+                            @foreach ($supportPlans as $plan)
+                                <div class="flex items-start gap-4">
+                                    <div class="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-500 text-[10px] font-black text-white">
+                                        {{ $plan['step'] }}
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-bold leading-tight">{{ $plan['title'] }}</h4>
+                                        <p class="mt-1 text-sm text-slate-400">{{ $plan['body'] }}</p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <a href="{{ route('register') }}" class="mt-10 inline-flex w-full items-center justify-center rounded-[1.25rem] bg-white py-4 text-center text-sm font-black uppercase tracking-[0.18em] text-slate-900">
+                            Start a care request
+                        </a>
+                    </div>
+
+                    <div class="absolute -bottom-12 -right-12 h-72 w-72 rounded-full bg-blue-600/20 blur-3xl"></div>
+                </div>
             </div>
         </div>
     </section>
 
-    <section id="services" class="bg-slate-50 px-6 py-24">
-        <div class="mx-auto max-w-7xl">
-            <div class="mb-12 max-w-4xl">
-                <h2 class="text-4xl font-black uppercase italic tracking-tight text-slate-950 md:text-5xl">
-                    Support families can actually book.
-                </h2>
-                <p class="mt-6 text-lg font-medium leading-relaxed text-slate-500">
-                    HomeCare is for non-medical support at home. These are the kinds of tasks families can request when they need another reliable person in the plan.
-                </p>
-            </div>
-
-            <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                @foreach ($services as $service)
-                    <div class="service-card rounded-[2rem] border border-slate-100 bg-white p-6">
-                        <div class="text-[11px] font-black uppercase tracking-[0.16em] text-blue-600">{{ $service['title'] }}</div>
-                        <p class="mt-4 text-sm font-medium leading-7 text-slate-600">{{ $service['body'] }}</p>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
-
-    <section id="podcast" class="bg-white px-6 py-24">
+    <section id="podcast" class="bg-slate-50 px-6 py-24">
         <div class="mx-auto max-w-5xl">
             <div class="podcast-card reveal flex flex-col items-center gap-12 rounded-[3rem] p-10 text-white shadow-2xl md:flex-row md:p-16">
                 <div class="relative flex h-48 w-48 flex-shrink-0 items-center justify-center overflow-hidden rounded-[2rem] border-4 border-slate-700 bg-slate-800 shadow-inner">
@@ -314,10 +349,10 @@
                         Featured Podcast
                     </div>
                     <h2 class="text-3xl font-black italic leading-tight md:text-5xl">
-                        {{ $podcast['episode_title'] ?? 'Practical guidance for families arranging care at home.' }}
+                        {{ $podcastTitle }}
                     </h2>
                     <p class="mt-4 font-medium text-slate-400">
-                        {{ $podcast['episode_summary'] ?? ($podcast['description'] ?? 'Use the podcast to educate families, explain how the system works, and build more trust before they post a request.') }}
+                        {{ $podcastSummary }}
                     </p>
 
                     @if (filled($podcast['embed_url'] ?? null))
@@ -330,10 +365,10 @@
                                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                             ></iframe>
                         </div>
-                    @elseif (filled($podcast['audio_url'] ?? null))
+                    @elseif (filled($podcastAudioUrl))
                         <div class="mt-8 rounded-[1.5rem] bg-white p-4">
                             <audio controls preload="none" class="w-full">
-                                <source src="{{ $podcast['audio_url'] }}">
+                                <source src="{{ $podcastAudioUrl }}">
                                 Your browser does not support the audio element.
                             </audio>
                         </div>
@@ -345,25 +380,159 @@
                                 {{ $link['label'] }}
                             </a>
                         @endforeach
+
+                        @if (filled($podcastAudioUrl))
+                            <a href="{{ $podcastAudioUrl }}" class="flex items-center gap-3 rounded-2xl border border-slate-700 bg-slate-800 px-8 py-4 font-bold text-white transition-all hover:bg-slate-700">
+                                Open Audio
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="safety" class="bg-blue-600 px-6 py-16 text-white">
-        <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-10 md:flex-row">
+    <section class="bg-white px-6 py-24">
+        <div class="mx-auto grid max-w-7xl items-center gap-20 lg:grid-cols-2">
             <div class="reveal">
-                <h2 class="text-3xl font-black uppercase italic md:text-4xl">Safety and clarity matter.</h2>
-                <p class="mt-4 max-w-2xl font-medium text-blue-100">
-                    Families need to understand what the platform is, how the communication works, and what protections are built into the experience.
+                <h2 class="text-4xl font-black uppercase italic tracking-tight text-slate-950 md:text-5xl">
+                    Visibility is <br>
+                    <span class="text-blue-600 underline decoration-4 underline-offset-8">peace of mind.</span>
+                </h2>
+                <p class="mt-6 text-lg font-medium leading-relaxed text-slate-500">
+                    Distance should not mean disconnect. The right experience gives families better visibility and fewer surprises.
+                </p>
+
+                <div class="mt-8 space-y-5">
+                    @foreach ($visibilityFeatures as $feature)
+                        <div class="flex gap-4 rounded-[1.5rem] p-4 transition-colors hover:bg-blue-50">
+                            <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold">{{ $feature['title'] }}</h4>
+                                <p class="text-sm font-medium text-slate-500">{{ $feature['body'] }}</p>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="reveal relative">
+                <div class="rounded-[3rem] border-4 border-slate-800 bg-slate-900 p-3 shadow-2xl">
+                    <div class="aspect-[9/19] overflow-hidden rounded-[2.5rem] bg-white">
+                        <div class="p-6">
+                            <div class="mb-8 flex items-center justify-between">
+                                <span class="text-xl font-black uppercase italic tracking-tight">Home<span class="text-blue-600">Care</span></span>
+                                <div class="h-8 w-8 rounded-full bg-slate-100"></div>
+                            </div>
+
+                            <h3 class="mb-4 text-lg font-bold">Active visit</h3>
+                            <div class="mb-4 rounded-[1.7rem] border border-blue-100 bg-blue-50 p-5">
+                                <div class="mb-4 flex items-center gap-3">
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white">SM</div>
+                                    <div>
+                                        <p class="text-xs font-bold">Sarah M.</p>
+                                        <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-600">Visiting Mom</p>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4 space-y-2">
+                                    <div class="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                                        <div class="h-1.5 w-1.5 rounded-full bg-green-500"></div>
+                                        Caregiver checked in
+                                    </div>
+                                    <div class="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                                        <div class="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                                        Grocery and meal support complete
+                                    </div>
+                                </div>
+
+                                <button type="button" class="w-full rounded-xl border border-blue-200 bg-white py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-600">
+                                    Message Sarah
+                                </button>
+                            </div>
+
+                            <h3 class="mb-4 text-lg font-bold">Visit summary</h3>
+                            <div class="flex aspect-square flex-col items-center justify-center gap-2 rounded-[1.7rem] bg-slate-100 text-slate-400">
+                                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <span class="text-[10px] font-bold uppercase tracking-[0.16em]">Summary updates here</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal active absolute -right-4 top-1/2 rounded-2xl border border-slate-100 bg-white p-4 shadow-xl">
+                    <div class="flex items-center gap-3">
+                        <div class="h-2 w-2 rounded-full bg-green-500"></div>
+                        <p class="text-xs font-bold">Verification complete</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-slate-50 px-6 py-24">
+        <div class="mx-auto max-w-7xl">
+            <div class="mb-16 text-center">
+                <h2 class="text-4xl font-black uppercase italic tracking-tight text-slate-950">
+                    Empathy you can trust.
+                </h2>
+                <p class="mt-4 font-medium text-slate-500">
+                    Local support should feel capable, warm, and dependable.
                 </p>
             </div>
 
-            <div class="flex flex-wrap gap-3 reveal">
+            <div class="grid gap-8 md:grid-cols-3">
+                @foreach ($profiles as $profile)
+                    <div class="profile-card rounded-[2.5rem] border border-slate-100 bg-white p-8">
+                        <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl {{ $profile['accent'] === 'blue' ? 'bg-blue-100 text-blue-600' : ($profile['accent'] === 'emerald' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-600') }} text-2xl font-black uppercase italic">
+                            {{ $profile['initials'] }}
+                        </div>
+
+                        <div class="mb-6 text-center">
+                            <h4 class="text-lg font-black">{{ $profile['name'] }}</h4>
+                            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] {{ $profile['accent'] === 'blue' ? 'text-blue-600' : ($profile['accent'] === 'emerald' ? 'text-emerald-600' : 'text-slate-600') }}">
+                                {{ $profile['role'] }}
+                            </p>
+                            <div class="text-xs text-yellow-400">★★★★★ <span class="ml-1 text-slate-400">(Verified)</span></div>
+                        </div>
+
+                        <p class="mb-6 text-center text-sm font-medium italic leading-6 text-slate-500">
+                            "{{ $profile['quote'] }}"
+                        </p>
+
+                        <div class="flex flex-wrap justify-center gap-2">
+                            @foreach ($profile['tags'] as $tag)
+                                <span class="rounded-full border border-slate-100 bg-slate-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em]">
+                                    {{ $tag }}
+                                </span>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
+    <section id="safety" class="relative overflow-hidden bg-blue-600 py-16 text-white">
+        <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-10 px-6 md:flex-row">
+            <div class="reveal">
+                <h2 class="text-3xl font-black uppercase italic md:text-4xl">Safety is not optional.</h2>
+                <p class="mt-4 max-w-2xl font-medium text-blue-100">
+                    Families need to understand what protections and communication tools are built into the experience.
+                </p>
+            </div>
+
+            <div class="flex gap-4 reveal">
                 @foreach ($trustSignals as $signal)
-                    <div class="rounded-2xl border border-white/20 bg-white/10 px-5 py-4 text-center">
-                        <div class="text-[11px] font-black uppercase tracking-[0.16em] text-white">{{ $signal }}</div>
+                    <div class="rounded-2xl border border-white/20 bg-white/10 px-6 py-4 text-center">
+                        <div class="text-[10px] font-black uppercase tracking-[0.16em] text-white">{{ $signal }}</div>
                     </div>
                 @endforeach
             </div>
@@ -373,11 +542,11 @@
     <section class="px-6 py-28 text-center">
         <div class="reveal mx-auto max-w-5xl">
             <h2 class="text-5xl font-black uppercase italic leading-[0.85] tracking-[-0.05em] text-slate-900 md:text-8xl">
-                Get help started <br>
-                without carrying <span class="text-blue-600 underline decoration-8 underline-offset-10">everything alone.</span>
+                Restore your role <br>
+                as a <span class="text-blue-600 underline decoration-8 underline-offset-10">family member.</span>
             </h2>
             <p class="mx-auto mt-8 max-w-2xl text-xl font-medium text-slate-500">
-                Post a request, review responses, choose a caregiver, and keep the family informed from one place.
+                Get support in place faster, stay informed, and spend less energy managing every moving part alone.
             </p>
             <div class="mt-12 flex flex-col items-center justify-center gap-6 md:flex-row">
                 <a href="{{ route('register') }}" class="w-full rounded-[2rem] bg-slate-950 px-16 py-7 text-2xl font-black uppercase italic tracking-tight text-white shadow-2xl transition-all hover:scale-[1.02] hover:bg-blue-600 md:w-auto">
