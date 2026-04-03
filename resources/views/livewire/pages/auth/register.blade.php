@@ -31,6 +31,7 @@ new #[Layout('layouts.guest')] class extends Component
         event(new Registered($user = User::create($validated)));
 
         Auth::login($user);
+        session()->flash('google_ads_family_signup_conversion', true);
 
         $this->redirect(route('dashboard', absolute: false), navigate: true);
     }
