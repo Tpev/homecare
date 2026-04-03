@@ -94,6 +94,7 @@
         ['label' => 'YouTube', 'url' => $podcast['youtube_url'] ?? null],
         ['label' => 'Transcript', 'url' => $podcast['transcript_url'] ?? null],
     ], fn (array $link): bool => filled($link['url'])));
+    $heroRoles = ['daughter', 'son', 'granddaughter', 'grandson', 'spouse', 'sister', 'brother'];
 @endphp
 
 <style>
@@ -137,6 +138,22 @@
     .podcast-card {
         background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
     }
+
+    .role-rotator {
+        display: inline-grid;
+        min-width: 7.5ch;
+    }
+
+    .role-word {
+        display: inline-block;
+        transform-origin: center;
+        transition: opacity 320ms cubic-bezier(0.16, 1, 0.3, 1), transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .role-word.is-changing {
+        opacity: 0;
+        transform: translateY(0.35em) scale(0.96);
+    }
 </style>
 
 <div class="overflow-x-hidden bg-white text-slate-900">
@@ -179,7 +196,16 @@
 
                 <h1 class="mx-auto max-w-5xl text-5xl font-black leading-[0.9] tracking-[-0.05em] text-slate-900 md:text-[5.4rem]">
                     Stop managing care.<br>
-                    Start being a <span class="text-blue-600">daughter again.</span>
+                    Start being a
+                    <span class="role-rotator text-blue-600">
+                        <span
+                            class="role-word"
+                            data-role-word
+                            data-roles='@json($heroRoles)'
+                            aria-live="polite"
+                        >daughter</span>
+                    </span>
+                    again.
                 </h1>
 
                 <p class="mx-auto mt-8 max-w-3xl text-xl font-medium leading-relaxed text-slate-500">
@@ -570,5 +596,24 @@
         });
 
         document.querySelectorAll('.reveal').forEach((element) => observer.observe(element));
+
+        const roleWord = document.querySelector('[data-role-word]');
+
+        if (roleWord) {
+            const roles = JSON.parse(roleWord.dataset.roles || '[]');
+            let index = 0;
+
+            if (roles.length > 1) {
+                setInterval(() => {
+                    roleWord.classList.add('is-changing');
+
+                    window.setTimeout(() => {
+                        index = (index + 1) % roles.length;
+                        roleWord.textContent = roles[index];
+                        roleWord.classList.remove('is-changing');
+                    }, 180);
+                }, 2200);
+            }
+        }
     });
 </script>
