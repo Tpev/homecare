@@ -6,6 +6,21 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'HomeCare') }}</title>
+    <meta name="description" content="HomeCare helps families find trusted non-medical support for mom or dad in Raleigh, NC.">
+    <link rel="canonical" href="{{ request()->url() }}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ config('app.name', 'HomeCare') }}">
+    <meta property="og:title" content="{{ config('app.name', 'HomeCare') }}">
+    <meta property="og:description" content="HomeCare helps families find trusted non-medical support for mom or dad in Raleigh, NC.">
+    <meta property="og:url" content="{{ request()->url() }}">
+    <meta property="og:image" content="{{ asset('images/marketing/flyer.png') }}">
+    <meta property="og:image:alt" content="HomeCare helps families find trusted support for mom or dad in Raleigh.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ config('app.name', 'HomeCare') }}">
+    <meta name="twitter:description" content="HomeCare helps families find trusted non-medical support for mom or dad in Raleigh, NC.">
+    <meta name="twitter:image" content="{{ asset('images/marketing/flyer.png') }}">
+    <meta name="twitter:image:alt" content="HomeCare helps families find trusted support for mom or dad in Raleigh.">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800|outfit:500,600,700&display=swap" rel="stylesheet" />

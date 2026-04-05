@@ -15,11 +15,13 @@
     <meta property="og:title" content="@yield('title', config('app.name', 'HomeCare'))">
     <meta property="og:description" content="@yield('meta_description', 'HomeCare connects families and caregivers for non-medical home care in Raleigh, NC.')">
     <meta property="og:url" content="@yield('canonical', request()->url())">
-    <meta property="og:image" content="@yield('og_image', 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1600&q=80')">
+    <meta property="og:image" content="@yield('og_image', asset('images/marketing/flyer.png'))">
+    <meta property="og:image:alt" content="@yield('og_image_alt', 'HomeCare helps families find trusted support for mom or dad in Raleigh.')">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="@yield('title', config('app.name', 'HomeCare'))">
     <meta name="twitter:description" content="@yield('meta_description', 'HomeCare connects families and caregivers for non-medical home care in Raleigh, NC.')">
-    <meta name="twitter:image" content="@yield('og_image', 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1600&q=80')">
+    <meta name="twitter:image" content="@yield('og_image', asset('images/marketing/flyer.png'))">
+    <meta name="twitter:image:alt" content="@yield('og_image_alt', 'HomeCare helps families find trusted support for mom or dad in Raleigh.')">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
