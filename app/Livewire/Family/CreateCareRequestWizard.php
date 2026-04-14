@@ -6,6 +6,7 @@ use App\Models\CareRequest;
 use App\Models\CareTask;
 use App\Models\FamilyHouseholdProfile;
 use App\Models\FamilyRecipientProfile;
+use App\Support\FamilyQuickRequestDraft;
 use App\Support\FunnelTracker;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -129,6 +130,7 @@ class CreateCareRequestWizard extends Component
         $this->state = (string) ($user->state ?? '');
 
         $this->loadSavedProfiles();
+        $this->applyHomepageQuickRequestDraft();
 
         $lastRequest = CareRequest::query()
             ->where('family_user_id', $user->id)
@@ -590,6 +592,31 @@ class CreateCareRequestWizard extends Component
         $this->hasSavedRecipientProfile = $user->familyRecipientProfile !== null;
     }
 
+    private function applyHomepageQuickRequestDraft(): void
+    {
+        $draft = FamilyQuickRequestDraft::pull();
+
+        if (! $draft) {
+            return;
+        }
+
+        $this->request_mode = (string) ($draft['request_mode'] ?? self::MODE_FAST_TRACK);
+        $this->modeChosen = (bool) ($draft['modeChosen'] ?? true);
+        $this->step = (int) ($draft['step'] ?? 4);
+        $this->request_type = (string) ($draft['request_type'] ?? CareRequest::TYPE_ONE_TIME);
+        $this->recipient_full_name = (string) ($draft['recipient_full_name'] ?? '');
+        $this->selectedTasks = collect($draft['selectedTasks'] ?? [])->map(fn ($id) => (int) $id)->values()->all();
+        $this->additional_info = (string) ($draft['additional_info'] ?? '');
+        $this->requested_start_at = $this->normalizeDateTimeForInput((string) ($draft['requested_start_at'] ?? ''));
+        $this->requested_end_at = $this->normalizeDateTimeForInput((string) ($draft['requested_end_at'] ?? ''));
+        $this->address_line1 = (string) ($draft['address_line1'] ?? '');
+        $this->city = (string) ($draft['city'] ?? $this->city);
+        $this->state = (string) ($draft['state'] ?? $this->state);
+        $this->zip = (string) ($draft['zip'] ?? '');
+
+        session()->flash('status', 'Your homepage request draft is loaded. Review it, then publish when ready.');
+    }
+
     private function saveFamilyProfiles(): void
     {
         $familyUserId = (int) auth()->id();
@@ -679,6 +706,20 @@ class CreateCareRequestWizard extends Component
 
         try {
             return Carbon::parse($trimmed)->format('H:i');
+        } catch (Throwable) {
+            return '';
+        }
+    }
+
+    private function normalizeDateTimeForInput(string $value): string
+    {
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return '';
+        }
+
+        try {
+            return Carbon::parse($trimmed)->format('Y-m-d\TH:i');
         } catch (Throwable) {
             return '';
         }

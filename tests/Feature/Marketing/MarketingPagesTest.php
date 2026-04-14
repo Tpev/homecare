@@ -29,7 +29,8 @@ class MarketingPagesTest extends TestCase
         $response->assertSee(route('register'), false);
         $response->assertSee(route('landing.caregiver'), false);
         $response->assertSee(route('login'), false);
-        $response->assertDontSee(route('caregivers.search'), false);
+        $response->assertSee(route('caregivers.search'), false);
+        $response->assertSee('Start your care request now.');
     }
 
     public function test_family_variant_pages_have_clear_primary_ctas(): void

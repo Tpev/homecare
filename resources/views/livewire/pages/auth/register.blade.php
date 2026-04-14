@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\FamilyQuickRequestDraft;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
@@ -33,6 +34,12 @@ new #[Layout('layouts.guest')] class extends Component
         Auth::login($user);
         session()->flash('google_ads_family_signup_conversion', true);
 
+        if (FamilyQuickRequestDraft::has()) {
+            session()->flash('status', 'Your request draft is waiting. Review it and publish from your new account.');
+            $this->redirect(route('family.requests.create', absolute: false), navigate: true);
+            return;
+        }
+
         $this->redirect(route('dashboard', absolute: false), navigate: true);
     }
 }; ?>
@@ -47,6 +54,12 @@ new #[Layout('layouts.guest')] class extends Component
         Registering as caregiver?
         <a href="{{ route('caregiver.register') }}" class="font-medium underline" wire:navigate>Use caregiver onboarding</a>.
     </div>
+
+    @if (\App\Support\FamilyQuickRequestDraft::has())
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+            Your quick care request is saved. Create your account now and we’ll take you straight to the final review before publishing.
+        </div>
+    @endif
 
     <form wire:submit="register" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

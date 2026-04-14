@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\FamilyQuickRequestDraft;
 use App\Livewire\Forms\LoginForm;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
@@ -17,6 +18,12 @@ new #[Layout('layouts.guest')] class extends Component
 
         Session::regenerate();
 
+        if (FamilyQuickRequestDraft::has() && auth()->user()?->role === 'family') {
+            session()->flash('status', 'Your quick request draft is ready. Finish review and publish it now.');
+            $this->redirect(route('family.requests.create', absolute: false), navigate: true);
+            return;
+        }
+
         $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
     }
 }; ?>
@@ -28,6 +35,12 @@ new #[Layout('layouts.guest')] class extends Component
     </div>
 
     <x-auth-session-status class="mb-4" :status="session('status')" />
+
+    @if (\App\Support\FamilyQuickRequestDraft::has())
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+            Your quick care request is saved. Sign in and we’ll open the final review so you can publish it.
+        </div>
+    @endif
 
     <form wire:submit="login" class="space-y-4">
         <div class="grid grid-cols-1 gap-4">

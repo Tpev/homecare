@@ -1,7 +1,7 @@
 @extends('layouts.marketing')
 
-@section('title', 'HomeCare Raleigh | Flexible Support for Families Caring for Parents')
-@section('meta_description', 'Arrange non-medical home care in Raleigh with a clearer, more modern family experience. Review caregivers, message directly, and stay informed in one place.')
+@section('title', 'Home Care HUB | Trusted Home Support for Older Adults')
+@section('meta_description', 'Home Care HUB helps families arrange trusted, non-medical support at home for an older parent, from 30-minute quick help to a few hours of support to traditional full-day coverage.')
 @section('canonical', route('landing'))
 
 @section('content')
