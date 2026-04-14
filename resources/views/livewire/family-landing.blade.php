@@ -192,95 +192,7 @@
 
 
 
-<style>
-
-    .glass-nav {
-
-        backdrop-filter: blur(20px);
-
-        background: rgba(255, 255, 255, 0.88);
-
-        border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-
-    }
-
-
-
-    .bg-grid {
-
-        background-image: radial-gradient(rgba(148, 163, 184, 0.2) 1px, transparent 1px);
-
-        background-size: 38px 38px;
-
-    }
-
-
-
-    .hero-gradient {
-
-        background:
-
-            radial-gradient(circle at 50% 10%, rgba(59, 130, 246, 0.12), transparent 34%),
-
-            linear-gradient(180deg, #f6fbff 0%, #ffffff 62%);
-
-    }
-
-
-
-    .reveal {
-
-        opacity: 0;
-
-        transform: translateY(24px);
-
-        transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
-
-    }
-
-
-
-    .reveal.active {
-
-        opacity: 1;
-
-        transform: translateY(0);
-
-    }
-
-
-
-    .profile-card {
-
-        transition: transform 0.35s ease, box-shadow 0.35s ease;
-
-    }
-
-
-
-    .profile-card:hover {
-
-        transform: translateY(-6px);
-
-        box-shadow: 0 26px 50px -24px rgba(15, 23, 42, 0.22);
-
-    }
-
-
-
-    .podcast-card {
-
-        background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
-
-    }
-
-
-
-</style>
-
-
-
-<div class="overflow-x-hidden bg-white text-slate-900">
+<div class="hub-family-landing overflow-x-hidden text-slate-900">
 
     <nav class="glass-nav fixed top-0 z-50 w-full">
 
@@ -288,17 +200,9 @@
 
             <a href="{{ route('landing') }}" class="flex items-center gap-3">
 
-                <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200/80">
+                <div class="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#DED6CA] bg-[#FFFCF8] shadow-lg"><x-application-logo class="h-5 w-5 text-[#0F3D3E]" /></div>
 
-                    <x-application-logo class="h-5 w-5 text-white" />
-
-                </div>
-
-                <span class="text-lg font-extrabold uppercase italic tracking-tight text-slate-950 sm:text-xl">
-
-                    Home Care <span class="text-blue-600">HUB</span>
-
-                </span>
+                <div><span class="block text-lg font-extrabold tracking-tight text-slate-950 sm:text-xl">Home Care <span class="text-blue-600">HUB</span></span><span class="block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:text-[11px]">Thoughtful care. Smarter by design.</span></div>
 
             </a>
 
@@ -326,7 +230,7 @@
 
             <div class="flex items-center gap-2 md:hidden">
 
-                <a href="{{ route('login') }}" class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700">
+                <a href="{{ route('login') }}" class="min-w-[108px] rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700">
 
                     Sign in
 
@@ -344,55 +248,65 @@
 
         <div class="mx-auto max-w-7xl">
 
-            <div class="reveal active mt-2 max-w-3xl rounded-[2rem] border border-slate-200/80 bg-white/90 p-5 text-left shadow-[0_24px_60px_-32px_rgba(37,99,235,0.20)] backdrop-blur sm:mx-auto sm:mt-0 sm:p-8 sm:text-center">
+            <div class="hub-hero-card reveal active mt-2 max-w-3xl rounded-[2rem] p-5 text-left backdrop-blur sm:mx-auto sm:mt-0 sm:p-8">
 
-                <div class="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-blue-700 shadow-sm sm:text-xs">
+                <p class="hub-hero-eyebrow text-[11px] font-extrabold sm:text-xs">
+                    Support for older adults at home
+                </p>
 
-                    <span class="flex h-2 w-2 rounded-full bg-blue-600"></span>
+                <h1 class="mt-3 max-w-[12ch] text-balance text-[2.05rem] leading-[1] tracking-[-0.05em] text-slate-950 sm:mt-5 sm:max-w-3xl sm:text-center sm:text-5xl">
 
-                    30-minute check-ins to full-day coverage
-
-                </div>
-
-                <h1 class="mt-4 max-w-[13ch] text-balance text-[2.45rem] font-black leading-[0.94] tracking-[-0.06em] text-slate-950 sm:mx-auto sm:mt-6 sm:max-w-4xl sm:text-5xl md:text-[5.1rem]">
-
-                    Trusted help for mom or dad, from quick support to full coverage.
+                    Trusted help for mom or dad, right when you need it.
 
                 </h1>
 
-                <p class="mt-4 max-w-2xl text-[1.02rem] font-medium leading-7 text-slate-600 sm:mx-auto sm:mt-6 sm:text-xl sm:leading-relaxed sm:text-slate-500">
+                <p class="mt-4 max-w-2xl text-[1rem] font-medium leading-7 text-slate-600 sm:mx-auto sm:mt-5 sm:text-center sm:text-[1.08rem] sm:leading-relaxed sm:text-slate-500">
 
-                    Home Care HUB helps families quickly arrange trusted, non-medical support at home for an older parent, whether that means 30 minutes of quick help, a few focused hours, or more traditional day coverage when your family needs it most.
+                    Home Care HUB helps families arrange trusted, non-medical support at home for an older parent, from a quick 30-minute visit to a few focused hours or more complete daytime coverage.
 
                 </p>
 
-                <div class="mt-5 flex flex-wrap gap-2 sm:mt-6 sm:justify-center">
+                <div class="mt-5 grid gap-2.5 sm:mt-6 sm:grid-cols-3">
 
-                    <span class="inline-flex min-h-10 items-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700">30-minute quick help</span>
+                    <div class="hub-range-card rounded-[1.35rem] px-4 py-3">
+                        <strong class="text-sm">30-minute quick help</strong>
+                        <span class="mt-1 block text-xs font-medium text-slate-500">Check-ins, reassurance, and a specific need handled fast.</span>
+                    </div>
 
-                    <span class="inline-flex min-h-10 items-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700">A few hours of support</span>
+                    <div class="hub-range-card rounded-[1.35rem] px-4 py-3">
+                        <strong class="text-sm">A few hours of support</strong>
+                        <span class="mt-1 block text-xs font-medium text-slate-500">Companionship, meals, errands, and steady help during the day.</span>
+                    </div>
 
-                    <span class="inline-flex min-h-10 items-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700">Traditional full coverage</span>
+                    <div class="hub-range-card rounded-[1.35rem] px-4 py-3">
+                        <strong class="text-sm">Traditional full coverage</strong>
+                        <span class="mt-1 block text-xs font-medium text-slate-500">Longer blocks when your family needs broader daytime support.</span>
+                    </div>
 
                 </div>
 
-                <p class="mt-4 text-sm font-semibold text-slate-500 sm:text-base">
+                <div class="mt-5 flex flex-col items-start gap-3 sm:mt-6 sm:items-center">
+                    <a href="tel:9844004008" class="hub-contact-chip inline-flex min-h-12 items-center justify-center rounded-[1.1rem] px-5 text-sm font-bold transition-all hover:bg-[#7C5DDC]/15 sm:min-h-11">
 
-                    Think of it like Uber, but for trusted home caregivers.
+                        Call or text (984) 400-4008
 
-                </p>
+                    </a>
+                    <p class="text-sm font-medium text-slate-500 sm:text-center">
+                        For families who need trusted support quickly, without agency runaround.
+                    </p>
+                </div>
 
-                <a href="tel:9844004008" class="mt-4 inline-flex min-h-12 items-center justify-center rounded-[1.1rem] border border-blue-200 bg-blue-50 px-5 text-sm font-bold text-blue-700 transition-all hover:bg-blue-100 sm:min-h-11">
-
-                    Call or text (984) 400-4008
-
-                </a>
+                <div class="hub-trust-row mt-5 sm:mt-6">
+                    <div class="hub-proof rounded-2xl px-4 py-3 text-left text-xs font-semibold sm:text-sm">Screened and reviewed caregivers</div>
+                    <div class="hub-proof rounded-2xl px-4 py-3 text-left text-xs font-semibold sm:text-sm">Flexible support from short visits to longer coverage</div>
+                    <div class="hub-proof rounded-2xl px-4 py-3 text-left text-xs font-semibold sm:text-sm">Secure booking and payment flow</div>
+                </div>
 
             </div>
 
 
 
-            <div class="mt-8 grid gap-6 xl:mt-16 xl:grid-cols-[1.05fr_0.95fr] xl:items-start">
+            <div class="mt-8 max-w-3xl xl:mt-12">
 
                 <div class="reveal order-1 xl:order-1">
 
@@ -415,102 +329,11 @@
                     </div>
 
                 </div>
-
-
-
-                <div class="reveal order-2 hidden rounded-[2.4rem] border border-slate-900 bg-slate-950 p-7 text-white shadow-2xl xl:block xl:order-2">
-
-                    <div class="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-
-                        <div class="mb-4 flex items-center justify-between">
-
-                            <div>
-
-                                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-blue-300">Family dashboard</p>
-
-                                <p class="mt-1 text-lg font-black tracking-tight">Today's care plan</p>
-
-                            </div>
-
-                            <div class="rounded-full bg-blue-600/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-blue-200">
-
-                                Live
-
-                            </div>
-
-                        </div>
-
-
-
-                        <div class="rounded-[1.25rem] bg-white p-4 text-slate-900">
-
-                            <div class="flex items-center gap-3">
-
-                                <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-sm font-black text-white">SM</div>
-
-                                <div>
-
-                                    <p class="text-sm font-black">Sarah M.</p>
-
-                                    <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">Active visit</p>
-
-                                </div>
-
-                            </div>
-
-
-
-                            <div class="mt-4 space-y-2">
-
-                                <div class="flex items-center gap-2 text-[11px] font-bold text-slate-500">
-
-                                    <span class="h-2 w-2 rounded-full bg-green-500"></span>
-
-                                    Caregiver has arrived
-
-                                </div>
-
-                                <div class="flex items-center gap-2 text-[11px] font-bold text-slate-500">
-
-                                    <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-
-                                    Groceries and lunch support planned
-
-                                </div>
-
-                            </div>
-
-
-
-                            <button type="button" class="mt-4 w-full rounded-xl border border-blue-200 bg-blue-50 py-3 text-xs font-black uppercase tracking-[0.16em] text-blue-700">
-
-                                Message caregiver
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <div class="mt-4 rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-
-                        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">What the app does</p>
-
-                        <p class="mt-2 text-sm font-semibold leading-6 text-slate-200">
-
-                            Post the need, compare caregivers, chat directly, hire, and keep the visit visible without callback loops or agency black boxes.
-
-                        </p>
-
-                    </div>
-
                 </div>
 
             </div>
 
-        </div>
+        
 
     </section>
 
@@ -534,6 +357,10 @@
 
                         Families are not just hiring time. They are trying to restore calm, coverage, and confidence at home.
 
+                    </p>
+
+                    <p class="mt-4 max-w-2xl text-sm font-semibold leading-6 text-slate-500">
+                        Think of it like Uber, but built around trusted home support for older adults.
                     </p>
 
 
@@ -650,7 +477,7 @@
 
             </div>
 
-        </div>
+        
 
     </section>
 
@@ -765,7 +592,7 @@
 
             </div>
 
-        </div>
+        
 
     </section>
 
@@ -935,7 +762,7 @@
 
             </div>
 
-        </div>
+        
 
     </section>
 
@@ -1096,38 +923,6 @@
         </div>
 
     </section>
-
 </div>
 
-
-
-<script>
-
-    document.addEventListener('DOMContentLoaded', () => {
-
-        const observer = new IntersectionObserver((entries) => {
-
-            entries.forEach((entry) => {
-
-                if (entry.isIntersecting) {
-
-                    entry.target.classList.add('active');
-
-                }
-
-            });
-
-        }, {
-
-            threshold: 0.15,
-
-        });
-
-
-
-        document.querySelectorAll('.reveal').forEach((element) => observer.observe(element));
-
-    });
-
-</script>
 

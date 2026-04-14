@@ -22,7 +22,7 @@ class HomepageQuickRequestFlowTest extends TestCase
 
         $this->get(route('landing'))
             ->assertOk()
-            ->assertSeeText('Trusted help for mom or dad, from quick support to full coverage.')
+            ->assertSeeText('Trusted help for mom or dad, right when you need it.')
             ->assertSeeText('Call or text (984) 400-4008')
             ->assertSee('Start your care request now.');
     }
