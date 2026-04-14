@@ -785,13 +785,17 @@
 
             <div class="mb-16 text-center">
 
-                <h2 class="text-4xl font-black uppercase italic tracking-tight text-slate-950">
+                <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#7C5DDC] sm:text-xs">
+                    Trusted caregivers
+                </p>
+
+                <h2 class="mt-3 text-4xl tracking-tight text-slate-950 md:text-5xl">
 
                     Empathy you can trust.
 
                 </h2>
 
-                <p class="mt-4 font-medium text-slate-500">
+                <p class="mx-auto mt-4 max-w-2xl text-base font-medium leading-7 text-slate-500 md:text-lg">
 
                     Local support should feel capable, warm, and dependable.
 
@@ -865,15 +869,17 @@
 
 
 
-    <section id="safety" class="relative overflow-hidden bg-blue-600 py-16 text-white">
+    <section id="safety" class="relative overflow-hidden bg-blue-600 py-20 text-white">
 
-        <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-10 px-6 md:flex-row">
+        <div class="mx-auto grid max-w-7xl gap-10 px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
 
             <div class="reveal">
 
-                <h2 class="text-3xl font-black uppercase italic md:text-4xl">Safety is not optional.</h2>
+                <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-blue-100">Built-in protection</p>
 
-                <p class="mt-4 max-w-2xl font-medium text-blue-100">
+                <h2 class="mt-3 text-3xl tracking-tight text-white md:text-5xl">Safety is not optional.</h2>
+
+                <p class="mt-4 max-w-2xl text-base font-medium leading-7 text-blue-100">
 
                     Families need to understand what protections and communication tools are built into the experience.
 
@@ -883,13 +889,13 @@
 
 
 
-            <div class="flex gap-4 reveal">
+            <div class="reveal grid gap-4 sm:grid-cols-2">
 
                 @foreach ($trustSignals as $signal)
 
-                    <div class="rounded-2xl border border-white/20 bg-white/10 px-6 py-4 text-center">
+                    <div class="rounded-[1.5rem] border border-white/15 bg-[#FFFCF8] px-5 py-5 text-left shadow-[0_18px_40px_-24px_rgba(0,0,0,0.28)]">
 
-                        <div class="text-[10px] font-black uppercase tracking-[0.16em] text-white">{{ $signal }}</div>
+                        <div class="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#0F3D3E]">{{ $signal }}</div>
 
                     </div>
 
