@@ -99,6 +99,10 @@
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
     }
 
+    .hub-family-landing .hub-request-stack {
+        position: relative;
+    }
+
     .hub-family-landing .hub-trust-row {
         display: grid;
         gap: 0.75rem;
@@ -233,6 +237,20 @@
     @media (min-width: 640px) {
         .hub-family-landing .hub-trust-row {
             grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 639px) {
+        .hub-family-landing .glass-nav {
+            backdrop-filter: none;
+            background: rgba(250, 249, 247, 0.98);
+        }
+    }
+
+    @media (min-width: 1280px) {
+        .hub-family-landing .hub-request-stack {
+            position: sticky;
+            top: 7.5rem;
         }
     }
 </style>

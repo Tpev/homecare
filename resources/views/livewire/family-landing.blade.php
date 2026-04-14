@@ -200,9 +200,12 @@
 
             <a href="{{ route('landing') }}" class="flex items-center gap-3">
 
-                <div class="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#DED6CA] bg-[#FFFCF8] shadow-lg"><x-application-logo class="h-5 w-5 text-[#0F3D3E]" /></div>
+                <div class="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#DED6CA] bg-[#FFFCF8] shadow-lg sm:h-11 sm:w-11"><x-application-logo class="h-5 w-5 text-[#0F3D3E]" /></div>
 
-                <div><span class="block text-lg font-extrabold tracking-tight text-slate-950 sm:text-xl">Home Care <span class="text-blue-600">HUB</span></span><span class="block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:text-[11px]">Thoughtful care. Smarter by design.</span></div>
+                <div>
+                    <span class="block text-lg font-extrabold tracking-tight text-slate-950 sm:text-xl">Home Care <span class="text-blue-600">HUB</span></span>
+                    <span class="hidden text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:block sm:text-[11px]">Thoughtful care. Smarter by design.</span>
+                </div>
 
             </a>
 
@@ -230,7 +233,7 @@
 
             <div class="flex items-center gap-2 md:hidden">
 
-                <a href="{{ route('login') }}" class="min-w-[108px] rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700">
+                <a href="{{ route('login') }}" class="min-w-[92px] rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700">
 
                     Sign in
 
@@ -247,26 +250,27 @@
     <section class="bg-grid hero-gradient px-4 pb-16 pt-28 sm:px-6 sm:pb-24 sm:pt-40">
 
         <div class="mx-auto max-w-7xl">
+            <div class="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)] xl:items-start">
 
-            <div class="hub-hero-card reveal active mt-2 max-w-3xl rounded-[2rem] p-5 text-left backdrop-blur sm:mx-auto sm:mt-0 sm:p-8">
+            <div class="hub-hero-card reveal active mt-2 rounded-[2rem] p-5 text-left backdrop-blur sm:mt-0 sm:p-8 xl:p-10">
 
                 <p class="hub-hero-eyebrow text-[11px] font-extrabold sm:text-xs">
                     Support for older adults at home
                 </p>
 
-                <h1 class="mt-3 max-w-[12ch] text-balance text-[2.05rem] leading-[1] tracking-[-0.05em] text-slate-950 sm:mt-5 sm:max-w-3xl sm:text-center sm:text-5xl">
+                <h1 class="mt-3 max-w-[12ch] text-balance text-[2.05rem] leading-[1] tracking-[-0.05em] text-slate-950 sm:mt-5 sm:max-w-3xl sm:text-center sm:text-5xl xl:max-w-[11ch] xl:text-left xl:text-[4.35rem]">
 
                     Trusted help for mom or dad, right when you need it.
 
                 </h1>
 
-                <p class="mt-4 max-w-2xl text-[1rem] font-medium leading-7 text-slate-600 sm:mx-auto sm:mt-5 sm:text-center sm:text-[1.08rem] sm:leading-relaxed sm:text-slate-500">
+                <p class="mt-4 max-w-2xl text-[1rem] font-medium leading-7 text-slate-600 sm:mx-auto sm:mt-5 sm:text-center sm:text-[1.08rem] sm:leading-relaxed sm:text-slate-500 xl:mx-0 xl:text-left">
 
                     Home Care HUB helps families arrange trusted, non-medical support at home for an older parent, from a quick 30-minute visit to a few focused hours or more complete daytime coverage.
 
                 </p>
 
-                <div class="mt-5 grid gap-2.5 sm:mt-6 sm:grid-cols-3">
+                <div class="mt-5 grid gap-2.5 sm:mt-6 sm:grid-cols-3 xl:mt-8">
 
                     <div class="hub-range-card rounded-[1.35rem] px-4 py-3">
                         <strong class="text-sm">30-minute quick help</strong>
@@ -285,13 +289,13 @@
 
                 </div>
 
-                <div class="mt-5 flex flex-col items-start gap-3 sm:mt-6 sm:items-center">
+                <div class="mt-5 flex flex-col items-start gap-3 sm:mt-6 sm:items-center xl:items-start">
                     <a href="tel:9844004008" class="hub-contact-chip inline-flex min-h-12 items-center justify-center rounded-[1.1rem] px-5 text-sm font-bold transition-all hover:bg-[#7C5DDC]/15 sm:min-h-11">
 
                         Call or text (984) 400-4008
 
                     </a>
-                    <p class="text-sm font-medium text-slate-500 sm:text-center">
+                    <p class="text-sm font-medium text-slate-500 sm:text-center xl:text-left">
                         For families who need trusted support quickly, without agency runaround.
                     </p>
                 </div>
@@ -306,9 +310,16 @@
 
 
 
-            <div class="mt-8 max-w-3xl xl:mt-12">
+            <div class="hub-request-stack mt-2 xl:mt-0">
 
                 <div class="reveal order-1 xl:order-1">
+                    <div class="mb-3 hidden xl:flex xl:items-center xl:justify-between xl:px-1">
+                        <div>
+                            <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#7C5DDC]">Start in minutes</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-500">Share the basics now. We will guide the rest step by step.</p>
+                        </div>
+                        <a href="tel:9844004008" class="text-sm font-bold text-[#7C5DDC] hover:text-[#0F3D3E]">Call (984) 400-4008</a>
+                    </div>
 
                     <livewire:family.homepage-quick-request />
 
@@ -329,8 +340,8 @@
                     </div>
 
                 </div>
-                </div>
 
+            </div>
             </div>
 
         
