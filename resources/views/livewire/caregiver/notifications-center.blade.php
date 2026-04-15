@@ -1,4 +1,4 @@
-<div class="hc-page space-y-5 py-5 sm:py-6">
+﻿<div class="hc-page space-y-5 py-5 sm:py-6">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -81,7 +81,7 @@
 
             <div class="space-y-3 pt-1">
                 @forelse ($notifications as $item)
-                    <article class="rounded-2xl border {{ $item['read_at'] ? 'border-slate-200 bg-white' : 'border-cyan-200 bg-cyan-50/30' }} p-4 shadow-sm sm:p-5">
+                    <article class="rounded-2xl border {{ $item['read_at'] ? 'border-[#E4DDD3] bg-white' : 'border-[#BDD4F7] bg-[#EEF5FF]/30' }} p-4 shadow-sm sm:p-5">
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <div class="flex flex-wrap items-center gap-2">
@@ -113,7 +113,7 @@
                                 <button
                                     type="button"
                                     wire:click="markRead('{{ $item['id'] }}')"
-                                    class="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-[#3C4A5B] transition hover:bg-slate-50 sm:w-auto"
+                                    class="inline-flex h-11 w-full items-center justify-center rounded-xl border border-[#E4DDD3] bg-white px-4 text-sm font-semibold text-[#3C4A5B] transition hover:bg-[#F7F2EA] sm:w-auto"
                                 >
                                     Mark read
                                 </button>
@@ -121,7 +121,7 @@
                         </div>
                     </article>
                 @empty
-                    <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-10 text-center text-sm text-[#5B6472]">
+                    <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-white px-4 py-10 text-center text-sm text-[#5B6472]">
                         No notifications for this filter yet.
                     </div>
                 @endforelse
@@ -129,14 +129,14 @@
         </section>
 
         <aside class="xl:col-span-4">
-            <details class="xl:hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <details class="xl:hidden rounded-2xl border border-[#E4DDD3] bg-white p-4 shadow-sm">
                 <summary class="cursor-pointer list-none">
                     <div class="flex items-center justify-between gap-3">
                         <div>
                             <p class="font-display text-lg font-semibold text-[#0F172A]">Delivery preferences</p>
                             <p class="mt-1 text-sm text-[#5B6472]">Choose where important updates reach you.</p>
                         </div>
-                        <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-[#3C4A5B]">Edit</span>
+                        <span class="rounded-full bg-[#F0E9E1] px-2.5 py-1 text-[11px] font-semibold text-[#3C4A5B]">Edit</span>
                     </div>
                 </summary>
                 <div class="mt-4 space-y-3">
@@ -215,5 +215,6 @@
         </aside>
     </div>
 </div>
+
 
 

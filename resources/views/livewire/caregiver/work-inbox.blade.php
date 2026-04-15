@@ -1,4 +1,4 @@
-<div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
+﻿<div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -14,8 +14,8 @@
             'success' => 'bg-emerald-100 text-emerald-700',
             'warning' => 'bg-amber-100 text-amber-800',
             'danger' => 'bg-rose-100 text-rose-700',
-            'info' => 'bg-sky-100 text-sky-700',
-            'neutral' => 'bg-slate-100 text-slate-700',
+            'info' => 'bg-[#E8F0FF] text-[#4F6FAF]',
+            'neutral' => 'bg-[#F0E9E1] text-[#4B5B6B]',
         ];
         $visibleShiftValue = collect($items)->sum(fn ($item) => (float) data_get($item, 'compensation.total', 0));
         $responsiveValue = collect($items)->where('scope', 'needs_response')->sum(fn ($item) => (float) data_get($item, 'compensation.total', 0));
@@ -49,27 +49,27 @@
 
             <div class="grid grid-cols-2 gap-2 lg:grid-cols-6">
                 <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Needs response</p>
+                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#D7DEE6]">Needs response</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['needs_response'] ?? 0 }}</p>
                 </div>
                 <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Recommended</p>
+                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#D7DEE6]">Recommended</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['recommended'] ?? 0 }}</p>
                 </div>
                 <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Applied</p>
+                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#D7DEE6]">Applied</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['applied'] ?? 0 }}</p>
                 </div>
                 <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Hired</p>
+                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#D7DEE6]">Hired</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['hired'] ?? 0 }}</p>
                 </div>
                 <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Completed</p>
+                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#D7DEE6]">Completed</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['completed'] ?? 0 }}</p>
                 </div>
                 <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Total</p>
+                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#D7DEE6]">Total</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['all'] ?? 0 }}</p>
                 </div>
             </div>
@@ -90,7 +90,7 @@
     </section>
 
     <div class="sticky top-16 z-20 -mx-1 px-1">
-        <div class="grid grid-cols-1 gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur lg:grid-cols-4">
+        <div class="grid grid-cols-1 gap-2 rounded-2xl border border-[#E4DDD3] bg-white/95 p-2 shadow-sm backdrop-blur lg:grid-cols-4">
             <div class="overflow-x-auto lg:col-span-3">
                 <div class="grid min-w-full grid-cols-2 gap-1 sm:flex sm:min-w-max lg:min-w-0 lg:grid lg:grid-cols-6 lg:gap-1">
                 @foreach ($scopeOptions as $option)
@@ -117,25 +117,25 @@
                     <div class="min-w-0">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
-                                <p class="font-display text-lg font-semibold leading-snug text-slate-900">{{ $item['title'] }}</p>
-                                <p class="mt-1 text-sm text-slate-600">{{ $item['location'] }} - {{ $item['schedule'] }}</p>
+                                <p class="font-display text-lg font-semibold leading-snug text-[#17313F]">{{ $item['title'] }}</p>
+                                <p class="mt-1 text-sm text-[#607080]">{{ $item['location'] }} - {{ $item['schedule'] }}</p>
                             </div>
                             <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusStyles[$item['status_tone'] ?? 'neutral'] ?? $statusStyles['neutral'] }}">
                                 {{ strtoupper((string) $item['status_label']) }}
                             </span>
                         </div>
 
-                        <p class="mt-2 text-xs font-medium text-slate-500">{{ $item['meta'] }}</p>
-                        <p class="mt-2 text-sm text-slate-700">{{ $item['fit_reason'] }}</p>
+                        <p class="mt-2 text-xs font-medium text-[#7B8794]">{{ $item['meta'] }}</p>
+                        <p class="mt-2 text-sm text-[#4B5B6B]">{{ $item['fit_reason'] }}</p>
 
                         @if (!empty($item['note']))
-                            <div class="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                            <div class="mt-3 rounded-lg border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-sm text-[#4B5B6B]">
                                 {{ $item['note'] }}
                             </div>
                         @endif
 
                         @if (!empty($item['compensation_line']))
-                            <p class="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">{{ $item['compensation_line'] }}</p>
+                            <p class="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-[#7B8794]">{{ $item['compensation_line'] }}</p>
                         @endif
 
                         <div class="mt-4 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
@@ -181,29 +181,30 @@
                                     ${{ number_format((float) data_get($item, 'compensation.total', 0), 2) }}
                                 </p>
                                 <div class="mt-3 space-y-1 text-sm">
-                                    <p class="text-slate-200">
+                                    <p class="text-[#E7ECF1]">
                                         {{ data_get($item, 'compensation.hours_label') }}h shift
                                     </p>
-                                    <p class="text-slate-200">
+                                    <p class="text-[#E7ECF1]">
                                         @ ${{ number_format((float) data_get($item, 'compensation.hourly_rate', 0), 2) }}/hr
                                     </p>
                                 </div>
                             </div>
                         @else
                             <div class="rounded-[1.4rem] border border-[#DED6CA] bg-[#F5F1EB] p-4">
-                                <p class="text-[11px] uppercase tracking-[0.14em] text-slate-500">Earnings</p>
-                                <p class="mt-2 text-sm text-slate-600">Compensation estimate appears when duration is defined.</p>
+                                <p class="text-[11px] uppercase tracking-[0.14em] text-[#7B8794]">Earnings</p>
+                                <p class="mt-2 text-sm text-[#607080]">Compensation estimate appears when duration is defined.</p>
                             </div>
                         @endif
                     </div>
                 </div>
             </article>
         @empty
-            <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-600">
+            <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-white px-4 py-8 text-center text-sm text-[#607080]">
                 No items for this filter yet.
             </div>
         @endforelse
     </section>
 </div>
+
 
 

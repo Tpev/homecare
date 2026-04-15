@@ -1,4 +1,4 @@
-<div class="hc-page py-6 space-y-5">
+﻿<div class="hc-page py-6 space-y-5">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -81,7 +81,7 @@
 
             <div class="space-y-3 pt-1">
                 @forelse ($notifications as $item)
-                    <article class="rounded-2xl border {{ $item['read_at'] ? 'border-slate-200 bg-white' : 'border-cyan-200 bg-cyan-50/30' }} p-4 shadow-sm sm:p-5">
+                    <article class="rounded-2xl border {{ $item['read_at'] ? 'border-[#E4DDD3] bg-white' : 'border-[#BDD4F7] bg-[#EEF5FF]/30' }} p-4 shadow-sm sm:p-5">
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <div class="flex flex-wrap items-center gap-2">
@@ -113,7 +113,7 @@
                                 <button
                                     type="button"
                                     wire:click="markRead('{{ $item['id'] }}')"
-                                    class="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-[#3C4A5B] transition hover:bg-slate-50 sm:w-auto"
+                                    class="inline-flex h-11 w-full items-center justify-center rounded-xl border border-[#E4DDD3] bg-white px-4 text-sm font-semibold text-[#3C4A5B] transition hover:bg-[#F7F2EA] sm:w-auto"
                                 >
                                     Mark read
                                 </button>
@@ -121,7 +121,7 @@
                         </div>
                     </article>
                 @empty
-                    <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-10 text-center text-sm text-[#5B6472]">
+                    <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-white px-4 py-10 text-center text-sm text-[#5B6472]">
                         No notifications for this filter yet.
                     </div>
                 @endforelse
@@ -170,6 +170,7 @@
         </aside>
     </div>
 </div>
+
 
 
 

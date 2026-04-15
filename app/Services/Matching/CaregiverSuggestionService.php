@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
 class CaregiverSuggestionService
 {
     /**
-     * @return Collection<int, array{user_id:int,name:string,score:int,proximity:string,reasons:array<int,string>,hourly_rate:float,average_rating:float,reviews_count:int,identity_verified:bool,background_check:bool,top_caregiver:bool}>
+     * @return Collection<int, array{user_id:int,name:string,profile_photo_path:?string,score:int,proximity:string,reasons:array<int,string>,hourly_rate:float,average_rating:float,reviews_count:int,identity_verified:bool,background_check:bool,top_caregiver:bool}>
      */
     public function topMatchesForRequest(CareRequest $request, int $limit = 3): Collection
     {
@@ -41,7 +41,7 @@ class CaregiverSuggestionService
     }
 
     /**
-     * @return array{user_id:int,name:string,score:int,proximity:string,reasons:array<int,string>,hourly_rate:float,average_rating:float,reviews_count:int,identity_verified:bool,background_check:bool,top_caregiver:bool}|null
+     * @return array{user_id:int,name:string,profile_photo_path:?string,score:int,proximity:string,reasons:array<int,string>,hourly_rate:float,average_rating:float,reviews_count:int,identity_verified:bool,background_check:bool,top_caregiver:bool}|null
      */
     private function scoreProfile(CareRequest $request, CaregiverProfile $profile): ?array
     {
@@ -87,6 +87,7 @@ class CaregiverSuggestionService
         return [
             'user_id' => (int) $profile->user_id,
             'name' => (string) $user->name,
+            'profile_photo_path' => $profile->profile_photo_path,
             'score' => max(1, $score),
             'proximity' => $proximity['label'],
             'reasons' => collect($reasons)->filter()->unique()->values()->all(),

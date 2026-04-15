@@ -1,4 +1,4 @@
-<div class="hc-page space-y-5 py-5 sm:py-6">
+﻿<div class="hc-page space-y-5 py-5 sm:py-6">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -7,13 +7,13 @@
         $statusStyles = [
             'paid' => 'bg-emerald-100 text-emerald-700',
             'scheduled_payout' => 'bg-indigo-100 text-indigo-700',
-            'eligible' => 'bg-cyan-100 text-[#7C5DDC]',
+            'eligible' => 'bg-[#EAF6F6] text-[#7C5DDC]',
             'pending_confirmation' => 'bg-amber-100 text-amber-800',
             'in_progress' => 'bg-emerald-100 text-emerald-700',
             'paused' => 'bg-amber-100 text-amber-800',
-            'scheduled' => 'bg-slate-100 text-slate-700',
+            'scheduled' => 'bg-[#F0E9E1] text-[#4B5B6B]',
             'disputed' => 'bg-rose-100 text-rose-700',
-            'cancelled' => 'bg-slate-200 text-slate-600',
+            'cancelled' => 'bg-[#E9E1D5] text-[#607080]',
         ];
         $maxTrend = max(1, (float) collect($trend)->max('amount'));
     @endphp
@@ -102,14 +102,14 @@
                 <x-slot:header>
                     <div class="flex items-center justify-between gap-3">
                         <h2 class="font-display text-lg font-semibold">Weekly goal</h2>
-                        <span class="text-sm text-slate-500">${{ number_format((float) ($goal['current'] ?? 0), 2) }} / ${{ number_format((float) ($goal['target'] ?? 0), 2) }}</span>
+                        <span class="text-sm text-[#7B8794]">${{ number_format((float) ($goal['current'] ?? 0), 2) }} / ${{ number_format((float) ($goal['target'] ?? 0), 2) }}</span>
                     </div>
                 </x-slot:header>
                 <div class="space-y-2">
-                    <div class="h-3 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div class="h-3 w-full overflow-hidden rounded-full bg-[#F0E9E1]">
                         <div class="h-full rounded-full bg-gradient-to-r from-[#0F3D3E] via-[#4F6FAF] to-[#7C5DDC] transition-all" style="width: {{ (int) ($goal['progress'] ?? 0) }}%"></div>
                     </div>
-                    <p class="text-xs text-slate-600">
+                    <p class="text-xs text-[#607080]">
                         @if (($goal['remaining'] ?? 0) > 0)
                             ${{ number_format((float) $goal['remaining'], 2) }} to hit this week's goal.
                         @else
@@ -124,7 +124,7 @@
                     <h2 class="font-display text-lg font-semibold">8-week trend</h2>
                 </x-slot:header>
                 @if ((float) collect($trend)->sum('amount') <= 0)
-                    <div class="rounded-xl border border-dashed border-slate-300 bg-[#F5F1EB] px-4 py-8 text-center text-sm text-slate-600">
+                    <div class="rounded-xl border border-dashed border-[#D6CCBE] bg-[#F5F1EB] px-4 py-8 text-center text-sm text-[#607080]">
                         No earnings trend yet. Once you complete paid shifts, your weekly history will appear here.
                     </div>
                 @else
@@ -134,11 +134,11 @@
                                 $height = max(10, (int) round(($point['amount'] / $maxTrend) * 112));
                             @endphp
                             <div class="space-y-1 text-center">
-                                <div class="mx-auto flex h-32 w-full max-w-[28px] items-end rounded-md bg-slate-100">
+                                <div class="mx-auto flex h-32 w-full max-w-[28px] items-end rounded-md bg-[#F0E9E1]">
                                     <div class="w-full rounded-md bg-gradient-to-t from-[#0F3D3E] via-[#4F6FAF] to-[#7C5DDC]" style="height: {{ $height }}px"></div>
                                 </div>
-                                <p class="text-[10px] text-slate-500">{{ $point['label'] }}</p>
-                                <p class="text-[10px] font-medium text-slate-700">${{ number_format((float) $point['amount'], 0) }}</p>
+                                <p class="text-[10px] text-[#7B8794]">{{ $point['label'] }}</p>
+                                <p class="text-[10px] font-medium text-[#4B5B6B]">${{ number_format((float) $point['amount'], 0) }}</p>
                             </div>
                         @endforeach
                     </div>
@@ -150,10 +150,10 @@
     @if ($activeTab === 'shifts')
         <section class="space-y-4">
             <div class="grid grid-cols-4 gap-2 rounded-2xl border border-[#DED6CA] bg-[rgba(255,253,250,0.96)] p-1 shadow-sm">
-                <button type="button" wire:click="setRange('today')" class="rounded-xl px-2 py-2 text-xs font-medium transition {{ $range === 'today' ? 'bg-[#0F3D3E] text-[#FAF9F7]' : 'text-slate-600' }}">Today</button>
-                <button type="button" wire:click="setRange('week')" class="rounded-xl px-2 py-2 text-xs font-medium transition {{ $range === 'week' ? 'bg-[#0F3D3E] text-[#FAF9F7]' : 'text-slate-600' }}">Week</button>
-                <button type="button" wire:click="setRange('month')" class="rounded-xl px-2 py-2 text-xs font-medium transition {{ $range === 'month' ? 'bg-[#0F3D3E] text-[#FAF9F7]' : 'text-slate-600' }}">Month</button>
-                <button type="button" wire:click="setRange('all')" class="rounded-xl px-2 py-2 text-xs font-medium transition {{ $range === 'all' ? 'bg-[#0F3D3E] text-[#FAF9F7]' : 'text-slate-600' }}">All</button>
+                <button type="button" wire:click="setRange('today')" class="rounded-xl px-2 py-2 text-xs font-medium transition {{ $range === 'today' ? 'bg-[#0F3D3E] text-[#FAF9F7]' : 'text-[#607080]' }}">Today</button>
+                <button type="button" wire:click="setRange('week')" class="rounded-xl px-2 py-2 text-xs font-medium transition {{ $range === 'week' ? 'bg-[#0F3D3E] text-[#FAF9F7]' : 'text-[#607080]' }}">Week</button>
+                <button type="button" wire:click="setRange('month')" class="rounded-xl px-2 py-2 text-xs font-medium transition {{ $range === 'month' ? 'bg-[#0F3D3E] text-[#FAF9F7]' : 'text-[#607080]' }}">Month</button>
+                <button type="button" wire:click="setRange('all')" class="rounded-xl px-2 py-2 text-xs font-medium transition {{ $range === 'all' ? 'bg-[#0F3D3E] text-[#FAF9F7]' : 'text-[#607080]' }}">All</button>
             </div>
 
             <div class="space-y-3">
@@ -161,37 +161,37 @@
                     <article class="rounded-2xl border border-[#DED6CA] bg-[rgba(255,253,250,0.98)] p-4 shadow-sm">
                         <div class="flex items-start justify-between gap-3">
                             <div>
-                                <p class="font-display text-lg font-semibold text-slate-900">{{ $item['title'] }}</p>
-                                <p class="text-xs text-slate-500">{{ $item['city'] }}, {{ $item['state'] }}</p>
+                                <p class="font-display text-lg font-semibold text-[#17313F]">{{ $item['title'] }}</p>
+                                <p class="text-xs text-[#7B8794]">{{ $item['city'] }}, {{ $item['state'] }}</p>
                             </div>
-                            <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusStyles[$item['status_key']] ?? 'bg-slate-100 text-slate-700' }}">
+                            <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusStyles[$item['status_key']] ?? 'bg-[#F0E9E1] text-[#4B5B6B]' }}">
                                 {{ $item['status_label'] }}
                             </span>
                         </div>
 
                         <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
                             <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
-                                <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Worked</p>
-                                <p class="font-semibold text-slate-900">{{ $item['worked_label'] }}</p>
+                                <p class="text-[11px] uppercase tracking-[0.12em] text-[#7B8794]">Worked</p>
+                                <p class="font-semibold text-[#17313F]">{{ $item['worked_label'] }}</p>
                             </div>
                             <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
-                                <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Gross</p>
-                                <p class="font-semibold text-slate-900">${{ number_format((float) $item['gross_amount'], 2) }}</p>
+                                <p class="text-[11px] uppercase tracking-[0.12em] text-[#7B8794]">Gross</p>
+                                <p class="font-semibold text-[#17313F]">${{ number_format((float) $item['gross_amount'], 2) }}</p>
                             </div>
                             <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
-                                <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Rate</p>
-                                <p class="font-semibold text-slate-900">${{ number_format((float) $item['hourly_rate'], 2) }}/hr</p>
+                                <p class="text-[11px] uppercase tracking-[0.12em] text-[#7B8794]">Rate</p>
+                                <p class="font-semibold text-[#17313F]">${{ number_format((float) $item['hourly_rate'], 2) }}/hr</p>
                             </div>
                             <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
-                                <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Window</p>
-                                <p class="font-semibold text-slate-900 text-xs">
+                                <p class="text-[11px] uppercase tracking-[0.12em] text-[#7B8794]">Window</p>
+                                <p class="font-semibold text-[#17313F] text-xs">
                                     {{ optional($item['scheduled_start_at'])->format('M d, H:i') ?: '-' }}
                                 </p>
                             </div>
                         </div>
 
                         <div class="mt-3 flex items-center justify-between">
-                            <p class="text-xs text-slate-500">
+                            <p class="text-xs text-[#7B8794]">
                                 @if ($item['status_key'] === 'paid')
                                     Paid {{ optional($item['paid_at'])->format('M d, Y') ?: '' }}
                                 @elseif ($item['status_key'] === 'scheduled_payout')
@@ -213,7 +213,7 @@
                         </div>
                     </article>
                 @empty
-                    <div class="rounded-2xl border border-dashed border-slate-300 bg-[rgba(255,253,250,0.98)] px-4 py-8 text-center text-sm text-slate-600">
+                    <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-[rgba(255,253,250,0.98)] px-4 py-8 text-center text-sm text-[#607080]">
                         No shifts in this range yet.
                     </div>
                 @endforelse
@@ -245,21 +245,21 @@
                             $payoutStyle = match ($payout['status']) {
                                 'paid' => 'bg-emerald-100 text-emerald-700',
                                 'processing' => 'bg-indigo-100 text-indigo-700',
-                                'scheduled' => 'bg-cyan-100 text-[#7C5DDC]',
+                                'scheduled' => 'bg-[#EAF6F6] text-[#7C5DDC]',
                                 'failed' => 'bg-rose-100 text-rose-700',
-                                default => 'bg-slate-100 text-slate-700',
+                                default => 'bg-[#F0E9E1] text-[#4B5B6B]',
                             };
                         @endphp
                         <div class="rounded-xl border border-[#DED6CA] bg-[rgba(255,253,250,0.98)] px-4 py-3">
                             <div class="flex items-start justify-between gap-3">
                                 <div>
-                                    <p class="font-medium text-slate-900">
+                                    <p class="font-medium text-[#17313F]">
                                         {{ optional($payout['period_start_on'])->format('M d') }} - {{ optional($payout['period_end_on'])->format('M d, Y') }}
                                     </p>
-                                    <p class="text-xs text-slate-500 mt-1">
+                                    <p class="text-xs text-[#7B8794] mt-1">
                                         {{ $payout['items_count'] }} shift(s)
                                         @if ($payout['scheduled_for'])
-                                            · Scheduled {{ $payout['scheduled_for']->format('M d, H:i') }}
+                                             -  Scheduled {{ $payout['scheduled_for']->format('M d, H:i') }}
                                         @endif
                                     </p>
                                 </div>
@@ -270,17 +270,17 @@
 
                             <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
                                 <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
-                                    <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Net</p>
-                                    <p class="font-semibold text-slate-900">${{ number_format((float) $payout['net_amount'], 2) }}</p>
+                                    <p class="text-[11px] uppercase tracking-[0.12em] text-[#7B8794]">Net</p>
+                                    <p class="font-semibold text-[#17313F]">${{ number_format((float) $payout['net_amount'], 2) }}</p>
                                 </div>
                                 <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
-                                    <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Gross</p>
-                                    <p class="font-semibold text-slate-900">${{ number_format((float) $payout['gross_amount'], 2) }}</p>
+                                    <p class="text-[11px] uppercase tracking-[0.12em] text-[#7B8794]">Gross</p>
+                                    <p class="font-semibold text-[#17313F]">${{ number_format((float) $payout['gross_amount'], 2) }}</p>
                                 </div>
                             </div>
                         </div>
                     @empty
-                        <div class="rounded-2xl border border-dashed border-slate-300 bg-[rgba(255,253,250,0.98)] px-4 py-8 text-center text-sm text-slate-600">
+                        <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-[rgba(255,253,250,0.98)] px-4 py-8 text-center text-sm text-[#607080]">
                             No payout batches yet. Completed confirmed shifts will appear here automatically.
                         </div>
                     @endforelse
@@ -289,4 +289,5 @@
         </section>
     @endif
 </div>
+
 

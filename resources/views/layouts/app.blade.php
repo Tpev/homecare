@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
@@ -35,7 +35,7 @@
             && auth()->user()?->role === 'family';
     @endphp
 
-    <body class="antialiased text-slate-900">
+    <body class="overflow-x-hidden antialiased text-[#17313F]">
         <x-toast />
 
         <div class="hc-app-shell min-h-screen flex flex-col">
@@ -58,7 +58,7 @@
                     <div class="sm:hidden">
                         @if ($compactFooter)
                             <div class="flex items-center justify-between gap-3">
-                                <p class="text-[11px] text-[#6E746F]">© {{ now()->year }} Home Care HUB</p>
+                                <p class="text-[11px] text-[#6E746F]">(c) {{ now()->year }} Home Care HUB</p>
                                 <details class="group">
                                     <summary class="list-none rounded-full border border-[#DED6CA] px-3 py-1.5 text-[11px] font-medium text-[#0F3D3E]">
                                         Legal links
@@ -70,14 +70,14 @@
                             </div>
                         @else
                             <div class="space-y-2">
-                                <p class="text-[11px] text-[#6E746F]">© {{ now()->year }} Home Care HUB / HUB Healthcare, LLC</p>
-                                <x-legal-links class="gap-x-3 gap-y-2 text-[11px]" />
+                                <p class="text-[11px] text-[#6E746F]">(c) {{ now()->year }} Home Care HUB / HUB Healthcare, LLC</p>
+                                <x-legal-links class="flex-col items-start gap-x-3 gap-y-2 text-[11px]" />
                             </div>
                         @endif
                     </div>
 
                     <div class="hidden items-center justify-between gap-4 sm:flex">
-                        <p class="text-xs text-[#6E746F]">© {{ now()->year }} Home Care HUB / HUB Healthcare, LLC</p>
+                        <p class="text-xs text-[#6E746F]">(c) {{ now()->year }} Home Care HUB / HUB Healthcare, LLC</p>
                         <x-legal-links />
                     </div>
                 </div>
@@ -97,3 +97,4 @@
         @endif
     </body>
 </html>
+

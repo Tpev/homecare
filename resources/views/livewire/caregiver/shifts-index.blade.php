@@ -1,4 +1,4 @@
-<div>
+﻿<div>
     <div class="hc-page py-6 space-y-5">
         @if (session('status'))
             <x-alert color="green">{{ session('status') }}</x-alert>
@@ -8,12 +8,12 @@
             $statusTone = fn (string $value) => match ($value) {
                 \App\Models\CareBooking::STATUS_IN_PROGRESS => 'bg-emerald-100 text-emerald-700',
                 \App\Models\CareBooking::STATUS_PAUSED => 'bg-amber-100 text-amber-800',
-                \App\Models\CareBooking::STATUS_SCHEDULED => 'bg-sky-100 text-sky-700',
+                \App\Models\CareBooking::STATUS_SCHEDULED => 'bg-[#E8F0FF] text-[#4F6FAF]',
                 \App\Models\CareBooking::STATUS_COMPLETED => 'bg-indigo-100 text-indigo-700',
                 \App\Models\CareBooking::STATUS_REVIEWED => 'bg-emerald-100 text-emerald-700',
                 \App\Models\CareBooking::STATUS_DISPUTED => 'bg-rose-100 text-rose-700',
-                \App\Models\CareBooking::STATUS_CANCELLED => 'bg-slate-200 text-slate-700',
-                default => 'bg-slate-100 text-slate-700',
+                \App\Models\CareBooking::STATUS_CANCELLED => 'bg-[#E9E1D5] text-[#4B5B6B]',
+                default => 'bg-[#F0E9E1] text-[#4B5B6B]',
             };
 
             $filterOptions = [
@@ -73,7 +73,7 @@
                         <p class="mt-1 text-sm font-semibold text-[#FAF9F7]">{{ $nextShift->careRequest?->title ?? 'Upcoming shift' }}</p>
                         <p class="text-xs text-[#F0E9E1]/82">
                             {{ optional($nextShift->scheduled_start_at)->format('D, M d \\a\\t H:i') }}
-                            · {{ $nextShift->careRequest?->city }}, {{ $nextShift->careRequest?->state }}
+                             -  {{ $nextShift->careRequest?->city }}, {{ $nextShift->careRequest?->state }}
                         </p>
                     </div>
                 @endif
@@ -118,15 +118,15 @@
                 <article class="rounded-2xl border border-[#DED6CA] bg-[rgba(255,253,250,0.98)] p-4 shadow-sm sm:p-5">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                            <p class="font-display text-lg font-semibold text-slate-900">{{ $request?->title ?? 'Care request' }}</p>
-                            <p class="mt-1 text-sm text-slate-600">{{ $request?->city ?? '-' }}, {{ $request?->state ?? '-' }} · Family: {{ $booking->family?->name ?? 'Unknown' }}</p>
+                            <p class="font-display text-lg font-semibold text-[#17313F]">{{ $request?->title ?? 'Care request' }}</p>
+                            <p class="mt-1 text-sm text-[#607080]">{{ $request?->city ?? '-' }}, {{ $request?->state ?? '-' }}  -  Family: {{ $booking->family?->name ?? 'Unknown' }}</p>
                         </div>
                         <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusTone($bookingStatus) }}">
                             {{ strtoupper($bookingStatus) }}
                         </span>
                     </div>
 
-                    <div class="mt-3 grid grid-cols-1 gap-2 text-xs text-slate-600 sm:grid-cols-3">
+                    <div class="mt-3 grid grid-cols-1 gap-2 text-xs text-[#607080] sm:grid-cols-3">
                         <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
                             Scheduled:
                             {{ optional($booking->scheduled_start_at)->format('M d, H:i') ?: '-' }}
@@ -164,7 +164,7 @@
                     </div>
                 </article>
             @empty
-                <div class="rounded-2xl border border-dashed border-slate-300 bg-[rgba(255,253,250,0.98)] px-4 py-8 text-center text-sm text-slate-600">
+                <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-[rgba(255,253,250,0.98)] px-4 py-8 text-center text-sm text-[#607080]">
                     No shifts yet. Once a family hires you, your shift actions appear here.
                 </div>
             @endforelse
@@ -185,7 +185,7 @@
                     @foreach ($hiredWithoutBooking as $application)
                         <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
                             <div class="flex flex-wrap items-center justify-between gap-2">
-                                <p class="text-sm text-slate-900">{{ $application->careRequest?->title }}</p>
+                                <p class="text-sm text-[#17313F]">{{ $application->careRequest?->title }}</p>
                                 <a href="{{ route('care-requests.apply', $application->care_request_id) }}" wire:navigate class="text-xs font-medium text-indigo-700 underline underline-offset-2">
                                     Open request
                                 </a>
@@ -197,4 +197,5 @@
         @endif
     </div>
 </div>
+
 

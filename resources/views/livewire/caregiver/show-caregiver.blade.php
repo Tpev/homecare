@@ -1,4 +1,4 @@
-<div class="hc-page py-8 space-y-6">
+﻿<div class="hc-page py-8 space-y-6">
     @php
         $photoUrl = $caregiver->profile_photo_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($caregiver->profile_photo_path) : null;
         $nameParts = preg_split('/\s+/', trim((string) $caregiver->user->name));
@@ -14,21 +14,21 @@
     <x-card>
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div class="lg:col-span-4">
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div class="rounded-2xl border border-[#E4DDD3] bg-[#F7F2EA] p-5">
                     <div class="flex flex-col items-center text-center">
                         @if ($photoUrl)
-                            <img src="{{ $photoUrl }}" alt="{{ $caregiver->user->name }}" class="h-28 w-28 rounded-full object-cover border border-slate-200">
+                            <img src="{{ $photoUrl }}" alt="{{ $caregiver->user->name }}" class="h-28 w-28 rounded-full object-cover border border-[#E4DDD3]">
                         @else
-                            <div class="h-28 w-28 rounded-full bg-cyan-100 text-cyan-700 border border-cyan-200 font-semibold text-3xl flex items-center justify-center">
+                            <div class="h-28 w-28 rounded-full bg-[#EAF6F6] text-[#0F3D3E] border border-[#BDD4F7] font-semibold text-3xl flex items-center justify-center">
                                 {{ $initials }}
                             </div>
                         @endif
 
-                        <h1 class="mt-4 text-2xl font-display font-semibold text-slate-900">{{ $caregiver->user->name }}</h1>
-                        <p class="text-sm text-slate-600">{{ $caregiver->user->city }}, {{ $caregiver->user->state }}</p>
-                        <p class="mt-2 text-lg font-semibold text-slate-900">${{ number_format((float) $caregiver->resolvePlatformHourlyRate(), 2) }}/hr</p>
-                        <p class="text-sm text-slate-600 mt-1">⭐ {{ number_format((float) $caregiver->average_rating, 1) }} ({{ $caregiver->reviews_count }} reviews)</p>
-                        <p class="text-xs text-slate-500 mt-1">Reliability score: {{ number_format((float) $caregiver->reliability_score, 0) }}%</p>
+                        <h1 class="mt-4 text-2xl font-display font-semibold text-[#17313F]">{{ $caregiver->user->name }}</h1>
+                        <p class="text-sm text-[#607080]">{{ $caregiver->user->city }}, {{ $caregiver->user->state }}</p>
+                        <p class="mt-2 text-lg font-semibold text-[#17313F]">${{ number_format((float) $caregiver->resolvePlatformHourlyRate(), 2) }}/hr</p>
+                        <p class="text-sm text-[#607080] mt-1">â­ {{ number_format((float) $caregiver->average_rating, 1) }} ({{ $caregiver->reviews_count }} reviews)</p>
+                        <p class="text-xs text-[#7B8794] mt-1">Reliability score: {{ number_format((float) $caregiver->reliability_score, 0) }}%</p>
 
                         <div class="mt-3 flex flex-wrap justify-center gap-2">
                             @if ($caregiver->hasIdentityVerifiedBadge())
@@ -42,14 +42,14 @@
                             @endif
                         </div>
 
-                        <p class="mt-4 text-xs text-slate-500">
+                        <p class="mt-4 text-xs text-[#7B8794]">
                             {{ $caregiver->is_accepting_new_clients ? 'Accepting new clients' : 'Not accepting new clients right now' }}
                         </p>
 
-                        <p class="mt-1 text-xs text-slate-500">
+                        <p class="mt-1 text-xs text-[#7B8794]">
                             Response score: {{ $caregiver->invite_response_rate !== null ? number_format((float) $caregiver->invite_response_rate, 0).'%' : 'N/A' }}
                             @if ($caregiver->avg_invite_response_minutes)
-                                · Avg reply {{ $caregiver->avg_invite_response_minutes }} min
+                                 -  Avg reply {{ $caregiver->avg_invite_response_minutes }} min
                             @endif
                         </p>
 
@@ -67,46 +67,46 @@
 
             <div class="lg:col-span-8 space-y-5">
                 <div>
-                    <h2 class="font-display font-semibold text-slate-900">About</h2>
-                    <p class="mt-2 text-slate-700 whitespace-pre-line">{{ $caregiver->bio }}</p>
+                    <h2 class="font-display font-semibold text-[#17313F]">About</h2>
+                    <p class="mt-2 text-[#4B5B6B] whitespace-pre-line">{{ $caregiver->bio }}</p>
                 </div>
 
                 <div>
-                    <h2 class="font-display font-semibold text-slate-900">Skills</h2>
+                    <h2 class="font-display font-semibold text-[#17313F]">Skills</h2>
                     <div class="mt-2 flex flex-wrap gap-2">
                         @forelse ($caregiver->skills as $skill)
-                            <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700">{{ $skill->name }}</span>
+                            <span class="inline-flex rounded-full bg-[#F0E9E1] px-3 py-1 text-xs text-[#4B5B6B]">{{ $skill->name }}</span>
                         @empty
-                            <p class="text-sm text-slate-500">No skills listed yet.</p>
+                            <p class="text-sm text-[#7B8794]">No skills listed yet.</p>
                         @endforelse
                     </div>
                 </div>
 
                 <div>
-                    <h2 class="font-display font-semibold text-slate-900">Languages</h2>
+                    <h2 class="font-display font-semibold text-[#17313F]">Languages</h2>
                     <div class="mt-2 flex flex-wrap gap-2">
                         @forelse ($caregiver->languages as $language)
-                            <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700">{{ $language->name }}</span>
+                            <span class="inline-flex rounded-full bg-[#F0E9E1] px-3 py-1 text-xs text-[#4B5B6B]">{{ $language->name }}</span>
                         @empty
-                            <p class="text-sm text-slate-500">No languages listed yet.</p>
+                            <p class="text-sm text-[#7B8794]">No languages listed yet.</p>
                         @endforelse
                     </div>
                 </div>
 
                 <div>
-                    <h2 class="font-display font-semibold text-slate-900">Typical Availability</h2>
+                    <h2 class="font-display font-semibold text-[#17313F]">Typical Availability</h2>
                     <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
                         @foreach ($dayNames as $dayIndex => $dayName)
-                            <div class="rounded-lg border border-slate-200 px-3 py-2 text-sm">
-                                <p class="font-medium text-slate-800">{{ $dayName }}</p>
+                            <div class="rounded-lg border border-[#E4DDD3] px-3 py-2 text-sm">
+                                <p class="font-medium text-[#324457]">{{ $dayName }}</p>
                                 @if (($availabilityByDay[$dayIndex] ?? collect())->isNotEmpty())
-                                    <p class="text-slate-600">
+                                    <p class="text-[#607080]">
                                         {{ ($availabilityByDay[$dayIndex] ?? collect())
                                             ->map(fn($slot) => substr((string) $slot->start_time, 0, 5).' - '.substr((string) $slot->end_time, 0, 5))
                                             ->implode(', ') }}
                                     </p>
                                 @else
-                                    <p class="text-slate-500">Unavailable</p>
+                                    <p class="text-[#7B8794]">Unavailable</p>
                                 @endif
                             </div>
                         @endforeach
@@ -158,3 +158,4 @@
         </x-card>
     @endif
 </div>
+

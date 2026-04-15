@@ -1,4 +1,4 @@
-<div class="hc-page py-8">
+﻿<div class="hc-page py-8">
     <div class="mb-6 overflow-hidden rounded-3xl bg-gradient-to-r from-cyan-700 via-blue-700 to-emerald-600 p-6 text-white shadow-xl">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -23,8 +23,8 @@
                 <x-slot:header>
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="font-display font-semibold text-slate-900">Conversation</p>
-                            <p class="text-xs text-slate-500">One question at a time. Clear and fast.</p>
+                            <p class="font-display font-semibold text-[#17313F]">Conversation</p>
+                            <p class="text-xs text-[#7B8794]">One question at a time. Clear and fast.</p>
                         </div>
                         <x-badge text="{{ strtoupper($status) }}" color="blue" />
                     </div>
@@ -33,8 +33,8 @@
                 <div class="space-y-3 max-h-[560px] overflow-y-auto pr-1">
                     @foreach($messages as $message)
                         <div class="flex {{ $message['role'] === 'user' ? 'justify-end' : 'justify-start' }}">
-                            <div class="max-w-[88%] rounded-2xl px-4 py-3 shadow-sm {{ $message['role'] === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-800' }}">
-                                <div class="text-xs font-semibold uppercase tracking-wide {{ $message['role'] === 'user' ? 'text-blue-100' : 'text-slate-500' }}">
+                            <div class="max-w-[88%] rounded-2xl px-4 py-3 shadow-sm {{ $message['role'] === 'user' ? 'bg-blue-600 text-white' : 'bg-[#F0E9E1] text-[#324457]' }}">
+                                <div class="text-xs font-semibold uppercase tracking-wide {{ $message['role'] === 'user' ? 'text-blue-100' : 'text-[#7B8794]' }}">
                                     {{ $message['role'] === 'user' ? 'You' : 'Copilot' }}
                                 </div>
                                 <p class="mt-1 text-sm leading-relaxed">{{ $message['content'] }}</p>
@@ -44,7 +44,7 @@
                 </div>
 
                 @if($quickReplies !== [])
-                    <div class="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+                    <div class="mt-4 flex flex-wrap gap-2 border-t border-[#EEE8DF] pt-4">
                         @foreach($quickReplies as $reply)
                             <x-button color="slate" sm light wire:click="useQuickReply({{ \Illuminate\Support\Js::from($reply) }})">{{ $reply }}</x-button>
                         @endforeach
@@ -54,12 +54,12 @@
                 @if($qualityHints !== [])
                     <div class="mt-4 space-y-1 rounded-xl bg-amber-50 p-3 text-xs text-amber-800 ring-1 ring-amber-200">
                         @foreach($qualityHints as $hint)
-                            <p>• {{ $hint }}</p>
+                            <p>- {{ $hint }}</p>
                         @endforeach
                     </div>
                 @endif
 
-                <form wire:submit="send" class="mt-4 border-t border-slate-100 pt-4">
+                <form wire:submit="send" class="mt-4 border-t border-[#EEE8DF] pt-4">
                     <div class="flex items-end gap-3">
                         <div class="flex-1">
                             <x-textarea
@@ -80,8 +80,8 @@
             <x-card>
                 <x-slot:header>
                     <div>
-                        <p class="font-display font-semibold text-slate-900">Live Request Draft</p>
-                        <p class="text-xs text-slate-500">Edit any field directly, then sync.</p>
+                        <p class="font-display font-semibold text-[#17313F]">Live Request Draft</p>
+                        <p class="text-xs text-[#7B8794]">Edit any field directly, then sync.</p>
                     </div>
                 </x-slot:header>
 
@@ -204,3 +204,5 @@
         </aside>
     </div>
 </div>
+
+

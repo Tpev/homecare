@@ -1,4 +1,4 @@
-<div class="max-w-7xl mx-auto py-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
+﻿<div class="max-w-7xl mx-auto py-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
     <x-card class="lg:col-span-1">
         <div class="space-y-4">
             <x-input label="City" wire:model.live="city" />
@@ -59,7 +59,7 @@
                 <div class="flex items-start justify-between gap-4">
                     <div class="space-y-1">
                         <p class="font-semibold">{{ $request->title }}</p>
-                        <p class="text-sm text-slate-600">
+                        <p class="text-sm text-[#607080]">
                             {{ $request->city }}, {{ $request->state }}
                             @if ($request->request_type === \App\Models\CareRequest::TYPE_ONE_TIME)
                                 - {{ optional($request->requested_start_at)->format('M d, Y H:i') }}
@@ -67,7 +67,7 @@
                                 - Recurring
                             @endif
                         </p>
-                        <p class="text-sm text-slate-600">
+                        <p class="text-sm text-[#607080]">
                             Recipient: {{ $request->recipient?->full_name ?? 'Unknown' }}
                         </p>
                     </div>
@@ -81,16 +81,16 @@
 
                 <div class="mt-3 flex flex-wrap gap-2">
                     @foreach ($request->tasks as $task)
-                        <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700">{{ $task->name }}</span>
+                        <span class="inline-flex rounded-full bg-[#F0E9E1] px-3 py-1 text-xs text-[#4B5B6B]">{{ $task->name }}</span>
                     @endforeach
                 </div>
 
                 <div class="mt-4 flex items-center justify-between">
                     @php $existingApplication = $request->applications->first(); @endphp
                     @if ($existingApplication)
-                        <p class="text-sm text-slate-600">You already applied ({{ strtoupper($existingApplication->status) }})</p>
+                        <p class="text-sm text-[#607080]">You already applied ({{ strtoupper($existingApplication->status) }})</p>
                     @else
-                        <p class="text-sm text-slate-600">No application sent yet</p>
+                        <p class="text-sm text-[#607080]">No application sent yet</p>
                     @endif
 
                     <a href="{{ route('care-requests.apply', $request->id) }}" wire:navigate class="text-sm underline text-blue-700">
@@ -114,14 +114,14 @@
 
                 @php $invitation = $request->invitations->first(); @endphp
                 @if ($invitation && $invitation->status === \App\Models\CareRequestInvitation::STATUS_PENDING)
-                    <div class="mt-3 rounded-md border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs text-cyan-900">
+                    <div class="mt-3 rounded-md border border-[#BDD4F7] bg-[#EEF5FF] px-3 py-2 text-xs text-[#0F3D3E]">
                         You were invited by this family. Respond in the Invitations page.
                     </div>
                 @endif
             </x-card>
         @empty
             <x-card>
-                <p class="text-sm text-slate-600">
+                <p class="text-sm text-[#607080]">
                     {{ !empty($prelaunchMode) ? 'Applications are paused during pre-launch. You will be notified when Raleigh goes live.' : 'No open requests match your current filters.' }}
                 </p>
             </x-card>
@@ -130,3 +130,4 @@
         <div>{{ $requests->links() }}</div>
     </div>
 </div>
+

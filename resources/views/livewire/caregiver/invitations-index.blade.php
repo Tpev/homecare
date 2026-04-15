@@ -1,4 +1,4 @@
-<div>
+﻿<div>
     <div class="hc-page py-8 space-y-6">
         @if (session('status'))
             <x-alert color="green">{{ session('status') }}</x-alert>
@@ -13,7 +13,7 @@
         <div class="flex items-center justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-display font-semibold">Invitations</h1>
-                <p class="text-sm text-slate-600">Families can invite you directly to requests.</p>
+                <p class="text-sm text-[#607080]">Families can invite you directly to requests.</p>
             </div>
             <x-select.styled
                 wire:model.live="status"
@@ -32,16 +32,16 @@
                 <x-card>
                     <div class="flex items-start justify-between gap-4">
                         <div class="space-y-1">
-                            <p class="font-display font-semibold text-slate-900">{{ $invitation->careRequest?->title }}</p>
-                            <p class="text-sm text-slate-600">
+                            <p class="font-display font-semibold text-[#17313F]">{{ $invitation->careRequest?->title }}</p>
+                            <p class="text-sm text-[#607080]">
                                 From {{ $invitation->family?->name }}
-                                · {{ $invitation->careRequest?->city }}, {{ $invitation->careRequest?->state }}
+                                 -  {{ $invitation->careRequest?->city }}, {{ $invitation->careRequest?->state }}
                             </p>
                             @if ($invitation->careRequest?->request_type === \App\Models\CareRequest::TYPE_ONE_TIME)
-                                <p class="text-xs text-slate-500">One-time · {{ optional($invitation->careRequest?->requested_start_at)->format('M d, Y H:i') }}</p>
+                                <p class="text-xs text-[#7B8794]">One-time  -  {{ optional($invitation->careRequest?->requested_start_at)->format('M d, Y H:i') }}</p>
                             @else
-                                <p class="text-xs text-slate-500">
-                                    Recurring ·
+                                <p class="text-xs text-[#7B8794]">
+                                    Recurring  - 
                                     {{ collect($invitation->careRequest?->recurring_days ?? [])->map(fn($d)=>['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][(int)$d] ?? null)->filter()->implode(', ') }}
                                     {{ $invitation->careRequest?->recurring_start_time }}-{{ $invitation->careRequest?->recurring_end_time }}
                                 </p>
@@ -51,13 +51,13 @@
                     </div>
 
                     @if ($invitation->message)
-                        <div class="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                        <div class="mt-3 rounded-lg border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-sm text-[#4B5B6B]">
                             {{ $invitation->message }}
                         </div>
                     @endif
 
                     @if ($invitation->status === \App\Models\CareRequestInvitation::STATUS_PENDING)
-                        <p class="mt-2 text-xs text-slate-500">
+                        <p class="mt-2 text-xs text-[#7B8794]">
                             Respond by SLA: {{ optional($invitation->responseDueAt())->format('M d, H:i') }}
                             @if ($invitation->responseDueAt() && $invitation->responseDueAt()->isPast())
                                 <span class="text-red-600"> (overdue)</span>
@@ -84,9 +84,10 @@
                 </x-card>
             @empty
                 <x-card>
-                    <p class="text-sm text-slate-600">No invitations in this status.</p>
+                    <p class="text-sm text-[#607080]">No invitations in this status.</p>
                 </x-card>
             @endforelse
         </div>
     </div>
 </div>
+
