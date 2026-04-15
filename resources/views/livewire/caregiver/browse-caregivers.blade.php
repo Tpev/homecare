@@ -7,7 +7,7 @@
 
     <section class="hc-hero">
         <p class="text-xs uppercase tracking-[0.2em] text-[#CFC6F7]">Find Caregivers</p>
-        <h1 class="mt-2 text-2xl md:text-3xl font-display font-semibold">Find trusted non-medical caregivers</h1>
+        <h1 class="mt-2 text-2xl md:text-3xl font-display font-semibold text-[#FFF8F0]">Find trusted non-medical caregivers</h1>
         <p class="mt-2 text-sm text-[#CFC6F7]">Filter by trust badges, skills, language, and experience to shortlist faster.</p>
     </section>
 

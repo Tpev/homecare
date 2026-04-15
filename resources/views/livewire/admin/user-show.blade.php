@@ -1,4 +1,12 @@
 <div class="hc-page py-8 space-y-6">
+    @if (session('status'))
+        <x-alert color="green">{{ session('status') }}</x-alert>
+    @endif
+
+    @error('identity')
+        <x-alert color="red">{{ $message }}</x-alert>
+    @enderror
+
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 class="text-xl font-semibold">User Profile Review</h1>
@@ -27,11 +35,11 @@
             </div>
             <div class="rounded-lg border border-slate-200 p-3 text-sm">
                 <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Location</p>
-                <p class="mt-1 font-semibold text-slate-900">{{ $user->city ?: '—' }}{{ $user->state ? ', '.$user->state : '' }}</p>
+                <p class="mt-1 font-semibold text-slate-900">{{ $user->city ?: '-' }}{{ $user->state ? ', '.$user->state : '' }}</p>
             </div>
             <div class="rounded-lg border border-slate-200 p-3 text-sm">
                 <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Phone</p>
-                <p class="mt-1 font-semibold text-slate-900">{{ $user->phone ?: '—' }}</p>
+                <p class="mt-1 font-semibold text-slate-900">{{ $user->phone ?: '-' }}</p>
             </div>
         </div>
     </x-card>
@@ -39,9 +47,9 @@
     @if($caregiverProfile)
         <x-card>
             <x-slot:header>
-                <div class="flex items-center justify-between gap-3">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <h2 class="text-lg font-semibold">Caregiver Profile</h2>
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
                         <x-badge :text="strtoupper((string) $caregiverProfile->status)" color="yellow" />
                         @if($caregiverProfile->slug)
                             <a href="{{ route('caregivers.show', $caregiverProfile->slug) }}" target="_blank" rel="noopener noreferrer">
@@ -55,26 +63,64 @@
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div class="rounded-lg border border-slate-200 p-3 text-sm">
                     <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Bio</p>
-                    <p class="mt-1 text-slate-900">{{ $caregiverProfile->bio ?: '—' }}</p>
+                    <p class="mt-1 text-slate-900">{{ $caregiverProfile->bio ?: '-' }}</p>
                 </div>
                 <div class="rounded-lg border border-slate-200 p-3 text-sm">
                     <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Experience</p>
-                    <p class="mt-1 font-semibold text-slate-900">{{ $caregiverProfile->years_experience ?? '—' }} years</p>
+                    <p class="mt-1 font-semibold text-slate-900">{{ $caregiverProfile->years_experience ?? '-' }} years</p>
                 </div>
                 <div class="rounded-lg border border-slate-200 p-3 text-sm">
                     <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Service Area</p>
                     <p class="mt-1 font-semibold text-slate-900">
-                        ZIP {{ $caregiverProfile->service_area_zip ?: '—' }} · Radius {{ $caregiverProfile->service_radius_miles ?? '—' }} mi
+                        ZIP {{ $caregiverProfile->service_area_zip ?: '-' }} · Radius {{ $caregiverProfile->service_radius_miles ?? '-' }} mi
                     </p>
                 </div>
-                <div class="rounded-lg border border-slate-200 p-3 text-sm">
-                    <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Trust & Review</p>
-                    <p class="mt-1 text-slate-900">
-                        Identity: <span class="font-semibold">{{ strtoupper((string) ($caregiverProfile->identity_verification_status ?: 'not_started')) }}</span>
-                    </p>
-                    <p class="text-slate-900">
-                        Submitted: <span class="font-semibold">{{ optional($caregiverProfile->review_submitted_at)->format('M d, Y H:i') ?: '—' }}</span>
-                    </p>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Trust & Review</p>
+                            <p class="mt-1 text-slate-900">
+                                Identity:
+                                <span class="font-semibold">{{ strtoupper((string) ($caregiverProfile->identity_verification_status ?: 'not_started')) }}</span>
+                            </p>
+                            <p class="text-slate-900">
+                                Checked:
+                                <span class="font-semibold">{{ optional($caregiverProfile->identity_verification_checked_at)->format('M d, Y H:i') ?: '-' }}</span>
+                            </p>
+                            <p class="text-slate-900">
+                                Submitted:
+                                <span class="font-semibold">{{ optional($caregiverProfile->review_submitted_at)->format('M d, Y H:i') ?: '-' }}</span>
+                            </p>
+                            @if($caregiverProfile->latestIdentityVerification)
+                                <p class="text-slate-900">
+                                    Latest source:
+                                    <span class="font-semibold">
+                                        {{ data_get($caregiverProfile->latestIdentityVerification->decision_payload, 'source') === 'admin_override' ? 'Admin override' : 'Didit session' }}
+                                    </span>
+                                </p>
+                            @endif
+                        </div>
+
+                        @if($caregiverProfile->identity_verification_status !== \App\Models\CaregiverIdentityVerification::STATUS_APPROVED || ! $caregiverProfile->identity_verified_at)
+                            <div class="w-full sm:w-auto">
+                                <x-button
+                                    color="green"
+                                    class="w-full justify-center sm:w-auto"
+                                    wire:click="approveIdentityVerification"
+                                    loading="approveIdentityVerification"
+                                >
+                                    Approve KYC manually
+                                </x-button>
+                                <p class="mt-2 text-xs text-slate-500 sm:max-w-[16rem]">
+                                    Use only after confirming the caregiver's identity documents outside the automated flow.
+                                </p>
+                            </div>
+                        @else
+                            <div class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                                KYC approved
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
 
@@ -82,13 +128,13 @@
                 <div class="rounded-lg border border-slate-200 p-3 text-sm">
                     <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Skills</p>
                     <p class="mt-2 text-slate-900">
-                        {{ $caregiverProfile->skills->pluck('name')->join(', ') ?: '—' }}
+                        {{ $caregiverProfile->skills->pluck('name')->join(', ') ?: '-' }}
                     </p>
                 </div>
                 <div class="rounded-lg border border-slate-200 p-3 text-sm">
                     <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Languages</p>
                     <p class="mt-2 text-slate-900">
-                        {{ $caregiverProfile->languages->pluck('name')->join(', ') ?: '—' }}
+                        {{ $caregiverProfile->languages->pluck('name')->join(', ') ?: '-' }}
                     </p>
                 </div>
             </div>

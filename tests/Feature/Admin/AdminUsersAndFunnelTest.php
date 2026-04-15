@@ -2,10 +2,13 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Livewire\Admin\UserShow as UserShowComponent;
 use App\Livewire\Admin\UsersIndex;
 use App\Livewire\Admin\CareRequestsIndex as CareRequestsIndexComponent;
 use App\Livewire\Admin\FunnelAnalytics as FunnelAnalyticsComponent;
 use App\Models\CareBooking;
+use App\Models\CaregiverIdentityVerification;
+use App\Models\CaregiverModerationLog;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareReview;
@@ -97,6 +100,53 @@ class AdminUsersAndFunnelTest extends TestCase
 
         $this->assertAuthenticatedAs($family);
         $this->get('/dashboard')->assertOk();
+    }
+
+    public function test_admin_can_manually_approve_caregiver_identity_verification(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'test@test.com',
+            'role' => 'admin',
+        ]);
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        $profile = CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'under_review',
+            'bio' => 'Ready for verification review.',
+            'identity_verification_status' => CaregiverIdentityVerification::STATUS_IN_REVIEW,
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(UserShowComponent::class, ['user' => $caregiver])
+            ->call('approveIdentityVerification')
+            ->assertHasNoErrors();
+
+        $profile->refresh();
+
+        $this->assertSame(CaregiverIdentityVerification::STATUS_APPROVED, $profile->identity_verification_status);
+        $this->assertNotNull($profile->identity_verified_at);
+        $this->assertNotNull($profile->identity_verification_checked_at);
+
+        $verification = CaregiverIdentityVerification::query()
+            ->where('caregiver_profile_id', $profile->id)
+            ->latest()
+            ->first();
+
+        $this->assertNotNull($verification);
+        $this->assertSame(CaregiverIdentityVerification::STATUS_APPROVED, $verification->status);
+        $this->assertStringStartsWith('admin-override-', $verification->didit_session_id);
+        $this->assertSame('admin_override', data_get($verification->decision_payload, 'source'));
+
+        $this->assertDatabaseHas('caregiver_moderation_logs', [
+            'caregiver_profile_id' => $profile->id,
+            'actor_user_id' => $admin->id,
+            'action' => 'identity_admin_verified',
+        ]);
+
+        $this->assertSame(1, CaregiverModerationLog::query()
+            ->where('caregiver_profile_id', $profile->id)
+            ->where('action', 'identity_admin_verified')
+            ->count());
     }
 
     public function test_admin_cannot_login_as_self_or_another_admin_from_users_table(): void
