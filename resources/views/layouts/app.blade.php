@@ -5,11 +5,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'HomeCare') }}</title>
+        <title>{{ config('app.name', 'Home Care HUB') }}</title>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800|outfit:500,600,700&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:wght@500;600;700&display=swap" rel="stylesheet">
 
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11325109038"></script>
@@ -20,7 +20,6 @@
             gtag('config', 'AW-11325109038');
         </script>
 
-        {{-- TallStackUI --}}
         <tallstackui:script />
 
         @livewireStyles
@@ -36,59 +35,55 @@
             && auth()->user()?->role === 'family';
     @endphp
 
-    <body class="font-sans antialiased text-slate-900">
-        {{-- TallStack Toasts --}}
+    <body class="antialiased text-slate-900">
         <x-toast />
 
-        <div class="min-h-screen flex flex-col">
+        <div class="hc-app-shell min-h-screen flex flex-col">
             <livewire:layout.navigation />
 
-            <!-- Page Heading -->
             @if (isset($header))
-                <header class="border-b border-slate-200/80 bg-white/90 backdrop-blur">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                <header class="border-b border-[#DED6CA]/80 bg-[rgba(255,253,250,0.92)] backdrop-blur">
+                    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
                 </header>
             @endif
 
-            <!-- Page Content -->
             <main class="flex-1">
                 {{ $slot }}
             </main>
 
-            <footer class="border-t border-slate-200 bg-white/95 backdrop-blur">
+            <footer class="border-t border-[#DED6CA]/80 bg-[rgba(255,253,250,0.96)] backdrop-blur">
                 <div class="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
                     <div class="sm:hidden">
                         @if ($compactFooter)
                             <div class="flex items-center justify-between gap-3">
-                                <p class="text-[11px] text-slate-500">Â© {{ now()->year }} HomeCare</p>
+                                <p class="text-[11px] text-[#6E746F]">© {{ now()->year }} Home Care HUB</p>
                                 <details class="group">
-                                    <summary class="list-none rounded-full border border-slate-200 px-3 py-1.5 text-[11px] font-medium text-slate-700">
+                                    <summary class="list-none rounded-full border border-[#DED6CA] px-3 py-1.5 text-[11px] font-medium text-[#0F3D3E]">
                                         Legal links
                                     </summary>
-                                    <div class="mt-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                                    <div class="mt-2 rounded-2xl border border-[#DED6CA] bg-[rgba(255,253,250,0.98)] p-3 shadow-sm">
                                         <x-legal-links class="flex-col items-start gap-2 text-[11px]" />
                                     </div>
                                 </details>
                             </div>
                         @else
                             <div class="space-y-2">
-                                <p class="text-[11px] text-slate-500">Â© {{ now()->year }} HomeCare / HUB Healthcare, LLC</p>
+                                <p class="text-[11px] text-[#6E746F]">© {{ now()->year }} Home Care HUB / HUB Healthcare, LLC</p>
                                 <x-legal-links class="gap-x-3 gap-y-2 text-[11px]" />
                             </div>
                         @endif
                     </div>
 
-                    <div class="hidden sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                        <p class="text-xs text-slate-500">Â© {{ now()->year }} HomeCare / HUB Healthcare, LLC</p>
+                    <div class="hidden items-center justify-between gap-4 sm:flex">
+                        <p class="text-xs text-[#6E746F]">© {{ now()->year }} Home Care HUB / HUB Healthcare, LLC</p>
                         <x-legal-links />
                     </div>
                 </div>
             </footer>
         </div>
 
-        {{-- Livewire scripts MUST be present --}}
         @livewireScripts
 
         @if ($shouldTrackFamilySignupConversion)

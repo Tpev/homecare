@@ -27,16 +27,16 @@
             ];
         @endphp
 
-        <section class="relative overflow-hidden rounded-3xl border border-slate-900/80 bg-slate-950 p-5 text-white shadow-xl">
-            <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-500/20 blur-2xl"></div>
-            <div class="pointer-events-none absolute -left-10 -bottom-12 h-40 w-40 rounded-full bg-cyan-500/20 blur-2xl"></div>
+        <section class="hc-brand-panel">
+            <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#7C5DDC]/20 blur-2xl"></div>
+            <div class="pointer-events-none absolute -left-10 -bottom-12 h-40 w-40 rounded-full bg-[#4F6FAF]/20 blur-2xl"></div>
 
             <div class="relative space-y-4">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                        <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">My shifts</p>
+                        <p class="hc-brand-kicker text-[#E8E0FF]">My shifts</p>
                         <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Get ready for your first shift.</h1>
-                        <p class="mt-1 text-sm text-slate-300">Start, pause, resume, and close shifts from one command view.</p>
+                        <p class="mt-1 text-sm text-[#F7F1E8]/82">Start, pause, resume, and close shifts from one command view.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate>
@@ -49,29 +49,29 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    <div class="rounded-xl border border-white/15 bg-white/5 px-3 py-2">
-                        <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Active</p>
+                    <div class="hc-brand-stat">
+                        <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Active</p>
                         <p class="mt-1 text-lg font-semibold">{{ (int) ($counts['active'] ?? 0) }}</p>
                     </div>
-                    <div class="rounded-xl border border-white/15 bg-white/5 px-3 py-2">
-                        <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Scheduled</p>
+                    <div class="hc-brand-stat">
+                        <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Scheduled</p>
                         <p class="mt-1 text-lg font-semibold">{{ (int) ($counts['scheduled'] ?? 0) }}</p>
                     </div>
-                    <div class="rounded-xl border border-white/15 bg-white/5 px-3 py-2">
-                        <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Completed</p>
+                    <div class="hc-brand-stat">
+                        <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Completed</p>
                         <p class="mt-1 text-lg font-semibold">{{ (int) ($counts['completed'] ?? 0) }}</p>
                     </div>
-                    <div class="rounded-xl border border-white/15 bg-white/5 px-3 py-2">
-                        <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Issues</p>
+                    <div class="hc-brand-stat">
+                        <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Issues</p>
                         <p class="mt-1 text-lg font-semibold">{{ (int) ($counts['issues'] ?? 0) }}</p>
                     </div>
                 </div>
 
                 @if (!empty($nextShift))
-                    <div class="rounded-2xl border border-cyan-300/40 bg-cyan-500/10 px-3 py-3">
-                        <p class="text-xs uppercase tracking-[0.14em] text-cyan-100">Next shift</p>
-                        <p class="mt-1 text-sm font-semibold text-cyan-50">{{ $nextShift->careRequest?->title ?? 'Upcoming shift' }}</p>
-                        <p class="text-xs text-cyan-100/90">
+                    <div class="rounded-[1.4rem] border border-[#D3CBF0] bg-[rgba(255,255,255,0.08)] px-3 py-3">
+                        <p class="text-xs uppercase tracking-[0.14em] text-[#E8E0FF]">Next shift</p>
+                        <p class="mt-1 text-sm font-semibold text-[#FAF9F7]">{{ $nextShift->careRequest?->title ?? 'Upcoming shift' }}</p>
+                        <p class="text-xs text-[#F0E9E1]/82">
                             {{ optional($nextShift->scheduled_start_at)->format('D, M d \\a\\t H:i') }}
                             · {{ $nextShift->careRequest?->city }}, {{ $nextShift->careRequest?->state }}
                         </p>
@@ -81,14 +81,14 @@
         </section>
 
         <div class="sticky top-16 z-20 -mx-1 px-1">
-            <div class="rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur">
+            <div class="rounded-2xl border border-[#DED6CA] bg-[rgba(255,253,250,0.95)] p-2 shadow-sm backdrop-blur">
                 <div class="overflow-x-auto">
-                    <div class="flex min-w-max gap-1">
+                    <div class="grid min-w-full grid-cols-2 gap-1 sm:flex sm:min-w-max">
                         @foreach ($filterOptions as $option)
                             <button
                                 type="button"
                                 wire:click="$set('status', '{{ $option['value'] }}')"
-                                class="h-11 rounded-xl px-3 text-sm font-medium transition {{ $status === $option['value'] ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
+                                class="h-11 rounded-xl px-3 text-sm font-medium transition {{ $status === $option['value'] ? 'bg-[#0F3D3E] text-[#FAF9F7]' : 'text-[#6E746F] hover:bg-[#F5F1EB] hover:text-[#0F3D3E]' }}"
                             >
                                 {{ $option['label'] }}
                             </button>
@@ -115,7 +115,7 @@
                     };
                 @endphp
 
-                <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                <article class="rounded-2xl border border-[#DED6CA] bg-[rgba(255,253,250,0.98)] p-4 shadow-sm sm:p-5">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
                             <p class="font-display text-lg font-semibold text-slate-900">{{ $request?->title ?? 'Care request' }}</p>
@@ -127,16 +127,16 @@
                     </div>
 
                     <div class="mt-3 grid grid-cols-1 gap-2 text-xs text-slate-600 sm:grid-cols-3">
-                        <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                        <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
                             Scheduled:
                             {{ optional($booking->scheduled_start_at)->format('M d, H:i') ?: '-' }}
                             -
                             {{ optional($booking->scheduled_end_at)->format('H:i') ?: '-' }}
                         </div>
-                        <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                        <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
                             Started: {{ optional($booking->started_at)->format('M d, H:i') ?: 'Pending' }}
                         </div>
-                        <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                        <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
                             Completed: {{ optional($booking->completed_at)->format('M d, H:i') ?: 'Pending' }}
                         </div>
                     </div>
@@ -146,7 +146,7 @@
                             <a
                                 href="{{ route('care-requests.apply', $request->id) }}"
                                 wire:navigate
-                                class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 sm:w-auto"
+                                class="hc-primary-button w-full sm:w-auto"
                             >
                                 {{ $ctaLabel }}
                             </a>
@@ -156,7 +156,7 @@
                             <a
                                 href="{{ route('messages.show', $booking->application->conversation->id) }}"
                                 wire:navigate
-                                class="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:w-auto"
+                                class="hc-secondary-button w-full sm:w-auto"
                             >
                                 Open chat
                             </a>
@@ -164,7 +164,7 @@
                     </div>
                 </article>
             @empty
-                <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-600">
+                <div class="rounded-2xl border border-dashed border-slate-300 bg-[rgba(255,253,250,0.98)] px-4 py-8 text-center text-sm text-slate-600">
                     No shifts yet. Once a family hires you, your shift actions appear here.
                 </div>
             @endforelse
@@ -197,3 +197,4 @@
         @endif
     </div>
 </div>
+

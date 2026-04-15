@@ -78,7 +78,7 @@
             </div>
 
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2 xl:col-span-1">
+                <div class="rounded-[1.4rem] border border-[#DED6CA] bg-[#F5F1EB] p-4 sm:col-span-2 xl:col-span-1">
                     <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Best next action</p>
                     <p class="mt-1 font-display text-base font-semibold text-slate-900">{{ $bestNextAction['title'] }}</p>
                     <p class="mt-1 text-sm text-slate-600">{{ $bestNextAction['action'] }}</p>
@@ -92,15 +92,15 @@
                 <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:col-span-2">
                     <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Pipeline status</p>
                     <div class="mt-2 grid grid-cols-3 gap-2">
-                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                        <div class="rounded-[1rem] bg-[#F5F1EB] px-3 py-2">
                             <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Applicants</p>
                             <p class="mt-1 text-lg font-semibold text-slate-900">{{ $requestItem->applications->count() }}</p>
                         </div>
-                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                        <div class="rounded-[1rem] bg-[#F5F1EB] px-3 py-2">
                             <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Invites</p>
                             <p class="mt-1 text-lg font-semibold text-slate-900">{{ $requestItem->invitations->count() }}</p>
                         </div>
-                        <div class="rounded-xl bg-slate-50 px-3 py-2">
+                        <div class="rounded-[1rem] bg-[#F5F1EB] px-3 py-2">
                             <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Shift</p>
                             <p class="mt-1 text-sm font-semibold text-slate-900">{{ strtoupper($booking?->status ?? 'NONE') }}</p>
                         </div>
@@ -113,7 +113,7 @@
             <button
                 type="button"
                 wire:click="setActiveTab('overview')"
-                class="{{ $activeTab === 'overview' ? 'bg-sky-600 text-white border-sky-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-2xl border px-4 py-3 text-left transition"
+                class="{{ $activeTab === 'overview' ? 'bg-[#0F3D3E] text-[#FAF9F7] border-[#0F3D3E] shadow-sm' : 'bg-[rgba(255,253,250,0.98)] text-[#0F3D3E] border-[#DED6CA] hover:border-[#B7ADA0]' }} rounded-[1.3rem] border px-4 py-3 text-left transition"
             >
                 <p class="font-display text-base font-semibold">Overview</p>
                 <p class="text-xs opacity-80">Request details and contact context</p>
@@ -122,7 +122,7 @@
             <button
                 type="button"
                 wire:click="setActiveTab('applicants')"
-                class="{{ $activeTab === 'applicants' ? 'bg-sky-600 text-white border-sky-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-2xl border px-4 py-3 text-left transition"
+                class="{{ $activeTab === 'applicants' ? 'bg-[#0F3D3E] text-[#FAF9F7] border-[#0F3D3E] shadow-sm' : 'bg-[rgba(255,253,250,0.98)] text-[#0F3D3E] border-[#DED6CA] hover:border-[#B7ADA0]' }} rounded-[1.3rem] border px-4 py-3 text-left transition"
             >
                 <p class="font-display text-base font-semibold">Applicants</p>
                 <p class="text-xs opacity-80">{{ $requestItem->applications->count() }} candidate(s)</p>
@@ -131,7 +131,7 @@
             <button
                 type="button"
                 wire:click="setActiveTab('shift')"
-                class="{{ $activeTab === 'shift' ? 'bg-sky-600 text-white border-sky-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-2xl border px-4 py-3 text-left transition"
+                class="{{ $activeTab === 'shift' ? 'bg-[#0F3D3E] text-[#FAF9F7] border-[#0F3D3E] shadow-sm' : 'bg-[rgba(255,253,250,0.98)] text-[#0F3D3E] border-[#DED6CA] hover:border-[#B7ADA0]' }} rounded-[1.3rem] border px-4 py-3 text-left transition"
             >
                 <p class="font-display text-base font-semibold">Shift</p>
                 <p class="text-xs opacity-80">{{ $booking ? 'Live operations' : 'No booking yet' }}</p>
@@ -140,7 +140,7 @@
             <button
                 type="button"
                 wire:click="setActiveTab('support')"
-                class="{{ $activeTab === 'support' ? 'bg-sky-600 text-white border-sky-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300' }} rounded-2xl border px-4 py-3 text-left transition"
+                class="{{ $activeTab === 'support' ? 'bg-[#0F3D3E] text-[#FAF9F7] border-[#0F3D3E] shadow-sm' : 'bg-[rgba(255,253,250,0.98)] text-[#0F3D3E] border-[#DED6CA] hover:border-[#B7ADA0]' }} rounded-[1.3rem] border px-4 py-3 text-left transition"
             >
                 <p class="font-display text-base font-semibold">Support</p>
                 <p class="text-xs opacity-80">Reschedule, incidents, disputes</p>
@@ -185,7 +185,7 @@
                                 ></iframe>
                             </div>
                             @if ($serviceMapOpenUrl)
-                                <a href="{{ $serviceMapOpenUrl }}" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-xs font-medium text-cyan-700 underline underline-offset-2">
+                                <a href="{{ $serviceMapOpenUrl }}" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-xs font-medium text-[#7C5DDC] underline underline-offset-2">
                                     Open full map
                                 </a>
                             @endif
@@ -282,7 +282,7 @@
                 <div class="mb-5 rounded-xl border border-cyan-200 bg-cyan-50 p-4">
                     <div class="flex items-center justify-between gap-3">
                         <div>
-                            <p class="text-xs uppercase tracking-[0.12em] text-cyan-700">Smart shortlist</p>
+                    <p class="text-xs uppercase tracking-[0.12em] text-[#7C5DDC]">Smart shortlist</p>
                             <h3 class="font-display text-lg font-semibold text-slate-900">Top suggested caregivers for this request</h3>
                             <p class="text-sm text-slate-600">Invite individually to accelerate first response.</p>
                         </div>
@@ -297,7 +297,7 @@
                                             <p class="font-display font-semibold text-slate-900">{{ $suggestion['name'] }}</p>
                                             <p class="text-xs text-slate-600">{{ $suggestion['proximity'] }} • Match score {{ $suggestion['score'] }}</p>
                                         </div>
-                                        <span class="inline-flex rounded-full bg-cyan-100 px-2 py-1 text-[11px] font-medium text-cyan-700">
+                            <span class="inline-flex rounded-full bg-[#EAE4F8] px-2 py-1 text-[11px] font-medium text-[#7C5DDC]">
                                             ${{ number_format((float) $suggestion['hourly_rate'], 2) }}/hr
                                         </span>
                                     </div>

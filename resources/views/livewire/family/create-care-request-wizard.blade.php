@@ -4,106 +4,102 @@
             <x-alert color="green">{{ session('status') }}</x-alert>
         @endif
 
-        <section class="relative overflow-hidden rounded-3xl border border-slate-900/80 bg-slate-950 p-5 text-white shadow-xl">
-            <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-cyan-500/20 blur-2xl"></div>
-            <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-emerald-500/20 blur-2xl"></div>
+        <section class="hc-brand-panel relative overflow-hidden">
+            <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#7C5DDC]/20 blur-2xl"></div>
+            <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-[#4F6FAF]/20 blur-2xl"></div>
 
             <div class="relative mt-3 flex flex-wrap items-start justify-between gap-4">
                 <div class="max-w-2xl">
-                    <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Family Request Wizard</p>
+                    <p class="hc-brand-kicker inline-flex rounded-full px-3 py-1">Family request wizard</p>
                     <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Create a care request in small, clear steps.</h1>
-                    <p class="mt-2 text-sm text-slate-300">
+                    <p class="mt-3 text-sm text-[#E5E7EB]">
                         We only ask what matters now. Optional details come last so you can publish faster.
                     </p>
                 </div>
                 @if ($modeChosen)
-                    <span class="rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-sm text-white">Step {{ $step }} of {{ $totalSteps }}</span>
+                    <span class="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white">Step {{ $step }} of {{ $totalSteps }}</span>
                 @endif
             </div>
             @if ($modeChosen)
                 <div class="relative mt-4">
                     <div class="h-2 rounded-full bg-white/20">
-                        <div class="h-2 rounded-full bg-cyan-300 transition-all duration-300" style="width: {{ $this->progressPercent }}%"></div>
+                        <div class="h-2 rounded-full bg-[#CFC6F7] transition-all duration-300" style="width: {{ $this->progressPercent }}%"></div>
                     </div>
-                    <p class="mt-2 text-xs text-slate-300">{{ $this->progressPercent }}% complete</p>
+                    <p class="mt-2 text-xs text-[#E5E7EB]">{{ $this->progressPercent }}% complete</p>
                     <div class="mt-2 flex items-center gap-2">
                         @for ($index = 1; $index <= $totalSteps; $index++)
-                            <span class="h-1.5 flex-1 rounded-full {{ $step >= $index ? 'bg-cyan-300' : 'bg-white/25' }}"></span>
+                            <span class="h-1.5 flex-1 rounded-full {{ $step >= $index ? 'bg-[#CFC6F7]' : 'bg-white/25' }}"></span>
                         @endfor
                     </div>
                 </div>
             @else
-                <p class="relative mt-4 text-xs text-cyan-200">Choose a mode to start. You can publish in minutes.</p>
+                <p class="relative mt-4 text-xs text-[#CFC6F7]">Choose a mode to start. You can publish in minutes.</p>
             @endif
         </section>
 
         @if (! $modeChosen)
-            <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <section class="hc-brand-card sm:p-6">
                 <div class="mb-4">
-                    <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Start here</p>
-                    <h2 class="mt-1 text-xl font-display font-semibold text-slate-900">Choose how you want to post this request</h2>
+                    <p class="text-xs uppercase tracking-[0.14em] text-[#7C5DDC]">Start here</p>
+                    <h2 class="mt-1 text-xl font-display font-semibold text-[#0F172A]">Choose how you want to post this request</h2>
                 </div>
 
                 <div class="grid gap-4 md:grid-cols-2">
-                    <button type="button" wire:click="chooseFastTrack" class="group rounded-2xl border border-emerald-300 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                        <p class="text-xs uppercase tracking-[0.14em] text-emerald-700 font-semibold">Recommended</p>
-                        <h3 class="mt-2 text-2xl font-display font-semibold text-slate-900">Fast Track</h3>
-                        <p class="mt-2 text-sm text-slate-600">Essential fields only. Great when you want to post quickly and start receiving applicants fast.</p>
-                        <ul class="mt-4 space-y-1 text-xs text-slate-600">
+                    <button type="button" wire:click="chooseFastTrack" class="group rounded-[1.6rem] border border-[#9ED8C6] bg-[#FFFCF8] p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                        <p class="text-xs uppercase tracking-[0.14em] text-[#0F3D3E] font-semibold">Recommended</p>
+                        <h3 class="mt-2 text-2xl font-display font-semibold text-[#0F172A]">Fast Track</h3>
+                        <p class="mt-2 text-sm text-[#5B6472]">Essential fields only. Great when you want to post quickly and start receiving applicants fast.</p>
+                        <ul class="mt-4 space-y-1 text-xs text-[#5B6472]">
                             <li>Schedule window</li>
                             <li>Address and city</li>
                             <li>Services and recipient name</li>
                         </ul>
-                        <p class="mt-4 text-sm font-semibold text-emerald-700 group-hover:text-emerald-800">Start fast track →</p>
+                        <p class="mt-4 text-sm font-semibold text-[#0F3D3E] group-hover:text-[#0A2F31]">Start fast track →</p>
                     </button>
 
-                    <button type="button" wire:click="chooseCompleteSetup" class="group rounded-2xl border border-slate-300 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                        <p class="text-xs uppercase tracking-[0.14em] text-slate-600 font-semibold">More control</p>
-                        <h3 class="mt-2 text-2xl font-display font-semibold text-slate-900">Detailed Request</h3>
-                        <p class="mt-2 text-sm text-slate-600">Add extra context for tighter matching, including optional recipient and access details.</p>
-                        <ul class="mt-4 space-y-1 text-xs text-slate-600">
+                    <button type="button" wire:click="chooseCompleteSetup" class="group rounded-[1.6rem] border border-[#DED6CA] bg-[#FFFCF8] p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                        <p class="text-xs uppercase tracking-[0.14em] text-[#7C5DDC] font-semibold">More control</p>
+                        <h3 class="mt-2 text-2xl font-display font-semibold text-[#0F172A]">Detailed Request</h3>
+                        <p class="mt-2 text-sm text-[#5B6472]">Add extra context for tighter matching, including optional recipient and access details.</p>
+                        <ul class="mt-4 space-y-1 text-xs text-[#5B6472]">
                             <li>Optional access notes</li>
                             <li>Recipient context and health details</li>
                             <li>Extra matching preferences</li>
                         </ul>
-                        <p class="mt-4 text-sm font-semibold text-slate-700 group-hover:text-slate-900">Start detailed request →</p>
+                        <p class="mt-4 text-sm font-semibold text-[#4F6FAF] group-hover:text-[#35548A]">Start detailed request →</p>
                     </button>
                 </div>
             </section>
         @else
             @if ($lastRequestId)
-                <div class="rounded-2xl border border-cyan-200 bg-cyan-50 p-4 flex flex-wrap items-center justify-between gap-3">
+                <div class="hc-brand-card flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <p class="text-xs uppercase tracking-[0.14em] text-cyan-700 font-semibold">Quick start</p>
-                        <p class="mt-1 text-sm text-cyan-900">
+                        <p class="text-xs uppercase tracking-[0.14em] text-[#7C5DDC] font-semibold">Quick start</p>
+                        <p class="mt-1 text-sm text-[#3C4A5B]">
                             Reuse your last request:
                             <span class="font-semibold">{{ $lastRequestSummary['title'] ?? 'Recent request' }}</span>
                             ({{ $lastRequestSummary['location'] ?? 'Raleigh, NC' }})
                         </p>
                         @if ($prefillApplied)
-                            <p class="mt-1 text-xs text-cyan-700">Fields loaded. Confirm schedule and publish.</p>
+                            <p class="mt-1 text-xs text-[#7C5DDC]">Fields loaded. Confirm schedule and publish.</p>
                         @endif
                     </div>
-                    <button type="button" wire:click="prefillFromLastRequest">
-                        <x-button color="blue" light>Use last request</x-button>
-                    </button>
+                    <button type="button" wire:click="prefillFromLastRequest" class="hc-secondary-button w-full sm:w-auto">Use last request</button>
                 </div>
             @endif
 
             @if ($hasSavedHouseholdProfile || $hasSavedRecipientProfile)
-                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex flex-wrap items-center justify-between gap-3">
+                <div class="hc-brand-card flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <p class="text-xs uppercase tracking-[0.14em] text-emerald-700 font-semibold">Saved family profile</p>
-                        <p class="mt-1 text-sm text-emerald-900">
+                        <p class="text-xs uppercase tracking-[0.14em] text-[#0F3D3E] font-semibold">Saved family profile</p>
+                        <p class="mt-1 text-sm text-[#3C4A5B]">
                             Reuse saved household + care recipient details in one click.
                         </p>
                         @if ($savedProfilesApplied)
-                            <p class="mt-1 text-xs text-emerald-700">Saved profile loaded.</p>
+                            <p class="mt-1 text-xs text-[#0F3D3E]">Saved profile loaded.</p>
                         @endif
                     </div>
-                    <button type="button" wire:click="applySavedProfiles">
-                        <x-button color="green" light>Use saved profiles</x-button>
-                    </button>
+                    <button type="button" wire:click="applySavedProfiles" class="hc-secondary-button w-full sm:w-auto">Use saved profiles</button>
                 </div>
             @endif
 
@@ -111,12 +107,12 @@
             <x-slot:header>
                 <div class="space-y-3">
                     <div class="flex items-center justify-between gap-3">
-                        <p class="text-xs uppercase tracking-[0.12em] text-slate-500">Guided flow</p>
-                        <p class="text-xs font-semibold text-slate-600">Step {{ $step }} / {{ $totalSteps }}</p>
+                        <p class="text-xs uppercase tracking-[0.12em] text-[#7C5DDC]">Guided flow</p>
+                        <p class="text-xs font-semibold text-[#5B6472]">Step {{ $step }} / {{ $totalSteps }}</p>
                     </div>
                     <div class="flex snap-x gap-2 overflow-x-auto pb-1">
                         @foreach ([1 => 'Care need', 2 => 'Schedule + location', 3 => 'Recipient + contacts', 4 => 'Review + publish'] as $index => $label)
-                            <div class="min-w-[160px] shrink-0 snap-start rounded-lg border px-3 py-2 text-xs sm:text-sm {{ $step >= $index ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-slate-50 text-slate-500' }}">
+                            <div class="min-w-[160px] shrink-0 snap-start rounded-lg border px-3 py-2 text-xs sm:text-sm {{ $step >= $index ? 'border-[#0F3D3E] bg-[#0F3D3E] text-white' : 'border-[#DED6CA] bg-[#FFFCF8] text-[#5B6472]'  }}">
                                 {{ $label }}
                             </div>
                         @endforeach
@@ -125,27 +121,27 @@
             </x-slot:header>
 
             <div class="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                    <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Type</p>
-                    <p class="mt-1 text-sm font-semibold text-slate-900">{{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring' : 'One-time' }}</p>
+                <div class="hc-metric-card">
+                    <p class="text-[11px] uppercase tracking-[0.12em] text-[#7C5DDC]">Type</p>
+                    <p class="mt-1 text-sm font-semibold text-[#0F3D3E]">{{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring' : 'One-time' }}</p>
                 </div>
-                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                    <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Services</p>
-                    <p class="mt-1 text-sm font-semibold text-slate-900">{{ count($selectedTasks) }}</p>
+                <div class="hc-metric-card">
+                    <p class="text-[11px] uppercase tracking-[0.12em] text-[#7C5DDC]">Services</p>
+                    <p class="mt-1 text-sm font-semibold text-[#0F3D3E]">{{ count($selectedTasks) }}</p>
                 </div>
-                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                    <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Location</p>
-                    <p class="mt-1 text-sm font-semibold text-slate-900">{{ trim($city) !== '' && trim($state) !== '' ? $city.', '.$state : 'Pending' }}</p>
+                <div class="hc-metric-card">
+                    <p class="text-[11px] uppercase tracking-[0.12em] text-[#7C5DDC]">Location</p>
+                    <p class="mt-1 text-sm font-semibold text-[#0F3D3E]">{{ trim($city) !== '' && trim($state) !== '' ? $city.', '.$state : 'Pending' }}</p>
                 </div>
-                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                    <p class="text-[11px] uppercase tracking-[0.12em] text-slate-500">Target reply</p>
-                    <p class="mt-1 text-sm font-semibold text-slate-900">{{ $preferred_response_hours }}h</p>
+                <div class="hc-metric-card">
+                    <p class="text-[11px] uppercase tracking-[0.12em] text-[#7C5DDC]">Target reply</p>
+                    <p class="mt-1 text-sm font-semibold text-[#0F3D3E]">{{ $preferred_response_hours }}h</p>
                 </div>
             </div>
 
             @if ($step === 1)
                 <div class="hc-wizard-step space-y-5">
-                    <div class="rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900">
+                    <div class="rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] p-3 text-sm text-[#3C4A5B]">
                         Start with your care need. Keep it simple. We will handle schedule and location in the next step.
                     </div>
 
@@ -176,8 +172,8 @@
                     </div>
 
                     @if ($request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_COMPLETE_SETUP)
-                        <details class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                            <summary class="cursor-pointer text-sm font-semibold text-slate-800">Optional now: add a custom request title</summary>
+                        <details class="rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] p-4">
+                            <summary class="cursor-pointer text-sm font-semibold text-[#0F172A]">Optional now: add a custom request title</summary>
                             <div class="mt-4">
                                 <x-input label="Request title (optional)" wire:model="title" hint="If empty, HomeCare creates one automatically." />
                                 @error('title') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
@@ -187,7 +183,7 @@
                 </div>
             @elseif ($step === 2)
                 <div class="hc-wizard-step space-y-5">
-                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                    <div class="rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] p-3 text-sm text-[#3C4A5B]">
                         {{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring request selected. We only ask recurring schedule fields.' : 'One-time request selected. We only ask one start/end window.' }}
                     </div>
 
@@ -203,7 +199,7 @@
                             </div>
                         </div>
                     @else
-                        <div class="space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                        <div class="space-y-4 rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] p-4">
                             <x-select.styled
                                 wire:model="recurring_days"
                                 multiple
@@ -277,8 +273,8 @@
                         @endif
                     </div>
 
-                    <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-                        <p class="text-xs uppercase tracking-[0.12em] text-emerald-700 font-semibold">
+                    <div class="rounded-[1rem] border border-[#9ED8C6] bg-[#F3FBF7] p-4">
+                        <p class="text-xs uppercase tracking-[0.12em] text-[#0F3D3E] font-semibold">
                             @if ($request_type === \App\Models\CareRequest::TYPE_RECURRING)
                                 Estimated weekly cost
                             @else
@@ -287,9 +283,9 @@
                         </p>
 
                         @if ($this->estimatedCost !== null && $this->estimatedHours !== null)
-                            <p class="mt-1 text-sm text-emerald-900">
+                            <p class="mt-1 text-sm text-[#3C4A5B]">
                                 <span class="font-semibold">{{ number_format($this->estimatedHours, 2) }}h</span>
-                                ×
+                                x
                                 <span class="font-semibold">${{ number_format($this->estimateHourlyRate, 2) }}/hr</span>
                                 =
                                 <span class="font-semibold">${{ number_format($this->estimatedCost, 2) }}</span>
@@ -298,15 +294,15 @@
                                 @endif
                             </p>
                         @else
-                            <p class="mt-1 text-sm text-emerald-900">Set your schedule to preview estimated cost.</p>
+                            <p class="mt-1 text-sm text-[#3C4A5B]">Set your schedule to preview estimated cost.</p>
                         @endif
 
-                        <p class="mt-1 text-xs text-emerald-700">Final total is based on confirmed worked time.</p>
+                        <p class="mt-1 text-xs text-[#3C4A5B]">Final total is based on confirmed worked time.</p>
                     </div>
                 </div>
             @elseif ($step === 3)
                 <div class="hc-wizard-step space-y-5">
-                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                    <div class="rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] p-3 text-sm text-[#3C4A5B]">
                         Add who receives care. This helps caregivers decide quickly if they are a good fit.
                     </div>
 
@@ -329,8 +325,8 @@
                     @endif
 
                     @if ($request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_COMPLETE_SETUP)
-                        <details class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                            <summary class="cursor-pointer text-sm font-semibold text-slate-800">Optional: add health context</summary>
+                        <details class="rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] p-4">
+                            <summary class="cursor-pointer text-sm font-semibold text-[#0F172A]">Optional: add health context</summary>
                             <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                     <x-input type="date" label="Date of birth" wire:model="recipient_date_of_birth" />
@@ -349,7 +345,7 @@
                     @endif
 
                     @if ($request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_COMPLETE_SETUP)
-                        <div class="rounded-lg border border-slate-200 p-4">
+                        <div class="rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] p-4">
                             <x-checkbox label="Booked by a third-party contact" wire:model="includeThirdPartyContact" />
 
                             @if ($includeThirdPartyContact)
@@ -385,20 +381,20 @@
                             ->values();
                     @endphp
 
-                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                        <p class="font-semibold text-slate-900">{{ $this->resolvedTitle }}</p>
-                        <p class="text-sm text-slate-600 mt-1">{{ $city }}, {{ $state }} {{ $zip }}</p>
-                        <p class="text-xs text-slate-500 mt-1">Response target: {{ $preferred_response_hours }}h</p>
+                    <div class="rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] p-4">
+                        <p class="font-display text-lg font-semibold text-[#0F172A]">{{ $this->resolvedTitle }}</p>
+                        <p class="mt-1 text-sm text-[#5B6472]">{{ $city }}, {{ $state }} {{ $zip }}</p>
+                        <p class="mt-1 text-xs text-[#7C5DDC]">Response target: {{ $preferred_response_hours }}h</p>
 
                         @if ($request_type === \App\Models\CareRequest::TYPE_ONE_TIME)
-                            <p class="mt-2 text-sm text-slate-700">
+                            <p class="mt-2 text-sm text-[#3C4A5B]">
                                 One-time:
                                 {{ $requested_start_at ? \Illuminate\Support\Carbon::parse($requested_start_at)->format('M d, Y H:i') : '-' }}
                                 to
                                 {{ $requested_end_at ? \Illuminate\Support\Carbon::parse($requested_end_at)->format('M d, Y H:i') : '-' }}
                             </p>
                         @else
-                            <p class="mt-2 text-sm text-slate-700">
+                            <p class="mt-2 text-sm text-[#3C4A5B]">
                                 Recurring:
                                 {{ collect($dayOptions)->whereIn('value', collect($recurring_days)->map(fn($d)=>(int)$d)->all())->pluck('label')->implode(', ') ?: '-' }}
                                 {{ $recurring_start_time }}-{{ $recurring_end_time }}
@@ -406,8 +402,8 @@
                         @endif
                     </div>
 
-                    <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-                        <p class="text-xs uppercase tracking-[0.12em] text-emerald-700 font-semibold">
+                    <div class="rounded-[1rem] border border-[#9ED8C6] bg-[#F3FBF7] p-4">
+                        <p class="text-xs uppercase tracking-[0.12em] text-[#0F3D3E] font-semibold">
                             @if ($request_type === \App\Models\CareRequest::TYPE_RECURRING)
                                 Estimated weekly cost
                             @else
@@ -415,27 +411,27 @@
                             @endif
                         </p>
                         @if ($this->estimatedCost !== null && $this->estimatedHours !== null)
-                            <p class="mt-1 text-sm text-emerald-900">
-                                {{ number_format($this->estimatedHours, 2) }}h × ${{ number_format($this->estimateHourlyRate, 2) }}/hr
+                            <p class="mt-1 text-sm text-[#3C4A5B]">
+                                {{ number_format($this->estimatedHours, 2) }}h x ${{ number_format($this->estimateHourlyRate, 2) }}/hr
                                 = <span class="font-semibold">${{ number_format($this->estimatedCost, 2) }}</span>
                                 @if ($request_type === \App\Models\CareRequest::TYPE_RECURRING)
                                     /week
                                 @endif
                             </p>
                         @else
-                            <p class="mt-1 text-sm text-emerald-900">Schedule incomplete. Add schedule details before publish.</p>
+                            <p class="mt-1 text-sm text-[#3C4A5B]">Schedule incomplete. Add schedule details before publish.</p>
                         @endif
                     </div>
 
-                    <div class="rounded-lg border border-slate-200 p-4">
+                    <div class="rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] p-4">
                         <p class="text-sm"><span class="font-medium">Care need:</span> {{ $additional_info ?: 'No additional note provided.' }}</p>
                         <p class="mt-2 text-sm"><span class="font-medium">Services:</span> {{ $selectedTaskNames->implode(', ') ?: 'None selected' }}</p>
                         <p class="mt-2 text-sm"><span class="font-medium">Recipient:</span> {{ $recipient_full_name ?: 'Care recipient' }} ({{ $recipient_relationship_to_family ?: 'Family member' }})</p>
                     </div>
 
                     @if ($request_mode === \App\Livewire\Family\CreateCareRequestWizard::MODE_COMPLETE_SETUP)
-                        <details class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                            <summary class="cursor-pointer text-sm font-semibold text-slate-800">Optional: refine matching details before publish</summary>
+                        <details class="rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] p-4">
+                            <summary class="cursor-pointer text-sm font-semibold text-[#0F172A]">Optional: refine matching details before publish</summary>
                             <div class="mt-4 space-y-4">
                                 <x-textarea label="Scope of work (optional)" wire:model="scope_of_work" hint="If empty, this will be generated from selected services." />
                                 @error('scope_of_work') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
@@ -449,24 +445,24 @@
                         </details>
                     @endif
 
-                    <div class="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                    <div class="rounded-[1rem] border border-[#D7C8A2] bg-[#FFF7E7] px-4 py-3 text-sm text-[#7A5A15]">
                         Once published, active caregivers can apply and you can invite specific profiles directly.
                     </div>
                 </div>
             @endif
 
             <x-slot:footer>
-                <div class="sticky bottom-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-lg backdrop-blur-sm sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
+                <div class="sticky bottom-2 rounded-2xl border border-[#DED6CA] bg-white/95 p-2 shadow-lg backdrop-blur-sm sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
                     <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <x-button color="slate" light wire:click="previousStep" :disabled="$step === 1" class="w-full sm:w-auto" wire:loading.attr="disabled" wire:target="previousStep,nextStep,publish">Back</x-button>
+                    <button type="button" wire:click="previousStep" :disabled="$step === 1" class="hc-secondary-button w-full sm:w-auto" wire:loading.attr="disabled" wire:target="previousStep,nextStep,publish">Back</button>
                     @if ($step < $totalSteps)
-                        <x-button color="blue" wire:click="nextStep" class="w-full sm:w-auto" wire:loading.attr="disabled" wire:target="nextStep,publish,previousStep">
+                        <button type="button" wire:click="nextStep" class="hc-primary-button w-full sm:w-auto" wire:loading.attr="disabled" wire:target="nextStep,publish,previousStep">
                             Continue
-                        </x-button>
+                        </button>
                     @else
-                        <x-button color="green" wire:click="publish" class="w-full sm:w-auto" wire:loading.attr="disabled" wire:target="publish,nextStep,previousStep">
+                        <button type="button" wire:click="publish" class="hc-primary-button w-full sm:w-auto" wire:loading.attr="disabled" wire:target="publish,nextStep,previousStep">
                             Publish request
-                        </x-button>
+                        </button>
                     @endif
                     </div>
                 </div>
@@ -475,3 +471,8 @@
         @endif
     </div>
 </div>
+
+
+
+
+

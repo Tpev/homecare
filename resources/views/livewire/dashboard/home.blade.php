@@ -74,15 +74,15 @@
                 ];
             @endphp
 
-            <section class="relative overflow-hidden rounded-3xl border border-slate-900/80 bg-slate-950 p-5 text-white shadow-xl">
-                <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-cyan-500/20 blur-2xl"></div>
-                <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-emerald-500/20 blur-2xl"></div>
+            <section class="hc-brand-panel">
+                <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#7C5DDC]/20 blur-2xl"></div>
+                <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-[#4F6FAF]/20 blur-2xl"></div>
 
                 <div class="relative mt-3 grid grid-cols-1 gap-5 lg:grid-cols-5">
                     <div class="lg:col-span-3">
-                        <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Family Dashboard</p>
+                        <p class="text-[11px] uppercase tracking-[0.18em] text-[#E8E0FF]">Family Dashboard</p>
                         <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">{{ $nextActionTitle }}</h1>
-                        <p class="mt-2 text-sm text-slate-300 max-w-2xl">{{ $nextActionDescription }}</p>
+                        <p class="mt-2 max-w-2xl text-sm text-[#F7F1E8]/82">{{ $nextActionDescription }}</p>
                         <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
                             <a href="{{ $nextActionRoute }}" wire:navigate class="block">
                                 <x-button color="white" class="w-full sm:w-auto">{{ $nextActionLabel }}</x-button>
@@ -92,15 +92,15 @@
                             </a>
                         </div>
                         @unless($billingReady)
-                            <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                            <div class="mt-4 rounded-[1.2rem] border border-[#D7C7A3] bg-[#F5ECDD] p-3 text-sm text-[#6A5320]">
                                 Add a payment method now so hiring is instant when you find the right caregiver.
                                 <a href="{{ route('family.billing.show') }}" wire:navigate class="ml-1 font-semibold underline underline-offset-2">Open billing</a>
                             </div>
                         @endunless
                     </div>
                     <div class="lg:col-span-2 grid grid-cols-2 gap-3">
-                        <div class="col-span-2 rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
-                            <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">How it works</p>
+                        <div class="col-span-2 hc-brand-stat">
+                            <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">How it works</p>
                             <div class="mt-2 grid grid-cols-2 gap-2">
                                 @foreach ($journeySteps as $index => $journeyStep)
                                     <div class="flex items-center gap-2 text-xs">
@@ -110,20 +110,20 @@
                                 @endforeach
                             </div>
                         </div>
-                        <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
-                            <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Ready to review</p>
+                        <div class="hc-brand-stat">
+                            <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Ready to review</p>
                             <p class="mt-1 text-2xl font-semibold">{{ $familyData['stats']['ready_to_review'] }}</p>
                         </div>
-                        <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
-                            <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Waiting applicants</p>
+                        <div class="hc-brand-stat">
+                            <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Waiting applicants</p>
                             <p class="mt-1 text-2xl font-semibold">{{ $familyData['stats']['waiting_for_applicants'] }}</p>
                         </div>
-                        <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
-                            <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Active shifts</p>
+                        <div class="hc-brand-stat">
+                            <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Active shifts</p>
                             <p class="mt-1 text-2xl font-semibold">{{ $familyData['stats']['active_shifts'] }}</p>
                         </div>
-                        <div class="rounded-xl border border-white/25 bg-white/10 p-3 backdrop-blur-sm">
-                            <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Unread messages</p>
+                        <div class="hc-brand-stat">
+                            <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Unread messages</p>
                             <p class="mt-1 text-2xl font-semibold">{{ $familyData['stats']['unread_messages'] }}</p>
                         </div>
                     </div>
@@ -197,7 +197,7 @@
                         </x-slot:header>
 
                         <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                            <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                            <div class="rounded-[1.4rem] border border-[#E3D3B7] bg-[#F9F2E6] p-4">
                                 <div class="flex items-center justify-between">
                                     <p class="text-xs uppercase tracking-[0.14em] text-amber-700 font-semibold">Needs applicants</p>
                                     <span class="text-sm font-semibold text-amber-900">{{ $needsApplicants->count() }}</span>
@@ -208,8 +208,8 @@
                                             <p class="font-medium text-slate-900 text-sm">{{ $request->title }}</p>
                                             <p class="text-xs text-slate-500 mt-1">{{ $request->city }}, {{ $request->state }}</p>
                                             <div class="mt-2 flex items-center justify-between">
-                                                <a href="{{ route('family.requests.show', $request->id) }}" wire:navigate class="text-xs font-medium text-cyan-700 underline underline-offset-2">Open</a>
-                                                <a href="{{ route('caregivers.search') }}" wire:navigate class="text-xs font-medium text-cyan-700 underline underline-offset-2">Find</a>
+                                                <a href="{{ route('family.requests.show', $request->id) }}" wire:navigate class="hc-link text-xs">Open</a>
+                                                <a href="{{ route('caregivers.search') }}" wire:navigate class="hc-link text-xs">Find</a>
                                             </div>
                                         </div>
                                     @empty
@@ -239,7 +239,7 @@
                                 </div>
                             </div>
 
-                            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                            <div class="rounded-[1.4rem] border border-[#CFE1D8] bg-[#F2F8F4] p-4">
                                 <div class="flex items-center justify-between">
                                     <p class="text-xs uppercase tracking-[0.14em] text-emerald-700 font-semibold">Active shifts</p>
                                     <span class="text-sm font-semibold text-emerald-900">{{ $activeShifts->count() }}</span>
@@ -287,7 +287,7 @@
                                                 <a href="{{ route('messages.show', $application->conversation->id) }}" wire:navigate class="text-xs font-medium text-indigo-700 underline underline-offset-2">Chat</a>
                                             @endif
                                             @if ($application->careRequest)
-                                                <a href="{{ route('family.requests.show', $application->careRequest->id) }}" wire:navigate class="text-xs font-medium text-cyan-700 underline underline-offset-2">Review</a>
+                                                <a href="{{ route('family.requests.show', $application->careRequest->id) }}" wire:navigate class="hc-link text-xs">Review</a>
                                             @endif
                                         </div>
                                     </div>
@@ -311,9 +311,9 @@
                                 </div>
                             </div>
                             <div class="space-y-2 text-sm">
-                                <a href="{{ route('family.requests.create') }}" wire:navigate class="block font-medium text-cyan-700 underline underline-offset-2">Post with Fast Track</a>
-                                <a href="{{ route('caregivers.search') }}" wire:navigate class="block font-medium text-cyan-700 underline underline-offset-2">Invite caregivers directly</a>
-                                <a href="{{ route('messages.index') }}" wire:navigate class="block font-medium text-cyan-700 underline underline-offset-2">Open messages</a>
+                                <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-link block">Post with Fast Track</a>
+                                <a href="{{ route('caregivers.search') }}" wire:navigate class="hc-link block">Invite caregivers directly</a>
+                                <a href="{{ route('messages.index') }}" wire:navigate class="hc-link block">Open messages</a>
                                 <a href="{{ route('family.billing.show') }}" wire:navigate class="block font-medium {{ $billingReady ? 'text-emerald-700' : 'text-amber-700' }} underline underline-offset-2">
                                     {{ $billingReady ? 'Billing is ready' : 'Complete billing setup' }}
                                 </a>
@@ -345,7 +345,7 @@
                                     <p class="text-slate-600">{{ $familyData['stats']['ready_to_review'] }} ready to review, {{ $familyData['stats']['waiting_for_applicants'] }} waiting for applicants.</p>
                                 </div>
                                 @if ($urgentOpenRequests > 0)
-                                    <div class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-amber-900">
+                                    <div class="rounded-xl border border-[#E3D3B7] bg-[#F9F2E6] px-3 py-2 text-[#6A5320]">
                                         <p class="font-medium">Urgent follow-up</p>
                                         <p class="text-xs mt-1">{{ $urgentOpenRequests }} request(s) have no applicants after 6+ hours.</p>
                                     </div>
@@ -408,15 +408,15 @@
                 </div>
             @endif
 
-            <section class="relative overflow-hidden rounded-3xl border border-slate-900/80 bg-slate-950 p-5 text-white shadow-xl">
-                <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-500/20 blur-2xl"></div>
-                <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-cyan-500/20 blur-2xl"></div>
+            <section class="hc-brand-panel">
+                <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#7C5DDC]/20 blur-2xl"></div>
+                <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-[#4F6FAF]/20 blur-2xl"></div>
 
                 <div class="relative grid grid-cols-1 gap-5 lg:grid-cols-5">
                     <div class="lg:col-span-3">
-                        <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Caregiver Dashboard</p>
+                        <p class="text-[11px] uppercase tracking-[0.18em] text-[#E8E0FF]">Caregiver Dashboard</p>
                         <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">You're ready to start getting booked.</h1>
-                        <p class="mt-2 text-sm text-slate-300">{{ $nextActionDescription }}</p>
+                        <p class="mt-2 text-sm text-[#F7F1E8]/82">{{ $nextActionDescription }}</p>
                         <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                             <a href="{{ $nextActionHref }}" wire:navigate class="block"><x-button color="white" class="w-full sm:w-auto">{{ $nextActionLabel }}</x-button></a>
                             <a href="{{ route('caregiver.shifts.index') }}" wire:navigate class="block"><x-button color="white" light class="w-full sm:w-auto">My shifts</x-button></a>
@@ -424,25 +424,25 @@
                         </div>
                     </div>
                     <div class="lg:col-span-2 space-y-2">
-                        <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-2">
-                            <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Best next action</p>
+                        <div class="hc-brand-stat">
+                            <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Best next action</p>
                             <p class="mt-1 text-sm font-semibold text-white">{{ $nextActionTitle }}</p>
                         </div>
                         <div class="grid grid-cols-2 gap-2">
-                            <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-2">
-                                <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Needs response</p>
+                            <div class="hc-brand-stat">
+                                <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Needs response</p>
                                 <p class="mt-1 text-lg font-semibold">{{ $needsResponseCount }}</p>
                             </div>
-                            <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-2">
-                                <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Profile status</p>
+                            <div class="hc-brand-stat">
+                                <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Profile status</p>
                                 <p class="mt-1 text-xs font-semibold uppercase">{{ str_replace('_', ' ', (string) ($profile?->status ?? 'draft')) }}</p>
                             </div>
-                            <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-2">
-                                <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Setup done</p>
+                            <div class="hc-brand-stat">
+                                <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Setup done</p>
                                 <p class="mt-1 text-lg font-semibold">{{ $requiredCompleted }}/{{ $requiredTotal }}</p>
                             </div>
-                            <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-2">
-                                <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Unread messages</p>
+                            <div class="hc-brand-stat">
+                                <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Unread messages</p>
                                 <p class="mt-1 text-lg font-semibold">{{ $caregiverData['stats']['unread_messages'] }}</p>
                             </div>
                         </div>
@@ -545,7 +545,7 @@
 
             <section class="space-y-4">
                 @if (!empty($caregiverData['active_shift']))
-                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex flex-wrap items-center justify-between gap-3">
+                    <div class="rounded-[1.4rem] border border-[#CFE1D8] bg-[#F2F8F4] p-4 flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <p class="text-xs uppercase tracking-[0.14em] text-emerald-700 font-semibold">Live now</p>
                             <p class="font-semibold text-emerald-900">{{ $caregiverData['active_shift']->careRequest?->title ?? 'Current shift' }}</p>
@@ -626,7 +626,7 @@
 
             <section class="space-y-4">
                 @if ($canSubmitForReview)
-                    <div class="rounded-2xl border border-cyan-200 bg-cyan-50 p-4 flex flex-wrap items-center justify-between gap-3">
+                    <div class="rounded-[1.4rem] border border-[#D8D1F1] bg-[#F5F1FB] p-4 flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <p class="font-semibold text-cyan-900">Ready to submit.</p>
                             <p class="text-sm text-cyan-800">Open the review step, confirm your details, and submit now.</p>
@@ -636,7 +636,7 @@
                         </a>
                     </div>
                 @elseif ($readyForReview)
-                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex flex-wrap items-center justify-between gap-3">
+                    <div class="rounded-[1.4rem] border border-[#CFE1D8] bg-[#F2F8F4] p-4 flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <p class="font-semibold text-emerald-900">Setup complete.</p>
                             <p class="text-sm text-emerald-800">Your profile is already submitted or active.</p>
@@ -701,7 +701,7 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                    <div class="rounded-[1.4rem] border border-[#CFE1D8] bg-[#F2F8F4] p-4">
                         <p class="font-semibold text-emerald-900">All setup cards are complete.</p>
                         <p class="text-sm text-emerald-800 mt-1">If your profile is still draft, open the review step and submit.</p>
                     </div>
@@ -736,3 +736,4 @@
         @endif
     </div>
 </div>
+

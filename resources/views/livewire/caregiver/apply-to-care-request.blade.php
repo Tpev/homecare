@@ -77,14 +77,14 @@
             </div>
         @endif
 
-        <div class="{{ $isShiftWorkspace ? 'rounded-2xl border border-slate-900/80 bg-slate-950 p-1 shadow-sm' : 'rounded-2xl border border-slate-200 bg-slate-50 p-1' }}">
+        <div class="{{ $isShiftWorkspace ? 'rounded-[1.6rem] border border-[#0F3D3E]/80 bg-[#0F3D3E] p-1 shadow-sm' : 'rounded-[1.6rem] border border-[#DED6CA] bg-[#F5F1EB] p-1' }}">
             <div class="grid grid-cols-2 gap-1 sm:grid-cols-4">
                 <button
                     type="button"
                     wire:click="setActiveTab('overview')"
                     class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'overview'
-                        ? ($isShiftWorkspace ? 'bg-white text-slate-900 shadow-sm' : 'bg-slate-900 text-white shadow-sm')
-                        : ($isShiftWorkspace ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900') }}"
+                        ? ($isShiftWorkspace ? 'bg-[#FAF9F7] text-[#0F3D3E] shadow-sm' : 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm')
+                        : ($isShiftWorkspace ? 'text-[#F0E9E1]/72 hover:text-[#FAF9F7]' : 'text-[#6E746F] hover:text-[#0F3D3E]') }}"
                 >
                     Overview
                 </button>
@@ -92,8 +92,8 @@
                     type="button"
                     wire:click="setActiveTab('application')"
                     class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'application'
-                        ? ($isShiftWorkspace ? 'bg-white text-slate-900 shadow-sm' : 'bg-slate-900 text-white shadow-sm')
-                        : ($isShiftWorkspace ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900') }}"
+                        ? ($isShiftWorkspace ? 'bg-[#FAF9F7] text-[#0F3D3E] shadow-sm' : 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm')
+                        : ($isShiftWorkspace ? 'text-[#F0E9E1]/72 hover:text-[#FAF9F7]' : 'text-[#6E746F] hover:text-[#0F3D3E]') }}"
                 >
                     Application
                 </button>
@@ -101,8 +101,8 @@
                     type="button"
                     wire:click="setActiveTab('shift')"
                     class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'shift'
-                        ? ($isShiftWorkspace ? 'bg-white text-slate-900 shadow-sm' : 'bg-slate-900 text-white shadow-sm')
-                        : ($isShiftWorkspace ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900') }}"
+                        ? ($isShiftWorkspace ? 'bg-[#FAF9F7] text-[#0F3D3E] shadow-sm' : 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm')
+                        : ($isShiftWorkspace ? 'text-[#F0E9E1]/72 hover:text-[#FAF9F7]' : 'text-[#6E746F] hover:text-[#0F3D3E]') }}"
                 >
                     Shift
                 </button>
@@ -110,8 +110,8 @@
                     type="button"
                     wire:click="setActiveTab('support')"
                     class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'support'
-                        ? ($isShiftWorkspace ? 'bg-white text-slate-900 shadow-sm' : 'bg-slate-900 text-white shadow-sm')
-                        : ($isShiftWorkspace ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900') }}"
+                        ? ($isShiftWorkspace ? 'bg-[#FAF9F7] text-[#0F3D3E] shadow-sm' : 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm')
+                        : ($isShiftWorkspace ? 'text-[#F0E9E1]/72 hover:text-[#FAF9F7]' : 'text-[#6E746F] hover:text-[#0F3D3E]') }}"
                 >
                     Support
                 </button>
@@ -181,7 +181,7 @@
                                 ></iframe>
                             </div>
                             @if ($serviceMapOpenUrl)
-                                <a href="{{ $serviceMapOpenUrl }}" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-xs font-medium text-cyan-700 underline underline-offset-2">
+                                <a href="{{ $serviceMapOpenUrl }}" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-xs font-medium text-[#7C5DDC] underline underline-offset-2">
                                     Open full map
                                 </a>
                             @endif
@@ -216,7 +216,7 @@
 
             @if ($canEditApplication)
                 <div class="space-y-4">
-                    <div class="rounded-md border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm text-cyan-900">
+                    <div class="rounded-[1rem] border border-[#D8D1F1] bg-[#F5F1FB] px-3 py-2 text-sm text-[#0F3D3E]">
                         Platform rate applied automatically:
                         <span class="font-semibold">
                             ${{ number_format((float) (auth()->user()->caregiverProfile?->resolvePlatformHourlyRate() ?? 0), 2) }}/hr
@@ -274,9 +274,9 @@
                     default => 'bg-slate-100 text-slate-700',
                 };
             @endphp
-            <section class="relative overflow-hidden rounded-3xl border border-slate-900/80 bg-slate-950 p-5 shadow-xl">
+            <section class="relative overflow-hidden rounded-[1.9rem] border border-[#0F3D3E]/80 bg-[#0F3D3E] p-5 shadow-xl">
                 <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-500/20 blur-2xl"></div>
-                <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-cyan-500/20 blur-2xl"></div>
+                <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-[#4F6FAF]/20 blur-2xl"></div>
 
                 <div class="relative">
                     <div class="mb-4">

@@ -20,22 +20,22 @@
         $visibleShiftValue = collect($items)->sum(fn ($item) => (float) data_get($item, 'compensation.total', 0));
         $responsiveValue = collect($items)->where('scope', 'needs_response')->sum(fn ($item) => (float) data_get($item, 'compensation.total', 0));
 
-        $primaryActionClasses = 'inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/40 sm:w-auto';
-        $successActionClasses = 'inline-flex h-11 w-full items-center justify-center rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 sm:w-auto';
-        $dangerActionClasses = 'inline-flex h-11 w-full items-center justify-center rounded-xl border border-rose-200 bg-white px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/30 sm:w-auto';
-        $secondaryActionClasses = 'inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 sm:w-auto';
+        $primaryActionClasses = 'inline-flex h-11 w-full items-center justify-center rounded-[1rem] bg-[#0F3D3E] px-4 text-sm font-semibold text-[#FAF9F7] shadow-sm transition hover:bg-[#123f40] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF]/30 sm:w-auto';
+        $successActionClasses = 'inline-flex h-11 w-full items-center justify-center rounded-[1rem] bg-[#4F6FAF] px-4 text-sm font-semibold text-[#FAF9F7] shadow-sm transition hover:bg-[#44639f] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF]/30 sm:w-auto';
+        $dangerActionClasses = 'inline-flex h-11 w-full items-center justify-center rounded-[1rem] border border-rose-200 bg-[rgba(255,253,250,0.98)] px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/30 sm:w-auto';
+        $secondaryActionClasses = 'inline-flex h-11 w-full items-center justify-center rounded-[1rem] border border-[#DED6CA] bg-[rgba(255,253,250,0.98)] px-4 text-sm font-semibold text-[#0F3D3E] transition hover:bg-[#F5F1EB] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF]/20 sm:w-auto';
     @endphp
 
-    <section class="relative overflow-hidden rounded-3xl border border-slate-900/80 bg-slate-950 p-4 text-white shadow-xl sm:p-5">
-        <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-500/20 blur-2xl"></div>
-        <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-cyan-500/20 blur-2xl"></div>
+    <section class="hc-brand-panel p-4 sm:p-5">
+        <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#7C5DDC]/20 blur-2xl"></div>
+        <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-[#4F6FAF]/20 blur-2xl"></div>
 
         <div class="relative space-y-4">
             <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
                 <div>
-                    <p class="text-[11px] uppercase tracking-[0.18em] text-slate-300">Caregiver Work Inbox</p>
+                    <p class="hc-brand-kicker text-[#E8E0FF]">Caregiver Work Inbox</p>
                     <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Stay on top of new opportunities.</h1>
-                    <p class="mt-1 text-sm text-slate-300">Offers, applications, hired shifts, and recaps in one place.</p>
+                    <p class="mt-1 text-sm text-[#F7F1E8]/82">Offers, applications, hired shifts, and recaps in one place.</p>
                 </div>
                 <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <a href="{{ route('caregiver.shifts.index') }}" wire:navigate>
@@ -47,43 +47,43 @@
                 </div>
             </div>
 
-            <div class="flex gap-2 overflow-x-auto pb-1 sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-6">
-                <div class="min-w-[122px] rounded-xl border border-white/15 bg-white/5 px-3 py-2 sm:min-w-0">
+            <div class="grid grid-cols-2 gap-2 lg:grid-cols-6">
+                <div class="hc-brand-stat">
                     <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Needs response</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['needs_response'] ?? 0 }}</p>
                 </div>
-                <div class="min-w-[122px] rounded-xl border border-white/15 bg-white/5 px-3 py-2 sm:min-w-0">
+                <div class="hc-brand-stat">
                     <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Recommended</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['recommended'] ?? 0 }}</p>
                 </div>
-                <div class="min-w-[122px] rounded-xl border border-white/15 bg-white/5 px-3 py-2 sm:min-w-0">
+                <div class="hc-brand-stat">
                     <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Applied</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['applied'] ?? 0 }}</p>
                 </div>
-                <div class="min-w-[122px] rounded-xl border border-white/15 bg-white/5 px-3 py-2 sm:min-w-0">
+                <div class="hc-brand-stat">
                     <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Hired</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['hired'] ?? 0 }}</p>
                 </div>
-                <div class="min-w-[122px] rounded-xl border border-white/15 bg-white/5 px-3 py-2 sm:min-w-0">
+                <div class="hc-brand-stat">
                     <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Completed</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['completed'] ?? 0 }}</p>
                 </div>
-                <div class="min-w-[122px] rounded-xl border border-white/15 bg-white/5 px-3 py-2 sm:min-w-0">
+                <div class="hc-brand-stat">
                     <p class="text-[11px] uppercase tracking-[0.14em] text-slate-300">Total</p>
                     <p class="mt-1 text-lg font-semibold">{{ $counts['all'] ?? 0 }}</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
-                <div class="rounded-2xl border border-emerald-300/35 bg-emerald-500/10 px-4 py-3">
+                <div class="rounded-[1.4rem] border border-[#BFD6CE] bg-[rgba(255,255,255,0.08)] px-4 py-3">
                     <p class="text-[11px] uppercase tracking-[0.14em] text-emerald-100">Visible shift value</p>
                     <p class="mt-1 text-2xl font-display font-semibold text-white">${{ number_format($visibleShiftValue, 2) }}</p>
                     <p class="text-xs text-emerald-100/90">Estimated total from jobs currently on this screen.</p>
                 </div>
-                <div class="rounded-2xl border border-cyan-300/35 bg-cyan-500/10 px-4 py-3">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-cyan-100">Ready-to-respond value</p>
+                <div class="rounded-[1.4rem] border border-[#D3CBF0] bg-[rgba(255,255,255,0.08)] px-4 py-3">
+                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#CFC6F7]">Ready-to-respond value</p>
                     <p class="mt-1 text-2xl font-display font-semibold text-white">${{ number_format($responsiveValue, 2) }}</p>
-                    <p class="text-xs text-cyan-100/90">Fast opportunities waiting for your response.</p>
+                    <p class="text-xs text-[#CFC6F7]/90">Fast opportunities waiting for your response.</p>
                 </div>
             </div>
         </div>
@@ -92,19 +92,19 @@
     <div class="sticky top-16 z-20 -mx-1 px-1">
         <div class="grid grid-cols-1 gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur lg:grid-cols-4">
             <div class="overflow-x-auto lg:col-span-3">
-                <div class="flex min-w-max gap-1 lg:min-w-0 lg:grid lg:grid-cols-6 lg:gap-1">
+                <div class="grid min-w-full grid-cols-2 gap-1 sm:flex sm:min-w-max lg:min-w-0 lg:grid lg:grid-cols-6 lg:gap-1">
                 @foreach ($scopeOptions as $option)
                     <button
                         type="button"
                         wire:click="$set('scope', '{{ $option['value'] }}')"
-                            class="h-11 rounded-xl px-3 text-sm font-medium transition {{ $scope === $option['value'] ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
+                            class="h-11 rounded-xl px-3 text-sm font-medium transition {{ $scope === $option['value'] ? 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm' : 'text-[#6E746F] hover:bg-[#F5F1EB] hover:text-[#0F3D3E]' }}"
                     >
                         {{ $option['label'] }}
                     </button>
                 @endforeach
                 </div>
             </div>
-            <div class="rounded-xl border border-slate-200 bg-white p-2">
+            <div class="rounded-[1rem] border border-[#DED6CA] bg-[rgba(255,253,250,0.96)] p-2">
                 <x-select.styled wire:model.live="sort" :options="$sortOptions" />
             </div>
         </div>
@@ -112,13 +112,13 @@
 
     <section class="space-y-3 pt-1">
         @forelse ($items as $item)
-            <article class="group overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg sm:p-5">
+            <article class="group overflow-hidden rounded-[1.8rem] border border-[#DED6CA] bg-[rgba(255,253,250,0.98)] p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg sm:p-5">
                 <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_17rem]">
                     <div class="min-w-0">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <p class="font-display text-lg font-semibold leading-snug text-slate-900">{{ $item['title'] }}</p>
-                                <p class="mt-1 text-sm text-slate-600">{{ $item['location'] }} · {{ $item['schedule'] }}</p>
+                                <p class="mt-1 text-sm text-slate-600">{{ $item['location'] }} - {{ $item['schedule'] }}</p>
                             </div>
                             <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusStyles[$item['status_tone'] ?? 'neutral'] ?? $statusStyles['neutral'] }}">
                                 {{ strtoupper((string) $item['status_label']) }}
@@ -175,7 +175,7 @@
 
                     <div class="lg:pl-1">
                         @if (!empty($item['compensation']))
-                            <div class="rounded-2xl border border-emerald-300/35 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 text-white shadow-sm">
+                            <div class="rounded-[1.4rem] border border-[#D7CCE9] bg-gradient-to-br from-[#0F3D3E] via-[#174A52] to-[#4F6FAF] p-4 text-white shadow-sm">
                                 <p class="text-[11px] uppercase tracking-[0.14em] text-emerald-200">Estimated earnings</p>
                                 <p class="mt-1 text-3xl font-display font-semibold text-emerald-300">
                                     ${{ number_format((float) data_get($item, 'compensation.total', 0), 2) }}
@@ -190,7 +190,7 @@
                                 </div>
                             </div>
                         @else
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <div class="rounded-[1.4rem] border border-[#DED6CA] bg-[#F5F1EB] p-4">
                                 <p class="text-[11px] uppercase tracking-[0.14em] text-slate-500">Earnings</p>
                                 <p class="mt-2 text-sm text-slate-600">Compensation estimate appears when duration is defined.</p>
                             </div>
@@ -205,3 +205,5 @@
         @endforelse
     </section>
 </div>
+
+
