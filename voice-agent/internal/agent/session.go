@@ -226,6 +226,17 @@ func (s *Session) connectDeepgram(ctx context.Context, prompt string) (*websocke
 		return nil, err
 	}
 
+	listenProvider := map[string]any{
+		"type":  "deepgram",
+		"model": s.cfg.DeepgramSTTModel,
+	}
+
+	if strings.HasPrefix(s.cfg.DeepgramSTTModel, "flux-") {
+		listenProvider["version"] = "v2"
+	} else {
+		listenProvider["smart_format"] = true
+	}
+
 	settings := map[string]any{
 		"type": "Settings",
 		"audio": map[string]any{
@@ -242,11 +253,7 @@ func (s *Session) connectDeepgram(ctx context.Context, prompt string) (*websocke
 		"agent": map[string]any{
 			"language": s.cfg.DeepgramLanguage,
 			"listen": map[string]any{
-				"provider": map[string]any{
-					"type":         "deepgram",
-					"model":        s.cfg.DeepgramSTTModel,
-					"smart_format": true,
-				},
+				"provider": listenProvider,
 			},
 			"think": map[string]any{
 				"provider": map[string]any{
