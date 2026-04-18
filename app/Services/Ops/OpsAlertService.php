@@ -6,6 +6,7 @@ use App\Mail\Ops\CaregiverReadyForReviewOpsAlertMail;
 use App\Mail\Ops\FamilyRegisteredOpsAlertMail;
 use App\Mail\Ops\NewCareRequestOpsAlertMail;
 use App\Mail\Ops\UserRegisteredOpsAlertMail;
+use App\Mail\Ops\VoiceCallReportOpsAlertMail;
 use App\Models\CareRequest;
 use App\Models\CaregiverProfile;
 use App\Models\User;
@@ -65,6 +66,20 @@ class OpsAlertService
 
         try {
             Mail::to($recipients)->send(new CaregiverReadyForReviewOpsAlertMail($user, $profile));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+    }
+
+    public function notifyVoiceCallReported(array $report): void
+    {
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            return;
+        }
+
+        try {
+            Mail::to($recipients)->send(new VoiceCallReportOpsAlertMail($report));
         } catch (Throwable $exception) {
             report($exception);
         }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Internal;
 
 use App\Http\Controllers\Controller;
+use App\Services\Ops\OpsAlertService;
 use App\Services\VoiceAgent\VoiceAgentIntakeService;
 use App\Services\VoiceAgent\VoiceAgentKnowledgeService;
 use Illuminate\Http\JsonResponse;
@@ -80,5 +81,31 @@ class VoiceAgentController extends Controller
         $result = $intake->createSignupRequest($payload, $request, $knowledge->signupLinkForAudience($payload['lead_type']));
 
         return response()->json($result, 201);
+    }
+
+    public function report(Request $request, OpsAlertService $opsAlerts): JsonResponse
+    {
+        $payload = $request->validate([
+            'call_sid' => ['nullable', 'string', 'max:64'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'lead_type' => ['nullable', 'string', Rule::in(['family', 'caregiver', 'agency', 'general'])],
+            'intent' => ['nullable', 'string', Rule::in(['information', 'callback_request', 'signup_link', 'general', 'unknown'])],
+            'outcome' => ['required', 'string', 'max:100'],
+            'call_status' => ['required', 'string', 'max:100'],
+            'duration_seconds' => ['nullable', 'integer', 'min:0'],
+            'started_at' => ['nullable', 'date'],
+            'ended_at' => ['nullable', 'date'],
+            'summary' => ['nullable', 'string', 'max:2000'],
+            'transcript' => ['nullable', 'string', 'max:20000'],
+            'callback_requested' => ['nullable', 'boolean'],
+            'signup_link_sent' => ['nullable', 'boolean'],
+            'metadata' => ['nullable', 'array'],
+        ]);
+
+        $opsAlerts->notifyVoiceCallReported($payload);
+
+        return response()->json([
+            'message' => 'Voice call report sent.',
+        ], 201);
     }
 }

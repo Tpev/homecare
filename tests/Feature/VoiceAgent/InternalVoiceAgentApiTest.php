@@ -4,7 +4,9 @@ namespace Tests\Feature\VoiceAgent;
 
 use App\Models\Lead;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
+use App\Mail\Ops\VoiceCallReportOpsAlertMail;
 
 class InternalVoiceAgentApiTest extends TestCase
 {
@@ -97,5 +99,36 @@ class InternalVoiceAgentApiTest extends TestCase
 
         $this->assertSame('signup_link', $lead->data['intent']);
         $this->assertSame(route('caregiver.register'), $lead->data['signup_link']);
+    }
+
+    public function test_report_endpoint_sends_ops_email(): void
+    {
+        Mail::fake();
+        config()->set('marketplace.ops_alert_recipients', ['ops@example.com']);
+
+        $this->withToken('voice-secret')
+            ->postJson('/api/internal/voice/reports', [
+                'call_sid' => 'CA456',
+                'phone' => '+15550001111',
+                'lead_type' => 'family',
+                'intent' => 'callback_request',
+                'outcome' => 'callback_request',
+                'call_status' => 'completed',
+                'duration_seconds' => 93,
+                'summary' => 'Caller wants a callback about arranging care for a parent next week.',
+                'transcript' => "assistant: Thanks for calling.\nuser: I need help for my mom.",
+                'callback_requested' => true,
+                'signup_link_sent' => false,
+                'metadata' => [
+                    'channel' => 'voice_agent',
+                ],
+            ])
+            ->assertCreated()
+            ->assertJsonPath('message', 'Voice call report sent.');
+
+        Mail::assertSent(VoiceCallReportOpsAlertMail::class, function (VoiceCallReportOpsAlertMail $mail): bool {
+            return ($mail->report['call_sid'] ?? null) === 'CA456'
+                && ($mail->report['outcome'] ?? null) === 'callback_request';
+        });
     }
 }

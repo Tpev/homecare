@@ -30,13 +30,20 @@ type Session struct {
 	twilioWriteMu sync.Mutex
 	dgWriteMu     sync.Mutex
 
-	streamSID    string
-	callSID      string
-	callerPhone  string
-	leadCreated  bool
-	knowledge    laravel.Knowledge
-	transcriptMu sync.Mutex
-	transcript   []string
+	streamSID         string
+	callSID           string
+	callerPhone       string
+	leadCreated       bool
+	leadType          string
+	intent            string
+	outcome           string
+	knowledge         laravel.Knowledge
+	callStartedAt     time.Time
+	callEndedAt       time.Time
+	callbackRequested bool
+	signupLinkSent    bool
+	transcriptMu      sync.Mutex
+	transcript        []string
 }
 
 type dgEnvelope struct {
@@ -79,6 +86,13 @@ func NewSession(cfg config.Config, logger *log.Logger, laravelClient *laravel.Cl
 }
 
 func (s *Session) Run(parent context.Context) error {
+	var runErr error
+	defer func() {
+		if reportErr := s.reportCall(runErr); reportErr != nil {
+			s.logger.Printf("voice call report failed: %v", reportErr)
+		}
+	}()
+
 	ctx, cancel := context.WithCancel(parent)
 	defer cancel()
 
@@ -93,8 +107,10 @@ func (s *Session) Run(parent context.Context) error {
 	select {
 	case start = <-startCh:
 	case err := <-twilioErrCh:
+		runErr = err
 		return err
 	case <-ctx.Done():
+		runErr = ctx.Err()
 		return ctx.Err()
 	}
 
@@ -105,20 +121,26 @@ func (s *Session) Run(parent context.Context) error {
 	s.streamSID = start.StreamSID
 	s.callSID = start.CallSID
 	s.callerPhone = firstNonEmpty(start.CustomParameters["from"], s.callerPhone)
+	s.leadType = "family"
+	s.intent = "unknown"
+	s.callStartedAt = time.Now().UTC()
 
 	knowledge, err := s.laravel.GetKnowledge(ctx)
 	if err != nil {
-		return fmt.Errorf("fetch knowledge: %w", err)
+		runErr = fmt.Errorf("fetch knowledge: %w", err)
+		return runErr
 	}
 	s.knowledge = knowledge
 
 	prompt, err := s.promptBuilder.Render(knowledge)
 	if err != nil {
-		return fmt.Errorf("render prompt: %w", err)
+		runErr = fmt.Errorf("render prompt: %w", err)
+		return runErr
 	}
 
 	dgConn, err := s.connectDeepgram(ctx, prompt)
 	if err != nil {
+		runErr = err
 		return err
 	}
 	defer dgConn.Close()
@@ -133,20 +155,24 @@ func (s *Session) Run(parent context.Context) error {
 				continue
 			}
 			if err := s.writeDeepgramBinary(dgConn, audio); err != nil {
+				runErr = err
 				return err
 			}
 		case err := <-twilioErrCh:
 			if finalizeErr := s.finalize(); finalizeErr != nil {
 				s.logger.Printf("finalize error after twilio close: %v", finalizeErr)
 			}
+			runErr = err
 			return err
 		case err := <-dgErrCh:
 			if finalizeErr := s.finalize(); finalizeErr != nil {
 				s.logger.Printf("finalize error after deepgram close: %v", finalizeErr)
 			}
+			runErr = err
 			return err
 		case <-ctx.Done():
-			return s.finalize()
+			runErr = s.finalize()
+			return runErr
 		}
 	}
 }
@@ -508,13 +534,13 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 	case "request_human_callback":
 		phone := firstNonEmpty(stringValue(args["phone"]), s.callerPhone)
 		payload := laravel.CallbackPayload{
-			LeadType:          firstNonEmpty(stringValue(args["lead_type"]), "general"),
+			LeadType:          firstNonEmpty(stringValue(args["lead_type"]), "family"),
 			Name:              stringValue(args["name"]),
 			Phone:             phone,
 			CallbackTime:      stringValue(args["callback_time"]),
 			Reason:            stringValue(args["reason"]),
 			CallSID:           s.callSID,
-			TranscriptExcerpt: s.transcriptExcerpt(),
+			TranscriptExcerpt: s.transcriptWithLimit(4000),
 			Metadata: map[string]any{
 				"channel": "voice_agent",
 			},
@@ -523,6 +549,10 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 			return "", err
 		}
 		s.leadCreated = true
+		s.leadType = payload.LeadType
+		s.intent = "callback_request"
+		s.outcome = "callback_request"
+		s.callbackRequested = true
 		return mustJSON(map[string]any{
 			"status":  "ok",
 			"message": "Callback request captured.",
@@ -536,12 +566,12 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 		}
 
 		signup, err := s.laravel.CreateSignupLink(ctx, laravel.SignupPayload{
-			LeadType:          firstNonEmpty(stringValue(args["lead_type"]), "general"),
+			LeadType:          firstNonEmpty(stringValue(args["lead_type"]), "family"),
 			Name:              stringValue(args["name"]),
 			Phone:             phone,
 			ConsentReceived:   consent,
 			CallSID:           s.callSID,
-			TranscriptExcerpt: s.transcriptExcerpt(),
+			TranscriptExcerpt: s.transcriptWithLimit(4000),
 			Metadata: map[string]any{
 				"channel": "voice_agent",
 			},
@@ -555,6 +585,10 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 		}
 
 		s.leadCreated = true
+		s.leadType = firstNonEmpty(stringValue(args["lead_type"]), "family")
+		s.intent = "signup_link"
+		s.outcome = "signup_link_sent"
+		s.signupLinkSent = true
 		return mustJSON(map[string]any{
 			"status":      "ok",
 			"phone":       phone,
@@ -601,23 +635,38 @@ func (s *Session) writeDeepgramBinary(conn *websocket.Conn, payload []byte) erro
 
 func (s *Session) finalize() error {
 	if s.leadCreated || len(s.transcript) == 0 {
+		if s.outcome == "" {
+			s.outcome = "information_only"
+		}
+		if s.intent == "unknown" {
+			s.intent = "information"
+		}
 		return nil
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	return s.laravel.CreateLead(ctx, laravel.LeadPayload{
-		LeadType:          "general",
+	err := s.laravel.CreateLead(ctx, laravel.LeadPayload{
+		LeadType:          "family",
 		Intent:            "information",
 		Phone:             s.callerPhone,
 		CallSID:           s.callSID,
-		TranscriptExcerpt: s.transcriptExcerpt(),
+		TranscriptExcerpt: s.transcriptWithLimit(4000),
 		Notes:             "Captured automatically from an informational voice-agent call.",
 		Metadata: map[string]any{
 			"channel": "voice_agent",
 		},
 	})
+
+	if err == nil {
+		s.leadCreated = true
+		s.leadType = "family"
+		s.intent = "information"
+		s.outcome = "information_only"
+	}
+
+	return err
 }
 
 func (s *Session) sendSMS(ctx context.Context, to, body string) error {
@@ -658,16 +707,84 @@ func (s *Session) addTranscript(line string) {
 	defer s.transcriptMu.Unlock()
 
 	s.transcript = append(s.transcript, line)
-	if len(s.transcript) > 24 {
-		s.transcript = s.transcript[len(s.transcript)-24:]
+	if len(s.transcript) > 120 {
+		s.transcript = s.transcript[len(s.transcript)-120:]
 	}
 }
 
-func (s *Session) transcriptExcerpt() string {
+func (s *Session) transcriptWithLimit(limit int) string {
 	s.transcriptMu.Lock()
 	defer s.transcriptMu.Unlock()
 
-	return strings.Join(s.transcript, "\n")
+	body := strings.Join(s.transcript, "\n")
+	if limit > 0 && len(body) > limit {
+		return body[len(body)-limit:]
+	}
+
+	return body
+}
+
+func (s *Session) reportCall(runErr error) error {
+	if s.callSID == "" && s.callerPhone == "" && s.transcriptWithLimit(1) == "" {
+		return nil
+	}
+
+	s.callEndedAt = time.Now().UTC()
+	if s.callStartedAt.IsZero() {
+		s.callStartedAt = s.callEndedAt
+	}
+
+	callStatus := "completed"
+	if runErr != nil && runErr != context.Canceled {
+		callStatus = "error"
+	}
+
+	outcome := firstNonEmpty(s.outcome, "information_only")
+	intent := firstNonEmpty(s.intent, "information")
+	leadType := firstNonEmpty(s.leadType, "family")
+
+	summary := "Informational family call."
+	switch outcome {
+	case "callback_request":
+		summary = "Family caller requested a human callback."
+	case "signup_link_sent":
+		summary = "Family caller received the signup link by SMS."
+	case "information_only":
+		summary = "Family caller received information without a callback or signup link."
+	}
+	if runErr != nil && runErr != context.Canceled {
+		summary = fmt.Sprintf("%s Session ended with error: %v", summary, runErr)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	return s.laravel.CreateCallReport(ctx, laravel.ReportPayload{
+		CallSID:           s.callSID,
+		Phone:             s.callerPhone,
+		LeadType:          leadType,
+		Intent:            intent,
+		Outcome:           outcome,
+		CallStatus:        callStatus,
+		DurationSeconds:   nonNegativeDurationSeconds(s.callEndedAt.Sub(s.callStartedAt)),
+		StartedAt:         s.callStartedAt.Format(time.RFC3339),
+		EndedAt:           s.callEndedAt.Format(time.RFC3339),
+		Summary:           summary,
+		Transcript:        s.transcriptWithLimit(20000),
+		CallbackRequested: s.callbackRequested,
+		SignupLinkSent:    s.signupLinkSent,
+		Metadata: map[string]any{
+			"channel": "voice_agent",
+		},
+	})
+}
+
+func nonNegativeDurationSeconds(duration time.Duration) int {
+	if duration < 0 {
+		return 0
+	}
+
+	return int(duration.Seconds())
 }
 
 func containsTopic(topic string, faq laravel.FAQ) bool {

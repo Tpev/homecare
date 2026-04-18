@@ -76,6 +76,23 @@ type SignupResponse struct {
 	SMSMessage string `json:"sms_message"`
 }
 
+type ReportPayload struct {
+	CallSID           string         `json:"call_sid,omitempty"`
+	Phone             string         `json:"phone,omitempty"`
+	LeadType          string         `json:"lead_type,omitempty"`
+	Intent            string         `json:"intent,omitempty"`
+	Outcome           string         `json:"outcome"`
+	CallStatus        string         `json:"call_status"`
+	DurationSeconds   int            `json:"duration_seconds,omitempty"`
+	StartedAt         string         `json:"started_at,omitempty"`
+	EndedAt           string         `json:"ended_at,omitempty"`
+	Summary           string         `json:"summary,omitempty"`
+	Transcript        string         `json:"transcript,omitempty"`
+	CallbackRequested bool           `json:"callback_requested"`
+	SignupLinkSent    bool           `json:"signup_link_sent"`
+	Metadata          map[string]any `json:"metadata,omitempty"`
+}
+
 func NewClient(cfg config.Config) *Client {
 	return &Client{
 		baseURL: cfg.LaravelBaseURL,
@@ -130,6 +147,15 @@ func (c *Client) CreateSignupLink(ctx context.Context, payload SignupPayload) (S
 	}
 
 	return response, nil
+}
+
+func (c *Client) CreateCallReport(ctx context.Context, payload ReportPayload) error {
+	req, err := c.newRequest(ctx, http.MethodPost, "/api/internal/voice/reports", payload)
+	if err != nil {
+		return err
+	}
+
+	return c.do(req, nil)
 }
 
 func (c *Client) newRequest(ctx context.Context, method, path string, body any) (*http.Request, error) {
