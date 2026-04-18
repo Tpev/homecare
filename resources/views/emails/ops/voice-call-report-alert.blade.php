@@ -6,7 +6,16 @@
 <h1>Voice Call Report</h1>
 
 <p><strong>Call SID:</strong> {{ $report['call_sid'] ?? 'n/a' }}</p>
+<p><strong>Caller name:</strong> {{ $report['name'] ?? 'n/a' }}</p>
 <p><strong>Caller phone:</strong> {{ $report['phone'] ?? 'n/a' }}</p>
+<p><strong>Relationship:</strong> {{ $report['relationship'] ?? 'n/a' }}</p>
+<p><strong>Care recipient:</strong> {{ $report['care_recipient'] ?? 'n/a' }}</p>
+<p><strong>Care needs:</strong> {{ $report['care_needs'] ?? 'n/a' }}</p>
+<p><strong>Urgency:</strong> {{ $report['urgency'] ?? 'n/a' }}</p>
+<p><strong>Address:</strong> {{ $report['address'] ?? 'n/a' }}</p>
+<p><strong>City:</strong> {{ $report['city'] ?? 'n/a' }}</p>
+<p><strong>Zip:</strong> {{ $report['zip'] ?? 'n/a' }}</p>
+<p><strong>Preferred callback time:</strong> {{ $report['callback_time'] ?? 'n/a' }}</p>
 <p><strong>Lead type:</strong> {{ $report['lead_type'] ?? 'n/a' }}</p>
 <p><strong>Intent:</strong> {{ $report['intent'] ?? 'n/a' }}</p>
 <p><strong>Outcome:</strong> {{ $report['outcome'] ?? 'n/a' }}</p>

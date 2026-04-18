@@ -109,7 +109,16 @@ class InternalVoiceAgentApiTest extends TestCase
         $this->withToken('voice-secret')
             ->postJson('/api/internal/voice/reports', [
                 'call_sid' => 'CA456',
+                'name' => 'Jane Caller',
                 'phone' => '+15550001111',
+                'relationship' => 'Daughter',
+                'care_recipient' => 'Her mother',
+                'care_needs' => 'Companionship and daily support',
+                'urgency' => 'Needs help next week',
+                'address' => '123 Main St',
+                'city' => 'Raleigh',
+                'zip' => '27601',
+                'callback_time' => 'Tomorrow afternoon',
                 'lead_type' => 'family',
                 'intent' => 'callback_request',
                 'outcome' => 'callback_request',

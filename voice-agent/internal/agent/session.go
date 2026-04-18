@@ -32,7 +32,16 @@ type Session struct {
 
 	streamSID         string
 	callSID           string
+	callerName        string
 	callerPhone       string
+	relationship      string
+	careRecipient     string
+	careNeeds         string
+	urgency           string
+	address           string
+	city              string
+	zip               string
+	callbackTime      string
 	leadCreated       bool
 	leadType          string
 	intent            string
@@ -309,11 +318,18 @@ func (s *Session) connectDeepgram(ctx context.Context, prompt string) (*websocke
 						"parameters": map[string]any{
 							"type": "object",
 							"properties": map[string]any{
-								"lead_type":     map[string]any{"type": "string", "description": "family, caregiver, agency, or general"},
-								"name":          map[string]any{"type": "string"},
-								"phone":         map[string]any{"type": "string"},
-								"callback_time": map[string]any{"type": "string"},
-								"reason":        map[string]any{"type": "string"},
+								"lead_type":      map[string]any{"type": "string", "description": "family, caregiver, agency, or general"},
+								"name":           map[string]any{"type": "string", "description": "Caller name"},
+								"phone":          map[string]any{"type": "string", "description": "Best callback number"},
+								"relationship":   map[string]any{"type": "string", "description": "Relationship to the person needing care"},
+								"care_recipient": map[string]any{"type": "string", "description": "Who needs care"},
+								"care_needs":     map[string]any{"type": "string", "description": "Type of help or support needed"},
+								"urgency":        map[string]any{"type": "string", "description": "How urgent the situation is"},
+								"address":        map[string]any{"type": "string", "description": "Street address if shared"},
+								"city":           map[string]any{"type": "string", "description": "City if shared"},
+								"zip":            map[string]any{"type": "string", "description": "Zip code if shared"},
+								"callback_time":  map[string]any{"type": "string", "description": "Best callback time or window"},
+								"reason":         map[string]any{"type": "string"},
 							},
 							"required": []string{"phone"},
 						},
@@ -325,8 +341,15 @@ func (s *Session) connectDeepgram(ctx context.Context, prompt string) (*websocke
 							"type": "object",
 							"properties": map[string]any{
 								"lead_type":        map[string]any{"type": "string", "description": "family, caregiver, agency, or general"},
-								"name":             map[string]any{"type": "string"},
-								"phone":            map[string]any{"type": "string"},
+								"name":             map[string]any{"type": "string", "description": "Caller name"},
+								"phone":            map[string]any{"type": "string", "description": "SMS-capable phone number"},
+								"relationship":     map[string]any{"type": "string", "description": "Relationship to the person needing care"},
+								"care_recipient":   map[string]any{"type": "string", "description": "Who needs care"},
+								"care_needs":       map[string]any{"type": "string", "description": "Type of help or support needed"},
+								"urgency":          map[string]any{"type": "string", "description": "How urgent the situation is"},
+								"address":          map[string]any{"type": "string", "description": "Street address if shared"},
+								"city":             map[string]any{"type": "string", "description": "City if shared"},
+								"zip":              map[string]any{"type": "string", "description": "Zip code if shared"},
 								"consent_received": map[string]any{"type": "boolean"},
 							},
 							"required": []string{"lead_type", "phone", "consent_received"},
@@ -532,17 +555,25 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 		}
 		return mustJSON(payload), nil
 	case "request_human_callback":
+		s.absorbCallerDetails(args)
 		phone := firstNonEmpty(stringValue(args["phone"]), s.callerPhone)
 		payload := laravel.CallbackPayload{
 			LeadType:          firstNonEmpty(stringValue(args["lead_type"]), "family"),
-			Name:              stringValue(args["name"]),
+			Name:              firstNonEmpty(stringValue(args["name"]), s.callerName),
 			Phone:             phone,
-			CallbackTime:      stringValue(args["callback_time"]),
+			CallbackTime:      firstNonEmpty(stringValue(args["callback_time"]), s.callbackTime),
 			Reason:            stringValue(args["reason"]),
 			CallSID:           s.callSID,
 			TranscriptExcerpt: s.transcriptWithLimit(4000),
 			Metadata: map[string]any{
-				"channel": "voice_agent",
+				"channel":        "voice_agent",
+				"relationship":   s.relationship,
+				"care_recipient": s.careRecipient,
+				"care_needs":     s.careNeeds,
+				"urgency":        s.urgency,
+				"address":        s.address,
+				"city":           s.city,
+				"zip":            s.zip,
 			},
 		}
 		if err := s.laravel.CreateCallback(ctx, payload); err != nil {
@@ -559,6 +590,7 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 			"phone":   phone,
 		}), nil
 	case "send_signup_link":
+		s.absorbCallerDetails(args)
 		phone := firstNonEmpty(stringValue(args["phone"]), s.callerPhone)
 		consent := boolValue(args["consent_received"])
 		if !consent {
@@ -567,13 +599,20 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 
 		signup, err := s.laravel.CreateSignupLink(ctx, laravel.SignupPayload{
 			LeadType:          firstNonEmpty(stringValue(args["lead_type"]), "family"),
-			Name:              stringValue(args["name"]),
+			Name:              firstNonEmpty(stringValue(args["name"]), s.callerName),
 			Phone:             phone,
 			ConsentReceived:   consent,
 			CallSID:           s.callSID,
 			TranscriptExcerpt: s.transcriptWithLimit(4000),
 			Metadata: map[string]any{
-				"channel": "voice_agent",
+				"channel":        "voice_agent",
+				"relationship":   s.relationship,
+				"care_recipient": s.careRecipient,
+				"care_needs":     s.careNeeds,
+				"urgency":        s.urgency,
+				"address":        s.address,
+				"city":           s.city,
+				"zip":            s.zip,
 			},
 		})
 		if err != nil {
@@ -761,7 +800,16 @@ func (s *Session) reportCall(runErr error) error {
 
 	return s.laravel.CreateCallReport(ctx, laravel.ReportPayload{
 		CallSID:           s.callSID,
+		Name:              s.callerName,
 		Phone:             s.callerPhone,
+		Relationship:      s.relationship,
+		CareRecipient:     s.careRecipient,
+		CareNeeds:         s.careNeeds,
+		Urgency:           s.urgency,
+		Address:           s.address,
+		City:              s.city,
+		Zip:               s.zip,
+		CallbackTime:      s.callbackTime,
 		LeadType:          leadType,
 		Intent:            intent,
 		Outcome:           outcome,
@@ -777,6 +825,19 @@ func (s *Session) reportCall(runErr error) error {
 			"channel": "voice_agent",
 		},
 	})
+}
+
+func (s *Session) absorbCallerDetails(args map[string]any) {
+	s.callerName = firstNonEmpty(stringValue(args["name"]), s.callerName)
+	s.callerPhone = firstNonEmpty(stringValue(args["phone"]), s.callerPhone)
+	s.relationship = firstNonEmpty(stringValue(args["relationship"]), s.relationship)
+	s.careRecipient = firstNonEmpty(stringValue(args["care_recipient"]), s.careRecipient)
+	s.careNeeds = firstNonEmpty(stringValue(args["care_needs"]), s.careNeeds)
+	s.urgency = firstNonEmpty(stringValue(args["urgency"]), s.urgency)
+	s.address = firstNonEmpty(stringValue(args["address"]), s.address)
+	s.city = firstNonEmpty(stringValue(args["city"]), s.city)
+	s.zip = firstNonEmpty(stringValue(args["zip"]), s.zip)
+	s.callbackTime = firstNonEmpty(stringValue(args["callback_time"]), s.callbackTime)
 }
 
 func nonNegativeDurationSeconds(duration time.Duration) int {

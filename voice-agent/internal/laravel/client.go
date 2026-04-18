@@ -78,7 +78,16 @@ type SignupResponse struct {
 
 type ReportPayload struct {
 	CallSID           string         `json:"call_sid,omitempty"`
+	Name              string         `json:"name,omitempty"`
 	Phone             string         `json:"phone,omitempty"`
+	Relationship      string         `json:"relationship,omitempty"`
+	CareRecipient     string         `json:"care_recipient,omitempty"`
+	CareNeeds         string         `json:"care_needs,omitempty"`
+	Urgency           string         `json:"urgency,omitempty"`
+	Address           string         `json:"address,omitempty"`
+	City              string         `json:"city,omitempty"`
+	Zip               string         `json:"zip,omitempty"`
+	CallbackTime      string         `json:"callback_time,omitempty"`
 	LeadType          string         `json:"lead_type,omitempty"`
 	Intent            string         `json:"intent,omitempty"`
 	Outcome           string         `json:"outcome"`

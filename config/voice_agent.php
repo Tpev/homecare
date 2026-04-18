@@ -52,5 +52,10 @@ return [
             'answer' => 'It helps to know who needs care, the kind of support they may need, how urgent the situation is, and the city or zip code.',
             'keywords' => ['what information', 'what do i need', 'zip code', 'urgency', 'what should i share'],
         ],
+        [
+            'question' => 'How much does it cost?',
+            'answer' => 'For short-term care, the rate is 30 dollars per hour. Longer-term support is priced lower than short-term care.',
+            'keywords' => ['price', 'pricing', 'cost', 'how much', 'hourly rate', '30 dollars'],
+        ],
     ],
 ];
