@@ -62,6 +62,12 @@ type dgConversationText struct {
 	Content string `json:"content"`
 }
 
+type dgErrorMessage struct {
+	Type    string `json:"type"`
+	Message string `json:"message"`
+	Code    string `json:"code,omitempty"`
+}
+
 func NewSession(cfg config.Config, logger *log.Logger, laravelClient *laravel.Client, promptBuilder *PromptBuilder, twilioConn *websocket.Conn) *Session {
 	return &Session{
 		cfg:           cfg,
@@ -253,7 +259,6 @@ func (s *Session) connectDeepgram(ctx context.Context, prompt string) (*websocke
 					{
 						"name":        "lookup_service_info",
 						"description": "Retrieve approved information about the service, signup paths, and common FAQs.",
-						"client_side": true,
 						"parameters": map[string]any{
 							"type": "object",
 							"properties": map[string]any{
@@ -268,7 +273,6 @@ func (s *Session) connectDeepgram(ctx context.Context, prompt string) (*websocke
 					{
 						"name":        "request_human_callback",
 						"description": "Create a callback request for a human team member.",
-						"client_side": true,
 						"parameters": map[string]any{
 							"type": "object",
 							"properties": map[string]any{
@@ -284,7 +288,6 @@ func (s *Session) connectDeepgram(ctx context.Context, prompt string) (*websocke
 					{
 						"name":        "send_signup_link",
 						"description": "Create a signup-link request and send the link by SMS after the caller has explicitly agreed to receive it.",
-						"client_side": true,
 						"parameters": map[string]any{
 							"type": "object",
 							"properties": map[string]any{
@@ -334,6 +337,20 @@ func (s *Session) waitForDeepgramMessage(conn *websocket.Conn, wantType string) 
 
 		var envelope dgEnvelope
 		if err := json.Unmarshal(payload, &envelope); err != nil {
+			continue
+		}
+
+		if envelope.Type == "Error" {
+			var dgErr dgErrorMessage
+			if err := json.Unmarshal(payload, &dgErr); err == nil {
+				return fmt.Errorf("deepgram error while waiting for %s: %s (%s)", wantType, dgErr.Message, dgErr.Code)
+			}
+
+			return fmt.Errorf("deepgram error while waiting for %s: %s", wantType, strings.TrimSpace(string(payload)))
+		}
+
+		if envelope.Type == "Warning" {
+			s.logger.Printf("deepgram warning while waiting for %s: %s", wantType, strings.TrimSpace(string(payload)))
 			continue
 		}
 
@@ -436,7 +453,14 @@ func (s *Session) handleDeepgramText(ctx context.Context, conn *websocket.Conn, 
 				return err
 			}
 		}
-	case "Error", "Warning", "AgentThinking", "AgentAudioDone", "Welcome", "SettingsApplied":
+	case "Error":
+		var dgErr dgErrorMessage
+		if err := json.Unmarshal(payload, &dgErr); err == nil {
+			return fmt.Errorf("deepgram error: %s (%s)", dgErr.Message, dgErr.Code)
+		}
+
+		return fmt.Errorf("deepgram error: %s", strings.TrimSpace(string(payload)))
+	case "Warning", "AgentThinking", "AgentAudioDone", "Welcome", "SettingsApplied":
 		s.logger.Printf("deepgram %s: %s", envelope.Type, strings.TrimSpace(string(payload)))
 	}
 
