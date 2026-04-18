@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
+        api: __DIR__.'/../routes/api.php',
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
@@ -15,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.email' => \App\Http\Middleware\EnsureAdminEmail::class,
             'caregiver.role' => \App\Http\Middleware\EnsureCaregiverRole::class,
             'family.role' => \App\Http\Middleware\EnsureFamilyRole::class,
+            'voice.agent' => \App\Http\Middleware\EnsureVoiceAgentToken::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
