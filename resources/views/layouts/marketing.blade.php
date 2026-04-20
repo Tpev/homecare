@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
@@ -52,11 +52,11 @@
     <footer class="border-t border-[#DED6CA] bg-[#FAF9F7]/95 backdrop-blur">
         <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
             <div class="space-y-2 sm:hidden">
-                <p class="text-[11px] text-slate-500">© {{ now()->year }} HomeCare / HUB Healthcare, LLC</p>
+                <p class="text-[11px] text-slate-500">&copy; {{ now()->year }} HomeCare / HUB Healthcare, LLC</p>
                 <x-legal-links class="gap-x-3 gap-y-2 text-[11px]" />
             </div>
             <div class="hidden sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                <p class="text-xs text-slate-500">© {{ now()->year }} HomeCare / HUB Healthcare, LLC</p>
+                <p class="text-xs text-slate-500">&copy; {{ now()->year }} HomeCare / HUB Healthcare, LLC</p>
                 <x-legal-links />
             </div>
         </div>
@@ -65,3 +65,4 @@
     @livewireScripts
 </body>
 </html>
+
