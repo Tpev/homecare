@@ -22,9 +22,10 @@ class HomepageQuickRequestFlowTest extends TestCase
 
         $this->get(route('landing'))
             ->assertOk()
-            ->assertSeeText('Trusted help for mom or dad, right when you need it.')
-            ->assertSeeText('Call or text (984) 400-4008')
-            ->assertSee('Start your care request now.');
+            ->assertSeeText('Care when you')
+            ->assertSeeText('need it most.')
+            ->assertSeeText('Call (984) 400-4008')
+            ->assertSee('Tell us what you need');
     }
 
     public function test_guest_can_start_quick_request_and_is_redirected_to_register_with_saved_draft(): void
@@ -32,26 +33,20 @@ class HomepageQuickRequestFlowTest extends TestCase
         $task = CareTask::query()->create(['name' => 'Companionship']);
 
         $component = Livewire::test(HomepageQuickRequest::class)
-            ->set('recipient_name', 'Margaret Johnson')
-            ->set('selectedTasks', [$task->id])
-            ->set('requested_start_at', now()->addDay()->setTime(9, 0)->format('Y-m-d\TH:i'))
-            ->set('requested_end_at', now()->addDay()->setTime(13, 0)->format('Y-m-d\TH:i'))
-            ->set('address_line1', '101 Oak Street')
-            ->set('city', 'Raleigh')
-            ->set('state', 'NC')
+            ->set('service_type', 'Companionship')
             ->set('zip', '27601')
-            ->set('additional_info', 'Just needs lunch and companionship while I am at work.')
-            ->set('step', 3);
+            ->set('time_preference', 'today_afternoon');
 
-        $component->call('startAccountHandoff')
+        $component->call('continueToRegister')
             ->assertRedirect(route('register', absolute: false));
 
         $draft = session(FamilyQuickRequestDraft::SESSION_KEY);
 
         $this->assertIsArray($draft);
-        $this->assertSame('Margaret Johnson', $draft['recipient_full_name']);
+        $this->assertSame('', $draft['recipient_full_name']);
         $this->assertSame([$task->id], $draft['selectedTasks']);
-        $this->assertSame('Raleigh', $draft['city']);
+        $this->assertSame('27601', $draft['zip']);
+        $this->assertStringContainsString('Companionship', $draft['additional_info']);
     }
 
     public function test_family_request_wizard_prefills_from_homepage_quick_request_draft(): void

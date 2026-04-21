@@ -16,19 +16,19 @@
         [
             'eyebrow' => 'For families',
             'title' => 'Help your loved one, today.',
-            'body' => 'Start the request in a minute, review trusted caregiver profiles, and move forward with less stress.',
+            'body' => 'Book trusted support quickly, for one visit or recurring help at home.',
             'image' => $familiesImage,
-            'items' => ['Find support quickly', 'Short visits or longer daytime coverage', 'Better visibility for the family'],
-            'button' => ['label' => 'Start a request', 'href' => '#quick-request'],
+            'items' => ['Find help fast', 'Flexible scheduling', 'Real, vetted caregivers'],
+            'button' => ['label' => 'Find Care', 'href' => '#quick-request'],
             'dark' => false,
         ],
         [
             'eyebrow' => 'For caregivers',
             'title' => 'Work that fits your week.',
-            'body' => 'Flexible, local opportunities for people who want meaningful work with older adults.',
+            'body' => 'Choose nearby opportunities, build trust, and work around your life.',
             'image' => $caregiversSideImage,
-            'items' => ['Choose what kind of help you offer', 'Stay on top of requests from your phone', 'Build trust and get booked again'],
-            'button' => ['label' => 'Explore caregiver side', 'href' => route('landing.caregiver')],
+            'items' => ['Flexible work', 'Choose your schedule', 'Get booked faster'],
+            'button' => ['label' => 'Join as Caregiver', 'href' => route('landing.caregiver')],
             'dark' => true,
         ],
     ];
@@ -36,17 +36,17 @@
     $valueCards = [
         [
             'title' => 'Care you can trust',
-            'body' => 'Profiles are reviewed for real family decision-making, not anonymous guesswork.',
+            'body' => 'Every caregiver is reviewed and checked before families make a decision.',
             'icon' => 'shield',
         ],
         [
             'title' => 'Book in minutes',
-            'body' => 'The request flow is designed to get the important details in quickly and clearly.',
+            'body' => 'Tell us what you need. Get matched with available caregivers in your area, fast.',
             'icon' => 'bolt',
         ],
         [
             'title' => 'Stay connected',
-            'body' => 'Messaging, scheduling, and updates live in one place instead of across scattered texts.',
+            'body' => 'Message your caregiver, manage schedules, and share updates with family.',
             'icon' => 'message',
         ],
     ];
@@ -64,21 +64,21 @@
     ];
 
     $steps = [
-        ['number' => '01', 'title' => 'Tell us what care looks like', 'body' => 'Share who needs help, what kind of support matters, and when the visit should happen.'],
-        ['number' => '02', 'title' => 'Review the right options', 'body' => 'See trusted caregivers, compare fit, and move forward with better context.'],
-        ['number' => '03', 'title' => 'Book and stay in sync', 'body' => 'Keep scheduling, communication, and visit details in one place from start to finish.'],
+        ['number' => '01', 'title' => 'Tell us what you need', 'body' => 'Service type, location, and when you need it.'],
+        ['number' => '02', 'title' => 'Get matched fast', 'body' => 'We surface available, vetted caregivers near you.'],
+        ['number' => '03', 'title' => 'Book and manage care', 'body' => 'Confirm, message, and adjust — all in one place.'],
     ];
 
     $differenceRows = [
-        ['title' => 'No agency callback loop', 'body' => 'Start with the request instead of waiting for someone to call you back and start over.'],
-        ['title' => 'Care on your schedule', 'body' => 'Book what fits the real week: a short visit, a few focused hours, or something broader.'],
-        ['title' => 'Built around communication', 'body' => 'The experience is designed to keep the family aligned, not guessing what happened.'],
+        ['title' => 'No long-term commitments', 'body' => 'Book one visit or a hundred. You decide.'],
+        ['title' => 'No intake delays', 'body' => 'Get matched in minutes, not days.'],
+        ['title' => 'Care on your schedule', 'body' => 'Mornings, evenings, weekends — flex as life shifts.'],
     ];
 
     $stats = [
-        ['value' => '4.9', 'label' => 'Average rating', 'sub' => 'from family reviews'],
-        ['value' => '100%', 'label' => 'Identity review required', 'sub' => 'before caregivers go live'],
-        ['value' => '1', 'label' => 'Clear place to manage it', 'sub' => 'request, schedule, and updates'],
+        ['value' => '4.9', 'label' => 'Average rating', 'sub' => 'from 12,000+ reviews'],
+        ['value' => '100%', 'label' => 'Background-checked', 'sub' => 'every caregiver, every time'],
+        ['value' => '12k+', 'label' => 'Loved by families', 'sub' => 'across 40+ cities'],
     ];
 @endphp
 
@@ -87,24 +87,21 @@
         <div class="hub-container flex items-center justify-between gap-4 py-4 md:py-5">
             <a href="{{ route('landing') }}" class="flex items-center gap-3">
                 <span class="hub-logo-mark">
-                    <x-application-logo class="h-5 w-5" />
+                    <span class="hub-logo-letter">h</span>
                 </span>
                 <span class="flex flex-col leading-none">
-                    <span class="text-lg font-black tracking-tight text-[var(--hub-deep)] md:text-[1.2rem]">Home Care <span class="text-[var(--hub-lavender)]">HUB</span></span>
-                    <span class="hidden text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--hub-copy-soft)] md:block">Support that fits your life</span>
+                    <span class="hub-brand-text">HomeCare <span>HUB</span></span>
                 </span>
             </a>
 
             <div class="hub-desktop-nav hidden items-center gap-7 md:flex">
-                <a class="hub-nav-link" href="#how">How it works</a>
-                <a class="hub-nav-link" href="#experience">Experience</a>
+                <a class="hub-nav-link" href="#how">How It Works</a>
                 <a class="hub-nav-link" href="#caregivers">Caregivers</a>
-                <a class="hub-nav-link" href="#guidance">Guidance</a>
+                <a class="hub-nav-link" href="#contact">Contact</a>
             </div>
 
             <div class="flex items-center gap-2 md:gap-3">
-                <a href="{{ route('login') }}" class="hub-button-ghost">Sign in</a>
-                <a href="#quick-request" class="hub-button-primary hub-nav-cta">Start request</a>
+                <a href="#quick-request" class="hub-button-primary hub-nav-cta">Find Care Now</a>
             </div>
         </div>
     </nav>
@@ -113,16 +110,18 @@
         <div class="hub-container hub-hero-grid">
             <div class="hub-hero-copy">
                 <span class="hub-pill"><span class="hub-dot"></span> Now booking in your area</span>
-                <h1 class="hub-hero-title">Care when you need it <em>most.</em></h1>
+                <h1 class="hub-hero-title">Care when you<br>need it <em>most.</em></h1>
                 <p class="hub-hero-body">
-                    Simple scheduling. Trusted caregivers. Peace of mind, from a short check-in to a few focused hours or broader daytime support at home.
+                    Simple scheduling. Trusted caregivers. Peace of mind — delivered to your door in minutes.
                 </p>
 
                 <div class="hub-hero-actions">
-                    <a href="#quick-request" class="hub-button-primary">Find care now
+                    <a href="#quick-request" class="hub-button-primary">Find Care Now
                         <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true"><path d="M5 10h10M11 4l4 6-4 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </a>
-                    <a href="#how" class="hub-button-secondary">How it works</a>
+                    <a href="#how" class="hub-button-secondary">How it works
+                        <svg viewBox="0 0 20 20" fill="none" class="h-3.5 w-3.5" aria-hidden="true"><path d="M5 10h10M11 4l4 6-4 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </a>
                 </div>
 
                 <div class="hub-hero-proofline mt-6 md:mt-8">
@@ -154,8 +153,8 @@
     <section class="hub-section hub-section-soft hub-support-section">
         <div class="hub-container text-center">
             <p class="hub-kicker">A quieter approach</p>
-            <h2 class="hub-section-title">Support that fits <em>your life.</em></h2>
-            <p class="hub-section-text mx-auto">Care should adapt to your family, not force you into a rigid process when you are already juggling too much.</p>
+            <h2 class="hub-section-title">Support that<br>fits <em>your life.</em></h2>
+            <p class="hub-section-text mx-auto">Care that adapts to you — not the other way around.</p>
         </div>
     </section>
 
@@ -164,7 +163,7 @@
             <div class="hub-experience-copy">
                 <p class="hub-kicker">Live experience</p>
                 <h2 class="hub-section-title">Real people. Real <em>availability.</em></h2>
-                <p class="hub-section-text">Browse trusted caregiver profiles, understand fit faster, and move from searching to support without losing the human side of the decision.</p>
+                <p class="hub-section-text">See who's free near you, right now. Browse profiles, read reviews, and book in a few taps.</p>
             </div>
 
             <div class="hub-live-stack">
@@ -311,11 +310,11 @@
                     </div>
                 </div>
                 <div class="p-6 md:p-8">
-                    <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/62">Guidance</p>
-                    <h3 class="mt-3 text-[2rem] leading-[1] text-white">Not sure where <em class="hub-highlight" style="color:#c9b8ff;">to start?</em></h3>
-                    <p class="mt-4 text-sm leading-7 text-white/74">Real conversations about care, family dynamics, and what actually matters when support at home becomes urgent.</p>
+                    <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/62">Episode 14 · 28 min</p>
+                    <h3 class="mt-3 text-[2rem] leading-[1] text-white">The first conversation about care</h3>
+                    <p class="mt-4 text-sm leading-7 text-white/74">How to talk to your parents about getting help — without the guilt, the awkwardness, or the script.</p>
                     <blockquote class="mt-6 border-l-2 border-[rgba(201,184,255,0.55)] pl-4 text-base italic text-white/82">“This helped us understand what to expect.”</blockquote>
-                    <p class="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/48">Marisol · daughter and caregiver</p>
+                    <p class="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/48">Marisol, daughter & caregiver</p>
                     <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                         <a href="#" class="hub-button-secondary !bg-white !text-[var(--hub-deep)] !border-transparent">Listen now</a>
                         <a href="#" class="hub-button-ghost !border-white/14 !bg-white/10 !text-white">All episodes</a>

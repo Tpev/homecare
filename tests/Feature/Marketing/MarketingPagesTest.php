@@ -26,11 +26,11 @@ class MarketingPagesTest extends TestCase
     {
         $response = $this->get(route('landing'));
 
-        $response->assertSee(route('register'), false);
+        $response->assertSee('#quick-request', false);
         $response->assertSee(route('landing.caregiver'), false);
-        $response->assertSee(route('login'), false);
-        $response->assertSee(route('caregivers.search'), false);
-        $response->assertSee('Start your care request now.');
+        $response->assertSee('Find Care Now');
+        $response->assertSee('Tell us what you need');
+        $response->assertSee('See available caregivers');
     }
 
     public function test_family_variant_pages_have_clear_primary_ctas(): void
