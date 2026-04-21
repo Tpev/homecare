@@ -14,6 +14,8 @@ use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -307,6 +309,69 @@ class CaregiverRegressionTest extends TestCase
             'caregiver_profile_id' => $profile->id,
             'reason' => 'profile_edit',
         ]);
+    }
+
+    public function test_onboarding_accepts_mobile_sized_profile_photo_upload(): void
+    {
+        Storage::fake('public');
+
+        $language = Language::query()->create(['name' => 'English']);
+        $user = User::factory()->create(['role' => 'caregiver', 'city' => 'Raleigh', 'state' => 'NC']);
+        CaregiverProfile::query()->create(['user_id' => $user->id, 'status' => 'draft']);
+
+        Livewire::actingAs($user)
+            ->test(OnboardingWizard::class)
+            ->set('bio', str_repeat('Great caregiver profile. ', 4))
+            ->set('years_experience', 2)
+            ->set('date_of_birth', now()->subYears(24)->toDateString())
+            ->set('city', 'Raleigh')
+            ->set('state', 'NC')
+            ->set('selectedLanguages', [$language->id])
+            ->set('profile_photo', UploadedFile::fake()->image('profile-photo.jpg')->size(5000))
+            ->call('nextStep')
+            ->assertHasNoErrors(['profile_photo']);
+
+        $savedProfile = CaregiverProfile::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertNotNull($savedProfile->profile_photo_path);
+        Storage::disk('public')->assertExists($savedProfile->profile_photo_path);
+    }
+
+    public function test_profile_editor_can_replace_profile_photo(): void
+    {
+        Storage::fake('public');
+
+        $skill = Skill::query()->create(['name' => 'Companionship']);
+        $language = Language::query()->create(['name' => 'English']);
+        $caregiver = User::factory()->create(['role' => 'caregiver', 'city' => 'Raleigh', 'state' => 'NC']);
+        $profile = CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'active',
+            'bio' => str_repeat('Bio ', 15),
+            'years_experience' => 2,
+            'service_area_zip' => '27601',
+            'service_radius_miles' => 10,
+        ]);
+        $profile->skills()->sync([$skill->id]);
+        $profile->languages()->sync([$language->id]);
+
+        Livewire::actingAs($caregiver)
+            ->test(ProfileEditor::class)
+            ->set('bio', str_repeat('Updated profile content. ', 4))
+            ->set('years_experience', 5)
+            ->set('city', 'Raleigh')
+            ->set('state', 'NC')
+            ->set('service_area_zip', '27602')
+            ->set('service_radius_miles', 15)
+            ->set('selectedSkills', [$skill->id])
+            ->set('selectedLanguages', [$language->id])
+            ->set('profile_photo', UploadedFile::fake()->image('fresh-photo.png')->size(4500))
+            ->call('save')
+            ->assertHasNoErrors(['profile_photo']);
+
+        $profile->refresh();
+
+        $this->assertNotNull($profile->profile_photo_path);
+        Storage::disk('public')->assertExists($profile->profile_photo_path);
     }
 
     public function test_search_page_shows_only_active_profiles(): void

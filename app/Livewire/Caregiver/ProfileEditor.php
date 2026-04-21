@@ -10,11 +10,18 @@ use App\Support\MarketplacePricing;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\WithFileUploads;
 
 #[Layout('layouts.app')]
 class ProfileEditor extends Component
 {
+    use WithFileUploads;
+
+    private const PROFILE_PHOTO_RULES = ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:10240'];
+
     public CaregiverProfile $profile;
+    public ?string $profile_photo_path = null;
+    public $profile_photo = null;
     public string $bio = '';
     public ?int $years_experience = null;
     public string $city = '';
@@ -40,6 +47,7 @@ class ProfileEditor extends Component
         $this->pricingTiers = app(MarketplacePricing::class)->tiers();
 
         $this->bio = (string) $this->profile->bio;
+        $this->profile_photo_path = $this->profile->profile_photo_path;
         $this->years_experience = $this->profile->years_experience;
         $this->city = (string)$user->city;
         $this->state = (string)$user->state;
@@ -53,6 +61,7 @@ class ProfileEditor extends Component
     public function save(): void
     {
         $this->validate([
+            'profile_photo' => self::PROFILE_PHOTO_RULES,
             'bio' => ['required', 'string', 'min:40'],
             'years_experience' => ['required', 'integer', 'min:0'],
             'city' => ['required', 'string'],
@@ -61,10 +70,14 @@ class ProfileEditor extends Component
             'service_radius_miles' => ['required', 'integer', 'min:1'],
             'selectedSkills' => ['required', 'array', 'min:1'],
             'selectedLanguages' => ['required', 'array', 'min:1'],
-        ]);
+        ], $this->validationMessages());
 
         DB::transaction(function () {
             $user = auth()->user();
+
+            if ($this->profile_photo) {
+                $this->profile_photo_path = $this->profile_photo->store('caregiver-photos', 'public');
+            }
 
             $user->forceFill([
                 'city' => $this->city,
@@ -72,6 +85,7 @@ class ProfileEditor extends Component
             ])->save();
 
             $this->profile->update([
+                'profile_photo_path' => $this->profile_photo_path,
                 'bio' => $this->bio,
                 'years_experience' => $this->years_experience,
                 'service_area_zip' => $this->service_area_zip,
@@ -96,6 +110,20 @@ class ProfileEditor extends Component
         });
 
         session()->flash('status', 'Profile updated successfully.');
+    }
+
+    public function updatedProfilePhoto(): void
+    {
+        $this->resetErrorBag('profile_photo');
+        $this->validateOnly('profile_photo', ['profile_photo' => self::PROFILE_PHOTO_RULES], $this->validationMessages());
+    }
+
+    private function validationMessages(): array
+    {
+        return [
+            'profile_photo.mimes' => 'Use a JPG, PNG, or WEBP image for your profile photo.',
+            'profile_photo.max' => 'Your profile photo must be 10 MB or smaller.',
+        ];
     }
 
     public function render()

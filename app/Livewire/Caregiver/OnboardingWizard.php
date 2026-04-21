@@ -24,6 +24,8 @@ class OnboardingWizard extends Component
 {
     use WithFileUploads;
 
+    private const PROFILE_PHOTO_RULES = ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:10240'];
+
     public int $step = 1;
     public int $totalSteps = 4;
 
@@ -203,7 +205,7 @@ class OnboardingWizard extends Component
                 'date_of_birth' => ['required', 'date', 'before_or_equal:'.now()->subYears(18)->toDateString()],
                 'city' => ['required', 'string', 'max:120'],
                 'state' => ['required', Rule::in(array_keys($this->usStates))],
-                'profile_photo' => ['nullable', 'image', 'max:2048'],
+                'profile_photo' => self::PROFILE_PHOTO_RULES,
                 'selectedLanguages' => ['required', 'array', 'min:1'],
                 'selectedLanguages.*' => ['integer', Rule::exists('languages', 'id')],
             ],
@@ -219,7 +221,7 @@ class OnboardingWizard extends Component
             ],
         };
 
-        $this->validate($rules);
+        $this->validate($rules, $this->validationMessages());
 
         if ($this->step === 3) {
             $this->validateAvailabilityRanges();
@@ -403,15 +405,30 @@ class OnboardingWizard extends Component
             'date_of_birth' => ['required', 'date', 'before_or_equal:'.now()->subYears(18)->toDateString()],
             'city' => ['required', 'string', 'max:120'],
             'state' => ['required', Rule::in(array_keys($this->usStates))],
+            'profile_photo' => self::PROFILE_PHOTO_RULES,
             'selectedLanguages' => ['required', 'array', 'min:1'],
             'selectedLanguages.*' => ['integer', Rule::exists('languages', 'id')],
             'service_area_zip' => ['required', 'string', 'max:15'],
             'service_radius_miles' => ['required', 'integer', 'min:1', 'max:60'],
             'availability' => ['required', 'array'],
             'is_accepting_new_clients' => ['required', 'boolean'],
-        ]);
+        ], $this->validationMessages());
 
         $this->validateAvailabilityRanges();
+    }
+
+    public function updatedProfilePhoto(): void
+    {
+        $this->resetErrorBag('profile_photo');
+        $this->validateOnly('profile_photo', ['profile_photo' => self::PROFILE_PHOTO_RULES], $this->validationMessages());
+    }
+
+    private function validationMessages(): array
+    {
+        return [
+            'profile_photo.mimes' => 'Use a JPG, PNG, or WEBP image for your profile photo.',
+            'profile_photo.max' => 'Your profile photo must be 10 MB or smaller.',
+        ];
     }
 
     public function render()
