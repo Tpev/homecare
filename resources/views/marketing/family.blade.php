@@ -52,7 +52,7 @@
         }
 
         .hub-home .hub-container {
-            width: min(1240px, calc(100vw - 2rem));
+            width: min(1180px, calc(100vw - 2rem));
             margin-inline: auto;
         }
 
@@ -175,17 +175,17 @@
         }
 
         .hub-home .hub-hero {
-            padding: 1.6rem 0 5.6rem;
+            padding: 1.5rem 0 4.4rem;
         }
 
         .hub-home .hub-hero-grid {
             display: grid;
             gap: 2rem;
             position: relative;
-            padding: 3.6rem 1.65rem 2.95rem;
+            padding: 3rem 1.45rem 2.6rem;
             border-radius: 2.75rem;
             overflow: hidden;
-            min-height: 43rem;
+            min-height: 38rem;
             background:
                 linear-gradient(90deg, rgba(255, 252, 247, 0.92) 0%, rgba(255, 252, 247, 0.78) 36%, rgba(255, 252, 247, 0.18) 100%),
                 linear-gradient(180deg, rgba(255, 252, 247, 0.24) 0%, rgba(255, 252, 247, 0.06) 100%);
@@ -216,8 +216,8 @@
         .hub-home .hub-hero-copy {
             position: relative;
             z-index: 2;
-            max-width: 33rem;
-            padding: 1.7rem 0 1rem;
+            max-width: 28rem;
+            padding: 0.85rem 0 0.5rem;
         }
 
         .hub-home .hub-kicker {
@@ -229,10 +229,10 @@
         }
 
         .hub-home .hub-hero-title {
-            margin-top: 1.95rem;
-            max-width: 7.8ch;
-            font-size: clamp(3.6rem, 8.2vw, 6.15rem);
-            line-height: 0.86;
+            margin-top: 1.65rem;
+            max-width: 6.25ch;
+            font-size: clamp(3.35rem, 7vw, 5.35rem);
+            line-height: 0.88;
             text-shadow: 0 10px 32px rgba(255, 252, 247, 0.26);
         }
 
@@ -246,20 +246,20 @@
         }
 
         .hub-home .hub-hero-body {
-            margin-top: 1.45rem;
-            max-width: 25rem;
-            font-size: 1.08rem;
-            line-height: 1.62;
+            margin-top: 1.2rem;
+            max-width: 22rem;
+            font-size: 1rem;
+            line-height: 1.56;
             color: rgba(18, 63, 64, 0.84);
             font-weight: 500;
             text-shadow: 0 2px 10px rgba(255, 252, 247, 0.32);
         }
 
         .hub-home .hub-hero-actions {
-            margin-top: 2rem;
+            margin-top: 1.6rem;
             display: flex;
             flex-direction: column;
-            gap: 0.85rem;
+            gap: 0.75rem;
             align-items: flex-start;
         }
 
@@ -348,7 +348,7 @@
 
         .hub-home .hub-quick-wrap {
             position: relative;
-            max-width: 24rem;
+            max-width: 22rem;
             margin-inline: 0;
         }
 
@@ -367,7 +367,7 @@
             position: relative;
             width: fit-content;
             max-width: calc(100% - 2rem);
-            margin: -1rem 6.4rem 0 0;
+            margin: -0.65rem 4.8rem 0 0;
             padding: 0.8rem 0.95rem;
             border-radius: 1.2rem;
             background: rgba(255, 252, 247, 0.94);
@@ -408,7 +408,7 @@
         }
 
         .hub-home .hub-section {
-            padding: 4.75rem 0;
+            padding: 4rem 0;
         }
 
         .hub-home .hub-section-alt { background: rgba(255,255,255,0.72); }
@@ -419,83 +419,85 @@
         }
 
         .hub-home .hub-section-title {
-            font-size: clamp(2.3rem, 5.5vw, 4.35rem);
-            line-height: 0.94;
+            font-size: clamp(2.15rem, 4.8vw, 4rem);
+            line-height: 0.96;
             letter-spacing: -0.05em;
         }
 
         .hub-home .hub-section-text {
             margin-top: 1rem;
-            font-size: 1.05rem;
-            line-height: 1.72;
+            font-size: 0.99rem;
+            line-height: 1.68;
             color: var(--hub-copy);
-            max-width: 40rem;
+            max-width: 36rem;
         }
 
         .hub-home .hub-support-section .hub-section-title {
-            font-size: clamp(2.8rem, 5vw, 4.85rem);
-            line-height: 0.92;
+            font-size: clamp(2.4rem, 4.5vw, 4.2rem);
+            line-height: 0.94;
         }
 
         .hub-home .hub-support-section .hub-section-text {
-            max-width: 38rem;
-            font-size: 1.1rem;
+            max-width: 34rem;
+            font-size: 1rem;
         }
 
         .hub-home .hub-experience-section .hub-section-title {
-            max-width: 8.5ch;
-            font-size: clamp(2.9rem, 5.2vw, 5rem);
-            line-height: 0.9;
-        }
-
-        .hub-home .hub-values-section .hub-section-title {
-            max-width: 10ch;
-            font-size: clamp(3rem, 5.4vw, 5.15rem);
-        }
-
-        .hub-home .hub-how-section .hub-section-title {
-            max-width: 8ch;
-            font-size: clamp(2.8rem, 5vw, 4.9rem);
+            max-width: 7.2ch;
+            font-size: clamp(2.45rem, 4.6vw, 4.2rem);
             line-height: 0.92;
         }
 
+        .hub-home .hub-values-section .hub-section-title {
+            max-width: 9ch;
+            font-size: clamp(2.45rem, 4.6vw, 4.25rem);
+        }
+
+        .hub-home .hub-how-section .hub-section-title {
+            max-width: 7.4ch;
+            font-size: clamp(2.4rem, 4.4vw, 4.15rem);
+            line-height: 0.94;
+        }
+
         .hub-home .hub-difference-section .hub-section-title {
-            font-size: clamp(3rem, 5.1vw, 5.2rem);
-            line-height: 0.9;
-            max-width: 7.2ch;
+            font-size: clamp(2.45rem, 4.6vw, 4.4rem);
+            line-height: 0.92;
+            max-width: 6.4ch;
         }
 
         .hub-home .hub-live-grid,
         .hub-home .hub-how-layout {
             display: grid;
-            gap: 2.6rem;
+            gap: 1.8rem;
         }
 
         .hub-home .hub-live-stack {
             position: relative;
-            min-height: 40rem;
-            max-width: 39rem;
+            min-height: 28rem;
+            width: min(100%, 29rem);
+            max-width: 29rem;
             margin-left: auto;
+            margin-right: auto;
         }
 
         .hub-home .hub-experience-copy {
-            max-width: 29rem;
-            padding-top: 3.5rem;
+            max-width: 21rem;
+            padding-top: 1.6rem;
         }
 
         .hub-home .hub-profile-card {
             position: relative;
-            width: min(100%, 18.75rem);
-            padding: 0.9rem;
+            width: min(100%, 11.5rem);
+            padding: 0.75rem;
             z-index: 2;
             box-shadow: 0 28px 60px -36px rgba(18, 63, 64, 0.24);
         }
 
         .hub-home .hub-profile-card img {
             width: 100%;
-            height: 12.5rem;
+            height: 7.4rem;
             object-fit: cover;
-            border-radius: 1.4rem;
+            border-radius: 1.1rem;
         }
 
         .hub-home .hub-visit-card,
@@ -561,7 +563,7 @@
         }
 
         .hub-home .hub-value-card {
-            padding: 1.55rem;
+            padding: 1.35rem;
         }
 
         .hub-home .hub-value-shift-1,
@@ -583,7 +585,7 @@
 
         .hub-home .hub-human {
             position: relative;
-            min-height: 24rem;
+            min-height: 19rem;
             overflow: hidden;
         }
 
@@ -605,15 +607,15 @@
         .hub-home .hub-human-copy {
             position: relative;
             z-index: 1;
-            padding: 3rem 1.25rem;
+            padding: 2.4rem 1.25rem;
             display: flex;
             align-items: flex-end;
-            min-height: 24rem;
+            min-height: 19rem;
         }
 
         .hub-home .hub-human-title {
-            font-size: clamp(2.4rem, 6.2vw, 5.15rem);
-            line-height: 0.92;
+            font-size: clamp(2.25rem, 5vw, 4.3rem);
+            line-height: 0.94;
             color: #fffefb;
         }
 
@@ -723,8 +725,8 @@
         }
 
         .hub-home .hub-final-title {
-            font-size: clamp(3.2rem, 8vw, 6.3rem);
-            line-height: 0.9;
+            font-size: clamp(2.8rem, 6vw, 5rem);
+            line-height: 0.92;
         }
 
         .hub-home .hub-inline-icon {
@@ -875,7 +877,7 @@
 
         @media (min-width: 768px) {
             .hub-home .hub-hero {
-                padding: 2.7rem 0 6.6rem;
+                padding: 2.15rem 0 5rem;
             }
 
             .hub-home .hub-hero-actions {
@@ -896,8 +898,8 @@
 
             .hub-home .hub-live-grid,
             .hub-home .hub-how-layout {
-                grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
-                align-items: start;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 0.94fr);
+                align-items: center;
             }
 
             .hub-home .hub-podcast-card {
@@ -920,42 +922,66 @@
 
         @media (min-width: 1100px) {
             .hub-home .hub-hero-grid {
-                grid-template-columns: minmax(0, 1fr) minmax(380px, 0.72fr);
+                grid-template-columns: minmax(0, 0.95fr) minmax(340px, 0.8fr);
                 align-items: center;
-                gap: 3.6rem;
-                padding: 4.85rem 4rem 5.3rem;
-                min-height: 44.25rem;
+                gap: 2.35rem;
+                padding: 3.6rem 3.4rem 3.85rem;
+                min-height: 39.5rem;
             }
 
             .hub-home .hub-hero-visual {
                 justify-self: end;
                 width: 100%;
-                max-width: 25.5rem;
+                max-width: 22.5rem;
             }
 
             .hub-home .hub-quick-wrap {
-                max-width: 24rem;
-                margin: 0.9rem 0 0 auto;
+                max-width: 22rem;
+                margin: 0.25rem 0 0 auto;
             }
 
             .hub-home .hub-live-stack .hub-profile-card {
                 position: absolute;
-                left: 3.2rem;
-                top: 2.5rem;
+                right: 1.15rem;
+                top: 6.25rem;
+                width: 10.5rem;
+                padding: 0.65rem;
             }
 
             .hub-home .hub-live-stack .hub-visit-card {
                 position: absolute;
-                right: 0;
-                top: 0.7rem;
-                width: 21rem;
+                left: 0;
+                top: 0.3rem;
+                width: 16.75rem;
             }
 
             .hub-home .hub-live-stack .hub-week-card {
                 position: absolute;
-                left: 8.4rem;
-                bottom: 1.65rem;
-                width: 18.75rem;
+                right: 1.25rem;
+                bottom: 0.35rem;
+                width: 11.2rem;
+            }
+
+            .hub-home .hub-live-stack .hub-profile-card img {
+                height: 5.6rem;
+                border-radius: 0.95rem;
+            }
+
+            .hub-home .hub-live-stack .hub-profile-card .space-y-2 {
+                display: none;
+            }
+
+            .hub-home .hub-live-stack .hub-profile-card .mt-4 {
+                margin-top: 0.65rem;
+            }
+
+            .hub-home .hub-live-stack .hub-profile-card .text-lg {
+                font-size: 1.05rem;
+            }
+
+            .hub-home .hub-live-stack .hub-profile-card .text-sm {
+                font-size: 0.78rem;
+                line-height: 1.4;
             }
         }
 
@@ -979,7 +1005,7 @@
             }
 
             .hub-home .hub-section {
-                padding: 3.8rem 0;
+                padding: 3rem 0;
             }
 
             .hub-home .hub-human,
@@ -992,7 +1018,7 @@
             }
 
             .hub-home .hub-hero-grid {
-                padding: 4.2rem 1.05rem 1.35rem;
+                padding: 3.45rem 1rem 1.2rem;
                 min-height: auto;
             }
 
@@ -1002,8 +1028,8 @@
             }
 
             .hub-home .hub-hero-title {
-                max-width: 8.5ch;
-                font-size: 3.7rem;
+                max-width: 6.8ch;
+                font-size: 3.15rem;
             }
 
             .hub-home .hub-hero-body {
@@ -1060,12 +1086,12 @@
             }
 
             .hub-home .hub-section-title {
-                font-size: 2.85rem;
-                line-height: 0.95;
+                font-size: 2.35rem;
+                line-height: 0.98;
             }
 
             .hub-home .hub-support-section .hub-section-title {
-                font-size: 3rem;
+                font-size: 2.55rem;
             }
 
             .hub-home .hub-experience-section .hub-section-title {
