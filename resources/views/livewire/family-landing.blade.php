@@ -83,30 +83,26 @@
 @endphp
 
 <div class="hub-home overflow-x-hidden">
-    <nav class="hub-nav">
-        <div class="hub-container flex items-center justify-between gap-4 py-4 md:py-5">
-            <a href="{{ route('landing') }}" class="flex items-center gap-3">
-                <span class="hub-logo-mark">
-                    <span class="hub-logo-letter">h</span>
-                </span>
-                <span class="flex flex-col leading-none">
-                    <span class="hub-brand-text">HomeCare <span>HUB</span></span>
-                </span>
-            </a>
-
-            <div class="hub-desktop-nav hidden items-center gap-7 md:flex">
-                <a class="hub-nav-link" href="#how">How It Works</a>
-                <a class="hub-nav-link" href="#caregivers">Caregivers</a>
-                <a class="hub-nav-link" href="#contact">Contact</a>
-            </div>
-
-            <div class="flex items-center gap-2 md:gap-3">
-                <a href="#quick-request" class="hub-button-primary hub-nav-cta">Find Care Now</a>
-            </div>
-        </div>
-    </nav>
-
     <section class="hub-hero">
+        <nav class="hub-nav">
+            <div class="hub-container flex items-center justify-between gap-4 py-4 md:py-5">
+                <a href="{{ route('landing') }}" class="hub-brand-link">
+                    <img src="{{ asset('images/marketing/logo.png') }}" alt="Home Care HUB" class="hub-logo-image">
+                </a>
+
+                <div class="hub-desktop-nav hidden items-center gap-7 md:flex">
+                    <a class="hub-nav-link" href="#how">How It Works</a>
+                    <a class="hub-nav-link" href="#caregivers">Caregivers</a>
+                    <a class="hub-nav-link" href="#contact">Contact</a>
+                </div>
+
+                <div class="flex items-center gap-2 md:gap-3">
+                    <a href="tel:9844004008" class="hub-phone-chip hub-nav-phone hidden md:inline-flex">(984) 400-4008</a>
+                    <a href="#quick-request" class="hub-button-primary hub-nav-cta">Find Care Now</a>
+                </div>
+            </div>
+        </nav>
+
         <div class="hub-container hub-hero-grid">
             <div class="hub-hero-copy">
                 <span class="hub-pill"><span class="hub-dot"></span> Now booking in your area</span>
@@ -114,6 +110,7 @@
                 <p class="hub-hero-body">
                     Simple scheduling. Trusted caregivers. Peace of mind — delivered to your door in minutes.
                 </p>
+                <p class="hub-hero-phone">Call or text <a href="tel:9844004008">(984) 400-4008</a></p>
 
                 <div class="hub-hero-actions">
                     <a href="#quick-request" class="hub-button-primary">Find Care Now
@@ -357,7 +354,7 @@
     </section>
 
     <section class="hub-section hub-final-section">
-        <div class="hub-container hub-final">
+        <div id="contact" class="hub-container hub-final">
             <h2 class="hub-final-title">Get help <em>today.</em></h2>
             <p class="hub-section-text mx-auto">Start the request, bring calm back into the plan, and get the right support moving faster.</p>
             <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">

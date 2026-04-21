@@ -1135,6 +1135,21 @@
             backdrop-filter: none;
         }
 
+        .hub-home .hub-brand-link {
+            display: inline-flex;
+            align-items: center;
+            min-height: 2.75rem;
+        }
+
+        .hub-home .hub-logo-image {
+            display: block;
+            height: 2.4rem;
+            width: auto;
+            max-width: min(15rem, 48vw);
+            object-fit: contain;
+            filter: drop-shadow(0 10px 24px rgba(18, 63, 64, 0.08));
+        }
+
         .hub-home .hub-logo-mark {
             height: 2.25rem;
             width: 2.25rem;
@@ -1168,6 +1183,19 @@
             font-size: 0.88rem;
             font-weight: 600;
             color: rgba(18, 63, 64, 0.78);
+        }
+
+        .hub-home .hub-phone-chip {
+            min-height: 2.75rem;
+            border-radius: 999px;
+            padding: 0.7rem 1rem;
+            border: 1px solid rgba(18, 63, 64, 0.12);
+            background: rgba(255, 253, 250, 0.78);
+            color: var(--hub-deep);
+            font-size: 0.84rem;
+            font-weight: 700;
+            box-shadow: 0 14px 28px -24px rgba(18, 63, 64, 0.28);
+            backdrop-filter: blur(10px);
         }
 
         .hub-home .hub-hero {
@@ -1243,6 +1271,19 @@
             line-height: 1.72;
             color: rgba(18, 63, 64, 0.68);
             text-shadow: none;
+        }
+
+        .hub-home .hub-hero-phone {
+            margin-top: 1rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: rgba(18, 63, 64, 0.78);
+        }
+
+        .hub-home .hub-hero-phone a {
+            color: var(--hub-deep);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(18, 63, 64, 0.18);
         }
 
         .hub-home .hub-hero-actions {
@@ -1629,6 +1670,11 @@
                 font-size: 1.05rem;
             }
 
+            .hub-home .hub-logo-image {
+                height: 2rem;
+                max-width: 11rem;
+            }
+
             .hub-home .hub-hero-grid {
                 padding: 7rem 1.25rem 4rem !important;
                 min-height: auto !important;
@@ -1642,6 +1688,10 @@
             .hub-home .hub-hero-actions {
                 flex-direction: column;
                 align-items: flex-start;
+            }
+
+            .hub-home .hub-hero-phone {
+                font-size: 0.9rem;
             }
 
             .hub-home .hub-hero-visual {
