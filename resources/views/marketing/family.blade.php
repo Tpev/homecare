@@ -52,7 +52,7 @@
         }
 
         .hub-home .hub-container {
-            width: min(1180px, calc(100vw - 2rem));
+            width: min(1240px, calc(100vw - 2rem));
             margin-inline: auto;
         }
 
@@ -63,6 +63,12 @@
             backdrop-filter: blur(22px);
             background: rgba(255, 252, 247, 0.85);
             border-bottom: 1px solid rgba(18, 63, 64, 0.08);
+        }
+
+        .hub-home .hub-desktop-nav {
+            display: flex;
+            align-items: center;
+            gap: 2.3rem;
         }
 
         .hub-home .hub-logo-mark {
@@ -109,10 +115,11 @@
         }
 
         .hub-home .hub-nav-link {
-            font-size: 0.95rem;
+            font-size: 0.98rem;
             font-weight: 600;
             color: rgba(18, 63, 64, 0.72);
             transition: color .18s ease;
+            white-space: nowrap;
         }
 
         .hub-home .hub-nav-link:hover { color: var(--hub-deep); }
@@ -168,17 +175,17 @@
         }
 
         .hub-home .hub-hero {
-            padding: 1.5rem 0 4.5rem;
+            padding: 1.6rem 0 5.6rem;
         }
 
         .hub-home .hub-hero-grid {
             display: grid;
             gap: 2rem;
             position: relative;
-            padding: 3rem 1.2rem 2.4rem;
-            border-radius: 2.5rem;
+            padding: 3.6rem 1.65rem 2.95rem;
+            border-radius: 2.75rem;
             overflow: hidden;
-            min-height: 40rem;
+            min-height: 43rem;
             background:
                 linear-gradient(90deg, rgba(255, 252, 247, 0.92) 0%, rgba(255, 252, 247, 0.78) 36%, rgba(255, 252, 247, 0.18) 100%),
                 linear-gradient(180deg, rgba(255, 252, 247, 0.24) 0%, rgba(255, 252, 247, 0.06) 100%);
@@ -190,8 +197,8 @@
             position: absolute;
             inset: 0;
             background:
-                radial-gradient(circle at left center, rgba(255, 252, 247, 0.76) 0%, rgba(255, 252, 247, 0.36) 28%, rgba(255, 252, 247, 0) 62%),
-                linear-gradient(180deg, rgba(18, 63, 64, 0.02) 0%, rgba(18, 63, 64, 0.12) 100%);
+                radial-gradient(circle at left center, rgba(255, 252, 247, 0.92) 0%, rgba(255, 252, 247, 0.6) 30%, rgba(255, 252, 247, 0.12) 62%),
+                linear-gradient(180deg, rgba(18, 63, 64, 0.02) 0%, rgba(18, 63, 64, 0.18) 100%);
             z-index: 1;
         }
 
@@ -209,7 +216,8 @@
         .hub-home .hub-hero-copy {
             position: relative;
             z-index: 2;
-            max-width: 36rem;
+            max-width: 33rem;
+            padding: 1.7rem 0 1rem;
         }
 
         .hub-home .hub-kicker {
@@ -221,10 +229,11 @@
         }
 
         .hub-home .hub-hero-title {
-            margin-top: 1.8rem;
-            max-width: 10ch;
-            font-size: clamp(3rem, 10vw, 5.6rem);
-            line-height: 0.92;
+            margin-top: 1.95rem;
+            max-width: 7.8ch;
+            font-size: clamp(3.6rem, 8.2vw, 6.15rem);
+            line-height: 0.86;
+            text-shadow: 0 10px 32px rgba(255, 252, 247, 0.26);
         }
 
         .hub-home .hub-hero-title em,
@@ -237,15 +246,17 @@
         }
 
         .hub-home .hub-hero-body {
-            margin-top: 1.25rem;
-            max-width: 30rem;
-            font-size: 1.02rem;
-            line-height: 1.8;
-            color: var(--hub-copy);
+            margin-top: 1.45rem;
+            max-width: 25rem;
+            font-size: 1.08rem;
+            line-height: 1.62;
+            color: rgba(18, 63, 64, 0.84);
+            font-weight: 500;
+            text-shadow: 0 2px 10px rgba(255, 252, 247, 0.32);
         }
 
         .hub-home .hub-hero-actions {
-            margin-top: 1.6rem;
+            margin-top: 2rem;
             display: flex;
             flex-direction: column;
             gap: 0.85rem;
@@ -290,16 +301,16 @@
             align-items: center;
             gap: 0.5rem;
             font-size: 0.86rem;
-            color: var(--hub-copy);
+            color: rgba(18, 63, 64, 0.88);
+            background: rgba(255, 252, 247, 0.48);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(8px);
+            border-radius: 999px;
+            padding: 0.45rem 0.75rem;
+            box-shadow: 0 8px 20px -16px rgba(18, 63, 64, 0.24);
         }
 
         .hub-home .hub-proof-inline::after {
-            content: '•';
-            margin-left: 0.5rem;
-            color: rgba(18, 63, 64, 0.2);
-        }
-
-        .hub-home .hub-proof-inline:last-child::after {
             display: none;
         }
 
@@ -329,12 +340,16 @@
         .hub-home .hub-hero-visual {
             position: relative;
             z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
         }
 
         .hub-home .hub-quick-wrap {
             position: relative;
-            max-width: 23rem;
-            margin-inline: auto;
+            max-width: 24rem;
+            margin-inline: 0;
         }
 
         .hub-home .hub-quick-wrap::before {
@@ -352,7 +367,7 @@
             position: relative;
             width: fit-content;
             max-width: calc(100% - 2rem);
-            margin: -1rem auto 0 1rem;
+            margin: -1rem 6.4rem 0 0;
             padding: 0.8rem 0.95rem;
             border-radius: 1.2rem;
             background: rgba(255, 252, 247, 0.94);
@@ -404,38 +419,81 @@
         }
 
         .hub-home .hub-section-title {
-            font-size: clamp(2.15rem, 6vw, 4rem);
-            line-height: 0.98;
+            font-size: clamp(2.3rem, 5.5vw, 4.35rem);
+            line-height: 0.94;
+            letter-spacing: -0.05em;
         }
 
         .hub-home .hub-section-text {
             margin-top: 1rem;
-            font-size: 1rem;
-            line-height: 1.8;
+            font-size: 1.05rem;
+            line-height: 1.72;
             color: var(--hub-copy);
             max-width: 40rem;
+        }
+
+        .hub-home .hub-support-section .hub-section-title {
+            font-size: clamp(2.8rem, 5vw, 4.85rem);
+            line-height: 0.92;
+        }
+
+        .hub-home .hub-support-section .hub-section-text {
+            max-width: 38rem;
+            font-size: 1.1rem;
+        }
+
+        .hub-home .hub-experience-section .hub-section-title {
+            max-width: 8.5ch;
+            font-size: clamp(2.9rem, 5.2vw, 5rem);
+            line-height: 0.9;
+        }
+
+        .hub-home .hub-values-section .hub-section-title {
+            max-width: 10ch;
+            font-size: clamp(3rem, 5.4vw, 5.15rem);
+        }
+
+        .hub-home .hub-how-section .hub-section-title {
+            max-width: 8ch;
+            font-size: clamp(2.8rem, 5vw, 4.9rem);
+            line-height: 0.92;
+        }
+
+        .hub-home .hub-difference-section .hub-section-title {
+            font-size: clamp(3rem, 5.1vw, 5.2rem);
+            line-height: 0.9;
+            max-width: 7.2ch;
         }
 
         .hub-home .hub-live-grid,
         .hub-home .hub-how-layout {
             display: grid;
-            gap: 2rem;
+            gap: 2.6rem;
         }
 
         .hub-home .hub-live-stack {
             position: relative;
-            min-height: 34rem;
+            min-height: 40rem;
+            max-width: 39rem;
+            margin-left: auto;
+        }
+
+        .hub-home .hub-experience-copy {
+            max-width: 29rem;
+            padding-top: 3.5rem;
         }
 
         .hub-home .hub-profile-card {
             position: relative;
-            width: min(100%, 21rem);
-            padding: 1rem;
+            width: min(100%, 18.75rem);
+            padding: 0.9rem;
+            z-index: 2;
+            box-shadow: 0 28px 60px -36px rgba(18, 63, 64, 0.24);
         }
 
         .hub-home .hub-profile-card img {
             width: 100%;
-            height: 12rem;
+            height: 12.5rem;
             object-fit: cover;
             border-radius: 1.4rem;
         }
@@ -449,6 +507,13 @@
             background: linear-gradient(180deg, var(--hub-deep) 0%, #194a4b 100%);
             color: rgba(255,255,255,0.95);
             border-color: rgba(255,255,255,0.08);
+            z-index: 3;
+            box-shadow: 0 28px 60px -30px rgba(18, 63, 64, 0.42);
+        }
+
+        .hub-home .hub-week-card {
+            z-index: 1;
+            box-shadow: 0 28px 58px -34px rgba(18, 63, 64, 0.18);
         }
 
         .hub-home .hub-week-item,
@@ -484,8 +549,19 @@
             border-color: rgba(255,255,255,0.08);
         }
 
+        .hub-home .hub-audience-card-dark h3,
+        .hub-home .hub-audience-card-dark p,
+        .hub-home .hub-audience-card-dark li,
+        .hub-home .hub-audience-card-dark span {
+            color: inherit;
+        }
+
+        .hub-home .hub-audience-card-dark h3 {
+            color: #fffefb !important;
+        }
+
         .hub-home .hub-value-card {
-            padding: 1.4rem;
+            padding: 1.55rem;
         }
 
         .hub-home .hub-value-shift-1,
@@ -536,13 +612,13 @@
         }
 
         .hub-home .hub-human-title {
-            font-size: clamp(2.2rem, 7vw, 4.8rem);
-            line-height: 0.95;
+            font-size: clamp(2.4rem, 6.2vw, 5.15rem);
+            line-height: 0.92;
             color: #fffefb;
         }
 
         .hub-home .hub-how-card {
-            padding: 1.3rem;
+            padding: 1.35rem 1.3rem 1.5rem;
             background: rgba(255, 252, 247, 0.8);
         }
 
@@ -559,6 +635,7 @@
             background: linear-gradient(180deg, var(--hub-deep) 0%, #173f55 100%);
             color: rgba(255,255,255,0.95);
             border-color: rgba(255,255,255,0.08);
+            border-radius: 2rem;
         }
 
         .hub-home .hub-podcast-image {
@@ -609,7 +686,7 @@
         .hub-home .hub-diff-row {
             display: flex;
             gap: 1rem;
-            padding: 1.3rem 0;
+            padding: 1.45rem 0;
             border-top: 1px solid rgba(255,255,255,0.1);
         }
 
@@ -646,8 +723,8 @@
         }
 
         .hub-home .hub-final-title {
-            font-size: clamp(3rem, 10vw, 6rem);
-            line-height: 0.92;
+            font-size: clamp(3.2rem, 8vw, 6.3rem);
+            line-height: 0.9;
         }
 
         .hub-home .hub-inline-icon {
@@ -726,7 +803,7 @@
             min-height: 3.2rem;
             border-radius: 1.2rem;
             border: 1px solid rgba(18,63,64,0.08);
-            background: rgba(246, 239, 230, 0.56);
+            background: rgba(255, 255, 255, 0.96);
             padding: 0.85rem 1rem;
             font-size: 0.96rem;
             font-weight: 600;
@@ -751,7 +828,7 @@
             font-weight: 800;
             letter-spacing: 0.16em;
             text-transform: uppercase;
-            color: var(--hub-copy-soft);
+            color: rgba(18, 63, 64, 0.62);
         }
 
         .hub-home .hub-home-request .hub-request-grid-two {
@@ -798,7 +875,7 @@
 
         @media (min-width: 768px) {
             .hub-home .hub-hero {
-                padding: 3rem 0 6rem;
+                padding: 2.7rem 0 6.6rem;
             }
 
             .hub-home .hub-hero-actions {
@@ -819,13 +896,13 @@
 
             .hub-home .hub-live-grid,
             .hub-home .hub-how-layout {
-                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-                align-items: center;
+                grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
+                align-items: start;
             }
 
             .hub-home .hub-podcast-card {
                 display: grid;
-                grid-template-columns: 18rem minmax(0, 1fr);
+                grid-template-columns: 17rem minmax(0, 1fr);
             }
 
             .hub-home .hub-value-shift-1 {
@@ -845,38 +922,40 @@
             .hub-home .hub-hero-grid {
                 grid-template-columns: minmax(0, 1fr) minmax(380px, 0.72fr);
                 align-items: center;
-                gap: 3rem;
-                padding: 4.25rem 3.5rem 5rem;
-                min-height: 42rem;
+                gap: 3.6rem;
+                padding: 4.85rem 4rem 5.3rem;
+                min-height: 44.25rem;
             }
 
             .hub-home .hub-hero-visual {
                 justify-self: end;
+                width: 100%;
+                max-width: 25.5rem;
             }
 
             .hub-home .hub-quick-wrap {
-                max-width: 22rem;
-                margin: 1.5rem 0 0 auto;
+                max-width: 24rem;
+                margin: 0.9rem 0 0 auto;
             }
 
             .hub-home .hub-live-stack .hub-profile-card {
                 position: absolute;
-                left: 0;
-                top: 0;
+                left: 3.2rem;
+                top: 2.5rem;
             }
 
             .hub-home .hub-live-stack .hub-visit-card {
                 position: absolute;
                 right: 0;
-                top: 2.25rem;
-                width: 19rem;
+                top: 0.7rem;
+                width: 21rem;
             }
 
             .hub-home .hub-live-stack .hub-week-card {
                 position: absolute;
-                left: 5rem;
-                bottom: 0;
-                width: 22rem;
+                left: 8.4rem;
+                bottom: 1.65rem;
+                width: 18.75rem;
             }
         }
 
@@ -913,24 +992,24 @@
             }
 
             .hub-home .hub-hero-grid {
-                padding: 4.4rem 1.1rem 1.35rem;
+                padding: 4.2rem 1.05rem 1.35rem;
                 min-height: auto;
             }
 
             .hub-home .hub-hero-grid::before {
                 background:
-                    linear-gradient(180deg, rgba(255, 252, 247, 0.92) 0%, rgba(255, 252, 247, 0.72) 44%, rgba(255, 252, 247, 0.18) 100%);
+                    linear-gradient(180deg, rgba(255, 252, 247, 0.95) 0%, rgba(255, 252, 247, 0.82) 44%, rgba(255, 252, 247, 0.22) 100%);
             }
 
             .hub-home .hub-hero-title {
                 max-width: 8.5ch;
-                font-size: 3.4rem;
+                font-size: 3.7rem;
             }
 
             .hub-home .hub-hero-body {
                 max-width: 100%;
-                font-size: 0.97rem;
-                line-height: 1.7;
+                font-size: 1rem;
+                line-height: 1.66;
             }
 
             .hub-home .hub-hero-proofline {
@@ -939,6 +1018,7 @@
 
             .hub-home .hub-proof-inline {
                 font-size: 0.8rem;
+                padding: 0.38rem 0.64rem;
             }
 
             .hub-home .hub-proof-inline::after {
@@ -957,6 +1037,44 @@
                 margin: 0.85rem auto 0;
                 width: 100%;
                 max-width: 100%;
+            }
+
+            .hub-home .hub-live-stack {
+                min-height: auto;
+                display: grid;
+                gap: 1rem;
+                max-width: 100%;
+            }
+
+            .hub-home .hub-experience-copy {
+                padding-top: 0;
+                max-width: 100%;
+            }
+
+            .hub-home .hub-profile-card,
+            .hub-home .hub-visit-card,
+            .hub-home .hub-week-card {
+                position: relative !important;
+                inset: auto !important;
+                width: 100% !important;
+            }
+
+            .hub-home .hub-section-title {
+                font-size: 2.85rem;
+                line-height: 0.95;
+            }
+
+            .hub-home .hub-support-section .hub-section-title {
+                font-size: 3rem;
+            }
+
+            .hub-home .hub-experience-section .hub-section-title {
+                max-width: 8.5ch;
+            }
+
+            .hub-home .hub-how-card h3 {
+                font-size: 1.55rem;
+                line-height: 1.05;
             }
         }
 

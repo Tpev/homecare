@@ -151,7 +151,7 @@
         </div>
     </section>
 
-    <section class="hub-section hub-section-soft">
+    <section class="hub-section hub-section-soft hub-support-section">
         <div class="hub-container text-center">
             <p class="hub-kicker">A quieter approach</p>
             <h2 class="hub-section-title">Support that fits <em>your life.</em></h2>
@@ -159,9 +159,9 @@
         </div>
     </section>
 
-    <section id="experience" class="hub-section hub-section-alt hub-section-anchor">
+    <section id="experience" class="hub-section hub-section-alt hub-section-anchor hub-experience-section">
         <div class="hub-container hub-live-grid">
-            <div>
+            <div class="hub-experience-copy">
                 <p class="hub-kicker">Live experience</p>
                 <h2 class="hub-section-title">Real people. Real <em>availability.</em></h2>
                 <p class="hub-section-text">Browse trusted caregiver profiles, understand fit faster, and move from searching to support without losing the human side of the decision.</p>
@@ -249,7 +249,7 @@
         </div>
     </section>
 
-    <section class="hub-section hub-section-soft">
+    <section class="hub-section hub-section-soft hub-values-section">
         <div class="hub-container">
             <div class="max-w-2xl">
                 <p class="hub-kicker">Why Home Care HUB</p>
@@ -284,7 +284,7 @@
         </div>
     </section>
 
-    <section id="how" class="hub-section hub-section-anchor">
+    <section id="how" class="hub-section hub-section-anchor hub-how-section">
         <div class="hub-container hub-how-layout">
             <div>
                 <p class="hub-kicker">How it works</p>
@@ -325,7 +325,7 @@
         </div>
     </section>
 
-    <section class="hub-section hub-section-dark">
+    <section class="hub-section hub-section-dark hub-difference-section">
         <div class="hub-container hub-live-grid">
             <div>
                 <p class="hub-kicker" style="color:rgba(201,184,255,0.78)">The difference</p>
@@ -357,7 +357,7 @@
         </div>
     </section>
 
-    <section class="hub-section">
+    <section class="hub-section hub-final-section">
         <div class="hub-container hub-final">
             <h2 class="hub-final-title">Get help <em>today.</em></h2>
             <p class="hub-section-text mx-auto">Start the request, bring calm back into the plan, and get the right support moving faster.</p>
