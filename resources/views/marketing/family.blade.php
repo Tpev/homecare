@@ -674,6 +674,20 @@
             box-shadow: 0 20px 36px -24px rgba(18, 63, 64, 0.5);
         }
 
+        .hub-home .hub-play-circle-disabled {
+            opacity: 0.7;
+            cursor: default;
+        }
+
+        .hub-home .hub-podcast-link {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .hub-home .hub-podcast-link:hover {
+            color: var(--hub-lavender);
+        }
+
         .hub-home .hub-dark-title,
         .hub-home .hub-dark-title em,
         .hub-home .hub-section-dark h2,

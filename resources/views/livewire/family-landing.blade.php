@@ -5,6 +5,15 @@
     $caregiversSideImage = asset('images/marketing/homepage/caregivers-side.jpg');
     $humanMomentImage = asset('images/marketing/homepage/human-moment.jpg');
     $podcastImage = asset('images/marketing/homepage/podcast.jpg');
+    $podcast = config('marketing.podcast', []);
+    $podcastUrl = collect([
+        $podcast['embed_url'] ?? null,
+        $podcast['audio_url'] ?? null,
+        $podcast['spotify_url'] ?? null,
+        $podcast['apple_url'] ?? null,
+        $podcast['youtube_url'] ?? null,
+        $podcast['transcript_url'] ?? null,
+    ])->first(fn ($url) => filled($url));
 
     $proofItems = [
         ['value' => '4.9', 'label' => 'rating'],
@@ -301,21 +310,30 @@
                 <div class="hub-podcast-image">
                     <img src="{{ $podcastImage }}" alt="Podcast cover art for Home Care HUB guidance." loading="lazy">
                     <div class="hub-podcast-play">
-                        <span class="hub-play-circle">
-                            <svg viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true"><path d="M7 5.5v9l7-4.5-7-4.5z"/></svg>
-                        </span>
+                        @if ($podcastUrl)
+                            <a href="{{ $podcastUrl }}" target="_blank" rel="noopener noreferrer" class="hub-play-circle" aria-label="Open podcast episode">
+                                <svg viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true"><path d="M7 5.5v9l7-4.5-7-4.5z"/></svg>
+                            </a>
+                        @else
+                            <span class="hub-play-circle hub-play-circle-disabled" aria-hidden="true">
+                                <svg viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true"><path d="M7 5.5v9l7-4.5-7-4.5z"/></svg>
+                            </span>
+                        @endif
                     </div>
                 </div>
                 <div class="p-6 md:p-8">
                     <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/62">Episode 14 · 28 min</p>
-                    <h3 class="mt-3 text-[2rem] leading-[1] text-white">The first conversation about care</h3>
+                    @if ($podcastUrl)
+                        <h3 class="mt-3 text-[2rem] leading-[1] text-white">
+                            <a href="{{ $podcastUrl }}" target="_blank" rel="noopener noreferrer" class="hub-podcast-link">The first conversation about care</a>
+                        </h3>
+                    @else
+                        <h3 class="mt-3 text-[2rem] leading-[1] text-white">The first conversation about care</h3>
+                    @endif
                     <p class="mt-4 text-sm leading-7 text-white/74">How to talk to your parents about getting help — without the guilt, the awkwardness, or the script.</p>
-                    <blockquote class="mt-6 border-l-2 border-[rgba(201,184,255,0.55)] pl-4 text-base italic text-white/82">“This helped us understand what to expect.”</blockquote>
-                    <p class="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/48">Marisol, daughter & caregiver</p>
-                    <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                        <a href="#" class="hub-button-secondary !bg-white !text-[var(--hub-deep)] !border-transparent">Listen now</a>
-                        <a href="#" class="hub-button-ghost !border-white/14 !bg-white/10 !text-white">All episodes</a>
-                    </div>
+                    @unless ($podcastUrl)
+                        <p class="mt-5 text-xs font-semibold uppercase tracking-[0.16em] text-white/48">Episode link coming soon</p>
+                    @endunless
                 </div>
             </div>
         </div>
