@@ -3,8 +3,10 @@
 namespace Tests\Feature\Family;
 
 use App\Livewire\Family\CreateCareRequestWizard;
+use App\Livewire\Family\CallbackRequest;
 use App\Livewire\Family\HomepageQuickRequest;
 use App\Models\CareTask;
+use App\Models\Lead;
 use App\Models\User;
 use App\Support\FamilyQuickRequestDraft;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,29 +26,53 @@ class HomepageQuickRequestFlowTest extends TestCase
             ->assertOk()
             ->assertSeeText('Care when you')
             ->assertSeeText('need it most.')
-            ->assertSeeText('Call (984) 400-4008')
+            ->assertSeeText('Call or text (984) 400-4008')
+            ->assertSeeText('Request a callback')
             ->assertSee('Tell us what you need');
     }
 
-    public function test_guest_can_start_quick_request_and_is_redirected_to_register_with_saved_draft(): void
+    public function test_guest_can_continue_homepage_quick_request_to_callback_page(): void
     {
-        $task = CareTask::query()->create(['name' => 'Companionship']);
-
         $component = Livewire::test(HomepageQuickRequest::class)
-            ->set('service_type', 'Companionship')
+            ->set('service_type', 'Companion care')
             ->set('zip', '27601')
             ->set('time_preference', 'today_afternoon');
 
-        $component->call('continueToRegister')
-            ->assertRedirect(route('register', absolute: false));
+        $component->call('continueToCallback')
+            ->assertRedirect(route('landing.get-care', [
+                'service_type' => 'Companion care',
+                'zip' => '27601',
+                'time_preference' => 'today_afternoon',
+            ], absolute: false));
+    }
 
-        $draft = session(FamilyQuickRequestDraft::SESSION_KEY);
+    public function test_callback_page_creates_family_callback_lead(): void
+    {
+        $this->get(route('landing.get-care'))
+            ->assertOk()
+            ->assertSeeText('Request a callback')
+            ->assertSeeText('Tell us what kind of support you need.');
 
-        $this->assertIsArray($draft);
-        $this->assertSame('', $draft['recipient_full_name']);
-        $this->assertSame([$task->id], $draft['selectedTasks']);
-        $this->assertSame('27601', $draft['zip']);
-        $this->assertStringContainsString('Companionship', $draft['additional_info']);
+        Livewire::test(CallbackRequest::class)
+            ->set('full_name', 'Jane Family')
+            ->set('phone', '(984) 400-0000')
+            ->set('email', 'jane@example.com')
+            ->set('zip', '27601')
+            ->set('service_type', 'Companion care')
+            ->set('callback_time', 'tomorrow_morning')
+            ->set('notes', 'My mom needs companionship twice a week.')
+            ->call('submit')
+            ->assertSet('submitted', true);
+
+        $lead = Lead::query()->sole();
+
+        $this->assertSame('family', $lead->lead_type);
+        $this->assertSame('Jane Family', $lead->name);
+        $this->assertSame('(984) 400-0000', $lead->phone);
+        $this->assertSame('27601', $lead->zip);
+        $this->assertSame('callback_request', $lead->data['intent']);
+        $this->assertSame('Companion care', $lead->data['service_type']);
+        $this->assertSame('Tomorrow morning', $lead->data['callback_time_label']);
     }
 
     public function test_family_request_wizard_prefills_from_homepage_quick_request_draft(): void

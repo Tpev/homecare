@@ -2,8 +2,6 @@
 
 namespace App\Livewire\Family;
 
-use App\Models\CareTask;
-use App\Support\FamilyQuickRequestDraft;
 use Livewire\Component;
 
 class HomepageQuickRequest extends Component
@@ -35,7 +33,7 @@ class HomepageQuickRequest extends Component
         $this->zip = '27601';
     }
 
-    public function continueToRegister()
+    public function continueToCallback()
     {
         $validated = $this->validate([
             'service_type' => ['required', 'string', 'max:100'],
@@ -43,46 +41,11 @@ class HomepageQuickRequest extends Component
             'time_preference' => ['required', 'string'],
         ]);
 
-        $taskId = $this->resolveTaskId($validated['service_type']);
-        $timeLabel = $this->timeOptions[$validated['time_preference']] ?? $validated['time_preference'];
-
-        FamilyQuickRequestDraft::put([
-            'request_mode' => CreateCareRequestWizard::MODE_FAST_TRACK,
-            'modeChosen' => true,
-            'step' => 1,
-            'request_type' => 'one_time',
-            'recipient_full_name' => '',
-            'selectedTasks' => $taskId ? [$taskId] : [],
-            'additional_info' => trim("Homepage request lead. Service type: {$validated['service_type']}. Preferred time: {$timeLabel}."),
+        return $this->redirect(route('landing.get-care', [
+            'service_type' => $validated['service_type'],
             'zip' => trim($validated['zip']),
-        ]);
-
-        session()->flash('status', 'Your request is started. Create your account to continue.');
-
-        if (auth()->check() && auth()->user()?->role === 'family') {
-            return $this->redirect(route('family.requests.create', absolute: false), navigate: true);
-        }
-
-        return $this->redirect(route('register', absolute: false), navigate: true);
-    }
-
-    private function resolveTaskId(string $serviceType): ?int
-    {
-        $normalized = mb_strtolower(trim($serviceType));
-
-        $task = CareTask::query()
-            ->get(['id', 'name'])
-            ->first(function (CareTask $task) use ($normalized) {
-                $name = mb_strtolower($task->name);
-
-                if ($name === $normalized) {
-                    return true;
-                }
-
-                return str_contains($normalized, $name) || str_contains($name, $normalized);
-            });
-
-        return $task?->id;
+            'time_preference' => $validated['time_preference'],
+        ], absolute: false), navigate: true);
     }
 
     public function render()

@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'HomeCare') }}</title>
-    <meta name="description" content="HomeCare helps families find trusted non-medical support for mom or dad in Raleigh, NC.">
+    <title>LoLo</title>
+    <meta name="description" content="LoLo helps families find trusted non-medical home care and companionship.">
     <link rel="canonical" href="{{ request()->url() }}">
 
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="{{ config('app.name', 'HomeCare') }}">
-    <meta property="og:title" content="{{ config('app.name', 'HomeCare') }}">
-    <meta property="og:description" content="HomeCare helps families find trusted non-medical support for mom or dad in Raleigh, NC.">
+    <meta property="og:site_name" content="LoLo">
+    <meta property="og:title" content="LoLo">
+    <meta property="og:description" content="LoLo helps families find trusted non-medical home care and companionship.">
     <meta property="og:url" content="{{ request()->url() }}">
     <meta property="og:image" content="{{ asset('images/marketing/flyer.png') }}">
-    <meta property="og:image:alt" content="HomeCare helps families find trusted support for mom or dad in Raleigh.">
+    <meta property="og:image:alt" content="LoLo helps families find trusted support for mom or dad at home.">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ config('app.name', 'HomeCare') }}">
-    <meta name="twitter:description" content="HomeCare helps families find trusted non-medical support for mom or dad in Raleigh, NC.">
+    <meta name="twitter:title" content="LoLo">
+    <meta name="twitter:description" content="LoLo helps families find trusted non-medical home care and companionship.">
     <meta name="twitter:image" content="{{ asset('images/marketing/flyer.png') }}">
-    <meta name="twitter:image:alt" content="HomeCare helps families find trusted support for mom or dad in Raleigh.">
+    <meta name="twitter:image:alt" content="LoLo helps families find trusted support for mom or dad at home.">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800|outfit:500,600,700&display=swap" rel="stylesheet" />
@@ -64,15 +64,14 @@
     <x-toast />
 
     <div class="min-h-screen grid lg:grid-cols-2">
-        <aside class="hidden lg:flex relative bg-gradient-to-br from-[#08345e] via-[#0d5f8d] to-[#17b879] text-white p-12">
+        <aside class="hidden lg:flex relative bg-gradient-to-br from-[#23483F] via-[#19392F] to-[#B95745] text-white p-12">
             <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_20%,white_0,transparent_40%),radial-gradient(circle_at_80%_80%,white_0,transparent_35%)]"></div>
             <div class="relative max-w-md my-auto space-y-6">
                 <a href="/" wire:navigate class="inline-flex items-center gap-3">
-                    <x-application-logo class="w-10 h-10 fill-current text-white" />
-                    <span class="text-2xl font-semibold tracking-tight">HomeCare</span>
+                    <img src="{{ asset('images/marketing/lolo/lolo-wordmark-ivory.svg') }}" alt="LoLo" class="h-10 w-auto">
                 </a>
                 <h1 class="text-4xl font-display font-semibold leading-tight">Find trusted non-medical care, faster.</h1>
-                <p class="text-blue-100 leading-relaxed">Families connect directly with independent caregivers for companionship, daily support, and flexible scheduling.</p>
+                <p class="text-[#FFF7EA]/85 leading-relaxed">Families connect directly with independent caregivers for companionship, daily support, and flexible scheduling.</p>
             </div>
         </aside>
 
@@ -80,8 +79,7 @@
             <div class="w-full max-w-3xl">
                 <div class="mb-5 text-center lg:hidden">
                     <a href="/" wire:navigate class="inline-flex items-center gap-2 text-slate-700">
-                        <x-application-logo class="w-8 h-8 fill-current text-blue-700" />
-                        <span class="text-xl font-semibold">HomeCare</span>
+                        <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo" class="h-8 w-auto">
                     </a>
                 </div>
                 <div class="bg-white border border-slate-200 shadow-xl shadow-slate-200/60 rounded-[28px] p-5 sm:p-6 md:p-8">

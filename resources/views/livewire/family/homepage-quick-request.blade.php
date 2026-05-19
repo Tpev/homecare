@@ -4,6 +4,7 @@
             <div>
                 <p class="hub-request-kicker">Book care</p>
                 <h2 class="hub-request-title">Tell us what you need</h2>
+                <p class="hub-request-price">Companionship starts at <strong>$30/hr</strong></p>
             </div>
 
             <span class="hub-request-heart" aria-hidden="true">
@@ -41,12 +42,12 @@
             </div>
         </div>
 
-        <button type="button" wire:click="continueToRegister" class="hub-request-submit mt-5">
-            See available caregivers
+        <button type="button" wire:click="continueToCallback" class="hub-request-submit mt-5">
+            Continue request
         </button>
 
         <div class="hub-request-meta">
-            <span>Average match time: 7 minutes</span>
+            <span>Clear hourly care. No long-term commitment.</span>
         </div>
     </div>
 </section>

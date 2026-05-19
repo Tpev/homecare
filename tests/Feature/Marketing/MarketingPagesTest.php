@@ -26,11 +26,25 @@ class MarketingPagesTest extends TestCase
     {
         $response = $this->get(route('landing'));
 
-        $response->assertSee('#quick-request', false);
+        $response->assertSee(route('landing.get-care'), false);
         $response->assertSee(route('landing.caregiver'), false);
-        $response->assertSee('Find Care Now');
+        $response->assertSee('Request callback');
         $response->assertSee('Tell us what you need');
-        $response->assertSee('See available caregivers');
+        $response->assertSee('$30/hr');
+    }
+
+    public function test_caregiver_landing_uses_lolo_positioning(): void
+    {
+        $response = $this->get(route('landing.caregiver'));
+
+        $response->assertOk()
+            ->assertSee('Caregiving work that fits your', false)
+            ->assertSee('Create your caregiver profile')
+            ->assertSee('Starting family rate')
+            ->assertSee(route('caregiver.register'), false)
+            ->assertDontSee('HomeCare')
+            ->assertDontSee('AI-guided')
+            ->assertDontSee('Text LoLo');
     }
 
     public function test_family_variant_pages_have_clear_primary_ctas(): void

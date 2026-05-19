@@ -69,6 +69,7 @@ Route::middleware(['web', 'auth', 'admin.email'])
 
 Route::get('/', [MarketingPagesController::class, 'landing'])->name('landing');
 Route::get('/families', [MarketingPagesController::class, 'family'])->name('landing.family');
+Route::view('/get-care', 'marketing.family-callback')->name('landing.get-care');
 Route::get('/families/{variant}', [MarketingPagesController::class, 'familyVariant'])
     ->whereIn('variant', ['a', 'b', 'c', 'd', 'e'])
     ->name('landing.family.variant');

@@ -1,5 +1,5 @@
 <img
-    src="{{ asset('images/marketing/logo.png') }}"
-    alt="HomeCare"
+    src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}"
+    alt="LoLo"
     {{ $attributes->class('block object-contain') }}
 >

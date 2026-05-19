@@ -1,4 +1,4 @@
-﻿@php
+@php
     $heroImage = asset('images/marketing/homepage/hero-care.jpg');
     $caregiverImage = asset('images/marketing/homepage/caregiver-1.jpg');
     $familiesImage = asset('images/marketing/homepage/families.jpg');
@@ -16,19 +16,26 @@
     ])->first(fn ($url) => filled($url));
 
     $proofItems = [
-        ['value' => '4.9', 'label' => 'rating'],
-        ['value' => 'Background-checked', 'label' => 'caregivers'],
-        ['value' => '12k+', 'label' => 'families'],
+        ['value' => 'From $30/hr', 'label' => 'clear hourly care'],
+        ['value' => 'Vetted', 'label' => 'caregiver profiles'],
+        ['value' => 'Flexible', 'label' => 'one-time or recurring'],
+    ];
+
+    $trustItems = [
+        ['title' => 'Care from $30/hr', 'body' => 'Transparent hourly companionship, without hidden intake surprises.'],
+        ['title' => 'Vetted caregivers', 'body' => 'Profiles, checks, reviews, and clear details before you choose.'],
+        ['title' => 'No long-term commitment', 'body' => 'Book one visit, a few hours, or recurring support around real life.'],
+        ['title' => 'Family updates', 'body' => 'Stay close to the plan with simple messages and schedule visibility.'],
     ];
 
     $audiences = [
         [
             'eyebrow' => 'For families',
             'title' => 'Help your loved one, today.',
-            'body' => 'Book trusted support quickly, for one visit or recurring help at home.',
+            'body' => 'Book trusted companionship and everyday help, starting at $30/hr.',
             'image' => $familiesImage,
-            'items' => ['Find help fast', 'Flexible scheduling', 'Real, vetted caregivers'],
-            'button' => ['label' => 'Find Care', 'href' => '#quick-request'],
+            'items' => ['Clear starting rate', 'Flexible scheduling', 'Real, vetted caregivers'],
+            'button' => ['label' => 'Request callback', 'href' => route('landing.get-care')],
             'dark' => false,
         ],
         [
@@ -37,7 +44,7 @@
             'body' => 'Choose nearby opportunities, build trust, and work around your life.',
             'image' => $caregiversSideImage,
             'items' => ['Flexible work', 'Choose your schedule', 'Get booked faster'],
-            'button' => ['label' => 'Join as Caregiver', 'href' => route('landing.caregiver')],
+            'button' => ['label' => 'Become a caregiver', 'href' => route('landing.caregiver')],
             'dark' => true,
         ],
     ];
@@ -49,8 +56,8 @@
             'icon' => 'shield',
         ],
         [
-            'title' => 'Book in minutes',
-            'body' => 'Tell us what you need. Get matched with available caregivers in your area, fast.',
+            'title' => 'Clear hourly value',
+            'body' => 'Clear rates and expectations from the first request, so families can plan with less stress.',
             'icon' => 'bolt',
         ],
         [
@@ -61,9 +68,9 @@
     ];
 
     $liveSignals = [
-        ['label' => 'Available now', 'value' => 'Maya R. · Companion care'],
+        ['label' => 'Available now', 'value' => 'Maya R. - Companion care'],
         ['label' => '4.9 family rating', 'value' => 'Verified profile'],
-        ['label' => 'Typical response', 'value' => 'Within minutes'],
+        ['label' => 'Clear rate', 'value' => 'Upfront hourly'],
     ];
 
     $scheduleRows = [
@@ -74,20 +81,20 @@
 
     $steps = [
         ['number' => '01', 'title' => 'Tell us what you need', 'body' => 'Service type, location, and when you need it.'],
-        ['number' => '02', 'title' => 'Get matched fast', 'body' => 'We surface available, vetted caregivers near you.'],
-        ['number' => '03', 'title' => 'Book and manage care', 'body' => 'Confirm, message, and adjust — all in one place.'],
+        ['number' => '02', 'title' => 'Review clear matches', 'body' => 'See available, vetted caregivers near you with simple hourly details.'],
+        ['number' => '03', 'title' => 'Book and manage care', 'body' => 'Confirm, message, and adjust - all in one place.'],
     ];
 
     $differenceRows = [
-        ['title' => 'No long-term commitments', 'body' => 'Book one visit or a hundred. You decide.'],
-        ['title' => 'No intake delays', 'body' => 'Get matched in minutes, not days.'],
-        ['title' => 'Care on your schedule', 'body' => 'Mornings, evenings, weekends — flex as life shifts.'],
+        ['title' => 'Transparent hourly care', 'body' => 'Companionship starts at $30/hr, so families can plan with less guesswork.'],
+        ['title' => 'No long-term commitments', 'body' => 'Book one visit, a few hours, or recurring help. You decide.'],
+        ['title' => 'Care on your schedule', 'body' => 'Mornings, evenings, weekends - flex as life shifts.'],
     ];
 
     $stats = [
-        ['value' => '4.9', 'label' => 'Average rating', 'sub' => 'from 12,000+ reviews'],
-        ['value' => '100%', 'label' => 'Background-checked', 'sub' => 'every caregiver, every time'],
-        ['value' => '12k+', 'label' => 'Loved by families', 'sub' => 'across 40+ cities'],
+        ['value' => 'Simple', 'label' => 'Request setup', 'sub' => 'tell us what you need in minutes'],
+        ['value' => 'Vetted', 'label' => 'Caregiver profiles', 'sub' => 'checks, reviews, and clear details'],
+        ['value' => '$30/hr', 'label' => 'Starting rate', 'sub' => 'transparent companionship care'],
     ];
 @endphp
 
@@ -96,7 +103,7 @@
         <nav class="hub-nav">
             <div class="hub-container flex items-center justify-between gap-4 py-4 md:py-5">
                 <a href="{{ route('landing') }}" class="hub-brand-link">
-                    <img src="{{ asset('images/marketing/logo.png') }}" alt="Home Care HUB" class="hub-logo-image">
+                    <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo" class="hub-logo-image">
                 </a>
 
                 <div class="hub-desktop-nav hidden items-center gap-7 md:flex">
@@ -106,8 +113,8 @@
                 </div>
 
                 <div class="flex items-center gap-2 md:gap-3">
-                    <a href="tel:9844004008" class="hub-phone-chip hub-nav-phone hidden md:inline-flex">(984) 400-4008</a>
-                    <a href="#quick-request" class="hub-button-primary hub-nav-cta">Find Care Now</a>
+                    <a href="tel:9844004008" class="hub-phone-chip hub-nav-phone hidden md:inline-flex">Call or text (984) 400-4008</a>
+                    <a href="{{ route('landing.get-care') }}" class="hub-button-primary hub-nav-cta">Request callback</a>
                 </div>
             </div>
         </nav>
@@ -117,12 +124,12 @@
                 <span class="hub-pill"><span class="hub-dot"></span> Now booking in your area</span>
                 <h1 class="hub-hero-title">Care when you<br>need it <em>most.</em></h1>
                 <p class="hub-hero-body">
-                    Simple scheduling. Trusted caregivers. Peace of mind — delivered to your door in minutes.
+                    Flexible in-home companionship and everyday help from vetted caregivers, with clear hourly choices.
                 </p>
-                <p class="hub-hero-phone">Call or text <a href="tel:9844004008">(984) 400-4008</a></p>
+                <p class="hub-hero-phone">Questions before you start? Call or text <a href="tel:9844004008">(984) 400-4008</a>.</p>
 
                 <div class="hub-hero-actions">
-                    <a href="#quick-request" class="hub-button-primary">Find Care Now
+                    <a href="{{ route('landing.get-care') }}" class="hub-button-primary">Request a callback
                         <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true"><path d="M5 10h10M11 4l4 6-4 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </a>
                     <a href="#how" class="hub-button-secondary">How it works
@@ -156,20 +163,31 @@
         </div>
     </section>
 
-    <section class="hub-section hub-section-soft hub-support-section">
-        <div class="hub-container text-center">
-            <p class="hub-kicker">A quieter approach</p>
-            <h2 class="hub-section-title">Support that<br>fits <em>your life.</em></h2>
-            <p class="hub-section-text mx-auto">Care that adapts to you — not the other way around.</p>
+    <section class="hub-trust-strip" aria-label="LoLo trust signals">
+        <div class="hub-container hub-trust-grid">
+            @foreach ($trustItems as $item)
+                <article class="hub-trust-card" data-hub-reveal>
+                    <strong>{{ $item['title'] }}</strong>
+                    <span>{{ $item['body'] }}</span>
+                </article>
+            @endforeach
         </div>
     </section>
 
-    <section id="experience" class="hub-section hub-section-alt hub-section-anchor hub-experience-section">
+    <section class="hub-section hub-section-soft hub-support-section" data-hub-reveal>
+        <div class="hub-container text-center">
+            <p class="hub-kicker">A quieter approach</p>
+            <h2 class="hub-section-title">Support that<br>fits <em>your life.</em></h2>
+            <p class="hub-section-text mx-auto">Companionship, errands, meals, check-ins, and calm support on your terms.</p>
+        </div>
+    </section>
+
+    <section id="experience" class="hub-section hub-section-alt hub-section-anchor hub-experience-section" data-hub-reveal>
         <div class="hub-container hub-live-grid">
             <div class="hub-experience-copy">
                 <p class="hub-kicker">Live experience</p>
                 <h2 class="hub-section-title">Real people. Real <em>availability.</em></h2>
-                <p class="hub-section-text">See who's free near you, right now. Browse profiles, read reviews, and book in a few taps.</p>
+                <p class="hub-section-text">See who's free near you. Browse vetted profiles, read reviews, compare clear hourly details, and book in a few taps.</p>
             </div>
 
             <div class="hub-live-stack">
@@ -178,9 +196,9 @@
                     <div class="mt-4 flex items-start justify-between gap-3">
                         <div>
                             <p class="text-lg font-bold text-[var(--hub-deep)]">Maya R.</p>
-                            <p class="mt-1 text-sm text-[var(--hub-copy-soft)]">Companion care · Meal support · 6 years</p>
+                            <p class="mt-1 text-sm text-[var(--hub-copy-soft)]">Companion care - Meal support - 6 years</p>
                         </div>
-                        <div class="rounded-full bg-[rgba(124,93,220,0.12)] px-3 py-2 text-xs font-bold text-[var(--hub-lavender)]">4.9</div>
+                        <div class="rounded-full bg-[rgba(201,107,85,0.12)] px-3 py-2 text-xs font-bold text-[var(--hub-coral)]">4.9</div>
                     </div>
                     <div class="mt-4 space-y-2 text-sm">
                         @foreach ($liveSignals as $signal)
@@ -209,11 +227,11 @@
                         <div class="hub-visit-row"><span>Support</span><strong class="text-white">Companion care</strong></div>
                     </div>
 
-                    <p class="mt-5 text-xs font-semibold uppercase tracking-[0.16em] text-[rgba(255,255,255,0.64)]">Maya is on her way · ETA 22 min</p>
+                    <p class="mt-5 text-xs font-semibold uppercase tracking-[0.16em] text-[rgba(255,255,255,0.64)]">Maya is on her way - ETA 22 min</p>
                 </div>
 
                 <div class="hub-surface-card hub-week-card">
-                    <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--hub-lavender)]">This week</p>
+                    <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--hub-coral)]">This week</p>
                     <div class="mt-3">
                         @foreach ($scheduleRows as $row)
                             <div class="hub-week-item">
@@ -224,7 +242,7 @@
                                         <p class="text-xs text-[var(--hub-copy-soft)]">{{ $row['name'] }}</p>
                                     </div>
                                 </div>
-                                <span class="hub-inline-icon">✓</span>
+                                <span class="hub-inline-icon">+</span>
                             </div>
                         @endforeach
                     </div>
@@ -236,15 +254,15 @@
     <section id="caregivers" class="hub-section hub-section-anchor">
         <div class="hub-container hub-audience-grid">
             @foreach ($audiences as $audience)
-                <article class="hub-audience-card {{ $audience['dark'] ? 'hub-audience-card-dark' : '' }}">
+                <article class="hub-audience-card {{ $audience['dark'] ? 'hub-audience-card-dark' : '' }}" data-hub-reveal>
                     <img src="{{ $audience['image'] }}" alt="{{ $audience['title'] }}" loading="lazy">
                     <div class="p-6 md:p-8">
-                        <p class="hub-kicker" style="color: {{ $audience['dark'] ? 'rgba(255,255,255,0.72)' : 'var(--hub-lavender)' }}">{{ $audience['eyebrow'] }}</p>
+                        <p class="hub-kicker" style="color: {{ $audience['dark'] ? 'rgba(255,255,255,0.72)' : 'var(--hub-coral)' }}">{{ $audience['eyebrow'] }}</p>
                         <h3 class="mt-2 text-[2rem] leading-[1] {{ $audience['dark'] ? 'text-white' : '' }}">{{ $audience['title'] }}</h3>
                         <p class="mt-4 text-sm leading-7 {{ $audience['dark'] ? 'text-white/74' : 'text-[var(--hub-copy)]' }}">{{ $audience['body'] }}</p>
                         <ul class="mt-5 space-y-2 text-sm {{ $audience['dark'] ? 'text-white/82' : 'text-[var(--hub-copy)]' }}">
                             @foreach ($audience['items'] as $item)
-                                <li class="flex items-center gap-2"><span class="hub-inline-icon">•</span>{{ $item }}</li>
+                                <li class="flex items-center gap-2"><span class="hub-inline-icon">+</span>{{ $item }}</li>
                             @endforeach
                         </ul>
                         <a href="{{ $audience['button']['href'] }}" class="{{ $audience['dark'] ? 'hub-button-ghost mt-6 !bg-white !text-[var(--hub-deep)]' : 'hub-button-primary mt-6' }}">{{ $audience['button']['label'] }}</a>
@@ -254,15 +272,15 @@
         </div>
     </section>
 
-    <section class="hub-section hub-section-soft hub-values-section">
+    <section class="hub-section hub-section-soft hub-values-section" data-hub-reveal>
         <div class="hub-container">
             <div class="max-w-2xl">
-                <p class="hub-kicker">Why Home Care HUB</p>
+                <p class="hub-kicker">Why LoLo</p>
                 <h2 class="hub-section-title">Built around the moments <em>that matter.</em></h2>
             </div>
             <div class="hub-value-grid mt-8 md:mt-12">
                 @foreach ($valueCards as $index => $card)
-                    <article class="hub-value-card {{ $index === 1 ? 'hub-value-shift-1' : ($index === 2 ? 'hub-value-shift-2' : '') }}">
+                    <article class="hub-value-card {{ $index === 1 ? 'hub-value-shift-1' : ($index === 2 ? 'hub-value-shift-2' : '') }}" data-hub-reveal>
                         <span class="hub-value-icon">
                             @if ($card['icon'] === 'shield')
                                 <svg viewBox="0 0 20 20" fill="none" class="h-5 w-5" aria-hidden="true"><path d="M10 2l6 2.5v4.9c0 3.6-2.3 6.7-6 8.6-3.7-1.9-6-5-6-8.6V4.5L10 2z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M7.5 10.1l1.5 1.5 3.4-3.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -280,24 +298,24 @@
         </div>
     </section>
 
-    <section class="hub-human">
+    <section class="hub-human" data-hub-reveal>
         <img src="{{ $humanMomentImage }}" alt="Caregiver and older adult laughing together in a warm kitchen." loading="lazy">
         <div class="hub-container hub-human-copy">
             <div class="max-w-2xl">
-                <h2 class="hub-human-title">It’s not just care.<br><em class="hub-highlight" style="color:#f6efe6;">It’s connection.</em></h2>
+                <h2 class="hub-human-title">It's not just care.<br><em class="hub-highlight" style="color:#f1e5d2;">It's connection.</em></h2>
             </div>
         </div>
     </section>
 
-    <section id="how" class="hub-section hub-section-anchor hub-how-section">
+    <section id="how" class="hub-section hub-section-anchor hub-how-section" data-hub-reveal>
         <div class="hub-container hub-how-layout">
             <div>
                 <p class="hub-kicker">How it works</p>
-                <h2 class="hub-section-title">Three steps. <em>That’s it.</em></h2>
-                <p class="hub-section-text">No phone trees, no back-and-forth intake loop. Just a clear path from “we need help” to actual support at home.</p>
+                <h2 class="hub-section-title">Three steps. <em>That's it.</em></h2>
+                <p class="hub-section-text">No phone trees, no back-and-forth intake loop. Just a clear path from "we need help" to actual support at home.</p>
                 <div class="hub-how-grid mt-8 md:mt-10 !grid-cols-1 md:!grid-cols-3">
                     @foreach ($steps as $step)
-                        <article class="hub-how-card">
+                        <article class="hub-how-card" data-hub-reveal>
                             <p class="hub-step-no">{{ $step['number'] }}</p>
                             <h3 class="mt-3 text-[1.5rem] leading-[1.08]">{{ $step['title'] }}</h3>
                             <p class="mt-3 text-sm leading-7 text-[var(--hub-copy)]">{{ $step['body'] }}</p>
@@ -306,9 +324,9 @@
                 </div>
             </div>
 
-            <div id="guidance" class="hub-podcast-card hub-section-anchor">
+            <div id="guidance" class="hub-podcast-card hub-section-anchor" data-hub-reveal>
                 <div class="hub-podcast-image">
-                    <img src="{{ $podcastImage }}" alt="Podcast cover art for Home Care HUB guidance." loading="lazy">
+                    <img src="{{ $podcastImage }}" alt="Podcast cover art for LoLo guidance." loading="lazy">
                     <div class="hub-podcast-play">
                         @if ($podcastUrl)
                             <a href="{{ $podcastUrl }}" target="_blank" rel="noopener noreferrer" class="hub-play-circle" aria-label="Open podcast episode">
@@ -322,7 +340,7 @@
                     </div>
                 </div>
                 <div class="p-6 md:p-8">
-                    <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/62">Episode 14 · 28 min</p>
+                    <p class="text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/62">Episode 14 - 28 min</p>
                     @if ($podcastUrl)
                         <h3 class="mt-3 text-[2rem] leading-[1] text-white">
                             <a href="{{ $podcastUrl }}" target="_blank" rel="noopener noreferrer" class="hub-podcast-link">The first conversation about care</a>
@@ -330,7 +348,7 @@
                     @else
                         <h3 class="mt-3 text-[2rem] leading-[1] text-white">The first conversation about care</h3>
                     @endif
-                    <p class="mt-4 text-sm leading-7 text-white/74">How to talk to your parents about getting help — without the guilt, the awkwardness, or the script.</p>
+                    <p class="mt-4 text-sm leading-7 text-white/74">How to talk to your parents about getting help - without the guilt, the awkwardness, or the script.</p>
                     @unless ($podcastUrl)
                         <p class="mt-5 text-xs font-semibold uppercase tracking-[0.16em] text-white/48">Episode link coming soon</p>
                     @endunless
@@ -339,11 +357,11 @@
         </div>
     </section>
 
-    <section class="hub-section hub-section-dark hub-difference-section">
+    <section class="hub-section hub-section-dark hub-difference-section" data-hub-reveal>
         <div class="hub-container hub-live-grid">
             <div>
-                <p class="hub-kicker" style="color:rgba(201,184,255,0.78)">The difference</p>
-                <h2 class="hub-section-title hub-dark-title">Not your typical <em>agency.</em></h2>
+                <p class="hub-kicker" style="color:rgba(255,247,234,0.78)">The difference</p>
+                <h2 class="hub-section-title hub-dark-title">Flexible care, without the <em>pressure.</em></h2>
             </div>
             <div>
                 @foreach ($differenceRows as $row)
@@ -362,7 +380,7 @@
     <section class="hub-section hub-section-alt">
         <div class="hub-container hub-stat-grid">
             @foreach ($stats as $stat)
-                <article class="hub-stat-card">
+                <article class="hub-stat-card" data-hub-reveal>
                     <strong>{{ $stat['value'] }}</strong>
                     <p class="mt-4 text-sm font-semibold text-[var(--hub-deep)]">{{ $stat['label'] }}</p>
                     <p class="mt-1 text-xs text-[var(--hub-copy-soft)]">{{ $stat['sub'] }}</p>
@@ -371,12 +389,12 @@
         </div>
     </section>
 
-    <section class="hub-section hub-final-section">
+    <section class="hub-section hub-final-section" data-hub-reveal>
         <div id="contact" class="hub-container hub-final">
             <h2 class="hub-final-title">Get help <em>today.</em></h2>
-            <p class="hub-section-text mx-auto">Start the request, bring calm back into the plan, and get the right support moving faster.</p>
+            <p class="hub-section-text mx-auto">Start with clear hourly companionship, bring calm back into the plan, and get the right support moving faster.</p>
             <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <a href="#quick-request" class="hub-button-primary">Find care now</a>
+                <a href="{{ route('landing.get-care') }}" class="hub-button-primary">Request a callback</a>
                 <a href="tel:9844004008" class="hub-button-ghost">Call (984) 400-4008</a>
             </div>
         </div>
