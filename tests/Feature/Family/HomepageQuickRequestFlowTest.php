@@ -5,11 +5,13 @@ namespace Tests\Feature\Family;
 use App\Livewire\Family\CreateCareRequestWizard;
 use App\Livewire\Family\CallbackRequest;
 use App\Livewire\Family\HomepageQuickRequest;
+use App\Mail\Ops\CallbackRequestOpsAlertMail;
 use App\Models\CareTask;
 use App\Models\Lead;
 use App\Models\User;
 use App\Support\FamilyQuickRequestDraft;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 use Livewire\Volt\Volt;
 use Tests\TestCase;
@@ -48,6 +50,14 @@ class HomepageQuickRequestFlowTest extends TestCase
 
     public function test_callback_page_creates_family_callback_lead(): void
     {
+        config([
+            'marketplace.ops_alert_recipients' => [
+                'peverelli.t@gmail.com',
+                'cpetrinipoli@hub.healthcare',
+            ],
+        ]);
+        Mail::fake();
+
         $this->get(route('landing.get-care'))
             ->assertOk()
             ->assertSeeText('Request a callback')
@@ -73,6 +83,13 @@ class HomepageQuickRequestFlowTest extends TestCase
         $this->assertSame('callback_request', $lead->data['intent']);
         $this->assertSame('Companion care', $lead->data['service_type']);
         $this->assertSame('Tomorrow morning', $lead->data['callback_time_label']);
+
+        Mail::assertSent(CallbackRequestOpsAlertMail::class, function (CallbackRequestOpsAlertMail $mail) use ($lead) {
+            return $mail->lead->is($lead)
+                && $mail->hasTo('peverelli.t@gmail.com')
+                && $mail->hasTo('cpetrinipoli@hub.healthcare')
+                && str_contains($mail->render(), 'My mom needs companionship twice a week.');
+        });
     }
 
     public function test_family_request_wizard_prefills_from_homepage_quick_request_draft(): void

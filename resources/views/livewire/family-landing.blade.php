@@ -98,7 +98,7 @@
     ];
 @endphp
 
-<div class="hub-home overflow-x-hidden">
+<div class="hub-home">
     <section class="hub-hero">
         <nav class="hub-nav">
             <div class="hub-container flex items-center justify-between gap-4 py-4 md:py-5">

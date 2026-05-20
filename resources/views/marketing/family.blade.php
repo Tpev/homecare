@@ -29,6 +29,8 @@
                 radial-gradient(circle at top right, rgba(158, 216, 198, 0.16), transparent 28%),
                 linear-gradient(180deg, #fffaf2 0%, var(--hub-bg) 34%, #fffaf0 100%);
             color: var(--hub-deep);
+            overflow-x: clip;
+            overflow-y: visible;
         }
 
         .hub-home,
@@ -1221,6 +1223,8 @@
         /* Target-alignment pass based on the supplied Lovable reference. */
         .hub-home {
             background: #fff7ea;
+            overflow-x: clip;
+            overflow-y: visible;
         }
 
         .hub-home .hub-container {

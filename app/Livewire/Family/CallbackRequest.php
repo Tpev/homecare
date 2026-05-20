@@ -3,6 +3,7 @@
 namespace App\Livewire\Family;
 
 use App\Models\Lead;
+use App\Services\Ops\OpsAlertService;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 
@@ -69,7 +70,7 @@ class CallbackRequest extends Component
             'notes' => ['nullable', 'string', 'max:1200'],
         ]);
 
-        Lead::query()->create([
+        $lead = Lead::query()->create([
             'lead_type' => 'family',
             'name' => trim($validated['full_name']),
             'email' => filled($validated['email']) ? trim($validated['email']) : null,
@@ -91,6 +92,8 @@ class CallbackRequest extends Component
             'ip' => request()->ip(),
             'user_agent' => request()->userAgent(),
         ]);
+
+        app(OpsAlertService::class)->notifyCallbackRequestCreated($lead);
 
         $this->submitted = true;
     }

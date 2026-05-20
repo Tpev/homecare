@@ -3,12 +3,14 @@
 namespace App\Services\Ops;
 
 use App\Mail\Ops\CaregiverReadyForReviewOpsAlertMail;
+use App\Mail\Ops\CallbackRequestOpsAlertMail;
 use App\Mail\Ops\FamilyRegisteredOpsAlertMail;
 use App\Mail\Ops\NewCareRequestOpsAlertMail;
 use App\Mail\Ops\UserRegisteredOpsAlertMail;
 use App\Mail\Ops\VoiceCallReportOpsAlertMail;
 use App\Models\CareRequest;
 use App\Models\CaregiverProfile;
+use App\Models\Lead;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
@@ -52,6 +54,20 @@ class OpsAlertService
 
         try {
             Mail::to($recipients)->send(new NewCareRequestOpsAlertMail($careRequest));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+    }
+
+    public function notifyCallbackRequestCreated(Lead $lead): void
+    {
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            return;
+        }
+
+        try {
+            Mail::to($recipients)->send(new CallbackRequestOpsAlertMail($lead));
         } catch (Throwable $exception) {
             report($exception);
         }
