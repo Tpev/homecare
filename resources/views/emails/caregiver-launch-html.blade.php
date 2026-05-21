@@ -19,18 +19,15 @@
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:660px;background:#fffaf2;border:1px solid #dfd3c1;border-radius:18px;overflow:hidden;">
                     <tr>
                         <td style="padding:28px 26px;background:#16433b;color:#fffaf2;">
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 18px 0;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 24px 0;">
                                 <tr>
-                                    <td width="72" style="vertical-align:middle;">
-                                        <img src="{{ $logoUrl }}" width="64" height="64" alt="LoLo Care" style="display:block;width:64px;height:64px;border:0;border-radius:14px;outline:none;text-decoration:none;">
-                                    </td>
-                                    <td style="vertical-align:middle;padding-left:14px;">
-                                        <p style="margin:0 0 4px 0;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#d8c7aa;">LoLo Care launch</p>
-                                        <p style="margin:0;font-size:16px;line-height:1.4;font-weight:bold;color:#fffaf2;">LoLo Care</p>
+                                    <td style="background:#fffaf2;border:1px solid #eadac4;border-radius:12px;padding:12px 14px;">
+                                        <img src="{{ $logoUrl }}" width="178" alt="LoLo Care" style="display:block;width:178px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;">
                                     </td>
                                 </tr>
                             </table>
-                            <h1 style="margin:0;font-size:30px;line-height:1.18;">HomeCare Hub is now LoLo Care</h1>
+                            <p style="margin:0 0 9px 0;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#d8c7aa;">Caregiver launch update</p>
+                            <h1 style="margin:0;font-size:30px;line-height:1.18;">HomeCare Hub has a new name</h1>
                             <p style="margin:12px 0 0 0;font-size:15px;line-height:1.6;color:#f7ead5;max-width:540px;">
                                 We're opening to families next week, and we'd love your help spreading the word.
                             </p>

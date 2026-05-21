@@ -36,7 +36,7 @@ class CaregiverLaunchEmailCommandTest extends TestCase
         );
     }
 
-    public function test_launch_email_includes_public_square_logo_url(): void
+    public function test_launch_email_includes_public_logo_url(): void
     {
         $mail = new CaregiverLaunchEmail;
         $content = $mail->content();

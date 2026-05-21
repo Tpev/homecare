@@ -21,7 +21,7 @@ class CaregiverLaunchEmail extends Mailable
 
     public const WEBSITE_URL = 'https://carelolo.com/';
 
-    public const LOGO_PATH = 'images/marketing/lolo/lolo-app-icon-1024.png';
+    public const LOGO_PATH = 'images/marketing/lolo/lolo-lockup-warm-1024.png';
 
     public const GET_CARE_URL = 'https://carelolo.com/get-care';
 
