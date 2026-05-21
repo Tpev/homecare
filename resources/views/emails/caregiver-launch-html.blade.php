@@ -8,6 +8,9 @@
 <body style="margin:0;padding:0;background:#f6f1e8;font-family:Arial,Helvetica,sans-serif;color:#17231f;">
     <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">
         {{ $previewText }}
+        @for ($i = 0; $i < 90; $i++)
+            &#8204;&nbsp;
+        @endfor
     </span>
 
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f1e8;padding:24px 12px;">
