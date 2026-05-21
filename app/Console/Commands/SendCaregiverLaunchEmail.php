@@ -209,9 +209,8 @@ class SendCaregiverLaunchEmail extends Command
     {
         return [
             'subject' => CaregiverLaunchEmail::SUBJECT,
-            'get_care_url' => CaregiverLaunchEmail::GET_CARE_URL,
-            'facebook_url' => CaregiverLaunchEmail::FACEBOOK_URL,
-            'instagram_url' => CaregiverLaunchEmail::INSTAGRAM_URL,
+            'launch_date' => CaregiverLaunchEmail::LAUNCH_DATE,
+            'website_url' => CaregiverLaunchEmail::WEBSITE_URL,
         ];
     }
 }

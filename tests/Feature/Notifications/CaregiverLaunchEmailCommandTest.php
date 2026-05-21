@@ -45,6 +45,21 @@ class CaregiverLaunchEmailCommandTest extends TestCase
         $this->assertFileExists(public_path(CaregiverLaunchEmail::LOGO_PATH));
     }
 
+    public function test_launch_email_copy_is_brand_announcement_with_june_first_followup(): void
+    {
+        $mail = new CaregiverLaunchEmail;
+        $content = $mail->content();
+        $html = (string) view($content->html, $content->with)->render();
+        $text = (string) view($content->text, $content->with)->render();
+
+        $this->assertStringContainsString('June 1, 2026', $html);
+        $this->assertStringContainsString('early next week', $html);
+        $this->assertStringContainsString('June 1, 2026', $text);
+        $this->assertStringContainsString('early next week', $text);
+        $this->assertStringNotContainsString('Follow us on Facebook', $text);
+        $this->assertStringNotContainsString('Here\'s a post you can copy and share', $text);
+    }
+
     public function test_all_option_sends_to_caregivers_only_and_logs_deliveries(): void
     {
         Mail::fake();
