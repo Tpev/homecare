@@ -60,7 +60,7 @@
                 <h2 class="font-display text-lg font-semibold">How charging works</h2>
             </x-slot:header>
             <div class="space-y-2 text-sm text-slate-700">
-                <p>1. When you click hire, HomeCare pre-authorizes your card for the expected shift amount.</p>
+                <p>1. When you click hire, LoLo pre-authorizes your card for the expected shift amount.</p>
                 <p>2. After the shift is confirmed, we capture the final amount based on actual worked time.</p>
                 <p>3. Caregiver payout moves through Stripe Connect once the shift is confirmed.</p>
             </div>

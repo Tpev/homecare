@@ -8,15 +8,15 @@
 @source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
 
 @theme {
-    --color-hc-bg: #faf9f7;
-    --color-hc-bg-warm: #f5f1eb;
-    --color-hc-ink: #0f3d3e;
-    --color-hc-muted: #6e746f;
-    --color-hc-primary: #0f3d3e;
+    --color-hc-bg: #fff7ea;
+    --color-hc-bg-warm: #f5ecde;
+    --color-hc-ink: #23483f;
+    --color-hc-muted: #66746d;
+    --color-hc-primary: #23483f;
     --color-hc-primary-soft: #4f6faf;
-    --color-hc-accent: #7c5ddc;
-    --color-hc-card: #fffdfa;
-    --color-hc-border: #ded6ca;
+    --color-hc-accent: #c96b55;
+    --color-hc-card: #fffaf0;
+    --color-hc-border: #e3d6c5;
 }
 
 @layer base {
@@ -32,9 +32,9 @@
 
     body {
         background-image:
-            radial-gradient(circle at 8% 10%, rgba(79, 111, 175, 0.08), transparent 28%),
-            radial-gradient(circle at 90% 8%, rgba(124, 93, 220, 0.08), transparent 24%),
-            linear-gradient(to bottom, #fcfbf8, #f7f3ec 40%, #faf9f7 100%);
+            radial-gradient(circle at 8% 10%, rgba(201, 107, 85, 0.11), transparent 28%),
+            radial-gradient(circle at 90% 8%, rgba(79, 111, 175, 0.08), transparent 24%),
+            linear-gradient(to bottom, #fffcf7, #fbf3e5 40%, #fff7ea 100%);
         background-attachment: fixed;
         font-family: "Inter", sans-serif;
     }
@@ -55,7 +55,7 @@
     }
 
     ::selection {
-        background: rgba(124, 93, 220, 0.18);
+        background: rgba(201, 107, 85, 0.18);
         color: var(--color-hc-ink);
     }
 }
@@ -68,9 +68,9 @@
     .hc-hero {
         @apply rounded-[2rem] p-6 md:p-8 text-white shadow-lg;
         background-image:
-            linear-gradient(135deg, rgba(15, 61, 62, 0.98), rgba(23, 74, 82, 0.98)),
+            linear-gradient(135deg, rgba(35, 72, 63, 0.98), rgba(25, 57, 47, 0.98)),
             radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.18), transparent 34%),
-            radial-gradient(circle at 90% 8%, rgba(124, 93, 220, 0.18), transparent 26%);
+            radial-gradient(circle at 90% 8%, rgba(201, 107, 85, 0.22), transparent 26%);
     }
 
     .hc-surface {
@@ -132,8 +132,8 @@
         inset: 0;
         pointer-events: none;
         background:
-            radial-gradient(circle at top left, rgba(79, 111, 175, 0.07), transparent 28%),
-            radial-gradient(circle at top right, rgba(124, 93, 220, 0.07), transparent 22%);
+            radial-gradient(circle at top left, rgba(201, 107, 85, 0.08), transparent 28%),
+            radial-gradient(circle at top right, rgba(79, 111, 175, 0.08), transparent 22%);
         z-index: -1;
     }
 
@@ -149,8 +149,8 @@
         @apply rounded-[1.9rem] border p-5 text-white shadow-lg;
         border-color: rgba(255, 255, 255, 0.14);
         background:
-            linear-gradient(145deg, rgba(15, 61, 62, 0.98), rgba(28, 83, 84, 0.98)),
-            radial-gradient(circle at top left, rgba(124, 93, 220, 0.18), transparent 36%);
+            linear-gradient(145deg, rgba(35, 72, 63, 0.98), rgba(25, 57, 47, 0.98)),
+            radial-gradient(circle at top left, rgba(201, 107, 85, 0.18), transparent 36%);
         box-shadow: 0 20px 44px rgba(15, 61, 62, 0.18);
     }
 
@@ -163,7 +163,7 @@
 
     .hc-brand-kicker {
         @apply text-[11px] uppercase tracking-[0.2em] font-semibold;
-        color: rgba(124, 93, 220, 0.9);
+        color: rgba(201, 107, 85, 0.95);
     }
 
     .hc-brand-stat {
@@ -202,7 +202,7 @@
 
     .hc-muted-chip {
         @apply inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em];
-        background: rgba(124, 93, 220, 0.12);
+        background: rgba(201, 107, 85, 0.12);
         color: var(--color-hc-accent);
     }
 

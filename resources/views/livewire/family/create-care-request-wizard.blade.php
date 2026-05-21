@@ -175,7 +175,7 @@
                         <details class="rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] p-4">
                             <summary class="cursor-pointer text-sm font-semibold text-[#0F172A]">Optional now: add a custom request title</summary>
                             <div class="mt-4">
-                                <x-input label="Request title (optional)" wire:model="title" hint="If empty, HomeCare creates one automatically." />
+                                <x-input label="Request title (optional)" wire:model="title" hint="If empty, LoLo creates one automatically." />
                                 @error('title') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                             </div>
                         </details>

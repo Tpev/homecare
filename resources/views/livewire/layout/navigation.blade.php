@@ -14,7 +14,7 @@ new class extends Component
     }
 }; ?>
 
-<nav x-data="{ open: false }" class="sticky top-0 z-40 border-b border-[#DED6CA]/80 bg-[rgba(255,253,250,0.94)] backdrop-blur">
+<nav x-data="{ open: false }" class="sticky top-0 z-40 border-b border-[#E3D6C5]/80 bg-[rgba(255,253,250,0.94)] backdrop-blur">
     @php
         $user = auth()->user();
         $isCaregiver = $user?->role === 'caregiver';
@@ -224,10 +224,12 @@ new class extends Component
         <div class="flex h-[4.5rem] items-center justify-between gap-3 py-2">
             <div class="shrink-0 flex items-center">
                 <a href="{{ $user ? route('dashboard') : route('landing') }}" wire:navigate class="inline-flex items-center gap-3">
-                    <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#0F3D3E]/10 bg-[rgba(255,253,250,0.96)] shadow-sm"><x-application-logo class="block h-7 w-auto object-contain" /></span>
+                    <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#23483F]/10 bg-[rgba(255,253,250,0.96)] shadow-sm">
+                        <img src="{{ asset('images/marketing/lolo/lolo-app-icon.svg') }}" alt="LoLo" class="block h-7 w-7 object-contain" />
+                    </span>
                     <span class="block">
-                        <span class="block font-display text-lg font-semibold leading-none text-[#0F3D3E] sm:text-xl">Home Care <span class="text-[#7C5DDC]">HUB</span></span>
-                        <span class="mt-1 hidden text-[11px] font-medium uppercase tracking-[0.16em] text-[#6E746F] md:block">{{ $isAdmin ? 'Admin console' : ($isCaregiver ? 'Caregiver workspace' : ($isFamily ? 'Family workspace' : 'Thoughtful care. Smarter by design.')) }}</span>
+                        <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo" class="block h-6 w-auto object-contain sm:h-7" />
+                        <span class="mt-1 hidden text-[11px] font-medium uppercase tracking-[0.16em] text-[#6E746F] md:block">{{ $isAdmin ? 'Admin console' : ($isCaregiver ? 'Caregiver workspace' : ($isFamily ? 'Family workspace' : 'Care that feels personal.')) }}</span>
                     </span>
                 </a>
             </div>
@@ -241,7 +243,7 @@ new class extends Component
             </div>
 
             <div class="sm:hidden ml-auto">
-                <button @click="open = ! open" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-[#DED6CA] bg-[rgba(255,253,250,0.98)] text-[#0F3D3E] shadow-sm hover:bg-[#F5F1EB]">
+                <button @click="open = ! open" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] text-[#23483F] shadow-sm hover:bg-[#F8F0E2]">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': !open}" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': !open, 'inline-flex': open}" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -255,18 +257,18 @@ new class extends Component
                 <button
                     type="button"
                     @click="accountOpen = !accountOpen"
-                    class="inline-flex items-center gap-3 rounded-2xl border border-[#DED6CA] bg-[rgba(255,253,250,0.98)] px-3 py-2 text-sm text-[#0F3D3E] shadow-sm transition hover:border-[#0F3D3E]/12 hover:bg-[#F5F1EB]"
+                    class="inline-flex items-center gap-3 rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] px-3 py-2 text-sm text-[#23483F] shadow-sm transition hover:border-[#23483F]/12 hover:bg-[#F8F0E2]"
                 >
                     @if ($avatarUrl)
-                        <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="h-9 w-9 rounded-full object-cover border border-[#DED6CA]">
+                        <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="h-9 w-9 rounded-full object-cover border border-[#E3D6C5]">
                     @else
-                        <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#EAE4F8] text-xs font-semibold text-[#7C5DDC]">
+                        <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F5E7E1] text-xs font-semibold text-[#C96B55]">
                             {{ $initials }}
                         </span>
                     @endif
 
                     <span class="hidden md:block text-left">
-                        <span class="block text-sm font-semibold leading-tight text-[#0F3D3E]">{{ $user->name }}</span>
+                        <span class="block text-sm font-semibold leading-tight text-[#23483F]">{{ $user->name }}</span>
                         <span class="block text-xs text-[#6E746F] leading-tight">{{ ucfirst((string) $user->role) }}</span>
                     </span>
 
@@ -279,60 +281,60 @@ new class extends Component
                     x-show="accountOpen"
                     x-transition
                     @click.outside="accountOpen = false"
-                    class="absolute right-0 mt-2 w-72 rounded-[1.4rem] border border-[#DED6CA] bg-[rgba(255,253,250,0.98)] p-2 shadow-xl space-y-1"
+                    class="absolute right-0 mt-2 w-72 rounded-[1.4rem] border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] p-2 shadow-xl space-y-1"
                     style="display: none;"
                 >
                     @if ($isAdmin)
-                        <div class="rounded-2xl border border-[#DED6CA] bg-[#F5F1EB] px-3 py-3 text-sm text-[#0F3D3E]">
-                            <p class="font-semibold text-[#0F3D3E]">{{ $user->name }}</p>
+                        <div class="rounded-2xl border border-[#E3D6C5] bg-[#F8F0E2] px-3 py-3 text-sm text-[#23483F]">
+                            <p class="font-semibold text-[#23483F]">{{ $user->name }}</p>
                             <p class="mt-1 text-xs text-[#6E746F]">{{ $user->email }}</p>
                             <p class="mt-2 text-xs font-medium uppercase tracking-[0.14em] text-[#6E746F]">Admin account</p>
                         </div>
                     @else
                         @if ($isCaregiver && $caregiverOnboardingMode)
-                            <a href="{{ route('caregiver.setup.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">Setup Hub</a>
+                            <a href="{{ route('caregiver.setup.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Setup Hub</a>
                         @endif
-                        <a href="{{ $myProfileHref }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">{{ $myProfileLabel }}</a>
+                        <a href="{{ $myProfileHref }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">{{ $myProfileLabel }}</a>
 
                         @if ($publicProfileHref)
-                            <a href="{{ $publicProfileHref }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">View Public Profile</a>
+                            <a href="{{ $publicProfileHref }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">View Public Profile</a>
                         @endif
 
-                        <a href="{{ route('profile') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">Account Settings</a>
-                        <a href="{{ $securityHref }}" class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">Change Password</a>
-                        <a href="{{ route('support.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">Support Center</a>
+                        <a href="{{ route('profile') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Account Settings</a>
+                        <a href="{{ $securityHref }}" class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Change Password</a>
+                        <a href="{{ route('support.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Support Center</a>
                         @if (! ($isCaregiver && $caregiverOnboardingMode))
-                            <a href="{{ route('messages.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">
+                            <a href="{{ route('messages.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">
                                 {{ $messageUnread > 0 ? 'Messages ('.$messageUnread.')' : 'Messages' }}
                             </a>
                         @endif
                         @if ($isFamily)
-                            <a href="{{ route('family.billing.show') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">Billing & Payments</a>
-                            <a href="{{ route('family.notifications.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">
+                            <a href="{{ route('family.billing.show') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Billing & Payments</a>
+                            <a href="{{ route('family.notifications.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">
                                 {{ $notificationUnread > 0 ? 'Notifications ('.$notificationUnread.')' : 'Notifications' }}
                             </a>
                         @endif
 
                         @if ($isCaregiver && ! $caregiverOnboardingMode)
-                            <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">
+                            <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">
                                 {{ $invitationUnread > 0 ? 'Work Inbox ('.$invitationUnread.')' : 'Work Inbox' }}
                             </a>
-                            <a href="{{ route('caregiver.notifications.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">
+                            <a href="{{ route('caregiver.notifications.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">
                                 {{ $notificationUnread > 0 ? 'Notifications ('.$notificationUnread.')' : 'Notifications' }}
                             </a>
-                            <a href="{{ route('caregiver.shifts.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">
+                            <a href="{{ route('caregiver.shifts.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">
                                 My Shifts
                             </a>
-                            <a href="{{ route('caregiver.earnings.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">
+                            <a href="{{ route('caregiver.earnings.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">
                                 My Earnings
                             </a>
-                            <a href="{{ route('caregiver.payouts.connect.show') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">
+                            <a href="{{ route('caregiver.payouts.connect.show') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">
                                 Payout Setup
                             </a>
-                            <a href="{{ route('caregiver.verification.show') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">
+                            <a href="{{ route('caregiver.verification.show') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">
                                 {{ $identityApproved ? 'Identity Verified' : 'Verify Identity' }}
                             </a>
-                            <a href="{{ route('caregiver.invitations.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">
+                            <a href="{{ route('caregiver.invitations.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">
                                 {{ $invitationUnread > 0 ? 'Invitations ('.$invitationUnread.')' : 'Invitations' }}
                             </a>
                         @endif
@@ -342,9 +344,9 @@ new class extends Component
                 </div>
             @else
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('landing.family') }}" class="inline-flex items-center rounded-xl border border-[#DED6CA] bg-[rgba(255,253,250,0.96)] px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">Families</a>
-                    <a href="{{ route('landing.caregiver') }}" class="inline-flex items-center rounded-xl border border-[#DED6CA] bg-[rgba(255,253,250,0.96)] px-3 py-2 text-sm text-[#0F3D3E] hover:bg-[#F5F1EB]">Caregivers</a>
-                    <a href="{{ route('login') }}" class="inline-flex items-center rounded-xl bg-[#0F3D3E] px-3 py-2 text-sm font-semibold text-[#FAF9F7] shadow-sm hover:bg-[#123f40]">Sign in</a>
+                    <a href="{{ route('landing.family') }}" class="inline-flex items-center rounded-xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.96)] px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Families</a>
+                    <a href="{{ route('landing.caregiver') }}" class="inline-flex items-center rounded-xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.96)] px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Caregivers</a>
+                    <a href="{{ route('login') }}" class="inline-flex items-center rounded-xl bg-[#23483F] px-3 py-2 text-sm font-semibold text-[#FFFBF4] shadow-sm hover:bg-[#1B3D35]">Sign in</a>
                 </div>
             @endif
         </div>
@@ -355,7 +357,7 @@ new class extends Component
         x-cloak
         x-show="open"
         x-transition.opacity
-        class="sm:hidden border-t border-[#DED6CA]/80 bg-[rgba(255,253,250,0.98)] backdrop-blur"
+        class="sm:hidden border-t border-[#E3D6C5]/80 bg-[rgba(255,253,250,0.98)] backdrop-blur"
     >
         <div class="space-y-1 px-2 pb-3 pt-2">
             @foreach ($primaryLinks as $link)
@@ -365,10 +367,10 @@ new class extends Component
             @endforeach
         </div>
 
-        <div class="border-t border-[#DED6CA]/80 pb-3 pt-4">
+        <div class="border-t border-[#E3D6C5]/80 pb-3 pt-4">
             @if ($user)
                 <div class="px-4">
-                    <div class="font-medium text-base text-[#0F3D3E]">{{ $user->name }}</div>
+                    <div class="font-medium text-base text-[#23483F]">{{ $user->name }}</div>
                     <div class="font-medium text-sm text-[#6E746F]">{{ $user->email }}</div>
                     <div class="mt-1 text-xs font-medium text-[#6E746F]">{{ ucfirst((string) $user->role) }}</div>
                 </div>

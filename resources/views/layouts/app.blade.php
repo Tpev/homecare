@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Home Care HUB') }}</title>
+        <title>LoLo</title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,7 +58,7 @@
                     <div class="sm:hidden">
                         @if ($compactFooter)
                             <div class="flex items-center justify-between gap-3">
-                                <p class="text-[11px] text-[#6E746F]">(c) {{ now()->year }} Home Care HUB</p>
+                                <p class="text-[11px] text-[#6E746F]">&copy; {{ now()->year }} LoLo</p>
                                 <details class="group">
                                     <summary class="list-none rounded-full border border-[#DED6CA] px-3 py-1.5 text-[11px] font-medium text-[#0F3D3E]">
                                         Legal links
@@ -70,14 +70,14 @@
                             </div>
                         @else
                             <div class="space-y-2">
-                                <p class="text-[11px] text-[#6E746F]">(c) {{ now()->year }} Home Care HUB / HUB Healthcare, LLC</p>
+                                <p class="text-[11px] text-[#6E746F]">&copy; {{ now()->year }} LoLo / HUB Healthcare, LLC</p>
                                 <x-legal-links class="flex-col items-start gap-x-3 gap-y-2 text-[11px]" />
                             </div>
                         @endif
                     </div>
 
                     <div class="hidden items-center justify-between gap-4 sm:flex">
-                        <p class="text-xs text-[#6E746F]">(c) {{ now()->year }} Home Care HUB / HUB Healthcare, LLC</p>
+                        <p class="text-xs text-[#6E746F]">&copy; {{ now()->year }} LoLo / HUB Healthcare, LLC</p>
                         <x-legal-links />
                     </div>
                 </div>

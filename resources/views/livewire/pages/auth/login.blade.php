@@ -31,7 +31,7 @@ new #[Layout('layouts.guest')] class extends Component
 <div class="space-y-6">
     <div class="space-y-2">
         <h1 class="text-2xl font-semibold tracking-tight">Welcome back</h1>
-        <p class="text-sm text-slate-600">Sign in to continue to your HomeCare dashboard.</p>
+        <p class="text-sm text-slate-600">Sign in to continue to your LoLo dashboard.</p>
     </div>
 
     <x-auth-session-status class="mb-4" :status="session('status')" />
