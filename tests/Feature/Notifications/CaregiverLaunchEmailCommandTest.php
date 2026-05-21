@@ -36,6 +36,15 @@ class CaregiverLaunchEmailCommandTest extends TestCase
         );
     }
 
+    public function test_launch_email_includes_public_square_logo_url(): void
+    {
+        $mail = new CaregiverLaunchEmail;
+        $content = $mail->content();
+
+        $this->assertSame(asset(CaregiverLaunchEmail::LOGO_PATH), $content->with['logoUrl']);
+        $this->assertFileExists(public_path(CaregiverLaunchEmail::LOGO_PATH));
+    }
+
     public function test_all_option_sends_to_caregivers_only_and_logs_deliveries(): void
     {
         Mail::fake();

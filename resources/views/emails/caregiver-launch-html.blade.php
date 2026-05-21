@@ -16,7 +16,17 @@
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:660px;background:#fffaf2;border:1px solid #dfd3c1;border-radius:18px;overflow:hidden;">
                     <tr>
                         <td style="padding:28px 26px;background:#16433b;color:#fffaf2;">
-                            <p style="margin:0 0 10px 0;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#d8c7aa;">LoLo Care launch</p>
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 18px 0;">
+                                <tr>
+                                    <td width="72" style="vertical-align:middle;">
+                                        <img src="{{ $logoUrl }}" width="64" height="64" alt="LoLo Care" style="display:block;width:64px;height:64px;border:0;border-radius:14px;outline:none;text-decoration:none;">
+                                    </td>
+                                    <td style="vertical-align:middle;padding-left:14px;">
+                                        <p style="margin:0 0 4px 0;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#d8c7aa;">LoLo Care launch</p>
+                                        <p style="margin:0;font-size:16px;line-height:1.4;font-weight:bold;color:#fffaf2;">LoLo Care</p>
+                                    </td>
+                                </tr>
+                            </table>
                             <h1 style="margin:0;font-size:30px;line-height:1.18;">HomeCare Hub is now LoLo Care</h1>
                             <p style="margin:12px 0 0 0;font-size:15px;line-height:1.6;color:#f7ead5;max-width:540px;">
                                 We're opening to families next week, and we'd love your help spreading the word.

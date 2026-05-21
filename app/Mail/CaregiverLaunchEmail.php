@@ -21,6 +21,8 @@ class CaregiverLaunchEmail extends Mailable
 
     public const WEBSITE_URL = 'https://carelolo.com/';
 
+    public const LOGO_PATH = 'images/marketing/lolo/lolo-app-icon-1024.png';
+
     public const GET_CARE_URL = 'https://carelolo.com/get-care';
 
     public const FACEBOOK_URL = 'https://www.facebook.com/lolo.homecare';
@@ -47,6 +49,7 @@ class CaregiverLaunchEmail extends Mailable
             with: [
                 'firstName' => $this->firstName(),
                 'previewText' => self::PREVIEW_TEXT,
+                'logoUrl' => asset(self::LOGO_PATH),
                 'websiteUrl' => self::WEBSITE_URL,
                 'getCareUrl' => self::GET_CARE_URL,
                 'facebookUrl' => self::FACEBOOK_URL,
