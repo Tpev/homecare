@@ -56,6 +56,8 @@ class CaregiverLaunchEmailCommandTest extends TestCase
         $this->assertStringContainsString('early next week', $html);
         $this->assertStringContainsString('June 1, 2026', $text);
         $this->assertStringContainsString('early next week', $text);
+        $this->assertStringContainsString('https://www.facebook.com/lolo.homecare', $text);
+        $this->assertStringContainsString('https://www.instagram.com/get.lolocare/', $text);
         $this->assertStringNotContainsString('Follow us on Facebook', $text);
         $this->assertStringNotContainsString('Here\'s a post you can copy and share', $text);
     }

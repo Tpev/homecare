@@ -59,6 +59,15 @@
                                 Early next week, we'll get in touch again with more information about the launch, what it means for caregiver accounts, and any next steps before families begin using the platform.
                             </p>
 
+                            <p style="margin:0 0 10px 0;font-size:16px;line-height:1.65;">
+                                If you'd like to follow along, you can find LoLo Care here:
+                            </p>
+
+                            <ul style="margin:0 0 22px 22px;padding:0;font-size:15px;line-height:1.75;color:#253b34;">
+                                <li>Facebook: <a href="{{ $facebookUrl }}" style="color:#0f6b5f;">{{ $facebookUrl }}</a></li>
+                                <li>Instagram: <a href="{{ $instagramUrl }}" style="color:#0f6b5f;">{{ $instagramUrl }}</a></li>
+                            </ul>
+
                             <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 22px 0;">
                                 <tr>
                                     <td style="border-radius:10px;background:#16433b;">

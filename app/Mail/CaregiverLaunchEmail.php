@@ -25,6 +25,10 @@ class CaregiverLaunchEmail extends Mailable
 
     public const LAUNCH_DATE = 'June 1, 2026';
 
+    public const FACEBOOK_URL = 'https://www.facebook.com/lolo.homecare';
+
+    public const INSTAGRAM_URL = 'https://www.instagram.com/get.lolocare/';
+
     public const PHONE = '(919) 593-2721';
 
     public function __construct(public ?User $caregiver = null) {}
@@ -48,6 +52,8 @@ class CaregiverLaunchEmail extends Mailable
                 'logoUrl' => asset(self::LOGO_PATH),
                 'launchDate' => self::LAUNCH_DATE,
                 'websiteUrl' => self::WEBSITE_URL,
+                'facebookUrl' => self::FACEBOOK_URL,
+                'instagramUrl' => self::INSTAGRAM_URL,
                 'phone' => self::PHONE,
             ],
         );

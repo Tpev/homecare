@@ -12,6 +12,11 @@ There is nothing you need to do today. We just wanted you to hear about the bran
 
 Early next week, we'll get in touch again with more information about the launch, what it means for caregiver accounts, and any next steps before families begin using the platform.
 
+If you'd like to follow along, you can find LoLo Care here:
+
+Facebook: {{ $facebookUrl }}
+Instagram: {{ $instagramUrl }}
+
 Thank you for being part of this next chapter. We're excited to bring LoLo Care to families with caregivers like you at the center of the experience.
 
 Warmly,
