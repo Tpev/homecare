@@ -109,6 +109,11 @@ new class extends Component
                 'active' => request()->routeIs('admin.support.tickets'),
             ],
             [
+                'label' => 'Admin SMS',
+                'href' => route('admin.sms.index'),
+                'active' => request()->routeIs('admin.sms.*'),
+            ],
+            [
                 'label' => 'Admin Payments',
                 'href' => route('admin.payments.ops'),
                 'active' => request()->routeIs('admin.payments.ops'),

@@ -14,18 +14,20 @@ use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SeoPagesController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StripeWebhookController;
-use App\Livewire\Admin\FunnelAnalytics;
+use App\Http\Controllers\TwilioSmsWebhookController;
+use App\Livewire\Admin\CaregiverCoverageMap;
+use App\Livewire\Admin\CaregiverReviewsQueue;
 use App\Livewire\Admin\CareRequestShow as AdminCareRequestShow;
 use App\Livewire\Admin\CareRequestsIndex;
-use App\Livewire\Admin\CaregiverCoverageMap;
+use App\Livewire\Admin\FunnelAnalytics;
 use App\Livewire\Admin\PaymentsQueue;
-use App\Livewire\Admin\CaregiverReviewsQueue;
+use App\Livewire\Admin\SmsInbox;
 use App\Livewire\Admin\SupportTicketsQueue;
-use App\Livewire\Admin\UsersIndex;
 use App\Livewire\Admin\UserShow;
+use App\Livewire\Admin\UsersIndex;
 use App\Livewire\Caregiver\ApplyToCareRequest;
-use App\Livewire\Caregiver\BrowseCareRequests;
 use App\Livewire\Caregiver\BrowseCaregivers;
+use App\Livewire\Caregiver\BrowseCareRequests;
 use App\Livewire\Caregiver\EarningsDashboard;
 use App\Livewire\Caregiver\InsuranceSetup;
 use App\Livewire\Caregiver\IntroVideoSetup;
@@ -58,6 +60,7 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/caregivers/moderation-logs', \App\Livewire\Admin\CaregiverModerationLogs::class)
             ->name('caregivers.moderation_logs');
         Route::get('/support/tickets', SupportTicketsQueue::class)->name('support.tickets');
+        Route::get('/sms', SmsInbox::class)->name('sms.index');
         Route::get('/payments/ops', PaymentsQueue::class)->name('payments.ops');
         Route::get('/analytics/funnel', FunnelAnalytics::class)->name('analytics.funnel');
         Route::get('/analytics/caregiver-map', CaregiverCoverageMap::class)->name('analytics.caregiver-map');
@@ -97,6 +100,9 @@ Route::post('/webhooks/didit/identity', DiditWebhookController::class)
 Route::post('/webhooks/stripe', StripeWebhookController::class)
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('webhooks.stripe');
+Route::post('/webhooks/twilio/sms', TwilioSmsWebhookController::class)
+    ->withoutMiddleware([VerifyCsrfToken::class])
+    ->name('webhooks.twilio.sms');
 Route::get('/{seoSlug}', [SeoPagesController::class, 'show'])
     ->whereIn('seoSlug', array_keys(config('seo_pages.pages', [])))
     ->name('seo.page');

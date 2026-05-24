@@ -60,6 +60,16 @@ return [
         'bypass' => filter_var(env('STRIPE_BYPASS', false), FILTER_VALIDATE_BOOL),
     ],
 
+    'twilio' => [
+        'account_sid' => env('TWILIO_ACCOUNT_SID'),
+        'auth_token' => env('TWILIO_AUTH_TOKEN'),
+        'phone_number' => env('TWILIO_PHONE_NUMBER'),
+        'sms_from' => env('TWILIO_SMS_FROM', env('TWILIO_PHONE_NUMBER')),
+        'webhook_base_url' => env('TWILIO_WEBHOOK_BASE_URL'),
+        'timeout' => (int) env('TWILIO_TIMEOUT_SECONDS', 15),
+        'bypass' => filter_var(env('TWILIO_BYPASS', false), FILTER_VALIDATE_BOOL),
+    ],
+
     'maptiler' => [
         'key' => env('MAPTILER_KEY'),
     ],

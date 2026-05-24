@@ -153,6 +153,11 @@ class User extends Authenticatable
         return $this->hasMany(MarketplaceNotificationDelivery::class);
     }
 
+    public function sentSmsMessages(): HasMany
+    {
+        return $this->hasMany(SmsMessage::class, 'sent_by_user_id');
+    }
+
     public function familyBookingPayments(): HasMany
     {
         return $this->hasMany(CareBookingPayment::class, 'family_user_id');
