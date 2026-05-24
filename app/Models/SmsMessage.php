@@ -19,6 +19,10 @@ class SmsMessage extends Model
 
     public const STATUS_SENT = 'sent';
 
+    public const STATUS_DELIVERED = 'delivered';
+
+    public const STATUS_UNDELIVERED = 'undelivered';
+
     public const STATUS_FAILED = 'failed';
 
     protected $fillable = [

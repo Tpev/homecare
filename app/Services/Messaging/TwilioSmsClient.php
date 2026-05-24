@@ -58,6 +58,7 @@ class TwilioSmsClient
                     'To' => $to,
                     'From' => $from,
                     'Body' => $body,
+                    'StatusCallback' => $this->statusCallbackUrl(),
                 ]);
         } catch (Throwable $e) {
             throw new RuntimeException('Twilio SMS request failed: '.$e->getMessage(), previous: $e);
@@ -149,6 +150,13 @@ class TwilioSmsClient
     private function messagesEndpoint(string $accountSid): string
     {
         return 'https://api.twilio.com/2010-04-01/Accounts/'.$accountSid.'/Messages.json';
+    }
+
+    private function statusCallbackUrl(): string
+    {
+        $configured = trim((string) config('services.twilio.status_callback_url'));
+
+        return $configured !== '' ? $configured : route('webhooks.twilio.sms.status');
     }
 
     private function responseErrorMessage(Response $response): string

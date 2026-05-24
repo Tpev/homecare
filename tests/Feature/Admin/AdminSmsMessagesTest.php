@@ -5,7 +5,9 @@ namespace Tests\Feature\Admin;
 use App\Livewire\Admin\SmsInbox;
 use App\Models\SmsMessage;
 use App\Models\User;
+use App\Services\Messaging\TwilioSmsClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -103,6 +105,72 @@ class AdminSmsMessagesTest extends TestCase
             'twilio_sid' => 'SM_received_123',
             'twilio_account_sid' => 'AC123',
         ]);
+    }
+
+    public function test_twilio_status_webhook_updates_delivery_error_details(): void
+    {
+        config()->set('services.twilio.bypass', false);
+        config()->set('services.twilio.auth_token', 'twilio-secret');
+
+        SmsMessage::query()->create([
+            'direction' => SmsMessage::DIRECTION_OUTGOING,
+            'status' => SmsMessage::STATUS_QUEUED,
+            'from_phone' => '+19844004008',
+            'to_phone' => '+19195932721',
+            'body' => 'Thibaud testing sms from admin api',
+            'twilio_sid' => 'SM5d8c36e16e343ce2e2775ad2d7de630e',
+            'sent_at' => now(),
+        ]);
+
+        $payload = [
+            'ErrorCode' => '30034',
+            'ErrorMessage' => 'US A2P 10DLC - Message from an Unregistered Number',
+            'From' => '+19844004008',
+            'MessageSid' => 'SM5d8c36e16e343ce2e2775ad2d7de630e',
+            'MessageStatus' => 'undelivered',
+            'To' => '+19195932721',
+        ];
+
+        $signature = $this->twilioSignature(url('/webhooks/twilio/sms/status'), $payload, 'twilio-secret');
+
+        $this->post(route('webhooks.twilio.sms.status'), $payload, [
+            'X-Twilio-Signature' => $signature,
+        ])
+            ->assertOk()
+            ->assertSee('<Response></Response>', false);
+
+        $this->assertDatabaseHas('sms_messages', [
+            'twilio_sid' => 'SM5d8c36e16e343ce2e2775ad2d7de630e',
+            'status' => SmsMessage::STATUS_UNDELIVERED,
+            'twilio_status' => SmsMessage::STATUS_UNDELIVERED,
+            'error_code' => '30034',
+            'error_message' => 'US A2P 10DLC - Message from an Unregistered Number',
+        ]);
+    }
+
+    public function test_twilio_send_includes_status_callback_url(): void
+    {
+        config()->set('services.twilio.bypass', false);
+        config()->set('services.twilio.account_sid', 'AC123');
+        config()->set('services.twilio.auth_token', 'twilio-secret');
+        config()->set('services.twilio.sms_from', '+19844004008');
+
+        Http::fake([
+            'api.twilio.com/*' => Http::response([
+                'sid' => 'SM_status_callback_test',
+                'status' => 'queued',
+                'account_sid' => 'AC123',
+            ], 201),
+        ]);
+
+        app(TwilioSmsClient::class)->sendMessage('+19195932721', 'Testing status callback.');
+
+        Http::assertSent(function ($request): bool {
+            return $request->url() === 'https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json'
+                && $request['To'] === '+19195932721'
+                && $request['From'] === '+19844004008'
+                && $request['StatusCallback'] === route('webhooks.twilio.sms.status');
+        });
     }
 
     /**

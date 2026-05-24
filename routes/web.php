@@ -14,6 +14,7 @@ use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SeoPagesController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\TwilioSmsStatusWebhookController;
 use App\Http\Controllers\TwilioSmsWebhookController;
 use App\Livewire\Admin\CaregiverCoverageMap;
 use App\Livewire\Admin\CaregiverReviewsQueue;
@@ -103,6 +104,9 @@ Route::post('/webhooks/stripe', StripeWebhookController::class)
 Route::post('/webhooks/twilio/sms', TwilioSmsWebhookController::class)
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('webhooks.twilio.sms');
+Route::post('/webhooks/twilio/sms/status', TwilioSmsStatusWebhookController::class)
+    ->withoutMiddleware([VerifyCsrfToken::class])
+    ->name('webhooks.twilio.sms.status');
 Route::get('/{seoSlug}', [SeoPagesController::class, 'show'])
     ->whereIn('seoSlug', array_keys(config('seo_pages.pages', [])))
     ->name('seo.page');
