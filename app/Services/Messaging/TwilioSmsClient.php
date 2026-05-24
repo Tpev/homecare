@@ -51,15 +51,25 @@ class TwilioSmsClient
         }
 
         try {
+            $payload = [
+                'To' => $to,
+                'Body' => $body,
+                'StatusCallback' => $this->statusCallbackUrl(),
+            ];
+
+            $messagingServiceSid = trim((string) config('services.twilio.messaging_service_sid'));
+            if ($messagingServiceSid !== '') {
+                $payload['MessagingServiceSid'] = $messagingServiceSid;
+            }
+
+            if ($from !== '') {
+                $payload['From'] = $from;
+            }
+
             $response = Http::asForm()
                 ->withBasicAuth($accountSid, $authToken)
                 ->timeout((int) config('services.twilio.timeout', 15))
-                ->post($this->messagesEndpoint($accountSid), [
-                    'To' => $to,
-                    'From' => $from,
-                    'Body' => $body,
-                    'StatusCallback' => $this->statusCallbackUrl(),
-                ]);
+                ->post($this->messagesEndpoint($accountSid), $payload);
         } catch (Throwable $e) {
             throw new RuntimeException('Twilio SMS request failed: '.$e->getMessage(), previous: $e);
         }

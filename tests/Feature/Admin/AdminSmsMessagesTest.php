@@ -154,6 +154,7 @@ class AdminSmsMessagesTest extends TestCase
         config()->set('services.twilio.account_sid', 'AC123');
         config()->set('services.twilio.auth_token', 'twilio-secret');
         config()->set('services.twilio.sms_from', '+19844004008');
+        config()->set('services.twilio.messaging_service_sid', 'MG1234567890abcdef1234567890abcdef');
 
         Http::fake([
             'api.twilio.com/*' => Http::response([
@@ -169,6 +170,7 @@ class AdminSmsMessagesTest extends TestCase
             return $request->url() === 'https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json'
                 && $request['To'] === '+19195932721'
                 && $request['From'] === '+19844004008'
+                && $request['MessagingServiceSid'] === 'MG1234567890abcdef1234567890abcdef'
                 && $request['StatusCallback'] === route('webhooks.twilio.sms.status');
         });
     }
