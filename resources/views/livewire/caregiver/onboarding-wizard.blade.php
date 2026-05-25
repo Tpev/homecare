@@ -40,38 +40,11 @@
 
         @if ($step === 1)
             <div class="space-y-4">
-                @php
-                    $currentPhotoUrl = $profile_photo_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($profile_photo_path) : null;
-                    $tempPhotoUrl = $profile_photo ? $profile_photo->temporaryUrl() : null;
-                    $displayPhotoUrl = $tempPhotoUrl ?: $currentPhotoUrl;
-                @endphp
-
-                <div class="rounded-2xl border border-[#E4DDD3] bg-[#FCFAF7] p-4">
-                    <div class="flex items-start gap-4">
-                        <div class="shrink-0">
-                            @if ($displayPhotoUrl)
-                                <img src="{{ $displayPhotoUrl }}" alt="Profile photo preview" class="h-20 w-20 rounded-full object-cover border border-[#D9D1C5] shadow-sm">
-                            @else
-                                <div class="flex h-20 w-20 items-center justify-center rounded-full border border-dashed border-[#CFC4B7] bg-white text-xs font-semibold uppercase tracking-[0.12em] text-[#7B8794]">
-                                    Photo
-                                </div>
-                            @endif
-                        </div>
-                        <div class="min-w-0 flex-1 space-y-2">
-                            <x-upload
-                                label="Profile photo"
-                                wire:model="profile_photo"
-                                accept="image/jpeg,image/png,image/webp"
-                            />
-                            <p class="text-xs text-[#607080]">
-                                Use a clear JPG, PNG, or WEBP image up to 10 MB. Most phone photos will work once the server upload limit is high enough.
-                            </p>
-                            @error('profile_photo')
-                                <p class="text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
+                <x-caregiver-profile-photo-upload
+                    label="Profile photo"
+                    :current-path="$profile_photo_path"
+                    :temporary-photo="$profile_photo"
+                />
                 <x-textarea label="Bio" wire:model="bio" hint="Minimum 40 characters" />
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">

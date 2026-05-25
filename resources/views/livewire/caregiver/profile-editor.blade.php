@@ -75,37 +75,14 @@
 
     <section class="rounded-2xl border border-[#E4DDD3] bg-white p-4 shadow-sm sm:p-5">
         <div class="space-y-5">
-            @php
-                $currentPhotoUrl = $profile_photo_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($profile_photo_path) : null;
-                $tempPhotoUrl = $profile_photo ? $profile_photo->temporaryUrl() : null;
-                $displayPhotoUrl = $tempPhotoUrl ?: $currentPhotoUrl;
-            @endphp
-
             <div>
                 <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Profile photo</p>
-                <div class="mt-2 rounded-2xl border border-[#E4DDD3] bg-[#FCFAF7] p-4">
-                    <div class="flex items-start gap-4">
-                        <div class="shrink-0">
-                            @if ($displayPhotoUrl)
-                                <img src="{{ $displayPhotoUrl }}" alt="Current caregiver profile photo" class="h-20 w-20 rounded-full object-cover border border-[#D9D1C5] shadow-sm">
-                            @else
-                                <div class="flex h-20 w-20 items-center justify-center rounded-full border border-dashed border-[#CFC4B7] bg-white text-xs font-semibold uppercase tracking-[0.12em] text-[#7B8794]">
-                                    Photo
-                                </div>
-                            @endif
-                        </div>
-                        <div class="min-w-0 flex-1 space-y-2">
-                            <x-upload
-                                label="Update profile photo"
-                                wire:model="profile_photo"
-                                accept="image/jpeg,image/png,image/webp"
-                            />
-                            <p class="text-xs text-[#607080]">Use a JPG, PNG, or WEBP image up to 10 MB.</p>
-                            @error('profile_photo')
-                                <p class="text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
+                <div class="mt-2">
+                    <x-caregiver-profile-photo-upload
+                        label="Update profile photo"
+                        :current-path="$profile_photo_path"
+                        :temporary-photo="$profile_photo"
+                    />
                 </div>
             </div>
 

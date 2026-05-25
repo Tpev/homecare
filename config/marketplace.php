@@ -34,6 +34,12 @@ return [
         'authorization_buffer_percent' => (float) env('MARKETPLACE_AUTH_BUFFER_PERCENT', 20),
     ],
 
+    'caregiver_profile_photo' => [
+        'max_upload_kb' => (int) env('CAREGIVER_PROFILE_PHOTO_MAX_UPLOAD_KB', 65536),
+        'max_dimension' => (int) env('CAREGIVER_PROFILE_PHOTO_MAX_DIMENSION', 1600),
+        'quality' => (int) env('CAREGIVER_PROFILE_PHOTO_QUALITY', 86),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Platform Pricing Tiers

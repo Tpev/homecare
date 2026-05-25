@@ -7,6 +7,7 @@ use App\Models\CaregiverProfile;
 use App\Models\CaregiverProfileVersion;
 use App\Models\Language;
 use App\Models\Skill;
+use App\Services\Images\CaregiverProfilePhotoProcessor;
 use App\Services\Ops\OpsAlertService;
 use App\Support\CaregiverOnboardingState;
 use App\Support\FunnelTracker;
@@ -18,32 +19,43 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\WithFileUploads;
+use Throwable;
 
 #[Layout('layouts.app')]
 class OnboardingWizard extends Component
 {
     use WithFileUploads;
 
-    private const PROFILE_PHOTO_RULES = ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:10240'];
-
     public int $step = 1;
+
     public int $totalSteps = 4;
 
     public ?string $profile_photo_path = null;
+
     public $profile_photo = null;
 
     public string $bio = '';
+
     public ?int $years_experience = null;
+
     public string $date_of_birth = '';
+
     public string $city = '';
+
     public string $state = '';
+
     public string $service_area_zip = '';
+
     public ?int $service_radius_miles = 10;
+
     public bool $is_accepting_new_clients = true;
 
     public array $selectedSkills = [];
+
     public array $selectedLanguages = [];
+
     public array $skillOptions = [];
+
     public array $languageOptions = [];
 
     // availability[day][] = ['start' => '09:00', 'end' => '17:00']
@@ -205,7 +217,7 @@ class OnboardingWizard extends Component
                 'date_of_birth' => ['required', 'date', 'before_or_equal:'.now()->subYears(18)->toDateString()],
                 'city' => ['required', 'string', 'max:120'],
                 'state' => ['required', Rule::in(array_keys($this->usStates))],
-                'profile_photo' => self::PROFILE_PHOTO_RULES,
+                'profile_photo' => $this->profilePhotoRules(),
                 'selectedLanguages' => ['required', 'array', 'min:1'],
                 'selectedLanguages.*' => ['integer', Rule::exists('languages', 'id')],
             ],
@@ -264,6 +276,7 @@ class OnboardingWizard extends Component
 
                 if (! $this->isQuarterHour($start) || ! $this->isQuarterHour($end)) {
                     $this->addError("availability.$day.$idx", 'Times must be in 15-minute increments.');
+
                     return;
                 }
 
@@ -272,6 +285,7 @@ class OnboardingWizard extends Component
 
                 if ($startMin >= $endMin) {
                     $this->addError("availability.$day.$idx", 'End time must be after start time.');
+
                     return;
                 }
 
@@ -283,6 +297,7 @@ class OnboardingWizard extends Component
             for ($i = 1; $i < count($windows); $i++) {
                 if ($windows[$i][0] < $windows[$i - 1][1]) {
                     $this->addError("availability.$day", 'Overlapping ranges are not allowed.');
+
                     return;
                 }
             }
@@ -295,84 +310,103 @@ class OnboardingWizard extends Component
 
     private function saveDraft(bool $submitForReview): void
     {
-        DB::transaction(function () use ($submitForReview) {
-            $user = auth()->user();
+        $photoProcessor = app(CaregiverProfilePhotoProcessor::class);
+        $newProfilePhotoPath = null;
+        $previousProfilePhotoPath = $this->profile_photo_path;
 
-            if ($this->profile_photo) {
-                $this->profile_photo_path = $this->profile_photo->store('caregiver-photos', 'public');
-            }
+        if ($this->profile_photo) {
+            $newProfilePhotoPath = $photoProcessor->store($this->profile_photo);
+        }
 
-            $user->forceFill([
-                'city' => trim($this->city),
-                'state' => strtoupper($this->state),
-                'date_of_birth' => $this->date_of_birth,
-            ])->save();
+        try {
+            DB::transaction(function () use ($submitForReview, $newProfilePhotoPath) {
+                $user = auth()->user();
 
-            $this->profile->user()->associate($user);
-
-            if (! $this->profile->slug) {
-                $this->profile->slug = Str::slug($user->name . '-' . $user->id);
-            }
-
-            $this->profile->fill([
-                'profile_photo_path' => $this->profile_photo_path,
-                'bio' => trim($this->bio),
-                'years_experience' => $this->years_experience,
-                'service_area_zip' => trim($this->service_area_zip),
-                'service_radius_miles' => $this->service_radius_miles,
-                'is_accepting_new_clients' => $this->is_accepting_new_clients,
-            ]);
-
-            if ($submitForReview) {
-                $this->profile->status = 'under_review';
-                $this->profile->review_submitted_at = now();
-                $this->profile->rejection_reason = null;
+                if ($newProfilePhotoPath) {
+                    $this->profile_photo_path = $newProfilePhotoPath;
+                }
 
                 $user->forceFill([
-                    'onboarding_completed_at' => now(),
+                    'city' => trim($this->city),
+                    'state' => strtoupper($this->state),
+                    'date_of_birth' => $this->date_of_birth,
                 ])->save();
-            } elseif (! in_array($this->profile->status, ['active', 'under_review', 'suspended'], true)) {
-                $this->profile->status = 'draft';
-            }
 
-            $this->profile->save();
+                $this->profile->user()->associate($user);
 
-            $this->profile->skills()->sync($this->selectedSkills);
-            $this->profile->languages()->sync($this->selectedLanguages);
+                if (! $this->profile->slug) {
+                    $this->profile->slug = Str::slug($user->name.'-'.$user->id);
+                }
 
-            $this->profile->availabilities()->delete();
-            foreach ($this->availability as $day => $dayRanges) {
-                foreach ($dayRanges as $range) {
-                    $this->profile->availabilities()->create([
-                        'day_of_week' => (int) $day,
-                        'start_time' => $range['start'],
-                        'end_time' => $range['end'],
+                $this->profile->fill([
+                    'profile_photo_path' => $this->profile_photo_path,
+                    'bio' => trim($this->bio),
+                    'years_experience' => $this->years_experience,
+                    'service_area_zip' => trim($this->service_area_zip),
+                    'service_radius_miles' => $this->service_radius_miles,
+                    'is_accepting_new_clients' => $this->is_accepting_new_clients,
+                ]);
+
+                if ($submitForReview) {
+                    $this->profile->status = 'under_review';
+                    $this->profile->review_submitted_at = now();
+                    $this->profile->rejection_reason = null;
+
+                    $user->forceFill([
+                        'onboarding_completed_at' => now(),
+                    ])->save();
+                } elseif (! in_array($this->profile->status, ['active', 'under_review', 'suspended'], true)) {
+                    $this->profile->status = 'draft';
+                }
+
+                $this->profile->save();
+
+                $this->profile->skills()->sync($this->selectedSkills);
+                $this->profile->languages()->sync($this->selectedLanguages);
+
+                $this->profile->availabilities()->delete();
+                foreach ($this->availability as $day => $dayRanges) {
+                    foreach ($dayRanges as $range) {
+                        $this->profile->availabilities()->create([
+                            'day_of_week' => (int) $day,
+                            'start_time' => $range['start'],
+                            'end_time' => $range['end'],
+                        ]);
+                    }
+                }
+
+                CaregiverProfileVersion::create([
+                    'caregiver_profile_id' => $this->profile->id,
+                    'user_id' => $user->id,
+                    'reason' => $submitForReview ? 'submitted_for_review' : 'draft_save',
+                    'snapshot' => [
+                        'profile' => $this->profile->fresh()->toArray(),
+                        'skills' => $this->profile->skills()->pluck('skills.id')->all(),
+                        'languages' => $this->profile->languages()->pluck('languages.id')->all(),
+                        'availability' => $this->availability,
+                    ],
+                ]);
+
+                if ($submitForReview) {
+                    CaregiverModerationLog::create([
+                        'caregiver_profile_id' => $this->profile->id,
+                        'actor_user_id' => $user->id,
+                        'action' => 'submitted',
+                        'note' => 'Profile submitted for review',
+                        'meta' => ['status' => 'under_review'],
                     ]);
                 }
-            }
+            });
+        } catch (Throwable $exception) {
+            $photoProcessor->deleteIfManaged($newProfilePhotoPath);
 
-            CaregiverProfileVersion::create([
-                'caregiver_profile_id' => $this->profile->id,
-                'user_id' => $user->id,
-                'reason' => $submitForReview ? 'submitted_for_review' : 'draft_save',
-                'snapshot' => [
-                    'profile' => $this->profile->fresh()->toArray(),
-					'skills' => $this->profile->skills()->pluck('skills.id')->all(),
-					'languages' => $this->profile->languages()->pluck('languages.id')->all(),
-                    'availability' => $this->availability,
-                ],
-            ]);
+            throw $exception;
+        }
 
-            if ($submitForReview) {
-                CaregiverModerationLog::create([
-                    'caregiver_profile_id' => $this->profile->id,
-                    'actor_user_id' => $user->id,
-                    'action' => 'submitted',
-                    'note' => 'Profile submitted for review',
-                    'meta' => ['status' => 'under_review'],
-                ]);
-            }
-        });
+        if ($newProfilePhotoPath) {
+            $photoProcessor->deleteIfManaged($previousProfilePhotoPath);
+            $this->profile_photo = null;
+        }
     }
 
     private function identityIsApproved(): bool
@@ -405,7 +439,7 @@ class OnboardingWizard extends Component
             'date_of_birth' => ['required', 'date', 'before_or_equal:'.now()->subYears(18)->toDateString()],
             'city' => ['required', 'string', 'max:120'],
             'state' => ['required', Rule::in(array_keys($this->usStates))],
-            'profile_photo' => self::PROFILE_PHOTO_RULES,
+            'profile_photo' => $this->profilePhotoRules(),
             'selectedLanguages' => ['required', 'array', 'min:1'],
             'selectedLanguages.*' => ['integer', Rule::exists('languages', 'id')],
             'service_area_zip' => ['required', 'string', 'max:15'],
@@ -420,15 +454,17 @@ class OnboardingWizard extends Component
     public function updatedProfilePhoto(): void
     {
         $this->resetErrorBag('profile_photo');
-        $this->validateOnly('profile_photo', ['profile_photo' => self::PROFILE_PHOTO_RULES], $this->validationMessages());
+        $this->validateOnly('profile_photo', ['profile_photo' => $this->profilePhotoRules()], $this->validationMessages());
+    }
+
+    private function profilePhotoRules(): array
+    {
+        return app(CaregiverProfilePhotoProcessor::class)->validationRules();
     }
 
     private function validationMessages(): array
     {
-        return [
-            'profile_photo.mimes' => 'Use a JPG, PNG, or WEBP image for your profile photo.',
-            'profile_photo.max' => 'Your profile photo must be 10 MB or smaller.',
-        ];
+        return app(CaregiverProfilePhotoProcessor::class)->validationMessages('profile_photo');
     }
 
     public function render()
