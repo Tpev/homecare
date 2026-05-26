@@ -191,12 +191,18 @@ func (s *Server) streamURL(r *http.Request, webhookURL string) string {
 }
 
 func forwardedBaseURL(r *http.Request) string {
-	host := firstForwardedValue(r.Header.Get("X-Forwarded-Host"))
+	forwardedHost := firstForwardedValue(r.Header.Get("X-Forwarded-Host"))
+	forwardedProto := strings.ToLower(firstForwardedValue(r.Header.Get("X-Forwarded-Proto")))
+	if forwardedHost == "" && forwardedProto == "" {
+		return ""
+	}
+
+	host := firstNonEmpty(forwardedHost, r.Host)
 	if host == "" {
 		return ""
 	}
 
-	scheme := strings.ToLower(firstForwardedValue(r.Header.Get("X-Forwarded-Proto")))
+	scheme := forwardedProto
 	if scheme != "http" && scheme != "https" {
 		scheme = requestScheme(r)
 	}

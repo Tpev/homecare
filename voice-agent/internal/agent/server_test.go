@@ -52,6 +52,38 @@ func TestTwilioVoiceUsesForwardedHostWhenConfiguredBaseIsStale(t *testing.T) {
 	}
 }
 
+func TestTwilioVoiceUsesForwardedProtoWithRequestHostWhenForwardedHostIsMissing(t *testing.T) {
+	server := testServer(config.Config{
+		Port:                   "8088",
+		PublicBaseURL:          "https://homecare.hub.healthcare",
+		TwilioAuthToken:        "twilio-secret",
+		TwilioVoiceWebhookPath: "/twilio/voice",
+		TwilioStreamPath:       "/ws/twilio",
+		StreamAuthToken:        "bridge-secret",
+	})
+
+	form := url.Values{
+		"CallSid": {"CA123"},
+		"From":    {"+15551234567"},
+	}
+	req := httptest.NewRequest(http.MethodPost, "http://carelolo.com/twilio/voice", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("X-Forwarded-Proto", "https")
+	req.Header.Set("X-Twilio-Signature", twilioSignature("twilio-secret", "https://carelolo.com/twilio/voice", form))
+
+	res := httptest.NewRecorder()
+	server.handleTwilioVoice(res, req)
+
+	if res.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d: %s", http.StatusOK, res.Code, res.Body.String())
+	}
+
+	body := res.Body.String()
+	if !strings.Contains(body, `url="wss://carelolo.com/ws/twilio"`) {
+		t.Fatalf("expected stream URL to use request host with forwarded proto, got:\n%s", body)
+	}
+}
+
 func TestTwilioVoiceStillAcceptsConfiguredPublicBaseURL(t *testing.T) {
 	server := testServer(config.Config{
 		Port:                   "8088",
