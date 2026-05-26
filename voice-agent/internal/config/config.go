@@ -32,7 +32,7 @@ type Config struct {
 func Load() (Config, error) {
 	cfg := Config{
 		Port:                    env("PORT", "8088"),
-		PublicBaseURL:           strings.TrimRight(env("PUBLIC_BASE_URL", ""), "/"),
+		PublicBaseURL:           strings.TrimRight(env("PUBLIC_BASE_URL", env("APP_URL", "")), "/"),
 		TwilioAccountSID:        env("TWILIO_ACCOUNT_SID", ""),
 		TwilioAuthToken:         env("TWILIO_AUTH_TOKEN", ""),
 		TwilioPhoneNumber:       env("TWILIO_PHONE_NUMBER", ""),

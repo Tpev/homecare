@@ -1,0 +1,23 @@
+package config
+
+import "testing"
+
+func TestLoadUsesAppURLAsPublicBaseFallback(t *testing.T) {
+	t.Setenv("APP_URL", "https://carelolo.com")
+	t.Setenv("PUBLIC_BASE_URL", "")
+	t.Setenv("TWILIO_ACCOUNT_SID", "AC123")
+	t.Setenv("TWILIO_AUTH_TOKEN", "twilio-secret")
+	t.Setenv("TWILIO_PHONE_NUMBER", "+15551234567")
+	t.Setenv("DEEPGRAM_API_KEY", "deepgram-secret")
+	t.Setenv("LARAVEL_INTERNAL_API_TOKEN", "voice-secret")
+	t.Setenv("DEEPGRAM_LLM_MODEL", "gpt-4o-mini")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+
+	if cfg.PublicBaseURL != "https://carelolo.com" {
+		t.Fatalf("expected APP_URL fallback for PublicBaseURL, got %q", cfg.PublicBaseURL)
+	}
+}

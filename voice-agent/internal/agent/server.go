@@ -77,16 +77,20 @@ func (s *Server) healthz(w http.ResponseWriter, _ *http.Request) {
 
 func (s *Server) handleTwilioVoice(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
+		s.logger.Printf("twilio voice webhook rejected: invalid form body: %v", err)
 		http.Error(w, "invalid form body", http.StatusBadRequest)
 		return
 	}
 
-	if !twilio.ValidateSignature(
-		s.cfg.TwilioAuthToken,
-		s.twilioWebhookURL(r),
-		r.PostForm,
-		r.Header.Get("X-Twilio-Signature"),
-	) {
+	signatureURL, ok := s.validTwilioSignatureURL(r)
+	if !ok {
+		s.logger.Printf(
+			"twilio voice webhook rejected: invalid signature host=%q forwarded_host=%q forwarded_proto=%q path=%q",
+			r.Host,
+			r.Header.Get("X-Forwarded-Host"),
+			r.Header.Get("X-Forwarded-Proto"),
+			r.URL.RequestURI(),
+		)
 		http.Error(w, "invalid twilio signature", http.StatusUnauthorized)
 		return
 	}
@@ -101,7 +105,7 @@ func (s *Server) handleTwilioVoice(w http.ResponseWriter, r *http.Request) {
 		},
 		Connect: connect{
 			Stream: stream{
-				URL: s.streamURL(),
+				URL: s.streamURL(r, signatureURL),
 				Parameter: []parameter{
 					{Name: "bridge_token", Value: s.cfg.StreamAuthToken},
 					{Name: "call_sid", Value: callSID},
@@ -137,25 +141,42 @@ func (s *Server) handleTwilioStream(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) twilioWebhookURL(r *http.Request) string {
-	if s.cfg.PublicBaseURL != "" {
-		return s.cfg.PublicBaseURL + s.cfg.TwilioVoiceWebhookPath
+func (s *Server) validTwilioSignatureURL(r *http.Request) (string, bool) {
+	provided := r.Header.Get("X-Twilio-Signature")
+	for _, requestURL := range s.twilioWebhookURLs(r) {
+		if twilio.ValidateSignature(s.cfg.TwilioAuthToken, requestURL, r.PostForm, provided) {
+			return requestURL, true
+		}
 	}
 
-	scheme := "https"
-	if r.TLS == nil {
-		scheme = "http"
-	}
-
-	return (&url.URL{
-		Scheme: scheme,
-		Host:   r.Host,
-		Path:   r.URL.Path,
-	}).String()
+	return "", false
 }
 
-func (s *Server) streamURL() string {
-	base := s.cfg.PublicBaseURL
+func (s *Server) twilioWebhookURLs(r *http.Request) []string {
+	path := r.URL.RequestURI()
+	if path == "" {
+		path = s.cfg.TwilioVoiceWebhookPath
+	}
+
+	candidates := make([]string, 0, 3)
+	if s.cfg.PublicBaseURL != "" {
+		candidates = append(candidates, strings.TrimRight(s.cfg.PublicBaseURL, "/")+path)
+	}
+	if base := forwardedBaseURL(r); base != "" {
+		candidates = append(candidates, base+path)
+	}
+	if base := requestBaseURL(r); base != "" {
+		candidates = append(candidates, base+path)
+	}
+
+	return uniqueStrings(candidates)
+}
+
+func (s *Server) streamURL(r *http.Request, webhookURL string) string {
+	base := originFromURL(webhookURL)
+	if base == "" {
+		base = firstNonEmpty(forwardedBaseURL(r), requestBaseURL(r), s.cfg.PublicBaseURL)
+	}
 	if base == "" {
 		base = fmt.Sprintf("http://localhost:%s", s.cfg.Port)
 	}
@@ -167,4 +188,71 @@ func (s *Server) streamURL() string {
 	}
 
 	return strings.TrimRight(base, "/") + s.cfg.TwilioStreamPath
+}
+
+func forwardedBaseURL(r *http.Request) string {
+	host := firstForwardedValue(r.Header.Get("X-Forwarded-Host"))
+	if host == "" {
+		return ""
+	}
+
+	scheme := strings.ToLower(firstForwardedValue(r.Header.Get("X-Forwarded-Proto")))
+	if scheme != "http" && scheme != "https" {
+		scheme = requestScheme(r)
+	}
+
+	return (&url.URL{Scheme: scheme, Host: host}).String()
+}
+
+func requestBaseURL(r *http.Request) string {
+	if r.Host == "" {
+		return ""
+	}
+
+	return (&url.URL{Scheme: requestScheme(r), Host: r.Host}).String()
+}
+
+func requestScheme(r *http.Request) string {
+	if r.TLS != nil {
+		return "https"
+	}
+
+	return "http"
+}
+
+func firstForwardedValue(value string) string {
+	parts := strings.Split(value, ",")
+	for _, part := range parts {
+		if trimmed := strings.TrimSpace(part); trimmed != "" {
+			return trimmed
+		}
+	}
+
+	return ""
+}
+
+func originFromURL(rawURL string) string {
+	parsed, err := url.Parse(rawURL)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return ""
+	}
+
+	return (&url.URL{Scheme: parsed.Scheme, Host: parsed.Host}).String()
+}
+
+func uniqueStrings(values []string) []string {
+	seen := make(map[string]struct{}, len(values))
+	unique := make([]string, 0, len(values))
+	for _, value := range values {
+		if value == "" {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		unique = append(unique, value)
+	}
+
+	return unique
 }
