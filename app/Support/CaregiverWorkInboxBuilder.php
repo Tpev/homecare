@@ -11,6 +11,7 @@ use App\Models\CareRequestInvitation;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class CaregiverWorkInboxBuilder
 {
@@ -31,7 +32,7 @@ class CaregiverWorkInboxBuilder
         $now = now();
         $profile = $user->caregiverProfile()->with('skills:id')->first();
         $skillIds = $profile?->skills?->pluck('id')->map(fn ($id) => (int) $id)->all() ?? [];
-        $defaultRate = (float) ($profile?->resolvePlatformHourlyRate() ?? 0);
+        $defaultRate = (float) config('marketplace.family_estimate_hourly_rate', 30.00);
 
         $items = collect();
 
@@ -229,6 +230,7 @@ class CaregiverWorkInboxBuilder
                 'tasks:id,name',
                 'recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
             ])
+            ->withCount('applications')
             ->where('status', CareRequest::STATUS_OPEN)
             ->when($excludedRequestIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $excludedRequestIds))
             ->latest()
@@ -243,12 +245,13 @@ class CaregiverWorkInboxBuilder
 
             $recommendedMinutes = $this->estimatedShiftMinutes($request);
             $recommendedCompensation = $this->compensationPayload($recommendedMinutes, $defaultRate);
+            $isFresh = $request->created_at?->gte(now()->subDays(2)) ?? false;
 
             $items->push([
-                'id' => 'recommended-'.$request->id,
-                'scope' => 'recommended',
+                'id' => 'new-request-'.$request->id,
+                'scope' => 'new_requests',
                 'state' => 'open_match',
-                'priority' => 300 + $score,
+                'priority' => ($isFresh ? 350 : 300) + $score,
                 'created_at' => $request->created_at,
                 'start_at' => $request->requested_start_at,
                 'title' => $request->title,
@@ -256,11 +259,12 @@ class CaregiverWorkInboxBuilder
                 'schedule' => $this->scheduleLabel($request),
                 'compensation' => $recommendedCompensation,
                 'compensation_line' => $recommendedCompensation['line'] ?? null,
-                'status_label' => 'Open',
-                'status_tone' => 'neutral',
+                'status_label' => $isFresh ? 'New' : 'Open',
+                'status_tone' => $isFresh ? 'info' : 'neutral',
                 'fit_reason' => $this->recommendationReason($request, $user, $skillIds),
                 'recipient_context' => $this->recipientContext($request->recipient),
-                'note' => null,
+                'note' => $this->requestPreview($request),
+                'request_details' => $this->requestDetails($request),
                 'primary_action' => [
                     'kind' => 'link',
                     'label' => 'Apply now',
@@ -272,12 +276,20 @@ class CaregiverWorkInboxBuilder
                     'href' => route('care-requests.apply', $request->id),
                 ],
                 'open_href' => route('care-requests.apply', $request->id),
-                'meta' => 'Recommended for you',
+                'meta' => 'Posted '.$this->postedLabel($request).' - '.$this->applicantCountLabel((int) ($request->applications_count ?? 0)),
             ]);
         }
 
         $items = $items->filter(function (array $item) use ($scope) {
-            return $scope === 'all' ? true : $item['scope'] === $scope;
+            if ($scope === 'all') {
+                return true;
+            }
+
+            if ($scope === 'recommended') {
+                return $item['scope'] === 'new_requests';
+            }
+
+            return $item['scope'] === $scope;
         });
 
         $items = match ($sort) {
@@ -288,7 +300,7 @@ class CaregiverWorkInboxBuilder
                 $scopeWeight = match ((string) ($item['scope'] ?? 'all')) {
                     'needs_response' => 5000,
                     'hired' => 4000,
-                    'recommended' => 3000,
+                    'new_requests' => 3000,
                     'applied' => 2000,
                     'completed' => 1000,
                     default => 0,
@@ -307,11 +319,13 @@ class CaregiverWorkInboxBuilder
     public function countsForUser(User $user): array
     {
         $items = $this->buildForUser($user, 'all', 'priority', 300);
+        $newRequests = $items->where('scope', 'new_requests')->count();
 
         return [
             'all' => $items->count(),
             'needs_response' => $items->where('scope', 'needs_response')->count(),
-            'recommended' => $items->where('scope', 'recommended')->count(),
+            'new_requests' => $newRequests,
+            'recommended' => $newRequests,
             'applied' => $items->where('scope', 'applied')->count(),
             'hired' => $items->where('scope', 'hired')->count(),
             'completed' => $items->where('scope', 'completed')->count(),
@@ -528,6 +542,37 @@ class CaregiverWorkInboxBuilder
         }
 
         return $score;
+    }
+
+    private function requestPreview(CareRequest $request): ?string
+    {
+        $preview = trim((string) ($request->scope_of_work ?: $request->additional_info ?: $request->time_expectations));
+
+        return $preview !== '' ? Str::limit($preview, 170) : null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function requestDetails(CareRequest $request): array
+    {
+        return array_values(array_filter([
+            ($request->preferred_response_hours ?: 12).'h response target',
+            $this->applicantCountLabel((int) ($request->applications_count ?? 0)),
+            $request->tasks->isNotEmpty()
+                ? $request->tasks->pluck('name')->take(3)->implode(', ')
+                : null,
+        ], fn ($value) => is_string($value) && trim($value) !== ''));
+    }
+
+    private function postedLabel(CareRequest $request): string
+    {
+        return $request->created_at?->diffForHumans() ?? 'recently';
+    }
+
+    private function applicantCountLabel(int $count): string
+    {
+        return $count.' applicant'.($count === 1 ? '' : 's');
     }
 
     private function recommendationReason(CareRequest $request, User $user, array $skillIds): string

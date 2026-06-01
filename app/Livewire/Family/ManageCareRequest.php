@@ -81,7 +81,9 @@ class ManageCareRequest extends Component
                 'invitations' => fn ($query) => $query->with(['caregiver:id,name']),
                 'applications' => fn ($query) => $query->with([
                     'caregiver:id,name,email,phone,city,state',
-                    'caregiver.caregiverProfile:id,user_id,status,average_rating,reviews_count,platform_hourly_rate',
+                    'caregiver.caregiverProfile:id,user_id,slug,profile_photo_path,bio,years_experience,status,average_rating,reviews_count,platform_hourly_rate,identity_verified_at,identity_verification_status,background_check_verified_at,top_caregiver,invite_response_rate,reliability_score,completed_bookings_count,is_accepting_new_clients',
+                    'caregiver.caregiverProfile.skills:id,name',
+                    'caregiver.caregiverProfile.languages:id,name',
                     'conversation:id,care_request_application_id,care_request_id,caregiver_user_id',
                     'booking:id,care_request_id,care_request_application_id,status,scheduled_start_at,scheduled_end_at',
                 ]),
@@ -136,6 +138,103 @@ class ManageCareRequest extends Component
         $application->update(['status' => CareRequestApplication::STATUS_REJECTED]);
         $this->refreshRequestItem();
         session()->flash('status', 'Applicant rejected.');
+    }
+
+    public function withdrawRequest(): void
+    {
+        if (! in_array($this->requestItem->status, [CareRequest::STATUS_DRAFT, CareRequest::STATUS_OPEN], true)) {
+            session()->flash('status', 'Only draft or open requests can be withdrawn here.');
+
+            return;
+        }
+
+        if ($this->requestItem->booking) {
+            session()->flash('status', 'This request already has a booking. Use the shift support tools to cancel or change it.');
+
+            return;
+        }
+
+        $affectedCaregiverIds = DB::transaction(function () {
+            $request = CareRequest::query()
+                ->where('family_user_id', auth()->id())
+                ->whereKey($this->requestItem->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! in_array($request->status, [CareRequest::STATUS_DRAFT, CareRequest::STATUS_OPEN], true)) {
+                return collect();
+            }
+
+            if ($request->booking()->exists()) {
+                return collect();
+            }
+
+            $activeApplications = $request->applications()
+                ->whereIn('status', [
+                    CareRequestApplication::STATUS_APPLIED,
+                    CareRequestApplication::STATUS_SHORTLISTED,
+                ])
+                ->get(['id', 'caregiver_user_id']);
+
+            $pendingInvitations = $request->invitations()
+                ->where('status', CareRequestInvitation::STATUS_PENDING)
+                ->get(['id', 'caregiver_user_id']);
+
+            if ($activeApplications->isNotEmpty()) {
+                $request->applications()
+                    ->whereKey($activeApplications->pluck('id')->all())
+                    ->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]);
+            }
+
+            if ($pendingInvitations->isNotEmpty()) {
+                $request->invitations()
+                    ->whereKey($pendingInvitations->pluck('id')->all())
+                    ->update([
+                        'status' => CareRequestInvitation::STATUS_CANCELLED,
+                        'expires_at' => now(),
+                    ]);
+            }
+
+            $request->update(['status' => CareRequest::STATUS_CANCELLED]);
+
+            return $activeApplications
+                ->pluck('caregiver_user_id')
+                ->merge($pendingInvitations->pluck('caregiver_user_id'))
+                ->filter()
+                ->unique()
+                ->values();
+        });
+
+        $this->refreshRequestItem();
+
+        if ($this->requestItem->status !== CareRequest::STATUS_CANCELLED) {
+            session()->flash('status', 'This request could not be withdrawn. Please refresh and try again.');
+
+            return;
+        }
+
+        if ($affectedCaregiverIds->isNotEmpty()) {
+            $caregivers = User::query()
+                ->whereIn('id', $affectedCaregiverIds->all())
+                ->get();
+
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $caregivers,
+                eventKey: MarketplaceEvent::CARE_REQUEST_WITHDRAWN,
+                title: 'Care request withdrawn',
+                body: 'A family withdrew a request you were following. No action is needed.',
+                url: route('caregiver.work-inbox.index'),
+                payload: ['care_request_id' => $this->requestItem->id],
+                subject: $this->requestItem,
+                dedupeKey: 'care-request-withdrawn:request-'.$this->requestItem->id
+            );
+        }
+
+        FunnelTracker::track('care_request_withdrawn', auth()->user(), $this->requestItem, [
+            'affected_caregivers' => $affectedCaregiverIds->count(),
+        ]);
+
+        session()->flash('status', 'Request withdrawn. Caregivers can no longer apply.');
     }
 
     public function hire(int $applicationId): void
@@ -987,7 +1086,9 @@ class ManageCareRequest extends Component
             'invitations' => fn ($query) => $query->with(['caregiver:id,name']),
             'applications' => fn ($query) => $query->with([
                 'caregiver:id,name,email,phone,city,state',
-                'caregiver.caregiverProfile:id,user_id,status,average_rating,reviews_count,platform_hourly_rate',
+                'caregiver.caregiverProfile:id,user_id,slug,profile_photo_path,bio,years_experience,status,average_rating,reviews_count,platform_hourly_rate,identity_verified_at,identity_verification_status,background_check_verified_at,top_caregiver,invite_response_rate,reliability_score,completed_bookings_count,is_accepting_new_clients',
+                'caregiver.caregiverProfile.skills:id,name',
+                'caregiver.caregiverProfile.languages:id,name',
                 'conversation:id,care_request_application_id,care_request_id,caregiver_user_id',
                 'booking:id,care_request_id,care_request_application_id,status,scheduled_start_at,scheduled_end_at',
             ]),

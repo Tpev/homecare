@@ -53,8 +53,8 @@
                     <p class="mt-1 text-lg font-semibold">{{ $counts['needs_response'] ?? 0 }}</p>
                 </div>
                 <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#D7DEE6]">Recommended</p>
-                    <p class="mt-1 text-lg font-semibold">{{ $counts['recommended'] ?? 0 }}</p>
+                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#D7DEE6]">New requests</p>
+                    <p class="mt-1 text-lg font-semibold">{{ $counts['new_requests'] ?? $counts['recommended'] ?? 0 }}</p>
                 </div>
                 <div class="hc-brand-stat">
                     <p class="text-[11px] uppercase tracking-[0.14em] text-[#D7DEE6]">Applied</p>
@@ -139,6 +139,16 @@
                             <x-care-recipient-context :context="$item['recipient_context']" :show-name="true" class="mt-3" />
                         @endif
                         <p class="mt-2 text-sm text-[#4B5B6B]">{{ $item['fit_reason'] }}</p>
+
+                        @if (!empty($item['request_details']))
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                @foreach ($item['request_details'] as $detail)
+                                    <span class="inline-flex rounded-full border border-[#DED6CA] bg-[#FFFCF8] px-3 py-1 text-xs font-medium text-[#4B5B6B]">
+                                        {{ $detail }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
 
                         @if (!empty($item['note']))
                             <div class="mt-3 rounded-lg border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-sm text-[#4B5B6B]">

@@ -7,6 +7,7 @@ class MarketplaceEvent
     public const INVITATION_SENT = 'invitation_sent';
     public const NEW_APPLICANT = 'new_applicant';
     public const APPLICATION_SUBMITTED = 'application_submitted';
+    public const CARE_REQUEST_WITHDRAWN = 'care_request_withdrawn';
     public const INVITE_ACCEPTED = 'invite_accepted';
     public const INVITE_DECLINED = 'invite_declined';
     public const MESSAGE_RECEIVED = 'message_received';
@@ -42,6 +43,7 @@ class MarketplaceEvent
             self::INVITATION_SENT,
             self::NEW_APPLICANT,
             self::APPLICATION_SUBMITTED,
+            self::CARE_REQUEST_WITHDRAWN,
             self::INVITE_ACCEPTED,
             self::INVITE_DECLINED,
             self::MESSAGE_RECEIVED,

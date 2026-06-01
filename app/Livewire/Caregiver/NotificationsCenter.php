@@ -26,6 +26,7 @@ class NotificationsCenter extends Component
     public array $eventKeys = [
         MarketplaceEvent::MATCHING_REQUEST_REMINDER,
         MarketplaceEvent::APPLICATION_SUBMITTED,
+        MarketplaceEvent::CARE_REQUEST_WITHDRAWN,
         MarketplaceEvent::CAREGIVER_HIRED,
         MarketplaceEvent::SHIFT_STARTING_SOON,
         MarketplaceEvent::SHIFT_STARTED,
@@ -204,6 +205,7 @@ class NotificationsCenter extends Component
         return match ($eventKey) {
             MarketplaceEvent::MATCHING_REQUEST_REMINDER => 'Invitation / match',
             MarketplaceEvent::APPLICATION_SUBMITTED => 'Application submitted',
+            MarketplaceEvent::CARE_REQUEST_WITHDRAWN => 'Request withdrawn',
             MarketplaceEvent::CAREGIVER_HIRED => 'Hired',
             MarketplaceEvent::SHIFT_STARTING_SOON => 'Shift reminder',
             MarketplaceEvent::SHIFT_STARTED => 'Shift started',
@@ -229,6 +231,7 @@ class NotificationsCenter extends Component
             MarketplaceEvent::REGULAR_CARE_ACCEPTED => 'success',
             MarketplaceEvent::SHIFT_STARTING_SOON,
             MarketplaceEvent::REGULAR_CARE_OFFERED => 'info',
+            MarketplaceEvent::CARE_REQUEST_WITHDRAWN,
             MarketplaceEvent::REVIEW_RECEIVED => 'warning',
             MarketplaceEvent::MESSAGE_RECEIVED => 'neutral',
             MarketplaceEvent::MATCHING_REQUEST_REMINDER => 'info',

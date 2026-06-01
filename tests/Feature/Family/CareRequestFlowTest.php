@@ -11,6 +11,7 @@ use App\Models\CareBookingPayment;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
+use App\Models\CareRequestInvitation;
 use App\Models\CareReview;
 use App\Models\CareTask;
 use App\Models\CaregiverProfile;
@@ -264,6 +265,131 @@ class CareRequestFlowTest extends TestCase
             'care_request_application_id' => $applicationB->id,
             'caregiver_user_id' => $caregiverB->id,
             'family_user_id' => $family->id,
+        ]);
+    }
+
+    public function test_closed_request_still_links_to_caregiver_profile_from_applicants(): void
+    {
+        $family = User::factory()->create([
+            'role' => 'family',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+        ]);
+        $caregiver = User::factory()->create([
+            'name' => 'Caroline Hill',
+            'role' => 'caregiver',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+        ]);
+
+        $skill = Skill::query()->create(['name' => 'Companionship']);
+        $language = Language::query()->create(['name' => 'English']);
+        $profile = CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'slug' => 'caroline-hill',
+            'bio' => 'Caroline has deep experience with calm morning routines, companionship, and meal preparation.',
+            'years_experience' => 7,
+            'status' => 'active',
+            'average_rating' => 4.9,
+            'reviews_count' => 12,
+            'platform_hourly_rate' => 30,
+            'identity_verified_at' => now(),
+            'background_check_verified_at' => now(),
+            'reliability_score' => 98,
+            'is_accepting_new_clients' => true,
+        ]);
+        $profile->skills()->sync([$skill->id]);
+        $profile->languages()->sync([$language->id]);
+
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Closed request with selected caregiver',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_FILLED,
+            'requested_start_at' => now()->addDay()->setTime(9, 0),
+            'requested_end_at' => now()->addDay()->setTime(12, 0),
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+            'address_line1' => '100 Main St',
+            'preferred_response_hours' => 12,
+        ]);
+
+        CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'cover_note' => 'I already know the morning routine.',
+            'proposed_rate' => 30,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('setActiveTab', 'applicants')
+            ->assertSee('Hiring is closed for this request. Applicant list is now read-only.')
+            ->assertSee('Caroline has deep experience with calm morning routines')
+            ->assertSee('Companionship')
+            ->assertSee('Languages: English')
+            ->assertSee('View full caregiver profile')
+            ->assertSee(route('caregivers.show', 'caroline-hill'), false);
+    }
+
+    public function test_family_can_withdraw_open_request_and_close_pending_flow(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $applicant = User::factory()->create(['role' => 'caregiver']);
+        $invitedCaregiver = User::factory()->create(['role' => 'caregiver']);
+
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Request to withdraw',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_OPEN,
+            'requested_start_at' => now()->addDay()->setTime(9, 0),
+            'requested_end_at' => now()->addDay()->setTime(12, 0),
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+            'address_line1' => '100 Main St',
+        ]);
+        $request->recipient()->create([
+            'full_name' => 'Care Recipient',
+            'relationship_to_family' => 'Mother',
+        ]);
+
+        $application = CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $applicant->id,
+            'status' => CareRequestApplication::STATUS_APPLIED,
+            'cover_note' => 'I can help with this request.',
+            'proposed_rate' => 30,
+        ]);
+
+        $invitation = CareRequestInvitation::query()->create([
+            'care_request_id' => $request->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $invitedCaregiver->id,
+            'status' => CareRequestInvitation::STATUS_PENDING,
+            'expires_at' => now()->addHours(24),
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->assertSee('Withdraw request')
+            ->call('withdrawRequest')
+            ->assertSee('Request withdrawn');
+
+        $this->assertDatabaseHas('care_requests', [
+            'id' => $request->id,
+            'status' => CareRequest::STATUS_CANCELLED,
+        ]);
+        $this->assertDatabaseHas('care_request_applications', [
+            'id' => $application->id,
+            'status' => CareRequestApplication::STATUS_NOT_SELECTED,
+        ]);
+        $this->assertDatabaseHas('care_request_invitations', [
+            'id' => $invitation->id,
+            'status' => CareRequestInvitation::STATUS_CANCELLED,
         ]);
     }
 

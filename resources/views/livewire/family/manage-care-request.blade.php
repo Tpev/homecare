@@ -1,4 +1,4 @@
-﻿<div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
+<div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -42,6 +42,10 @@
         $shiftEarnings = $workedMinutes > 0 && $shiftRate > 0
             ? round(($workedMinutes / 60) * $shiftRate, 2)
             : 0;
+        $canWithdrawRequest = in_array($requestItem->status, [
+            \App\Models\CareRequest::STATUS_DRAFT,
+            \App\Models\CareRequest::STATUS_OPEN,
+        ], true) && ! $booking;
     @endphp
 
     <x-card>
@@ -83,6 +87,17 @@
                             <x-button color="green" light class="w-full sm:w-auto">Book {{ $hiredCaregiverFirstName }} again</x-button>
                         </a>
                     @endif
+                    @if ($canWithdrawRequest)
+                        <x-button
+                            color="red"
+                            light
+                            wire:click="withdrawRequest"
+                            onclick="if (!confirm('Withdraw this request? Caregivers will no longer be able to apply.')) return false;"
+                            class="w-full sm:w-auto"
+                        >
+                            Withdraw request
+                        </x-button>
+                    @endif
                 </div>
             </div>
 
@@ -117,6 +132,12 @@
                 </div>
             </div>
         </x-slot:header>
+
+        @if ($requestItem->status === \App\Models\CareRequest::STATUS_CANCELLED)
+            <div class="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                This request has been withdrawn. Caregivers can no longer apply or respond to invitations.
+            </div>
+        @endif
 
         <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
             <button
@@ -250,6 +271,12 @@
             </x-slot:header>
 
             @if ($hiredApplication)
+                @php
+                    $selectedCaregiverProfile = $hiredApplication->caregiver->caregiverProfile;
+                    $selectedCaregiverProfileHref = $selectedCaregiverProfile?->slug
+                        ? route('caregivers.show', $selectedCaregiverProfile->slug)
+                        : null;
+                @endphp
                 <div class="rounded-lg border border-green-200 bg-green-50 p-4">
                     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
@@ -257,8 +284,21 @@
                             <p class="text-sm text-[#607080]">
                                 Platform rate: ${{ number_format((float) $hiredApplication->proposed_rate, 2) }}/hr
                             </p>
+                            @if ($selectedCaregiverProfile)
+                                <p class="mt-1 text-sm text-[#4B5B6B]">
+                                    {{ (int) ($selectedCaregiverProfile->years_experience ?? 0) }} year{{ (int) ($selectedCaregiverProfile->years_experience ?? 0) === 1 ? '' : 's' }} experience
+                                    @if ($selectedCaregiverProfile->average_rating && $selectedCaregiverProfile->reviews_count > 0)
+                                        - {{ number_format((float) $selectedCaregiverProfile->average_rating, 1) }} stars from {{ (int) $selectedCaregiverProfile->reviews_count }} review{{ (int) $selectedCaregiverProfile->reviews_count === 1 ? '' : 's' }}
+                                    @endif
+                                </p>
+                            @endif
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                            @if ($selectedCaregiverProfileHref)
+                                <a href="{{ $selectedCaregiverProfileHref }}" wire:navigate>
+                                    <x-button color="blue" light>View profile</x-button>
+                                </a>
+                            @endif
                             @if ($hiredConversation)
                                 <a href="{{ route('messages.show', $hiredConversation->id) }}" wire:navigate>
                                     <x-button color="indigo" light>Open chat</x-button>
@@ -403,6 +443,10 @@
                             : null;
                         $averageRating = $caregiverProfile?->average_rating ? (float) $caregiverProfile->average_rating : null;
                         $reviewsCount = (int) ($caregiverProfile?->reviews_count ?? 0);
+                        $profileHref = $caregiverProfile?->slug ? route('caregivers.show', $caregiverProfile->slug) : null;
+                        $yearsExperience = (int) ($caregiverProfile?->years_experience ?? 0);
+                        $skills = $caregiverProfile?->skills ?? collect();
+                        $languages = $caregiverProfile?->languages ?? collect();
                     @endphp
                     <div class="rounded-2xl border border-[#E4DDD3] p-4 shadow-sm">
                         <div class="flex items-start gap-3">
@@ -429,6 +473,7 @@
                                     {{ $application->caregiver->city }}, {{ $application->caregiver->state }}
                                 </p>
                                 <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[#607080]">
+                                    <span>{{ $yearsExperience }} year{{ $yearsExperience === 1 ? '' : 's' }} experience</span>
                                     @if ($averageRating && $reviewsCount > 0)
                                         <span class="inline-flex items-center gap-1 font-medium text-[#17313F]">
                                             <svg viewBox="0 0 20 20" class="h-4 w-4 text-amber-400" fill="currentColor" aria-hidden="true">
@@ -440,15 +485,58 @@
                                     @else
                                         <span class="text-[#7B8794]">No reviews yet</span>
                                     @endif
+                                    @if ($caregiverProfile?->reliability_score)
+                                        <span>Reliability {{ number_format((float) $caregiverProfile->reliability_score, 0) }}%</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
+
+                        @if ($caregiverProfile)
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                @if ($caregiverProfile->hasIdentityVerifiedBadge())
+                                    <x-badge color="cyan" text="Identity verified" />
+                                @endif
+                                @if ($caregiverProfile->hasBackgroundCheckBadge())
+                                    <x-badge color="green" text="Background check" />
+                                @endif
+                                @if ($caregiverProfile->hasTopCaregiverBadge())
+                                    <x-badge color="amber" text="Top Caregiver" />
+                                @endif
+                                <x-badge color="{{ $caregiverProfile->is_accepting_new_clients ? 'green' : 'slate' }}" text="{{ $caregiverProfile->is_accepting_new_clients ? 'Accepting clients' : 'Limited availability' }}" />
+                            </div>
+
+                            @if ($caregiverProfile->bio)
+                                <p class="mt-3 text-sm leading-6 text-[#4B5B6B]">{{ \Illuminate\Support\Str::limit((string) $caregiverProfile->bio, 220) }}</p>
+                            @endif
+
+                            @if ($skills->isNotEmpty() || $languages->isNotEmpty())
+                                <div class="mt-3 space-y-2">
+                                    @if ($skills->isNotEmpty())
+                                        <div class="flex flex-wrap gap-2">
+                                            @foreach ($skills->take(5) as $skill)
+                                                <span class="rounded-full bg-[#F0E9E1] px-3 py-1 text-xs font-medium text-[#4B5B6B]">{{ $skill->name }}</span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                    @if ($languages->isNotEmpty())
+                                        <p class="text-xs text-[#7B8794]">Languages: {{ $languages->take(4)->pluck('name')->implode(', ') }}</p>
+                                    @endif
+                                </div>
+                            @endif
+                        @endif
 
                         @if ($application->cover_note)
                             <p class="mt-3 whitespace-pre-line text-sm text-[#4B5B6B]">{{ $application->cover_note }}</p>
                         @endif
 
                         <div class="mt-4 space-y-2">
+                            @if ($profileHref)
+                                <a href="{{ $profileHref }}" wire:navigate class="block sm:inline-block">
+                                    <x-button color="blue" light class="w-full sm:w-auto">View full caregiver profile</x-button>
+                                </a>
+                            @endif
+
                             @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN)
                                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                                     <x-button color="green" wire:click="hire({{ $application->id }})" class="w-full">Hire caregiver</x-button>

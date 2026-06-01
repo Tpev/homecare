@@ -8,6 +8,7 @@ use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
+use App\Models\CareTask;
 use App\Models\CaregiverProfile;
 use App\Models\Language;
 use App\Models\Skill;
@@ -74,6 +75,7 @@ class CaregiverWorkInboxTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Caregiver Work Inbox');
+        $response->assertSee('New requests');
         $response->assertSee($invitedRequest->title);
         $response->assertSee($appliedRequest->title);
         $response->assertSee($hiredRequest->title);
@@ -86,6 +88,12 @@ class CaregiverWorkInboxTest extends TestCase
         $response->assertSee($family->name);
         $response->assertSee('3h @ $27.00/hr');
         $response->assertSee('$81.00 total shift');
+
+        Livewire::actingAs($caregiver)
+            ->test(WorkInbox::class)
+            ->set('scope', 'new_requests')
+            ->assertSee($recommendedRequest->title)
+            ->assertDontSee($appliedRequest->title);
     }
 
     public function test_caregiver_can_accept_invitation_from_work_inbox(): void
@@ -159,6 +167,30 @@ class CaregiverWorkInboxTest extends TestCase
         $response->assertSee('Work inbox');
         $response->assertSee($request->title);
         $response->assertSee('Open full inbox');
+    }
+
+    public function test_caregiver_browse_requests_surfaces_new_request_context(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = $this->createReadyCaregiver();
+        $task = CareTask::query()->create(['name' => 'Morning routine']);
+        $request = $this->createOneTimeRequest($family->id, 'Detailed morning support');
+        $request->update([
+            'scope_of_work' => 'Help with breakfast setup, companionship, and safe movement around the home.',
+            'time_expectations' => 'Please arrive a few minutes early and keep the morning routine calm.',
+            'preferred_response_hours' => 8,
+        ]);
+        $request->tasks()->sync([$task->id => ['task_note' => 'Use the walker for hallway movement.']]);
+
+        $response = $this->actingAs($caregiver)->get('/care-requests');
+
+        $response->assertOk();
+        $response->assertSee('New to you');
+        $response->assertSee($request->title);
+        $response->assertSee('Help with breakfast setup');
+        $response->assertSee('8h response target');
+        $response->assertSee('3h at $30.00/hr - about $90.00');
+        $response->assertSee('Use the walker for hallway movement.');
     }
 
     private function createOneTimeRequest(

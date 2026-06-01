@@ -24,7 +24,7 @@ class WorkInbox extends Component
     public array $scopeOptions = [
         ['label' => 'All', 'value' => 'all'],
         ['label' => 'Needs response', 'value' => 'needs_response'],
-        ['label' => 'Recommended', 'value' => 'recommended'],
+        ['label' => 'New requests', 'value' => 'new_requests'],
         ['label' => 'Applied', 'value' => 'applied'],
         ['label' => 'Hired', 'value' => 'hired'],
         ['label' => 'Completed', 'value' => 'completed'],

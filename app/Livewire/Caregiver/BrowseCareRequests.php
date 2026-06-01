@@ -6,6 +6,8 @@ use App\Models\CareRequest;
 use App\Models\CareTask;
 use App\Support\CaregiverPrelaunch;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -21,8 +23,15 @@ class BrowseCareRequests extends Component
     public string $requestType = 'all';
     public string $when = 'any';
     public string $sort = 'newest';
+    public string $scope = 'new_to_you';
 
     public array $taskOptions = [];
+    public array $scopeOptions = [
+        ['label' => 'New to you', 'value' => 'new_to_you'],
+        ['label' => 'Invited', 'value' => 'invited'],
+        ['label' => 'Applied', 'value' => 'applied'],
+        ['label' => 'All open', 'value' => 'all'],
+    ];
 
     public function mount(): void
     {
@@ -61,6 +70,11 @@ class BrowseCareRequests extends Component
         $this->resetPage();
     }
 
+    public function updatingScope(): void
+    {
+        $this->resetPage();
+    }
+
     public function clearFilters(): void
     {
         $this->reset([
@@ -70,30 +84,109 @@ class BrowseCareRequests extends Component
             'requestType',
             'when',
             'sort',
+            'scope',
         ]);
 
         $this->requestType = 'all';
         $this->when = 'any';
         $this->sort = 'newest';
+        $this->scope = 'new_to_you';
         $this->resetPage();
     }
 
     public function render()
     {
-        $query = CareRequest::query()
+        $prelaunchMode = CaregiverPrelaunch::enabled();
+        $caregiverId = (int) auth()->id();
+
+        $query = $this->filteredOpenRequestsQuery($prelaunchMode);
+        $scopeCounts = $this->scopeCounts($query, $caregiverId);
+
+        $this->applyScope($query, $caregiverId);
+
+        $query
             ->with([
                 'recipient',
                 'tasks',
                 'applications' => fn ($q) => $q
-                    ->where('caregiver_user_id', auth()->id())
+                    ->where('caregiver_user_id', $caregiverId)
                     ->with(['conversation:id,care_request_application_id,care_request_id,caregiver_user_id']),
                 'invitations' => fn ($q) => $q
-                    ->where('caregiver_user_id', auth()->id())
+                    ->where('caregiver_user_id', $caregiverId)
                     ->latest('created_at'),
             ])
-            ->where('status', CareRequest::STATUS_OPEN);
+            ->withCount('applications');
 
-        $prelaunchMode = CaregiverPrelaunch::enabled();
+        match ($this->sort) {
+            'start_soon' => $query->orderByRaw('requested_start_at is null')->orderBy('requested_start_at'),
+            default => $query->orderByDesc('created_at'),
+        };
+
+        return view('livewire.caregiver.browse-care-requests', [
+            'prelaunchMode' => $prelaunchMode,
+            'requests' => $query->paginate(10),
+            'scopeCounts' => $scopeCounts,
+        ]);
+    }
+
+    public function scheduleLabel(CareRequest $request): string
+    {
+        if ($request->request_type === CareRequest::TYPE_RECURRING) {
+            $dayMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            $days = collect($request->recurring_days ?? [])
+                ->map(fn ($day) => $dayMap[(int) $day] ?? null)
+                ->filter()
+                ->implode(', ');
+            $time = trim(substr((string) $request->recurring_start_time, 0, 5).'-'.substr((string) $request->recurring_end_time, 0, 5), '-');
+
+            return 'Recurring'.($days !== '' ? ': '.$days : '').($time !== '' ? ' '.$time : '');
+        }
+
+        if ($request->requested_start_at && $request->requested_end_at) {
+            return $request->requested_start_at->format('M d, Y g:i A').' to '.$request->requested_end_at->format('g:i A');
+        }
+
+        return 'Schedule pending';
+    }
+
+    public function estimatedPayLine(CareRequest $request): ?string
+    {
+        $minutes = $this->estimatedMinutes($request);
+        if (! $minutes || $minutes <= 0) {
+            return null;
+        }
+
+        $rate = (float) config('marketplace.family_estimate_hourly_rate', 30.00);
+        $hours = $minutes / 60;
+        $hoursLabel = abs($hours - round($hours)) < 0.01
+            ? (string) (int) round($hours)
+            : number_format($hours, 1);
+        $total = round($hours * $rate, 2);
+
+        return sprintf('%sh at $%s/hr - about $%s', $hoursLabel, number_format($rate, 2), number_format($total, 2));
+    }
+
+    public function postedLabel(CareRequest $request): string
+    {
+        return $request->created_at?->diffForHumans() ?? 'recently';
+    }
+
+    public function responseTargetLabel(CareRequest $request): string
+    {
+        return ($request->preferred_response_hours ?: 12).'h response target';
+    }
+
+    public function requestPreview(CareRequest $request): ?string
+    {
+        $preview = trim((string) ($request->scope_of_work ?: $request->additional_info ?: $request->time_expectations));
+
+        return $preview !== '' ? Str::limit($preview, 220) : null;
+    }
+
+    private function filteredOpenRequestsQuery(bool $prelaunchMode): Builder
+    {
+        $query = CareRequest::query()->where('status', CareRequest::STATUS_OPEN);
+
         if ($prelaunchMode) {
             $query->whereRaw('1 = 0');
         }
@@ -122,15 +215,99 @@ class BrowseCareRequests extends Component
             $query->whereBetween('requested_start_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
         }
 
-        match ($this->sort) {
-            'start_soon' => $query->orderBy('requested_start_at'),
-            'budget_high' => $query->orderByDesc('budget_max'),
-            default => $query->orderByDesc('created_at'),
-        };
+        return $query;
+    }
 
-        return view('livewire.caregiver.browse-care-requests', [
-            'prelaunchMode' => $prelaunchMode,
-            'requests' => $query->paginate(10),
-        ]);
+    /**
+     * @return array<string, int>
+     */
+    private function scopeCounts(Builder $query, int $caregiverId): array
+    {
+        return [
+            'new_to_you' => (clone $query)
+                ->whereDoesntHave('applications', fn ($q) => $q->where('caregiver_user_id', $caregiverId))
+                ->whereDoesntHave('invitations', fn ($q) => $this->pendingInvitationFilter($q, $caregiverId))
+                ->count(),
+            'invited' => (clone $query)
+                ->whereHas('invitations', fn ($q) => $this->pendingInvitationFilter($q, $caregiverId))
+                ->count(),
+            'applied' => (clone $query)
+                ->whereHas('applications', fn ($q) => $q->where('caregiver_user_id', $caregiverId))
+                ->count(),
+            'all' => (clone $query)->count(),
+        ];
+    }
+
+    private function applyScope(Builder $query, int $caregiverId): void
+    {
+        if ($this->scope === 'invited') {
+            $query->whereHas('invitations', fn ($q) => $this->pendingInvitationFilter($q, $caregiverId));
+
+            return;
+        }
+
+        if ($this->scope === 'applied') {
+            $query->whereHas('applications', fn ($q) => $q->where('caregiver_user_id', $caregiverId));
+
+            return;
+        }
+
+        if ($this->scope === 'new_to_you') {
+            $query
+                ->whereDoesntHave('applications', fn ($q) => $q->where('caregiver_user_id', $caregiverId))
+                ->whereDoesntHave('invitations', fn ($q) => $this->pendingInvitationFilter($q, $caregiverId));
+        }
+    }
+
+    private function pendingInvitationFilter(Builder $query, int $caregiverId): void
+    {
+        $query
+            ->where('caregiver_user_id', $caregiverId)
+            ->where('status', \App\Models\CareRequestInvitation::STATUS_PENDING)
+            ->where(function ($nested) {
+                $nested->whereNull('expires_at')->orWhere('expires_at', '>=', now());
+            });
+    }
+
+    private function estimatedMinutes(CareRequest $request): ?int
+    {
+        if ($request->request_type === CareRequest::TYPE_ONE_TIME && $request->requested_start_at && $request->requested_end_at) {
+            $minutes = (int) $request->requested_start_at->diffInMinutes($request->requested_end_at, false);
+
+            return $minutes > 0 ? $minutes : null;
+        }
+
+        if ($request->request_type === CareRequest::TYPE_RECURRING) {
+            $startMinutes = $this->timeStringToMinutes($request->recurring_start_time);
+            $endMinutes = $this->timeStringToMinutes($request->recurring_end_time);
+
+            if ($startMinutes === null || $endMinutes === null) {
+                return null;
+            }
+
+            $diff = $endMinutes - $startMinutes;
+            if ($diff <= 0) {
+                $diff += 24 * 60;
+            }
+
+            return $diff > 0 ? $diff : null;
+        }
+
+        return null;
+    }
+
+    private function timeStringToMinutes(?string $time): ?int
+    {
+        if (! $time) {
+            return null;
+        }
+
+        try {
+            $parsed = Carbon::parse($time);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return ((int) $parsed->format('H') * 60) + (int) $parsed->format('i');
     }
 }

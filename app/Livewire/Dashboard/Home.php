@@ -438,6 +438,7 @@ class Home extends Component
         return [
             MarketplaceEvent::MATCHING_REQUEST_REMINDER => ['label' => 'New invite', 'tone' => 'info'],
             MarketplaceEvent::APPLICATION_SUBMITTED => ['label' => 'Applied', 'tone' => 'success'],
+            MarketplaceEvent::CARE_REQUEST_WITHDRAWN => ['label' => 'Withdrawn', 'tone' => 'warning'],
             MarketplaceEvent::CAREGIVER_HIRED => ['label' => 'Hired', 'tone' => 'success'],
             MarketplaceEvent::SHIFT_STARTING_SOON => ['label' => 'Shift soon', 'tone' => 'info'],
             MarketplaceEvent::SHIFT_STARTED => ['label' => 'Shift started', 'tone' => 'info'],
