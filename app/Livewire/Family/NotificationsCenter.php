@@ -38,6 +38,10 @@ class NotificationsCenter extends Component
         MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED,
         MarketplaceEvent::PAYMENT_CAPTURED,
         MarketplaceEvent::PAYMENT_REFUNDED,
+        MarketplaceEvent::REGULAR_CARE_ACCEPTED,
+        MarketplaceEvent::REGULAR_CARE_COUNTERED,
+        MarketplaceEvent::REGULAR_CARE_DECLINED,
+        MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION,
     ];
 
     public function mount(): void
@@ -217,6 +221,10 @@ class NotificationsCenter extends Component
             MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED => 'Payment issue',
             MarketplaceEvent::PAYMENT_CAPTURED => 'Payment captured',
             MarketplaceEvent::PAYMENT_REFUNDED => 'Payment refunded',
+            MarketplaceEvent::REGULAR_CARE_ACCEPTED => 'Regular care accepted',
+            MarketplaceEvent::REGULAR_CARE_COUNTERED => 'Regular care countered',
+            MarketplaceEvent::REGULAR_CARE_DECLINED => 'Regular care declined',
+            MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION => 'Regular care payment',
             default => 'Update',
         };
     }
@@ -227,16 +235,19 @@ class NotificationsCenter extends Component
             MarketplaceEvent::INVITATION_SENT,
             MarketplaceEvent::PAYMENT_AUTHORIZED,
             MarketplaceEvent::PAYMENT_CAPTURED,
-            MarketplaceEvent::HIRE_CONFIRMED => 'success',
+            MarketplaceEvent::HIRE_CONFIRMED,
+            MarketplaceEvent::REGULAR_CARE_ACCEPTED => 'success',
             MarketplaceEvent::NEW_APPLICANT,
             MarketplaceEvent::INVITE_ACCEPTED,
             MarketplaceEvent::SHIFT_STARTED => 'info',
             MarketplaceEvent::INVITE_DECLINED,
             MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED,
             MarketplaceEvent::PAYMENT_ACTION_REQUIRED,
-            MarketplaceEvent::PAYMENT_REFUNDED => 'warning',
+            MarketplaceEvent::PAYMENT_REFUNDED,
+            MarketplaceEvent::REGULAR_CARE_COUNTERED,
+            MarketplaceEvent::REGULAR_CARE_DECLINED,
+            MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION => 'warning',
             default => 'neutral',
         };
     }
 }
-

@@ -64,6 +64,24 @@ class BrowseCaregivers extends Component
         $this->resetPage();
     }
 
+    public function clearFilters(): void
+    {
+        $this->reset([
+            'search',
+            'zip',
+            'rate_min',
+            'rate_max',
+            'skills',
+            'languages',
+            'trust',
+            'sort',
+        ]);
+
+        $this->trust = 'all';
+        $this->sort = 'relevance';
+        $this->resetPage();
+    }
+
     public function render()
     {
         $prelaunchMode = CaregiverPrelaunch::enabled();

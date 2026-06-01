@@ -24,6 +24,7 @@ class CareRequest extends Model
 
     protected $fillable = [
         'family_user_id',
+        'care_plan_id',
         'title',
         'additional_info',
         'scope_of_work',
@@ -75,6 +76,11 @@ class CareRequest extends Model
     public function family(): BelongsTo
     {
         return $this->belongsTo(User::class, 'family_user_id');
+    }
+
+    public function carePlan(): BelongsTo
+    {
+        return $this->belongsTo(CarePlan::class);
     }
 
     public function recipient(): HasOne

@@ -25,7 +25,11 @@ class CaregiverWorkInboxTest extends TestCase
         $family = User::factory()->create(['role' => 'family', 'city' => 'Raleigh', 'state' => 'NC']);
         $caregiver = $this->createReadyCaregiver();
 
-        $invitedRequest = $this->createOneTimeRequest($family->id, 'Invited morning support');
+        $invitedRequest = $this->createOneTimeRequest($family->id, 'Invited morning support', CareRequest::STATUS_OPEN, [
+            'recipient_is_requester' => true,
+            'full_name' => $family->name,
+            'relationship_to_family' => 'Self',
+        ]);
         CareRequestInvitation::query()->create([
             'care_request_id' => $invitedRequest->id,
             'family_user_id' => $family->id,
@@ -78,6 +82,8 @@ class CaregiverWorkInboxTest extends TestCase
         $response->assertSee('Open application');
         $response->assertSee('Start shift');
         $response->assertSee('Apply now');
+        $response->assertSee('Requester receives care');
+        $response->assertSee($family->name);
         $response->assertSee('3h @ $27.00/hr');
         $response->assertSee('$81.00 total shift');
     }
@@ -155,9 +161,14 @@ class CaregiverWorkInboxTest extends TestCase
         $response->assertSee('Open full inbox');
     }
 
-    private function createOneTimeRequest(int $familyUserId, string $title, string $status = CareRequest::STATUS_OPEN): CareRequest
+    private function createOneTimeRequest(
+        int $familyUserId,
+        string $title,
+        string $status = CareRequest::STATUS_OPEN,
+        array $recipientOverrides = []
+    ): CareRequest
     {
-        return CareRequest::query()->create([
+        $request = CareRequest::query()->create([
             'family_user_id' => $familyUserId,
             'title' => $title,
             'status' => $status,
@@ -169,6 +180,14 @@ class CaregiverWorkInboxTest extends TestCase
             'state' => 'NC',
             'zip' => '27601',
         ]);
+
+        $request->recipient()->create(array_merge([
+            'recipient_is_requester' => false,
+            'full_name' => 'Care recipient',
+            'relationship_to_family' => 'Mother',
+        ], $recipientOverrides));
+
+        return $request;
     }
 
     private function createReadyCaregiver(): User

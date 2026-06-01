@@ -12,13 +12,15 @@
                         && (int) ($request->pending_candidate_count ?? 0) > 0;
                 })->values();
                 $activeShifts = $familyData['active_shifts'] ?? collect();
+                $regularPlans = $familyData['regular_care_plans'] ?? collect();
+                $regularSources = $familyData['regular_care_sources'] ?? collect();
                 $billingReady = (bool) ($familyData['billing_ready'] ?? false);
                 $urgentOpenRequests = (int) ($familyData['urgent_open_requests'] ?? 0);
                 $recentApplicants = $familyData['recent_applicants'] ?? collect();
-                $hasAnyPipelineData = $focusRequests->count() > 0 || $activeShifts->count() > 0 || $recentApplicants->count() > 0;
+                $hasAnyPipelineData = $focusRequests->count() > 0 || $activeShifts->count() > 0 || $recentApplicants->count() > 0 || $regularPlans->count() > 0;
 
                 $nextActionTitle = 'Post your first request';
-                $nextActionDescription = 'Use Fast Track to post in minutes. You can edit details any time.';
+                $nextActionDescription = 'Use the simple request form to post in minutes. You can edit details any time.';
                 $nextActionRoute = route('family.requests.create');
                 $nextActionLabel = 'Post request';
 
@@ -64,6 +66,13 @@
                     $nextActionDescription = 'Follow status, confirm timesheet, and leave a review when complete.';
                     $nextActionRoute = $activeRequest ? route('family.requests.show', $activeRequest->id) : route('family.requests.index');
                     $nextActionLabel = 'Open shift';
+                }
+
+                if ($regularPlans->whereIn('status', [\App\Models\CarePlan::STATUS_PENDING_CAREGIVER, \App\Models\CarePlan::STATUS_COUNTERED])->count() > 0) {
+                    $nextActionTitle = 'Regular care is waiting';
+                    $nextActionDescription = 'Review caregiver responses and keep recurring care moving.';
+                    $nextActionRoute = route('family.care.index');
+                    $nextActionLabel = 'Open my care';
                 }
 
                 $journeySteps = [
@@ -171,16 +180,74 @@
                 </x-card>
             @endif
 
+            @if ($regularPlans->count() > 0 || $regularSources->count() > 0)
+                <x-card>
+                    <x-slot:header>
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <h2 class="font-display font-semibold">Regular care</h2>
+                                <p class="text-sm text-[#607080]">Rebook trusted caregivers without starting from scratch.</p>
+                            </div>
+                            <a href="{{ route('family.care.index') }}" wire:navigate class="hc-link">Open my care</a>
+                        </div>
+                    </x-slot:header>
+                    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                        <div class="space-y-3">
+                            <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[#7B8794]">Plans</p>
+                            @forelse ($regularPlans->take(3) as $plan)
+                                @php
+                                    $dashboardPlanStatusLabel = $plan->status === \App\Models\CarePlan::STATUS_PAYMENT_ATTENTION
+                                        ? 'PAYMENT NEEDED'
+                                        : strtoupper(str_replace('_', ' ', $plan->status));
+                                @endphp
+                                <a href="{{ route('family.care.show', $plan->id) }}" wire:navigate class="block rounded-xl border border-[#E4DDD3] bg-white p-3 transition hover:bg-[#F7F2EA]">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p class="font-semibold text-[#17313F]">{{ $plan->title }}</p>
+                                            <p class="mt-1 text-xs text-[#607080]">{{ $plan->caregiver?->name }} - {{ $dashboardPlanStatusLabel }}</p>
+                                        </div>
+                                        <span class="text-xs font-semibold text-[#0F3D3E]">Open</span>
+                                    </div>
+                                </a>
+                            @empty
+                                <p class="rounded-xl border border-dashed border-[#D6CCBE] px-3 py-4 text-sm text-[#607080]">No recurring plans yet.</p>
+                            @endforelse
+                        </div>
+                        <div class="space-y-3">
+                            <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[#7B8794]">Book again</p>
+                            @forelse ($regularSources->take(3) as $request)
+                                @php
+                                    $hired = $request->applications->first();
+                                    $caregiverName = trim((string) ($hired?->caregiver?->name ?? ''));
+                                    $caregiverFirstName = $caregiverName !== ''
+                                        ? \Illuminate\Support\Str::of($caregiverName)->before(' ')
+                                        : 'caregiver';
+                                @endphp
+                                <div class="rounded-xl border border-[#E4DDD3] bg-white p-3">
+                                    <p class="font-semibold text-[#17313F]">{{ $hired?->caregiver?->name ?: 'Hired caregiver' }}</p>
+                                    <p class="mt-1 text-xs text-[#607080]">{{ $request->title }}</p>
+                                    <div class="mt-2">
+                                        <a href="{{ route('family.care.compose', $request->id) }}" wire:navigate class="hc-link text-xs">Book {{ $caregiverFirstName }} again</a>
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="rounded-xl border border-dashed border-[#D6CCBE] px-3 py-4 text-sm text-[#607080]">Completed booked shifts will appear here.</p>
+                            @endforelse
+                        </div>
+                    </div>
+                </x-card>
+            @endif
+
             @if (! $hasAnyPipelineData)
                 <x-card>
                     <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
                         <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Get started</p>
                         <h2 class="mt-2 font-display text-2xl font-semibold text-slate-900">Post your first care request in minutes</h2>
                         <p class="mx-auto mt-2 max-w-2xl text-sm text-slate-600">
-                            Start with Fast Track: schedule, address, services, and recipient name. Then review applicants, chat, and hire.
+                            Start with a simple request: schedule, address, services, and recipient name. Then review applicants, chat, and hire.
                         </p>
                         <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
-                            <a href="{{ route('family.requests.create') }}" wire:navigate><x-button color="blue">Start fast request</x-button></a>
+                            <a href="{{ route('family.requests.create') }}" wire:navigate><x-button color="blue">Start care request</x-button></a>
                             <a href="{{ route('caregivers.search') }}" wire:navigate><x-button color="slate" light>Browse caregivers</x-button></a>
                         </div>
                     </div>
@@ -311,7 +378,7 @@
                                 </div>
                             </div>
                             <div class="space-y-2 text-sm">
-                                <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-link block">Post with Fast Track</a>
+                                <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-link block">Post a care request</a>
                                 <a href="{{ route('caregivers.search') }}" wire:navigate class="hc-link block">Invite caregivers directly</a>
                                 <a href="{{ route('messages.index') }}" wire:navigate class="hc-link block">Open messages</a>
                                 <a href="{{ route('family.billing.show') }}" wire:navigate class="block font-medium {{ $billingReady ? 'text-emerald-700' : 'text-amber-700' }} underline underline-offset-2">
@@ -515,7 +582,10 @@
                             <div class="flex items-start justify-between gap-3">
                                 <div>
                                     <p class="font-medium text-slate-900">{{ $item['title'] }}</p>
-                                    <p class="text-xs text-slate-500 mt-1">{{ $item['location'] }} · {{ $item['schedule'] }}</p>
+                                    <p class="text-xs text-slate-500 mt-1">{{ $item['location'] }} - {{ $item['schedule'] }}</p>
+                                    @if (!empty($item['recipient_context']))
+                                        <x-care-recipient-context :context="$item['recipient_context']" :show-name="true" class="mt-2" />
+                                    @endif
                                     <p class="text-xs text-slate-600 mt-1">{{ $item['fit_reason'] }}</p>
                                 </div>
                                 <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $inboxStatusStyles[$item['status_tone'] ?? 'neutral'] ?? $inboxStatusStyles['neutral'] }}">

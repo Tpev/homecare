@@ -3,6 +3,8 @@
 namespace App\Support;
 
 use App\Models\CareBooking;
+use App\Models\CarePlan;
+use App\Models\CareRecipient;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestInvitation;
@@ -37,6 +39,7 @@ class CaregiverWorkInboxBuilder
             ->with([
                 'family:id,name',
                 'careRequest:id,title,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,city,state,status',
+                'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
             ])
             ->where('caregiver_user_id', $caregiverId)
             ->where('status', CareRequestInvitation::STATUS_PENDING)
@@ -70,6 +73,7 @@ class CaregiverWorkInboxBuilder
                 'status_label' => 'Invited',
                 'status_tone' => 'info',
                 'fit_reason' => 'Family invited you directly.',
+                'recipient_context' => $this->recipientContext($request->recipient),
                 'note' => $invitation->message ?: null,
                 'primary_action' => [
                     'kind' => 'inline',
@@ -88,9 +92,53 @@ class CaregiverWorkInboxBuilder
             ]);
         }
 
+        $regularCareOffers = CarePlan::query()
+            ->with(['family:id,name,city,state'])
+            ->where('caregiver_user_id', $caregiverId)
+            ->where('status', CarePlan::STATUS_PENDING_CAREGIVER)
+            ->latest()
+            ->get();
+
+        foreach ($regularCareOffers as $plan) {
+            $minutes = $this->estimatedPlanMinutes($plan);
+            $compensation = $this->compensationPayload($minutes, (float) $plan->hourly_rate);
+
+            $items->push([
+                'id' => 'regular-offer-'.$plan->id,
+                'scope' => 'needs_response',
+                'state' => 'regular_care_offer',
+                'priority' => 1250,
+                'created_at' => $plan->offered_at ?: $plan->created_at,
+                'start_at' => $plan->starts_on,
+                'title' => $plan->title,
+                'location' => $this->planLocation($plan),
+                'schedule' => $this->planScheduleLabel($plan),
+                'compensation' => $compensation,
+                'compensation_line' => $compensation['line'] ?? null,
+                'status_label' => 'Regular offer',
+                'status_tone' => 'info',
+                'fit_reason' => 'A family wants to rebook you on a regular schedule.',
+                'recipient_context' => $this->planRecipientContext($plan),
+                'note' => $plan->family_message ?: null,
+                'primary_action' => [
+                    'kind' => 'link',
+                    'label' => 'Review offer',
+                    'href' => route('caregiver.regular-clients.index'),
+                ],
+                'secondary_action' => [
+                    'kind' => 'link',
+                    'label' => 'Regular clients',
+                    'href' => route('caregiver.regular-clients.index'),
+                ],
+                'open_href' => route('caregiver.regular-clients.index'),
+                'meta' => $plan->family ? 'From '.$plan->family->name : 'Direct regular-care offer',
+            ]);
+        }
+
         $applications = CareRequestApplication::query()
             ->with([
                 'careRequest:id,title,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,city,state,status,created_at',
+                'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
                 'conversation:id,care_request_application_id',
                 'booking:id,care_request_application_id,status,scheduled_start_at,scheduled_end_at,started_at,completed_at',
             ])
@@ -115,6 +163,61 @@ class CaregiverWorkInboxBuilder
             }
         }
 
+        $activeRegularPlans = CarePlan::query()
+            ->with(['family:id,name,city,state', 'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at'])
+            ->where('caregiver_user_id', $caregiverId)
+            ->whereIn('status', [
+                CarePlan::STATUS_ACTIVE,
+                CarePlan::STATUS_PAYMENT_ATTENTION,
+                CarePlan::STATUS_PAUSED,
+            ])
+            ->latest('updated_at')
+            ->limit(12)
+            ->get();
+
+        foreach ($activeRegularPlans as $plan) {
+            $minutes = $this->estimatedPlanMinutes($plan);
+            $compensation = $this->compensationPayload($minutes, (float) $plan->hourly_rate);
+            $paymentNeedsFamily = $plan->status === CarePlan::STATUS_PAYMENT_ATTENTION;
+
+            $items->push([
+                'id' => 'regular-plan-'.$plan->id,
+                'scope' => 'hired',
+                'state' => 'regular_care_'.$plan->status,
+                'priority' => $plan->status === CarePlan::STATUS_PAYMENT_ATTENTION ? 430 : 360,
+                'created_at' => $plan->updated_at,
+                'start_at' => $plan->nextBooking?->scheduled_start_at ?: $plan->starts_on,
+                'title' => $plan->title,
+                'location' => $this->planLocation($plan),
+                'schedule' => $this->planScheduleLabel($plan),
+                'compensation' => $compensation,
+                'compensation_line' => $compensation['line'] ?? null,
+                'status_label' => $paymentNeedsFamily ? 'Family payment needed' : 'Regular client',
+                'status_tone' => $paymentNeedsFamily ? 'warning' : 'success',
+                'fit_reason' => $paymentNeedsFamily
+                    ? 'Family needs to update payment. No action needed from you right now.'
+                    : ($plan->nextBooking
+                    ? 'Next regular-care shift is ready in your shift workflow.'
+                    : 'Regular-care schedule accepted.'),
+                'recipient_context' => $this->planRecipientContext($plan),
+                'note' => null,
+                'primary_action' => [
+                    'kind' => 'link',
+                    'label' => $plan->nextBooking ? 'Open next shift' : 'Open plan',
+                    'href' => $plan->nextBooking
+                        ? route('care-requests.apply', $plan->nextBooking->care_request_id)
+                        : route('caregiver.regular-clients.index'),
+                ],
+                'secondary_action' => [
+                    'kind' => 'link',
+                    'label' => 'Regular clients',
+                    'href' => route('caregiver.regular-clients.index'),
+                ],
+                'open_href' => route('caregiver.regular-clients.index'),
+                'meta' => $plan->family ? 'Regular client: '.$plan->family->name : 'Regular client',
+            ]);
+        }
+
         $excludedRequestIds = collect()
             ->merge($pendingInvitations->pluck('care_request_id'))
             ->merge($applications->pluck('care_request_id'))
@@ -122,7 +225,10 @@ class CaregiverWorkInboxBuilder
             ->values();
 
         $recommendedRequests = CareRequest::query()
-            ->with(['tasks:id,name'])
+            ->with([
+                'tasks:id,name',
+                'recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
+            ])
             ->where('status', CareRequest::STATUS_OPEN)
             ->when($excludedRequestIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $excludedRequestIds))
             ->latest()
@@ -153,6 +259,7 @@ class CaregiverWorkInboxBuilder
                 'status_label' => 'Open',
                 'status_tone' => 'neutral',
                 'fit_reason' => $this->recommendationReason($request, $user, $skillIds),
+                'recipient_context' => $this->recipientContext($request->recipient),
                 'note' => null,
                 'primary_action' => [
                     'kind' => 'link',
@@ -223,6 +330,7 @@ class CaregiverWorkInboxBuilder
 
         $booking = $application->booking;
         $status = (string) $application->status;
+        $recipientContext = $this->recipientContext($request->recipient);
 
         if ($status === CareRequestApplication::STATUS_APPLIED) {
             $minutes = $this->estimatedShiftMinutes($request, $booking);
@@ -244,6 +352,7 @@ class CaregiverWorkInboxBuilder
                 'status_label' => 'Applied',
                 'status_tone' => 'neutral',
                 'fit_reason' => 'Waiting for family review.',
+                'recipient_context' => $recipientContext,
                 'note' => null,
                 'primary_action' => [
                     'kind' => 'link',
@@ -279,6 +388,7 @@ class CaregiverWorkInboxBuilder
                 'status_label' => 'Shortlisted',
                 'status_tone' => 'success',
                 'fit_reason' => 'Family shortlisted you. Chat now to increase hire odds.',
+                'recipient_context' => $recipientContext,
                 'note' => null,
                 'primary_action' => [
                     'kind' => 'link',
@@ -316,6 +426,7 @@ class CaregiverWorkInboxBuilder
                     'status_label' => 'Hired',
                     'status_tone' => 'success',
                     'fit_reason' => 'You were hired. Open shift details and confirm agreement.',
+                    'recipient_context' => $recipientContext,
                     'note' => null,
                     'primary_action' => [
                         'kind' => 'link',
@@ -364,6 +475,7 @@ class CaregiverWorkInboxBuilder
                 'status_label' => $label,
                 'status_tone' => $tone,
                 'fit_reason' => $fitReason,
+                'recipient_context' => $recipientContext,
                 'note' => null,
                 'primary_action' => [
                     'kind' => 'link',
@@ -434,6 +546,39 @@ class CaregiverWorkInboxBuilder
         }
 
         return 'Good profile fit based on your service settings.';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function recipientContext(?CareRecipient $recipient = null, ?array $snapshot = null): array
+    {
+        $name = $recipient?->full_name ?: data_get($snapshot, 'full_name');
+        $relationship = $recipient?->relationship_to_family ?: data_get($snapshot, 'relationship_to_family');
+        $isRequester = (bool) ($recipient?->recipient_is_requester ?? data_get($snapshot, 'recipient_is_requester', false))
+            || strcasecmp((string) $relationship, 'self') === 0;
+
+        if (! $recipient && ! $snapshot && ! $isRequester) {
+            return [];
+        }
+
+        return [
+            'name' => trim((string) $name),
+            'relationship' => trim((string) $relationship),
+            'recipient_is_requester' => $isRequester,
+            'label' => $isRequester ? 'Requester receives care' : 'Family member receives care',
+            'description' => $isRequester
+                ? 'The person posting is also receiving care.'
+                : ($relationship ? 'A family contact is coordinating care for their '.strtolower((string) $relationship).'.' : 'A family contact is coordinating care for someone else.'),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function planRecipientContext(CarePlan $plan): array
+    {
+        return $this->recipientContext(snapshot: $plan->recipient_snapshot ?? []);
     }
 
     /**
@@ -517,6 +662,40 @@ class CaregiverWorkInboxBuilder
         }
 
         return ((int) $parsed->format('H') * 60) + (int) $parsed->format('i');
+    }
+
+    private function estimatedPlanMinutes(CarePlan $plan): ?int
+    {
+        $startMinutes = $this->timeStringToMinutes((string) $plan->schedule_start_time);
+        $endMinutes = $this->timeStringToMinutes((string) $plan->schedule_end_time);
+
+        if ($startMinutes === null || $endMinutes === null) {
+            return null;
+        }
+
+        $diff = $endMinutes - $startMinutes;
+
+        return $diff > 0 ? $diff : null;
+    }
+
+    private function planScheduleLabel(CarePlan $plan): string
+    {
+        $dayMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        $days = collect($plan->schedule_days ?? [])
+            ->map(fn ($day) => $dayMap[(int) $day] ?? null)
+            ->filter()
+            ->implode(', ');
+
+        return 'Regular: '.$days.' '.substr((string) $plan->schedule_start_time, 0, 5).'-'.substr((string) $plan->schedule_end_time, 0, 5);
+    }
+
+    private function planLocation(CarePlan $plan): string
+    {
+        $city = (string) data_get($plan->address_snapshot, 'city', $plan->family?->city);
+        $state = (string) data_get($plan->address_snapshot, 'state', $plan->family?->state);
+        $location = trim($city.', '.$state, ', ');
+
+        return $location !== '' ? $location : 'Family address';
     }
 
     private function scheduleLabel(CareRequest $request, ?CareBooking $booking = null): string

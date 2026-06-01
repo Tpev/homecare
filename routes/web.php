@@ -37,6 +37,7 @@ use App\Livewire\Caregiver\NotificationsCenter;
 use App\Livewire\Caregiver\OnboardingHub;
 use App\Livewire\Caregiver\OnboardingWizard;
 use App\Livewire\Caregiver\ProfileEditor;
+use App\Livewire\Caregiver\RegularClients;
 use App\Livewire\Caregiver\ShiftsIndex;
 use App\Livewire\Caregiver\ShowCaregiver;
 use App\Livewire\Caregiver\TaskComfortSetup;
@@ -46,6 +47,9 @@ use App\Livewire\Family\AiRequestCopilot;
 use App\Livewire\Family\CreateCareRequestWizard;
 use App\Livewire\Family\ManageCareRequest;
 use App\Livewire\Family\NotificationsCenter as FamilyNotificationsCenter;
+use App\Livewire\Family\RegularCareComposer;
+use App\Livewire\Family\RegularCareIndex;
+use App\Livewire\Family\RegularCareShow;
 use App\Livewire\Family\RequestsIndex;
 use App\Livewire\Messaging\Inbox;
 use App\Livewire\Support\TicketsCenter;
@@ -149,6 +153,7 @@ Route::middleware(['auth', 'caregiver.role'])->group(function () {
         ->name('caregiver.payouts.connect.return');
     Route::get('/caregiver/invitations', InvitationsIndex::class)->name('caregiver.invitations.index');
     Route::get('/caregiver/work-inbox', WorkInbox::class)->name('caregiver.work-inbox.index');
+    Route::get('/caregiver/regular-clients', RegularClients::class)->name('caregiver.regular-clients.index');
     Route::get('/caregiver/notifications', NotificationsCenter::class)->name('caregiver.notifications.index');
     Route::get('/caregiver/shifts', ShiftsIndex::class)->name('caregiver.shifts.index');
     Route::get('/caregiver/earnings', EarningsDashboard::class)->name('caregiver.earnings.index');
@@ -159,12 +164,19 @@ Route::middleware(['auth', 'caregiver.role'])->group(function () {
 });
 
 Route::middleware(['auth', 'family.role'])->prefix('family')->name('family.')->group(function () {
+    Route::get('/care', RegularCareIndex::class)->name('care.index');
+    Route::get('/care/{carePlan}', RegularCareShow::class)
+        ->whereNumber('carePlan')
+        ->name('care.show');
     Route::get('/requests', RequestsIndex::class)->name('requests.index');
     Route::get('/requests/create', CreateCareRequestWizard::class)->name('requests.create');
     Route::get('/requests/create/ai', AiRequestCopilot::class)->name('requests.create_ai');
     Route::get('/notifications', FamilyNotificationsCenter::class)->name('notifications.index');
     Route::get('/billing', [FamilyBillingController::class, 'show'])->name('billing.show');
     Route::post('/billing/checkout', [FamilyBillingController::class, 'createCheckout'])->name('billing.checkout');
+    Route::get('/requests/{careRequest}/regular-care', RegularCareComposer::class)
+        ->whereNumber('careRequest')
+        ->name('care.compose');
     Route::get('/requests/{careRequest}', ManageCareRequest::class)
         ->whereNumber('careRequest')
         ->name('requests.show');

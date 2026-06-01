@@ -4,14 +4,19 @@
             <x-input label="City" wire:model.live="city" />
             <x-input label="State (2 letters)" wire:model.live="state" maxlength="2" />
 
-            <x-select.styled
-                wire:model.live="taskIds"
-                multiple
-                label="Tasks"
-                :options="collect($taskOptions)->map(fn($item)=>['label'=>$item['name'],'value'=>$item['id']])->values()->all()"
-            />
+            <div>
+                <p class="text-sm font-medium text-[#324457]">Tasks</p>
+                <div class="mt-2 max-h-48 space-y-2 overflow-y-auto rounded-xl border border-[#DED6CA] bg-[#FFFCF8] p-2">
+                    @foreach ($taskOptions as $task)
+                        <label class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm text-[#324457] hover:bg-white" wire:key="request-task-filter-{{ $task['id'] }}">
+                            <input type="checkbox" value="{{ $task['id'] }}" wire:model.live="taskIds" class="rounded border-[#B7ADA0] text-[#0F3D3E] focus:ring-[#4F6FAF]">
+                            <span>{{ $task['name'] }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
 
-            <x-select.styled
+            <x-native-select-field
                 label="Job type"
                 wire:model.live="requestType"
                 :options="[
@@ -21,7 +26,7 @@
                 ]"
             />
 
-            <x-select.styled
+            <x-native-select-field
                 label="When"
                 wire:model.live="when"
                 :options="[
@@ -31,7 +36,7 @@
                 ]"
             />
 
-            <x-select.styled
+            <x-native-select-field
                 label="Sort"
                 wire:model.live="sort"
                 :options="[
@@ -40,6 +45,10 @@
                     ['label' => 'Highest budget', 'value' => 'budget_high'],
                 ]"
             />
+
+            <button type="button" wire:click="clearFilters" class="w-full rounded-xl border border-[#DED6CA] bg-white px-3 py-2 text-sm font-semibold text-[#0F3D3E] transition hover:bg-[#F5F1EB]">
+                Clear filters
+            </button>
         </div>
     </x-card>
 
@@ -67,9 +76,7 @@
                                 - Recurring
                             @endif
                         </p>
-                        <p class="text-sm text-[#607080]">
-                            Recipient: {{ $request->recipient?->full_name ?? 'Unknown' }}
-                        </p>
+                        <x-care-recipient-context :recipient="$request->recipient" :show-name="true" class="mt-2" />
                     </div>
                     <div class="flex items-center gap-2">
                         @if ($request->request_type === \App\Models\CareRequest::TYPE_RECURRING)

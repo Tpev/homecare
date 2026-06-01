@@ -22,6 +22,7 @@ class CareBooking extends Model
 
     protected $fillable = [
         'care_request_id',
+        'care_plan_id',
         'care_request_application_id',
         'family_user_id',
         'caregiver_user_id',
@@ -95,6 +96,11 @@ class CareBooking extends Model
     public function careRequest(): BelongsTo
     {
         return $this->belongsTo(CareRequest::class);
+    }
+
+    public function carePlan(): BelongsTo
+    {
+        return $this->belongsTo(CarePlan::class);
     }
 
     public function application(): BelongsTo

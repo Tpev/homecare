@@ -12,7 +12,7 @@
             <x-input label="Subject" wire:model="subject" />
             <x-textarea label="Describe your issue" wire:model="description" />
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <x-select.styled
+                <x-native-select-field
                     label="Category"
                     wire:model="category"
                     :options="[
@@ -23,7 +23,7 @@
                         ['label' => 'Billing', 'value' => 'billing'],
                     ]"
                 />
-                <x-select.styled
+                <x-native-select-field
                     label="Priority"
                     wire:model="priority"
                     :options="[
@@ -35,8 +35,8 @@
                 />
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <x-select.styled label="Related request (optional)" wire:model="care_request_id" :options="$requestOptions" />
-                <x-select.styled label="Related booking (optional)" wire:model="care_booking_id" :options="$bookingOptions" />
+                <x-native-select-field label="Related request (optional)" wire:model="care_request_id" :options="$requestOptions" />
+                <x-native-select-field label="Related booking (optional)" wire:model="care_booking_id" :options="$bookingOptions" />
             </div>
         </div>
 

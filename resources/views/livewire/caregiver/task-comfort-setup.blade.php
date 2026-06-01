@@ -31,12 +31,17 @@
                 Pick all tasks you are comfortable doing. After save, we move you to your next required step automatically.
             </div>
 
-            <x-select.styled
-                wire:model="selectedSkills"
-                multiple
-                label="Tasks you are comfortable with"
-                :options="collect($skillOptions)->map(fn($item)=>['label'=>$item['name'],'value'=>$item['id']])->values()->all()"
-            />
+            <div>
+                <p class="text-sm font-medium text-[#324457]">Tasks you are comfortable with</p>
+                <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    @foreach ($skillOptions as $skill)
+                        <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-[#DED6CA] bg-white px-3 py-2 text-sm font-medium text-[#17313F] transition hover:bg-[#F5F1EB]">
+                            <input type="checkbox" value="{{ $skill['id'] }}" wire:model="selectedSkills" class="rounded border-[#B7ADA0] text-[#0F3D3E] focus:ring-[#4F6FAF]">
+                            <span>{{ $skill['name'] }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
             @error('selectedSkills') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
             @error('selectedSkills.*') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
         </div>

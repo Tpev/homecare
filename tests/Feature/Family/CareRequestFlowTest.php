@@ -18,6 +18,7 @@ use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
 use App\Services\Payments\BookingPaymentService;
+use App\Support\CareRequestProgress;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
@@ -27,6 +28,47 @@ use Tests\TestCase;
 class CareRequestFlowTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_family_response_metrics_never_show_negative_time(): void
+    {
+        $family = User::factory()->create([
+            'role' => 'family',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+        ]);
+
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Morning companionship',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_FILLED,
+            'requested_start_at' => now()->addDay()->setTime(9, 0),
+            'requested_end_at' => now()->addDay()->setTime(12, 0),
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+            'address_line1' => '100 Main St',
+            'preferred_response_hours' => 12,
+        ]);
+
+        $request->forceFill([
+            'created_at' => now(),
+            'first_applicant_at' => now()->subMinutes(30),
+            'first_hire_at' => now()->subMinutes(15),
+        ])->save();
+
+        $request->refresh();
+
+        $this->assertSame('0m', CareRequestProgress::firstResponseLabel($request));
+        $this->assertSame('0m', CareRequestProgress::firstHireLabel($request));
+
+        $this->actingAs($family)
+            ->get(route('family.requests.index'))
+            ->assertOk()
+            ->assertSee('Average first response: 0m')
+            ->assertDontSee('First response -')
+            ->assertDontSee('First hire -');
+    }
 
     public function test_family_can_publish_care_request_with_recipient_and_third_party_contact(): void
     {
@@ -141,12 +183,15 @@ class CareRequestFlowTest extends TestCase
             'zip' => '27603',
         ]);
         $request->recipient()->create([
-            'full_name' => 'Recipient Name',
-            'relationship_to_family' => 'Father',
+            'recipient_is_requester' => true,
+            'full_name' => $family->name,
+            'relationship_to_family' => 'Self',
         ]);
 
         Livewire::actingAs($caregiver)
             ->test(ApplyToCareRequest::class, ['careRequest' => $request->id])
+            ->assertSee('Requester receives care')
+            ->assertSee('The person posting is also receiving care.')
             ->set('cover_note', str_repeat('I have relevant home care experience. ', 3))
             ->call('submit');
 
@@ -644,6 +689,48 @@ class CareRequestFlowTest extends TestCase
             ->assertSet('requested_start_at', '')
             ->assertSet('requested_end_at', '')
             ->assertSet('selectedTasks', [$task->id]);
+    }
+
+    public function test_family_can_publish_request_for_self_without_typing_recipient_name(): void
+    {
+        $family = User::factory()->create([
+            'name' => 'Don Harris',
+            'role' => 'family',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+        ]);
+
+        $task = CareTask::query()->create(['name' => 'Companionship']);
+        $startAt = now()->addDay()->setTime(10, 0)->format('Y-m-d\TH:i');
+        $endAt = now()->addDay()->setTime(12, 0)->format('Y-m-d\TH:i');
+
+        Livewire::actingAs($family)
+            ->test(CreateCareRequestWizard::class)
+            ->set('care_for', CreateCareRequestWizard::CARE_FOR_SELF)
+            ->set('selectedTasks', [$task->id])
+            ->set('requested_start_at', $startAt)
+            ->set('requested_end_at', $endAt)
+            ->set('address_line1', '100 Main St')
+            ->set('city', 'Raleigh')
+            ->set('state', 'NC')
+            ->set('zip', '27601')
+            ->call('publish');
+
+        $careRequest = CareRequest::query()->latest('id')->first();
+
+        $this->assertNotNull($careRequest);
+        $this->assertDatabaseHas('care_request_recipients', [
+            'care_request_id' => $careRequest->id,
+            'recipient_is_requester' => true,
+            'full_name' => 'Don Harris',
+            'relationship_to_family' => 'Self',
+        ]);
+        $this->assertDatabaseHas('family_recipient_profiles', [
+            'family_user_id' => $family->id,
+            'recipient_is_requester' => true,
+            'full_name' => 'Don Harris',
+            'relationship_to_family' => 'Self',
+        ]);
     }
 
     public function test_family_sees_one_time_estimated_cost_preview(): void

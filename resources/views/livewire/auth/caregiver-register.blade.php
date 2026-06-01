@@ -28,7 +28,7 @@
                 </div>
 
                 <div class="md:col-span-2">
-                    <x-select.styled
+                    <x-native-select-field
                         label="State"
                         wire:model="state"
                         :options="collect($usStates)->map(fn($label,$value)=>['label'=>$label,'value'=>$value])->values()->all()"

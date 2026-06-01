@@ -133,7 +133,7 @@
                         <a href="{{ route('family.requests.create') }}" wire:navigate class="underline">Create one now</a>.
                     </x-alert>
                 @else
-                    <x-select.styled
+                    <x-native-select-field
                         label="Select request"
                         wire:model="selectedCareRequestId"
                         :options="$familyRequestOptions"

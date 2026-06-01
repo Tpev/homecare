@@ -29,7 +29,8 @@
     @php
         $compactFooter = request()->routeIs('messages.*')
             || request()->routeIs('care-requests.apply')
-            || request()->routeIs('family.requests.show');
+            || request()->routeIs('family.requests.show')
+            || request()->routeIs('family.care.show');
         $shouldTrackFamilySignupConversion = session('google_ads_family_signup_conversion')
             && auth()->check()
             && auth()->user()?->role === 'family';

@@ -58,6 +58,26 @@ class User extends Authenticatable
         return $this->hasMany(CareRequest::class, 'family_user_id');
     }
 
+    public function familyCareRelationships(): HasMany
+    {
+        return $this->hasMany(CareRelationship::class, 'family_user_id');
+    }
+
+    public function caregiverCareRelationships(): HasMany
+    {
+        return $this->hasMany(CareRelationship::class, 'caregiver_user_id');
+    }
+
+    public function familyCarePlans(): HasMany
+    {
+        return $this->hasMany(CarePlan::class, 'family_user_id');
+    }
+
+    public function caregiverCarePlans(): HasMany
+    {
+        return $this->hasMany(CarePlan::class, 'caregiver_user_id');
+    }
+
     public function careRequestApplications(): HasMany
     {
         return $this->hasMany(CareRequestApplication::class, 'caregiver_user_id');

@@ -112,19 +112,29 @@
             <div>
                 <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Care capabilities</p>
                 <div class="mt-2 space-y-4">
-                    <x-select.styled
-                        wire:model="selectedSkills"
-                        multiple
-                        label="Skills"
-                        :options="collect($skillOptions)->map(fn($item)=>['label'=>$item['name'],'value'=>$item['id']])->values()->all()"
-                    />
+                    <div>
+                        <p class="text-sm font-medium text-[#324457]">Skills</p>
+                        <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            @foreach ($skillOptions as $skill)
+                                <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-[#DED6CA] bg-white px-3 py-2 text-sm font-medium text-[#17313F] transition hover:bg-[#F5F1EB]">
+                                    <input type="checkbox" value="{{ $skill['id'] }}" wire:model="selectedSkills" class="rounded border-[#B7ADA0] text-[#0F3D3E] focus:ring-[#4F6FAF]">
+                                    <span>{{ $skill['name'] }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
 
-                    <x-select.styled
-                        wire:model="selectedLanguages"
-                        multiple
-                        label="Languages"
-                        :options="collect($languageOptions)->map(fn($item)=>['label'=>$item['name'],'value'=>$item['id']])->values()->all()"
-                    />
+                    <div>
+                        <p class="text-sm font-medium text-[#324457]">Languages</p>
+                        <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            @foreach ($languageOptions as $language)
+                                <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-[#DED6CA] bg-white px-3 py-2 text-sm font-medium text-[#17313F] transition hover:bg-[#F5F1EB]">
+                                    <input type="checkbox" value="{{ $language['id'] }}" wire:model="selectedLanguages" class="rounded border-[#B7ADA0] text-[#0F3D3E] focus:ring-[#4F6FAF]">
+                                    <span>{{ $language['name'] }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

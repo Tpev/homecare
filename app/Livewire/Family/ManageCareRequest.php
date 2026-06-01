@@ -777,6 +777,7 @@ class ManageCareRequest extends Component
 
             if ($this->requestItem->recipient) {
                 $newRequest->recipient()->create($this->requestItem->recipient->only([
+                    'recipient_is_requester',
                     'full_name',
                     'date_of_birth',
                     'gender',

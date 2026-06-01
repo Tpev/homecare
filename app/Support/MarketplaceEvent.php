@@ -26,6 +26,12 @@ class MarketplaceEvent
     public const PAYOUT_TRANSFER_FAILED = 'payout_transfer_failed';
     public const CAREGIVER_WELCOME = 'caregiver_welcome';
     public const CAREGIVER_ONBOARDING_REMINDER_24H = 'caregiver_onboarding_reminder_24h';
+    public const REGULAR_CARE_OFFERED = 'regular_care_offered';
+    public const REGULAR_CARE_ACCEPTED = 'regular_care_accepted';
+    public const REGULAR_CARE_COUNTERED = 'regular_care_countered';
+    public const REGULAR_CARE_DECLINED = 'regular_care_declined';
+    public const REGULAR_CARE_ENDED = 'regular_care_ended';
+    public const REGULAR_CARE_PAYMENT_ATTENTION = 'regular_care_payment_attention';
 
     /**
      * @return list<string>
@@ -55,6 +61,12 @@ class MarketplaceEvent
             self::PAYOUT_TRANSFER_FAILED,
             self::CAREGIVER_WELCOME,
             self::CAREGIVER_ONBOARDING_REMINDER_24H,
+            self::REGULAR_CARE_OFFERED,
+            self::REGULAR_CARE_ACCEPTED,
+            self::REGULAR_CARE_COUNTERED,
+            self::REGULAR_CARE_DECLINED,
+            self::REGULAR_CARE_ENDED,
+            self::REGULAR_CARE_PAYMENT_ATTENTION,
         ];
     }
 }

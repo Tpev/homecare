@@ -29,9 +29,9 @@
         <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div class="hc-brand-card">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <x-select.styled label="Status" wire:model.live="status" :options="$statusOptions" />
-                    <x-select.styled label="Type" wire:model.live="requestType" :options="$requestTypeOptions" />
-                    <x-select.styled label="Sort" wire:model.live="sort" :options="$sortOptions" />
+                    <x-native-select-field label="Status" wire:model.live="status" :options="$statusOptions" />
+                    <x-native-select-field label="Type" wire:model.live="requestType" :options="$requestTypeOptions" />
+                    <x-native-select-field label="Sort" wire:model.live="sort" :options="$sortOptions" />
                 </div>
             </div>
 

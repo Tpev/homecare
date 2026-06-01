@@ -20,6 +20,8 @@ class CreateCareRequestWizard extends Component
 {
     public const MODE_FAST_TRACK = 'fast_track';
     public const MODE_COMPLETE_SETUP = 'complete_setup';
+    public const CARE_FOR_SELF = 'self';
+    public const CARE_FOR_OTHER = 'other';
 
     public int $step = 1;
     public int $totalSteps = 4;
@@ -61,6 +63,7 @@ class CreateCareRequestWizard extends Component
     public string $recipient_mobility_level = '';
     public string $recipient_relationship_to_family = '';
     public string $recipient_care_notes = '';
+    public string $care_for = self::CARE_FOR_OTHER;
 
     public bool $includeThirdPartyContact = false;
     public string $third_party_full_name = '';
@@ -76,6 +79,10 @@ class CreateCareRequestWizard extends Component
     public array $requestTypeOptions = [
         ['label' => 'One-time job', 'value' => CareRequest::TYPE_ONE_TIME],
         ['label' => 'Recurring job', 'value' => CareRequest::TYPE_RECURRING],
+    ];
+    public array $careForOptions = [
+        ['label' => 'Me', 'value' => self::CARE_FOR_SELF],
+        ['label' => 'A family member', 'value' => self::CARE_FOR_OTHER],
     ];
     public array $dayOptions = [
         ['label' => 'Sun', 'value' => 0],
@@ -134,7 +141,7 @@ class CreateCareRequestWizard extends Component
 
         $lastRequest = CareRequest::query()
             ->where('family_user_id', $user->id)
-            ->with(['recipient:id,care_request_id,full_name,relationship_to_family', 'thirdPartyContact:id,care_request_id,full_name'])
+            ->with(['recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family', 'thirdPartyContact:id,care_request_id,full_name'])
             ->latest('id')
             ->first();
 
@@ -152,6 +159,31 @@ class CreateCareRequestWizard extends Component
     public function getResolvedTitleProperty(): string
     {
         return trim($this->title) !== '' ? trim($this->title) : $this->buildDefaultTitle();
+    }
+
+    public function getRecipientIsRequesterProperty(): bool
+    {
+        return $this->care_for === self::CARE_FOR_SELF;
+    }
+
+    public function getResolvedRecipientNameProperty(): string
+    {
+        if ($this->recipientIsRequester) {
+            return trim((string) (auth()->user()?->name ?? '')) ?: 'Care recipient';
+        }
+
+        return trim($this->recipient_full_name) !== '' ? trim($this->recipient_full_name) : 'Care recipient';
+    }
+
+    public function getResolvedRecipientRelationshipProperty(): string
+    {
+        if ($this->recipientIsRequester) {
+            return 'Self';
+        }
+
+        return trim($this->recipient_relationship_to_family) !== ''
+            ? trim($this->recipient_relationship_to_family)
+            : 'Family member';
     }
 
     public function getEstimateHourlyRateProperty(): float
@@ -275,6 +307,13 @@ class CreateCareRequestWizard extends Component
         $this->recipient_mobility_level = (string) ($request->recipient?->mobility_level ?? '');
         $this->recipient_relationship_to_family = (string) ($request->recipient?->relationship_to_family ?? '');
         $this->recipient_care_notes = (string) ($request->recipient?->care_notes ?? '');
+        $this->care_for = $this->careForFromRecipient(
+            (bool) ($request->recipient?->recipient_is_requester ?? false),
+            $this->recipient_relationship_to_family
+        );
+        if ($this->recipientIsRequester && trim($this->recipient_full_name) === '') {
+            $this->recipient_full_name = trim((string) (auth()->user()?->name ?? ''));
+        }
 
         $this->includeThirdPartyContact = $request->thirdPartyContact !== null;
         $this->third_party_full_name = (string) ($request->thirdPartyContact?->full_name ?? '');
@@ -315,6 +354,13 @@ class CreateCareRequestWizard extends Component
             $this->recipient_mobility_level = (string) ($recipient->mobility_level ?? '');
             $this->recipient_relationship_to_family = (string) ($recipient->relationship_to_family ?? '');
             $this->recipient_care_notes = (string) ($recipient->care_notes ?? '');
+            $this->care_for = $this->careForFromRecipient(
+                (bool) ($recipient->recipient_is_requester ?? false),
+                $this->recipient_relationship_to_family
+            );
+            if ($this->recipientIsRequester && trim($this->recipient_full_name) === '') {
+                $this->recipient_full_name = trim((string) ($user->name ?? ''));
+            }
             $this->includeThirdPartyContact = (bool) ($recipient->include_third_party_contact ?? false);
             $this->third_party_full_name = (string) ($recipient->third_party_full_name ?? '');
             $this->third_party_relationship_to_recipient = (string) ($recipient->third_party_relationship_to_recipient ?? '');
@@ -355,6 +401,23 @@ class CreateCareRequestWizard extends Component
         }
 
         $this->reset(['requested_start_at', 'requested_end_at']);
+    }
+
+    public function updatedCareFor(string $value): void
+    {
+        if ($value === self::CARE_FOR_SELF) {
+            $this->recipient_full_name = trim((string) (auth()->user()?->name ?? ''));
+            $this->recipient_relationship_to_family = 'Self';
+            return;
+        }
+
+        if ($this->recipient_relationship_to_family === 'Self') {
+            $this->recipient_relationship_to_family = '';
+        }
+
+        if ($this->recipient_full_name === trim((string) (auth()->user()?->name ?? ''))) {
+            $this->recipient_full_name = '';
+        }
     }
 
     public function chooseFastTrack(): void
@@ -406,11 +469,12 @@ class CreateCareRequestWizard extends Component
             $careRequest->tasks()->sync($attachPayload);
 
             $careRequest->recipient()->create([
-                'full_name' => trim($this->recipient_full_name) !== '' ? trim($this->recipient_full_name) : 'Care recipient',
+                'recipient_is_requester' => $this->recipientIsRequester,
+                'full_name' => $this->resolvedRecipientName,
                 'date_of_birth' => $this->recipient_date_of_birth ?: null,
                 'gender' => $this->recipient_gender ?: null,
                 'mobility_level' => $this->recipient_mobility_level ?: null,
-                'relationship_to_family' => trim($this->recipient_relationship_to_family) !== '' ? trim($this->recipient_relationship_to_family) : 'Family member',
+                'relationship_to_family' => $this->resolvedRecipientRelationship,
                 'care_notes' => trim($this->recipient_care_notes) !== '' ? trim($this->recipient_care_notes) : (trim($this->additional_info) ?: null),
             ]);
 
@@ -520,11 +584,14 @@ class CreateCareRequestWizard extends Component
 
     private function rulesForRecipient(): array
     {
-        $recipientNameRules = $this->request_mode === self::MODE_FAST_TRACK
+        $recipientNameRules = $this->recipientIsRequester
+            ? ['nullable', 'string', 'max:120']
+            : ($this->request_mode === self::MODE_FAST_TRACK
             ? ['required', 'string', 'min:2', 'max:120']
-            : ['nullable', 'string', 'max:120'];
+            : ['nullable', 'string', 'max:120']);
 
         return [
+            'care_for' => ['required', Rule::in([self::CARE_FOR_SELF, self::CARE_FOR_OTHER])],
             'recipient_full_name' => $recipientNameRules,
             'recipient_date_of_birth' => ['nullable', 'date', 'before:today'],
             'recipient_gender' => ['nullable', Rule::in(array_column($this->genderOptions, 'value'))],
@@ -580,6 +647,15 @@ class CreateCareRequestWizard extends Component
         return 'Non-medical home care support based on family instructions.';
     }
 
+    private function careForFromRecipient(bool $recipientIsRequester, ?string $relationship): string
+    {
+        if ($recipientIsRequester || strtolower(trim((string) $relationship)) === 'self') {
+            return self::CARE_FOR_SELF;
+        }
+
+        return self::CARE_FOR_OTHER;
+    }
+
     private function loadSavedProfiles(): void
     {
         $user = auth()->user();
@@ -604,7 +680,15 @@ class CreateCareRequestWizard extends Component
         $this->modeChosen = (bool) ($draft['modeChosen'] ?? true);
         $this->step = (int) ($draft['step'] ?? 4);
         $this->request_type = (string) ($draft['request_type'] ?? CareRequest::TYPE_ONE_TIME);
+        $careFor = (string) ($draft['care_for'] ?? self::CARE_FOR_OTHER);
+        $this->care_for = in_array($careFor, [self::CARE_FOR_SELF, self::CARE_FOR_OTHER], true)
+            ? $careFor
+            : self::CARE_FOR_OTHER;
         $this->recipient_full_name = (string) ($draft['recipient_full_name'] ?? '');
+        if ($this->recipientIsRequester && trim($this->recipient_full_name) === '') {
+            $this->recipient_full_name = trim((string) (auth()->user()?->name ?? ''));
+            $this->recipient_relationship_to_family = 'Self';
+        }
         $this->selectedTasks = collect($draft['selectedTasks'] ?? [])->map(fn ($id) => (int) $id)->values()->all();
         $this->additional_info = (string) ($draft['additional_info'] ?? '');
         $this->requested_start_at = $this->normalizeDateTimeForInput((string) ($draft['requested_start_at'] ?? ''));
@@ -638,11 +722,12 @@ class CreateCareRequestWizard extends Component
         FamilyRecipientProfile::query()->updateOrCreate(
             ['family_user_id' => $familyUserId],
             [
-                'full_name' => trim($this->recipient_full_name) !== '' ? trim($this->recipient_full_name) : null,
+                'recipient_is_requester' => $this->recipientIsRequester,
+                'full_name' => $this->resolvedRecipientName !== 'Care recipient' ? $this->resolvedRecipientName : null,
                 'date_of_birth' => $this->recipient_date_of_birth ?: null,
                 'gender' => $this->recipient_gender ?: null,
                 'mobility_level' => $this->recipient_mobility_level ?: null,
-                'relationship_to_family' => trim($this->recipient_relationship_to_family) !== '' ? trim($this->recipient_relationship_to_family) : null,
+                'relationship_to_family' => $this->resolvedRecipientRelationship,
                 'care_notes' => trim($this->recipient_care_notes) !== '' ? trim($this->recipient_care_notes) : null,
                 'include_third_party_contact' => (bool) $this->includeThirdPartyContact,
                 'third_party_full_name' => trim($this->third_party_full_name) !== '' ? trim($this->third_party_full_name) : null,

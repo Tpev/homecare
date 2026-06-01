@@ -125,7 +125,7 @@
                 @endif
 
                 <div class="space-y-3">
-                    <x-select.styled
+                    <x-native-select-field
                         label="Request type"
                         wire:model.live="draft.request_type"
                         :options="[
@@ -144,7 +144,7 @@
                         <x-input label="Address line 1" wire:model.live="draft.address_line1" />
                         <x-input label="Address line 2 (optional)" wire:model.live="draft.address_line2" />
                         <x-input label="City" wire:model.live="draft.city" />
-                        <x-select.styled
+                        <x-native-select-field
                             label="State"
                             wire:model.live="draft.state"
                             :options="collect($usStates)->map(fn($label,$value)=>['label'=>$label,'value'=>$value])->values()->all()"
@@ -153,12 +153,17 @@
                         <x-input label="Preferred response (hours)" type="number" min="1" max="72" wire:model.live="draft.preferred_response_hours" />
                     </div>
 
-                    <x-select.styled
-                        label="Services needed"
-                        wire:model.live="draft.task_ids"
-                        multiple
-                        :options="collect($taskOptions)->map(fn($task)=>['label'=>$task['name'],'value'=>(int) $task['id']])->values()->all()"
-                    />
+                    <div>
+                        <p class="text-sm font-medium text-[#324457]">Services needed</p>
+                        <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            @foreach ($taskOptions as $task)
+                                <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-[#DED6CA] bg-white px-3 py-2 text-sm font-medium text-[#17313F] transition hover:bg-[#F5F1EB]">
+                                    <input type="checkbox" value="{{ (int) $task['id'] }}" wire:model.live="draft.task_ids" class="rounded border-[#B7ADA0] text-[#0F3D3E] focus:ring-[#4F6FAF]">
+                                    <span>{{ $task['name'] }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
 
                     @if(($draft['request_type'] ?? null) === \App\Models\CareRequest::TYPE_ONE_TIME)
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -167,17 +172,17 @@
                         </div>
                     @else
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <x-select.styled
-                                label="Recurring days"
-                                multiple
-                                wire:model.live="draft.recurring_days"
-                                :options="[
-                                    ['label' => 'Sun', 'value' => 0], ['label' => 'Mon', 'value' => 1],
-                                    ['label' => 'Tue', 'value' => 2], ['label' => 'Wed', 'value' => 3],
-                                    ['label' => 'Thu', 'value' => 4], ['label' => 'Fri', 'value' => 5],
-                                    ['label' => 'Sat', 'value' => 6],
-                                ]"
-                            />
+                            <div>
+                                <p class="text-sm font-medium text-[#324457]">Recurring days</p>
+                                <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                    @foreach ([0 => 'Sun', 1 => 'Mon', 2 => 'Tue', 3 => 'Wed', 4 => 'Thu', 5 => 'Fri', 6 => 'Sat'] as $dayValue => $dayLabel)
+                                        <label class="flex h-11 cursor-pointer items-center justify-center rounded-xl border text-sm font-semibold transition {{ in_array((string) $dayValue, array_map('strval', $draft['recurring_days'] ?? []), true) ? 'border-[#0F3D3E] bg-[#0F3D3E] text-white' : 'border-[#DED6CA] bg-white text-[#0F3D3E] hover:bg-[#F5F1EB]' }}">
+                                            <input type="checkbox" class="sr-only" value="{{ $dayValue }}" wire:model.live="draft.recurring_days">
+                                            {{ $dayLabel }}
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
                             <x-input label="Starts on" type="date" wire:model.live="draft.recurring_starts_on" />
                             <x-input label="Start time" type="time" wire:model.live="draft.recurring_start_time" />
                             <x-input label="End time" type="time" wire:model.live="draft.recurring_end_time" />

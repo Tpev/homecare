@@ -72,7 +72,8 @@
                         </button>
                     </div>
 
-                    <x-select.styled
+                    <x-native-select-field
+                        label="Event type"
                         wire:model.live="eventFilter"
                         :options="array_merge([['label' => 'All event types', 'value' => 'all']], $eventOptions)"
                     />
@@ -212,6 +213,7 @@
                     </button>
                 </div>
             </x-card>
+            </div>
         </aside>
     </div>
 </div>

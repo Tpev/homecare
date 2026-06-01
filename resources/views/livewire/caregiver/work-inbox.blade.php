@@ -105,7 +105,16 @@
                 </div>
             </div>
             <div class="rounded-[1rem] border border-[#DED6CA] bg-[rgba(255,253,250,0.96)] p-2">
-                <x-select.styled wire:model.live="sort" :options="$sortOptions" />
+                <label for="work-inbox-sort" class="sr-only">Sort inbox</label>
+                <select
+                    id="work-inbox-sort"
+                    wire:model.live="sort"
+                    class="h-10 w-full rounded-xl border-0 bg-white px-3 text-sm font-medium text-[#0F3D3E] shadow-sm outline-none ring-1 ring-[#DED6CA] transition focus:ring-2 focus:ring-[#4F6FAF]/40"
+                >
+                    @foreach ($sortOptions as $option)
+                        <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+                    @endforeach
+                </select>
             </div>
         </div>
     </div>
@@ -126,6 +135,9 @@
                         </div>
 
                         <p class="mt-2 text-xs font-medium text-[#7B8794]">{{ $item['meta'] }}</p>
+                        @if (!empty($item['recipient_context']))
+                            <x-care-recipient-context :context="$item['recipient_context']" :show-name="true" class="mt-3" />
+                        @endif
                         <p class="mt-2 text-sm text-[#4B5B6B]">{{ $item['fit_reason'] }}</p>
 
                         @if (!empty($item['note']))

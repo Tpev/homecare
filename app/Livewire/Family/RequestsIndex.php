@@ -79,7 +79,9 @@ class RequestsIndex extends Component
             ->where('family_user_id', auth()->id())
             ->whereNotNull('first_applicant_at')
             ->get(['created_at', 'first_applicant_at'])
-            ->avg(fn (CareRequest $request) => (int) $request->created_at->diffInMinutes($request->first_applicant_at));
+            ->map(fn (CareRequest $request) => CareRequestProgress::elapsedMinutes($request->created_at, $request->first_applicant_at))
+            ->filter(fn (?int $minutes) => $minutes !== null)
+            ->avg();
 
         return view('livewire.family.requests-index', [
             'requests' => $paginated,

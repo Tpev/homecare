@@ -61,6 +61,23 @@ class BrowseCareRequests extends Component
         $this->resetPage();
     }
 
+    public function clearFilters(): void
+    {
+        $this->reset([
+            'city',
+            'state',
+            'taskIds',
+            'requestType',
+            'when',
+            'sort',
+        ]);
+
+        $this->requestType = 'all';
+        $this->when = 'any';
+        $this->sort = 'newest';
+        $this->resetPage();
+    }
+
     public function render()
     {
         $query = CareRequest::query()

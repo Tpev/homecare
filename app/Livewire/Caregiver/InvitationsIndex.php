@@ -147,6 +147,7 @@ class InvitationsIndex extends Component
             ->where('caregiver_user_id', auth()->id())
             ->with([
                 'careRequest:id,title,request_type,city,state,requested_start_at,recurring_days,recurring_start_time,recurring_end_time',
+                'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
                 'family:id,name',
                 'application:id',
                 'application.conversation:id,care_request_application_id',
@@ -166,6 +167,7 @@ class InvitationsIndex extends Component
         $invitations = CareRequestInvitation::query()
             ->with([
                 'careRequest:id,title,request_type,city,state,requested_start_at,recurring_days,recurring_start_time,recurring_end_time',
+                'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
                 'family:id,name',
                 'application:id',
                 'application.conversation:id,care_request_application_id',

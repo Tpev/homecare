@@ -35,6 +35,9 @@ class NotificationsCenter extends Component
         MarketplaceEvent::PAYOUT_TRANSFERRED,
         MarketplaceEvent::PAYOUT_TRANSFER_FAILED,
         MarketplaceEvent::PAYMENT_REFUNDED,
+        MarketplaceEvent::REGULAR_CARE_OFFERED,
+        MarketplaceEvent::REGULAR_CARE_ACCEPTED,
+        MarketplaceEvent::REGULAR_CARE_ENDED,
     ];
 
     public function mount(): void
@@ -210,6 +213,9 @@ class NotificationsCenter extends Component
             MarketplaceEvent::PAYOUT_TRANSFERRED => 'Payout sent',
             MarketplaceEvent::PAYOUT_TRANSFER_FAILED => 'Payout issue',
             MarketplaceEvent::PAYMENT_REFUNDED => 'Refund update',
+            MarketplaceEvent::REGULAR_CARE_OFFERED => 'Regular care offer',
+            MarketplaceEvent::REGULAR_CARE_ACCEPTED => 'Regular care accepted',
+            MarketplaceEvent::REGULAR_CARE_ENDED => 'Regular care ended',
             default => 'Update',
         };
     }
@@ -219,15 +225,18 @@ class NotificationsCenter extends Component
         return match ($eventKey) {
             MarketplaceEvent::APPLICATION_SUBMITTED,
             MarketplaceEvent::CAREGIVER_HIRED,
-            MarketplaceEvent::SHIFT_STARTED => 'success',
-            MarketplaceEvent::SHIFT_STARTING_SOON => 'info',
+            MarketplaceEvent::SHIFT_STARTED,
+            MarketplaceEvent::REGULAR_CARE_ACCEPTED => 'success',
+            MarketplaceEvent::SHIFT_STARTING_SOON,
+            MarketplaceEvent::REGULAR_CARE_OFFERED => 'info',
             MarketplaceEvent::REVIEW_RECEIVED => 'warning',
             MarketplaceEvent::MESSAGE_RECEIVED => 'neutral',
             MarketplaceEvent::MATCHING_REQUEST_REMINDER => 'info',
             MarketplaceEvent::SHIFT_COMPLETED => 'neutral',
             MarketplaceEvent::PAYOUT_TRANSFERRED => 'success',
             MarketplaceEvent::PAYOUT_TRANSFER_FAILED => 'warning',
-            MarketplaceEvent::PAYMENT_REFUNDED => 'warning',
+            MarketplaceEvent::PAYMENT_REFUNDED,
+            MarketplaceEvent::REGULAR_CARE_ENDED => 'warning',
             default => 'neutral',
         };
     }

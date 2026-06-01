@@ -114,6 +114,7 @@
 
                 <div class="flex items-center gap-2 md:gap-3">
                     <a href="tel:9844004008" class="hub-phone-chip hub-nav-phone hidden md:inline-flex">Call or text (984) 400-4008</a>
+                    <a href="{{ route('login') }}" class="hub-button-ghost">Log in</a>
                     <a href="{{ route('landing.get-care') }}" class="hub-button-primary hub-nav-cta">Request callback</a>
                 </div>
             </div>

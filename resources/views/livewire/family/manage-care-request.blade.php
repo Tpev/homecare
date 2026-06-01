@@ -7,6 +7,10 @@
         $booking = $requestItem->booking;
         $payment = $booking?->payment;
         $hiredApplication = $requestItem->applications->firstWhere('status', \App\Models\CareRequestApplication::STATUS_HIRED);
+        $hiredCaregiverName = trim((string) ($hiredApplication?->caregiver?->name ?? ''));
+        $hiredCaregiverFirstName = $hiredCaregiverName !== ''
+            ? \Illuminate\Support\Str::of($hiredCaregiverName)->before(' ')
+            : 'caregiver';
         $hiredConversation = $hiredApplication?->conversation;
         $noShowEligibleAt = $booking?->scheduled_start_at?->copy()->addMinutes(30);
         $canMarkNoShow = $booking
@@ -72,6 +76,11 @@
                     @if ($hiredConversation)
                         <a href="{{ route('messages.show', $hiredConversation->id) }}" wire:navigate>
                             <x-button color="indigo" light class="w-full sm:w-auto">Open chat</x-button>
+                        </a>
+                    @endif
+                    @if (! $requestItem->care_plan_id && $booking && $hiredApplication && ! in_array($booking->status, [\App\Models\CareBooking::STATUS_CANCELLED, \App\Models\CareBooking::STATUS_DISPUTED], true))
+                        <a href="{{ route('family.care.compose', $requestItem->id) }}" wire:navigate>
+                            <x-button color="green" light class="w-full sm:w-auto">Book {{ $hiredCaregiverFirstName }} again</x-button>
                         </a>
                     @endif
                 </div>
@@ -175,7 +184,7 @@
                             {{ $requestItem->city }}, {{ $requestItem->state }} {{ $requestItem->zip }}
                         </p>
                         @if ($serviceMapEmbedUrl)
-                            <div class="mt-3 overflow-hidden rounded-xl border border-[#E4DDD3] bg-[#F7F2EA]">
+                            <div wire:ignore class="mt-3 overflow-hidden rounded-xl border border-[#E4DDD3] bg-[#F7F2EA]">
                                 <iframe
                                     title="Service location map"
                                     src="{{ $serviceMapEmbedUrl }}"
@@ -367,8 +376,8 @@
 
             @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN)
                 <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <x-select.styled label="Status" wire:model.live="applicationStatus" :options="$applicationStatusOptions" />
-                    <x-select.styled
+                    <x-native-select-field label="Status" wire:model.live="applicationStatus" :options="$applicationStatusOptions" />
+                    <x-native-select-field
                         label="Sort"
                         wire:model.live="applicationSort"
                         :options="[
@@ -770,7 +779,7 @@
                         <details class="rounded border border-[#E4DDD3] p-3">
                             <summary class="cursor-pointer font-medium">Request cancellation or reschedule</summary>
                             <div class="mt-3 space-y-4">
-                                <x-select.styled
+                                <x-native-select-field
                                     label="Change type"
                                     wire:model="changeType"
                                     :options="[
@@ -794,7 +803,7 @@
                         <summary class="cursor-pointer font-medium">Support ticket</summary>
                         <div class="mt-3 space-y-4">
                             <x-input label="Subject" wire:model="supportSubject" />
-                            <x-select.styled
+                            <x-native-select-field
                                 label="Category"
                                 wire:model="supportCategory"
                                 :options="[
@@ -814,7 +823,7 @@
                         <summary class="cursor-pointer font-medium">Report incident</summary>
                         <div class="mt-3 space-y-4">
                             <x-input label="Incident title" wire:model="incidentTitle" />
-                            <x-select.styled
+                            <x-native-select-field
                                 label="Severity"
                                 wire:model="incidentSeverity"
                                 :options="[
@@ -838,9 +847,13 @@
                         </details>
                     @endif
                 </div>
-                <x-slot:footer>
-                    <x-button color="green" light wire:click="rebookHiredCaregiver">Rebook & invite hired caregiver</x-button>
-                </x-slot:footer>
+                @if (! $requestItem->care_plan_id && $hiredApplication && ! in_array($booking->status, [\App\Models\CareBooking::STATUS_CANCELLED, \App\Models\CareBooking::STATUS_DISPUTED], true))
+                    <x-slot:footer>
+                        <a href="{{ route('family.care.compose', $requestItem->id) }}" wire:navigate>
+                            <x-button color="green" light>Book {{ $hiredCaregiverFirstName }} again</x-button>
+                        </a>
+                    </x-slot:footer>
+                @endif
             </x-card>
         @endif
     @endif

@@ -3,6 +3,7 @@
 namespace App\Livewire\Dashboard;
 
 use App\Models\CareBooking;
+use App\Models\CarePlan;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
@@ -132,6 +133,37 @@ class Home extends Component
                 ->limit(6)
                 ->get();
 
+            $familyData['regular_care_plans'] = CarePlan::query()
+                ->with([
+                    'caregiver:id,name',
+                    'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
+                ])
+                ->where('family_user_id', $user->id)
+                ->latest()
+                ->limit(4)
+                ->get();
+
+            $familyData['regular_care_sources'] = CareRequest::query()
+                ->with([
+                    'recipient',
+                    'booking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
+                    'applications' => fn ($query) => $query
+                        ->where('status', CareRequestApplication::STATUS_HIRED)
+                        ->with('caregiver:id,name'),
+                ])
+                ->where('family_user_id', $user->id)
+                ->whereNull('care_plan_id')
+                ->whereHas('booking', function ($query) {
+                    $query->whereIn('status', [
+                        CareBooking::STATUS_COMPLETED,
+                        CareBooking::STATUS_REVIEWED,
+                        CareBooking::STATUS_SCHEDULED,
+                    ]);
+                })
+                ->latest()
+                ->limit(3)
+                ->get();
+
             $familyData['notification_digest'] = $this->notificationDigestForRole($user, 'family');
         }
 
@@ -170,6 +202,18 @@ class Home extends Component
             $caregiverData['work_inbox_counts'] = $workInboxBuilder->countsForUser($user);
             $caregiverData['work_inbox_preview'] = $workInboxBuilder->buildForUser($user, 'all', 'priority', 5);
             $caregiverData['stats']['needs_response'] = (int) ($caregiverData['work_inbox_counts']['needs_response'] ?? 0);
+            $caregiverData['stats']['regular_care_offers'] = CarePlan::query()
+                ->where('caregiver_user_id', $user->id)
+                ->where('status', CarePlan::STATUS_PENDING_CAREGIVER)
+                ->count();
+            $caregiverData['stats']['regular_clients'] = CarePlan::query()
+                ->where('caregiver_user_id', $user->id)
+                ->whereIn('status', [
+                    CarePlan::STATUS_ACTIVE,
+                    CarePlan::STATUS_PAYMENT_ATTENTION,
+                    CarePlan::STATUS_PAUSED,
+                ])
+                ->count();
 
             $caregiverData['recent_applications'] = CareRequestApplication::query()
                 ->with(['careRequest:id,title,status,city,state,requested_start_at'])
@@ -384,6 +428,10 @@ class Home extends Component
                 MarketplaceEvent::PAYMENT_ACTION_REQUIRED => ['label' => 'Payment action', 'tone' => 'warning'],
                 MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED => ['label' => 'Payment issue', 'tone' => 'warning'],
                 MarketplaceEvent::PAYMENT_AUTHORIZED => ['label' => 'Payment secured', 'tone' => 'success'],
+                MarketplaceEvent::REGULAR_CARE_ACCEPTED => ['label' => 'Regular care', 'tone' => 'success'],
+                MarketplaceEvent::REGULAR_CARE_COUNTERED => ['label' => 'Regular care', 'tone' => 'warning'],
+                MarketplaceEvent::REGULAR_CARE_DECLINED => ['label' => 'Regular care', 'tone' => 'warning'],
+                MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION => ['label' => 'Payment issue', 'tone' => 'warning'],
             ];
         }
 
@@ -398,6 +446,9 @@ class Home extends Component
             MarketplaceEvent::REVIEW_RECEIVED => ['label' => 'Review received', 'tone' => 'warning'],
             MarketplaceEvent::PAYOUT_TRANSFERRED => ['label' => 'Payout sent', 'tone' => 'success'],
             MarketplaceEvent::PAYOUT_TRANSFER_FAILED => ['label' => 'Payout issue', 'tone' => 'warning'],
+            MarketplaceEvent::REGULAR_CARE_OFFERED => ['label' => 'Regular care', 'tone' => 'info'],
+            MarketplaceEvent::REGULAR_CARE_ACCEPTED => ['label' => 'Regular care', 'tone' => 'success'],
+            MarketplaceEvent::REGULAR_CARE_ENDED => ['label' => 'Regular care', 'tone' => 'warning'],
         ];
     }
 }

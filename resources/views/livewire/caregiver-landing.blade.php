@@ -850,6 +850,7 @@
             }
 
             .cg-nav-links .cg-button {
+                width: auto;
                 min-height: 40px;
                 padding: 0 12px;
                 font-size: 12px;
@@ -899,6 +900,7 @@
                 <a href="#pay">Pay</a>
                 <a href="#how-it-works">How it works</a>
                 <a href="{{ route('landing.family') }}">Families</a>
+                <a class="cg-button cg-button-secondary cg-nav-login" href="{{ route('login') }}">Log in</a>
                 <a class="cg-button cg-button-primary" href="{{ route('caregiver.register') }}">Create profile</a>
             </nav>
         </div>

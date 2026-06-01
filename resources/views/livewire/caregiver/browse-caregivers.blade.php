@@ -16,26 +16,54 @@
             <x-input label="Search name, city, bio" placeholder="Example: Raleigh companionship" wire:model.live.debounce.300ms="search" />
             <x-input label="ZIP" wire:model.live="zip" />
 
-            <x-select.styled wire:model.live="skills" multiple label="Skills"
-                :options="$skillOptions->map(fn($s)=>['label'=>$s->name,'value'=>$s->id])->values()->all()" />
+            <div>
+                <p class="text-sm font-medium text-[#324457]">Skills</p>
+                <div class="mt-2 max-h-44 space-y-2 overflow-y-auto rounded-xl border border-[#DED6CA] bg-[#FFFCF8] p-2">
+                    @foreach ($skillOptions as $skill)
+                        <label class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm text-[#324457] hover:bg-white" wire:key="caregiver-skill-filter-{{ $skill->id }}">
+                            <input type="checkbox" value="{{ $skill->id }}" wire:model.live="skills" class="rounded border-[#B7ADA0] text-[#0F3D3E] focus:ring-[#4F6FAF]">
+                            <span>{{ $skill->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
 
-            <x-select.styled wire:model.live="languages" multiple label="Languages"
-                :options="$languageOptions->map(fn($l)=>['label'=>$l->name,'value'=>$l->id])->values()->all()" />
+            <div>
+                <p class="text-sm font-medium text-[#324457]">Languages</p>
+                <div class="mt-2 max-h-36 space-y-2 overflow-y-auto rounded-xl border border-[#DED6CA] bg-[#FFFCF8] p-2">
+                    @foreach ($languageOptions as $language)
+                        <label class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm text-[#324457] hover:bg-white" wire:key="caregiver-language-filter-{{ $language->id }}">
+                            <input type="checkbox" value="{{ $language->id }}" wire:model.live="languages" class="rounded border-[#B7ADA0] text-[#0F3D3E] focus:ring-[#4F6FAF]">
+                            <span>{{ $language->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
 
-            <x-select.styled wire:model.live="trust" label="Trust badges"
+            <x-native-select-field
+                label="Trust badges"
+                wire:model.live="trust"
                 :options="[
                     ['label'=>'All caregivers','value'=>'all'],
                     ['label'=>'Verified only','value'=>'verified'],
                     ['label'=>'Top Caregiver only','value'=>'top'],
-                ]" />
+                ]"
+            />
 
-            <x-select.styled wire:model.live="sort" label="Sort"
+            <x-native-select-field
+                label="Sort"
+                wire:model.live="sort"
                 :options="[
                     ['label'=>'Relevance','value'=>'relevance'],
                     ['label'=>'Top caregivers first','value'=>'top'],
                     ['label'=>'Reliability high-low','value'=>'reliability'],
                     ['label'=>'Experience high-low','value'=>'experience'],
-                ]" />
+                ]"
+            />
+
+            <button type="button" wire:click="clearFilters" class="w-full rounded-xl border border-[#DED6CA] bg-white px-3 py-2 text-sm font-semibold text-[#0F3D3E] transition hover:bg-[#F5F1EB]">
+                Clear filters
+            </button>
         </aside>
 
         <section class="space-y-4 min-w-0">

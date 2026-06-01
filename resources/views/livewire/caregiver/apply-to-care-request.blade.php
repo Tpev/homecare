@@ -1,4 +1,4 @@
-﻿<div class="hc-page py-8 space-y-6">
+<div class="hc-page py-8 space-y-6" wire:key="caregiver-apply-{{ $requestItem->id }}">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -77,11 +77,13 @@
             </div>
         @endif
 
-        <div class="{{ $isShiftWorkspace ? 'rounded-[1.6rem] border border-[#0F3D3E]/80 bg-[#0F3D3E] p-1 shadow-sm' : 'rounded-[1.6rem] border border-[#DED6CA] bg-[#F5F1EB] p-1' }}">
+        <div wire:key="caregiver-apply-tabs-{{ $requestItem->id }}" class="{{ $isShiftWorkspace ? 'rounded-[1.6rem] border border-[#0F3D3E]/80 bg-[#0F3D3E] p-1 shadow-sm' : 'rounded-[1.6rem] border border-[#DED6CA] bg-[#F5F1EB] p-1' }}">
             <div class="grid grid-cols-2 gap-1 sm:grid-cols-4">
                 <button
                     type="button"
                     wire:click="setActiveTab('overview')"
+                    wire:loading.attr="disabled"
+                    wire:target="setActiveTab"
                     class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'overview'
                         ? ($isShiftWorkspace ? 'bg-[#FAF9F7] text-[#0F3D3E] shadow-sm' : 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm')
                         : ($isShiftWorkspace ? 'text-[#F0E9E1]/72 hover:text-[#FAF9F7]' : 'text-[#6E746F] hover:text-[#0F3D3E]') }}"
@@ -91,6 +93,8 @@
                 <button
                     type="button"
                     wire:click="setActiveTab('application')"
+                    wire:loading.attr="disabled"
+                    wire:target="setActiveTab"
                     class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'application'
                         ? ($isShiftWorkspace ? 'bg-[#FAF9F7] text-[#0F3D3E] shadow-sm' : 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm')
                         : ($isShiftWorkspace ? 'text-[#F0E9E1]/72 hover:text-[#FAF9F7]' : 'text-[#6E746F] hover:text-[#0F3D3E]') }}"
@@ -100,6 +104,8 @@
                 <button
                     type="button"
                     wire:click="setActiveTab('shift')"
+                    wire:loading.attr="disabled"
+                    wire:target="setActiveTab"
                     class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'shift'
                         ? ($isShiftWorkspace ? 'bg-[#FAF9F7] text-[#0F3D3E] shadow-sm' : 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm')
                         : ($isShiftWorkspace ? 'text-[#F0E9E1]/72 hover:text-[#FAF9F7]' : 'text-[#6E746F] hover:text-[#0F3D3E]') }}"
@@ -109,6 +115,8 @@
                 <button
                     type="button"
                     wire:click="setActiveTab('support')"
+                    wire:loading.attr="disabled"
+                    wire:target="setActiveTab"
                     class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'support'
                         ? ($isShiftWorkspace ? 'bg-[#FAF9F7] text-[#0F3D3E] shadow-sm' : 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm')
                         : ($isShiftWorkspace ? 'text-[#F0E9E1]/72 hover:text-[#FAF9F7]' : 'text-[#6E746F] hover:text-[#0F3D3E]') }}"
@@ -162,6 +170,7 @@
                         <p class="text-xs font-semibold tracking-wide text-[#7B8794] uppercase">Recipient</p>
                         <p class="mt-1 font-medium text-[#17313F]">{{ $requestItem->recipient?->full_name ?: '-' }}</p>
                         <p class="text-[#607080]">{{ $requestItem->recipient?->relationship_to_family ?: '-' }}</p>
+                        <x-care-recipient-context :recipient="$requestItem->recipient" :show-description="true" class="mt-2" />
                     </div>
 
                     <div class="rounded-lg border border-[#E4DDD3] bg-[#F7F2EA] p-3">
@@ -171,7 +180,7 @@
                         </p>
                         <p class="text-[#607080]">{{ $requestItem->city }}, {{ $requestItem->state }} {{ $requestItem->zip }}</p>
                         @if ($serviceMapEmbedUrl)
-                            <div class="mt-3 overflow-hidden rounded-xl border border-[#E4DDD3] bg-white">
+                            <div wire:ignore class="mt-3 overflow-hidden rounded-xl border border-[#E4DDD3] bg-white">
                                 <iframe
                                     title="Service location map"
                                     src="{{ $serviceMapEmbedUrl }}"
@@ -684,7 +693,7 @@
                         <details class="rounded border border-[#E4DDD3] p-3">
                             <summary class="cursor-pointer font-medium">Request cancellation or reschedule</summary>
                             <div class="mt-3 space-y-4">
-                                <x-select.styled
+                                <x-native-select-field
                                     label="Change type"
                                     wire:model="changeType"
                                     :options="[
@@ -708,7 +717,7 @@
                         <summary class="cursor-pointer font-medium">Support ticket</summary>
                         <div class="mt-3 space-y-4">
                             <x-input label="Subject" wire:model="supportSubject" />
-                            <x-select.styled
+                            <x-native-select-field
                                 label="Category"
                                 wire:model="supportCategory"
                                 :options="[
@@ -728,7 +737,7 @@
                         <summary class="cursor-pointer font-medium">Report incident</summary>
                         <div class="mt-3 space-y-4">
                             <x-input label="Incident title" wire:model="incidentTitle" />
-                            <x-select.styled
+                            <x-native-select-field
                                 label="Severity"
                                 wire:model="incidentSeverity"
                                 :options="[
@@ -755,8 +764,6 @@
             </x-card>
         @endif
     @endif
-</div>
-
 <script>
     if (! window.homecareShiftTracker) {
         window.homecareShiftTracker = function (config) {
@@ -862,6 +869,8 @@
         };
     }
 </script>
+
+</div>
 
 
 

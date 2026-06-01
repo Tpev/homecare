@@ -12,6 +12,7 @@ class FamilyRecipientProfile extends Model
 
     protected $fillable = [
         'family_user_id',
+        'recipient_is_requester',
         'full_name',
         'date_of_birth',
         'gender',
@@ -29,6 +30,7 @@ class FamilyRecipientProfile extends Model
     {
         return [
             'date_of_birth' => 'date',
+            'recipient_is_requester' => 'boolean',
             'include_third_party_contact' => 'boolean',
         ];
     }
@@ -38,4 +40,3 @@ class FamilyRecipientProfile extends Model
         return $this->belongsTo(User::class, 'family_user_id');
     }
 }
-

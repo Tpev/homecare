@@ -60,12 +60,14 @@ class PublishCareRequestService
             $careRequest->tasks()->sync(collect($taskIds)->mapWithKeys(fn ($id) => [$id => ['task_note' => null]])->all());
 
             $recipient = $draft['recipient'] ?? [];
+            $relationship = (string) ($recipient['relationship_to_family'] ?? '');
             $careRequest->recipient()->create([
+                'recipient_is_requester' => (bool) ($recipient['recipient_is_requester'] ?? strtolower(trim($relationship)) === 'self'),
                 'full_name' => (string) ($recipient['full_name'] ?? ''),
                 'date_of_birth' => $recipient['date_of_birth'] ?? null,
                 'gender' => $recipient['gender'] ?? null,
                 'mobility_level' => $recipient['mobility_level'] ?? null,
-                'relationship_to_family' => (string) ($recipient['relationship_to_family'] ?? ''),
+                'relationship_to_family' => $relationship,
                 'care_notes' => $recipient['care_notes'] ?? null,
             ]);
 
@@ -104,4 +106,3 @@ class PublishCareRequestService
         return Carbon::parse($value);
     }
 }
-

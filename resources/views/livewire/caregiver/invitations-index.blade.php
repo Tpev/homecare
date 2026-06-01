@@ -15,7 +15,8 @@
                 <h1 class="text-2xl font-display font-semibold">Invitations</h1>
                 <p class="text-sm text-[#607080]">Families can invite you directly to requests.</p>
             </div>
-            <x-select.styled
+            <x-native-select-field
+                label="Invitation status"
                 wire:model.live="status"
                 :options="[
                     ['label' => 'Pending', 'value' => 'pending'],
@@ -46,6 +47,7 @@
                                     {{ $invitation->careRequest?->recurring_start_time }}-{{ $invitation->careRequest?->recurring_end_time }}
                                 </p>
                             @endif
+                            <x-care-recipient-context :recipient="$invitation->careRequest?->recipient" :show-name="true" class="mt-2" />
                         </div>
                         <x-badge :text="strtoupper($invitation->status)" color="blue" />
                     </div>

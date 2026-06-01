@@ -66,6 +66,13 @@ new class extends Component
                         ->count();
                 }
 
+                if (\Illuminate\Support\Facades\Schema::hasTable('care_plans')) {
+                    $invitationUnread += \App\Models\CarePlan::query()
+                        ->where('caregiver_user_id', $user->id)
+                        ->where('status', \App\Models\CarePlan::STATUS_PENDING_CAREGIVER)
+                        ->count();
+                }
+
             }
 
             if (($isCaregiver || $isFamily) && \Illuminate\Support\Facades\Schema::hasTable('notifications')) {
@@ -145,6 +152,11 @@ new class extends Component
 
             if ($isFamily) {
                 $primaryLinks[] = [
+                    'label' => 'My Care',
+                    'href' => route('family.care.index'),
+                    'active' => request()->routeIs('family.care.*'),
+                ];
+                $primaryLinks[] = [
                     'label' => 'My Requests',
                     'href' => route('family.requests.index'),
                     'active' => request()->routeIs('family.requests.index') || request()->routeIs('family.requests.show'),
@@ -158,16 +170,6 @@ new class extends Component
                     'label' => 'Find Caregivers',
                     'href' => route('caregivers.search'),
                     'active' => request()->routeIs('caregivers.search') || request()->routeIs('caregivers.show'),
-                ];
-                $primaryLinks[] = [
-                    'label' => 'Billing',
-                    'href' => route('family.billing.show'),
-                    'active' => request()->routeIs('family.billing.*'),
-                ];
-                $primaryLinks[] = [
-                    'label' => $notificationUnread > 0 ? "Notifications ($notificationUnread)" : 'Notifications',
-                    'href' => route('family.notifications.index'),
-                    'active' => request()->routeIs('family.notifications.*'),
                 ];
                 $primaryLinks[] = [
                     'label' => $messageUnread > 0 ? "Messages ($messageUnread)" : 'Messages',
@@ -201,6 +203,11 @@ new class extends Component
                         'active' => request()->routeIs('caregiver.work-inbox.*'),
                     ];
                     $primaryLinks[] = [
+                        'label' => 'Regular Clients',
+                        'href' => route('caregiver.regular-clients.index'),
+                        'active' => request()->routeIs('caregiver.regular-clients.*'),
+                    ];
+                    $primaryLinks[] = [
                         'label' => 'My Shifts',
                         'href' => route('caregiver.shifts.index'),
                         'active' => request()->routeIs('caregiver.shifts.*'),
@@ -209,11 +216,6 @@ new class extends Component
                         'label' => 'My Earnings',
                         'href' => route('caregiver.earnings.index'),
                         'active' => request()->routeIs('caregiver.earnings.*'),
-                    ];
-                    $primaryLinks[] = [
-                        'label' => $notificationUnread > 0 ? "Notifications ($notificationUnread)" : 'Notifications',
-                        'href' => route('caregiver.notifications.index'),
-                        'active' => request()->routeIs('caregiver.notifications.*'),
                     ];
                     $primaryLinks[] = [
                         'label' => $messageUnread > 0 ? "Messages ($messageUnread)" : 'Messages',
@@ -239,7 +241,7 @@ new class extends Component
                 </a>
             </div>
 
-            <div class="hidden sm:flex sm:ml-8 space-x-2 overflow-x-auto">
+            <div class="hidden min-w-0 flex-1 space-x-2 overflow-x-auto sm:ml-8 sm:mr-72 sm:flex">
                 @foreach ($primaryLinks as $link)
                     <x-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
                         {{ __($link['label']) }}
@@ -286,7 +288,7 @@ new class extends Component
                     x-show="accountOpen"
                     x-transition
                     @click.outside="accountOpen = false"
-                    class="absolute right-0 mt-2 w-72 rounded-[1.4rem] border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] p-2 shadow-xl space-y-1"
+                    class="absolute right-0 z-50 mt-2 w-72 rounded-[1.4rem] border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] p-2 shadow-xl space-y-1"
                     style="display: none;"
                 >
                     @if ($isAdmin)

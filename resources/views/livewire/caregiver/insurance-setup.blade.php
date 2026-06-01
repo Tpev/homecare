@@ -31,7 +31,7 @@
                 Insurance is optional for submission. You can submit without it and update this later anytime.
             </div>
 
-            <x-select.styled
+            <x-native-select-field
                 label="Do you currently have insurance?"
                 wire:model="insurance_status"
                 :options="[

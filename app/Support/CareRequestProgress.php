@@ -24,7 +24,7 @@ class CareRequestProgress
             return 'Waiting for first applicant';
         }
 
-        return self::minutesLabel((int) $request->created_at->diffInMinutes($request->first_applicant_at));
+        return self::minutesLabel(self::elapsedMinutes($request->created_at, $request->first_applicant_at));
     }
 
     public static function firstHireLabel(CareRequest $request): string
@@ -33,7 +33,16 @@ class CareRequestProgress
             return 'Not hired yet';
         }
 
-        return self::minutesLabel((int) $request->created_at->diffInMinutes($request->first_hire_at));
+        return self::minutesLabel(self::elapsedMinutes($request->created_at, $request->first_hire_at));
+    }
+
+    public static function elapsedMinutes(?Carbon $from, ?Carbon $to): ?int
+    {
+        if (! $from || ! $to) {
+            return null;
+        }
+
+        return max(0, intdiv(max(0, $to->getTimestamp() - $from->getTimestamp()), 60));
     }
 
     /**
