@@ -733,12 +733,21 @@ class StripeClient
             return Event::constructFrom($decoded);
         }
 
-        $secret = (string) config('services.stripe.webhook_secret');
-        if ($secret === '') {
+        $secrets = $this->webhookSecrets();
+        if ($secrets === []) {
             throw new RuntimeException('STRIPE_WEBHOOK_SECRET is not configured.');
         }
 
-        return Webhook::constructEvent($payload, $signature, $secret);
+        $lastException = null;
+        foreach ($secrets as $secret) {
+            try {
+                return Webhook::constructEvent($payload, $signature, $secret);
+            } catch (Throwable $e) {
+                $lastException = $e;
+            }
+        }
+
+        throw $lastException ?: new RuntimeException('Invalid Stripe webhook signature.');
     }
 
     private function client(): StripeSdk
@@ -755,6 +764,17 @@ class StripeClient
         $this->client = new StripeSdk($secret);
 
         return $this->client;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function webhookSecrets(): array
+    {
+        return array_values(array_filter(
+            array_map('trim', explode(',', (string) config('services.stripe.webhook_secret', ''))),
+            fn (string $secret): bool => $secret !== ''
+        ));
     }
 
     /**

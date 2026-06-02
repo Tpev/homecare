@@ -283,11 +283,8 @@
                     default => 'bg-[#F0E9E1] text-[#4B5B6B]',
                 };
             @endphp
-            <section class="relative overflow-hidden rounded-[1.9rem] border border-[#0F3D3E]/80 bg-[#0F3D3E] p-5 shadow-xl">
-                <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-500/20 blur-2xl"></div>
-                <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-[#4F6FAF]/20 blur-2xl"></div>
-
-                <div class="relative">
+            <section class="rounded-[1.9rem] border border-[#0F3D3E]/80 bg-[#0F3D3E] p-5 shadow-xl">
+                <div>
                     <div class="mb-4">
                         <p class="text-[11px] uppercase tracking-[0.18em] text-[#D7DEE6]">Shift command center</p>
                         <div class="mt-2 flex items-start justify-between gap-3">
@@ -341,10 +338,35 @@
                         </button>
                     </div>
 
-                    <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-3 text-white" x-show="panel === 'live'" x-transition>
-                        <p class="text-xs uppercase tracking-[0.12em] text-[#E7ECF1]">Scheduled window</p>
-                        <p class="mt-1 font-medium">{{ optional($booking->scheduled_start_at)->format('M d, Y H:i') }} - {{ optional($booking->scheduled_end_at)->format('M d, Y H:i') }}</p>
+                    <div class="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]" x-show="panel === 'live'" x-transition>
+                        <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-3 text-white">
+                            <p class="text-xs uppercase tracking-[0.12em] text-[#E7ECF1]">Scheduled window</p>
+                            <p class="mt-1 font-medium">{{ optional($booking->scheduled_start_at)->format('M d, Y H:i') }} - {{ optional($booking->scheduled_end_at)->format('M d, Y H:i') }}</p>
+                        </div>
+
+                        <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-3 text-white">
+                            <p class="text-xs uppercase tracking-[0.12em] text-[#E7ECF1]">Care location</p>
+                            <p class="mt-1 font-medium">{{ $serviceAddress ?: 'Address pending' }}</p>
+                            <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-[#D7DEE6]">
+                                @if ($serviceMapOpenUrl)
+                                    <a href="{{ $serviceMapOpenUrl }}" target="_blank" rel="noopener noreferrer" class="font-semibold text-white underline underline-offset-2">Open map</a>
+                                @endif
+                                <span>{{ $requestItem->recipient?->full_name ?: 'Recipient' }} - {{ $requestItem->recipient?->relationship_to_family ?: 'Care recipient' }}</span>
+                            </div>
+                        </div>
                     </div>
+
+                    @if ($serviceMapEmbedUrl)
+                        <div wire:ignore class="overflow-hidden rounded-xl border border-white/20 bg-white/10" x-show="panel === 'live'" x-transition>
+                            <iframe
+                                title="Care location map"
+                                src="{{ $serviceMapEmbedUrl }}"
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                                class="h-48 w-full"
+                            ></iframe>
+                        </div>
+                    @endif
 
                     @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true))
                         <div class="rounded-xl border border-emerald-300/40 bg-emerald-500/10 p-3.5" x-show="panel === 'live'" x-transition>
@@ -376,6 +398,20 @@
                             </div>
                         @endif
                     </div>
+
+                    @if ($requestItem->home_access_notes || $requestItem->recipient?->care_notes)
+                        <div class="rounded-xl border border-white/20 bg-white/10 p-3" x-show="panel === 'details'" x-transition>
+                            <p class="font-medium text-white">Care notes</p>
+                            @if ($requestItem->home_access_notes)
+                                <p class="mt-2 text-xs uppercase tracking-[0.12em] text-[#D7DEE6]">Home access</p>
+                                <p class="text-sm text-white">{{ $requestItem->home_access_notes }}</p>
+                            @endif
+                            @if ($requestItem->recipient?->care_notes)
+                                <p class="mt-2 text-xs uppercase tracking-[0.12em] text-[#D7DEE6]">Recipient notes</p>
+                                <p class="text-sm text-white">{{ $requestItem->recipient->care_notes }}</p>
+                            @endif
+                        </div>
+                    @endif
 
                     <div x-show="panel === 'live'" x-transition class="space-y-2">
                         @if ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED && ! $booking->caregiver_terms_accepted_at)
@@ -409,9 +445,11 @@
                     </div>
 
                     @if ($canCheckIn || $canCheckOut)
-                        <div class="grid grid-cols-1 gap-3 md:grid-cols-2" x-show="panel === 'details'" x-transition>
-                            <x-input label="Start note (optional)" wire:model="checkInNote" />
-                            <x-input label="End note (optional)" wire:model="checkOutNote" />
+                        <div class="rounded-xl bg-white p-3" x-show="panel === 'details'" x-transition>
+                            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                <x-input label="Start note (optional)" wire:model="checkInNote" />
+                                <x-input label="End note (optional)" wire:model="checkOutNote" />
+                            </div>
                         </div>
                     @endif
 
@@ -568,6 +606,36 @@
                                         @endif
                                     </div>
                                 @endforeach
+                            </div>
+                        </details>
+                    @endif
+
+                    @if (! in_array($booking->status, [\App\Models\CareBooking::STATUS_CANCELLED, \App\Models\CareBooking::STATUS_REVIEWED], true))
+                        <details class="rounded-xl border border-amber-300/40 bg-amber-500/10 p-3" x-show="panel === 'details'" x-transition>
+                            <summary class="cursor-pointer font-medium text-amber-100">Need to cancel or reschedule?</summary>
+                            <div class="mt-3 space-y-4 text-sm text-amber-50">
+                                <p class="text-xs text-amber-100">
+                                    Send a request to the family. If they accept, the shift is cancelled or moved, and late cancellation is tracked automatically.
+                                </p>
+                                <div class="space-y-4 rounded-xl bg-white p-3 text-[#17313F]">
+                                    <x-native-select-field
+                                        label="Change type"
+                                        wire:model="changeType"
+                                        :options="[
+                                            ['label' => 'Cancel booking', 'value' => 'cancel'],
+                                            ['label' => 'Reschedule booking', 'value' => 'reschedule'],
+                                        ]"
+                                    />
+                                    <x-textarea label="Reason" wire:model="changeReason" />
+                                    @error('changeReason') <p class="text-sm text-red-700">{{ $message }}</p> @enderror
+                                    @if ($changeType === 'reschedule')
+                                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                            <x-input type="datetime-local" label="Proposed start" wire:model="proposedStartAt" />
+                                            <x-input type="datetime-local" label="Proposed end" wire:model="proposedEndAt" />
+                                        </div>
+                                    @endif
+                                    <x-button color="amber" wire:click="submitChangeRequest">Send request</x-button>
+                                </div>
                             </div>
                         </details>
                     @endif

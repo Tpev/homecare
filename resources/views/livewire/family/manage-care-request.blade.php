@@ -46,6 +46,49 @@
             \App\Models\CareRequest::STATUS_DRAFT,
             \App\Models\CareRequest::STATUS_OPEN,
         ], true) && ! $booking;
+        $canCancelScheduledShift = $booking && $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED;
+        $lateCancel = $booking?->scheduled_start_at
+            ? now()->diffInMinutes($booking->scheduled_start_at, false) <= 24 * 60
+            : false;
+        $shiftStatusTone = match ((string) ($booking?->status ?? '')) {
+            \App\Models\CareBooking::STATUS_SCHEDULED => 'border-[#BDD4F7] bg-[#EEF5FF] text-[#28486F]',
+            \App\Models\CareBooking::STATUS_IN_PROGRESS => 'border-emerald-200 bg-emerald-50 text-emerald-900',
+            \App\Models\CareBooking::STATUS_PAUSED => 'border-amber-200 bg-amber-50 text-amber-900',
+            \App\Models\CareBooking::STATUS_COMPLETED,
+            \App\Models\CareBooking::STATUS_REVIEWED => 'border-indigo-200 bg-indigo-50 text-indigo-900',
+            \App\Models\CareBooking::STATUS_CANCELLED,
+            \App\Models\CareBooking::STATUS_DISPUTED => 'border-rose-200 bg-rose-50 text-rose-900',
+            default => 'border-[#E4DDD3] bg-[#F7F2EA] text-[#4B5B6B]',
+        };
+        $shiftStatusTitle = match ((string) ($booking?->status ?? '')) {
+            \App\Models\CareBooking::STATUS_SCHEDULED => 'Shift is scheduled',
+            \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Caregiver is checked in',
+            \App\Models\CareBooking::STATUS_PAUSED => 'Shift is paused',
+            \App\Models\CareBooking::STATUS_COMPLETED => 'Timesheet needs review',
+            \App\Models\CareBooking::STATUS_REVIEWED => 'Shift is closed',
+            \App\Models\CareBooking::STATUS_CANCELLED => 'Shift was cancelled',
+            \App\Models\CareBooking::STATUS_DISPUTED => 'Shift is in dispute',
+            default => 'Shift status',
+        };
+        $shiftStatusBody = match ((string) ($booking?->status ?? '')) {
+            \App\Models\CareBooking::STATUS_SCHEDULED => 'Waiting for caregiver check-in. You can cancel before check-in, or mark no-show 30 minutes after scheduled start.',
+            \App\Models\CareBooking::STATUS_IN_PROGRESS => 'The caregiver has started the shift. Watch check-in details, message them, or mark complete when care is finished.',
+            \App\Models\CareBooking::STATUS_PAUSED => 'The caregiver paused the shift. They can resume or end from their shift screen.',
+            \App\Models\CareBooking::STATUS_COMPLETED => 'The caregiver submitted the timesheet. Review worked time before confirming.',
+            \App\Models\CareBooking::STATUS_REVIEWED => 'Payment and review flow is complete.',
+            \App\Models\CareBooking::STATUS_CANCELLED => $booking?->no_show_flag ? 'This shift was closed as caregiver no-show.' : 'This shift was cancelled.',
+            \App\Models\CareBooking::STATUS_DISPUTED => 'Support is reviewing this shift.',
+            default => 'Shift operations are available after hiring.',
+        };
+        $shiftBadgeColor = match ((string) ($booking?->status ?? '')) {
+            \App\Models\CareBooking::STATUS_IN_PROGRESS => 'green',
+            \App\Models\CareBooking::STATUS_PAUSED => 'amber',
+            \App\Models\CareBooking::STATUS_COMPLETED,
+            \App\Models\CareBooking::STATUS_REVIEWED => 'indigo',
+            \App\Models\CareBooking::STATUS_CANCELLED,
+            \App\Models\CareBooking::STATUS_DISPUTED => 'red',
+            default => 'blue',
+        };
     @endphp
 
     <x-card>
@@ -57,7 +100,7 @@
                         <h1 class="text-2xl font-display font-semibold text-[#17313F]">{{ $requestItem->title }}</h1>
                         <x-badge :text="strtoupper($requestItem->status)" color="blue" />
                     @if ($booking)
-                        <x-badge :text="'SHIFT '.strtoupper($booking->status)" color="green" />
+                        <x-badge :text="'SHIFT '.strtoupper($booking->status)" :color="$shiftBadgeColor" />
                     @endif
                     @if ($payment)
                         <x-badge :text="'PAYMENT '.strtoupper($payment->status)" color="amber" />
@@ -577,92 +620,134 @@
                 </div>
             </x-card>
         @else
-            <x-card>
-                <x-slot:header>
-                    <div class="flex items-center justify-between">
-                        <h2 class="font-display text-lg font-semibold">Shift command center</h2>
-                        <x-badge :text="strtoupper($booking->status)" color="green" />
+            <section class="space-y-4 rounded-3xl border border-[#D8E1D7] bg-white p-4 shadow-sm sm:p-5">
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                        <p class="hc-brand-kicker">Shift command center</p>
+                        <h2 class="mt-1 font-display text-2xl font-semibold text-[#17313F]">{{ $requestItem->title }}</h2>
+                        <p class="mt-1 text-sm text-[#607080]">Track live care, location, cancellation, and no-show timing from one place.</p>
                     </div>
-                </x-slot:header>
+                    <x-badge :text="strtoupper(str_replace('_', ' ', $booking->status))" :color="$shiftBadgeColor" />
+                </div>
 
-                <div class="space-y-4 text-sm">
-                    @if (! $payment)
-                        <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                            Payment authorization is not ready yet. Add or update your card in
-                            <a href="{{ route('family.billing.show') }}" wire:navigate class="underline underline-offset-2 font-medium">Billing & Payments</a>.
-                        </div>
-                    @else
-                        <div class="rounded-md border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-xs text-[#4B5B6B]">
-                            Payment status: <span class="font-semibold text-[#17313F]">{{ strtoupper($payment->status) }}</span>
-                            @if ($payment->amount_authorized_cents)
-                                - Authorized ${{ number_format($payment->amount_authorized_cents / 100, 2) }}
+                <div class="rounded-2xl border px-4 py-3 {{ $shiftStatusTone }}">
+                    <p class="font-display text-lg font-semibold">{{ $shiftStatusTitle }}</p>
+                    <p class="mt-1 text-sm">{{ $shiftStatusBody }}</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-3 xl:grid-cols-4">
+                    <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
+                        <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Schedule</p>
+                        <p class="mt-2 font-semibold text-[#17313F]">{{ optional($booking->scheduled_start_at)->format('M d, Y') ?: 'Pending' }}</p>
+                        <p class="text-sm text-[#607080]">{{ optional($booking->scheduled_start_at)->format('g:i A') ?: '-' }} - {{ optional($booking->scheduled_end_at)->format('g:i A') ?: '-' }}</p>
+                    </div>
+
+                    <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
+                        <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Caregiver</p>
+                        <p class="mt-2 font-semibold text-[#17313F]">{{ $hiredApplication?->caregiver?->name ?: 'Selected caregiver' }}</p>
+                        <p class="text-sm text-[#607080]">{{ $booking->started_at ? 'Checked in '.$booking->started_at->format('M d, g:i A') : 'Check-in pending' }}</p>
+                    </div>
+
+                    <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 xl:col-span-2">
+                        <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Care location</p>
+                        <p class="mt-2 font-semibold text-[#17313F]">{{ $serviceAddress ?: 'Address not set' }}</p>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            @if ($serviceMapOpenUrl)
+                                <a href="{{ $serviceMapOpenUrl }}" target="_blank" rel="noopener noreferrer" class="text-sm font-medium text-[#7C5DDC] underline underline-offset-2">Open map</a>
                             @endif
-                            @if ($payment->amount_captured_cents)
-                                - Captured ${{ number_format($payment->amount_captured_cents / 100, 2) }}
-                            @endif
+                            <span class="text-sm text-[#607080]">{{ $requestItem->recipient?->full_name ?: 'Recipient' }} - {{ $requestItem->recipient?->relationship_to_family ?: 'Care recipient' }}</span>
                         </div>
-                    @endif
+                    </div>
+                </div>
 
-                    <p class="text-[#607080]">
-                        Scheduled: {{ optional($booking->scheduled_start_at)->format('M d, Y H:i') }} - {{ optional($booking->scheduled_end_at)->format('M d, Y H:i') }}
-                    </p>
+                @if ($serviceMapEmbedUrl)
+                    <div wire:ignore class="overflow-hidden rounded-2xl border border-[#E4DDD3] bg-[#F7F2EA]">
+                        <iframe
+                            title="Shift service location map"
+                            src="{{ $serviceMapEmbedUrl }}"
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade"
+                            class="h-56 w-full"
+                        ></iframe>
+                    </div>
+                @endif
 
-                    @if ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED)
-                        <div class="rounded-md border border-[#C8D9F5] bg-[#F2F7FF] px-3 py-2 text-sm text-[#28486F]">
-                            Waiting for caregiver check-in. Shift start is caregiver-driven.
-                            @if (! $canMarkNoShow && $noShowEligibleAt)
-                                You can mark no-show after {{ $noShowEligibleAt->format('M d, H:i') }}.
-                            @endif
-                        </div>
-                    @elseif ($booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS)
-                        <div class="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-                            Shift is in progress. If the shift is done, mark it complete.
-                        </div>
-                    @elseif ($booking->status === \App\Models\CareBooking::STATUS_PAUSED)
-                        <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                            Caregiver paused the shift for a break. They can resume or end the shift.
-                        </div>
-                    @elseif (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true) && ! $booking->family_confirmed_at)
-                        <div class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                            Caregiver submitted completion. Review details and confirm timesheet.
-                        </div>
-                    @elseif ($booking->status === \App\Models\CareBooking::STATUS_REVIEWED)
-                        <div class="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-                            Shift closed. Review submitted.
-                        </div>
-                    @elseif ($booking->status === \App\Models\CareBooking::STATUS_CANCELLED)
-                        <div class="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
-                            Shift cancelled.
-                        </div>
-                    @elseif ($booking->status === \App\Models\CareBooking::STATUS_DISPUTED)
-                        <div class="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
-                            Shift is under dispute review.
-                        </div>
-                    @endif
+                @if (! $payment)
+                    <div class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                        Payment authorization is not ready yet. Add or update your card in
+                        <a href="{{ route('family.billing.show') }}" wire:navigate class="font-medium underline underline-offset-2">Billing & Payments</a>.
+                    </div>
+                @else
+                    <div class="rounded-xl border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-xs text-[#4B5B6B]">
+                        Payment status: <span class="font-semibold text-[#17313F]">{{ strtoupper($payment->status) }}</span>
+                        @if ($payment->amount_authorized_cents)
+                            - Authorized ${{ number_format($payment->amount_authorized_cents / 100, 2) }}
+                        @endif
+                        @if ($payment->amount_captured_cents)
+                            - Captured ${{ number_format($payment->amount_captured_cents / 100, 2) }}
+                        @endif
+                    </div>
+                @endif
 
-                    <div class="flex flex-wrap items-center gap-2">
+                <div class="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_20rem]">
+                    <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                         @if ($hiredConversation)
                             <a href="{{ route('messages.show', $hiredConversation->id) }}" wire:navigate>
-                                <x-button color="indigo">Open chat</x-button>
+                                <x-button color="indigo" class="w-full sm:w-auto">Open chat</x-button>
                             </a>
                         @endif
 
                         @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true))
-                            <x-button color="green" wire:click="completeBooking">Mark shift complete</x-button>
+                            <x-button color="green" wire:click="completeBooking" class="w-full sm:w-auto">Mark shift complete</x-button>
                         @endif
 
                         @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true) && ! $booking->family_confirmed_at)
-                            <x-button color="green" wire:click="completeBooking">Confirm timesheet</x-button>
+                            <x-button color="green" wire:click="completeBooking" class="w-full sm:w-auto">Confirm timesheet</x-button>
                         @endif
 
                         @if ($canMarkNoShow)
-                            <x-button color="red" light wire:click="markNoShow">Mark no-show</x-button>
+                            <x-button color="red" light wire:click="markNoShow" onclick="if (!confirm('Mark this caregiver as no-show? This cancels the shift and affects reliability.')) return false;" class="w-full sm:w-auto">Mark caregiver no-show</x-button>
                         @endif
+
+                        <x-button color="white" light wire:click="setActiveTab('support')" class="w-full sm:w-auto">Safety/support</x-button>
                     </div>
 
-                    @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true) && ! $booking->family_confirmed_at)
-                        <x-input label="Confirmation note (optional)" wire:model="confirmationNote" />
+                    @if ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED)
+                        <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3 text-sm text-[#4B5B6B]">
+                            <p class="font-semibold text-[#17313F]">No-show rule</p>
+                            @if ($canMarkNoShow)
+                                <p class="mt-1">Available now because the scheduled start was more than 30 minutes ago.</p>
+                            @elseif ($noShowEligibleAt)
+                                <p class="mt-1">No-show unlocks at {{ $noShowEligibleAt->format('M d, g:i A') }}.</p>
+                            @else
+                                <p class="mt-1">No-show requires a scheduled start time.</p>
+                            @endif
+                        </div>
                     @endif
+                </div>
+
+                @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true) && ! $booking->family_confirmed_at)
+                    <x-input label="Confirmation note (optional)" wire:model="confirmationNote" />
+                @endif
+
+                @if ($canCancelScheduledShift)
+                    <details class="rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                        <summary class="cursor-pointer font-display text-base font-semibold text-rose-900">Cancel this scheduled shift</summary>
+                        <div class="mt-3 space-y-3 text-sm text-rose-900">
+                            <p>
+                                This cancels the shift before caregiver check-in and releases the payment authorization when possible.
+                                @if ($lateCancel)
+                                    It is inside the late-cancellation window.
+                                @endif
+                            </p>
+                            <x-textarea label="Cancellation reason" wire:model="directCancelReason" />
+                            @error('directCancelReason') <p class="text-sm text-red-700">{{ $message }}</p> @enderror
+                            <x-button color="red" wire:click="cancelScheduledBooking" onclick="if (!confirm('Cancel this scheduled shift?')) return false;">Cancel shift</x-button>
+                        </div>
+                    </details>
+                @endif
+
+                <div class="space-y-4 text-sm">
 
                     @if ($booking->timesheet_submitted_at || $booking->worked_minutes)
                         <div class="grid grid-cols-1 gap-3 rounded-lg border border-[#E4DDD3] bg-[#F7F2EA] p-3 md:grid-cols-3">
@@ -755,7 +840,7 @@
                         </details>
                     @endif
                 </div>
-            </x-card>
+            </section>
 
             @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true))
                 <x-card>

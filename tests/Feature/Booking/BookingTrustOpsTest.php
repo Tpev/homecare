@@ -11,6 +11,7 @@ use App\Models\CareRequestApplication;
 use App\Models\CareTask;
 use App\Models\CaregiverProfile;
 use App\Models\User;
+use App\Support\MarketplaceEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -177,6 +178,71 @@ class BookingTrustOpsTest extends TestCase
         ]);
         $this->assertDatabaseHas('care_booking_events', [
             'event_type' => 'caregiver_no_show_marked',
+        ]);
+    }
+
+    public function test_family_cannot_mark_caregiver_no_show_before_grace_period(): void
+    {
+        [$family, $caregiver, $request, $application] = $this->seedHireScenario();
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $booking->forceFill([
+            'scheduled_start_at' => now()->subMinutes(10),
+            'scheduled_end_at' => now()->addHours(2),
+        ])->save();
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('markNoShow');
+
+        $booking->refresh();
+
+        $this->assertSame(CareBooking::STATUS_SCHEDULED, $booking->status);
+        $this->assertFalse((bool) $booking->no_show_flag);
+        $this->assertDatabaseMissing('care_booking_events', [
+            'care_booking_id' => $booking->id,
+            'event_type' => 'caregiver_no_show_marked',
+        ]);
+    }
+
+    public function test_family_can_cancel_scheduled_shift_from_shift_view(): void
+    {
+        [$family, $caregiver, $request, $application] = $this->seedHireScenario();
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $booking->forceFill([
+            'scheduled_start_at' => now()->addHours(2),
+            'scheduled_end_at' => now()->addHours(6),
+        ])->save();
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->assertSee('Cancel this scheduled shift')
+            ->set('directCancelReason', 'Family needs to cancel because the care recipient has another appointment.')
+            ->call('cancelScheduledBooking')
+            ->assertHasNoErrors();
+
+        $booking->refresh();
+
+        $this->assertSame(CareBooking::STATUS_CANCELLED, $booking->status);
+        $this->assertSame($family->id, $booking->cancelled_by_user_id);
+        $this->assertTrue((bool) $booking->late_cancel_flag);
+        $this->assertSame('Family needs to cancel because the care recipient has another appointment.', $booking->cancellation_reason);
+        $this->assertDatabaseHas('care_booking_events', [
+            'care_booking_id' => $booking->id,
+            'event_type' => 'booking_cancelled_by_family',
+        ]);
+        $this->assertDatabaseHas('notifications', [
+            'notifiable_id' => $caregiver->id,
+            'data->event_key' => MarketplaceEvent::SHIFT_CANCELLED,
         ]);
     }
 

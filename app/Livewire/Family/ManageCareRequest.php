@@ -48,6 +48,7 @@ class ManageCareRequest extends Component
     public string $supportCategory = 'general';
 
     public string $confirmationNote = '';
+    public string $directCancelReason = '';
     public string $disputeReason = '';
     public string $incidentTitle = '';
     public string $incidentDescription = '';
@@ -768,8 +769,88 @@ class ManageCareRequest extends Component
         );
         app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
 
+        if ($booking->caregiver) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $booking->caregiver,
+                eventKey: MarketplaceEvent::SHIFT_CANCELLED,
+                title: 'Shift marked no-show',
+                body: auth()->user()->name.' marked the shift as caregiver no-show.',
+                url: route('care-requests.apply', $this->requestItem->id),
+                payload: ['care_booking_id' => $booking->id, 'care_request_id' => $this->requestItem->id],
+                subject: $booking,
+                dedupeKey: 'shift-no-show:booking-'.$booking->id.'-user-'.$booking->caregiver_user_id
+            );
+        }
+
         $this->refreshRequestItem();
         session()->flash('status', 'Booking marked as no-show.');
+    }
+
+    public function cancelScheduledBooking(): void
+    {
+        $booking = $this->requestItem->booking;
+        if (! $booking || $booking->status !== CareBooking::STATUS_SCHEDULED) {
+            session()->flash('status', 'Only scheduled shifts can be cancelled here.');
+
+            return;
+        }
+
+        $this->validate([
+            'directCancelReason' => ['required', 'string', 'min:8', 'max:2000'],
+        ]);
+
+        $lateCancel = app(BookingTrustService::class)->markLateCancelFlag($booking);
+        $reason = trim($this->directCancelReason);
+
+        $booking->update([
+            'status' => CareBooking::STATUS_CANCELLED,
+            'cancelled_at' => now(),
+            'cancelled_by_user_id' => auth()->id(),
+            'cancellation_reason' => $reason,
+            'late_cancel_flag' => $lateCancel,
+        ]);
+
+        app(BookingPaymentService::class)->cancelForBooking($booking);
+        app(BookingTrustService::class)->recordEvent(
+            $booking,
+            auth()->id(),
+            'family',
+            'booking_cancelled_by_family',
+            [
+                'reason' => $reason,
+                'late_cancel' => $lateCancel,
+            ]
+        );
+        app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
+
+        if ($booking->caregiver) {
+            app(MarketplaceNotificationService::class)->notify(
+                recipients: $booking->caregiver,
+                eventKey: MarketplaceEvent::SHIFT_CANCELLED,
+                title: 'Shift cancelled',
+                body: auth()->user()->name.' cancelled a scheduled shift.',
+                url: route('care-requests.apply', $this->requestItem->id),
+                payload: [
+                    'care_booking_id' => $booking->id,
+                    'care_request_id' => $this->requestItem->id,
+                    'late_cancel' => $lateCancel,
+                ],
+                subject: $booking,
+                dedupeKey: 'shift-cancelled:booking-'.$booking->id.'-user-'.$booking->caregiver_user_id
+            );
+        }
+
+        FunnelTracker::track('care_booking_cancelled', auth()->user(), $booking, [
+            'source' => 'family_shift_command',
+            'late_cancel' => $lateCancel,
+        ]);
+
+        $this->directCancelReason = '';
+        $this->refreshRequestItem();
+        session()->flash('status', $lateCancel
+            ? 'Shift cancelled. This was inside the late-cancellation window.'
+            : 'Shift cancelled and payment authorization released.'
+        );
     }
 
     public function reportIncident(): void

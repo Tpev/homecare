@@ -13,6 +13,7 @@ class MarketplaceEvent
     public const MESSAGE_RECEIVED = 'message_received';
     public const CAREGIVER_HIRED = 'caregiver_hired';
     public const HIRE_CONFIRMED = 'hire_confirmed';
+    public const SHIFT_CANCELLED = 'shift_cancelled';
     public const SHIFT_STARTING_SOON = 'shift_starting_soon';
     public const SHIFT_STARTED = 'shift_started';
     public const SHIFT_COMPLETED = 'shift_completed';
@@ -49,6 +50,7 @@ class MarketplaceEvent
             self::MESSAGE_RECEIVED,
             self::CAREGIVER_HIRED,
             self::HIRE_CONFIRMED,
+            self::SHIFT_CANCELLED,
             self::SHIFT_STARTING_SOON,
             self::SHIFT_STARTED,
             self::SHIFT_COMPLETED,
