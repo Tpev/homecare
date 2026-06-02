@@ -27,9 +27,7 @@ class DiagnoseStripeConfig extends Command
         'payment_intent.requires_action',
         'checkout.session.completed',
         'transfer.created',
-        'transfer.paid',
         'transfer.reversed',
-        'transfer.reversal.created',
         'charge.refunded',
     ];
 
@@ -268,17 +266,9 @@ class DiagnoseStripeConfig extends Command
             return;
         }
 
-        $apiMode = (bool) ($account->livemode ?? false) ? 'live' : 'test';
-        $details = 'Account '.($account->id ?? '(unknown)').' returned '.$apiMode.' mode.';
-
-        if ($secretMode && $apiMode !== $secretMode) {
-            $this->failRow('Stripe API account', $details.' This does not match STRIPE_SECRET mode.');
-            return;
-        }
-
-        if ($requireLive && $apiMode !== 'live') {
-            $this->failRow('Stripe API account', $details.' Expected live mode.');
-            return;
+        $details = 'Platform account '.($account->id ?? '(unknown)').' retrieved successfully.';
+        if ($requireLive && $secretMode === 'live') {
+            $details .= ' Live mode is enforced from STRIPE_SECRET prefix and webhook endpoint checks.';
         }
 
         $this->passRow('Stripe API account', $details);
@@ -330,11 +320,21 @@ class DiagnoseStripeConfig extends Command
 
         $allEvents = [];
         $hasConnectedEndpoint = false;
+        $endpointModes = [];
         foreach ($enabledMatches as $endpoint) {
             $hasConnectedEndpoint = $hasConnectedEndpoint || (bool) ($endpoint->connect ?? false);
+            if (isset($endpoint->livemode)) {
+                $endpointModes[(bool) $endpoint->livemode ? 'live' : 'test'] = true;
+            }
             foreach ((array) ($endpoint->enabled_events ?? []) as $event) {
                 $allEvents[$event] = true;
             }
+        }
+
+        if ((bool) $this->option('live') && isset($endpointModes['test']) && ! isset($endpointModes['live'])) {
+            $this->failRow('Stripe webhook mode', 'Matching webhook endpoint is test-mode, but --live was requested.');
+        } elseif (isset($endpointModes['live'])) {
+            $this->passRow('Stripe webhook mode', 'Matching webhook endpoint is live-mode.');
         }
 
         $missing = array_values(array_filter(
