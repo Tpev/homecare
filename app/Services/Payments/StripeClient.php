@@ -380,7 +380,9 @@ class StripeClient
      *   payment_intent_id:string,
      *   status:string,
      *   amount:int,
-     *   authorization_expires_at:\Carbon\CarbonInterface|null
+     *   authorization_expires_at:\Carbon\CarbonInterface|null,
+     *   failure_message?:string,
+     *   client_secret?:string
      * }
      */
     public function createManualAuthorization(
@@ -431,6 +433,7 @@ class StripeClient
                     'status' => $intentStatus,
                     'amount' => (int) ($errorIntent['amount'] ?? $amountCents),
                     'authorization_expires_at' => $this->captureBeforeFromPaymentIntent($errorIntent),
+                    'failure_message' => (string) data_get($errorIntent, 'last_payment_error.message', $e->getMessage()),
                     'client_secret' => (string) ($errorIntent['client_secret'] ?? ''),
                 ];
             }

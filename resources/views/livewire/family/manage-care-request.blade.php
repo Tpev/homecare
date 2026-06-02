@@ -686,6 +686,10 @@
                         @if ($payment->amount_captured_cents)
                             - Captured ${{ number_format($payment->amount_captured_cents / 100, 2) }}
                         @endif
+                        @if ($payment->last_error)
+                            <span class="mt-1 block text-amber-800">{{ $payment->last_error }}</span>
+                            <a href="{{ route('family.billing.show') }}" wire:navigate class="mt-1 inline-block font-semibold text-amber-900 underline underline-offset-2">Update billing</a>
+                        @endif
                     </div>
                 @endif
 

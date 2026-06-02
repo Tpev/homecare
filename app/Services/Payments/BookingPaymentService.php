@@ -96,20 +96,26 @@ class BookingPaymentService
         $authorizationStatus = (string) ($authorization['status'] ?? '');
 
         if ($authorizationStatus !== 'requires_capture') {
+            $status = $this->authorizationStatusRequiresAction($authorizationStatus)
+                ? CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED
+                : CareBookingPayment::STATUS_FAILED;
+            $message = (string) ($authorization['failure_message'] ?? '');
+            if ($message === '') {
+                $message = $this->authorizationFailureMessage($authorizationStatus);
+            }
+
             $payment = $this->persistAuthorizationFailure(
                 booking: $booking,
                 customerId: $customerId,
                 paymentMethodId: (string) $defaultPaymentMethod['id'],
-                status: CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
-                message: 'Payment intent requires user action.',
+                status: $status,
+                message: $message,
                 paymentIntentId: (string) ($authorization['payment_intent_id'] ?? null)
             );
 
-            $this->notifyAuthorizationState($booking, $payment, CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED);
+            $this->notifyAuthorizationState($booking, $payment, $status);
 
-            throw new PaymentException(
-                'Card verification is required. Open Billing & Payments, confirm your card, then retry.'
-            );
+            throw new PaymentException($this->authorizationFailureMessage($authorizationStatus), $message);
         }
 
         $payment = CareBookingPayment::query()->updateOrCreate(
@@ -944,8 +950,31 @@ class BookingPaymentService
         $haystack = strtolower($e->userMessage.' '.$e->getMessage());
 
         return str_contains($haystack, 'requires action')
+            || str_contains($haystack, 'requires_action')
             || str_contains($haystack, 'authentication')
-            || str_contains($haystack, 'authorize');
+            || str_contains($haystack, '3d secure')
+            || str_contains($haystack, '3ds');
+    }
+
+    private function authorizationStatusRequiresAction(string $status): bool
+    {
+        return in_array($status, [
+            'requires_action',
+            'requires_confirmation',
+        ], true);
+    }
+
+    private function authorizationFailureMessage(string $status): string
+    {
+        if ($this->authorizationStatusRequiresAction($status)) {
+            return 'Card verification is required. Open Billing & Payments, confirm your card, then retry.';
+        }
+
+        if ($status === 'requires_payment_method') {
+            return 'Card was declined. Update your payment method in Billing & Payments, then try hiring again.';
+        }
+
+        return 'Card authorization failed. Update your payment method in Billing & Payments, then try hiring again.';
     }
 
     private function persistAuthorizationFailure(

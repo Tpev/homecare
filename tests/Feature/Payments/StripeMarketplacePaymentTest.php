@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Payments;
 
+use App\Exceptions\Payments\PaymentException;
 use App\Livewire\Family\ManageCareRequest;
 use App\Livewire\Admin\PaymentsQueue;
 use App\Models\CareBooking;
@@ -11,6 +12,7 @@ use App\Models\CareRequestApplication;
 use App\Models\CaregiverProfile;
 use App\Models\User;
 use App\Services\Payments\BookingPaymentService;
+use App\Services\Payments\StripeClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -38,6 +40,78 @@ class StripeMarketplacePaymentTest extends TestCase
             'care_request_id' => $request->id,
         ]);
         $this->assertDatabaseCount('care_booking_payments', 0);
+    }
+
+    public function test_authorization_requires_payment_method_throws_declined_card_message(): void
+    {
+        config()->set('services.stripe.bypass', false);
+
+        [$family, $request, $application] = $this->seedScenario();
+
+        $this->bindDeclinedStripeClient();
+
+        $booking = CareBooking::query()->create([
+            'care_request_id' => $request->id,
+            'care_request_application_id' => $application->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $application->caregiver_user_id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+            'scheduled_start_at' => now()->addDay()->setTime(9, 0),
+            'scheduled_end_at' => now()->addDay()->setTime(13, 0),
+            'expected_minutes' => 240,
+        ]);
+
+        try {
+            app(BookingPaymentService::class)->authorizeForBooking($booking);
+            $this->fail('Expected a declined-card payment exception.');
+        } catch (PaymentException $exception) {
+            $this->assertSame(
+                'Card was declined. Update your payment method in Billing & Payments, then try hiring again.',
+                $exception->userMessage
+            );
+        }
+
+        $this->assertDatabaseHas('care_booking_payments', [
+            'care_booking_id' => $booking->id,
+            'status' => CareBookingPayment::STATUS_FAILED,
+            'stripe_payment_intent_id' => 'pi_declined',
+            'last_error' => 'Your card was declined.',
+        ]);
+    }
+
+    public function test_hire_continues_when_card_declines_after_payment_attempt_is_created(): void
+    {
+        config()->set('services.stripe.bypass', false);
+
+        [$family, $request, $application] = $this->seedScenario();
+
+        $this->bindDeclinedStripeClient();
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+
+        $this->assertDatabaseHas('care_requests', [
+            'id' => $request->id,
+            'status' => CareRequest::STATUS_FILLED,
+        ]);
+        $this->assertDatabaseHas('care_request_applications', [
+            'id' => $application->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+        ]);
+        $this->assertDatabaseHas('care_bookings', [
+            'id' => $booking->id,
+            'care_request_id' => $request->id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+        ]);
+        $this->assertDatabaseHas('care_booking_payments', [
+            'care_booking_id' => $booking->id,
+            'status' => CareBookingPayment::STATUS_FAILED,
+            'stripe_payment_intent_id' => 'pi_declined',
+            'last_error' => 'Your card was declined.',
+        ]);
     }
 
     public function test_hire_authorizes_payment_in_bypass_mode(): void
@@ -399,6 +473,44 @@ class StripeMarketplacePaymentTest extends TestCase
             'id' => $payment->id,
             'status' => CareBookingPayment::STATUS_PARTIALLY_REFUNDED,
         ]);
+    }
+
+    private function bindDeclinedStripeClient(): void
+    {
+        app()->instance(StripeClient::class, new class extends StripeClient
+        {
+            public function ensureFamilyCustomer(User $family): string
+            {
+                return 'cus_declined';
+            }
+
+            public function defaultPaymentMethodForCustomer(string $customerId): ?array
+            {
+                return ['id' => 'pm_declined'];
+            }
+
+            public function createManualAuthorization(
+                CareBooking $booking,
+                string $customerId,
+                string $paymentMethodId,
+                int $amountCents,
+                string $currency,
+                ?string $idempotencyKey = null,
+            ): array {
+                return [
+                    'payment_intent_id' => 'pi_declined',
+                    'status' => 'requires_payment_method',
+                    'amount' => $amountCents,
+                    'authorization_expires_at' => null,
+                    'failure_message' => 'Your card was declined.',
+                ];
+            }
+
+            public function currency(): string
+            {
+                return 'usd';
+            }
+        });
     }
 
     /**

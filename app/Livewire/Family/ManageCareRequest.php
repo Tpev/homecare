@@ -251,8 +251,10 @@ class ManageCareRequest extends Component
             return;
         }
 
+        $paymentWarning = null;
+
         try {
-            DB::transaction(function () use ($application) {
+            DB::transaction(function () use ($application, &$paymentWarning) {
                 $application->update(['status' => CareRequestApplication::STATUS_HIRED]);
 
                 CareRequestConversation::findOrCreateForApplication($application->loadMissing('careRequest'), auth()->id());
@@ -303,7 +305,16 @@ class ManageCareRequest extends Component
                     ['application_id' => $application->id]
                 );
 
-                app(BookingPaymentService::class)->authorizeForBooking($booking);
+                try {
+                    app(BookingPaymentService::class)->authorizeForBooking($booking);
+                } catch (PaymentException $e) {
+                    $booking->load('payment');
+                    if (! $booking->payment) {
+                        throw $e;
+                    }
+
+                    $paymentWarning = $e->userMessage;
+                }
             });
         } catch (PaymentException $e) {
             session()->flash('status', $e->userMessage);
@@ -339,7 +350,12 @@ class ManageCareRequest extends Component
         ]);
 
         $this->refreshRequestItem();
-        session()->flash('status', 'Care request filled and caregiver hired. Booking created.');
+        session()->flash(
+            'status',
+            $paymentWarning
+                ? 'Caregiver hired and shift created. Payment still needs attention: '.$paymentWarning
+                : 'Care request filled and caregiver hired. Booking created.'
+        );
     }
 
     public function completeBooking(): void
