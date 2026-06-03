@@ -144,7 +144,7 @@ class StripeClient
                         'family_user_id' => (string) $family->id,
                     ],
                 ],
-            ], $this->requestOptions('billing-setup:user-'.$family->id));
+            ], $this->requestOptions('billing-setup:user-'.$family->id.':'.(string) \Illuminate\Support\Str::uuid()));
         } catch (Throwable $e) {
             throw new PaymentException(
                 'Unable to open card setup right now. Please try again.',
