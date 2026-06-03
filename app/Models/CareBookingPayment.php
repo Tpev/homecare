@@ -31,6 +31,7 @@ class CareBookingPayment extends Model
         'stripe_customer_id',
         'stripe_payment_method_id',
         'stripe_payment_intent_id',
+        'stripe_payment_intent_client_secret',
         'stripe_overage_payment_intent_id',
         'stripe_transfer_id',
         'stripe_last_refund_id',

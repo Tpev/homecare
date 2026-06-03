@@ -79,7 +79,7 @@ class StripeMarketplacePaymentTest extends TestCase
         ]);
     }
 
-    public function test_hire_continues_when_card_declines_after_payment_attempt_is_created(): void
+    public function test_hire_continues_and_starts_client_authorization_when_payment_needs_confirmation(): void
     {
         config()->set('services.stripe.bypass', false);
 
@@ -108,9 +108,37 @@ class StripeMarketplacePaymentTest extends TestCase
         ]);
         $this->assertDatabaseHas('care_booking_payments', [
             'care_booking_id' => $booking->id,
-            'status' => CareBookingPayment::STATUS_FAILED,
-            'stripe_payment_intent_id' => 'pi_declined',
-            'last_error' => 'Your card was declined.',
+            'status' => CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
+            'stripe_payment_intent_id' => 'pi_client_confirmation',
+            'stripe_payment_intent_client_secret' => 'pi_client_confirmation_secret_test',
+            'last_error' => 'Card authorization needs confirmation.',
+        ]);
+    }
+
+    public function test_family_can_finalize_client_authorization_after_3ds(): void
+    {
+        config()->set('services.stripe.bypass', false);
+
+        [$family, $request, $application] = $this->seedScenario();
+
+        $this->bindDeclinedStripeClient();
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('finalizeStripeAuthorization', 'pi_client_confirmation');
+
+        $this->assertDatabaseHas('care_booking_payments', [
+            'care_booking_id' => $booking->id,
+            'status' => CareBookingPayment::STATUS_AUTHORIZED,
+            'stripe_payment_intent_id' => 'pi_client_confirmation',
+            'amount_authorized_cents' => 10890,
+            'last_error' => null,
         ]);
     }
 
@@ -503,6 +531,37 @@ class StripeMarketplacePaymentTest extends TestCase
                     'amount' => $amountCents,
                     'authorization_expires_at' => null,
                     'failure_message' => 'Your card was declined.',
+                ];
+            }
+
+            public function createManualAuthorizationIntent(
+                CareBooking $booking,
+                string $customerId,
+                string $paymentMethodId,
+                int $amountCents,
+                string $currency,
+                ?string $idempotencyKey = null,
+            ): array {
+                return [
+                    'payment_intent_id' => 'pi_client_confirmation',
+                    'client_secret' => 'pi_client_confirmation_secret_test',
+                    'status' => 'requires_payment_method',
+                    'amount' => $amountCents,
+                    'authorization_expires_at' => null,
+                ];
+            }
+
+            public function retrievePaymentIntent(string $paymentIntentId): array
+            {
+                return [
+                    'payment_intent_id' => $paymentIntentId,
+                    'id' => $paymentIntentId,
+                    'client_secret' => $paymentIntentId.'_secret_test',
+                    'status' => 'requires_capture',
+                    'amount' => 10890,
+                    'amount_received' => 0,
+                    'authorization_expires_at' => now()->addDays(6),
+                    'last_payment_error' => null,
                 ];
             }
 

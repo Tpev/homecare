@@ -6,6 +6,7 @@ use App\Exceptions\Payments\PaymentException;
 use App\Models\CareBooking;
 use App\Models\CareBookingChangeRequest;
 use App\Models\CareBookingIncident;
+use App\Models\CareBookingPayment;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
@@ -252,9 +253,10 @@ class ManageCareRequest extends Component
         }
 
         $paymentWarning = null;
+        $paymentConfirmationId = null;
 
         try {
-            DB::transaction(function () use ($application, &$paymentWarning) {
+            DB::transaction(function () use ($application, &$paymentWarning, &$paymentConfirmationId) {
                 $application->update(['status' => CareRequestApplication::STATUS_HIRED]);
 
                 CareRequestConversation::findOrCreateForApplication($application->loadMissing('careRequest'), auth()->id());
@@ -305,15 +307,10 @@ class ManageCareRequest extends Component
                     ['application_id' => $application->id]
                 );
 
-                try {
-                    app(BookingPaymentService::class)->authorizeForBooking($booking);
-                } catch (PaymentException $e) {
-                    $booking->load('payment');
-                    if (! $booking->payment) {
-                        throw $e;
-                    }
-
-                    $paymentWarning = $e->userMessage;
+                $payment = app(BookingPaymentService::class)->prepareOnSessionAuthorization($booking);
+                if ($payment->status === CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED) {
+                    $paymentConfirmationId = $payment->id;
+                    $paymentWarning = 'Confirm the card authorization to protect this booking.';
                 }
             });
         } catch (PaymentException $e) {
@@ -350,12 +347,95 @@ class ManageCareRequest extends Component
         ]);
 
         $this->refreshRequestItem();
+        if ($paymentConfirmationId) {
+            $payment = CareBookingPayment::query()->find($paymentConfirmationId);
+            if ($payment) {
+                $this->dispatchPaymentConfirmation($payment);
+            }
+        }
+
         session()->flash(
             'status',
             $paymentWarning
                 ? 'Caregiver hired and shift created. Payment still needs attention: '.$paymentWarning
                 : 'Care request filled and caregiver hired. Booking created.'
         );
+    }
+
+    public function startPaymentAuthorization(): void
+    {
+        $booking = $this->requestItem->booking;
+        if (! $booking) {
+            session()->flash('status', 'No booking is ready for payment authorization yet.');
+
+            return;
+        }
+
+        try {
+            $payment = app(BookingPaymentService::class)->prepareOnSessionAuthorization($booking);
+        } catch (PaymentException $e) {
+            session()->flash('status', $e->userMessage);
+
+            return;
+        }
+
+        $this->refreshRequestItem();
+
+        if ($payment->status === CareBookingPayment::STATUS_AUTHORIZED) {
+            session()->flash('status', 'Card pre-authorization is already complete.');
+
+            return;
+        }
+
+        $this->dispatchPaymentConfirmation($payment);
+        session()->flash('status', 'Confirm the card authorization in the secure Stripe window.');
+    }
+
+    public function finalizeStripeAuthorization(string $paymentIntentId): void
+    {
+        $booking = $this->requestItem->booking;
+        if (! $booking) {
+            session()->flash('status', 'No booking is ready for payment authorization yet.');
+
+            return;
+        }
+
+        try {
+            $payment = app(BookingPaymentService::class)->syncPreparedAuthorization($booking, $paymentIntentId);
+        } catch (PaymentException $e) {
+            session()->flash('status', $e->userMessage);
+
+            return;
+        }
+
+        $this->refreshRequestItem();
+
+        if ($payment->status === CareBookingPayment::STATUS_AUTHORIZED) {
+            session()->flash('status', 'Card pre-authorization complete. This booking is now payment protected.');
+
+            return;
+        }
+
+        session()->flash('status', $payment->last_error ?: 'Payment authorization still needs attention.');
+    }
+
+    public function failStripeAuthorization(?string $paymentIntentId = null, string $message = ''): void
+    {
+        $booking = $this->requestItem->booking;
+        if (! $booking) {
+            session()->flash('status', $message !== '' ? $message : 'Card authorization failed.');
+
+            return;
+        }
+
+        $payment = app(BookingPaymentService::class)->recordClientAuthorizationFailure(
+            $booking,
+            $paymentIntentId,
+            $message
+        );
+
+        $this->refreshRequestItem();
+        session()->flash('status', $payment?->last_error ?: ($message !== '' ? $message : 'Card authorization failed.'));
     }
 
     public function completeBooking(): void
@@ -1190,6 +1270,27 @@ class ManageCareRequest extends Component
                 'booking:id,care_request_id,care_request_application_id,status,scheduled_start_at,scheduled_end_at',
             ]),
         ]);
+    }
+
+    private function dispatchPaymentConfirmation(CareBookingPayment $payment): void
+    {
+        $publishableKey = (string) config('services.stripe.publishable_key', '');
+        $clientSecret = (string) $payment->stripe_payment_intent_client_secret;
+
+        if ($publishableKey === '' || $clientSecret === '') {
+            session()->flash('status', 'Payment authorization is waiting, but Stripe confirmation is not available. Update billing and retry.');
+
+            return;
+        }
+
+        $this->dispatch(
+            'confirm-stripe-booking-payment',
+            publishableKey: $publishableKey,
+            clientSecret: $clientSecret,
+            paymentMethodId: (string) $payment->stripe_payment_method_id,
+            paymentIntentId: (string) $payment->stripe_payment_intent_id,
+            bookingId: (int) $payment->care_booking_id,
+        );
     }
 
     public function getVisibleApplicationsProperty()

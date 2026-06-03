@@ -63,7 +63,7 @@ class RegularCareShow extends Component
                 'sourceCareRequest:id,title',
                 'sourceCareBooking:id,status,scheduled_start_at,scheduled_end_at',
                 'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
-                'nextBooking.payment:id,care_booking_id,status,amount_authorized_cents,authorization_expires_at',
+                'nextBooking.payment:id,care_booking_id,status,amount_authorized_cents,authorization_expires_at,last_error',
                 'generatedBookings' => fn ($query) => $query
                     ->with('careRequest:id,title')
                     ->latest()

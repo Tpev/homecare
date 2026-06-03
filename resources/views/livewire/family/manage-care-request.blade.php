@@ -6,6 +6,11 @@
     @php
         $booking = $requestItem->booking;
         $payment = $booking?->payment;
+        $needsPaymentAuthorization = $payment && in_array($payment->status, [
+            \App\Models\CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
+            \App\Models\CareBookingPayment::STATUS_REAUTH_REQUIRED,
+            \App\Models\CareBookingPayment::STATUS_FAILED,
+        ], true);
         $hiredApplication = $requestItem->applications->firstWhere('status', \App\Models\CareRequestApplication::STATUS_HIRED);
         $hiredCaregiverName = trim((string) ($hiredApplication?->caregiver?->name ?? ''));
         $hiredCaregiverFirstName = $hiredCaregiverName !== ''
@@ -90,6 +95,18 @@
             default => 'blue',
         };
     @endphp
+
+    @if ($needsPaymentAuthorization)
+        <x-alert color="amber">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <p class="font-semibold">Card authorization needs attention.</p>
+                    <p class="text-sm">{{ $payment->last_error ?: 'Confirm the card authorization before the shift is financially protected.' }}</p>
+                </div>
+                <x-button color="amber" wire:click="startPaymentAuthorization" class="w-full sm:w-auto">Confirm card authorization</x-button>
+            </div>
+        </x-alert>
+    @endif
 
     <x-card>
         <x-slot:header>
@@ -674,7 +691,9 @@
 
                 @if (! $payment)
                     <div class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                        Payment authorization is not ready yet. Add or update your card in
+                        Payment authorization is not ready yet.
+                        <button type="button" wire:click="startPaymentAuthorization" class="font-semibold underline underline-offset-2">Confirm card authorization</button>
+                        or update your card in
                         <a href="{{ route('family.billing.show') }}" wire:navigate class="font-medium underline underline-offset-2">Billing & Payments</a>.
                     </div>
                 @else
@@ -688,7 +707,8 @@
                         @endif
                         @if ($payment->last_error)
                             <span class="mt-1 block text-amber-800">{{ $payment->last_error }}</span>
-                            <a href="{{ route('family.billing.show') }}" wire:navigate class="mt-1 inline-block font-semibold text-amber-900 underline underline-offset-2">Update billing</a>
+                            <button type="button" wire:click="startPaymentAuthorization" class="mt-1 inline-block font-semibold text-amber-900 underline underline-offset-2">Confirm authorization</button>
+                            <a href="{{ route('family.billing.show') }}" wire:navigate class="ml-2 mt-1 inline-block font-semibold text-amber-900 underline underline-offset-2">Update billing</a>
                         @endif
                     </div>
                 @endif
@@ -699,6 +719,10 @@
                             <a href="{{ route('messages.show', $hiredConversation->id) }}" wire:navigate>
                                 <x-button color="indigo" class="w-full sm:w-auto">Open chat</x-button>
                             </a>
+                        @endif
+
+                        @if ($needsPaymentAuthorization)
+                            <x-button color="amber" wire:click="startPaymentAuthorization" class="w-full sm:w-auto">Confirm card authorization</x-button>
                         @endif
 
                         @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true))
@@ -1036,3 +1060,68 @@
     @endif
 </div>
 
+@script
+<script>
+    window.homecareLoadStripeJs = window.homecareLoadStripeJs || (() => new Promise((resolve, reject) => {
+        if (window.Stripe) {
+            resolve(window.Stripe);
+
+            return;
+        }
+
+        const existing = document.querySelector('script[src="https://js.stripe.com/v3/"]');
+        if (existing) {
+            existing.addEventListener('load', () => resolve(window.Stripe));
+            existing.addEventListener('error', () => reject(new Error('Stripe.js could not be loaded.')));
+
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://js.stripe.com/v3/';
+        script.async = true;
+        script.onload = () => resolve(window.Stripe);
+        script.onerror = () => reject(new Error('Stripe.js could not be loaded.'));
+        document.head.appendChild(script);
+    }));
+
+    $wire.on('confirm-stripe-booking-payment', async (payload) => {
+        const detail = Array.isArray(payload) ? (payload[0] || {}) : (payload || {});
+
+        if (window.homecareConfirmingBookingPayment || !detail.clientSecret || !detail.publishableKey) {
+            return;
+        }
+
+        window.homecareConfirmingBookingPayment = true;
+
+        try {
+            const StripeConstructor = await window.homecareLoadStripeJs();
+            const stripe = StripeConstructor(detail.publishableKey);
+            const confirmParams = {
+                return_url: window.location.href,
+            };
+
+            if (detail.paymentMethodId) {
+                confirmParams.payment_method = detail.paymentMethodId;
+            }
+
+            const result = await stripe.confirmCardPayment(detail.clientSecret, confirmParams);
+
+            if (result.error) {
+                const paymentIntentId = result.error.payment_intent?.id || detail.paymentIntentId || '';
+                await $wire.failStripeAuthorization(paymentIntentId, result.error.message || 'Card authorization failed.');
+
+                return;
+            }
+
+            if (result.paymentIntent?.id) {
+                await $wire.finalizeStripeAuthorization(result.paymentIntent.id);
+            }
+        } catch (error) {
+            await $wire.failStripeAuthorization(detail.paymentIntentId || '', error?.message || 'Card authorization failed.');
+        } finally {
+            window.homecareConfirmingBookingPayment = false;
+        }
+    });
+</script>
+@endscript

@@ -110,7 +110,8 @@ class BookingPaymentService
                 paymentMethodId: (string) $defaultPaymentMethod['id'],
                 status: $status,
                 message: $message,
-                paymentIntentId: (string) ($authorization['payment_intent_id'] ?? null)
+                paymentIntentId: (string) ($authorization['payment_intent_id'] ?? null),
+                clientSecret: (string) ($authorization['client_secret'] ?? null)
             );
 
             $this->notifyAuthorizationState($booking, $payment, $status);
@@ -128,6 +129,7 @@ class BookingPaymentService
                 'stripe_customer_id' => $customerId,
                 'stripe_payment_method_id' => (string) $defaultPaymentMethod['id'],
                 'stripe_payment_intent_id' => (string) $authorization['payment_intent_id'],
+                'stripe_payment_intent_client_secret' => (string) ($authorization['client_secret'] ?? null),
                 'amount_authorized_cents' => (int) $authorization['amount'],
                 'authorization_expires_at' => $authorization['authorization_expires_at'],
                 'authorized_at' => now(),
@@ -135,18 +137,143 @@ class BookingPaymentService
                 'failed_at' => null,
                 'last_error' => null,
                 'overage_pending_cents' => 0,
-                'metadata' => [
-                    'hourly_rate' => $this->effectiveHourlyRate($booking),
-                    'estimated_minutes' => $this->estimatedMinutes($booking),
-                    'platform_fee_percent' => $this->platformFeePercent(),
-                    'buffer_percent' => $this->authorizationBufferPercent(),
-                ],
+                'metadata' => $this->authorizationMetadata($booking, (int) $authorization['amount']),
             ]
         );
 
         $this->notifyAuthorizationState($booking, $payment, CareBookingPayment::STATUS_AUTHORIZED);
 
         return $payment;
+    }
+
+    public function prepareOnSessionAuthorization(CareBooking $booking, bool $forceNewIntent = false): CareBookingPayment
+    {
+        $booking->loadMissing([
+            'application',
+            'family',
+            'caregiver',
+            'caregiver.caregiverProfile',
+            'payment',
+        ]);
+
+        $existing = $booking->payment;
+        if (! $forceNewIntent && $existing && in_array($existing->status, [
+            CareBookingPayment::STATUS_AUTHORIZED,
+            CareBookingPayment::STATUS_CAPTURED,
+            CareBookingPayment::STATUS_TRANSFERRED,
+            CareBookingPayment::STATUS_PARTIALLY_REFUNDED,
+            CareBookingPayment::STATUS_REFUNDED,
+        ], true)) {
+            return $existing;
+        }
+
+        $family = $booking->family;
+        if (! $family) {
+            throw new PaymentException('Family billing profile is missing.');
+        }
+
+        $customerId = $this->stripe->ensureFamilyCustomer($family);
+        $defaultPaymentMethod = $this->stripe->defaultPaymentMethodForCustomer($customerId);
+
+        if (! $defaultPaymentMethod) {
+            throw new PaymentException(
+                'Add a payment method before hiring. Open Billing & Payments from your account menu.'
+            );
+        }
+
+        $amountCents = $this->authorizationAmountCents($booking);
+        $currency = $this->stripe->currency();
+        $metadata = $this->authorizationMetadata($booking, $amountCents);
+
+        if (! $forceNewIntent && $existing && $this->canReuseAuthorizationIntent($existing, $amountCents, $currency)) {
+            $existing->forceFill([
+                'stripe_customer_id' => $customerId,
+                'stripe_payment_method_id' => (string) $defaultPaymentMethod['id'],
+                'metadata' => array_merge($existing->metadata ?? [], $metadata),
+            ])->save();
+
+            return $existing->fresh();
+        }
+
+        $intent = $this->stripe->createManualAuthorizationIntent(
+            $booking,
+            $customerId,
+            (string) $defaultPaymentMethod['id'],
+            $amountCents,
+            $currency,
+            $this->idempotencyKey($booking->id, 'authorize-client-'.now()->format('YmdHisv'), $amountCents)
+        );
+
+        $status = (string) ($intent['status'] ?? '');
+        $paymentStatus = $status === 'requires_capture'
+            ? CareBookingPayment::STATUS_AUTHORIZED
+            : CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED;
+
+        $payment = CareBookingPayment::query()->updateOrCreate(
+            ['care_booking_id' => $booking->id],
+            [
+                'family_user_id' => (int) $booking->family_user_id,
+                'caregiver_user_id' => (int) $booking->caregiver_user_id,
+                'status' => $paymentStatus,
+                'currency' => $currency,
+                'stripe_customer_id' => $customerId,
+                'stripe_payment_method_id' => (string) $defaultPaymentMethod['id'],
+                'stripe_payment_intent_id' => (string) $intent['payment_intent_id'],
+                'stripe_payment_intent_client_secret' => (string) ($intent['client_secret'] ?? null),
+                'amount_authorized_cents' => $paymentStatus === CareBookingPayment::STATUS_AUTHORIZED
+                    ? (int) $intent['amount']
+                    : null,
+                'authorization_expires_at' => $intent['authorization_expires_at'],
+                'authorized_at' => $paymentStatus === CareBookingPayment::STATUS_AUTHORIZED ? now() : null,
+                'failed_at' => $paymentStatus === CareBookingPayment::STATUS_AUTHORIZED ? null : now(),
+                'last_error' => $paymentStatus === CareBookingPayment::STATUS_AUTHORIZED
+                    ? null
+                    : 'Card authorization needs confirmation.',
+                'metadata' => $metadata,
+            ]
+        );
+
+        $this->notifyAuthorizationState($booking, $payment, $paymentStatus);
+
+        return $payment;
+    }
+
+    public function syncPreparedAuthorization(CareBooking $booking, string $paymentIntentId): CareBookingPayment
+    {
+        $booking->loadMissing(['payment', 'family', 'caregiver']);
+
+        $payment = $booking->payment;
+        if (! $payment || (string) $payment->stripe_payment_intent_id !== $paymentIntentId) {
+            throw new PaymentException('Payment authorization was not found for this booking.');
+        }
+
+        $intent = $this->stripe->retrievePaymentIntent($paymentIntentId);
+
+        return $this->applyPaymentIntentState($payment, $intent);
+    }
+
+    public function recordClientAuthorizationFailure(CareBooking $booking, ?string $paymentIntentId, string $message): ?CareBookingPayment
+    {
+        $booking->loadMissing(['payment']);
+
+        $payment = $booking->payment;
+        if (! $payment) {
+            return null;
+        }
+
+        if ($paymentIntentId && (string) $payment->stripe_payment_intent_id !== $paymentIntentId) {
+            return $payment;
+        }
+
+        $payment->forceFill([
+            'status' => CareBookingPayment::STATUS_FAILED,
+            'failed_at' => now(),
+            'last_error' => $message !== '' ? $message : 'Card authorization failed.',
+        ])->save();
+
+        $this->notifyAuthorizationState($booking, $payment, CareBookingPayment::STATUS_FAILED);
+
+        return $payment->fresh();
     }
 
     public function captureForBooking(CareBooking $booking): CareBookingPayment
@@ -163,6 +290,16 @@ class BookingPaymentService
         $payment = $booking->payment;
         if (! $payment) {
             throw new PaymentException('Payment authorization is missing for this booking.');
+        }
+
+        if (in_array($payment->status, [
+            CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
+            CareBookingPayment::STATUS_REAUTH_REQUIRED,
+            CareBookingPayment::STATUS_FAILED,
+        ], true)) {
+            throw new PaymentException(
+                'Payment authorization is not ready. Confirm the card authorization before approving the timesheet.'
+            );
         }
 
         if (in_array($payment->status, [CareBookingPayment::STATUS_CAPTURED, CareBookingPayment::STATUS_TRANSFERRED], true)
@@ -370,6 +507,7 @@ class BookingPaymentService
             CareBookingPayment::STATUS_AUTHORIZED,
             CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
             CareBookingPayment::STATUS_REAUTH_REQUIRED,
+            CareBookingPayment::STATUS_FAILED,
         ], true)) {
             return;
         }
@@ -601,30 +739,58 @@ class BookingPaymentService
             return;
         }
 
+        $this->applyPaymentIntentState($payment, $object);
+    }
+
+    /**
+     * @param  array<string, mixed>  $object
+     */
+    private function applyPaymentIntentState(CareBookingPayment $payment, array $object): CareBookingPayment
+    {
         $status = (string) ($object['status'] ?? '');
         $amount = (int) ($object['amount'] ?? 0);
         $amountReceived = (int) ($object['amount_received'] ?? 0);
+        $clientSecret = (string) ($object['client_secret'] ?? '');
+        $authorizationExpiresAt = $object['authorization_expires_at'] ?? null;
 
         if ($status === 'requires_capture') {
-            $payment->forceFill([
+            $payload = [
                 'status' => CareBookingPayment::STATUS_AUTHORIZED,
                 'amount_authorized_cents' => $amount > 0 ? $amount : $payment->amount_authorized_cents,
                 'authorized_at' => $payment->authorized_at ?: now(),
                 'failed_at' => null,
                 'last_error' => null,
-            ])->save();
+            ];
 
-            return;
+            if ($clientSecret !== '') {
+                $payload['stripe_payment_intent_client_secret'] = $clientSecret;
+            }
+
+            if ($authorizationExpiresAt) {
+                $payload['authorization_expires_at'] = $authorizationExpiresAt;
+            }
+
+            $payment->forceFill($payload)->save();
+
+            return $payment->fresh();
         }
 
-        if ($status === 'requires_action') {
-            $payment->forceFill([
+        if (in_array($status, ['requires_action', 'requires_confirmation'], true)) {
+            $payload = [
                 'status' => CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
                 'failed_at' => now(),
-                'last_error' => 'Stripe requires additional action before capture.',
-            ])->save();
+                'last_error' => $status === 'requires_confirmation'
+                    ? 'Card authorization needs confirmation.'
+                    : 'Stripe requires additional action before capture.',
+            ];
 
-            return;
+            if ($clientSecret !== '') {
+                $payload['stripe_payment_intent_client_secret'] = $clientSecret;
+            }
+
+            $payment->forceFill($payload)->save();
+
+            return $payment->fresh();
         }
 
         if ($status === 'succeeded') {
@@ -645,7 +811,7 @@ class BookingPaymentService
                 'last_error' => null,
             ])->save();
 
-            return;
+            return $payment->fresh();
         }
 
         if (in_array($status, ['canceled', 'requires_payment_method'], true)) {
@@ -657,6 +823,8 @@ class BookingPaymentService
                 'last_error' => (string) data_get($object, 'last_payment_error.message', 'Stripe payment failed.'),
             ])->save();
         }
+
+        return $payment->fresh();
     }
 
     /**
@@ -744,6 +912,40 @@ class BookingPaymentService
         $withBuffer = $withPlatformFee * (1 + ($this->authorizationBufferPercent() / 100));
 
         return max(100, (int) round($withBuffer * 100));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function authorizationMetadata(CareBooking $booking, int $amountCents): array
+    {
+        return [
+            'hourly_rate' => $this->effectiveHourlyRate($booking),
+            'estimated_minutes' => $this->estimatedMinutes($booking),
+            'platform_fee_percent' => $this->platformFeePercent(),
+            'buffer_percent' => $this->authorizationBufferPercent(),
+            'requested_authorization_cents' => $amountCents,
+        ];
+    }
+
+    private function canReuseAuthorizationIntent(CareBookingPayment $payment, int $amountCents, string $currency): bool
+    {
+        if (! $payment->stripe_payment_intent_id || ! $payment->stripe_payment_intent_client_secret) {
+            return false;
+        }
+
+        if (! in_array($payment->status, [
+            CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
+            CareBookingPayment::STATUS_REAUTH_REQUIRED,
+            CareBookingPayment::STATUS_FAILED,
+        ], true)) {
+            return false;
+        }
+
+        $metadataAmount = (int) data_get($payment->metadata, 'requested_authorization_cents', 0);
+
+        return $metadataAmount === $amountCents
+            && strtolower((string) $payment->currency) === strtolower($currency);
     }
 
     private function captureAmountCents(CareBooking $booking, CareBookingPayment $payment): int
@@ -984,6 +1186,7 @@ class BookingPaymentService
         string $status,
         string $message,
         ?string $paymentIntentId = null,
+        ?string $clientSecret = null,
     ): CareBookingPayment {
         return CareBookingPayment::query()->updateOrCreate(
             ['care_booking_id' => $booking->id],
@@ -995,6 +1198,7 @@ class BookingPaymentService
                 'stripe_customer_id' => $customerId,
                 'stripe_payment_method_id' => $paymentMethodId,
                 'stripe_payment_intent_id' => $paymentIntentId,
+                'stripe_payment_intent_client_secret' => $clientSecret,
                 'failed_at' => now(),
                 'last_error' => $message,
             ]

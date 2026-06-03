@@ -53,7 +53,11 @@
     @if ($plan->status === \App\Models\CarePlan::STATUS_PAYMENT_ATTENTION)
         <x-alert color="amber">
             {{ $plan->last_error ?: 'Payment action is needed before LoLo can keep this regular visit fully protected.' }}
-            <a href="{{ route('family.billing.show') }}" wire:navigate class="ml-1 font-semibold underline underline-offset-2">Open billing</a>
+            @if ($plan->nextBooking)
+                <a href="{{ route('family.requests.show', $plan->nextBooking->care_request_id) }}" wire:navigate class="ml-1 font-semibold underline underline-offset-2">Open booking payment</a>
+            @else
+                <a href="{{ route('family.billing.show') }}" wire:navigate class="ml-1 font-semibold underline underline-offset-2">Open billing</a>
+            @endif
         </x-alert>
     @endif
 

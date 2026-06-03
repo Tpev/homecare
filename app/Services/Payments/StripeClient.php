@@ -471,6 +471,91 @@ class StripeClient
     }
 
     /**
+     * @return array{
+     *   payment_intent_id:string,
+     *   client_secret:string,
+     *   status:string,
+     *   amount:int,
+     *   authorization_expires_at:\Carbon\CarbonInterface|null
+     * }
+     */
+    public function createManualAuthorizationIntent(
+        CareBooking $booking,
+        string $customerId,
+        string $paymentMethodId,
+        int $amountCents,
+        string $currency,
+        ?string $idempotencyKey = null,
+    ): array {
+        if ($this->isBypass()) {
+            return [
+                'payment_intent_id' => 'pi_bypass_booking_'.$booking->id,
+                'client_secret' => 'pi_bypass_booking_'.$booking->id.'_secret_bypass',
+                'status' => PaymentIntent::STATUS_REQUIRES_CAPTURE,
+                'amount' => $amountCents,
+                'authorization_expires_at' => now()->addDays(6),
+            ];
+        }
+
+        if ($amountCents <= 0) {
+            throw new PaymentException('Unable to authorize payment for this booking amount.');
+        }
+
+        try {
+            $intent = $this->client()->paymentIntents->create([
+                'amount' => $amountCents,
+                'currency' => $currency,
+                'customer' => $customerId,
+                'capture_method' => 'manual',
+                'confirmation_method' => 'automatic',
+                'payment_method_types' => ['card'],
+                'payment_method_options' => [
+                    'card' => [
+                        'request_three_d_secure' => 'automatic',
+                    ],
+                ],
+                'description' => 'HomeCare booking #'.$booking->id,
+                'metadata' => [
+                    'care_booking_id' => (string) $booking->id,
+                    'care_request_id' => (string) $booking->care_request_id,
+                    'family_user_id' => (string) $booking->family_user_id,
+                    'caregiver_user_id' => (string) $booking->caregiver_user_id,
+                ],
+            ], $this->requestOptions($idempotencyKey));
+        } catch (ApiErrorException $e) {
+            throw new PaymentException(
+                'Unable to start card authorization. Update your card and try hiring again.',
+                $e->getMessage()
+            );
+        }
+
+        return $this->paymentIntentPayload($intent);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function retrievePaymentIntent(string $paymentIntentId): array
+    {
+        if ($this->isBypass()) {
+            return [
+                'id' => $paymentIntentId,
+                'client_secret' => $paymentIntentId.'_secret_bypass',
+                'status' => PaymentIntent::STATUS_REQUIRES_CAPTURE,
+                'amount' => 100,
+            ];
+        }
+
+        try {
+            $intent = $this->client()->paymentIntents->retrieve($paymentIntentId);
+        } catch (ApiErrorException $e) {
+            throw new PaymentException('Unable to verify card authorization right now.', $e->getMessage());
+        }
+
+        return $this->paymentIntentPayload($intent);
+    }
+
+    /**
      * @return array{id:string,status:string,amount_received:int}
      */
     public function capturePaymentIntent(string $paymentIntentId, int $amountToCaptureCents, ?string $idempotencyKey = null): array
@@ -820,6 +905,25 @@ class StripeClient
         $decoded = json_decode(json_encode($paymentIntent), true);
 
         return is_array($decoded) ? $decoded : null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function paymentIntentPayload(PaymentIntent $intent): array
+    {
+        $payload = json_decode(json_encode($intent), true) ?: [];
+
+        return [
+            'payment_intent_id' => (string) $intent->id,
+            'id' => (string) $intent->id,
+            'client_secret' => (string) ($intent->client_secret ?? ''),
+            'status' => (string) $intent->status,
+            'amount' => (int) $intent->amount,
+            'amount_received' => (int) ($intent->amount_received ?? 0),
+            'authorization_expires_at' => $this->captureBeforeFromPaymentIntent($payload),
+            'last_payment_error' => $payload['last_payment_error'] ?? null,
+        ];
     }
 
     /**
