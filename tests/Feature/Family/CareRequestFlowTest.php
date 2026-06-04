@@ -550,7 +550,12 @@ class CareRequestFlowTest extends TestCase
 
         Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $request->id])
-            ->assertSee('Confirm timesheet')
+            ->assertSee('Review caregiver timesheet')
+            ->assertSee('Approve timesheet')
+            ->assertSee('capture payment')
+            ->assertSee('3h 00m')
+            ->assertSee('$99.00')
+            ->assertSee('$90.00')
             ->call('completeBooking');
 
         $this->assertNotNull($booking->fresh()?->family_confirmed_at);

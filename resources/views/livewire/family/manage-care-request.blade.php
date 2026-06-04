@@ -38,14 +38,25 @@
             : null;
         $familyReview = $booking?->reviews?->firstWhere('reviewer_user_id', (int) auth()->id());
         $caregiverReview = $booking?->reviews?->firstWhere('reviewer_user_id', (int) ($booking?->caregiver_user_id ?? 0));
+        $timesheetNeedsReview = $booking
+            && in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true)
+            && ! $booking->family_confirmed_at;
         $canLeaveFamilyReview = $booking
             && in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true)
             && ! $familyReview;
         $workedMinutes = (int) ($booking?->worked_minutes ?? 0);
-        $workedLabel = sprintf('%02d:%02d', intdiv($workedMinutes, 60), $workedMinutes % 60);
-        $shiftRate = (float) ($hiredApplication?->proposed_rate ?? 0);
+        $workedLabel = sprintf('%dh %02dm', intdiv($workedMinutes, 60), $workedMinutes % 60);
+        $applicationRate = (float) ($hiredApplication?->proposed_rate ?? 0);
+        $profileRate = (float) ($hiredApplication?->caregiver?->caregiverProfile?->resolvePlatformHourlyRate() ?? 0);
+        $shiftRate = $applicationRate > 0
+            ? $applicationRate
+            : ($profileRate > 0 ? $profileRate : (float) config('marketplace.family_estimate_hourly_rate', 30.00));
         $shiftEarnings = $workedMinutes > 0 && $shiftRate > 0
             ? round(($workedMinutes / 60) * $shiftRate, 2)
+            : 0;
+        $platformFeePercent = max(0, (float) config('marketplace.payments.platform_fee_percent', 0));
+        $estimatedPaymentTotal = $shiftEarnings > 0
+            ? round($shiftEarnings * (1 + ($platformFeePercent / 100)), 2)
             : 0;
         $canWithdrawRequest = in_array($requestItem->status, [
             \App\Models\CareRequest::STATUS_DRAFT,
@@ -652,6 +663,69 @@
                     <p class="mt-1 text-sm">{{ $shiftStatusBody }}</p>
                 </div>
 
+                @if ($timesheetNeedsReview)
+                    <div class="rounded-3xl border-2 border-emerald-300 bg-emerald-50 p-4 text-emerald-950 shadow-sm sm:p-5">
+                        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">Action needed</p>
+                                <h3 class="mt-1 font-display text-2xl font-semibold">Review caregiver timesheet</h3>
+                                <p class="mt-1 max-w-2xl text-sm text-emerald-900">
+                                    Approve only if the worked hours look right. Approval captures the family payment and moves the caregiver payout forward.
+                                </p>
+                            </div>
+                            <x-button color="green" wire:click="completeBooking" class="w-full sm:w-auto">
+                                Approve timesheet & capture payment
+                            </x-button>
+                        </div>
+
+                        <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
+                            <div class="rounded-2xl border border-emerald-200 bg-white px-4 py-3">
+                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Worked hours</p>
+                                <p class="mt-1 text-2xl font-semibold text-[#17313F]">{{ $workedLabel }}</p>
+                                <p class="text-xs text-[#607080]">{{ $booking->worked_minutes ?? 0 }} minute{{ (int) ($booking->worked_minutes ?? 0) === 1 ? '' : 's' }}</p>
+                            </div>
+                            <div class="rounded-2xl border border-emerald-200 bg-white px-4 py-3">
+                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Estimated payment</p>
+                                <p class="mt-1 text-2xl font-semibold text-[#17313F]">${{ number_format($estimatedPaymentTotal, 2) }}</p>
+                                <p class="text-xs text-[#607080]">
+                                    Care ${{ number_format($shiftEarnings, 2) }} at {{ '$'.number_format($shiftRate, 2) }}/hr
+                                    @if ($platformFeePercent > 0)
+                                        + {{ rtrim(rtrim(number_format($platformFeePercent, 2), '0'), '.') }}% platform fee
+                                    @endif
+                                </p>
+                            </div>
+                            <div class="rounded-2xl border border-emerald-200 bg-white px-4 py-3">
+                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Submitted</p>
+                                <p class="mt-1 text-base font-semibold text-[#17313F]">{{ optional($booking->timesheet_submitted_at)->format('M d, g:i A') ?: 'Pending' }}</p>
+                                <p class="text-xs text-[#607080]">Caregiver checkout {{ optional($booking->completed_at)->format('g:i A') ?: 'pending' }}</p>
+                            </div>
+                            <div class="rounded-2xl border border-emerald-200 bg-white px-4 py-3">
+                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Payment</p>
+                                <p class="mt-1 text-base font-semibold text-[#17313F]">{{ strtoupper($payment?->status ?? 'missing') }}</p>
+                                @if ($payment?->amount_authorized_cents)
+                                    <p class="text-xs text-[#607080]">Authorized ${{ number_format($payment->amount_authorized_cents / 100, 2) }}</p>
+                                @elseif (! $payment)
+                                    <p class="text-xs text-amber-700">Authorization needs attention before capture.</p>
+                                @else
+                                    <p class="text-xs text-[#607080]">Capture runs when you approve.</p>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+                            <x-input label="Confirmation note (optional)" wire:model="confirmationNote" />
+                            <div class="flex flex-col gap-2 sm:flex-row lg:justify-end">
+                                <x-button color="green" wire:click="completeBooking" class="w-full sm:w-auto">
+                                    Approve timesheet & capture payment
+                                </x-button>
+                                <x-button color="white" light wire:click="setActiveTab('support')" class="w-full sm:w-auto">
+                                    Question these hours
+                                </x-button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="grid grid-cols-1 gap-3 xl:grid-cols-4">
                     <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
                         <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Schedule</p>
@@ -729,10 +803,6 @@
                             <x-button color="green" wire:click="completeBooking" class="w-full sm:w-auto">Mark shift complete</x-button>
                         @endif
 
-                        @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true) && ! $booking->family_confirmed_at)
-                            <x-button color="green" wire:click="completeBooking" class="w-full sm:w-auto">Confirm timesheet</x-button>
-                        @endif
-
                         @if ($canMarkNoShow)
                             <x-button color="red" light wire:click="markNoShow" onclick="if (!confirm('Mark this caregiver as no-show? This cancels the shift and affects reliability.')) return false;" class="w-full sm:w-auto">Mark caregiver no-show</x-button>
                         @endif
@@ -753,10 +823,6 @@
                         </div>
                     @endif
                 </div>
-
-                @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true) && ! $booking->family_confirmed_at)
-                    <x-input label="Confirmation note (optional)" wire:model="confirmationNote" />
-                @endif
 
                 @if ($canCancelScheduledShift)
                     <details class="rounded-2xl border border-rose-200 bg-rose-50 p-4">
