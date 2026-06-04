@@ -4,6 +4,7 @@
     @endif
 
     @php
+        $pricing = app(\App\Support\MarketplacePricing::class);
         $activePlans = $plans->filter(fn ($plan) => in_array($plan->status, [
             \App\Models\CarePlan::STATUS_ACTIVE,
             \App\Models\CarePlan::STATUS_PAYMENT_ATTENTION,
@@ -85,6 +86,7 @@
                             $paymentLabel = $plan->payment_status === \App\Models\CarePlan::PAYMENT_ACTION_REQUIRED
                                 ? 'ACTION NEEDED'
                                 : strtoupper(str_replace('_', ' ', $plan->payment_status));
+                            $planRate = $pricing->hourlyRateForFamily(auth()->user(), (float) $plan->hourly_rate);
                         @endphp
                         <a href="{{ route('family.care.show', $plan->id) }}" wire:navigate class="block rounded-2xl border border-[#DED6CA] bg-white p-4 transition hover:border-[#B7ADA0] hover:shadow-sm">
                             <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -94,7 +96,7 @@
                                         <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $style }}">{{ $planStatusLabel }}</span>
                                     </div>
                                     <p class="mt-1 text-sm text-[#607080]">
-                                        {{ $plan->caregiver?->name }} - {{ $scheduleService->scheduleLabel($plan) }} - ${{ number_format((float) $plan->hourly_rate, 2) }}/hr
+                                        {{ $plan->caregiver?->name }} - {{ $scheduleService->scheduleLabel($plan) }} - ${{ number_format($planRate, 2) }}/hr
                                     </p>
                                     <p class="mt-2 text-sm text-[#4B5B6B]">
                                         Next: {{ $upcoming[0]['label'] ?? optional($plan->nextBooking?->scheduled_start_at)->format('M d, g:i A') ?? 'waiting for schedule activation' }}

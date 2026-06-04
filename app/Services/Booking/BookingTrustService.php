@@ -9,6 +9,7 @@ use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CaregiverProfile;
 use App\Models\User;
+use App\Support\MarketplacePricing;
 use Illuminate\Support\Carbon;
 
 class BookingTrustService
@@ -40,7 +41,10 @@ class BookingTrustService
                 'recurring_start_time' => $request->recurring_start_time,
                 'recurring_end_time' => $request->recurring_end_time,
             ],
-            'proposed_rate' => $application->proposed_rate,
+            'proposed_rate' => app(MarketplacePricing::class)->hourlyRateForRequest(
+                $request,
+                (float) $application->proposed_rate
+            ),
             'services' => $request->tasks()
                 ->pluck('care_tasks.name')
                 ->values()

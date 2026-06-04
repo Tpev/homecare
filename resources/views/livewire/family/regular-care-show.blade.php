@@ -4,6 +4,7 @@
     @endif
 
     @php
+        $pricing = app(\App\Support\MarketplacePricing::class);
         $statusStyles = [
             'active' => 'bg-emerald-100 text-emerald-700',
             'payment_attention' => 'bg-amber-100 text-amber-800',
@@ -23,6 +24,7 @@
             : strtoupper(str_replace('_', ' ', $plan->payment_status));
         $tasks = collect($plan->task_snapshot ?? []);
         $address = $plan->address_snapshot ?? [];
+        $planRate = $pricing->hourlyRateForFamily($plan->family, (float) $plan->hourly_rate);
     @endphp
 
     <section class="hc-brand-panel">
@@ -34,7 +36,7 @@
                     <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusStyle }}">{{ $planStatusLabel }}</span>
                 </div>
                 <p class="mt-2 max-w-2xl text-sm text-[#F7F1E8]/82">
-                    {{ $plan->caregiver?->name }} - {{ $scheduleLabel }} - ${{ number_format((float) $plan->hourly_rate, 2) }}/hr
+                    {{ $plan->caregiver?->name }} - {{ $scheduleLabel }} - ${{ number_format($planRate, 2) }}/hr
                 </p>
             </div>
             <div class="flex flex-col gap-2 sm:flex-row">

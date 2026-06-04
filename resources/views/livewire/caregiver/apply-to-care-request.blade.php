@@ -4,13 +4,15 @@
     @endif
 
     @php
+        $pricing = app(\App\Support\MarketplacePricing::class);
         $booking = $existingApplication?->booking;
         $caregiverReview = $booking?->reviews?->firstWhere('reviewer_user_id', (int) auth()->id());
         $familyReview = $booking?->reviews?->firstWhere('reviewer_user_id', (int) ($booking?->family_user_id ?? 0));
         $canLeaveReview = $booking
             && in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true)
             && ! $caregiverReview;
-        $ratePerHour = (float) ($existingApplication?->proposed_rate ?? auth()->user()->caregiverProfile?->resolvePlatformHourlyRate() ?? 0);
+        $baseRatePerHour = (float) ($existingApplication?->proposed_rate ?? auth()->user()->caregiverProfile?->resolvePlatformHourlyRate() ?? 0);
+        $ratePerHour = $pricing->hourlyRateForRequest($requestItem, $baseRatePerHour);
         $canEditApplication = $requestItem->status === \App\Models\CareRequest::STATUS_OPEN;
         $canCheckIn = $booking
             && $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED
@@ -226,9 +228,9 @@
             @if ($canEditApplication)
                 <div class="space-y-4">
                     <div class="rounded-[1rem] border border-[#D8D1F1] bg-[#F5F1FB] px-3 py-2 text-sm text-[#0F3D3E]">
-                        Platform rate applied automatically:
+                        Care rate applied automatically:
                         <span class="font-semibold">
-                            ${{ number_format((float) (auth()->user()->caregiverProfile?->resolvePlatformHourlyRate() ?? 0), 2) }}/hr
+                            ${{ number_format($pricing->hourlyRateForRequest($requestItem, (float) (auth()->user()->caregiverProfile?->resolvePlatformHourlyRate() ?? 0)), 2) }}/hr
                         </span>
                     </div>
 
@@ -244,7 +246,7 @@
             @elseif ($existingApplication)
                 <div class="space-y-3 text-sm">
                     <p><span class="font-medium">Status:</span> {{ strtoupper($existingApplication->status) }}</p>
-                    <p><span class="font-medium">Platform rate:</span> ${{ number_format((float) $existingApplication->proposed_rate, 2) }}/hr</p>
+                    <p><span class="font-medium">Care rate:</span> ${{ number_format($ratePerHour, 2) }}/hr</p>
                     <p class="whitespace-pre-line text-[#4B5B6B]">{{ $existingApplication->cover_note ?: '-' }}</p>
                 </div>
             @else

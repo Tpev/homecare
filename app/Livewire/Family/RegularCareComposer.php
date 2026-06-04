@@ -102,7 +102,7 @@ class RegularCareComposer extends Component
         return view('livewire.family.regular-care-composer', [
             'scheduleService' => $plans,
             'hiredApplication' => $this->hiredApplication,
-            'platformRate' => $plans->platformHourlyRate(),
+            'platformRate' => $plans->hourlyRateForFamily(auth()->user()),
         ]);
     }
 }

@@ -5,6 +5,7 @@
 
     @php
         $booking = $requestItem->booking;
+        $pricing = app(\App\Support\MarketplacePricing::class);
         $payment = $booking?->payment;
         $needsPaymentAuthorization = $payment && in_array($payment->status, [
             \App\Models\CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
@@ -49,13 +50,18 @@
         $workedLabel = sprintf('%dh %02dm', intdiv($workedMinutes, 60), $workedMinutes % 60);
         $applicationRate = (float) ($hiredApplication?->proposed_rate ?? 0);
         $profileRate = (float) ($hiredApplication?->caregiver?->caregiverProfile?->resolvePlatformHourlyRate() ?? 0);
-        $shiftRate = $applicationRate > 0
+        $baseShiftRate = $applicationRate > 0
             ? $applicationRate
             : ($profileRate > 0 ? $profileRate : (float) config('marketplace.family_estimate_hourly_rate', 30.00));
+        $shiftRate = $booking
+            ? $pricing->hourlyRateForBooking($booking, $baseShiftRate)
+            : $pricing->hourlyRateForFamily($requestItem->family, $baseShiftRate);
         $shiftEarnings = $workedMinutes > 0 && $shiftRate > 0
             ? round(($workedMinutes / 60) * $shiftRate, 2)
             : 0;
-        $platformFeePercent = max(0, (float) config('marketplace.payments.platform_fee_percent', 0));
+        $platformFeePercent = $booking
+            ? $pricing->platformFeePercentForBooking($booking, max(0, (float) config('marketplace.payments.platform_fee_percent', 0)))
+            : $pricing->platformFeePercentForFamily($requestItem->family, max(0, (float) config('marketplace.payments.platform_fee_percent', 0)));
         $estimatedPaymentTotal = $shiftEarnings > 0
             ? round($shiftEarnings * (1 + ($platformFeePercent / 100)), 2)
             : 0;
@@ -349,13 +355,17 @@
                     $selectedCaregiverProfileHref = $selectedCaregiverProfile?->slug
                         ? route('caregivers.show', $selectedCaregiverProfile->slug)
                         : null;
+                    $selectedCaregiverRate = $pricing->hourlyRateForFamily(
+                        $requestItem->family,
+                        (float) ($hiredApplication->proposed_rate ?: $selectedCaregiverProfile?->resolvePlatformHourlyRate() ?: config('marketplace.family_estimate_hourly_rate', 30.00))
+                    );
                 @endphp
                 <div class="rounded-lg border border-green-200 bg-green-50 p-4">
                     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
                             <p class="font-display text-lg font-semibold text-[#17313F]">{{ $hiredApplication->caregiver->name }}</p>
                             <p class="text-sm text-[#607080]">
-                                Platform rate: ${{ number_format((float) $hiredApplication->proposed_rate, 2) }}/hr
+                                Care rate: ${{ number_format($selectedCaregiverRate, 2) }}/hr
                             </p>
                             @if ($selectedCaregiverProfile)
                                 <p class="mt-1 text-sm text-[#4B5B6B]">

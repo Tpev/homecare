@@ -9,6 +9,7 @@ use App\Models\CaregiverPayout;
 use App\Models\CaregiverPayoutItem;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Support\MarketplaceEvent;
+use App\Support\MarketplacePricing;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -18,6 +19,7 @@ class BookingPaymentService
     public function __construct(
         private readonly StripeClient $stripe,
         private readonly MarketplaceNotificationService $notifications,
+        private readonly MarketplacePricing $pricing,
     ) {
     }
 
@@ -398,7 +400,7 @@ class BookingPaymentService
             }
         }
 
-        $platformFeeCents = (int) round($capturedCents * ($this->platformFeePercent() / 100));
+        $platformFeeCents = (int) round($capturedCents * ($this->platformFeePercent($booking) / 100));
         $caregiverAmountCents = max(0, $capturedCents - $platformFeeCents);
 
         $payment->forceFill([
@@ -797,7 +799,9 @@ class BookingPaymentService
             $platformFeeCents = $payment->platform_fee_cents;
             $caregiverAmountCents = $payment->caregiver_amount_cents;
             if (! is_int($platformFeeCents) || ! is_int($caregiverAmountCents)) {
-                $platformFeeCents = (int) round($amountReceived * ($this->platformFeePercent() / 100));
+                $booking = $payment->booking;
+                $booking?->loadMissing('family');
+                $platformFeeCents = (int) round($amountReceived * ($this->platformFeePercent($booking) / 100));
                 $caregiverAmountCents = max(0, $amountReceived - $platformFeeCents);
             }
 
@@ -908,7 +912,7 @@ class BookingPaymentService
     private function authorizationAmountCents(CareBooking $booking): int
     {
         $subtotal = $this->bookingSubtotal($booking, $this->estimatedMinutes($booking));
-        $withPlatformFee = $subtotal * (1 + ($this->platformFeePercent() / 100));
+        $withPlatformFee = $subtotal * (1 + ($this->platformFeePercent($booking) / 100));
         $withBuffer = $withPlatformFee * (1 + ($this->authorizationBufferPercent() / 100));
 
         return max(100, (int) round($withBuffer * 100));
@@ -922,7 +926,7 @@ class BookingPaymentService
         return [
             'hourly_rate' => $this->effectiveHourlyRate($booking),
             'estimated_minutes' => $this->estimatedMinutes($booking),
-            'platform_fee_percent' => $this->platformFeePercent(),
+            'platform_fee_percent' => $this->platformFeePercent($booking),
             'buffer_percent' => $this->authorizationBufferPercent(),
             'requested_authorization_cents' => $amountCents,
         ];
@@ -956,7 +960,7 @@ class BookingPaymentService
         }
 
         $subtotal = $this->bookingSubtotal($booking, $workedMinutes);
-        $withPlatformFee = $subtotal * (1 + ($this->platformFeePercent() / 100));
+        $withPlatformFee = $subtotal * (1 + ($this->platformFeePercent($booking) / 100));
 
         if ($withPlatformFee <= 0) {
             return (int) ($payment->amount_authorized_cents ?? 0);
@@ -977,15 +981,18 @@ class BookingPaymentService
     {
         $applicationRate = (float) ($booking->application?->proposed_rate ?? 0);
         if ($applicationRate > 0) {
-            return $applicationRate;
+            return $this->pricing->hourlyRateForBooking($booking, $applicationRate);
         }
 
         $profileRate = (float) ($booking->caregiver?->caregiverProfile?->resolvePlatformHourlyRate() ?? 0);
         if ($profileRate > 0) {
-            return $profileRate;
+            return $this->pricing->hourlyRateForBooking($booking, $profileRate);
         }
 
-        return (float) config('marketplace.family_estimate_hourly_rate', 30.0);
+        return $this->pricing->hourlyRateForBooking(
+            $booking,
+            (float) config('marketplace.family_estimate_hourly_rate', 30.0)
+        );
     }
 
     private function estimatedMinutes(CareBooking $booking): int
@@ -1001,9 +1008,15 @@ class BookingPaymentService
         return 60;
     }
 
-    private function platformFeePercent(): float
+    private function platformFeePercent(?CareBooking $booking = null): float
     {
-        return max(0, (float) config('marketplace.payments.platform_fee_percent', 10));
+        $fallback = max(0, (float) config('marketplace.payments.platform_fee_percent', 10));
+
+        if (! $booking) {
+            return $fallback;
+        }
+
+        return $this->pricing->platformFeePercentForBooking($booking, $fallback);
     }
 
     private function authorizationBufferPercent(): float

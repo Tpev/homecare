@@ -43,6 +43,11 @@ class CarePlanService
         return $this->pricing->rateForTier((string) config('marketplace.default_pricing_tier', 'standard'));
     }
 
+    public function hourlyRateForFamily(User $family): float
+    {
+        return $this->pricing->hourlyRateForFamily($family, $this->platformHourlyRate());
+    }
+
     /**
      * @return array{ready:bool,customer_id:string|null,card:array<string,mixed>|null}
      */
@@ -101,6 +106,7 @@ class CarePlanService
         $source->loadMissing([
             'recipient',
             'tasks',
+            'family:id,email',
             'booking',
             'applications.caregiver.caregiverProfile',
         ]);
@@ -133,7 +139,10 @@ class CarePlanService
             'schedule_start_time' => substr($startTime, 0, 5),
             'schedule_end_time' => substr($endTime, 0, 5),
             'starts_on' => (string) $startsOn,
-            'hourly_rate' => $this->platformHourlyRate(),
+            'hourly_rate' => $this->pricing->hourlyRateForFamily(
+                $source->family,
+                $this->platformHourlyRate()
+            ),
             'care_notes' => $source->recipient?->care_notes ?: $source->scope_of_work,
             'family_message' => 'We would love to make this a regular visit.',
         ];
@@ -177,7 +186,7 @@ class CarePlanService
         }
 
         $schedule = $this->normalizeSchedulePayload($payload);
-        $hourlyRate = $this->platformHourlyRate();
+        $hourlyRate = $this->hourlyRateForFamily($family);
 
         return DB::transaction(function () use ($source, $family, $caregiver, $application, $payload, $schedule, $hourlyRate): CarePlan {
             $relationship = CareRelationship::query()->firstOrNew([
@@ -506,6 +515,10 @@ class CarePlanService
         $occurrence = $this->nextOccurrence($plan);
         $address = $plan->address_snapshot ?? [];
         $recipient = $plan->recipient_snapshot ?? [];
+        $hourlyRate = $this->pricing->hourlyRateForFamily(
+            $plan->family,
+            (float) $plan->hourly_rate
+        );
 
         $request = CareRequest::query()->create([
             'family_user_id' => $plan->family_user_id,
@@ -518,8 +531,8 @@ class CarePlanService
             'preferred_response_hours' => 12,
             'status' => CareRequest::STATUS_FILLED,
             'request_type' => CareRequest::TYPE_ONE_TIME,
-            'budget_min' => $plan->hourly_rate,
-            'budget_max' => $plan->hourly_rate,
+            'budget_min' => $hourlyRate,
+            'budget_max' => $hourlyRate,
             'requested_start_at' => $occurrence['start'],
             'requested_end_at' => $occurrence['end'],
             'address_line1' => (string) data_get($address, 'address_line1', 'Address on file'),
@@ -556,7 +569,7 @@ class CarePlanService
             'care_request_id' => $request->id,
             'caregiver_user_id' => $plan->caregiver_user_id,
             'status' => CareRequestApplication::STATUS_HIRED,
-            'proposed_rate' => $plan->hourly_rate,
+            'proposed_rate' => $hourlyRate,
             'cover_note' => 'Accepted through regular care plan #'.$plan->id.'.',
         ]);
 

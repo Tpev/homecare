@@ -17,6 +17,7 @@ use App\Services\Payments\BookingPaymentService;
 use App\Support\CaregiverPrelaunch;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
+use App\Support\MarketplacePricing;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -59,7 +60,7 @@ class ApplyToCareRequest extends Component
     public function mount(int $careRequest): void
     {
         $this->requestItem = CareRequest::query()
-            ->with(['recipient', 'tasks', 'thirdPartyContact'])
+            ->with(['recipient', 'tasks', 'thirdPartyContact', 'family:id,email,name'])
             ->findOrFail($careRequest);
 
         $this->refreshExistingApplication();
@@ -117,6 +118,8 @@ class ApplyToCareRequest extends Component
             return;
         }
 
+        $applicationRate = app(MarketplacePricing::class)->hourlyRateForRequest($this->requestItem, $platformRate);
+
         $existing = CareRequestApplication::query()
             ->where('care_request_id', $this->requestItem->id)
             ->where('caregiver_user_id', auth()->id())
@@ -136,7 +139,7 @@ class ApplyToCareRequest extends Component
             ],
             [
                 'status' => $status,
-                'proposed_rate' => $platformRate,
+                'proposed_rate' => $applicationRate,
                 'cover_note' => trim($this->cover_note),
             ],
         );
@@ -323,9 +326,10 @@ class ApplyToCareRequest extends Component
         $workedMinutes = $this->computeWorkedMinutes($booking, $totalPausedSeconds);
 
         $capturedByGps = ! is_null($this->checkOutLat) && ! is_null($this->checkOutLng);
-        $ratePerHour = (float) ($this->existingApplication?->proposed_rate
+        $baseRatePerHour = (float) ($this->existingApplication?->proposed_rate
             ?: auth()->user()->caregiverProfile?->resolvePlatformHourlyRate()
             ?: 0);
+        $ratePerHour = app(MarketplacePricing::class)->hourlyRateForRequest($this->requestItem, $baseRatePerHour);
         $estimatedEarnings = $this->calculateShiftEarnings((int) ($workedMinutes ?? 0), $ratePerHour);
 
         $booking->update([

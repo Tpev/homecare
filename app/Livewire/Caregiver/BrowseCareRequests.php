@@ -5,6 +5,7 @@ namespace App\Livewire\Caregiver;
 use App\Models\CareRequest;
 use App\Models\CareTask;
 use App\Support\CaregiverPrelaunch;
+use App\Support\MarketplacePricing;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
@@ -107,6 +108,7 @@ class BrowseCareRequests extends Component
         $query
             ->with([
                 'recipient',
+                'family:id,email',
                 'tasks',
                 'applications' => fn ($q) => $q
                     ->where('caregiver_user_id', $caregiverId)
@@ -156,7 +158,10 @@ class BrowseCareRequests extends Component
             return null;
         }
 
-        $rate = (float) config('marketplace.family_estimate_hourly_rate', 30.00);
+        $rate = app(MarketplacePricing::class)->hourlyRateForRequest(
+            $request,
+            (float) config('marketplace.family_estimate_hourly_rate', 30.00)
+        );
         $hours = $minutes / 60;
         $hoursLabel = abs($hours - round($hours)) < 0.01
             ? (string) (int) round($hours)

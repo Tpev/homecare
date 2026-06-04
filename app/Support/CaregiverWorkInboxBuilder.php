@@ -39,7 +39,8 @@ class CaregiverWorkInboxBuilder
         $pendingInvitations = CareRequestInvitation::query()
             ->with([
                 'family:id,name',
-                'careRequest:id,title,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,city,state,status',
+                'careRequest:id,family_user_id,title,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,city,state,status',
+                'careRequest.family:id,email',
                 'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
             ])
             ->where('caregiver_user_id', $caregiverId)
@@ -57,7 +58,10 @@ class CaregiverWorkInboxBuilder
             }
 
             $invitationMinutes = $this->estimatedShiftMinutes($request);
-            $invitationCompensation = $this->compensationPayload($invitationMinutes, $defaultRate);
+            $invitationCompensation = $this->compensationPayload(
+                $invitationMinutes,
+                $this->effectiveRequestRate($request, $defaultRate)
+            );
 
             $items->push([
                 'id' => 'invite-'.$invitation->id,
@@ -94,7 +98,7 @@ class CaregiverWorkInboxBuilder
         }
 
         $regularCareOffers = CarePlan::query()
-            ->with(['family:id,name,city,state'])
+            ->with(['family:id,name,email,city,state'])
             ->where('caregiver_user_id', $caregiverId)
             ->where('status', CarePlan::STATUS_PENDING_CAREGIVER)
             ->latest()
@@ -102,7 +106,7 @@ class CaregiverWorkInboxBuilder
 
         foreach ($regularCareOffers as $plan) {
             $minutes = $this->estimatedPlanMinutes($plan);
-            $compensation = $this->compensationPayload($minutes, (float) $plan->hourly_rate);
+            $compensation = $this->compensationPayload($minutes, $this->effectivePlanRate($plan));
 
             $items->push([
                 'id' => 'regular-offer-'.$plan->id,
@@ -138,7 +142,8 @@ class CaregiverWorkInboxBuilder
 
         $applications = CareRequestApplication::query()
             ->with([
-                'careRequest:id,title,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,city,state,status,created_at',
+                'careRequest:id,family_user_id,title,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,city,state,status,created_at',
+                'careRequest.family:id,email',
                 'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
                 'conversation:id,care_request_application_id',
                 'booking:id,care_request_application_id,status,scheduled_start_at,scheduled_end_at,started_at,completed_at',
@@ -165,7 +170,7 @@ class CaregiverWorkInboxBuilder
         }
 
         $activeRegularPlans = CarePlan::query()
-            ->with(['family:id,name,city,state', 'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at'])
+            ->with(['family:id,name,email,city,state', 'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at'])
             ->where('caregiver_user_id', $caregiverId)
             ->whereIn('status', [
                 CarePlan::STATUS_ACTIVE,
@@ -178,7 +183,7 @@ class CaregiverWorkInboxBuilder
 
         foreach ($activeRegularPlans as $plan) {
             $minutes = $this->estimatedPlanMinutes($plan);
-            $compensation = $this->compensationPayload($minutes, (float) $plan->hourly_rate);
+            $compensation = $this->compensationPayload($minutes, $this->effectivePlanRate($plan));
             $paymentNeedsFamily = $plan->status === CarePlan::STATUS_PAYMENT_ATTENTION;
 
             $items->push([
@@ -228,6 +233,7 @@ class CaregiverWorkInboxBuilder
         $recommendedRequests = CareRequest::query()
             ->with([
                 'tasks:id,name',
+                'family:id,email',
                 'recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
             ])
             ->withCount('applications')
@@ -244,7 +250,10 @@ class CaregiverWorkInboxBuilder
             }
 
             $recommendedMinutes = $this->estimatedShiftMinutes($request);
-            $recommendedCompensation = $this->compensationPayload($recommendedMinutes, $defaultRate);
+            $recommendedCompensation = $this->compensationPayload(
+                $recommendedMinutes,
+                $this->effectiveRequestRate($request, $defaultRate)
+            );
             $isFresh = $request->created_at?->gte(now()->subDays(2)) ?? false;
 
             $items->push([
@@ -348,7 +357,7 @@ class CaregiverWorkInboxBuilder
 
         if ($status === CareRequestApplication::STATUS_APPLIED) {
             $minutes = $this->estimatedShiftMinutes($request, $booking);
-            $rate = (float) ($application->proposed_rate ?: $defaultRate);
+            $rate = $this->effectiveRequestRate($request, (float) ($application->proposed_rate ?: $defaultRate));
             $compensation = $this->compensationPayload($minutes, $rate);
 
             return [
@@ -384,7 +393,7 @@ class CaregiverWorkInboxBuilder
                 ? route('messages.show', $application->conversation->id)
                 : route('care-requests.apply', $request->id);
             $minutes = $this->estimatedShiftMinutes($request, $booking);
-            $rate = (float) ($application->proposed_rate ?: $defaultRate);
+            $rate = $this->effectiveRequestRate($request, (float) ($application->proposed_rate ?: $defaultRate));
             $compensation = $this->compensationPayload($minutes, $rate);
 
             return [
@@ -422,7 +431,7 @@ class CaregiverWorkInboxBuilder
         if ($status === CareRequestApplication::STATUS_HIRED) {
             if (! $booking) {
                 $minutes = $this->estimatedShiftMinutes($request);
-                $rate = (float) ($application->proposed_rate ?: $defaultRate);
+                $rate = $this->effectiveRequestRate($request, (float) ($application->proposed_rate ?: $defaultRate));
                 $compensation = $this->compensationPayload($minutes, $rate);
 
                 return [
@@ -471,7 +480,7 @@ class CaregiverWorkInboxBuilder
                 default => ['hired', 300, 'Hired', 'success', 'Shift ready.', 'Open shift'],
             };
             $minutes = $this->estimatedShiftMinutes($request, $booking);
-            $rate = (float) ($application->proposed_rate ?: $defaultRate);
+            $rate = $this->effectiveRequestRate($request, (float) ($application->proposed_rate ?: $defaultRate));
             $compensation = $this->compensationPayload($minutes, $rate);
 
             return [
@@ -659,6 +668,19 @@ class CaregiverWorkInboxBuilder
     private function compensationLine(?int $minutes, float $hourlyRate): ?string
     {
         return $this->compensationPayload($minutes, $hourlyRate)['line'] ?? null;
+    }
+
+    private function effectiveRequestRate(CareRequest $request, float $fallback): float
+    {
+        return app(MarketplacePricing::class)->hourlyRateForRequest($request, $fallback);
+    }
+
+    private function effectivePlanRate(CarePlan $plan): float
+    {
+        return app(MarketplacePricing::class)->hourlyRateForFamily(
+            $plan->family,
+            (float) $plan->hourly_rate
+        );
     }
 
     private function estimatedShiftMinutes(CareRequest $request, ?CareBooking $booking = null): ?int

@@ -6,6 +6,7 @@ use App\Models\CareBooking;
 use App\Models\CaregiverPayout;
 use App\Models\CaregiverPayoutItem;
 use App\Models\User;
+use App\Support\MarketplacePricing;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -179,6 +180,7 @@ class CaregiverEarningsService
         return CareBooking::query()
             ->with([
                 'careRequest:id,title,city,state',
+                'family:id,email',
                 'application:id,care_request_id,caregiver_user_id,proposed_rate',
                 'payoutItem:id,caregiver_payout_id,caregiver_user_id,care_booking_id,status,amount,included_at,paid_at',
                 'payoutItem.payout:id,status,scheduled_for,paid_at',
@@ -201,7 +203,10 @@ class CaregiverEarningsService
     private function normalizeBooking(CareBooking $booking, float $profileRate, Carbon $now): array
     {
         $workedMinutes = $this->computeWorkedMinutes($booking, $now);
-        $hourlyRate = (float) ($booking->application?->proposed_rate ?: $profileRate);
+        $hourlyRate = app(MarketplacePricing::class)->hourlyRateForBooking(
+            $booking,
+            (float) ($booking->application?->proposed_rate ?: $profileRate)
+        );
         $grossAmount = $workedMinutes > 0 && $hourlyRate > 0
             ? round(($workedMinutes / 60) * $hourlyRate, 2)
             : 0.0;

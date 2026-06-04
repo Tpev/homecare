@@ -34,6 +34,13 @@ return [
         'authorization_buffer_percent' => (float) env('MARKETPLACE_AUTH_BUFFER_PERCENT', 20),
     ],
 
+    'family_pricing_overrides' => [
+        'donrjohn22@yahoo.com' => [
+            'hourly_rate' => 15.75,
+            'platform_fee_percent' => 0,
+        ],
+    ],
+
     'caregiver_profile_photo' => [
         'max_upload_kb' => (int) env('CAREGIVER_PROFILE_PHOTO_MAX_UPLOAD_KB', 65536),
         'max_dimension' => (int) env('CAREGIVER_PROFILE_PHOTO_MAX_DIMENSION', 1600),

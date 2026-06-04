@@ -200,6 +200,60 @@ class StripeMarketplacePaymentTest extends TestCase
         $this->assertNotNull($booking->fresh()?->family_confirmed_at);
     }
 
+    public function test_family_pricing_override_controls_authorization_capture_fee_and_transfer(): void
+    {
+        config()->set('services.stripe.bypass', true);
+        config()->set('marketplace.family_pricing_overrides', [
+            'donrjohn22@yahoo.com' => [
+                'hourly_rate' => 15.75,
+                'platform_fee_percent' => 0,
+            ],
+        ]);
+
+        [$family, $request, $application, $caregiverProfile] = $this->seedScenario(returnProfile: true);
+        $family->forceFill(['email' => 'DonRJohn22@yahoo.com'])->save();
+        $caregiverProfile->update([
+            'stripe_connect_account_id' => 'acct_test_ready_override',
+            'stripe_charges_enabled' => true,
+            'stripe_payouts_enabled' => true,
+            'stripe_connect_onboarding_completed_at' => now(),
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $payment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->firstOrFail();
+
+        $this->assertSame(7560, (int) $payment->amount_authorized_cents);
+        $this->assertSame(15.75, (float) data_get($payment->metadata, 'hourly_rate'));
+        $this->assertSame(0.0, (float) data_get($payment->metadata, 'platform_fee_percent'));
+
+        $booking->update([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'timesheet_submitted_at' => now(),
+            'worked_minutes' => 120,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('completeBooking');
+
+        $payment->refresh();
+
+        $this->assertSame(CareBookingPayment::STATUS_TRANSFERRED, $payment->status);
+        $this->assertSame(3150, (int) $payment->amount_captured_cents);
+        $this->assertSame(0, (int) $payment->platform_fee_cents);
+        $this->assertSame(3150, (int) $payment->caregiver_amount_cents);
+        $this->assertDatabaseHas('caregiver_payout_items', [
+            'care_booking_id' => $booking->id,
+            'status' => 'paid',
+            'amount' => 31.50,
+        ]);
+    }
+
     public function test_family_billing_checkout_in_bypass_mode_sets_customer_profile(): void
     {
         config()->set('services.stripe.bypass', true);

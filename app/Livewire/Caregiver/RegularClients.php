@@ -104,7 +104,7 @@ class RegularClients extends Component
         $userId = auth()->id();
 
         $offers = CarePlan::query()
-            ->with(['family:id,name,city,state', 'nextBooking'])
+            ->with(['family:id,name,email,city,state', 'nextBooking'])
             ->where('caregiver_user_id', $userId)
             ->whereIn('status', [
                 CarePlan::STATUS_PENDING_CAREGIVER,
@@ -115,7 +115,7 @@ class RegularClients extends Component
 
         $activePlans = CarePlan::query()
             ->with([
-                'family:id,name,city,state',
+                'family:id,name,email,city,state',
                 'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
                 'nextBooking.payment:id,care_booking_id,status',
             ])
