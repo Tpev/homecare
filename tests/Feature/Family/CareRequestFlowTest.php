@@ -556,6 +556,7 @@ class CareRequestFlowTest extends TestCase
             ->assertSee('3h 00m')
             ->assertSee('$99.00')
             ->assertSee('$90.00')
+            ->assertDontSee('Leave a caregiver review')
             ->call('completeBooking');
 
         $this->assertNotNull($booking->fresh()?->family_confirmed_at);

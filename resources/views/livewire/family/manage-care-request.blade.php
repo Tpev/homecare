@@ -43,6 +43,7 @@
             && ! $booking->family_confirmed_at;
         $canLeaveFamilyReview = $booking
             && in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true)
+            && $booking->family_confirmed_at
             && ! $familyReview;
         $workedMinutes = (int) ($booking?->worked_minutes ?? 0);
         $workedLabel = sprintf('%dh %02dm', intdiv($workedMinutes, 60), $workedMinutes % 60);
@@ -201,6 +202,7 @@
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
         </x-slot:header>
 
@@ -648,12 +650,16 @@
                 </div>
             </x-card>
         @else
-            <section class="space-y-4 rounded-3xl border border-[#D8E1D7] bg-white p-4 shadow-sm sm:p-5">
+            <section class="space-y-5 rounded-3xl border border-[#D8E1D7] bg-white p-4 shadow-sm sm:p-5">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                        <p class="hc-brand-kicker">Shift command center</p>
-                        <h2 class="mt-1 font-display text-2xl font-semibold text-[#17313F]">{{ $requestItem->title }}</h2>
-                        <p class="mt-1 text-sm text-[#607080]">Track live care, location, cancellation, and no-show timing from one place.</p>
+                        <p class="hc-brand-kicker">{{ $timesheetNeedsReview ? 'Timesheet review' : 'Shift details' }}</p>
+                        <h2 class="mt-1 font-display text-2xl font-semibold text-[#17313F]">
+                            {{ $timesheetNeedsReview ? 'Review and approve this completed shift' : $requestItem->title }}
+                        </h2>
+                        <p class="mt-1 max-w-3xl text-sm text-[#607080]">
+                            {{ $timesheetNeedsReview ? 'Check the hours, amount, caregiver, and location. If everything looks right, approve the timesheet to capture payment.' : 'Track care, location, cancellation, no-show timing, and shift records from one place.' }}
+                        </p>
                     </div>
                     <x-badge :text="strtoupper(str_replace('_', ' ', $booking->status))" :color="$shiftBadgeColor" />
                 </div>
@@ -763,28 +769,30 @@
                     </div>
                 @endif
 
-                @if (! $payment)
-                    <div class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                        Payment authorization is not ready yet.
-                        <button type="button" wire:click="startPaymentAuthorization" class="font-semibold underline underline-offset-2">Confirm card authorization</button>
-                        or update your card in
-                        <a href="{{ route('family.billing.show') }}" wire:navigate class="font-medium underline underline-offset-2">Billing & Payments</a>.
-                    </div>
-                @else
-                    <div class="rounded-xl border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-xs text-[#4B5B6B]">
-                        Payment status: <span class="font-semibold text-[#17313F]">{{ strtoupper($payment->status) }}</span>
-                        @if ($payment->amount_authorized_cents)
-                            - Authorized ${{ number_format($payment->amount_authorized_cents / 100, 2) }}
-                        @endif
-                        @if ($payment->amount_captured_cents)
-                            - Captured ${{ number_format($payment->amount_captured_cents / 100, 2) }}
-                        @endif
-                        @if ($payment->last_error)
-                            <span class="mt-1 block text-amber-800">{{ $payment->last_error }}</span>
-                            <button type="button" wire:click="startPaymentAuthorization" class="mt-1 inline-block font-semibold text-amber-900 underline underline-offset-2">Confirm authorization</button>
-                            <a href="{{ route('family.billing.show') }}" wire:navigate class="ml-2 mt-1 inline-block font-semibold text-amber-900 underline underline-offset-2">Update billing</a>
-                        @endif
-                    </div>
+                @if (! $timesheetNeedsReview)
+                    @if (! $payment)
+                        <div class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                            Payment authorization is not ready yet.
+                            <button type="button" wire:click="startPaymentAuthorization" class="font-semibold underline underline-offset-2">Confirm card authorization</button>
+                            or update your card in
+                            <a href="{{ route('family.billing.show') }}" wire:navigate class="font-medium underline underline-offset-2">Billing & Payments</a>.
+                        </div>
+                    @else
+                        <div class="rounded-xl border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-xs text-[#4B5B6B]">
+                            Payment status: <span class="font-semibold text-[#17313F]">{{ strtoupper($payment->status) }}</span>
+                            @if ($payment->amount_authorized_cents)
+                                - Authorized ${{ number_format($payment->amount_authorized_cents / 100, 2) }}
+                            @endif
+                            @if ($payment->amount_captured_cents)
+                                - Captured ${{ number_format($payment->amount_captured_cents / 100, 2) }}
+                            @endif
+                            @if ($payment->last_error)
+                                <span class="mt-1 block text-amber-800">{{ $payment->last_error }}</span>
+                                <button type="button" wire:click="startPaymentAuthorization" class="mt-1 inline-block font-semibold text-amber-900 underline underline-offset-2">Confirm authorization</button>
+                                <a href="{{ route('family.billing.show') }}" wire:navigate class="ml-2 mt-1 inline-block font-semibold text-amber-900 underline underline-offset-2">Update billing</a>
+                            @endif
+                        </div>
+                    @endif
                 @endif
 
                 <div class="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -843,7 +851,7 @@
 
                 <div class="space-y-4 text-sm">
 
-                    @if ($booking->timesheet_submitted_at || $booking->worked_minutes)
+                    @if (($booking->timesheet_submitted_at || $booking->worked_minutes) && ! $timesheetNeedsReview)
                         <div class="grid grid-cols-1 gap-3 rounded-lg border border-[#E4DDD3] bg-[#F7F2EA] p-3 md:grid-cols-3">
                             <div>
                                 <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Worked time</p>
@@ -936,7 +944,8 @@
                 </div>
             </section>
 
-            @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true))
+            @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true) && ! $timesheetNeedsReview)
+                <div class="mx-auto grid max-w-5xl grid-cols-1 gap-4 {{ $caregiverReview ? 'lg:grid-cols-2' : '' }}">
                 <x-card>
                     <x-slot:header>
                         @if ($canLeaveFamilyReview)
@@ -1026,6 +1035,7 @@
                         </div>
                     </x-card>
                 @endif
+                </div>
             @endif
         @endif
     @endif
