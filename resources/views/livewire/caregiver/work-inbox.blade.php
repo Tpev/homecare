@@ -162,14 +162,27 @@
 
                         <div class="mt-4 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
                             @if (($item['primary_action']['kind'] ?? null) === 'inline')
-                                <button
-                                    type="button"
-                                    wire:click="{{ $item['primary_action']['method'] }}({{ $item['primary_action']['id'] }})"
-                                    class="{{ $item['primary_action']['method'] === 'acceptInvitation' ? $successActionClasses : $primaryActionClasses }}"
-                                    aria-label="{{ $item['primary_action']['label'] }}"
+                                @php
+                                    $primaryMethod = (string) $item['primary_action']['method'];
+                                    $primaryId = (int) $item['primary_action']['id'];
+                                    $primaryFallbackRoute = $primaryMethod === 'acceptInvitation'
+                                        ? route('caregiver.invitations.accept', $primaryId)
+                                        : '#';
+                                @endphp
+                                <form
+                                    method="POST"
+                                    action="{{ $primaryFallbackRoute }}"
+                                    class="w-full sm:w-auto"
                                 >
-                                    {{ $item['primary_action']['label'] }}
-                                </button>
+                                    @csrf
+                                    <button
+                                        type="submit"
+                                        class="{{ $primaryMethod === 'acceptInvitation' ? $successActionClasses : $primaryActionClasses }}"
+                                        aria-label="{{ $item['primary_action']['label'] }}"
+                                    >
+                                        {{ $item['primary_action']['label'] }}
+                                    </button>
+                                </form>
                             @elseif (($item['primary_action']['kind'] ?? null) === 'link')
                                 <a href="{{ $item['primary_action']['href'] }}" wire:navigate class="{{ $primaryActionClasses }}" aria-label="{{ $item['primary_action']['label'] }}">
                                     {{ $item['primary_action']['label'] }}
@@ -178,14 +191,27 @@
 
                             @if (!empty($item['secondary_action']))
                                 @if (($item['secondary_action']['kind'] ?? null) === 'inline')
-                                    <button
-                                        type="button"
-                                        wire:click="{{ $item['secondary_action']['method'] }}({{ $item['secondary_action']['id'] }})"
-                                        class="{{ $item['secondary_action']['method'] === 'declineInvitation' ? $dangerActionClasses : $secondaryActionClasses }}"
-                                        aria-label="{{ $item['secondary_action']['label'] }}"
+                                    @php
+                                        $secondaryMethod = (string) $item['secondary_action']['method'];
+                                        $secondaryId = (int) $item['secondary_action']['id'];
+                                        $secondaryFallbackRoute = $secondaryMethod === 'declineInvitation'
+                                            ? route('caregiver.invitations.decline', $secondaryId)
+                                            : '#';
+                                    @endphp
+                                    <form
+                                        method="POST"
+                                        action="{{ $secondaryFallbackRoute }}"
+                                        class="w-full sm:w-auto"
                                     >
-                                        {{ $item['secondary_action']['label'] }}
-                                    </button>
+                                        @csrf
+                                        <button
+                                            type="submit"
+                                            class="{{ $secondaryMethod === 'declineInvitation' ? $dangerActionClasses : $secondaryActionClasses }}"
+                                            aria-label="{{ $item['secondary_action']['label'] }}"
+                                        >
+                                            {{ $item['secondary_action']['label'] }}
+                                        </button>
+                                    </form>
                                 @elseif (($item['secondary_action']['kind'] ?? null) === 'link')
                                     <a href="{{ $item['secondary_action']['href'] }}" wire:navigate class="{{ $secondaryActionClasses }}" aria-label="{{ $item['secondary_action']['label'] }}">
                                         {{ $item['secondary_action']['label'] }}

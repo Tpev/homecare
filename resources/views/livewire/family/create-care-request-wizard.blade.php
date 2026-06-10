@@ -16,9 +16,7 @@
                 ->whereIn('value', $selectedDayIds)
                 ->pluck('label')
                 ->implode(', ');
-            $scheduleLine = $request_type === \App\Models\CareRequest::TYPE_RECURRING
-                ? (($dayLabels ?: 'Choose days').' '.$recurring_start_time.'-'.$recurring_end_time)
-                : (($requested_start_at ? str_replace('T', ' ', $requested_start_at) : 'Choose start').' to '.($requested_end_at ? str_replace('T', ' ', $requested_end_at) : 'choose end'));
+            $scheduleLine = $this->scheduleSummary;
         @endphp
 
         <section class="hc-brand-panel">
@@ -152,8 +150,8 @@
                 <x-card>
                     <x-slot:header>
                         <div>
-                            <h2 class="font-display text-lg font-semibold">When</h2>
-                            <p class="text-sm text-[#607080]">Choose a single visit or a repeating schedule.</p>
+                            <h2 class="font-display text-lg font-semibold">When should care happen?</h2>
+                            <p class="text-sm text-[#607080]">Pick the day, start time, and how long the caregiver should stay. We calculate the end time.</p>
                         </div>
                     </x-slot:header>
 
@@ -162,22 +160,34 @@
                             @foreach ($requestTypeOptions as $option)
                                 <label class="flex min-h-14 cursor-pointer items-center justify-center rounded-xl border px-4 text-sm font-semibold transition {{ $request_type === $option['value'] ? 'border-[#0F3D3E] bg-[#0F3D3E] text-white' : 'border-[#DED6CA] bg-white text-[#0F3D3E] hover:bg-[#F5F1EB]' }}">
                                     <input type="radio" class="sr-only" value="{{ $option['value'] }}" wire:model.live="request_type">
-                                    {{ $option['label'] === 'Recurring job' ? 'Repeating care' : 'One visit' }}
+                                    {{ $option['label'] === 'Recurring job' ? 'Repeat every week' : 'One visit' }}
                                 </label>
                             @endforeach
                         </div>
                         @error('request_type') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
                         @if ($request_type === \App\Models\CareRequest::TYPE_ONE_TIME)
-                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                 <div>
-                                    <x-input type="datetime-local" label="Start" wire:model.live="requested_start_at" />
+                                    <x-input type="date" label="Starting day" min="{{ $this->minimumStartDate }}" wire:model.live="requested_start_date" />
+                                    @error('requested_start_date') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <x-input type="time" label="Starting time" wire:model.live="requested_start_time" />
+                                    @error('requested_start_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                     @error('requested_start_at') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
-                                    <x-input type="datetime-local" label="End" wire:model.live="requested_end_at" />
-                                    @error('requested_end_at') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    <x-native-select-field
+                                        label="Duration (HH:MM)"
+                                        wire:model.live="requested_duration_minutes"
+                                        :options="$durationOptions"
+                                    />
+                                    @error('requested_duration_minutes') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
+                            </div>
+                            <div class="rounded-xl border border-[#CFE1D8] bg-[#F2F8F4] px-4 py-3 text-sm text-[#0F3D3E]">
+                                <span class="font-semibold">Schedule:</span> {{ $this->scheduleSummary }}
                             </div>
                         @else
                             <div class="space-y-5">
@@ -197,21 +207,29 @@
 
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <div>
-                                        <x-input type="time" label="Start time" wire:model.live="recurring_start_time" />
-                                        @error('recurring_start_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                                    </div>
-                                    <div>
-                                        <x-input type="time" label="End time" wire:model.live="recurring_end_time" />
-                                        @error('recurring_end_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                                    </div>
-                                    <div>
-                                        <x-input type="date" label="First date" wire:model.live="recurring_starts_on" />
+                                        <x-input type="date" label="Starting day" min="{{ $this->minimumStartDate }}" wire:model.live="recurring_starts_on" />
                                         @error('recurring_starts_on') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                     </div>
                                     <div>
-                                        <x-input type="date" label="End date (optional)" wire:model="recurring_ends_on" />
+                                        <x-input type="time" label="Starting time" wire:model.live="recurring_start_time" />
+                                        @error('recurring_start_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+                                    <div>
+                                        <x-native-select-field
+                                            label="Duration (HH:MM)"
+                                            wire:model.live="recurring_duration_minutes"
+                                            :options="$durationOptions"
+                                        />
+                                        @error('recurring_duration_minutes') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                        @error('recurring_end_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+                                    <div>
+                                        <x-input type="date" label="Stop repeating on (optional)" min="{{ $this->minimumStartDate }}" wire:model="recurring_ends_on" />
                                         @error('recurring_ends_on') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                     </div>
+                                </div>
+                                <div class="rounded-xl border border-[#CFE1D8] bg-[#F2F8F4] px-4 py-3 text-sm text-[#0F3D3E]">
+                                    <span class="font-semibold">Schedule:</span> {{ $this->scheduleSummary }}
                                 </div>
                             </div>
                         @endif
@@ -251,73 +269,6 @@
                             <x-input label="ZIP" wire:model="zip" />
                             @error('zip') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
-                    </div>
-                </x-card>
-
-                <x-card>
-                    <x-slot:header>
-                        <div>
-                            <h2 class="font-display text-lg font-semibold">Helpful details</h2>
-                            <p class="text-sm text-[#607080]">Add only what would help a caregiver arrive prepared.</p>
-                        </div>
-                    </x-slot:header>
-
-                    <div class="space-y-5">
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div>
-                                <x-native-select-field label="Mobility" wire:model="recipient_mobility_level" :options="$mobilityOptions" />
-                                @error('recipient_mobility_level') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                            </div>
-                            <div>
-                                <x-input
-                                    type="number"
-                                    min="1"
-                                    max="72"
-                                    label="Reply needed within hours"
-                                    wire:model="preferred_response_hours"
-                                />
-                                @error('preferred_response_hours') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                            </div>
-                        </div>
-
-                        <x-textarea label="Care notes" wire:model="recipient_care_notes" placeholder="Routines, allergies, preferences, or safety notes." />
-                        @error('recipient_care_notes') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-
-                        <x-textarea label="Home access notes" wire:model="home_access_notes" placeholder="Parking, doorbell, pets, stairs, or entry notes." />
-                        @error('home_access_notes') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-
-                        <details class="group border-t border-[#E4DDD3] pt-4">
-                            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-[#17313F] [&::-webkit-details-marker]:hidden">
-                                <span>Someone else should be contacted</span>
-                                <span class="text-[#607080] group-open:hidden">Add</span>
-                                <span class="hidden text-[#607080] group-open:inline">Hide</span>
-                            </summary>
-                            <div class="mt-4 space-y-4">
-                                <x-checkbox label="Add another contact for this request" wire:model.live="includeThirdPartyContact" />
-                                @error('includeThirdPartyContact') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-
-                                @if ($includeThirdPartyContact)
-                                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                        <div>
-                                            <x-input label="Contact name" wire:model="third_party_full_name" />
-                                            @error('third_party_full_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                                        </div>
-                                        <div>
-                                            <x-input label="Relationship" wire:model="third_party_relationship_to_recipient" />
-                                            @error('third_party_relationship_to_recipient') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                                        </div>
-                                        <div>
-                                            <x-input label="Phone" wire:model="third_party_phone" />
-                                            @error('third_party_phone') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                                        </div>
-                                        <div>
-                                            <x-input type="email" label="Email (optional)" wire:model="third_party_email" />
-                                            @error('third_party_email') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                        </details>
                     </div>
 
                     <x-slot:footer>

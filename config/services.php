@@ -57,7 +57,7 @@ return [
         'publishable_key' => env('STRIPE_KEY'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
         'currency' => strtolower((string) env('STRIPE_CURRENCY', 'usd')),
-        'bypass' => filter_var(env('STRIPE_BYPASS', false), FILTER_VALIDATE_BOOL),
+        'bypass' => filter_var(env('STRIPE_BYPASS', env('APP_ENV') === 'local'), FILTER_VALIDATE_BOOL),
     ],
 
     'twilio' => [

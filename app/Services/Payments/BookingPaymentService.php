@@ -749,6 +749,7 @@ class BookingPaymentService
      */
     private function applyPaymentIntentState(CareBookingPayment $payment, array $object): CareBookingPayment
     {
+        $paymentIntentId = (string) ($object['id'] ?? '');
         $status = (string) ($object['status'] ?? '');
         $amount = (int) ($object['amount'] ?? 0);
         $amountReceived = (int) ($object['amount_received'] ?? 0);
@@ -796,18 +797,36 @@ class BookingPaymentService
         }
 
         if ($status === 'succeeded') {
+            $isOverageIntent = $paymentIntentId !== ''
+                && $payment->stripe_overage_payment_intent_id
+                && $paymentIntentId === (string) $payment->stripe_overage_payment_intent_id;
+            $capturedAmountCents = $amountReceived > 0
+                ? $amountReceived
+                : (int) ($payment->amount_captured_cents ?? 0);
+
+            if ($isOverageIntent) {
+                $capturedAmountCents = max(
+                    (int) ($payment->amount_captured_cents ?? 0),
+                    (int) ($payment->amount_authorized_cents ?? 0) + $amountReceived
+                );
+            }
+
             $platformFeeCents = $payment->platform_fee_cents;
             $caregiverAmountCents = $payment->caregiver_amount_cents;
             if (! is_int($platformFeeCents) || ! is_int($caregiverAmountCents)) {
                 $booking = $payment->booking;
                 $booking?->loadMissing('family');
-                $platformFeeCents = (int) round($amountReceived * ($this->platformFeePercent($booking) / 100));
-                $caregiverAmountCents = max(0, $amountReceived - $platformFeeCents);
+                $platformFeeCents = (int) round($capturedAmountCents * ($this->platformFeePercent($booking) / 100));
+                $caregiverAmountCents = max(0, $capturedAmountCents - $platformFeeCents);
             }
 
             $payment->forceFill([
                 'status' => $payment->stripe_transfer_id ? CareBookingPayment::STATUS_TRANSFERRED : CareBookingPayment::STATUS_CAPTURED,
-                'amount_captured_cents' => $amountReceived > 0 ? $amountReceived : $payment->amount_captured_cents,
+                'amount_captured_cents' => $capturedAmountCents > 0 ? $capturedAmountCents : $payment->amount_captured_cents,
+                'amount_overage_cents' => $isOverageIntent
+                    ? max((int) ($payment->amount_overage_cents ?? 0), $amountReceived)
+                    : $payment->amount_overage_cents,
+                'overage_pending_cents' => $isOverageIntent ? 0 : $payment->overage_pending_cents,
                 'platform_fee_cents' => $platformFeeCents,
                 'caregiver_amount_cents' => $caregiverAmountCents,
                 'captured_at' => $payment->captured_at ?: now(),

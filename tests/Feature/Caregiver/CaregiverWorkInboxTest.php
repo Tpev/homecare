@@ -137,6 +137,67 @@ class CaregiverWorkInboxTest extends TestCase
         $component->assertRedirect(route('messages.show', $conversation->id, false));
     }
 
+    public function test_caregiver_can_accept_invitation_from_plain_post_fallback(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = $this->createReadyCaregiver();
+        $request = $this->createOneTimeRequest($family->id, 'Invitation form fallback');
+
+        $invitation = CareRequestInvitation::query()->create([
+            'care_request_id' => $request->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestInvitation::STATUS_PENDING,
+            'message' => 'Could you take this shift?',
+            'expires_at' => now()->addHours(10),
+        ]);
+
+        $response = $this->actingAs($caregiver)
+            ->post(route('caregiver.invitations.accept', $invitation->id));
+
+        $application = CareRequestApplication::query()
+            ->where('care_request_id', $request->id)
+            ->where('caregiver_user_id', $caregiver->id)
+            ->firstOrFail();
+
+        $conversation = CareRequestConversation::query()
+            ->where('care_request_id', $request->id)
+            ->where('caregiver_user_id', $caregiver->id)
+            ->firstOrFail();
+
+        $response->assertRedirect(route('messages.show', $conversation->id));
+        $this->assertSame(CareRequestApplication::STATUS_SHORTLISTED, $application->status);
+        $this->assertDatabaseHas('care_request_invitations', [
+            'id' => $invitation->id,
+            'status' => CareRequestInvitation::STATUS_ACCEPTED,
+            'care_request_application_id' => $application->id,
+        ]);
+    }
+
+    public function test_invite_response_metrics_never_store_negative_minutes(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = $this->createReadyCaregiver();
+        $request = $this->createOneTimeRequest($family->id, 'Future timestamp invite');
+
+        $invitation = CareRequestInvitation::query()->create([
+            'care_request_id' => $request->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestInvitation::STATUS_PENDING,
+            'message' => 'Could you take this shift?',
+            'expires_at' => now()->addHours(10),
+            'created_at' => now()->addMinutes(30),
+            'updated_at' => now()->addMinutes(30),
+        ]);
+
+        $this->actingAs($caregiver)
+            ->post(route('caregiver.invitations.accept', $invitation->id))
+            ->assertRedirect();
+
+        $this->assertSame(0, (int) $caregiver->caregiverProfile()->value('avg_invite_response_minutes'));
+    }
+
     public function test_family_user_cannot_access_caregiver_work_inbox(): void
     {
         $family = User::factory()->create([

@@ -26,7 +26,13 @@ class CaregiverResponseMetrics
         $avgMinutes = (int) round((clone $base)
             ->whereNotNull('responded_at')
             ->get(['created_at', 'responded_at'])
-            ->avg(fn (CareRequestInvitation $invitation) => $invitation->responded_at->diffInMinutes($invitation->created_at)) ?? 0);
+            ->avg(function (CareRequestInvitation $invitation): ?int {
+                if (! $invitation->created_at || ! $invitation->responded_at) {
+                    return null;
+                }
+
+                return max(0, (int) $invitation->created_at->diffInMinutes($invitation->responded_at, false));
+            }) ?? 0);
 
         CaregiverProfile::query()
             ->where('user_id', $caregiverUserId)

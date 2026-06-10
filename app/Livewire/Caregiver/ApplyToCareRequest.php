@@ -108,7 +108,7 @@ class ApplyToCareRequest extends Component
         }
 
         $this->validate([
-            'cover_note' => ['required', 'string', 'min:40', 'max:2500'],
+            'cover_note' => ['nullable', 'string', 'max:2500'],
         ]);
 
         $platformRate = (float) (auth()->user()->caregiverProfile?->resolvePlatformHourlyRate() ?? 0);
@@ -140,7 +140,7 @@ class ApplyToCareRequest extends Component
             [
                 'status' => $status,
                 'proposed_rate' => $applicationRate,
-                'cover_note' => trim($this->cover_note),
+                'cover_note' => trim($this->cover_note) ?: null,
             ],
         );
 

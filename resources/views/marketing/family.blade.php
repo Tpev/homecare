@@ -139,6 +139,7 @@
             gap: 0.55rem;
             font-size: 0.92rem;
             font-weight: 700;
+            white-space: nowrap;
             transition: transform .18s ease, background-color .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
         }
 
@@ -1092,8 +1093,7 @@
                 width: min(100vw - 1.25rem, 1180px);
             }
 
-            .hub-home .hub-nav .hub-desktop-nav,
-            .hub-home .hub-nav .hub-nav-cta {
+            .hub-home .hub-nav .hub-desktop-nav {
                 display: none !important;
             }
 

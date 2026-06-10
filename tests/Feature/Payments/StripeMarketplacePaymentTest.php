@@ -367,6 +367,28 @@ class StripeMarketplacePaymentTest extends TestCase
         $payment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->firstOrFail();
         $this->assertGreaterThan(0, (int) $payment->amount_overage_cents);
         $this->assertNotNull($payment->stripe_overage_payment_intent_id);
+
+        $capturedCents = (int) $payment->amount_captured_cents;
+        $caregiverAmountCents = (int) $payment->caregiver_amount_cents;
+        $overageCents = (int) $payment->amount_overage_cents;
+
+        $this->postJson(route('webhooks.stripe'), [
+            'id' => 'evt_test_overage_succeeded',
+            'object' => 'event',
+            'type' => 'payment_intent.succeeded',
+            'data' => [
+                'object' => [
+                    'id' => $payment->stripe_overage_payment_intent_id,
+                    'status' => 'succeeded',
+                    'amount_received' => $overageCents,
+                ],
+            ],
+        ])->assertOk();
+
+        $payment->refresh();
+        $this->assertSame($capturedCents, (int) $payment->amount_captured_cents);
+        $this->assertSame($caregiverAmountCents, (int) $payment->caregiver_amount_cents);
+        $this->assertSame($overageCents, (int) $payment->amount_overage_cents);
     }
 
     public function test_expired_authorization_reauthorizes_before_capture(): void

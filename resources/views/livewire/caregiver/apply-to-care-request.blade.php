@@ -234,12 +234,12 @@
                         </span>
                     </div>
 
-                    <x-textarea label="Cover note" wire:model="cover_note" hint="Explain your relevant experience for this request." />
+                    <x-textarea label="Cover note (optional)" wire:model="cover_note" hint="Add a short note if you want to introduce yourself." />
                     @error('cover_note') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
                 <x-slot:footer>
                     <div class="flex items-center justify-between">
-                        <span class="text-xs text-[#7B8794]">Strong cover notes improve shortlisting odds.</span>
+                        <span class="text-xs text-[#7B8794]">You can send this without a note.</span>
                         <x-button color="green" wire:click="submit">{{ $existingApplication ? 'Update application' : 'Send application' }}</x-button>
                     </div>
                 </x-slot:footer>

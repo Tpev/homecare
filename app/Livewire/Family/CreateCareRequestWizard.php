@@ -44,9 +44,13 @@ class CreateCareRequestWizard extends Component
     public string $request_type = CareRequest::TYPE_ONE_TIME;
     public string $requested_start_at = '';
     public string $requested_end_at = '';
+    public string $requested_start_date = '';
+    public string $requested_start_time = '';
+    public string $requested_duration_minutes = '60';
     public array $recurring_days = [];
     public string $recurring_start_time = '';
     public string $recurring_end_time = '';
+    public string $recurring_duration_minutes = '60';
     public string $recurring_starts_on = '';
     public string $recurring_ends_on = '';
     public string $address_line1 = '';
@@ -94,6 +98,8 @@ class CreateCareRequestWizard extends Component
         ['label' => 'Sat', 'value' => 6],
     ];
 
+    public array $durationOptions = [];
+
     public array $genderOptions = [
         ['label' => 'Female', 'value' => 'female'],
         ['label' => 'Male', 'value' => 'male'],
@@ -132,6 +138,8 @@ class CreateCareRequestWizard extends Component
             ->orderBy('name')
             ->get(['id', 'name'])
             ->toArray();
+
+        $this->durationOptions = $this->buildDurationOptions();
 
         $this->city = (string) ($user->city ?? '');
         $this->state = (string) ($user->state ?? '');
@@ -200,17 +208,12 @@ class CreateCareRequestWizard extends Component
     public function getEstimatedHoursProperty(): ?float
     {
         if ($this->request_type === CareRequest::TYPE_ONE_TIME) {
-            if (trim($this->requested_start_at) === '' || trim($this->requested_end_at) === '') {
+            $range = $this->oneTimeScheduleRange();
+            if ($range === null) {
                 return null;
             }
 
-            try {
-                $start = Carbon::parse($this->requested_start_at);
-                $end = Carbon::parse($this->requested_end_at);
-            } catch (Throwable) {
-                return null;
-            }
-
+            [$start, $end] = $range;
             if ($end->lte($start)) {
                 return null;
             }
@@ -238,6 +241,47 @@ class CreateCareRequestWizard extends Component
         }
 
         return round($this->estimatedHours * $this->estimateHourlyRate, 2);
+    }
+
+    public function getMinimumStartDateProperty(): string
+    {
+        return now()->toDateString();
+    }
+
+    public function getScheduleSummaryProperty(): string
+    {
+        if ($this->request_type === CareRequest::TYPE_RECURRING) {
+            $days = collect($this->dayOptions)
+                ->whereIn('value', $this->normalizedRecurringDays())
+                ->pluck('label')
+                ->implode(', ');
+
+            $time = $this->formatTimeLabel($this->recurring_start_time);
+            $duration = $this->durationLabel((int) $this->recurring_duration_minutes);
+            $startsOn = null;
+            if (trim($this->recurring_starts_on) !== '') {
+                try {
+                    $startsOn = Carbon::parse($this->recurring_starts_on)->format('M j, Y');
+                } catch (Throwable) {
+                    $startsOn = null;
+                }
+            }
+
+            if ($days === '' || $time === null) {
+                return 'Choose days and start time';
+            }
+
+            return trim($days.' at '.$time.' for '.$duration.($startsOn ? ' starting '.$startsOn : ''));
+        }
+
+        $range = $this->oneTimeScheduleRange();
+        if ($range === null) {
+            return 'Choose a day and start time';
+        }
+
+        [$start, $end] = $range;
+
+        return $start->format('M j, Y').' at '.$start->format('g:i A').' for '.$this->durationLabel((int) $start->diffInMinutes($end));
     }
 
     public function getProgressPercentProperty(): int
@@ -271,17 +315,25 @@ class CreateCareRequestWizard extends Component
         if ($this->request_type === CareRequest::TYPE_ONE_TIME) {
             $this->requested_start_at = '';
             $this->requested_end_at = '';
+            $this->requested_start_date = '';
+            $this->requested_start_time = '';
+            $this->requested_duration_minutes = '60';
             $this->recurring_days = [];
             $this->recurring_start_time = '';
             $this->recurring_end_time = '';
+            $this->recurring_duration_minutes = '60';
             $this->recurring_starts_on = '';
             $this->recurring_ends_on = '';
         } else {
             $this->requested_start_at = '';
             $this->requested_end_at = '';
+            $this->requested_start_date = '';
+            $this->requested_start_time = '';
+            $this->requested_duration_minutes = '60';
             $this->recurring_days = collect($request->recurring_days ?? [])->map(fn ($day) => (int) $day)->values()->all();
             $this->recurring_start_time = $this->normalizeTimeForInput((string) ($request->recurring_start_time ?? ''));
             $this->recurring_end_time = $this->normalizeTimeForInput((string) ($request->recurring_end_time ?? ''));
+            $this->recurring_duration_minutes = (string) ($this->durationMinutesBetweenTimes($this->recurring_start_time, $this->recurring_end_time) ?? 60);
             $this->recurring_starts_on = '';
             $this->recurring_ends_on = '';
         }
@@ -378,6 +430,7 @@ class CreateCareRequestWizard extends Component
             $this->modeChosen = true;
         }
 
+        $this->syncScheduleFields();
         $this->validateStep($this->step);
         $this->step = min($this->step + 1, $this->totalSteps);
     }
@@ -394,13 +447,16 @@ class CreateCareRequestWizard extends Component
                 'recurring_days',
                 'recurring_start_time',
                 'recurring_end_time',
+                'recurring_duration_minutes',
                 'recurring_starts_on',
                 'recurring_ends_on',
             ]);
+            $this->recurring_duration_minutes = '60';
             return;
         }
 
-        $this->reset(['requested_start_at', 'requested_end_at']);
+        $this->reset(['requested_start_at', 'requested_end_at', 'requested_start_date', 'requested_start_time']);
+        $this->requested_duration_minutes = '60';
     }
 
     public function updatedCareFor(string $value): void
@@ -434,7 +490,9 @@ class CreateCareRequestWizard extends Component
 
     public function publish(): void
     {
+        $this->syncScheduleFields();
         $this->validateAll();
+        $this->syncScheduleFields();
 
         $careRequest = DB::transaction(function () {
             $careRequest = CareRequest::query()->create([
@@ -511,6 +569,32 @@ class CreateCareRequestWizard extends Component
         ));
     }
 
+    public function messages(): array
+    {
+        return [
+            'selectedTasks.required' => 'Choose at least one kind of help.',
+            'selectedTasks.min' => 'Choose at least one kind of help.',
+            'requested_start_date.required' => 'Choose the day care should start.',
+            'requested_start_time.required' => 'Choose the start time.',
+            'requested_duration_minutes.required' => 'Choose how long the visit should last.',
+            'requested_duration_minutes.in' => 'Choose a duration from the list.',
+            'requested_start_at.after' => 'Start time must be in the future.',
+            'recurring_days.required' => 'Choose at least one day of the week.',
+            'recurring_days.min' => 'Choose at least one day of the week.',
+            'recurring_start_time.required' => 'Choose the start time.',
+            'recurring_duration_minutes.required' => 'Choose how long each visit should last.',
+            'recurring_duration_minutes.in' => 'Choose a duration from the list.',
+            'recurring_starts_on.required' => 'Choose the first day care should start.',
+            'recurring_starts_on.after_or_equal' => 'The first day cannot be in the past.',
+            'recurring_end_time.after' => 'Choose a shorter duration or an earlier start time.',
+            'address_line1.required' => 'Enter the care address.',
+            'city.required' => 'Enter the city.',
+            'state.required' => 'Choose the state.',
+            'zip.required' => 'Enter the ZIP code.',
+            'recipient_full_name.required' => 'Enter the name of the person receiving care.',
+        ];
+    }
+
     private function validateStep(int $step): void
     {
         $rules = match ($step) {
@@ -558,12 +642,16 @@ class CreateCareRequestWizard extends Component
         ];
 
         if ($this->request_type === CareRequest::TYPE_ONE_TIME) {
+            $rules['requested_start_date'] = ['required', 'date'];
+            $rules['requested_start_time'] = ['required', 'date_format:H:i'];
+            $rules['requested_duration_minutes'] = ['required', 'integer', Rule::in($this->durationMinuteValues())];
             $rules['requested_start_at'] = ['required', 'date', 'after:now'];
             $rules['requested_end_at'] = ['required', 'date', 'after:requested_start_at'];
         } else {
             $rules['recurring_days'] = ['required', 'array', 'min:1'];
             $rules['recurring_days.*'] = ['integer', Rule::in(range(0, 6))];
             $rules['recurring_start_time'] = ['required', 'date_format:H:i'];
+            $rules['recurring_duration_minutes'] = ['required', 'integer', Rule::in($this->durationMinuteValues())];
             $rules['recurring_end_time'] = ['required', 'date_format:H:i', 'after:recurring_start_time'];
             $rules['recurring_starts_on'] = ['required', 'date', 'after_or_equal:today'];
             $rules['recurring_ends_on'] = ['nullable', 'date', 'after_or_equal:recurring_starts_on'];
@@ -580,6 +668,122 @@ class CreateCareRequestWizard extends Component
             ->sort()
             ->values()
             ->all();
+    }
+
+    private function syncScheduleFields(): void
+    {
+        if ($this->request_type === CareRequest::TYPE_ONE_TIME) {
+            if ((trim($this->requested_start_date) === '' || trim($this->requested_start_time) === '')
+                && trim($this->requested_start_at) !== ''
+            ) {
+                $this->setOneTimeScheduleFromRange($this->requested_start_at, $this->requested_end_at);
+            }
+
+            $range = $this->oneTimeScheduleRange();
+            if ($range === null) {
+                return;
+            }
+
+            [$start, $end] = $range;
+            $this->requested_start_at = $start->format('Y-m-d H:i:s');
+            $this->requested_end_at = $end->format('Y-m-d H:i:s');
+
+            return;
+        }
+
+        if (trim($this->recurring_start_time) !== ''
+            && trim($this->recurring_end_time) !== ''
+            && (int) $this->recurring_duration_minutes === 60
+        ) {
+            $derivedDuration = $this->durationMinutesBetweenTimes($this->recurring_start_time, $this->recurring_end_time);
+            if ($derivedDuration !== null && $this->durationIsAllowed($derivedDuration)) {
+                $this->recurring_duration_minutes = (string) $derivedDuration;
+            }
+        }
+
+        $startMinutes = $this->timeStringToMinutes($this->recurring_start_time);
+        $duration = $this->normalizedDurationMinutes($this->recurring_duration_minutes);
+
+        if ($startMinutes === null || $duration === null) {
+            return;
+        }
+
+        $endMinutes = $startMinutes + $duration;
+        if ($endMinutes >= (24 * 60)) {
+            $this->recurring_end_time = '';
+            return;
+        }
+
+        $this->recurring_end_time = $this->minutesToTimeString($endMinutes);
+    }
+
+    /**
+     * @return array{0: \Carbon\Carbon, 1: \Carbon\Carbon}|null
+     */
+    private function oneTimeScheduleRange(): ?array
+    {
+        if (trim($this->requested_start_date) !== '' && trim($this->requested_start_time) !== '') {
+            $start = $this->parseLocalDateAndTime($this->requested_start_date, $this->requested_start_time);
+            $duration = $this->normalizedDurationMinutes($this->requested_duration_minutes);
+
+            if ($start === null || $duration === null) {
+                return null;
+            }
+
+            return [$start, $start->copy()->addMinutes($duration)];
+        }
+
+        if (trim($this->requested_start_at) === '' || trim($this->requested_end_at) === '') {
+            return null;
+        }
+
+        try {
+            $start = Carbon::parse($this->requested_start_at);
+            $end = Carbon::parse($this->requested_end_at);
+        } catch (Throwable) {
+            return null;
+        }
+
+        return [$start, $end];
+    }
+
+    private function setOneTimeScheduleFromRange(string $startValue, string $endValue): void
+    {
+        $startValue = trim($startValue);
+        if ($startValue === '') {
+            $this->requested_start_at = '';
+            $this->requested_end_at = '';
+            $this->requested_start_date = '';
+            $this->requested_start_time = '';
+            $this->requested_duration_minutes = '60';
+
+            return;
+        }
+
+        try {
+            $start = Carbon::parse($startValue);
+        } catch (Throwable) {
+            return;
+        }
+
+        $duration = 60;
+        if (trim($endValue) !== '') {
+            try {
+                $end = Carbon::parse($endValue);
+                $diff = (int) $start->diffInMinutes($end, false);
+                if ($this->durationIsAllowed($diff)) {
+                    $duration = $diff;
+                }
+            } catch (Throwable) {
+                $duration = 60;
+            }
+        }
+
+        $this->requested_start_at = $start->format('Y-m-d H:i:s');
+        $this->requested_end_at = $start->copy()->addMinutes($duration)->format('Y-m-d H:i:s');
+        $this->requested_start_date = $start->toDateString();
+        $this->requested_start_time = $start->format('H:i');
+        $this->requested_duration_minutes = (string) $duration;
     }
 
     private function rulesForRecipient(): array
@@ -691,8 +895,10 @@ class CreateCareRequestWizard extends Component
         }
         $this->selectedTasks = collect($draft['selectedTasks'] ?? [])->map(fn ($id) => (int) $id)->values()->all();
         $this->additional_info = (string) ($draft['additional_info'] ?? '');
-        $this->requested_start_at = $this->normalizeDateTimeForInput((string) ($draft['requested_start_at'] ?? ''));
-        $this->requested_end_at = $this->normalizeDateTimeForInput((string) ($draft['requested_end_at'] ?? ''));
+        $this->setOneTimeScheduleFromRange(
+            (string) ($draft['requested_start_at'] ?? ''),
+            (string) ($draft['requested_end_at'] ?? '')
+        );
         $this->address_line1 = (string) ($draft['address_line1'] ?? '');
         $this->city = (string) ($draft['city'] ?? $this->city);
         $this->state = (string) ($draft['state'] ?? $this->state);
@@ -744,13 +950,69 @@ class CreateCareRequestWizard extends Component
     private function recurringHoursPerShift(): ?float
     {
         $startMinutes = $this->timeStringToMinutes($this->recurring_start_time);
-        $endMinutes = $this->timeStringToMinutes($this->recurring_end_time);
+        $duration = $this->normalizedDurationMinutes($this->recurring_duration_minutes);
+
+        if ($startMinutes === null || $duration === null) {
+            return null;
+        }
+
+        return round($duration / 60, 2);
+    }
+
+    private function buildDurationOptions(): array
+    {
+        return collect($this->durationMinuteValues())
+            ->map(fn (int $minutes) => [
+                'label' => $this->durationLabel($minutes),
+                'value' => (string) $minutes,
+            ])
+            ->all();
+    }
+
+    private function durationMinuteValues(): array
+    {
+        return range(60, 720, 30);
+    }
+
+    private function durationIsAllowed(int $minutes): bool
+    {
+        return in_array($minutes, $this->durationMinuteValues(), true);
+    }
+
+    private function normalizedDurationMinutes(string|int|null $value): ?int
+    {
+        if ($value === null || trim((string) $value) === '') {
+            return null;
+        }
+
+        $minutes = (int) $value;
+
+        return $this->durationIsAllowed($minutes) ? $minutes : null;
+    }
+
+    private function durationLabel(int $minutes): string
+    {
+        $hours = intdiv($minutes, 60);
+        $remainingMinutes = $minutes % 60;
+        $hhmm = sprintf('%02d:%02d', $hours, $remainingMinutes);
+
+        if ($remainingMinutes === 0) {
+            return $hhmm.' ('.$hours.' '.($hours === 1 ? 'hour' : 'hours').')';
+        }
+
+        return $hhmm.' ('.$hours.'h '.$remainingMinutes.'m)';
+    }
+
+    private function durationMinutesBetweenTimes(string $startTime, string $endTime): ?int
+    {
+        $startMinutes = $this->timeStringToMinutes($startTime);
+        $endMinutes = $this->timeStringToMinutes($endTime);
 
         if ($startMinutes === null || $endMinutes === null || $endMinutes <= $startMinutes) {
             return null;
         }
 
-        return round(($endMinutes - $startMinutes) / 60, 2);
+        return $endMinutes - $startMinutes;
     }
 
     private function timeStringToMinutes(string $time): ?int
@@ -774,6 +1036,37 @@ class CreateCareRequestWizard extends Component
         return ($hours * 60) + $minutes;
     }
 
+    private function minutesToTimeString(int $minutes): string
+    {
+        $hours = intdiv($minutes, 60);
+        $remainingMinutes = $minutes % 60;
+
+        return sprintf('%02d:%02d', $hours, $remainingMinutes);
+    }
+
+    private function parseLocalDateAndTime(string $date, string $time): ?Carbon
+    {
+        try {
+            return Carbon::createFromFormat('Y-m-d H:i', trim($date).' '.trim($time), config('app.timezone'));
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    private function formatTimeLabel(string $time): ?string
+    {
+        $normalized = $this->normalizeTimeForInput($time);
+        if ($normalized === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::createFromFormat('H:i', $normalized)->format('g:i A');
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
     private function normalizeTimeForInput(string $time): string
     {
         $trimmed = trim($time);
@@ -791,20 +1084,6 @@ class CreateCareRequestWizard extends Component
 
         try {
             return Carbon::parse($trimmed)->format('H:i');
-        } catch (Throwable) {
-            return '';
-        }
-    }
-
-    private function normalizeDateTimeForInput(string $value): string
-    {
-        $trimmed = trim($value);
-        if ($trimmed === '') {
-            return '';
-        }
-
-        try {
-            return Carbon::parse($trimmed)->format('Y-m-d\TH:i');
         } catch (Throwable) {
             return '';
         }

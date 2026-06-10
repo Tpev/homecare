@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminLeadsController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogCoverController;
 use App\Http\Controllers\CaregiverIdentityVerificationController;
+use App\Http\Controllers\CareRequestInvitationResponseController;
 use App\Http\Controllers\CaregiverStripeConnectController;
 use App\Http\Controllers\DiditWebhookController;
 use App\Http\Controllers\FamilyBillingController;
@@ -152,6 +153,12 @@ Route::middleware(['auth', 'caregiver.role'])->group(function () {
     Route::get('/caregiver/payouts/connect/return', [CaregiverStripeConnectController::class, 'returned'])
         ->name('caregiver.payouts.connect.return');
     Route::get('/caregiver/invitations', InvitationsIndex::class)->name('caregiver.invitations.index');
+    Route::post('/caregiver/invitations/{invitation}/accept', [CareRequestInvitationResponseController::class, 'accept'])
+        ->whereNumber('invitation')
+        ->name('caregiver.invitations.accept');
+    Route::post('/caregiver/invitations/{invitation}/decline', [CareRequestInvitationResponseController::class, 'decline'])
+        ->whereNumber('invitation')
+        ->name('caregiver.invitations.decline');
     Route::get('/caregiver/work-inbox', WorkInbox::class)->name('caregiver.work-inbox.index');
     Route::get('/caregiver/regular-clients', RegularClients::class)->name('caregiver.regular-clients.index');
     Route::get('/caregiver/notifications', NotificationsCenter::class)->name('caregiver.notifications.index');

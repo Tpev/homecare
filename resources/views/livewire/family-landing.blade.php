@@ -35,7 +35,7 @@
             'body' => 'Book trusted companionship and everyday help, starting at $30/hr.',
             'image' => $familiesImage,
             'items' => ['Clear starting rate', 'Flexible scheduling', 'Real, vetted caregivers'],
-            'button' => ['label' => 'Request callback', 'href' => route('landing.get-care')],
+            'button' => ['label' => 'Start care', 'href' => route('register')],
             'dark' => false,
         ],
         [
@@ -115,7 +115,7 @@
                 <div class="flex items-center gap-2 md:gap-3">
                     <a href="tel:9844004008" class="hub-phone-chip hub-nav-phone hidden md:inline-flex">Call or text (984) 400-4008</a>
                     <a href="{{ route('login') }}" class="hub-button-ghost">Log in</a>
-                    <a href="{{ route('landing.get-care') }}" class="hub-button-primary hub-nav-cta">Request callback</a>
+                    <a href="{{ route('register') }}" class="hub-button-primary">Get started</a>
                 </div>
             </div>
         </nav>
@@ -130,10 +130,10 @@
                 <p class="hub-hero-phone">Questions before you start? Call or text <a href="tel:9844004008">(984) 400-4008</a>.</p>
 
                 <div class="hub-hero-actions">
-                    <a href="{{ route('landing.get-care') }}" class="hub-button-primary">Request a callback
+                    <a href="{{ route('register') }}" class="hub-button-primary">Start care
                         <svg viewBox="0 0 20 20" fill="none" class="h-4 w-4" aria-hidden="true"><path d="M5 10h10M11 4l4 6-4 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </a>
-                    <a href="#how" class="hub-button-secondary">How it works
+                    <a href="{{ route('landing.get-care') }}" class="hub-button-secondary">Request a callback
                         <svg viewBox="0 0 20 20" fill="none" class="h-3.5 w-3.5" aria-hidden="true"><path d="M5 10h10M11 4l4 6-4 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </a>
                 </div>
@@ -395,7 +395,8 @@
             <h2 class="hub-final-title">Get help <em>today.</em></h2>
             <p class="hub-section-text mx-auto">Start with clear hourly companionship, bring calm back into the plan, and get the right support moving faster.</p>
             <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <a href="{{ route('landing.get-care') }}" class="hub-button-primary">Request a callback</a>
+                <a href="{{ route('register') }}" class="hub-button-primary">Start care</a>
+                <a href="{{ route('landing.get-care') }}" class="hub-button-secondary">Request a callback</a>
                 <a href="tel:9844004008" class="hub-button-ghost">Call (984) 400-4008</a>
             </div>
         </div>

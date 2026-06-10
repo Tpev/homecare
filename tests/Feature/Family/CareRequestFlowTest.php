@@ -716,6 +716,37 @@ class CareRequestFlowTest extends TestCase
         $this->assertStringContainsString('care support', strtolower((string) $careRequest->title));
     }
 
+    public function test_family_can_publish_one_time_request_from_day_time_and_duration(): void
+    {
+        $family = User::factory()->create([
+            'role' => 'family',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+        ]);
+
+        $task = CareTask::query()->create(['name' => 'Errands']);
+        $start = now()->addDay()->setTime(10, 0, 0);
+
+        Livewire::actingAs($family)
+            ->test(CreateCareRequestWizard::class)
+            ->set('selectedTasks', [$task->id])
+            ->set('requested_start_date', $start->toDateString())
+            ->set('requested_start_time', $start->format('H:i'))
+            ->set('requested_duration_minutes', '210')
+            ->set('address_line1', '100 Main St')
+            ->set('city', 'Raleigh')
+            ->set('state', 'NC')
+            ->set('zip', '27601')
+            ->set('recipient_full_name', 'Don Johnson')
+            ->call('publish');
+
+        $careRequest = CareRequest::query()->latest('id')->first();
+
+        $this->assertNotNull($careRequest);
+        $this->assertSame($start->format('Y-m-d H:i:s'), $careRequest->requested_start_at?->format('Y-m-d H:i:s'));
+        $this->assertSame($start->copy()->addMinutes(210)->format('Y-m-d H:i:s'), $careRequest->requested_end_at?->format('Y-m-d H:i:s'));
+    }
+
     public function test_family_can_save_and_reuse_household_and_recipient_profiles_in_one_click(): void
     {
         $family = User::factory()->create([

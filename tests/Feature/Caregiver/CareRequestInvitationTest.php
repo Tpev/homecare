@@ -116,6 +116,24 @@ class CareRequestInvitationTest extends TestCase
         ]);
     }
 
+    public function test_caregiver_can_apply_without_cover_note(): void
+    {
+        [$family, $caregiver, $request] = $this->seedContext();
+
+        Livewire::actingAs($caregiver)
+            ->test(ApplyToCareRequest::class, ['careRequest' => $request->id])
+            ->set('cover_note', '')
+            ->call('submit')
+            ->assertHasNoErrors('cover_note');
+
+        $this->assertDatabaseHas('care_request_applications', [
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_APPLIED,
+            'cover_note' => null,
+        ]);
+    }
+
     public function test_caregiver_can_decline_invitation(): void
     {
         [$family, $caregiver, $request] = $this->seedContext();
