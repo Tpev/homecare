@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AdminLeadsController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogCoverController;
 use App\Http\Controllers\CaregiverIdentityVerificationController;
@@ -22,6 +21,7 @@ use App\Livewire\Admin\CaregiverReviewsQueue;
 use App\Livewire\Admin\CareRequestShow as AdminCareRequestShow;
 use App\Livewire\Admin\CareRequestsIndex;
 use App\Livewire\Admin\FunnelAnalytics;
+use App\Livewire\Admin\LeadsIndex;
 use App\Livewire\Admin\PaymentsQueue;
 use App\Livewire\Admin\SmsInbox;
 use App\Livewire\Admin\SupportTicketsQueue;
@@ -62,7 +62,8 @@ Route::middleware(['web', 'auth', 'admin.email'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        Route::get('/leads', [AdminLeadsController::class, 'index'])->name('leads.index');
+        Route::get('/crm', LeadsIndex::class)->name('crm.index');
+        Route::get('/leads', LeadsIndex::class)->name('leads.index');
         Route::get('/caregivers/reviews', CaregiverReviewsQueue::class)->name('caregivers.reviews');
         Route::get('/caregivers/moderation-logs', \App\Livewire\Admin\CaregiverModerationLogs::class)
             ->name('caregivers.moderation_logs');

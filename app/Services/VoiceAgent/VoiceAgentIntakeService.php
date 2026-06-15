@@ -103,6 +103,7 @@ class VoiceAgentIntakeService
             'zip' => $zip,
             'data' => $data,
             'status' => 'new',
+            'source' => 'voice_agent',
             'source_url' => $sourceUrl ?: 'voice-agent://phone-call',
             'referrer_url' => $referrerUrl,
             'ip' => $request->ip(),

@@ -94,53 +94,92 @@ new class extends Component
         $initials = collect($nameParts)->filter()->map(fn ($part) => strtoupper(substr($part, 0, 1)))->take(2)->implode('');
         $initials = $initials !== '' ? $initials : strtoupper(substr((string) ($user?->name ?? 'G'), 0, 1));
 
-        $adminLinks = [
+        $adminCrmLink = [
+            'label' => 'CRM',
+            'href' => route('admin.crm.index'),
+            'active' => request()->routeIs('admin.crm.*') || request()->routeIs('admin.leads.*'),
+        ];
+
+        $adminNavGroups = [
             [
-                'label' => 'Admin Users',
-                'href' => route('admin.users.index'),
-                'active' => request()->routeIs('admin.users.index'),
+                'label' => 'Care ops',
+                'active' => request()->routeIs('admin.requests.*')
+                    || request()->routeIs('admin.caregivers.reviews')
+                    || request()->routeIs('admin.support.tickets'),
+                'items' => [
+                    [
+                        'label' => 'Admin Requests',
+                        'href' => route('admin.requests.index'),
+                        'active' => request()->routeIs('admin.requests.*'),
+                    ],
+                    [
+                        'label' => 'Admin Reviews',
+                        'href' => route('admin.caregivers.reviews'),
+                        'active' => request()->routeIs('admin.caregivers.reviews'),
+                    ],
+                    [
+                        'label' => 'Admin Support',
+                        'href' => route('admin.support.tickets'),
+                        'active' => request()->routeIs('admin.support.tickets'),
+                    ],
+                ],
             ],
             [
-                'label' => 'Admin Requests',
-                'href' => route('admin.requests.index'),
-                'active' => request()->routeIs('admin.requests.*'),
+                'label' => 'People',
+                'active' => request()->routeIs('admin.users.*')
+                    || request()->routeIs('admin.caregivers.moderation_logs'),
+                'items' => [
+                    [
+                        'label' => 'Admin Users',
+                        'href' => route('admin.users.index'),
+                        'active' => request()->routeIs('admin.users.index'),
+                    ],
+                    [
+                        'label' => 'Moderation Logs',
+                        'href' => route('admin.caregivers.moderation_logs'),
+                        'active' => request()->routeIs('admin.caregivers.moderation_logs'),
+                    ],
+                ],
             ],
             [
-                'label' => 'Admin Reviews',
-                'href' => route('admin.caregivers.reviews'),
-                'active' => request()->routeIs('admin.caregivers.reviews'),
+                'label' => 'Comms & money',
+                'active' => request()->routeIs('admin.sms.*')
+                    || request()->routeIs('admin.payments.ops'),
+                'items' => [
+                    [
+                        'label' => 'Admin SMS',
+                        'href' => route('admin.sms.index'),
+                        'active' => request()->routeIs('admin.sms.*'),
+                    ],
+                    [
+                        'label' => 'Admin Payments',
+                        'href' => route('admin.payments.ops'),
+                        'active' => request()->routeIs('admin.payments.ops'),
+                    ],
+                ],
             ],
             [
-                'label' => 'Admin Support',
-                'href' => route('admin.support.tickets'),
-                'active' => request()->routeIs('admin.support.tickets'),
-            ],
-            [
-                'label' => 'Admin SMS',
-                'href' => route('admin.sms.index'),
-                'active' => request()->routeIs('admin.sms.*'),
-            ],
-            [
-                'label' => 'Admin Payments',
-                'href' => route('admin.payments.ops'),
-                'active' => request()->routeIs('admin.payments.ops'),
-            ],
-            [
-                'label' => 'Admin Funnel',
-                'href' => route('admin.analytics.funnel'),
-                'active' => request()->routeIs('admin.analytics.funnel'),
-            ],
-            [
-                'label' => 'Admin Coverage',
-                'href' => route('admin.analytics.caregiver-map'),
-                'active' => request()->routeIs('admin.analytics.caregiver-map'),
+                'label' => 'Analytics',
+                'active' => request()->routeIs('admin.analytics.*'),
+                'items' => [
+                    [
+                        'label' => 'Admin Funnel',
+                        'href' => route('admin.analytics.funnel'),
+                        'active' => request()->routeIs('admin.analytics.funnel'),
+                    ],
+                    [
+                        'label' => 'Admin Coverage',
+                        'href' => route('admin.analytics.caregiver-map'),
+                        'active' => request()->routeIs('admin.analytics.caregiver-map'),
+                    ],
+                ],
             ],
         ];
 
         $primaryLinks = [];
 
         if ($isAdmin) {
-            $primaryLinks = $adminLinks;
+            $primaryLinks = [$adminCrmLink];
         } else {
             if ($user && ! $caregiverOnboardingMode) {
                 $primaryLinks[] = [
@@ -239,22 +278,62 @@ new class extends Component
                 </a>
             </div>
 
-            <div class="hidden min-w-0 flex-1 space-x-2 overflow-x-auto sm:ml-8 sm:mr-72 sm:flex">
-                @foreach ($primaryLinks as $link)
-                    @if (!empty($link['primary']))
-                        <a
-                            href="{{ $link['href'] }}"
-                            wire:navigate
-                            class="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition {{ $link['active'] ? 'bg-[#C96B55] text-white shadow-sm' : 'bg-[#23483F] text-[#FFFBF4] shadow-sm hover:bg-[#1B3D35]' }}"
-                        >
-                            {{ __($link['label']) }}
-                        </a>
-                    @else
-                        <x-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
-                            {{ __($link['label']) }}
-                        </x-nav-link>
-                    @endif
-                @endforeach
+            <div class="hidden min-w-0 flex-1 items-center gap-2 sm:ml-8 sm:mr-72 sm:flex">
+                @if ($isAdmin)
+                    <x-nav-link :href="$adminCrmLink['href']" :active="$adminCrmLink['active']" wire:navigate>
+                        {{ __($adminCrmLink['label']) }}
+                    </x-nav-link>
+
+                    @foreach ($adminNavGroups as $group)
+                        <div class="relative" x-data="{ open: false }">
+                            <button
+                                type="button"
+                                @click="open = !open"
+                                class="inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-semibold transition {{ $group['active'] ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#547067] hover:bg-[#F8F0E2] hover:text-[#23483F]' }}"
+                            >
+                                <span>{{ $group['label'] }}</span>
+                                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.12l3.71-3.89a.75.75 0 111.08 1.04l-4.25 4.46a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+
+                            <div
+                                x-cloak
+                                x-show="open"
+                                x-transition
+                                @click.outside="open = false"
+                                class="absolute left-0 z-50 mt-2 w-56 rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] p-2 shadow-xl"
+                                style="display: none;"
+                            >
+                                @foreach ($group['items'] as $item)
+                                    <a
+                                        href="{{ $item['href'] }}"
+                                        wire:navigate
+                                        class="block rounded-xl px-3 py-2 text-sm font-medium {{ $item['active'] ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#23483F] hover:bg-[#F8F0E2]' }}"
+                                    >
+                                        {{ __($item['label']) }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                @else
+                    @foreach ($primaryLinks as $link)
+                        @if (!empty($link['primary']))
+                            <a
+                                href="{{ $link['href'] }}"
+                                wire:navigate
+                                class="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition {{ $link['active'] ? 'bg-[#C96B55] text-white shadow-sm' : 'bg-[#23483F] text-[#FFFBF4] shadow-sm hover:bg-[#1B3D35]' }}"
+                            >
+                                {{ __($link['label']) }}
+                            </a>
+                        @else
+                            <x-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
+                                {{ __($link['label']) }}
+                            </x-nav-link>
+                        @endif
+                    @endforeach
+                @endif
             </div>
 
             <div class="sm:hidden ml-auto">
@@ -375,21 +454,36 @@ new class extends Component
         class="sm:hidden border-t border-[#E3D6C5]/80 bg-[rgba(255,253,250,0.98)] backdrop-blur"
     >
         <div class="space-y-1 px-2 pb-3 pt-2">
-            @foreach ($primaryLinks as $link)
-                @if (!empty($link['primary']))
-                    <a
-                        href="{{ $link['href'] }}"
-                        wire:navigate
-                        class="mt-2 flex min-h-12 items-center justify-center rounded-2xl bg-[#23483F] px-4 text-base font-semibold text-[#FFFBF4] shadow-sm"
-                    >
-                        {{ __($link['label']) }}
-                    </a>
-                @else
-                    <x-responsive-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
-                        {{ __($link['label']) }}
-                    </x-responsive-nav-link>
-                @endif
-            @endforeach
+            @if ($isAdmin)
+                <x-responsive-nav-link :href="$adminCrmLink['href']" :active="$adminCrmLink['active']" wire:navigate>
+                    {{ __($adminCrmLink['label']) }}
+                </x-responsive-nav-link>
+
+                @foreach ($adminNavGroups as $group)
+                    <div class="px-2 pt-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#6E746F]">{{ $group['label'] }}</div>
+                    @foreach ($group['items'] as $item)
+                        <x-responsive-nav-link :href="$item['href']" :active="$item['active']" wire:navigate>
+                            {{ __($item['label']) }}
+                        </x-responsive-nav-link>
+                    @endforeach
+                @endforeach
+            @else
+                @foreach ($primaryLinks as $link)
+                    @if (!empty($link['primary']))
+                        <a
+                            href="{{ $link['href'] }}"
+                            wire:navigate
+                            class="mt-2 flex min-h-12 items-center justify-center rounded-2xl bg-[#23483F] px-4 text-base font-semibold text-[#FFFBF4] shadow-sm"
+                        >
+                            {{ __($link['label']) }}
+                        </a>
+                    @else
+                        <x-responsive-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
+                            {{ __($link['label']) }}
+                        </x-responsive-nav-link>
+                    @endif
+                @endforeach
+            @endif
         </div>
 
         <div class="border-t border-[#E3D6C5]/80 pb-3 pt-4">
