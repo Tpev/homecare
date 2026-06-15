@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('homecare:dispatch-notifications --type=all')->everyTenMinutes();
 Schedule::command('homecare:auto-approve-timesheets')->hourly();
+Schedule::command('homecare:retry-payout-transfers --limit=100')->hourly();

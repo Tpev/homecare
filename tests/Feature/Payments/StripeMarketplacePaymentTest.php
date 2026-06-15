@@ -579,6 +579,111 @@ class StripeMarketplacePaymentTest extends TestCase
         ]);
     }
 
+    public function test_payment_succeeded_webhook_preserves_transfer_failed_state(): void
+    {
+        config()->set('services.stripe.bypass', true);
+
+        [$family, $request, $application, $caregiverProfile] = $this->seedScenario(returnProfile: true);
+        $caregiverProfile->update([
+            'stripe_connect_account_id' => 'acct_transfer_failed_webhook',
+            'stripe_charges_enabled' => true,
+            'stripe_payouts_enabled' => true,
+            'stripe_connect_onboarding_completed_at' => now(),
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $booking->update([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'timesheet_submitted_at' => now(),
+            'worked_minutes' => 120,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('completeBooking');
+
+        $payment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->firstOrFail();
+        $payment->forceFill([
+            'status' => CareBookingPayment::STATUS_TRANSFER_FAILED,
+            'stripe_transfer_id' => null,
+            'last_error' => 'Unable to transfer caregiver payout right now.',
+        ])->save();
+
+        $this->postJson(route('webhooks.stripe'), [
+            'id' => 'evt_late_payment_succeeded',
+            'object' => 'event',
+            'type' => 'payment_intent.succeeded',
+            'data' => [
+                'object' => [
+                    'id' => $payment->stripe_payment_intent_id,
+                    'status' => 'succeeded',
+                    'amount_received' => (int) $payment->amount_captured_cents,
+                ],
+            ],
+        ])->assertOk();
+
+        $payment->refresh();
+        $this->assertSame(CareBookingPayment::STATUS_TRANSFER_FAILED, $payment->status);
+        $this->assertSame('Unable to transfer caregiver payout right now.', $payment->last_error);
+        $this->assertNull($payment->stripe_transfer_id);
+    }
+
+    public function test_retry_payout_transfers_command_moves_ready_captured_payment(): void
+    {
+        config()->set('services.stripe.bypass', true);
+
+        [$family, $request, $application, $caregiverProfile] = $this->seedScenario(returnProfile: true);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $booking->update([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'timesheet_submitted_at' => now(),
+            'worked_minutes' => 120,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('completeBooking');
+
+        $payment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->firstOrFail();
+        $this->assertSame(CareBookingPayment::STATUS_CAPTURED, $payment->status);
+        $this->assertNull($payment->stripe_transfer_id);
+
+        $this->assertDatabaseHas('caregiver_payout_items', [
+            'care_booking_id' => $booking->id,
+            'status' => 'scheduled',
+        ]);
+
+        $caregiverProfile->update([
+            'stripe_connect_account_id' => 'acct_retry_command_ready',
+            'stripe_charges_enabled' => true,
+            'stripe_payouts_enabled' => true,
+            'stripe_connect_onboarding_completed_at' => now(),
+        ]);
+
+        $this->artisan('homecare:retry-payout-transfers --limit=10')
+            ->assertSuccessful();
+
+        $payment->refresh();
+        $this->assertSame(CareBookingPayment::STATUS_TRANSFERRED, $payment->status);
+        $this->assertNotNull($payment->stripe_transfer_id);
+
+        $this->assertDatabaseHas('caregiver_payout_items', [
+            'care_booking_id' => $booking->id,
+            'status' => 'paid',
+        ]);
+    }
+
     private function bindDeclinedStripeClient(): void
     {
         app()->instance(StripeClient::class, new class extends StripeClient

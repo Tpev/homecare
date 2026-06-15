@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Family;
 
+use App\Exceptions\Payments\PaymentException;
 use App\Mail\Ops\NewCareRequestOpsAlertMail;
 use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Family\CreateCareRequestWizard;
@@ -758,6 +759,70 @@ class CareRequestFlowTest extends TestCase
             'care_request_application_id' => $applicationB->id,
             'caregiver_user_id' => $caregiverB->id,
             'family_user_id' => $family->id,
+        ]);
+    }
+
+    public function test_failed_hire_payment_keeps_request_open_on_current_screen(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = User::factory()->create([
+            'role' => 'caregiver',
+            'name' => 'Charles Petrini-Poli',
+        ]);
+        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active']);
+
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'One-time care support for Companionship',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_OPEN,
+            'requested_start_at' => now()->addDays(2)->setTime(15, 5),
+            'requested_end_at' => now()->addDays(2)->setTime(18, 5),
+            'address_line1' => '123 Test St',
+            'city' => 'Willer-sur-Thur',
+            'state' => 'AR',
+            'zip' => '12345',
+        ]);
+        $request->recipient()->create([
+            'full_name' => 'Care Recipient',
+            'relationship_to_family' => 'Self',
+        ]);
+
+        $application = CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_SHORTLISTED,
+            'proposed_rate' => 30,
+            'cover_note' => 'We think your profile could be a strong fit for this request.',
+        ]);
+
+        $this->mock(BookingPaymentService::class, function ($mock): void {
+            $mock->shouldReceive('prepareOnSessionAuthorization')
+                ->once()
+                ->andThrow(new PaymentException('Add a payment method before hiring. Open Billing & Payments from your account menu.'));
+        });
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->assertSee('Caregivers are ready for review.')
+            ->assertSee('Hire Charles')
+            ->call('hire', $application->id)
+            ->assertSee('Add a payment method before hiring.')
+            ->assertSee('Caregivers are ready for review.')
+            ->assertSee('Hire Charles')
+            ->assertDontSee('Caregiver selected. Visit setup is next.');
+
+        $this->assertDatabaseHas('care_requests', [
+            'id' => $request->id,
+            'status' => CareRequest::STATUS_OPEN,
+            'first_hire_at' => null,
+        ]);
+        $this->assertDatabaseHas('care_request_applications', [
+            'id' => $application->id,
+            'status' => CareRequestApplication::STATUS_SHORTLISTED,
+        ]);
+        $this->assertDatabaseMissing('care_bookings', [
+            'care_request_id' => $request->id,
         ]);
     }
 

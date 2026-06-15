@@ -820,8 +820,18 @@ class BookingPaymentService
                 $caregiverAmountCents = max(0, $capturedAmountCents - $platformFeeCents);
             }
 
+            $currentStatus = (string) $payment->status;
+            $preservedStatus = in_array($currentStatus, [
+                CareBookingPayment::STATUS_TRANSFER_FAILED,
+                CareBookingPayment::STATUS_PARTIALLY_REFUNDED,
+                CareBookingPayment::STATUS_REFUNDED,
+            ], true)
+                ? $currentStatus
+                : null;
+
             $payment->forceFill([
-                'status' => $payment->stripe_transfer_id ? CareBookingPayment::STATUS_TRANSFERRED : CareBookingPayment::STATUS_CAPTURED,
+                'status' => $preservedStatus
+                    ?: ($payment->stripe_transfer_id ? CareBookingPayment::STATUS_TRANSFERRED : CareBookingPayment::STATUS_CAPTURED),
                 'amount_captured_cents' => $capturedAmountCents > 0 ? $capturedAmountCents : $payment->amount_captured_cents,
                 'amount_overage_cents' => $isOverageIntent
                     ? max((int) ($payment->amount_overage_cents ?? 0), $amountReceived)
@@ -831,7 +841,9 @@ class BookingPaymentService
                 'caregiver_amount_cents' => $caregiverAmountCents,
                 'captured_at' => $payment->captured_at ?: now(),
                 'failed_at' => null,
-                'last_error' => null,
+                'last_error' => $currentStatus === CareBookingPayment::STATUS_TRANSFER_FAILED
+                    ? $payment->last_error
+                    : null,
             ])->save();
 
             return $payment->fresh();

@@ -1,4 +1,8 @@
 <div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
+    @if (session('warning'))
+        <x-alert color="amber">{{ session('warning') }}</x-alert>
+    @endif
+
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif

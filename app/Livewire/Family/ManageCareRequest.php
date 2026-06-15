@@ -326,7 +326,8 @@ class ManageCareRequest extends Component
                 }
             });
         } catch (PaymentException $e) {
-            session()->flash('status', $e->userMessage);
+            $this->refreshRequestItem(preferLifecyclePrimary: true);
+            session()->flash('warning', $e->userMessage);
 
             return;
         }
