@@ -169,7 +169,7 @@ new class extends Component
                     'active' => request()->routeIs('messages.*'),
                 ];
                 $primaryLinks[] = [
-                    'label' => 'Start care',
+                    'label' => 'Get care',
                     'href' => route('family.requests.create'),
                     'active' => request()->routeIs('family.requests.create') || request()->routeIs('family.requests.create_ai'),
                     'primary' => true,

@@ -491,7 +491,7 @@
                                 <span>Review and chat with caregivers</span>
                             </div>
                             <div class="flyer-flow-node flyer-flow-node-3">
-                                <strong>3. Start Care</strong>
+                                <strong>3. Get Care</strong>
                                 <span>Book securely and get support</span>
                             </div>
                             <span class="flyer-flow-arrow flyer-flow-arrow-1" aria-hidden="true"></span>

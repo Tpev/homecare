@@ -36,7 +36,7 @@
                         Open requests, upcoming visits, weekly care, and rebooking all live here. Start with the item that needs attention.
                     </p>
                     <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                        <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button w-full sm:w-auto">Start care</a>
+                        <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button w-full sm:w-auto">Get care</a>
                         <a href="{{ route('caregivers.search') }}" wire:navigate class="hc-secondary-button w-full sm:w-auto">Find caregivers</a>
                     </div>
                 </div>
@@ -218,7 +218,7 @@
                                 <p class="font-display text-xl font-semibold text-[#17313F]">No care yet.</p>
                                 <p class="mx-auto mt-2 max-w-xl text-sm text-[#607080]">Start with a simple request. You can choose the caregiver after replies arrive.</p>
                                 <div class="mt-5">
-                                    <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button">Start care</a>
+                                    <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button">Get care</a>
                                 </div>
                             </div>
                         @endforelse

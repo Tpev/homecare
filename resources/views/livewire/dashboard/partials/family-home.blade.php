@@ -63,10 +63,10 @@
         }
     }
 
-    $nextActionTitle = 'Start care when you are ready';
+    $nextActionTitle = 'Get care when you are ready';
     $nextActionDescription = 'Post a short request. LoLo will show caregivers the schedule, location, and care needs clearly.';
     $nextActionRoute = route('family.requests.create');
-    $nextActionLabel = 'Start care';
+    $nextActionLabel = 'Get care';
     $nextActionTone = 'primary';
 
     if (! $billingReady) {
@@ -176,7 +176,7 @@
         ->values();
 
     $careSummaryTitle = 'No visit scheduled yet.';
-    $careSummaryBody = 'Start care or book a caregiver again whenever you are ready.';
+    $careSummaryBody = 'Get care or book a caregiver again whenever you are ready.';
     $careSummaryMeta = 'Nothing is waiting on you.';
 
     if (! $billingReady) {
@@ -311,7 +311,7 @@
                 </div>
             @else
                 <div class="rounded-2xl border border-dashed border-[#D6CCBE] p-5 text-sm text-[#607080]">
-                    No upcoming visit yet. Start care or hire from an open request.
+                    No upcoming visit yet. Get care or hire from an open request.
                 </div>
             @endif
         </x-card>

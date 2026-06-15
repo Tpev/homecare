@@ -228,7 +228,7 @@
                 : 'Keep the final schedule, time, payment, notes, and feedback in one record.',
             \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Schedule, check-in, location, and payment stay here while live actions stay above.',
             \App\Models\CareBooking::STATUS_PAUSED => 'Schedule, check-in, location, and payment stay here while pause details stay above.',
-            \App\Models\CareBooking::STATUS_CANCELLED => 'This visit is closed. Review the cancellation record or start care again.',
+            \App\Models\CareBooking::STATUS_CANCELLED => 'This visit is closed. Review the cancellation record or get care again.',
             \App\Models\CareBooking::STATUS_DISPUTED => 'Support is reviewing the visit. Keep details and messages together here.',
             default => 'Confirm time, caregiver, location, payment status, and support options before care starts.',
         };
