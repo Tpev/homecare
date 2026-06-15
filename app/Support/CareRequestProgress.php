@@ -234,7 +234,7 @@ class CareRequestProgress
             );
         }
 
-        if ($request->status === CareRequest::STATUS_OPEN && $pendingCandidates === 0) {
+        if (! $booking && $request->status === CareRequest::STATUS_OPEN && $pendingCandidates === 0) {
             return $make(
                 'waiting_for_caregivers',
                 'Finding care',
@@ -250,7 +250,7 @@ class CareRequestProgress
             );
         }
 
-        if ($request->status === CareRequest::STATUS_OPEN) {
+        if (! $booking && $request->status === CareRequest::STATUS_OPEN) {
             return $make(
                 'reviewing_caregivers',
                 'Choose caregiver',

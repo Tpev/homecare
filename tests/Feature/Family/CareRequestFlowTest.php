@@ -761,6 +761,67 @@ class CareRequestFlowTest extends TestCase
         ]);
     }
 
+    public function test_family_request_page_repairs_open_status_when_booking_already_exists(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = User::factory()->create([
+            'role' => 'caregiver',
+            'name' => 'Charles Petrini-Poli',
+        ]);
+        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active']);
+
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'One-time care support for Companionship',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_OPEN,
+            'requested_start_at' => now()->addDays(2)->setTime(15, 5),
+            'requested_end_at' => now()->addDays(2)->setTime(18, 5),
+            'address_line1' => '123 Test St',
+            'city' => 'Willer-sur-Thur',
+            'state' => 'AR',
+            'zip' => '12345',
+        ]);
+        $request->recipient()->create([
+            'full_name' => 'Care Recipient',
+            'relationship_to_family' => 'Self',
+        ]);
+
+        $application = CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_SHORTLISTED,
+            'proposed_rate' => 30,
+            'cover_note' => 'We think your profile could be a strong fit for this request.',
+        ]);
+
+        CareBooking::query()->create([
+            'care_request_id' => $request->id,
+            'care_request_application_id' => $application->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+            'scheduled_start_at' => $request->requested_start_at,
+            'scheduled_end_at' => $request->requested_end_at,
+            'expected_minutes' => 180,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->assertSee('Your visit is scheduled.')
+            ->assertSee('VISIT Scheduled')
+            ->assertDontSee('Hire Charles');
+
+        $this->assertDatabaseHas('care_requests', [
+            'id' => $request->id,
+            'status' => CareRequest::STATUS_FILLED,
+        ]);
+        $this->assertDatabaseHas('care_request_applications', [
+            'id' => $application->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+        ]);
+    }
+
     public function test_family_can_save_and_chat_with_applicant_before_hiring(): void
     {
         $family = User::factory()->create(['role' => 'family']);

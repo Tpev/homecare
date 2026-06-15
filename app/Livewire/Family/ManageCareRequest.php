@@ -94,6 +94,10 @@ class ManageCareRequest extends Component
 
         abort_unless(auth()->user()->can('manageApplicants', $this->requestItem), 403);
 
+        if ($this->reconcileFilledStateFromBooking()) {
+            $this->refreshRequestItem(preferLifecyclePrimary: true);
+        }
+
         $this->activeTab = CareRequestProgress::familyLifecycleStage($this->requestItem)['primary_tab'];
     }
 
@@ -1290,6 +1294,31 @@ class ManageCareRequest extends Component
             ]),
         ]);
 
+        if ($this->reconcileFilledStateFromBooking()) {
+            $this->requestItem = $this->requestItem->fresh([
+                'family:id,name,email,phone',
+                'recipient',
+                'thirdPartyContact',
+                'tasks',
+                'booking',
+                'booking.payment',
+                'booking.taskChecks',
+                'booking.events.actor:id,name',
+                'booking.incidents.reporter:id,name',
+                'booking.changeRequests.requester:id,name',
+                'booking.reviews.reviewer:id,name',
+                'invitations' => fn ($query) => $query->with(['caregiver:id,name']),
+                'applications' => fn ($query) => $query->with([
+                    'caregiver:id,name,email,phone,city,state',
+                    'caregiver.caregiverProfile:id,user_id,slug,profile_photo_path,bio,years_experience,status,average_rating,reviews_count,platform_hourly_rate,identity_verified_at,identity_verification_status,background_check_verified_at,top_caregiver,invite_response_rate,reliability_score,completed_bookings_count,is_accepting_new_clients',
+                    'caregiver.caregiverProfile.skills:id,name',
+                    'caregiver.caregiverProfile.languages:id,name',
+                    'conversation:id,care_request_application_id,care_request_id,caregiver_user_id',
+                    'booking:id,care_request_id,care_request_application_id,status,scheduled_start_at,scheduled_end_at',
+                ]),
+            ]);
+        }
+
         $visibleTabs = collect(CareRequestProgress::familyLifecycleStage($this->requestItem)['tabs'])
             ->pluck('key')
             ->all();
@@ -1297,6 +1326,59 @@ class ManageCareRequest extends Component
         if ($preferLifecyclePrimary || ! in_array($this->activeTab, $visibleTabs, true)) {
             $this->activeTab = CareRequestProgress::familyLifecycleStage($this->requestItem)['primary_tab'];
         }
+    }
+
+    private function reconcileFilledStateFromBooking(): bool
+    {
+        $booking = $this->requestItem->relationLoaded('booking')
+            ? $this->requestItem->booking
+            : $this->requestItem->booking()->first();
+
+        if (! $booking) {
+            return false;
+        }
+
+        $changed = false;
+        $requestUpdates = [];
+
+        if (! in_array($this->requestItem->status, [CareRequest::STATUS_FILLED, CareRequest::STATUS_CANCELLED], true)) {
+            $requestUpdates['status'] = CareRequest::STATUS_FILLED;
+        }
+
+        if (! $this->requestItem->first_hire_at) {
+            $requestUpdates['first_hire_at'] = $booking->created_at ?: now();
+        }
+
+        if ($requestUpdates !== []) {
+            $this->requestItem->forceFill($requestUpdates)->save();
+            $changed = true;
+        }
+
+        $hiredApplicationId = (int) ($booking->care_request_application_id ?? 0);
+        if ($hiredApplicationId > 0) {
+            $application = CareRequestApplication::query()
+                ->where('care_request_id', $this->requestItem->id)
+                ->whereKey($hiredApplicationId)
+                ->first();
+
+            if ($application && $application->status !== CareRequestApplication::STATUS_HIRED) {
+                $application->update(['status' => CareRequestApplication::STATUS_HIRED]);
+                $changed = true;
+            }
+
+            $updatedOthers = CareRequestApplication::query()
+                ->where('care_request_id', $this->requestItem->id)
+                ->whereKeyNot($hiredApplicationId)
+                ->whereIn('status', [
+                    CareRequestApplication::STATUS_APPLIED,
+                    CareRequestApplication::STATUS_SHORTLISTED,
+                ])
+                ->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]);
+
+            $changed = $changed || $updatedOthers > 0;
+        }
+
+        return $changed;
     }
 
     private function dispatchPaymentConfirmation(CareBookingPayment $payment): void
