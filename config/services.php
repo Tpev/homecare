@@ -72,6 +72,10 @@ return [
         'bypass' => filter_var(env('TWILIO_BYPASS', false), FILTER_VALIDATE_BOOL),
     ],
 
+    'google_sheets_leads' => [
+        'webhook_secret' => env('GOOGLE_SHEETS_LEADS_WEBHOOK_SECRET'),
+    ],
+
     'maptiler' => [
         'key' => env('MAPTILER_KEY'),
     ],

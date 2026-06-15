@@ -9,11 +9,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Lead extends Model
 {
     public const TYPE_FAMILY = 'family';
+
     public const TYPE_REFERRAL = 'referral';
 
     public const PRIORITY_LOW = 'low';
+
     public const PRIORITY_NORMAL = 'normal';
+
     public const PRIORITY_HIGH = 'high';
+
     public const PRIORITY_URGENT = 'urgent';
 
     public const FAMILY_STAGES = [
@@ -50,6 +54,8 @@ class Lead extends Model
         'priority',
         'source',
         'source_detail',
+        'external_source',
+        'external_id',
         'contact_role',
         'last_contacted_at',
         'next_follow_up_at',

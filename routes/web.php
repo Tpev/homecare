@@ -3,10 +3,11 @@
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogCoverController;
 use App\Http\Controllers\CaregiverIdentityVerificationController;
-use App\Http\Controllers\CareRequestInvitationResponseController;
 use App\Http\Controllers\CaregiverStripeConnectController;
+use App\Http\Controllers\CareRequestInvitationResponseController;
 use App\Http\Controllers\DiditWebhookController;
 use App\Http\Controllers\FamilyBillingController;
+use App\Http\Controllers\GoogleSheetsLeadWebhookController;
 use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\MarketingPagesController;
 use App\Http\Controllers\NotificationEmailTrackingController;
@@ -114,6 +115,9 @@ Route::post('/webhooks/twilio/sms', TwilioSmsWebhookController::class)
 Route::post('/webhooks/twilio/sms/status', TwilioSmsStatusWebhookController::class)
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('webhooks.twilio.sms.status');
+Route::post('/webhooks/google-sheets/leads', GoogleSheetsLeadWebhookController::class)
+    ->withoutMiddleware([VerifyCsrfToken::class])
+    ->name('webhooks.google-sheets.leads');
 Route::get('/{seoSlug}', [SeoPagesController::class, 'show'])
     ->whereIn('seoSlug', array_keys(config('seo_pages.pages', [])))
     ->name('seo.page');
