@@ -224,6 +224,29 @@ class LeadsIndex extends Component
         }
     }
 
+    public function moveLeadToStage(int|string|null $leadId, string $status): void
+    {
+        if (! $leadId) {
+            return;
+        }
+
+        $lead = Lead::query()->findOrFail((int) $leadId);
+        if (! array_key_exists($status, $lead->stageOptions())) {
+            return;
+        }
+
+        $oldStatus = $lead->status;
+        $this->updateStatus($lead->id, $status);
+
+        if ($oldStatus !== $status) {
+            $this->dispatch('toast', [
+                'type' => 'success',
+                'title' => 'Stage updated',
+                'message' => 'Lead moved to '.$this->stageName($lead, $status).'.',
+            ]);
+        }
+    }
+
     public function assignToMe(int $leadId): void
     {
         $lead = Lead::query()->findOrFail($leadId);

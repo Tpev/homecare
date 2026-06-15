@@ -145,4 +145,72 @@ class AdminCrmTest extends TestCase
             'type' => LeadActivity::TYPE_STAGE_CHANGE,
         ]);
     }
+
+    public function test_admin_can_drag_move_lead_across_board_stages(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'test@test.com',
+            'role' => 'admin',
+            'name' => 'Ops Admin',
+        ]);
+
+        $lead = Lead::query()->create([
+            'lead_type' => Lead::TYPE_FAMILY,
+            'name' => 'Move Me Lead',
+            'email' => 'move@example.com',
+            'status' => 'new',
+            'priority' => Lead::PRIORITY_NORMAL,
+            'source' => 'phone',
+            'data' => ['source' => 'test'],
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.crm.index'))
+            ->assertOk()
+            ->assertSee('Move Me Lead')
+            ->assertSee('draggable="true"', false)
+            ->assertSee('moveLeadToStage', false)
+            ->assertSee('Delete');
+
+        Livewire::actingAs($admin)
+            ->test(LeadsIndex::class)
+            ->call('moveLeadToStage', $lead->id, 'qualified')
+            ->assertHasNoErrors();
+
+        $lead->refresh();
+
+        $this->assertSame('qualified', $lead->status);
+        $this->assertDatabaseHas('lead_activities', [
+            'lead_id' => $lead->id,
+            'type' => LeadActivity::TYPE_STAGE_CHANGE,
+            'summary' => 'Stage changed',
+        ]);
+    }
+
+    public function test_admin_can_delete_lead_from_crm(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'test@test.com',
+            'role' => 'admin',
+            'name' => 'Ops Admin',
+        ]);
+
+        $lead = Lead::query()->create([
+            'lead_type' => Lead::TYPE_FAMILY,
+            'name' => 'Delete Me Lead',
+            'email' => 'delete@example.com',
+            'status' => 'new',
+            'priority' => Lead::PRIORITY_NORMAL,
+            'source' => 'manual_admin',
+            'data' => ['source' => 'test'],
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(LeadsIndex::class)
+            ->call('openLead', $lead->id)
+            ->call('deleteLead', $lead->id)
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseMissing('leads', ['id' => $lead->id]);
+    }
 }
