@@ -45,6 +45,7 @@ use App\Livewire\Caregiver\TaskComfortSetup;
 use App\Livewire\Caregiver\WorkInbox;
 use App\Livewire\Dashboard\Home as DashboardHome;
 use App\Livewire\Family\AiRequestCopilot;
+use App\Livewire\Family\BookAgain;
 use App\Livewire\Family\CreateCareRequestWizard;
 use App\Livewire\Family\ManageCareRequest;
 use App\Livewire\Family\NotificationsCenter as FamilyNotificationsCenter;
@@ -184,6 +185,9 @@ Route::middleware(['auth', 'family.role'])->prefix('family')->name('family.')->g
     Route::get('/requests/{careRequest}/regular-care', RegularCareComposer::class)
         ->whereNumber('careRequest')
         ->name('care.compose');
+    Route::get('/requests/{careRequest}/book-again', BookAgain::class)
+        ->whereNumber('careRequest')
+        ->name('requests.book_again');
     Route::get('/requests/{careRequest}', ManageCareRequest::class)
         ->whereNumber('careRequest')
         ->name('requests.show');

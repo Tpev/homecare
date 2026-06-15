@@ -115,7 +115,7 @@ class CaregiverEarningsService
         $nextPayoutType = $nextScheduledPayout ? 'scheduled' : 'estimated';
         $nextPayoutSubtitle = $nextScheduledPayout
             ? 'Scheduled payout batch'
-            : 'Estimated from confirmed unpaid shifts';
+            : 'Estimated from confirmed unpaid visits';
 
         $goalCurrent = $weekGross;
         $goalTarget = max(1, $weeklyGoal);
@@ -399,9 +399,9 @@ class CaregiverEarningsService
         $activeShift = $items->first(fn (array $item) => in_array($item['status_key'], ['in_progress', 'paused'], true));
         if ($activeShift) {
             return [
-                'title' => 'Keep this shift moving',
-                'description' => 'You have a live shift right now. Continue tracking to protect payout accuracy.',
-                'cta_label' => 'Open active shift',
+                'title' => 'Keep this visit moving',
+                'description' => 'You have a live visit right now. Continue tracking to protect payout accuracy.',
+                'cta_label' => 'Open active visit',
                 'cta_href' => route('care-requests.apply', $activeShift['care_request_id']),
             ];
         }
@@ -409,8 +409,8 @@ class CaregiverEarningsService
         if ($pendingConfirmations > 0) {
             return [
                 'title' => 'Follow up on confirmations',
-                'description' => $pendingConfirmations.' shift(s) are waiting family confirmation before payout eligibility.',
-                'cta_label' => 'Review completed shifts',
+                'description' => $pendingConfirmations.' visit(s) are waiting family confirmation before payout eligibility.',
+                'cta_label' => 'Review completed visits',
                 'cta_href' => route('caregiver.shifts.index'),
             ];
         }

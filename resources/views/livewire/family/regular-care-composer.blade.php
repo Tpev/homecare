@@ -20,10 +20,10 @@
     <section class="hc-brand-panel">
         <div class="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-                <p class="hc-brand-kicker text-[#E8E0FF]">Regular care setup</p>
-                <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Send a direct schedule to {{ $caregiver?->name ?: 'your caregiver' }}.</h1>
+                <p class="hc-brand-kicker text-[#E8E0FF]">Weekly care</p>
+                <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Have {{ $caregiver?->name ?: 'your caregiver' }} come again.</h1>
                 <p class="mt-2 max-w-2xl text-sm text-[#F7F1E8]/82">
-                    This creates a real regular-care offer. When the caregiver accepts, LoLo generates the next request, books the shift, and authorizes payment.
+                    Pick the weekly days and time. When the caregiver accepts, LoLo creates the next visit and protects payment automatically.
                 </p>
             </div>
             <a href="{{ route('family.requests.show', $requestItem->id) }}" wire:navigate>
@@ -37,13 +37,13 @@
             <x-card>
                 <x-slot:header>
                     <div>
-                        <h2 class="font-display text-lg font-semibold">Schedule</h2>
-                        <p class="text-sm text-[#607080]">Pick the weekly rhythm that should be offered to the caregiver.</p>
+                        <h2 class="font-display text-lg font-semibold">When should they come?</h2>
+                        <p class="text-sm text-[#607080]">Choose the days, start time, and end time for weekly care.</p>
                     </div>
                 </x-slot:header>
 
                 <div class="space-y-5">
-                    <x-input label="Plan name" wire:model="title" />
+                    <x-input label="Care name" wire:model="title" />
                     @error('title') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
                     <div>
@@ -78,8 +78,8 @@
             <x-card>
                 <x-slot:header>
                     <div>
-                        <h2 class="font-display text-lg font-semibold">Care details</h2>
-                        <p class="text-sm text-[#607080]">These details are copied into generated requests so the caregiver sees consistent expectations.</p>
+                        <h2 class="font-display text-lg font-semibold">Same care details?</h2>
+                        <p class="text-sm text-[#607080]">These notes are copied into each visit so the caregiver sees the same expectations.</p>
                     </div>
                 </x-slot:header>
 
@@ -87,7 +87,7 @@
                     <div class="rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4">
                         <p class="text-xs uppercase tracking-[0.12em] text-emerald-700">Care rate</p>
                         <p class="mt-1 font-display text-2xl font-semibold text-emerald-950">${{ number_format((float) $platformRate, 2) }}/hr</p>
-                        <p class="mt-1 text-sm text-emerald-800">LoLo sets the care rate. Families and caregivers do not edit it in regular-care setup.</p>
+                        <p class="mt-1 text-sm text-emerald-800">LoLo sets the care rate. You only choose the schedule and notes.</p>
                     </div>
 
                     <x-textarea label="Care notes" wire:model="careNotes" />
@@ -99,10 +99,10 @@
 
                 <x-slot:footer>
                     @if ($billingSummary['ready'] ?? false)
-                        <x-button color="blue" type="submit">Send regular-care offer</x-button>
+                        <x-button color="blue" type="submit">Send to caregiver</x-button>
                     @else
                         <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <p class="text-sm text-amber-700">Add a payment method before sending this offer.</p>
+                        <p class="text-sm text-amber-700">Add a payment method before sending this schedule.</p>
                             <a href="{{ route('family.billing.show') }}" wire:navigate>
                                 <x-button color="amber" type="button">Open billing</x-button>
                             </a>
@@ -136,7 +136,7 @@
 
             <x-card>
                 <x-slot:header>
-                    <h2 class="font-display text-lg font-semibold">Payment readiness</h2>
+                    <h2 class="font-display text-lg font-semibold">Payment</h2>
                 </x-slot:header>
                 @if ($billingSummary['ready'] ?? false)
                     <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
@@ -148,7 +148,7 @@
                 @else
                     <div class="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
                         <p class="font-semibold">Payment method required</p>
-                        <p class="mt-1">LoLo authorizes the next generated visit after the caregiver accepts.</p>
+                        <p class="mt-1">LoLo authorizes the next visit after the caregiver accepts.</p>
                     </div>
                 @endif
             </x-card>

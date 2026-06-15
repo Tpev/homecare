@@ -35,7 +35,7 @@
                 <p class="hc-brand-kicker text-[#E8E0FF]">Regular Clients</p>
                 <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Direct regular-care offers from families.</h1>
                 <p class="mt-2 max-w-2xl text-sm text-[#F7F1E8]/82">
-                    Accept a schedule, suggest a better time, or decline. Accepted offers create real booked shifts with payment authorization.
+                    Accept a schedule, suggest a better time, or decline. Accepted offers create real booked visits with payment authorization.
                 </p>
             </div>
             <div class="grid grid-cols-2 gap-3 lg:col-span-2">
@@ -195,7 +195,7 @@
                             @if ($plan->nextBooking)
                                 <div class="mt-3">
                                     <a href="{{ route('care-requests.apply', $plan->nextBooking->care_request_id) }}" wire:navigate>
-                                        <x-button color="blue" light sm class="w-full">Open next shift</x-button>
+                                        <x-button color="blue" light sm class="w-full">Open next visit</x-button>
                                     </a>
                                 </div>
                             @endif

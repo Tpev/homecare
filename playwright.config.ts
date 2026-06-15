@@ -13,6 +13,7 @@ const laravelEnv = {
     QUEUE_CONNECTION: 'sync',
     MAIL_MAILER: 'array',
     DIDIT_BYPASS: 'true',
+    STRIPE_BYPASS: 'true',
 };
 
 export default defineConfig({

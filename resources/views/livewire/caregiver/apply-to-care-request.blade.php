@@ -28,7 +28,29 @@
         $pausedSeconds = (int) ($booking?->total_paused_seconds ?? 0);
         $pausedLabel = sprintf('%02d:%02d', intdiv($pausedSeconds, 3600), intdiv($pausedSeconds % 3600, 60));
         $payoutReady = (bool) (auth()->user()->caregiverProfile?->stripeConnectIsReady() ?? false);
+        $careIsLiveNow = $booking && in_array($booking->status, [
+            \App\Models\CareBooking::STATUS_IN_PROGRESS,
+            \App\Models\CareBooking::STATUS_PAUSED,
+        ], true);
+        $showPayoutSetupAlert = ! $payoutReady && ! $careIsLiveNow;
         $isShiftWorkspace = $activeTab === 'shift';
+        $applicationStatus = (string) ($existingApplication?->status ?? '');
+        $isNewApplicationDecision = ! $existingApplication && $requestItem->status === \App\Models\CareRequest::STATUS_OPEN;
+        $isWaitingForFamilyDecision = $existingApplication
+            && ! $booking
+            && in_array($applicationStatus, [
+                \App\Models\CareRequestApplication::STATUS_APPLIED,
+                \App\Models\CareRequestApplication::STATUS_SHORTLISTED,
+            ], true);
+        $applicationStateEyebrow = $applicationStatus === \App\Models\CareRequestApplication::STATUS_SHORTLISTED
+            ? 'Accepted invitation'
+            : 'Application sent';
+        $applicationStateTitle = $applicationStatus === \App\Models\CareRequestApplication::STATUS_SHORTLISTED
+            ? 'You accepted the invitation.'
+            : 'Your reply was sent.';
+        $applicationStateBody = $applicationStatus === \App\Models\CareRequestApplication::STATUS_SHORTLISTED
+            ? 'No visit is booked yet. The family can hire you now or message you if they need to confirm details.'
+            : 'No visit is booked yet. The family is reviewing replies and can hire you or send a message.';
         $serviceAddress = trim(collect([
             $requestItem->address_line1,
             $requestItem->address_line2,
@@ -40,6 +62,25 @@
         $serviceMapOpenUrl = $serviceAddress !== ''
             ? 'https://www.google.com/maps/search/?api=1&query='.rawurlencode($serviceAddress)
             : null;
+        $requestScheduleSummary = $this->requestScheduleSummary();
+        $estimatedRequestMinutes = $this->estimatedRequestMinutes();
+        $estimatedRequestHoursLabel = $estimatedRequestMinutes
+            ? rtrim(rtrim(number_format($estimatedRequestMinutes / 60, 1), '0'), '.')
+            : null;
+        $estimatedRequestTotal = $estimatedRequestMinutes
+            ? round(($estimatedRequestMinutes / 60) * $ratePerHour, 2)
+            : null;
+        $workspaceTabs = $booking
+            ? [
+                ['key' => 'shift', 'label' => 'Visit'],
+                ['key' => 'overview', 'label' => 'Care details'],
+                ['key' => 'support', 'label' => 'Support'],
+            ]
+            : [
+                ['key' => 'overview', 'label' => 'Overview'],
+                ['key' => 'application', 'label' => 'Application'],
+            ];
+        $showWorkspaceTabs = ! $isWaitingForFamilyDecision && ! $isNewApplicationDecision;
     @endphp
 
     <section class="{{ $isShiftWorkspace ? 'space-y-3' : 'rounded-3xl border border-[#E4DDD3] bg-white p-4 shadow-sm space-y-3' }}">
@@ -51,10 +92,10 @@
                         {{ $requestItem->city }}, {{ $requestItem->state }}
                         - {{ $requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME ? 'One-time' : 'Recurring' }}
                         @if ($existingApplication)
-                            - App {{ strtoupper($existingApplication->status) }}
+                            - Reply {{ strtoupper($existingApplication->status) }}
                         @endif
                         @if ($booking)
-                            - Shift {{ strtoupper($booking->status) }}
+                            - Visit {{ strtoupper($booking->status) }}
                         @endif
                     </p>
                 </div>
@@ -63,7 +104,7 @@
                     <a href="{{ route('care-requests.index') }}" wire:navigate>
                         <x-button color="white" light>Back to requests</x-button>
                     </a>
-                    @if ($existingApplication && in_array($existingApplication->status, ['shortlisted', 'hired'], true))
+                    @if ($existingApplication && in_array($existingApplication->status, ['shortlisted', 'hired'], true) && ! ($isWaitingForFamilyDecision && $activeTab === 'application'))
                         <x-button color="indigo" light wire:click="openChat">Open chat</x-button>
                     @endif
                 </div>
@@ -79,57 +120,159 @@
             </div>
         @endif
 
-        <div wire:key="caregiver-apply-tabs-{{ $requestItem->id }}" class="{{ $isShiftWorkspace ? 'rounded-[1.6rem] border border-[#0F3D3E]/80 bg-[#0F3D3E] p-1 shadow-sm' : 'rounded-[1.6rem] border border-[#DED6CA] bg-[#F5F1EB] p-1' }}">
-            <div class="grid grid-cols-2 gap-1 sm:grid-cols-4">
-                <button
-                    type="button"
-                    wire:click="setActiveTab('overview')"
-                    wire:loading.attr="disabled"
-                    wire:target="setActiveTab"
-                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'overview'
-                        ? ($isShiftWorkspace ? 'bg-[#FAF9F7] text-[#0F3D3E] shadow-sm' : 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm')
-                        : ($isShiftWorkspace ? 'text-[#F0E9E1]/72 hover:text-[#FAF9F7]' : 'text-[#6E746F] hover:text-[#0F3D3E]') }}"
-                >
-                    Overview
-                </button>
-                <button
-                    type="button"
-                    wire:click="setActiveTab('application')"
-                    wire:loading.attr="disabled"
-                    wire:target="setActiveTab"
-                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'application'
-                        ? ($isShiftWorkspace ? 'bg-[#FAF9F7] text-[#0F3D3E] shadow-sm' : 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm')
-                        : ($isShiftWorkspace ? 'text-[#F0E9E1]/72 hover:text-[#FAF9F7]' : 'text-[#6E746F] hover:text-[#0F3D3E]') }}"
-                >
-                    Application
-                </button>
-                <button
-                    type="button"
-                    wire:click="setActiveTab('shift')"
-                    wire:loading.attr="disabled"
-                    wire:target="setActiveTab"
-                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'shift'
-                        ? ($isShiftWorkspace ? 'bg-[#FAF9F7] text-[#0F3D3E] shadow-sm' : 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm')
-                        : ($isShiftWorkspace ? 'text-[#F0E9E1]/72 hover:text-[#FAF9F7]' : 'text-[#6E746F] hover:text-[#0F3D3E]') }}"
-                >
-                    Shift
-                </button>
-                <button
-                    type="button"
-                    wire:click="setActiveTab('support')"
-                    wire:loading.attr="disabled"
-                    wire:target="setActiveTab"
-                    class="rounded-xl px-2 py-2 text-sm font-medium transition {{ $activeTab === 'support'
-                        ? ($isShiftWorkspace ? 'bg-[#FAF9F7] text-[#0F3D3E] shadow-sm' : 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm')
-                        : ($isShiftWorkspace ? 'text-[#F0E9E1]/72 hover:text-[#FAF9F7]' : 'text-[#6E746F] hover:text-[#0F3D3E]') }}"
-                >
-                    Support
-                </button>
+        @if ($showWorkspaceTabs)
+            <div wire:key="caregiver-apply-tabs-{{ $requestItem->id }}" class="{{ $isShiftWorkspace ? 'rounded-[1.6rem] border border-[#0F3D3E]/80 bg-[#0F3D3E] p-1 shadow-sm' : 'rounded-[1.6rem] border border-[#DED6CA] bg-[#F5F1EB] p-1' }}">
+                <div class="grid gap-1 {{ $booking ? 'grid-cols-3' : 'grid-cols-2' }}">
+                    @foreach ($workspaceTabs as $tab)
+                        <button
+                            type="button"
+                            wire:click="setActiveTab('{{ $tab['key'] }}')"
+                            wire:loading.attr="disabled"
+                            wire:target="setActiveTab"
+                            class="rounded-xl px-2 py-2 text-xs font-medium transition sm:text-sm {{ $activeTab === $tab['key']
+                                ? ($isShiftWorkspace ? 'bg-[#FAF9F7] text-[#0F3D3E] shadow-sm' : 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm')
+                                : ($isShiftWorkspace ? 'text-[#F0E9E1]/72 hover:text-[#FAF9F7]' : 'text-[#6E746F] hover:text-[#0F3D3E]') }}"
+                        >
+                            {{ $tab['label'] }}
+                        </button>
+                    @endforeach
+                </div>
             </div>
-        </div>
+        @endif
     </section>
 
     @if ($activeTab === 'overview')
+        @if ($isNewApplicationDecision)
+            <section class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <div class="rounded-3xl border border-[#D7CCE9] bg-white p-5 shadow-sm lg:col-span-2">
+                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-[#7B8794]">New request</p>
+                    <h2 class="mt-2 font-display text-3xl font-semibold leading-tight text-[#17313F]">Interested in this visit?</h2>
+                    <p class="mt-2 max-w-2xl text-sm leading-6 text-[#4B5B6B]">
+                        Review the essentials. If the time and location work for you, send your interest to the family.
+                    </p>
+
+                    <div class="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
+                        <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3">
+                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">When</p>
+                            <p class="mt-1 font-semibold text-[#17313F]">{{ $requestScheduleSummary['primary'] }}</p>
+                            <p class="text-sm text-[#607080]">{{ $requestScheduleSummary['secondary'] ?: 'Time pending' }}</p>
+                        </div>
+                        <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3">
+                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Length</p>
+                            <p class="mt-1 font-semibold text-[#17313F]">
+                                {{ $estimatedRequestHoursLabel ? $estimatedRequestHoursLabel.'h visit' : 'Duration pending' }}
+                            </p>
+                            <p class="text-sm text-[#607080]">{{ $estimatedRequestMinutes ? $estimatedRequestMinutes.' minutes' : 'We will show this once set.' }}</p>
+                        </div>
+                        <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3">
+                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Where</p>
+                            <p class="mt-1 font-semibold text-[#17313F]">{{ $requestItem->city }}, {{ $requestItem->state }}</p>
+                            <p class="text-sm text-[#607080]">{{ trim((string) $requestItem->zip) !== '' ? $requestItem->zip : 'ZIP not listed' }}</p>
+                        </div>
+                        <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3">
+                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Care for</p>
+                            <p class="mt-1 font-semibold text-[#17313F]">{{ $requestItem->recipient?->full_name ?: 'Care recipient' }}</p>
+                            <p class="text-sm text-[#607080]">{{ $requestItem->recipient?->relationship_to_family ?: 'Relationship not listed' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <x-button color="green" wire:click="submit" wire:loading.attr="disabled" wire:target="submit" class="w-full sm:w-auto">
+                            <span wire:loading.remove wire:target="submit">I can do this visit</span>
+                            <span wire:loading wire:target="submit">Sending...</span>
+                        </x-button>
+                        <a href="{{ route('care-requests.index') }}" wire:navigate class="inline-flex h-11 w-full items-center justify-center rounded-[1rem] border border-[#DED6CA] bg-white px-4 text-sm font-semibold text-[#0F3D3E] transition hover:bg-[#F5F1EB] sm:w-auto">
+                            Back to requests
+                        </a>
+                    </div>
+
+                    <div class="mt-5 rounded-2xl border border-[#E4DDD3] bg-[#F7F2EA] px-4 py-3">
+                        <p class="text-sm font-semibold text-[#17313F]">What help is needed</p>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            @forelse ($requestItem->tasks as $task)
+                                <span class="rounded-full border border-[#DED6CA] bg-white px-3 py-1 text-xs font-medium text-[#4B5B6B]">{{ $task->name }}</span>
+                            @empty
+                                <span class="text-sm text-[#607080]">No tasks listed yet.</span>
+                            @endforelse
+                        </div>
+                        @if (trim((string) $requestItem->scope_of_work) !== '')
+                            <p class="mt-3 text-sm leading-6 text-[#4B5B6B]">{{ $requestItem->scope_of_work }}</p>
+                        @endif
+                    </div>
+
+                    <details class="mt-4 rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3">
+                        <summary class="cursor-pointer list-none text-sm font-semibold text-[#17313F] [&::-webkit-details-marker]:hidden">
+                            Add a short note before sending <span class="font-normal text-[#7B8794]">(optional)</span>
+                        </summary>
+                        <div class="mt-3 border-t border-[#EFE6D8] pt-3">
+                            <label for="caregiver-cover-note-{{ $requestItem->id }}" class="sr-only">Optional note to family</label>
+                            <textarea
+                                id="caregiver-cover-note-{{ $requestItem->id }}"
+                                wire:model="cover_note"
+                                rows="3"
+                                class="block w-full rounded-2xl border border-[#D6CCBE] bg-white px-4 py-3 text-sm text-[#17313F] shadow-sm outline-none transition placeholder:text-[#8A96A3] focus:border-[#4F6FAF] focus:ring-2 focus:ring-[#4F6FAF]/20"
+                                placeholder="Example: I am nearby and available for this visit."
+                            ></textarea>
+                            <p class="mt-1 text-xs text-[#7B8794]">This can be left blank.</p>
+                            @error('cover_note') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                            <x-button color="green" wire:click="submit" wire:loading.attr="disabled" wire:target="submit" class="mt-3 w-full sm:w-auto">
+                                <span wire:loading.remove wire:target="submit">Send with note</span>
+                                <span wire:loading wire:target="submit">Sending...</span>
+                            </x-button>
+                        </div>
+                    </details>
+                </div>
+
+                <aside class="space-y-3">
+                    <div class="rounded-[1.6rem] border border-[#0F3D3E]/70 bg-gradient-to-br from-[#0F3D3E] via-[#174A52] to-[#4F6FAF] p-5 text-white shadow-sm">
+                        <p class="text-[11px] uppercase tracking-[0.14em] text-emerald-200">Estimated earnings</p>
+                        @if ($estimatedRequestTotal !== null)
+                            <p class="mt-1 font-display text-4xl font-semibold text-emerald-300">${{ number_format($estimatedRequestTotal, 2) }}</p>
+                            <p class="mt-3 text-sm text-[#E7ECF1]">{{ $estimatedRequestHoursLabel }}h @ ${{ number_format($ratePerHour, 2) }}/hr</p>
+                        @else
+                            <p class="mt-2 text-sm leading-6 text-[#E7ECF1]">Earnings estimate appears once the visit duration is set.</p>
+                        @endif
+                    </div>
+
+                    <div class="rounded-2xl border border-[#E4DDD3] bg-white px-4 py-3">
+                        <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Family</p>
+                        <p class="mt-1 font-semibold text-[#17313F]">{{ $requestItem->family?->name ?: 'Family' }}</p>
+                        <p class="text-sm text-[#607080]">They will review your profile before hiring.</p>
+                    </div>
+                </aside>
+            </section>
+
+            <section class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <div class="rounded-2xl border border-[#E4DDD3] bg-white p-4 shadow-sm">
+                    <p class="text-sm font-semibold text-[#17313F]">Care recipient details</p>
+                    <x-care-recipient-context :recipient="$requestItem->recipient" :show-description="true" class="mt-3" />
+                    @if (trim((string) $requestItem->time_expectations) !== '')
+                        <div class="mt-4 rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] px-3 py-2">
+                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Timing note</p>
+                            <p class="mt-1 text-sm text-[#4B5B6B]">{{ $requestItem->time_expectations }}</p>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="rounded-2xl border border-[#E4DDD3] bg-white p-4 shadow-sm">
+                    <p class="text-sm font-semibold text-[#17313F]">Location and notes</p>
+                    <p class="mt-2 text-sm text-[#4B5B6B]">{{ $serviceAddress ?: 'Address pending' }}</p>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        @if ($serviceMapOpenUrl)
+                            <a href="{{ $serviceMapOpenUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex h-10 items-center justify-center rounded-[0.9rem] border border-[#DED6CA] bg-[#FFFCF8] px-3 text-sm font-semibold text-[#0F3D3E] transition hover:bg-[#F5F1EB]">
+                                Open map
+                            </a>
+                        @endif
+                    </div>
+                    @if (trim((string) $requestItem->home_access_notes) !== '')
+                        <div class="mt-4 rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] px-3 py-2">
+                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Home access</p>
+                            <p class="mt-1 text-sm text-[#4B5B6B]">{{ $requestItem->home_access_notes }}</p>
+                        </div>
+                    @endif
+                </div>
+            </section>
+        @else
         <x-card>
             <x-slot:header>
                 <h2 class="font-display text-lg font-semibold">Request context</h2>
@@ -217,15 +360,164 @@
                 @endforelse
             </div>
         </x-card>
+        @endif
     @endif
 
     @if ($activeTab === 'application')
         <x-card>
             <x-slot:header>
-                <h2 class="font-display text-lg font-semibold">Application</h2>
+                <h2 class="font-display text-lg font-semibold">{{ $isWaitingForFamilyDecision ? 'Waiting for family' : 'Application' }}</h2>
             </x-slot:header>
 
-            @if ($canEditApplication)
+            @if ($isWaitingForFamilyDecision)
+                <div class="space-y-4">
+                    <div class="rounded-3xl border border-[#CFE1D8] bg-[#F2F8F4] p-4">
+                        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">{{ $applicationStateEyebrow }}</p>
+                        <h3 class="mt-1 font-display text-2xl font-semibold leading-tight text-[#17313F]">{{ $applicationStateTitle }}</h3>
+                        <p class="mt-2 text-sm leading-6 text-[#4B5B6B]">{{ $applicationStateBody }}</p>
+                        <div class="mt-3 rounded-2xl border border-[#CFE1D8] bg-white/80 px-4 py-3">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">Right now</p>
+                            <p class="mt-1 text-sm font-semibold text-[#17313F]">No action needed. Keep chat open in case the family has a question.</p>
+                        </div>
+                        <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            @if ($applicationStatus === \App\Models\CareRequestApplication::STATUS_SHORTLISTED)
+                                <x-button color="indigo" light wire:click="openChat" class="w-full">
+                                    Open chat
+                                </x-button>
+                            @endif
+                            <a href="#caregiver-request-details-{{ $requestItem->id }}" class="inline-flex h-11 w-full items-center justify-center rounded-[1rem] border border-[#DED6CA] bg-white px-4 text-sm font-semibold text-[#0F3D3E] transition hover:bg-[#F5F1EB]">
+                                Review request details
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3">
+                        <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">What happens next</p>
+                        <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                            <div class="rounded-xl border border-[#E4DDD3] bg-white px-3 py-2">
+                                <p class="font-semibold text-[#17313F]">1. Family reviews</p>
+                                <p class="mt-1 text-xs text-[#607080]">They compare replies and profiles.</p>
+                            </div>
+                            <div class="rounded-xl border border-[#E4DDD3] bg-white px-3 py-2">
+                                <p class="font-semibold text-[#17313F]">2. They may chat</p>
+                                <p class="mt-1 text-xs text-[#607080]">Answer only if they ask a question.</p>
+                            </div>
+                            <div class="rounded-xl border border-[#E4DDD3] bg-white px-3 py-2">
+                                <p class="font-semibold text-[#17313F]">3. If hired</p>
+                                <p class="mt-1 text-xs text-[#607080]">Visit tools appear here.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="caregiver-request-details-{{ $requestItem->id }}" class="rounded-2xl border border-[#E4DDD3] bg-white px-4 py-3">
+                        <div class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Visit time</p>
+                                @if ($requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME)
+                                    <p class="mt-1 font-semibold text-[#17313F]">
+                                        {{ optional($requestItem->requested_start_at)->format('M d, g:i A') ?: 'Time pending' }}
+                                    </p>
+                                    <p class="text-[#607080]">
+                                        to {{ optional($requestItem->requested_end_at)->format('g:i A') ?: 'end pending' }}
+                                    </p>
+                                @else
+                                    <p class="mt-1 font-semibold text-[#17313F]">
+                                        {{ collect($requestItem->recurring_days ?? [])->map(fn($d) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][(int) $d] ?? null)->filter()->implode(', ') ?: 'Weekly' }}
+                                    </p>
+                                    <p class="text-[#607080]">{{ $requestItem->recurring_start_time }}-{{ $requestItem->recurring_end_time }}</p>
+                                @endif
+                            </div>
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Care recipient</p>
+                                <p class="mt-1 font-semibold text-[#17313F]">{{ $requestItem->recipient?->full_name ?: 'Care recipient' }}</p>
+                                <p class="text-[#607080]">{{ $requestItem->recipient?->relationship_to_family ?: 'Relationship not listed' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Location</p>
+                                <p class="mt-1 font-semibold text-[#17313F]">{{ $requestItem->city }}, {{ $requestItem->state }}</p>
+                                <p class="text-[#607080]">{{ trim($requestItem->zip) !== '' ? $requestItem->zip : 'ZIP not listed' }}</p>
+                            </div>
+                        </div>
+
+                        <details class="mt-4 rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] px-3 py-2">
+                            <summary class="cursor-pointer list-none text-sm font-semibold text-[#17313F] [&::-webkit-details-marker]:hidden">
+                                Tasks, address, and notes
+                            </summary>
+                            <div class="mt-3 space-y-3 border-t border-[#EFE6D8] pt-3 text-sm text-[#4B5B6B]">
+                                <div>
+                                    <p class="font-semibold text-[#17313F]">Tasks</p>
+                                    <div class="mt-2 flex flex-wrap gap-2">
+                                        @forelse ($requestItem->tasks as $task)
+                                            <span class="rounded-full border border-[#DED6CA] bg-white px-3 py-1 text-xs font-medium text-[#4B5B6B]">{{ $task->name }}</span>
+                                        @empty
+                                            <span>No tasks listed.</span>
+                                        @endforelse
+                                    </div>
+                                </div>
+                                @if ($serviceAddress !== '')
+                                    <div>
+                                        <p class="font-semibold text-[#17313F]">Address</p>
+                                        <p>{{ $serviceAddress }}</p>
+                                        @if ($serviceMapOpenUrl)
+                                            <a href="{{ $serviceMapOpenUrl }}" target="_blank" rel="noopener noreferrer" class="mt-1 inline-block text-xs font-medium text-[#7C5DDC] underline underline-offset-2">
+                                                Open map
+                                            </a>
+                                        @endif
+                                    </div>
+                                @endif
+                                @if (trim((string) $requestItem->time_expectations) !== '' || trim((string) $requestItem->home_access_notes) !== '')
+                                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                        @if (trim((string) $requestItem->time_expectations) !== '')
+                                            <div>
+                                                <p class="font-semibold text-[#17313F]">Timing note</p>
+                                                <p>{{ $requestItem->time_expectations }}</p>
+                                            </div>
+                                        @endif
+                                        @if (trim((string) $requestItem->home_access_notes) !== '')
+                                            <div>
+                                                <p class="font-semibold text-[#17313F]">Home access</p>
+                                                <p>{{ $requestItem->home_access_notes }}</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        </details>
+                    </div>
+
+                    @if ($existingApplication->cover_note || $canEditApplication)
+                        <details class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3">
+                            <summary class="cursor-pointer list-none text-sm font-semibold text-[#17313F] [&::-webkit-details-marker]:hidden">
+                                Your reply
+                            </summary>
+                            <div class="mt-4 space-y-3 border-t border-[#EFE6D8] pt-4">
+                                @if ($existingApplication->cover_note)
+                                    <div>
+                                        <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Sent note</p>
+                                        <p class="mt-2 whitespace-pre-line text-sm leading-6 text-[#4B5B6B]">{{ $existingApplication->cover_note }}</p>
+                                    </div>
+                                @endif
+                                @if ($canEditApplication)
+                                    <div class="space-y-3">
+                                        <label for="caregiver-cover-note-{{ $requestItem->id }}" class="block text-sm font-semibold text-[#17313F]">
+                                            Edit note <span class="font-normal text-[#7B8794]">(optional)</span>
+                                        </label>
+                                        <textarea
+                                            id="caregiver-cover-note-{{ $requestItem->id }}"
+                                            wire:model="cover_note"
+                                            rows="4"
+                                            class="block w-full rounded-2xl border border-[#D6CCBE] bg-white px-4 py-3 text-sm text-[#17313F] shadow-sm outline-none transition placeholder:text-[#8A96A3] focus:border-[#4F6FAF] focus:ring-2 focus:ring-[#4F6FAF]/20"
+                                            placeholder="Add a short note if you want to introduce yourself."
+                                        ></textarea>
+                                        @error('cover_note') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                        <x-button color="green" wire:click="submit" class="w-full sm:w-auto">Update note</x-button>
+                                    </div>
+                                @endif
+                            </div>
+                        </details>
+                    @endif
+                </div>
+            @elseif ($canEditApplication)
                 <div class="space-y-4">
                     <div class="rounded-[1rem] border border-[#D8D1F1] bg-[#F5F1FB] px-3 py-2 text-sm text-[#0F3D3E]">
                         Care rate applied automatically:
@@ -234,7 +526,19 @@
                         </span>
                     </div>
 
-                    <x-textarea label="Cover note (optional)" wire:model="cover_note" hint="Add a short note if you want to introduce yourself." />
+                    <div>
+                        <label for="caregiver-cover-note-{{ $requestItem->id }}" class="block text-sm font-semibold text-[#17313F]">
+                            Cover note <span class="font-normal text-[#7B8794]">(optional)</span>
+                        </label>
+                        <textarea
+                            id="caregiver-cover-note-{{ $requestItem->id }}"
+                            wire:model="cover_note"
+                            rows="4"
+                            class="mt-2 block w-full rounded-2xl border border-[#D6CCBE] bg-white px-4 py-3 text-sm text-[#17313F] shadow-sm outline-none transition placeholder:text-[#8A96A3] focus:border-[#4F6FAF] focus:ring-2 focus:ring-[#4F6FAF]/20"
+                            placeholder="Add a short note if you want to introduce yourself."
+                        ></textarea>
+                        <p class="mt-1 text-xs text-[#7B8794]">This can be left blank.</p>
+                    </div>
                     @error('cover_note') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
                 <x-slot:footer>
@@ -258,14 +562,14 @@
     @if ($activeTab === 'shift')
         @if (! $booking)
             <section class="rounded-3xl border border-dashed border-[#D6CCBE] bg-white px-5 py-8 text-center shadow-sm">
-                <p class="text-xs uppercase tracking-[0.16em] text-[#7B8794]">Shift command</p>
-                <h2 class="mt-2 font-display text-2xl font-semibold text-[#17313F]">No active shift yet</h2>
+                <p class="text-xs uppercase tracking-[0.16em] text-[#7B8794]">Visit tools</p>
+                <h2 class="mt-2 font-display text-2xl font-semibold text-[#17313F]">No active visit yet</h2>
                 <p class="mt-2 text-sm text-[#607080]">
                     Once you are hired, start and resume controls will appear here.
                 </p>
                 <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
                     <a href="{{ route('caregiver.shifts.index') }}" wire:navigate>
-                        <x-button color="blue" sm>My shifts</x-button>
+                        <x-button color="blue" sm>My visits</x-button>
                     </a>
                     <a href="{{ route('care-requests.index') }}" wire:navigate>
                         <x-button color="white" light sm>Browse requests</x-button>
@@ -284,15 +588,62 @@
                     \App\Models\CareBooking::STATUS_DISPUTED => 'bg-rose-100 text-rose-800',
                     default => 'bg-[#F0E9E1] text-[#4B5B6B]',
                 };
+                $careRecipientName = trim((string) ($requestItem->recipient?->full_name ?? '')) ?: 'the care recipient';
+                $scheduledWindowLabel = trim(
+                    (optional($booking->scheduled_start_at)->format('M d, g:i A') ?: 'the scheduled start')
+                    .' - '.
+                    (optional($booking->scheduled_end_at)->format('g:i A') ?: 'end time pending')
+                );
+                $commandStatusToneClass = match ($shiftStatus) {
+                    \App\Models\CareBooking::STATUS_SCHEDULED => 'border-[#C8D9F5]/60 bg-[#4F6FAF]/10 text-[#DCE8FF]',
+                    \App\Models\CareBooking::STATUS_IN_PROGRESS => 'border-emerald-300/40 bg-emerald-500/10 text-emerald-100',
+                    \App\Models\CareBooking::STATUS_PAUSED,
+                    \App\Models\CareBooking::STATUS_COMPLETED => 'border-amber-300/40 bg-amber-500/10 text-amber-100',
+                    \App\Models\CareBooking::STATUS_REVIEWED => 'border-emerald-300/40 bg-emerald-500/10 text-emerald-100',
+                    default => 'border-white/20 bg-white/10 text-[#D7DEE6]',
+                };
+                $commandStatusTitle = match ($shiftStatus) {
+                    \App\Models\CareBooking::STATUS_SCHEDULED => 'Check in when you arrive.',
+                    \App\Models\CareBooking::STATUS_IN_PROGRESS => 'You are checked in.',
+                    \App\Models\CareBooking::STATUS_PAUSED => 'The visit is paused.',
+                    \App\Models\CareBooking::STATUS_COMPLETED => 'Your timesheet is submitted.',
+                    \App\Models\CareBooking::STATUS_REVIEWED => 'This visit is closed.',
+                    default => 'Visit tools are ready.',
+                };
+                $commandStatusBody = match ($shiftStatus) {
+                    \App\Models\CareBooking::STATUS_SCHEDULED => 'Next visit for '.$careRecipientName.' is '.$scheduledWindowLabel.'.',
+                    \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Stay focused on '.$careRecipientName.'. Pause only for breaks, or end when care is done.',
+                    \App\Models\CareBooking::STATUS_PAUSED => 'Resume when you are back with '.$careRecipientName.', or end the visit if care is finished.',
+                    \App\Models\CareBooking::STATUS_COMPLETED => 'Family review is the next step. Keep an eye on messages if they have a question.',
+                    \App\Models\CareBooking::STATUS_REVIEWED => 'Family review is complete. Your visit record is saved here.',
+                    default => 'Use the visit tools for this booking.',
+                };
+                $visitStageEyebrow = match ($shiftStatus) {
+                    \App\Models\CareBooking::STATUS_SCHEDULED => 'Upcoming visit',
+                    \App\Models\CareBooking::STATUS_IN_PROGRESS,
+                    \App\Models\CareBooking::STATUS_PAUSED => 'Live visit',
+                    \App\Models\CareBooking::STATUS_COMPLETED => 'Timesheet sent',
+                    \App\Models\CareBooking::STATUS_REVIEWED => 'Completed visit',
+                    default => 'Visit',
+                };
+                $visitStageTitle = match ($shiftStatus) {
+                    \App\Models\CareBooking::STATUS_SCHEDULED => 'Get ready for '.$careRecipientName,
+                    \App\Models\CareBooking::STATUS_IN_PROGRESS => 'You are with '.$careRecipientName,
+                    \App\Models\CareBooking::STATUS_PAUSED => 'Visit paused for '.$careRecipientName,
+                    \App\Models\CareBooking::STATUS_COMPLETED => 'Waiting for family review',
+                    \App\Models\CareBooking::STATUS_REVIEWED => 'Visit is fully closed',
+                    default => $requestItem->title,
+                };
             @endphp
             <section class="rounded-[1.9rem] border border-[#0F3D3E]/80 bg-[#0F3D3E] p-5 shadow-xl">
                 <div>
                     <div class="mb-4">
-                        <p class="text-[11px] uppercase tracking-[0.18em] text-[#D7DEE6]">Shift command center</p>
+                        <p class="text-[11px] uppercase tracking-[0.18em] text-[#D7DEE6]">{{ $visitStageEyebrow }}</p>
                         <div class="mt-2 flex items-start justify-between gap-3">
                             <div>
-                                <h2 class="font-display text-2xl font-semibold leading-tight text-white">{{ $requestItem->title }}</h2>
+                                <h2 class="font-display text-2xl font-semibold leading-tight text-white">{{ $visitStageTitle }}</h2>
                                 <p class="mt-1 text-sm text-[#D7DEE6]">
+                                    {{ $requestItem->title }} -
                                     {{ $requestItem->city }}, {{ $requestItem->state }}
                                     - {{ $requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME ? 'One-time' : 'Recurring' }}
                                 </p>
@@ -302,13 +653,6 @@
                             </span>
                         </div>
                     </div>
-
-                    @if (! $payoutReady)
-                        <div class="mb-3 rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
-                            Payout setup is incomplete. Connect Stripe to receive earnings from completed shifts.
-                            <a href="{{ route('caregiver.payouts.connect.show') }}" wire:navigate class="font-semibold underline underline-offset-2">Complete setup</a>
-                        </div>
-                    @endif
 
                 <div
                     class="space-y-3 text-sm text-white"
@@ -325,19 +669,108 @@
                     })"
                     x-init="init()"
                 >
-                    <div class="grid grid-cols-3 gap-2 rounded-xl border border-white/15 bg-white/5 p-1">
-                        <button type="button" @click="panel = 'live'" class="rounded-lg px-3 py-2 text-sm font-medium transition"
-                            :class="panel === 'live' ? 'bg-white text-[#17313F] shadow-sm' : 'text-[#D7DEE6] hover:text-white'">
-                            Live
-                        </button>
-                        <button type="button" @click="panel = 'tasks'" class="rounded-lg px-3 py-2 text-sm font-medium transition"
-                            :class="panel === 'tasks' ? 'bg-white text-[#17313F] shadow-sm' : 'text-[#D7DEE6] hover:text-white'">
-                            Tasks
-                        </button>
-                        <button type="button" @click="panel = 'details'" class="rounded-lg px-3 py-2 text-sm font-medium transition"
-                            :class="panel === 'details' ? 'bg-white text-[#17313F] shadow-sm' : 'text-[#D7DEE6] hover:text-white'">
-                            Details
-                        </button>
+                    <div x-show="panel === 'live'" x-transition class="space-y-2">
+                        @if ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED && ! $booking->caregiver_terms_accepted_at)
+                            <div class="rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-3 text-sm text-amber-100">
+                                Accept the agreement first, then check in when you arrive.
+                            </div>
+                            <p class="text-xs font-medium text-amber-100">
+                                Open Visit record and notes below to accept the agreement.
+                            </p>
+                        @else
+                            <div class="rounded-xl border px-3 py-3 {{ $commandStatusToneClass }}">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] opacity-85">Right now</p>
+                                <p class="mt-1 text-sm font-semibold text-white">{{ $commandStatusTitle }}</p>
+                                <p class="mt-1 text-sm leading-6">{{ $commandStatusBody }}</p>
+                            </div>
+                        @endif
+
+                        @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true))
+                            <div class="rounded-xl border border-emerald-300/40 bg-emerald-500/10 p-3.5">
+                                <p class="text-xs uppercase tracking-[0.12em] text-emerald-100 font-semibold">Live timer</p>
+                                <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                    <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+                                        <p class="text-xs uppercase tracking-[0.12em] text-[#D7DEE6]">Time with client</p>
+                                        <p class="text-2xl font-semibold tabular-nums" x-text="timerLabel">00:00</p>
+                                    </div>
+                                    <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+                                        <p class="text-xs uppercase tracking-[0.12em] text-[#D7DEE6]">Estimated earnings</p>
+                                        <p class="text-2xl font-semibold tabular-nums" x-text="earningsLabel">$0.00</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if ($canCheckIn)
+                            <x-button
+                                color="blue"
+                                class="w-full"
+                                x-bind:disabled="geoLoading || !canCheckIn"
+                                x-on:click.prevent="startWithGps()"
+                            >
+                                <span x-show="!geoLoading">Start visit</span>
+                                <span x-show="geoLoading">Capturing GPS...</span>
+                            </x-button>
+                        @endif
+
+                        @if ($canPause)
+                            <x-button color="amber" class="w-full" wire:click="pauseBooking">Pause visit</x-button>
+                        @endif
+
+                        @if ($canResume)
+                            <x-button color="blue" class="w-full" wire:click="resumeBooking">Resume visit</x-button>
+                        @endif
+
+                        @if ($canCheckOut)
+                            <x-button
+                                color="green"
+                                class="w-full"
+                                x-bind:disabled="geoLoading || !canCheckOut"
+                                x-on:click.prevent="endWithGps()"
+                            >
+                                <span x-show="!geoLoading">End visit</span>
+                                <span x-show="geoLoading">Capturing GPS...</span>
+                            </x-button>
+                        @endif
+
+                        <p class="text-xs text-[#D7DEE6]" x-show="geoMessage" x-text="geoMessage"></p>
+
+                        @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED, \App\Models\CareBooking::STATUS_DISPUTED], true))
+                            <div class="rounded-xl border border-indigo-300/40 bg-indigo-500/10 p-3.5">
+                                <p class="text-xs uppercase tracking-[0.12em] text-indigo-100 font-semibold">Visit recap</p>
+                                <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 text-sm">
+                                    <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+                                        <p class="text-xs text-[#D7DEE6]">Worked time</p>
+                                        <p class="font-semibold text-white">{{ $workedLabel }}</p>
+                                    </div>
+                                    <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+                                        <p class="text-xs text-[#D7DEE6]">Rate</p>
+                                        <p class="font-semibold text-white">${{ number_format($ratePerHour, 2) }}/hr</p>
+                                    </div>
+                                    <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+                                        <p class="text-xs text-[#D7DEE6]">Estimated earnings</p>
+                                        <p class="font-semibold text-white">${{ number_format($estimatedEarnings, 2) }}</p>
+                                    </div>
+                                    <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
+                                        <p class="text-xs text-[#D7DEE6]">Break time</p>
+                                        <p class="font-semibold text-white">{{ $pausedLabel }}</p>
+                                    </div>
+                                    <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2 sm:col-span-2">
+                                        <p class="text-xs text-[#D7DEE6]">GPS verification</p>
+                                        <p class="font-semibold text-white">
+                                            {{ ($booking->check_in_lat && $booking->check_in_lng && $booking->check_out_lat && $booking->check_out_lng) ? 'Start + End captured' : 'Partial capture' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if ($showPayoutSetupAlert)
+                            <div class="rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+                                Payout setup is incomplete. Connect Stripe to receive earnings from completed visits.
+                                <a href="{{ route('caregiver.payouts.connect.show') }}" wire:navigate class="font-semibold underline underline-offset-2">Complete setup</a>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]" x-show="panel === 'live'" x-transition>
@@ -359,34 +792,24 @@
                     </div>
 
                     @if ($serviceMapEmbedUrl)
-                        <div wire:ignore class="overflow-hidden rounded-xl border border-white/20 bg-white/10" x-show="panel === 'live'" x-transition>
-                            <iframe
-                                title="Care location map"
-                                src="{{ $serviceMapEmbedUrl }}"
-                                loading="lazy"
-                                referrerpolicy="no-referrer-when-downgrade"
-                                class="h-48 w-full"
-                            ></iframe>
-                        </div>
-                    @endif
-
-                    @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true))
-                        <div class="rounded-xl border border-emerald-300/40 bg-emerald-500/10 p-3.5" x-show="panel === 'live'" x-transition>
-                            <p class="text-xs uppercase tracking-[0.12em] text-emerald-100 font-semibold">Live counters</p>
-                            <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
-                                    <p class="text-xs uppercase tracking-[0.12em] text-[#D7DEE6]">Timer</p>
-                                    <p class="text-2xl font-semibold tabular-nums" x-text="timerLabel">00:00</p>
-                                </div>
-                                <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
-                                    <p class="text-xs uppercase tracking-[0.12em] text-[#D7DEE6]">Earned</p>
-                                    <p class="text-2xl font-semibold tabular-nums" x-text="earningsLabel">$0.00</p>
-                                </div>
+                        <details class="rounded-xl border border-white/20 bg-white/10 p-3 text-white" x-show="panel === 'live'" x-transition>
+                            <summary class="cursor-pointer font-medium">Map and visit record</summary>
+                            <div wire:ignore class="mt-3 overflow-hidden rounded-xl border border-white/20 bg-white/10">
+                                <iframe
+                                    title="Care location map"
+                                    src="{{ $serviceMapEmbedUrl }}"
+                                    loading="lazy"
+                                    referrerpolicy="no-referrer-when-downgrade"
+                                    class="h-48 w-full"
+                                ></iframe>
                             </div>
-                        </div>
+                        </details>
                     @endif
 
-                    <div class="rounded-xl border border-white/20 bg-white/10 p-3" x-show="panel === 'details'" x-transition>
+                    <details class="rounded-xl border border-white/20 bg-white/10 p-3" {{ ! $booking->caregiver_terms_accepted_at ? 'open' : '' }}>
+                        <summary class="cursor-pointer font-medium text-white">Visit record and notes</summary>
+                        <div class="mt-3 space-y-3">
+                    <div class="rounded-xl border border-white/20 bg-white/10 p-3">
                         <p class="font-medium text-white">Agreement</p>
                         <p class="mt-1 text-xs text-[#D7DEE6]">
                             Family accepted:
@@ -402,7 +825,7 @@
                     </div>
 
                     @if ($requestItem->home_access_notes || $requestItem->recipient?->care_notes)
-                        <div class="rounded-xl border border-white/20 bg-white/10 p-3" x-show="panel === 'details'" x-transition>
+                        <div class="rounded-xl border border-white/20 bg-white/10 p-3">
                             <p class="font-medium text-white">Care notes</p>
                             @if ($requestItem->home_access_notes)
                                 <p class="mt-2 text-xs uppercase tracking-[0.12em] text-[#D7DEE6]">Home access</p>
@@ -415,39 +838,8 @@
                         </div>
                     @endif
 
-                    <div x-show="panel === 'live'" x-transition class="space-y-2">
-                        @if ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED && ! $booking->caregiver_terms_accepted_at)
-                            <div class="rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-3 text-sm text-amber-100">
-                                Accept the agreement first, then check in when you arrive.
-                            </div>
-                            <button type="button" @click="panel = 'details'" class="text-xs font-medium text-amber-200 underline underline-offset-2">
-                                Open details to accept agreement
-                            </button>
-                        @elseif ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED)
-                            <div class="rounded-xl border border-[#C8D9F5]/60 bg-[#4F6FAF]/10 px-3 py-3 text-sm text-[#DCE8FF]">
-                                Ready to start. Check in when you arrive at the care location.
-                            </div>
-                        @elseif ($booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS)
-                            <div class="rounded-xl border border-emerald-300/40 bg-emerald-500/10 px-3 py-3 text-sm text-emerald-100">
-                                Shift in progress. Pause for break or end when done.
-                            </div>
-                        @elseif ($booking->status === \App\Models\CareBooking::STATUS_PAUSED)
-                            <div class="rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-3 text-sm text-amber-100">
-                                Shift is paused. Resume when back or end shift directly.
-                            </div>
-                        @elseif ($booking->status === \App\Models\CareBooking::STATUS_COMPLETED)
-                            <div class="rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-3 text-sm text-amber-100">
-                                Timesheet submitted. Waiting for family confirmation.
-                            </div>
-                        @elseif ($booking->status === \App\Models\CareBooking::STATUS_REVIEWED)
-                            <div class="rounded-xl border border-emerald-300/40 bg-emerald-500/10 px-3 py-3 text-sm text-emerald-100">
-                                Shift closed and reviewed.
-                            </div>
-                        @endif
-                    </div>
-
                     @if ($canCheckIn || $canCheckOut)
-                        <div class="rounded-xl bg-white p-3" x-show="panel === 'details'" x-transition>
+                        <div class="rounded-xl bg-white p-3">
                             <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                                 <x-input label="Start note (optional)" wire:model="checkInNote" />
                                 <x-input label="End note (optional)" wire:model="checkOutNote" />
@@ -455,46 +847,11 @@
                         </div>
                     @endif
 
-                    <div class="space-y-2">
-                        @if ($canCheckIn)
-                            <x-button
-                                color="blue"
-                                class="w-full"
-                                x-bind:disabled="geoLoading || !canCheckIn"
-                                x-on:click.prevent="startWithGps()"
-                            >
-                                <span x-show="!geoLoading">Start shift</span>
-                                <span x-show="geoLoading">Capturing GPS...</span>
-                            </x-button>
-                        @endif
-
-                        @if ($canPause)
-                            <x-button color="amber" class="w-full" wire:click="pauseBooking">Pause shift</x-button>
-                        @endif
-
-                        @if ($canResume)
-                            <x-button color="blue" class="w-full" wire:click="resumeBooking">Resume shift</x-button>
-                        @endif
-
-                        @if ($canCheckOut)
-                            <x-button
-                                color="green"
-                                class="w-full"
-                                x-bind:disabled="geoLoading || !canCheckOut"
-                                x-on:click.prevent="endWithGps()"
-                            >
-                                <span x-show="!geoLoading">End shift</span>
-                                <span x-show="geoLoading">Capturing GPS...</span>
-                            </x-button>
-                        @endif
-                    </div>
-
-                    <p class="text-xs text-[#D7DEE6]" x-show="geoMessage" x-text="geoMessage"></p>
-                    <p class="text-xs text-[#D7DEE6]" x-show="panel === 'details'" x-transition>
+                    <p class="text-xs text-[#D7DEE6]">
                         Start and end use phone GPS to verify on-site timestamps.
                     </p>
 
-                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 text-xs text-[#E7ECF1]" x-show="panel === 'details'" x-transition>
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 text-xs text-[#E7ECF1]">
                         <div class="rounded-lg border border-white/15 bg-white/5 px-3 py-2">Started: {{ optional($booking->started_at)->format('M d, H:i') ?: 'Pending' }}</div>
                         <div class="rounded-lg border border-white/15 bg-white/5 px-3 py-2">Paused at: {{ optional($booking->paused_at)->format('M d, H:i') ?: 'Not paused' }}</div>
                         <div class="rounded-lg border border-white/15 bg-white/5 px-3 py-2">Checked out: {{ optional($booking->completed_at)->format('M d, H:i') ?: 'Pending' }}</div>
@@ -525,43 +882,13 @@
                     </div>
 
                     @if ($booking->expected_minutes || $booking->worked_minutes)
-                        <p class="text-xs text-[#D7DEE6]" x-show="panel === 'details'" x-transition>
+                        <p class="text-xs text-[#D7DEE6]">
                             Minutes: expected {{ $booking->expected_minutes ?? '-' }} - worked {{ $booking->worked_minutes ?? '-' }}
                         </p>
                     @endif
 
-                    @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED, \App\Models\CareBooking::STATUS_DISPUTED], true))
-                        <div class="rounded-xl border border-indigo-300/40 bg-indigo-500/10 p-3.5" x-show="panel === 'live'" x-transition>
-                            <p class="text-xs uppercase tracking-[0.12em] text-indigo-100 font-semibold">Shift recap</p>
-                            <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 text-sm">
-                                <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
-                                    <p class="text-xs text-[#D7DEE6]">Worked time</p>
-                                    <p class="font-semibold text-white">{{ $workedLabel }}</p>
-                                </div>
-                                <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
-                                    <p class="text-xs text-[#D7DEE6]">Rate</p>
-                                    <p class="font-semibold text-white">${{ number_format($ratePerHour, 2) }}/hr</p>
-                                </div>
-                                <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
-                                    <p class="text-xs text-[#D7DEE6]">Estimated earnings</p>
-                                    <p class="font-semibold text-white">${{ number_format($estimatedEarnings, 2) }}</p>
-                                </div>
-                                <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
-                                    <p class="text-xs text-[#D7DEE6]">Break time</p>
-                                    <p class="font-semibold text-white">{{ $pausedLabel }}</p>
-                                </div>
-                                <div class="rounded-lg border border-white/20 bg-white/10 px-3 py-2">
-                                    <p class="text-xs text-[#D7DEE6]">GPS verification</p>
-                                    <p class="font-semibold text-white">
-                                        {{ ($booking->check_in_lat && $booking->check_in_lng && $booking->check_out_lat && $booking->check_out_lng) ? 'Start + End captured' : 'Partial capture' }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-
-                    <details class="rounded-xl border border-white/20 bg-white/10 p-3" x-show="panel === 'tasks'" x-transition>
-                        <summary class="cursor-pointer font-medium text-white">Shift checklist</summary>
+                    <details class="rounded-xl border border-white/20 bg-white/10 p-3">
+                        <summary class="cursor-pointer font-medium text-white">Visit checklist</summary>
                         <div class="mt-3 space-y-2">
                             @forelse ($booking->taskChecks as $taskCheck)
                                 <div class="flex items-center justify-between gap-3 rounded border border-white/15 bg-white/5 px-3 py-2">
@@ -581,7 +908,7 @@
                         </div>
                     </details>
 
-                    <details class="rounded-xl border border-white/20 bg-white/10 p-3" x-show="panel === 'details'" x-transition>
+                    <details class="rounded-xl border border-white/20 bg-white/10 p-3">
                         <summary class="cursor-pointer font-medium text-white">Timeline</summary>
                         <div class="mt-3 max-h-52 space-y-1 overflow-auto text-xs text-[#D7DEE6]">
                             @forelse ($booking->events->take(20) as $event)
@@ -593,7 +920,7 @@
                     </details>
 
                     @if ($booking->changeRequests->count() > 0)
-                        <details class="rounded-xl border border-white/20 bg-white/10 p-3" x-show="panel === 'details'" x-transition>
+                        <details class="rounded-xl border border-white/20 bg-white/10 p-3">
                             <summary class="cursor-pointer font-medium text-white">Change requests</summary>
                             <div class="mt-3 space-y-2">
                                 @foreach ($booking->changeRequests as $change)
@@ -613,19 +940,19 @@
                     @endif
 
                     @if (! in_array($booking->status, [\App\Models\CareBooking::STATUS_CANCELLED, \App\Models\CareBooking::STATUS_REVIEWED], true))
-                        <details class="rounded-xl border border-amber-300/40 bg-amber-500/10 p-3" x-show="panel === 'details'" x-transition>
+                        <details class="rounded-xl border border-amber-300/40 bg-amber-500/10 p-3">
                             <summary class="cursor-pointer font-medium text-amber-100">Need to cancel or reschedule?</summary>
                             <div class="mt-3 space-y-4 text-sm text-amber-50">
                                 <p class="text-xs text-amber-100">
-                                    Send a request to the family. If they accept, the shift is cancelled or moved, and late cancellation is tracked automatically.
+                                    Send a request to the family. If they accept, the visit is cancelled or moved, and late cancellation is tracked automatically.
                                 </p>
                                 <div class="space-y-4 rounded-xl bg-white p-3 text-[#17313F]">
                                     <x-native-select-field
                                         label="Change type"
                                         wire:model="changeType"
                                         :options="[
-                                            ['label' => 'Cancel booking', 'value' => 'cancel'],
-                                            ['label' => 'Reschedule booking', 'value' => 'reschedule'],
+                                            ['label' => 'Cancel visit', 'value' => 'cancel'],
+                                            ['label' => 'Reschedule visit', 'value' => 'reschedule'],
                                         ]"
                                     />
                                     <x-textarea label="Reason" wire:model="changeReason" />
@@ -642,10 +969,12 @@
                         </details>
                     @endif
 
-                    <div class="flex flex-wrap gap-2" x-show="panel === 'details'" x-transition>
+                    <div class="flex flex-wrap gap-2">
                         <x-button color="white" light wire:click="openChat">Open chat</x-button>
                         <x-button color="white" light wire:click="setActiveTab('support')">Open support tools</x-button>
                     </div>
+                        </div>
+                    </details>
                 </div>
                 </div>
             </section>
@@ -655,7 +984,7 @@
                     <x-slot:header>
                         @if ($canLeaveReview)
                             <h2 class="font-display text-lg font-semibold">Leave a review</h2>
-                            <p class="text-xs text-[#7B8794]">Tap stars to rate this shift.</p>
+                            <p class="text-xs text-[#7B8794]">Tap stars to rate this visit.</p>
                         @else
                             <h2 class="font-display text-lg font-semibold">Your review</h2>
                             <p class="text-xs text-emerald-600">Review submitted successfully.</p>
@@ -722,7 +1051,7 @@
                 @if ($familyReview)
                     <x-card>
                         <x-slot:header>
-                            <h2 class="font-display text-lg font-semibold">Family feedback on this shift</h2>
+                            <h2 class="font-display text-lg font-semibold">Family feedback on this visit</h2>
                         </x-slot:header>
 
                         <div class="space-y-3">
@@ -767,8 +1096,8 @@
                                     label="Change type"
                                     wire:model="changeType"
                                     :options="[
-                                        ['label' => 'Cancel booking', 'value' => 'cancel'],
-                                        ['label' => 'Reschedule booking', 'value' => 'reschedule'],
+                                        ['label' => 'Cancel visit', 'value' => 'cancel'],
+                                        ['label' => 'Reschedule visit', 'value' => 'reschedule'],
                                     ]"
                                 />
                                 <x-textarea label="Reason" wire:model="changeReason" />
@@ -890,18 +1219,20 @@
                         return;
                     }
 
-                    this.capturePositionAndCall('startBookingWithGeo', 'Starting shift...');
+                    this.capturePositionAndCall('startBookingWithGeo', 'Starting visit...');
                 },
                 endWithGps() {
                     if (!this.canCheckOut || this.geoLoading) {
                         return;
                     }
 
-                    this.capturePositionAndCall('completeBookingWithGeo', 'Ending shift...');
+                    this.capturePositionAndCall('completeBookingWithGeo', 'Ending visit...');
                 },
                 capturePositionAndCall(methodName, successMessage) {
                     if (!navigator.geolocation) {
-                        this.geoMessage = 'GPS is not available on this device/browser.';
+                        this.geoMessage = 'GPS is not available. Recording a manual timestamp.';
+                        this.$wire[methodName](null, null, null);
+                        this.geoLoading = false;
                         return;
                     }
 
@@ -919,7 +1250,8 @@
                             this.geoLoading = false;
                         },
                         () => {
-                            this.geoMessage = 'Could not capture GPS. Enable location permissions and retry.';
+                            this.geoMessage = 'Could not capture GPS. Recording a manual timestamp.';
+                            this.$wire[methodName](null, null, null);
                             this.geoLoading = false;
                         },
                         {

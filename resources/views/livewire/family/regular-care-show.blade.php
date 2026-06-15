@@ -30,7 +30,7 @@
     <section class="hc-brand-panel">
         <div class="relative flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-                <p class="hc-brand-kicker text-[#E8E0FF]">Regular care plan</p>
+                <p class="hc-brand-kicker text-[#E8E0FF]">Weekly care</p>
                 <div class="mt-1 flex flex-wrap items-center gap-2">
                     <h1 class="text-2xl font-display font-semibold leading-tight sm:text-3xl">{{ $plan->title }}</h1>
                     <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusStyle }}">{{ $planStatusLabel }}</span>
@@ -41,11 +41,11 @@
             </div>
             <div class="flex flex-col gap-2 sm:flex-row">
                 <a href="{{ route('family.care.index') }}" wire:navigate>
-                    <x-button color="white" light class="w-full sm:w-auto">All care plans</x-button>
+                    <x-button color="white" light class="w-full sm:w-auto">All weekly care</x-button>
                 </a>
                 @if ($plan->nextBooking)
                     <a href="{{ route('family.requests.show', $plan->nextBooking->care_request_id) }}" wire:navigate>
-                        <x-button color="white" class="w-full sm:w-auto">Open next booking</x-button>
+                        <x-button color="white" class="w-full sm:w-auto">Open next visit</x-button>
                     </a>
                 @endif
             </div>
@@ -56,7 +56,7 @@
         <x-alert color="amber">
             {{ $plan->last_error ?: 'Payment action is needed before LoLo can keep this regular visit fully protected.' }}
             @if ($plan->nextBooking)
-                <a href="{{ route('family.requests.show', $plan->nextBooking->care_request_id) }}" wire:navigate class="ml-1 font-semibold underline underline-offset-2">Open booking payment</a>
+                <a href="{{ route('family.requests.show', $plan->nextBooking->care_request_id) }}" wire:navigate class="ml-1 font-semibold underline underline-offset-2">Open visit payment</a>
             @else
                 <a href="{{ route('family.billing.show') }}" wire:navigate class="ml-1 font-semibold underline underline-offset-2">Open billing</a>
             @endif
@@ -94,7 +94,7 @@
                     <div class="flex items-center justify-between gap-3">
                         <div>
                             <h2 class="font-display text-lg font-semibold">Upcoming visits</h2>
-                            <p class="text-sm text-[#607080]">Generated bookings use the existing request, shift, and payment systems.</p>
+                            <p class="text-sm text-[#607080]">LoLo creates each visit from this weekly schedule.</p>
                         </div>
                         <span class="rounded-full bg-[#F0E9E1] px-2.5 py-1 text-[11px] font-semibold text-[#4B5B6B]">
                             {{ $paymentLabel }}
@@ -116,7 +116,7 @@
                                     <p class="mt-1 text-sm text-[#607080]">{{ $plan->recipientName() }} with {{ $plan->caregiver?->name }}</p>
                                 </div>
                                 @if ($isGeneratedBooking)
-                                    <x-badge color="green" text="BOOKED" />
+                                    <x-badge color="green" text="Scheduled" />
                                 @else
                                     <x-badge color="slate" text="PROJECTED" />
                                 @endif
@@ -189,10 +189,10 @@
             @if ($plan->nextBooking)
                 <x-card>
                     <x-slot:header>
-                        <h2 class="font-display text-lg font-semibold">Next generated booking</h2>
+                        <h2 class="font-display text-lg font-semibold">Next visit</h2>
                     </x-slot:header>
                     <div class="space-y-2 text-sm">
-                        <p>Status: <span class="font-semibold text-[#17313F]">{{ strtoupper($plan->nextBooking->status) }}</span></p>
+                        <p>Status: <span class="font-semibold text-[#17313F]">{{ strtoupper(str_replace('_', ' ', $plan->nextBooking->status)) }}</span></p>
                         <p>Payment: <span class="font-semibold text-[#17313F]">{{ strtoupper($plan->nextBooking->payment?->status ?? 'pending') }}</span></p>
                         <p>{{ optional($plan->nextBooking->scheduled_start_at)->format('M d, Y g:i A') }} to {{ optional($plan->nextBooking->scheduled_end_at)->format('g:i A') }}</p>
                     </div>
@@ -202,11 +202,11 @@
             @if ($plan->isLive())
                 <x-card>
                     <x-slot:header>
-                        <h2 class="font-display text-lg font-semibold">Plan controls</h2>
+                        <h2 class="font-display text-lg font-semibold">Weekly care controls</h2>
                     </x-slot:header>
-                    <p class="text-sm text-[#607080]">Ending the plan stops future recurring generation. Existing generated bookings stay in the shift workflow.</p>
+                    <p class="text-sm text-[#607080]">Ending weekly care stops future visits. Existing scheduled visits stay in the normal visit workflow.</p>
                     <x-slot:footer>
-                        <x-button color="red" light wire:click="endPlan">End regular care</x-button>
+                        <x-button color="red" light wire:click="endPlan">End weekly care</x-button>
                     </x-slot:footer>
                 </x-card>
             @endif

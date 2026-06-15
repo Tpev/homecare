@@ -15,7 +15,7 @@ class PrelaunchFamilyAutoApplicantsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_prelaunch_auto_applicants_are_queued_with_expected_delays(): void
+    public function test_family_requests_do_not_auto_queue_staff_applicants(): void
     {
         config([
             'marketplace.family_prelaunch_auto_applicants.enabled' => true,
@@ -43,17 +43,7 @@ class PrelaunchFamilyAutoApplicantsTest extends TestCase
             'zip' => '27601',
         ]);
 
-        Queue::assertPushed(InjectPrelaunchStaffApplication::class, 2);
-        Queue::assertPushed(
-            InjectPrelaunchStaffApplication::class,
-            fn (InjectPrelaunchStaffApplication $job): bool => $job->caregiverEmail === 'carolinepetrinipoli@gmail.com'
-                && $job->delayMinutes === 10
-        );
-        Queue::assertPushed(
-            InjectPrelaunchStaffApplication::class,
-            fn (InjectPrelaunchStaffApplication $job): bool => $job->caregiverEmail === 'charlespetrinipoli@gmail.com'
-                && $job->delayMinutes === 15
-        );
+        Queue::assertNotPushed(InjectPrelaunchStaffApplication::class);
     }
 
     public function test_prelaunch_auto_applicant_job_creates_applied_record_once(): void
@@ -110,4 +100,3 @@ class PrelaunchFamilyAutoApplicantsTest extends TestCase
         );
     }
 }
-

@@ -34,9 +34,9 @@
             <div class="relative space-y-4">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                        <p class="hc-brand-kicker text-[#E8E0FF]">My shifts</p>
-                        <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Get ready for your first shift.</h1>
-                        <p class="mt-1 text-sm text-[#F7F1E8]/82">Start, pause, resume, and close shifts from one command view.</p>
+                        <p class="hc-brand-kicker text-[#E8E0FF]">My visits</p>
+                        <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Get ready for your first visit.</h1>
+                        <p class="mt-1 text-sm text-[#F7F1E8]/82">Start, pause, resume, and close visits from one command view.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate>
@@ -69,8 +69,8 @@
 
                 @if (!empty($nextShift))
                     <div class="rounded-[1.4rem] border border-[#D3CBF0] bg-[rgba(255,255,255,0.08)] px-3 py-3">
-                        <p class="text-xs uppercase tracking-[0.14em] text-[#E8E0FF]">Next shift</p>
-                        <p class="mt-1 text-sm font-semibold text-[#FAF9F7]">{{ $nextShift->careRequest?->title ?? 'Upcoming shift' }}</p>
+                        <p class="text-xs uppercase tracking-[0.14em] text-[#E8E0FF]">Next visit</p>
+                        <p class="mt-1 text-sm font-semibold text-[#FAF9F7]">{{ $nextShift->careRequest?->title ?? 'Upcoming visit' }}</p>
                         <p class="text-xs text-[#F0E9E1]/82">
                             {{ optional($nextShift->scheduled_start_at)->format('D, M d \\a\\t H:i') }}
                              -  {{ $nextShift->careRequest?->city }}, {{ $nextShift->careRequest?->state }}
@@ -83,12 +83,12 @@
         <div class="sticky top-16 z-20 -mx-1 px-1">
             <div class="rounded-2xl border border-[#DED6CA] bg-[rgba(255,253,250,0.95)] p-2 shadow-sm backdrop-blur">
                 <div class="overflow-x-auto">
-                    <div class="grid min-w-full grid-cols-2 gap-1 sm:flex sm:min-w-max">
+                    <div class="flex min-w-max gap-1">
                         @foreach ($filterOptions as $option)
                             <button
                                 type="button"
                                 wire:click="$set('status', '{{ $option['value'] }}')"
-                                class="h-11 rounded-xl px-3 text-sm font-medium transition {{ $status === $option['value'] ? 'bg-[#0F3D3E] text-[#FAF9F7]' : 'text-[#6E746F] hover:bg-[#F5F1EB] hover:text-[#0F3D3E]' }}"
+                                class="h-11 min-w-[8.5rem] rounded-xl px-3 text-sm font-medium transition {{ $status === $option['value'] ? 'bg-[#0F3D3E] text-[#FAF9F7]' : 'text-[#6E746F] hover:bg-[#F5F1EB] hover:text-[#0F3D3E]' }}"
                             >
                                 {{ $option['label'] }}
                             </button>
@@ -104,14 +104,14 @@
                     $request = $booking->careRequest;
                     $bookingStatus = (string) $booking->status;
                     $ctaLabel = match ($bookingStatus) {
-                        \App\Models\CareBooking::STATUS_SCHEDULED => 'Start shift',
-                        \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Continue shift',
-                        \App\Models\CareBooking::STATUS_PAUSED => 'Resume shift',
+                        \App\Models\CareBooking::STATUS_SCHEDULED => 'Start visit',
+                        \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Continue visit',
+                        \App\Models\CareBooking::STATUS_PAUSED => 'Resume visit',
                         \App\Models\CareBooking::STATUS_COMPLETED => 'View recap',
-                        \App\Models\CareBooking::STATUS_REVIEWED => 'View shift',
+                        \App\Models\CareBooking::STATUS_REVIEWED => 'View visit',
                         \App\Models\CareBooking::STATUS_DISPUTED => 'Open dispute view',
                         \App\Models\CareBooking::STATUS_CANCELLED => 'View details',
-                        default => 'Open shift',
+                        default => 'Open visit',
                     };
                 @endphp
 
@@ -165,7 +165,7 @@
                 </article>
             @empty
                 <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-[rgba(255,253,250,0.98)] px-4 py-8 text-center text-sm text-[#607080]">
-                    No shifts yet. Once a family hires you, your shift actions appear here.
+                    No visits yet. Once a family hires you, your visit actions appear here.
                 </div>
             @endforelse
         </section>
@@ -179,7 +179,7 @@
         @if ($hiredWithoutBooking->count() > 0)
             <x-card>
                 <x-slot:header>
-                    <h2 class="font-display text-lg font-semibold">Pending shift setup</h2>
+                    <h2 class="font-display text-lg font-semibold">Pending visit setup</h2>
                 </x-slot:header>
                 <div class="space-y-2">
                     @foreach ($hiredWithoutBooking as $application)

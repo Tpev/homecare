@@ -2,8 +2,12 @@
 
 namespace App\Livewire\Family;
 
+use App\Models\CareBooking;
+use App\Models\CarePlan;
 use App\Models\CareRequest;
+use App\Models\CareRequestApplication;
 use App\Support\CareRequestProgress;
+use App\Support\FamilyRebookingOptions;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -20,9 +24,9 @@ class RequestsIndex extends Component
     public array $statusOptions = [
         ['label' => 'All statuses', 'value' => 'all'],
         ['label' => 'Open', 'value' => CareRequest::STATUS_OPEN],
-        ['label' => 'Filled', 'value' => CareRequest::STATUS_FILLED],
+        ['label' => 'Visit scheduled', 'value' => CareRequest::STATUS_FILLED],
         ['label' => 'Draft', 'value' => CareRequest::STATUS_DRAFT],
-        ['label' => 'Cancelled', 'value' => CareRequest::STATUS_CANCELLED],
+        ['label' => 'Withdrawn', 'value' => CareRequest::STATUS_CANCELLED],
         ['label' => 'Expired', 'value' => CareRequest::STATUS_EXPIRED],
     ];
 
@@ -34,8 +38,8 @@ class RequestsIndex extends Component
 
     public array $requestTypeOptions = [
         ['label' => 'All types', 'value' => 'all'],
-        ['label' => 'One-time', 'value' => CareRequest::TYPE_ONE_TIME],
-        ['label' => 'Recurring', 'value' => CareRequest::TYPE_RECURRING],
+        ['label' => 'One visit', 'value' => CareRequest::TYPE_ONE_TIME],
+        ['label' => 'Repeats weekly', 'value' => CareRequest::TYPE_RECURRING],
     ];
 
     public function mount(): void
@@ -75,6 +79,45 @@ class RequestsIndex extends Component
 
         $paginated = $requests->paginate(10);
 
+        $carePlans = CarePlan::query()
+            ->with([
+                'caregiver:id,name,email,city,state',
+                'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
+            ])
+            ->where('family_user_id', auth()->id())
+            ->latest()
+            ->limit(4)
+            ->get();
+
+        $rebookableRequests = app(FamilyRebookingOptions::class)->forUser(auth()->user(), 4);
+
+        $attentionCount = CareRequest::query()
+            ->where('family_user_id', auth()->id())
+            ->where(function ($query) {
+                $query->where(function ($requestQuery) {
+                    $requestQuery->where('status', CareRequest::STATUS_OPEN)
+                        ->whereHas('applications', function ($applicationQuery) {
+                            $applicationQuery->whereIn('status', [
+                                CareRequestApplication::STATUS_APPLIED,
+                                CareRequestApplication::STATUS_SHORTLISTED,
+                            ]);
+                        });
+                })->orWhereHas('booking', function ($bookingQuery) {
+                    $bookingQuery->where(function ($query) {
+                        $query->whereIn('status', [
+                            CareBooking::STATUS_IN_PROGRESS,
+                            CareBooking::STATUS_PAUSED,
+                        ])->orWhere(function ($reviewQuery) {
+                            $reviewQuery->whereIn('status', [
+                                CareBooking::STATUS_COMPLETED,
+                                CareBooking::STATUS_REVIEWED,
+                            ])->whereNull('family_confirmed_at');
+                        });
+                    });
+                });
+            })
+            ->count();
+
         $avgFirstResponseMinutes = CareRequest::query()
             ->where('family_user_id', auth()->id())
             ->whereNotNull('first_applicant_at')
@@ -85,6 +128,9 @@ class RequestsIndex extends Component
 
         return view('livewire.family.requests-index', [
             'requests' => $paginated,
+            'carePlans' => $carePlans,
+            'rebookableRequests' => $rebookableRequests,
+            'attentionCount' => $attentionCount,
             'avgFirstResponseLabel' => CareRequestProgress::minutesLabel(
                 $avgFirstResponseMinutes !== null ? (int) round($avgFirstResponseMinutes) : null
             ),

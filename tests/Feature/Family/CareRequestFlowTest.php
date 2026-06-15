@@ -66,9 +66,502 @@ class CareRequestFlowTest extends TestCase
         $this->actingAs($family)
             ->get(route('family.requests.index'))
             ->assertOk()
-            ->assertSee('Average first response: 0m')
+            ->assertSee('0m')
             ->assertDontSee('First response -')
             ->assertDontSee('First hire -');
+    }
+
+    public function test_family_care_hub_uses_state_specific_action_labels(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+
+        $openRequest = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Review caregiver label',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_OPEN,
+            'requested_start_at' => now()->addDay()->setTime(9, 0),
+            'requested_end_at' => now()->addDay()->setTime(11, 0),
+            'city' => 'Durham',
+            'state' => 'NC',
+            'zip' => '27703',
+            'address_line1' => '10 Main St',
+        ]);
+
+        CareRequestApplication::query()->create([
+            'care_request_id' => $openRequest->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_APPLIED,
+            'proposed_rate' => 30,
+        ]);
+
+        $scheduledRequest = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Open visit label',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_FILLED,
+            'requested_start_at' => now()->addDays(2)->setTime(10, 0),
+            'requested_end_at' => now()->addDays(2)->setTime(12, 0),
+            'city' => 'Durham',
+            'state' => 'NC',
+            'zip' => '27703',
+            'address_line1' => '20 Main St',
+        ]);
+
+        $scheduledApplication = CareRequestApplication::query()->create([
+            'care_request_id' => $scheduledRequest->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 30,
+        ]);
+
+        CareBooking::query()->create([
+            'care_request_id' => $scheduledRequest->id,
+            'care_request_application_id' => $scheduledApplication->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+            'scheduled_start_at' => now()->addDays(2)->setTime(10, 0),
+            'scheduled_end_at' => now()->addDays(2)->setTime(12, 0),
+        ]);
+
+        $completedRequest = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Review hours label',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_FILLED,
+            'requested_start_at' => now()->subDay()->setTime(10, 0),
+            'requested_end_at' => now()->subDay()->setTime(12, 0),
+            'city' => 'Durham',
+            'state' => 'NC',
+            'zip' => '27703',
+            'address_line1' => '30 Main St',
+        ]);
+
+        $completedApplication = CareRequestApplication::query()->create([
+            'care_request_id' => $completedRequest->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 30,
+        ]);
+
+        CareBooking::query()->create([
+            'care_request_id' => $completedRequest->id,
+            'care_request_application_id' => $completedApplication->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_COMPLETED,
+            'scheduled_start_at' => now()->subDay()->setTime(10, 0),
+            'scheduled_end_at' => now()->subDay()->setTime(12, 0),
+            'completed_at' => now()->subDay()->setTime(12, 0),
+            'timesheet_submitted_at' => now()->subDay()->setTime(12, 10),
+            'worked_minutes' => 120,
+        ]);
+
+        $this->actingAs($family)
+            ->get(route('family.requests.index'))
+            ->assertOk()
+            ->assertSee('Review caregivers')
+            ->assertSee('Open visit')
+            ->assertSee('Review hours')
+            ->assertDontSee('>Open</a>', false);
+    }
+
+    public function test_family_rebooking_surfaces_each_caregiver_once_across_family_pages(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caroline = User::factory()->create(['role' => 'caregiver', 'name' => 'Caroline Petrini-Poli']);
+        $bob = User::factory()->create(['role' => 'caregiver', 'name' => 'Bob Helper']);
+
+        $this->createCompletedRebookSource($family, $caroline, 'Older visit with Caroline', now()->subWeeks(2));
+        $this->createCompletedRebookSource($family, $caroline, 'Newer visit with Caroline', now()->subWeek());
+        $this->createCompletedRebookSource($family, $bob, 'Visit with Bob', now()->subDays(3));
+
+        foreach ([route('dashboard'), route('family.requests.index')] as $url) {
+            $html = $this->actingAs($family)
+                ->get($url)
+                ->assertOk()
+                ->getContent();
+
+            $this->assertSame(1, substr_count($html, 'Book Caroline again'), 'Caroline should only appear once on '.$url);
+            $this->assertSame(1, substr_count($html, 'Book Bob again'), 'Bob should only appear once on '.$url);
+        }
+
+        $weeklyCareHtml = $this->actingAs($family)
+            ->get(route('family.care.index'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertSame(1, substr_count($weeklyCareHtml, 'Set up weekly care with Caroline'), 'Caroline should only appear once on weekly care.');
+        $this->assertSame(1, substr_count($weeklyCareHtml, 'Set up weekly care with Bob'), 'Bob should only appear once on weekly care.');
+    }
+
+    public function test_request_detail_lands_on_the_right_lifecycle_screen(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = User::factory()->create(['role' => 'caregiver', 'name' => 'Caroline Petrini-Poli']);
+
+        $openRequest = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Need companionship replies',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_OPEN,
+            'requested_start_at' => now()->addDay()->setTime(9, 0),
+            'requested_end_at' => now()->addDay()->setTime(12, 0),
+            'city' => 'Durham',
+            'state' => 'NC',
+            'zip' => '27703',
+            'address_line1' => '1520 Home Creek Drive',
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $openRequest->id])
+            ->assertSet('activeTab', 'applicants')
+            ->assertSee('Finding care')
+            ->assertSee('Your request is live.')
+            ->assertSee('Find matching caregivers')
+            ->assertSee('Suggested caregivers')
+            ->assertSee('Invite one or two caregivers')
+            ->assertSee('After a caregiver replies, this screen changes to compare, chat, and hire.')
+            ->assertSee('Caregivers')
+            ->assertSee('Invite matching people')
+            ->assertSee('Care details')
+            ->assertDontSee('At a glance')
+            ->assertDontSee('Invite, chat, hire')
+            ->assertDontSee('No caregivers have replied yet.')
+            ->assertDontSee('Filter or sort caregivers')
+            ->assertDontSee('More timing details')
+            ->assertDontSee('Need to stop this request?')
+            ->assertDontSee('Request options')
+            ->assertDontSee('Time, location, payment');
+
+        $reviewRequest = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Choose caregiver request',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_OPEN,
+            'requested_start_at' => now()->addDays(2)->setTime(9, 0),
+            'requested_end_at' => now()->addDays(2)->setTime(12, 0),
+            'city' => 'Durham',
+            'state' => 'NC',
+            'zip' => '27703',
+            'address_line1' => '1520 Home Creek Drive',
+        ]);
+        CareRequestApplication::query()->create([
+            'care_request_id' => $reviewRequest->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_APPLIED,
+            'proposed_rate' => 30,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $reviewRequest->id])
+            ->assertSet('activeTab', 'applicants')
+            ->assertSee('Choose caregiver')
+            ->assertSee('Caregivers are ready for review.')
+            ->assertSee('Ready to choose')
+            ->assertSee('Hire Caroline')
+            ->assertSee('Chat first')
+            ->assertDontSee('Save & chat')
+            ->assertDontSee('Filter or sort caregivers')
+            ->assertSee('Need more choices?')
+            ->assertSee('Invite more caregivers')
+            ->assertSee('Review, chat, hire')
+            ->assertDontSee('At a glance')
+            ->assertDontSee('Request options')
+            ->assertDontSee('Invite, chat, hire');
+
+        $secondCaregiver = User::factory()->create(['role' => 'caregiver', 'name' => 'Michael Rivera']);
+        $multiReviewRequest = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Compare caregiver request',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_OPEN,
+            'requested_start_at' => now()->addDays(2)->setTime(13, 0),
+            'requested_end_at' => now()->addDays(2)->setTime(15, 0),
+            'city' => 'Durham',
+            'state' => 'NC',
+            'zip' => '27703',
+            'address_line1' => '1520 Home Creek Drive',
+        ]);
+        CareRequestApplication::query()->create([
+            'care_request_id' => $multiReviewRequest->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_APPLIED,
+            'proposed_rate' => 30,
+        ]);
+        CareRequestApplication::query()->create([
+            'care_request_id' => $multiReviewRequest->id,
+            'caregiver_user_id' => $secondCaregiver->id,
+            'status' => CareRequestApplication::STATUS_APPLIED,
+            'proposed_rate' => 30,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $multiReviewRequest->id])
+            ->assertSet('activeTab', 'applicants')
+            ->assertSee('2 caregivers replied')
+            ->assertSee('Review each card below')
+            ->assertDontSee('Compare caregivers')
+            ->assertDontSee('Filter or sort caregivers')
+            ->assertSee('Hire Caroline')
+            ->assertSee('Hire Michael')
+            ->assertDontSee('Ready to choose');
+
+        $scheduledRequest = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Scheduled visit request',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_FILLED,
+            'requested_start_at' => now()->addDays(3)->setTime(10, 0),
+            'requested_end_at' => now()->addDays(3)->setTime(12, 0),
+            'city' => 'Durham',
+            'state' => 'NC',
+            'zip' => '27703',
+            'address_line1' => '1520 Home Creek Drive',
+        ]);
+        $scheduledApplication = CareRequestApplication::query()->create([
+            'care_request_id' => $scheduledRequest->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 30,
+        ]);
+        CareBooking::query()->create([
+            'care_request_id' => $scheduledRequest->id,
+            'care_request_application_id' => $scheduledApplication->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+            'scheduled_start_at' => now()->addDays(3)->setTime(10, 0),
+            'scheduled_end_at' => now()->addDays(3)->setTime(12, 0),
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $scheduledRequest->id])
+            ->assertSet('activeTab', 'shift')
+            ->assertSee('Visit scheduled')
+            ->assertSee('Your visit is scheduled.')
+            ->assertSee('Right now')
+            ->assertSee('Caroline is coming')
+            ->assertSee('Message caregiver')
+            ->assertSee('Change or cancel')
+            ->assertSee('Before the visit')
+            ->assertSee('Visit plan')
+            ->assertSee('Map and visit record')
+            ->assertSee('Profile, chat')
+            ->assertSee('Time, location, payment')
+            ->assertSee('Change or get help')
+            ->assertDontSee('At a glance')
+            ->assertDontSee('Invite, chat, hire')
+            ->assertSee('If the caregiver is late')
+            ->assertDontSee('Book Caroline again')
+            ->assertDontSee('No-show rule')
+            ->assertDontSee('Cancel this scheduled visit')
+            ->assertDontSee('Task completion snapshot')
+            ->call('setActiveTab', 'support')
+            ->assertSee('Change or cancel this visit')
+            ->assertSee('Request cancellation or reschedule')
+            ->assertSee('Need to cancel now?');
+
+        $completedRequest = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Timesheet review request',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_FILLED,
+            'requested_start_at' => now()->subDay()->setTime(10, 0),
+            'requested_end_at' => now()->subDay()->setTime(12, 0),
+            'city' => 'Durham',
+            'state' => 'NC',
+            'zip' => '27703',
+            'address_line1' => '1520 Home Creek Drive',
+        ]);
+        $completedApplication = CareRequestApplication::query()->create([
+            'care_request_id' => $completedRequest->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 30,
+        ]);
+        CareBooking::query()->create([
+            'care_request_id' => $completedRequest->id,
+            'care_request_application_id' => $completedApplication->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_COMPLETED,
+            'scheduled_start_at' => now()->subDay()->setTime(10, 0),
+            'scheduled_end_at' => now()->subDay()->setTime(12, 0),
+            'completed_at' => now()->subDay()->setTime(12, 0),
+            'timesheet_submitted_at' => now()->subDay()->setTime(12, 10),
+            'worked_minutes' => 120,
+        ]);
+
+        $completedComponent = Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $completedRequest->id])
+            ->assertSet('activeTab', 'shift')
+            ->assertSee('Review hours')
+            ->assertSee('Caregiver hours need your review.')
+            ->assertSee('Submitted hours')
+            ->assertSee('Estimated payment')
+            ->assertSee('Approve hours and pay')
+            ->assertSee('Question hours')
+            ->assertSee('Visit details before approval')
+            ->assertDontSee('Review hours and payment')
+            ->assertSee('Profile, chat')
+            ->assertDontSee('At a glance')
+            ->assertDontSee('Review caregiver timesheet')
+            ->assertDontSee('Invite, chat, hire');
+
+        $completedComponent
+            ->call('setActiveTab', 'support')
+            ->assertSee('Question hours or payment')
+            ->assertSee('Question the submitted hours')
+            ->assertDontSee('Request cancellation or reschedule')
+            ->set('changeReason', 'Trying to reschedule after the visit is complete.')
+            ->call('submitChangeRequest')
+            ->assertSee('Visit changes are only available before caregiver check-in.');
+
+        $this->assertDatabaseCount('care_booking_change_requests', 0);
+
+        $reviewedRequest = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Reviewed visit request',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_FILLED,
+            'requested_start_at' => now()->subDays(2)->setTime(10, 0),
+            'requested_end_at' => now()->subDays(2)->setTime(12, 0),
+            'city' => 'Durham',
+            'state' => 'NC',
+            'zip' => '27703',
+            'address_line1' => '1520 Home Creek Drive',
+        ]);
+        $reviewedApplication = CareRequestApplication::query()->create([
+            'care_request_id' => $reviewedRequest->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 30,
+        ]);
+        $reviewedBooking = CareBooking::query()->create([
+            'care_request_id' => $reviewedRequest->id,
+            'care_request_application_id' => $reviewedApplication->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_REVIEWED,
+            'scheduled_start_at' => now()->subDays(2)->setTime(10, 0),
+            'scheduled_end_at' => now()->subDays(2)->setTime(12, 0),
+            'started_at' => now()->subDays(2)->setTime(10, 0),
+            'completed_at' => now()->subDays(2)->setTime(12, 0),
+            'timesheet_submitted_at' => now()->subDays(2)->setTime(12, 10),
+            'worked_minutes' => 120,
+            'family_confirmed_at' => now()->subDays(2)->setTime(13, 0),
+        ]);
+        CareReview::query()->create([
+            'care_request_id' => $reviewedRequest->id,
+            'care_booking_id' => $reviewedBooking->id,
+            'reviewer_user_id' => $family->id,
+            'reviewee_user_id' => $caregiver->id,
+            'rating' => 5,
+            'comment' => 'Caroline was calm and kind.',
+        ]);
+        CareReview::query()->create([
+            'care_request_id' => $reviewedRequest->id,
+            'care_booking_id' => $reviewedBooking->id,
+            'reviewer_user_id' => $caregiver->id,
+            'reviewee_user_id' => $family->id,
+            'rating' => 5,
+            'comment' => 'Everything was ready when I arrived.',
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $reviewedRequest->id])
+            ->assertSet('activeTab', 'shift')
+            ->assertSee('Visit complete')
+            ->assertSee('This visit is complete.')
+            ->assertSee('Final details')
+            ->assertSee('Visit receipt')
+            ->assertSee('Reviews')
+            ->assertSee('Your review')
+            ->assertSee('Caregiver feedback')
+            ->assertSee('Detailed visit record')
+            ->assertSee('Open map')
+            ->assertDontSee('Payment status:')
+            ->assertDontSee('Visit service location map')
+            ->assertSee('Book Caroline again')
+            ->assertSee('Profile, chat')
+            ->assertDontSee('At a glance')
+            ->assertDontSee('Invite, chat, hire')
+            ->assertDontSee('More timing details')
+            ->assertDontSee('Task completion snapshot');
+
+        $reviewedHtml = $this->actingAs($family)
+            ->get(route('family.requests.show', $reviewedRequest->id))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertSame(1, substr_count($reviewedHtml, 'Book Caroline again'));
+    }
+
+    public function test_family_next_action_distinguishes_scheduled_and_active_visits(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = User::factory()->create(['role' => 'caregiver', 'name' => 'Caroline Petrini-Poli']);
+
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Clear visit state',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_FILLED,
+            'requested_start_at' => now()->addHours(2),
+            'requested_end_at' => now()->addHours(4),
+            'city' => 'Durham',
+            'state' => 'NC',
+            'zip' => '27703',
+            'address_line1' => '1520 Home Creek Drive',
+        ]);
+
+        $application = CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 30,
+        ]);
+
+        $booking = CareBooking::query()->create([
+            'care_request_id' => $request->id,
+            'care_request_application_id' => $application->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+            'scheduled_start_at' => now()->addHours(2),
+            'scheduled_end_at' => now()->addHours(4),
+        ]);
+
+        $this->assertSame('Visit is scheduled', CareRequestProgress::bestNextAction($request->fresh('booking'))['title']);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->assertSee('Your visit is scheduled.')
+            ->assertSee('Caroline is coming')
+            ->assertDontSee('Visit is active');
+
+        $booking->update([
+            'status' => CareBooking::STATUS_IN_PROGRESS,
+            'started_at' => now()->subMinutes(15),
+        ]);
+
+        $this->assertSame('Visit is happening now', CareRequestProgress::bestNextAction($request->fresh('booking'))['title']);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->assertSee('Care is happening now.')
+            ->assertSee('Caroline checked in')
+            ->assertSee('Live visit details')
+            ->assertSee('Live check-in')
+            ->assertSee('Map and visit record')
+            ->assertSee('Message caregiver')
+            ->assertSee('The visit has ended')
+            ->assertSee('Get help')
+            ->assertDontSee('Caregiver is checked in')
+            ->assertDontSee('Visit is scheduled');
     }
 
     public function test_family_can_publish_care_request_with_recipient_and_third_party_contact(): void
@@ -268,6 +761,51 @@ class CareRequestFlowTest extends TestCase
         ]);
     }
 
+    public function test_family_can_save_and_chat_with_applicant_before_hiring(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active']);
+
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Chat before hire request',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_OPEN,
+            'requested_start_at' => now()->addDay()->setTime(10, 0),
+            'requested_end_at' => now()->addDay()->setTime(12, 0),
+            'city' => 'Durham',
+            'state' => 'NC',
+            'zip' => '27703',
+            'address_line1' => '1520 Home Creek Drive',
+        ]);
+
+        $application = CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_APPLIED,
+            'proposed_rate' => 30,
+        ]);
+
+        $component = Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->assertSee('Chat first')
+            ->assertDontSee('Save & chat')
+            ->assertDontSee('Caregiver selection')
+            ->call('startConversation', $application->id);
+
+        $conversation = CareRequestConversation::query()
+            ->where('care_request_application_id', $application->id)
+            ->firstOrFail();
+
+        $component->assertRedirect(route('messages.show', $conversation->id, false));
+
+        $this->assertDatabaseHas('care_request_applications', [
+            'id' => $application->id,
+            'status' => CareRequestApplication::STATUS_SHORTLISTED,
+        ]);
+    }
+
     public function test_closed_request_still_links_to_caregiver_profile_from_applicants(): void
     {
         $family = User::factory()->create([
@@ -326,11 +864,11 @@ class CareRequestFlowTest extends TestCase
         Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $request->id])
             ->call('setActiveTab', 'applicants')
-            ->assertSee('Hiring is closed for this request. Applicant list is now read-only.')
+            ->assertSee('Caroline Hill is hired for this visit')
             ->assertSee('Caroline has deep experience with calm morning routines')
             ->assertSee('Companionship')
             ->assertSee('Languages: English')
-            ->assertSee('View full caregiver profile')
+            ->assertSee('View profile')
             ->assertSee(route('caregivers.show', 'caroline-hill'), false);
     }
 
@@ -375,6 +913,8 @@ class CareRequestFlowTest extends TestCase
 
         Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->assertDontSee('Withdraw request')
+            ->call('setActiveTab', 'overview')
             ->assertSee('Withdraw request')
             ->call('withdrawRequest')
             ->assertSee('Request withdrawn');
@@ -548,14 +1088,19 @@ class CareRequestFlowTest extends TestCase
         });
         app()->instance(BookingPaymentService::class, $paymentService);
 
+        $this->assertSame(
+            'Hours need your approval',
+            CareRequestProgress::bestNextAction($request->fresh('booking'))['title']
+        );
+
         Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $request->id])
-            ->assertSee('Review caregiver timesheet')
-            ->assertSee('Approve timesheet')
+            ->assertSee('Approve hours and pay')
             ->assertSee('capture payment')
             ->assertSee('3h 00m')
             ->assertSee('$99.00')
             ->assertSee('$90.00')
+            ->assertDontSee('Review caregiver timesheet')
             ->assertDontSee('Leave a caregiver review')
             ->call('completeBooking');
 
@@ -619,7 +1164,7 @@ class CareRequestFlowTest extends TestCase
         Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $request->id])
             ->set('activeTab', 'shift')
-            ->assertSee('Caregiver feedback about this shift')
+            ->assertSee('Caregiver feedback')
             ->assertSee('Family was clear and respectful.');
     }
 
@@ -916,9 +1461,85 @@ class CareRequestFlowTest extends TestCase
             ->set('requested_start_at', $startAt)
             ->set('requested_end_at', $endAt)
             ->call('nextStep')
+            ->assertSee('Review and publish')
             ->assertSee('Estimated one-time cost')
             ->assertSee('4.00h')
             ->assertSee('$30.00/hr')
-            ->assertSee('$120.00');
+            ->assertSee('$120.00')
+            ->assertDontSee('Request summary');
+    }
+
+    public function test_create_request_shows_plain_language_publish_checklist(): void
+    {
+        $family = User::factory()->create([
+            'role' => 'family',
+            'name' => 'Don Johnson',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+        ]);
+
+        $task = CareTask::query()->create(['name' => 'Companionship']);
+
+        Livewire::actingAs($family)
+            ->test(CreateCareRequestWizard::class)
+            ->assertSee('Before publishing')
+            ->assertSee('0 of 4 essentials ready')
+            ->assertSee('Person')
+            ->assertSee('Help')
+            ->assertSee('Time')
+            ->assertSee('Address')
+            ->assertSee('Needed')
+            ->set('care_for', CreateCareRequestWizard::CARE_FOR_SELF)
+            ->set('selectedTasks', [$task->id])
+            ->set('requested_start_date', now()->addDay()->toDateString())
+            ->set('requested_start_time', '09:30')
+            ->set('requested_duration_minutes', '120')
+            ->set('address_line1', '1520 Home Creek Drive')
+            ->set('city', 'Durham')
+            ->set('state', 'NC')
+            ->set('zip', '27703')
+            ->assertSee('All essentials are ready. Review once, then publish.')
+            ->assertSee('Don Johnson')
+            ->assertSee('Companionship')
+            ->assertSee('Durham, NC 27703')
+            ->assertSee('Ready');
+    }
+
+    private function createCompletedRebookSource(User $family, User $caregiver, string $title, \Illuminate\Support\Carbon $startAt): CareRequest
+    {
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => $title,
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_FILLED,
+            'requested_start_at' => $startAt,
+            'requested_end_at' => $startAt->copy()->addHours(2),
+            'city' => 'Durham',
+            'state' => 'NC',
+            'zip' => '27703',
+            'address_line1' => '1520 Home Creek Drive',
+        ]);
+
+        $application = CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 30,
+        ]);
+
+        CareBooking::query()->create([
+            'care_request_id' => $request->id,
+            'care_request_application_id' => $application->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_REVIEWED,
+            'scheduled_start_at' => $startAt,
+            'scheduled_end_at' => $startAt->copy()->addHours(2),
+            'completed_at' => $startAt->copy()->addHours(2),
+            'worked_minutes' => 120,
+            'family_confirmed_at' => $startAt->copy()->addHours(3),
+        ]);
+
+        return $request;
     }
 }

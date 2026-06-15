@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Caregiver;
 
+use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Caregiver\WorkInbox;
 use App\Models\CareBooking;
 use App\Models\CareRequest;
@@ -31,7 +32,7 @@ class CaregiverWorkInboxTest extends TestCase
             'full_name' => $family->name,
             'relationship_to_family' => 'Self',
         ]);
-        CareRequestInvitation::query()->create([
+        $invitation = CareRequestInvitation::query()->create([
             'care_request_id' => $invitedRequest->id,
             'family_user_id' => $family->id,
             'caregiver_user_id' => $caregiver->id,
@@ -75,25 +76,82 @@ class CaregiverWorkInboxTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Caregiver Work Inbox');
+        $response->assertSee('You have 1 request to answer.');
+        $response->assertSee('Right now');
+        $response->assertDontSee('Visible visit value');
+        $response->assertDontSee('Ready-to-respond value');
+        $response->assertDontSee('Stay on top of new opportunities.');
         $response->assertSee('New requests');
         $response->assertSee($invitedRequest->title);
-        $response->assertSee($appliedRequest->title);
-        $response->assertSee($hiredRequest->title);
-        $response->assertSee($recommendedRequest->title);
+        $response->assertDontSee($appliedRequest->title);
+        $response->assertDontSee($hiredRequest->title);
+        $response->assertDontSee($recommendedRequest->title);
         $response->assertSee('Accept invite');
-        $response->assertSee('Open application');
-        $response->assertSee('Start shift');
-        $response->assertSee('Apply now');
+        $response->assertSee(route('caregiver.invitations.accept', $invitation), false);
+        $response->assertSee(route('caregiver.invitations.decline', $invitation), false);
         $response->assertSee('Requester receives care');
         $response->assertSee($family->name);
-        $response->assertSee('3h @ $27.00/hr');
-        $response->assertSee('$81.00 total shift');
+        $response->assertSee('3h @ $30.00/hr');
+        $response->assertSee('$90.00 total visit');
 
         Livewire::actingAs($caregiver)
             ->test(WorkInbox::class)
+            ->assertSet('scope', 'needs_response')
+            ->assertSee($invitedRequest->title)
+            ->assertDontSee($appliedRequest->title)
+            ->set('scope', 'all')
+            ->assertSee($invitedRequest->title)
+            ->assertSee($appliedRequest->title)
+            ->assertSee($hiredRequest->title)
+            ->assertSee($recommendedRequest->title)
+            ->assertSee('Open application')
+            ->assertSee('Start visit')
+            ->assertSee('Apply now')
+            ->assertSee('3h @ $27.00/hr')
+            ->assertSee('$81.00 total visit')
             ->set('scope', 'new_requests')
             ->assertSee($recommendedRequest->title)
             ->assertDontSee($appliedRequest->title);
+    }
+
+    public function test_work_inbox_defaults_to_new_requests_when_no_replies_are_waiting(): void
+    {
+        $family = User::factory()->create(['role' => 'family', 'city' => 'Raleigh', 'state' => 'NC']);
+        $caregiver = $this->createReadyCaregiver();
+        $request = $this->createOneTimeRequest($family->id, 'Fresh request to consider');
+
+        Livewire::actingAs($caregiver)
+            ->test(WorkInbox::class)
+            ->assertSet('scope', 'new_requests')
+            ->assertSee('New requests are available.')
+            ->assertSee($request->title)
+            ->assertSee('Apply now');
+    }
+
+    public function test_caregiver_open_request_detail_is_decision_first_before_applying(): void
+    {
+        $family = User::factory()->create(['role' => 'family', 'city' => 'Raleigh', 'state' => 'NC']);
+        $caregiver = $this->createReadyCaregiver();
+        $task = CareTask::query()->create(['name' => 'Companionship']);
+        $request = $this->createOneTimeRequest($family->id, 'Simple companionship visit');
+        $request->update([
+            'scope_of_work' => 'Keep the visit calm, help with conversation, and support light movement.',
+            'time_expectations' => 'Please arrive on time.',
+        ]);
+        $request->tasks()->sync([$task->id => ['task_note' => null]]);
+
+        $this->actingAs($caregiver)
+            ->get(route('care-requests.apply', $request->id))
+            ->assertOk()
+            ->assertSee('Interested in this visit?')
+            ->assertSee('I can do this visit')
+            ->assertSee('Add a short note')
+            ->assertSee('This can be left blank.')
+            ->assertSee('Send with note')
+            ->assertSee('Estimated earnings')
+            ->assertSee('Companionship')
+            ->assertDontSee('Request context')
+            ->assertDontSee('caregiver-apply-tabs', false);
     }
 
     public function test_caregiver_can_accept_invitation_from_work_inbox(): void
@@ -134,7 +192,45 @@ class CaregiverWorkInboxTest extends TestCase
             ->first();
 
         $this->assertNotNull($conversation);
-        $component->assertRedirect(route('messages.show', $conversation->id, false));
+        $component->assertRedirect(route('care-requests.apply', $request->id, false));
+
+        $this->actingAs($caregiver)
+            ->get(route('care-requests.apply', $request->id))
+            ->assertOk()
+            ->assertSee('Waiting for family')
+            ->assertSee('You accepted the invitation.')
+            ->assertSee('No action needed.')
+            ->assertSee('What happens next')
+            ->assertSee('If hired')
+            ->assertSee('Open chat')
+            ->assertSee('Review request details')
+            ->assertSee('Tasks, address, and notes')
+            ->assertSee('Your reply')
+            ->assertDontSee('Update application')
+            ->assertDontSee('caregiver-apply-tabs', false)
+            ->assertDontSee('No active visit yet')
+            ->assertDontSee('setActiveTab(\'support\')', false);
+    }
+
+    public function test_caregiver_can_apply_without_cover_note(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = $this->createReadyCaregiver();
+        $request = $this->createOneTimeRequest($family->id, 'No cover note required');
+
+        Livewire::actingAs($caregiver)
+            ->test(ApplyToCareRequest::class, ['careRequest' => $request->id])
+            ->set('cover_note', '')
+            ->call('submit')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('care-requests.index', absolute: false));
+
+        $this->assertDatabaseHas('care_request_applications', [
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_APPLIED,
+            'cover_note' => null,
+        ]);
     }
 
     public function test_caregiver_can_accept_invitation_from_plain_post_fallback(): void
@@ -165,7 +261,7 @@ class CaregiverWorkInboxTest extends TestCase
             ->where('caregiver_user_id', $caregiver->id)
             ->firstOrFail();
 
-        $response->assertRedirect(route('messages.show', $conversation->id));
+        $response->assertRedirect(route('care-requests.apply', $request->id));
         $this->assertSame(CareRequestApplication::STATUS_SHORTLISTED, $application->status);
         $this->assertDatabaseHas('care_request_invitations', [
             'id' => $invitation->id,

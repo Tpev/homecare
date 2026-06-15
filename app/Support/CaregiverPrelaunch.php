@@ -2,6 +2,9 @@
 
 namespace App\Support;
 
+use App\Models\CareRequest;
+use App\Models\CareRequestInvitation;
+
 class CaregiverPrelaunch
 {
     public static function enabled(): bool
@@ -12,6 +15,11 @@ class CaregiverPrelaunch
     public static function message(): string
     {
         return 'HomeCare is currently in caregiver pre-launch mode. Complete your setup now and we will notify you as soon as matching opens.';
+    }
+
+    public static function familyHireMessage(): string
+    {
+        return 'Ask this caregiver to accept your invitation first. Once they accept, you can hire them for this visit.';
     }
 
     /**
@@ -42,12 +50,27 @@ class CaregiverPrelaunch
         return in_array($candidate, self::pilotCaregiverEmails(), true);
     }
 
-    public static function familyCanProceedWithCaregiver(?string $caregiverEmail): bool
+    public static function familyCanProceedWithCaregiver(
+        ?string $caregiverEmail,
+        ?CareRequest $careRequest = null,
+        ?int $caregiverUserId = null,
+    ): bool
     {
         if (! self::enabled()) {
             return true;
         }
 
-        return self::isPilotCaregiverEmail($caregiverEmail);
+        if (self::isPilotCaregiverEmail($caregiverEmail)) {
+            return true;
+        }
+
+        if ($careRequest && $caregiverUserId) {
+            return $careRequest->invitations()
+                ->where('caregiver_user_id', $caregiverUserId)
+                ->where('status', CareRequestInvitation::STATUS_ACCEPTED)
+                ->exists();
+        }
+
+        return false;
     }
 }

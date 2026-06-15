@@ -1,0 +1,227 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="2500" viewBox="0 0 1800 2500">
+  <defs>
+    <style>
+      .bg { fill: #fbf7ef; }
+      .title { font: 700 42px Georgia, serif; fill: #143832; }
+      .subtitle { font: 400 21px Arial, sans-serif; fill: #53616f; }
+      .lane-title { font: 700 22px Arial, sans-serif; letter-spacing: 2px; fill: #0f3d3e; }
+      .lane { fill: #ffffff; stroke: #e2d8ca; stroke-width: 2; }
+      .box { fill: #fffcf8; stroke: #d8ccbe; stroke-width: 2; }
+      .box-green { fill: #f2f8f4; stroke: #b9d8c8; stroke-width: 2; }
+      .box-blue { fill: #eef5ff; stroke: #bdd4f7; stroke-width: 2; }
+      .box-dark { fill: #0f3d3e; stroke: #0f3d3e; stroke-width: 2; }
+      .box-amber { fill: #fff7e7; stroke: #e9cf8c; stroke-width: 2; }
+      .box-red { fill: #fff1f2; stroke: #fecdd3; stroke-width: 2; }
+      .label { font: 700 21px Arial, sans-serif; fill: #12233a; }
+      .label-dark { font: 700 21px Arial, sans-serif; fill: #ffffff; }
+      .small { font: 400 16px Arial, sans-serif; fill: #53616f; }
+      .small-dark { font: 400 16px Arial, sans-serif; fill: #d8eee8; }
+      .step { font: 700 13px Arial, sans-serif; letter-spacing: 1.6px; fill: #6b7280; }
+      .step-dark { font: 700 13px Arial, sans-serif; letter-spacing: 1.6px; fill: #b7efe0; }
+      .arrow { stroke: #637083; stroke-width: 3; fill: none; marker-end: url(#arrowhead); }
+      .arrow-green { stroke: #0f766e; stroke-width: 3; fill: none; marker-end: url(#arrowheadGreen); }
+      .arrow-amber { stroke: #b45309; stroke-width: 3; fill: none; marker-end: url(#arrowheadAmber); }
+      .dashed { stroke-dasharray: 9 8; }
+    </style>
+    <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#637083" />
+    </marker>
+    <marker id="arrowheadGreen" markerWidth="12" markerHeight="12" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#0f766e" />
+    </marker>
+    <marker id="arrowheadAmber" markerWidth="12" markerHeight="12" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#b45309" />
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1800" height="2500"/>
+  <text class="title" x="80" y="80">LoLo Care Request Workflow</text>
+  <text class="subtitle" x="80" y="118">From posting a request to caregiver response, hire, visit, review, payment, and rebooking.</text>
+
+  <rect class="lane" x="60" y="170" width="520" height="2220" rx="28"/>
+  <rect class="lane" x="640" y="170" width="520" height="2220" rx="28"/>
+  <rect class="lane" x="1220" y="170" width="520" height="2220" rx="28"/>
+  <text class="lane-title" x="100" y="220">CARE RECEIVER / FAMILY</text>
+  <text class="lane-title" x="680" y="220">CAREGIVER</text>
+  <text class="lane-title" x="1260" y="220">PAYMENT / SUPPORT</text>
+
+  <!-- Family lane -->
+  <rect class="box-dark" x="100" y="260" width="440" height="92" rx="18"/>
+  <text class="step-dark" x="130" y="292">START</text>
+  <text class="label-dark" x="130" y="322">Register or log in</text>
+  <text class="small-dark" x="130" y="345">Don enters the family workspace.</text>
+
+  <rect class="box-green" x="100" y="405" width="440" height="112" rx="18"/>
+  <text class="step" x="130" y="438">CREATE REQUEST</text>
+  <text class="label" x="130" y="468">Tell us what care you need</text>
+  <text class="small" x="130" y="493">Person, help, day, start time, duration, address.</text>
+
+  <rect class="box" x="100" y="570" width="440" height="118" rx="18"/>
+  <text class="step" x="130" y="603">CONDITIONAL</text>
+  <text class="label" x="130" y="633">Who receives care?</text>
+  <text class="small" x="130" y="658">Me, or a family member with relationship details.</text>
+
+  <rect class="box-blue" x="100" y="745" width="440" height="112" rx="18"/>
+  <text class="step" x="130" y="778">PUBLISH</text>
+  <text class="label" x="130" y="808">Review once, then publish</text>
+  <text class="small" x="130" y="833">Checklist confirms person, help, time, address.</text>
+
+  <rect class="box-green" x="100" y="910" width="440" height="118" rx="18"/>
+  <text class="step" x="130" y="943">REQUEST LIVE</text>
+  <text class="label" x="130" y="973">Wait or invite caregivers</text>
+  <text class="small" x="130" y="998">Suggested caregivers help Don move faster.</text>
+
+  <rect class="box-green" x="100" y="1080" width="440" height="130" rx="18"/>
+  <text class="step" x="130" y="1113">REVIEW</text>
+  <text class="label" x="130" y="1143">Caregivers are ready</text>
+  <text class="small" x="130" y="1168">Compare replies, view profile, chat if needed.</text>
+  <text class="small" x="130" y="1192">Primary action: hire the person you trust.</text>
+
+  <rect class="box-blue" x="100" y="1265" width="440" height="112" rx="18"/>
+  <text class="step" x="130" y="1298">CHAT</text>
+  <text class="label" x="130" y="1328">Confirm fit, then return to hire</text>
+  <text class="small" x="130" y="1353">Chat keeps a visible "Open request to hire" path.</text>
+
+  <rect class="box-green" x="100" y="1430" width="440" height="112" rx="18"/>
+  <text class="step" x="130" y="1463">HIRE</text>
+  <text class="label" x="130" y="1493">Hire caregiver</text>
+  <text class="small" x="130" y="1518">Creates booking after payment authorization.</text>
+
+  <rect class="box-green" x="100" y="1595" width="440" height="112" rx="18"/>
+  <text class="step" x="130" y="1628">BEFORE VISIT</text>
+  <text class="label" x="130" y="1658">Visit scheduled</text>
+  <text class="small" x="130" y="1683">Message, change or cancel, late/no-show guidance.</text>
+
+  <rect class="box-green" x="100" y="1760" width="440" height="118" rx="18"/>
+  <text class="step" x="130" y="1793">LIVE VISIT</text>
+  <text class="label" x="130" y="1823">Care is happening now</text>
+  <text class="small" x="130" y="1848">See check-in, message, mark complete, get help.</text>
+
+  <rect class="box-amber" x="100" y="1935" width="440" height="128" rx="18"/>
+  <text class="step" x="130" y="1968">REVIEW HOURS</text>
+  <text class="label" x="130" y="1998">Approve or question timesheet</text>
+  <text class="small" x="130" y="2023">Hours and estimated payment are the focus.</text>
+  <text class="small" x="130" y="2047">Question hours opens support/dispute.</text>
+
+  <rect class="box-green" x="100" y="2118" width="440" height="118" rx="18"/>
+  <text class="step" x="130" y="2151">DONE</text>
+  <text class="label" x="130" y="2181">Visit complete</text>
+  <text class="small" x="130" y="2206">Final record, reviews, and "Book again".</text>
+
+  <!-- Caregiver lane -->
+  <rect class="box-blue" x="680" y="910" width="440" height="118" rx="18"/>
+  <text class="step" x="710" y="943">NEW WORK</text>
+  <text class="label" x="710" y="973">Sees request or invitation</text>
+  <text class="small" x="710" y="998">Decision screen shows time, place, care recipient.</text>
+
+  <rect class="box-green" x="680" y="1080" width="440" height="130" rx="18"/>
+  <text class="step" x="710" y="1113">RESPOND</text>
+  <text class="label" x="710" y="1143">Apply or accept invite</text>
+  <text class="small" x="710" y="1168">Primary action: "I can do this visit".</text>
+  <text class="small" x="710" y="1192">Optional note stays secondary.</text>
+
+  <rect class="box-green" x="680" y="1265" width="440" height="112" rx="18"/>
+  <text class="step" x="710" y="1298">WAITING</text>
+  <text class="label" x="710" y="1328">No action needed</text>
+  <text class="small" x="710" y="1353">Chat stays open while family decides.</text>
+
+  <rect class="box-green" x="680" y="1595" width="440" height="112" rx="18"/>
+  <text class="step" x="710" y="1628">UPCOMING VISIT</text>
+  <text class="label" x="710" y="1658">Get ready for client</text>
+  <text class="small" x="710" y="1683">Location, schedule, check-in button.</text>
+
+  <rect class="box-dark" x="680" y="1760" width="440" height="118" rx="18"/>
+  <text class="step-dark" x="710" y="1793">CHECKED IN</text>
+  <text class="label-dark" x="710" y="1823">Live visit timer</text>
+  <text class="small-dark" x="710" y="1848">Pause only for breaks, end when care is done.</text>
+
+  <rect class="box-amber" x="680" y="1935" width="440" height="128" rx="18"/>
+  <text class="step" x="710" y="1968">TIMESHEET SENT</text>
+  <text class="label" x="710" y="1998">Waiting for family review</text>
+  <text class="small" x="710" y="2023">Worked time, rate, earnings, GPS recap.</text>
+
+  <rect class="box-green" x="680" y="2118" width="440" height="118" rx="18"/>
+  <text class="step" x="710" y="2151">AFTER VISIT</text>
+  <text class="label" x="710" y="2181">Reviews and future work</text>
+  <text class="small" x="710" y="2206">Feedback appears after family completes review.</text>
+
+  <!-- Payment/support lane -->
+  <rect class="box-amber" x="1260" y="1430" width="440" height="112" rx="18"/>
+  <text class="step" x="1290" y="1463">PAYMENT CHECK</text>
+  <text class="label" x="1290" y="1493">Card ready?</text>
+  <text class="small" x="1290" y="1518">If not, family opens Billing and Payments.</text>
+
+  <rect class="box-blue" x="1260" y="1595" width="440" height="112" rx="18"/>
+  <text class="step" x="1290" y="1628">STRIPE</text>
+  <text class="label" x="1290" y="1658">Pre-authorize expected amount</text>
+  <text class="small" x="1290" y="1683">Supports 3DS confirmation when required.</text>
+
+  <rect class="box-green" x="1260" y="1760" width="440" height="118" rx="18"/>
+  <text class="step" x="1290" y="1793">PROTECTED BOOKING</text>
+  <text class="label" x="1290" y="1823">Authorization complete</text>
+  <text class="small" x="1290" y="1848">Booking is scheduled and payment protected.</text>
+
+  <rect class="box-red" x="1260" y="1935" width="440" height="128" rx="18"/>
+  <text class="step" x="1290" y="1968">EXCEPTION PATH</text>
+  <text class="label" x="1290" y="1998">Question hours or support</text>
+  <text class="small" x="1290" y="2023">Dispute/support pauses the simple approval path.</text>
+
+  <rect class="box-green" x="1260" y="2118" width="440" height="118" rx="18"/>
+  <text class="step" x="1290" y="2151">CAPTURE AND PAYOUT</text>
+  <text class="label" x="1290" y="2181">Capture payment</text>
+  <text class="small" x="1290" y="2206">Caregiver payout moves forward through Connect.</text>
+
+  <!-- Main vertical arrows -->
+  <path class="arrow" d="M320 352 V405"/>
+  <path class="arrow" d="M320 517 V570"/>
+  <path class="arrow" d="M320 688 V745"/>
+  <path class="arrow" d="M320 857 V910"/>
+  <path class="arrow" d="M320 1028 V1080"/>
+  <path class="arrow" d="M320 1210 V1265"/>
+  <path class="arrow" d="M320 1377 V1430"/>
+  <path class="arrow" d="M320 1542 V1595"/>
+  <path class="arrow" d="M320 1707 V1760"/>
+  <path class="arrow" d="M320 1878 V1935"/>
+  <path class="arrow" d="M320 2063 V2118"/>
+
+  <path class="arrow" d="M900 1028 V1080"/>
+  <path class="arrow" d="M900 1210 V1265"/>
+  <path class="arrow" d="M900 1707 V1760"/>
+  <path class="arrow" d="M900 1878 V1935"/>
+  <path class="arrow" d="M900 2063 V2118"/>
+
+  <path class="arrow" d="M1480 1542 V1595"/>
+  <path class="arrow" d="M1480 1707 V1760"/>
+  <path class="arrow" d="M1480 1878 V1935"/>
+  <path class="arrow" d="M1480 2063 V2118"/>
+
+  <!-- Cross-lane arrows -->
+  <path class="arrow-green" d="M540 969 C600 969 620 969 680 969"/>
+  <path class="arrow-green" d="M680 1145 C620 1145 600 1145 540 1145"/>
+  <path class="arrow" d="M540 1321 C600 1321 620 1321 680 1321"/>
+  <path class="arrow-amber" d="M540 1486 C850 1486 950 1486 1260 1486"/>
+  <path class="arrow-green" d="M540 1651 C600 1651 620 1651 680 1651"/>
+  <path class="arrow-green" d="M900 1760 C900 1740 320 1740 320 1760"/>
+  <path class="arrow-green" d="M900 1935 C900 1910 320 1910 320 1935"/>
+  <path class="arrow-amber" d="M540 2028 H650 V2078 H1230 V1999 H1260"/>
+  <path class="arrow-green" d="M540 2048 C620 2105 620 2275 760 2275 H1230 V2177 H1260"/>
+
+  <!-- Loops / exception arrows -->
+  <path class="arrow dashed" d="M1260 1999 C1160 1999 1160 1999 1120 1999"/>
+  <text class="small" x="1115" y="2072">if disputed</text>
+  <path class="arrow-green" d="M1260 2218 H1230 V2290 H570 V2177 H540"/>
+  <path class="arrow-green" d="M1260 2177 H1120"/>
+  <text class="small" x="112" y="2312">Rebooking starts a new request prefilled from the completed visit.</text>
+
+  <!-- Footer legend -->
+  <rect class="box" x="80" y="2415" width="1640" height="52" rx="16"/>
+  <circle cx="120" cy="2441" r="10" fill="#f2f8f4" stroke="#b9d8c8"/>
+  <text class="small" x="140" y="2447">Normal stage</text>
+  <circle cx="290" cy="2441" r="10" fill="#eef5ff" stroke="#bdd4f7"/>
+  <text class="small" x="310" y="2447">Chat / coordination</text>
+  <circle cx="520" cy="2441" r="10" fill="#fff7e7" stroke="#e9cf8c"/>
+  <text class="small" x="540" y="2447">Review / payment attention</text>
+  <circle cx="820" cy="2441" r="10" fill="#fff1f2" stroke="#fecdd3"/>
+  <text class="small" x="840" y="2447">Support / dispute path</text>
+  <text class="small" x="1215" y="2447">Designed as separate state screens, each with one primary job.</text>
+</svg>

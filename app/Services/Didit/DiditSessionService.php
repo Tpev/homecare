@@ -58,7 +58,7 @@ class DiditSessionService
             throw new RuntimeException('DIDIT_WORKFLOW_ID is not configured.');
         }
 
-        $vendorData = 'caregiver_user_'.$user->id.'_profile_'.$profile->id;
+        $vendorData = 'caregiver_user_'.$user->id.'_profile_'.$profile->id.'_attempt_'.Str::uuid()->toString();
         $callback = (string) config('services.didit.callback_url');
         if ($callback === '') {
             $callback = route('caregiver.verification.return');

@@ -18,14 +18,14 @@
             ? \Illuminate\Support\Str::of($hiredCaregiverName)->before(' ')
             : 'caregiver';
         $hiredConversation = $hiredApplication?->conversation;
+        $caregiverTabSubtitle = $hiredApplication
+            ? 'Caregiver selected'
+            : $requestItem->applications->count().' to review';
         $noShowEligibleAt = $booking?->scheduled_start_at?->copy()->addMinutes(30);
         $canMarkNoShow = $booking
             && $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED
             && $noShowEligibleAt
             && now()->gte($noShowEligibleAt);
-        $postedAgo = \App\Support\CareRequestProgress::postedAgoLabel($requestItem);
-        $firstResponse = \App\Support\CareRequestProgress::firstResponseLabel($requestItem);
-        $firstHire = \App\Support\CareRequestProgress::firstHireLabel($requestItem);
         $serviceAddress = trim(collect([
             $requestItem->address_line1,
             $requestItem->address_line2,
@@ -69,7 +69,59 @@
             \App\Models\CareRequest::STATUS_DRAFT,
             \App\Models\CareRequest::STATUS_OPEN,
         ], true) && ! $booking;
+        $openCaregiverResponses = $requestItem->applications
+            ->whereIn('status', [
+                \App\Models\CareRequestApplication::STATUS_APPLIED,
+                \App\Models\CareRequestApplication::STATUS_SHORTLISTED,
+            ])
+            ->count();
+        $topCaregiverActionLabel = $openCaregiverResponses > 0 ? 'Review caregivers' : 'Invite caregivers';
         $canCancelScheduledShift = $booking && $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED;
+        $canRequestVisitChange = $booking && $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED;
+        $canDisputeVisit = $booking && in_array($booking->status, [
+            \App\Models\CareBooking::STATUS_COMPLETED,
+            \App\Models\CareBooking::STATUS_REVIEWED,
+        ], true);
+        $supportScreenEyebrow = match ((string) ($booking?->status ?? '')) {
+            \App\Models\CareBooking::STATUS_SCHEDULED => 'Before the visit',
+            \App\Models\CareBooking::STATUS_IN_PROGRESS,
+            \App\Models\CareBooking::STATUS_PAUSED => 'Live help',
+            \App\Models\CareBooking::STATUS_COMPLETED => 'Timesheet help',
+            \App\Models\CareBooking::STATUS_REVIEWED => $timesheetNeedsReview ? 'Timesheet help' : 'Completed visit help',
+            \App\Models\CareBooking::STATUS_CANCELLED => 'Cancelled visit help',
+            \App\Models\CareBooking::STATUS_DISPUTED => 'Support review',
+            default => 'Help',
+        };
+        $supportScreenTitle = match ((string) ($booking?->status ?? '')) {
+            \App\Models\CareBooking::STATUS_SCHEDULED => 'Change or cancel this visit',
+            \App\Models\CareBooking::STATUS_IN_PROGRESS,
+            \App\Models\CareBooking::STATUS_PAUSED => 'Need help during this visit?',
+            \App\Models\CareBooking::STATUS_COMPLETED => $timesheetNeedsReview ? 'Question hours or payment' : 'Get help with this completed visit',
+            \App\Models\CareBooking::STATUS_REVIEWED => $timesheetNeedsReview ? 'Question hours or payment' : 'Get help with this completed visit',
+            \App\Models\CareBooking::STATUS_CANCELLED => 'Get help with this cancelled visit',
+            \App\Models\CareBooking::STATUS_DISPUTED => 'Support is reviewing this visit',
+            default => 'Safety and support',
+        };
+        $supportScreenBody = match ((string) ($booking?->status ?? '')) {
+            \App\Models\CareBooking::STATUS_SCHEDULED => 'Use this before caregiver check-in if the time no longer works or you need to cancel.',
+            \App\Models\CareBooking::STATUS_IN_PROGRESS,
+            \App\Models\CareBooking::STATUS_PAUSED => 'For ordinary questions, message the caregiver. If something feels wrong, report it here.',
+            \App\Models\CareBooking::STATUS_COMPLETED => $timesheetNeedsReview
+                ? 'If the submitted hours do not look right, ask for help before approving payment.'
+                : 'Payment has moved forward. You can still open a support ticket or dispute if something is wrong.',
+            \App\Models\CareBooking::STATUS_REVIEWED => $timesheetNeedsReview
+                ? 'If the submitted hours do not look right, ask for help before approving payment.'
+                : 'This visit is closed. Keep support requests focused on billing, safety, or record corrections.',
+            \App\Models\CareBooking::STATUS_CANCELLED => 'This visit is closed. Support can help with cancellation questions or billing follow-up.',
+            \App\Models\CareBooking::STATUS_DISPUTED => 'A dispute is already open. Add a support ticket only if you need to share more context.',
+            default => 'Choose the option that best matches what you need.',
+        };
+        $supportButtonLabel = match ((string) ($booking?->status ?? '')) {
+            \App\Models\CareBooking::STATUS_SCHEDULED => 'Change or cancel',
+            \App\Models\CareBooking::STATUS_COMPLETED => $timesheetNeedsReview ? 'Question hours' : 'Get support',
+            \App\Models\CareBooking::STATUS_REVIEWED => $timesheetNeedsReview ? 'Question hours' : 'Get support',
+            default => 'Safety/support',
+        };
         $lateCancel = $booking?->scheduled_start_at
             ? now()->diffInMinutes($booking->scheduled_start_at, false) <= 24 * 60
             : false;
@@ -84,24 +136,26 @@
             default => 'border-[#E4DDD3] bg-[#F7F2EA] text-[#4B5B6B]',
         };
         $shiftStatusTitle = match ((string) ($booking?->status ?? '')) {
-            \App\Models\CareBooking::STATUS_SCHEDULED => 'Shift is scheduled',
+            \App\Models\CareBooking::STATUS_SCHEDULED => 'Visit is scheduled',
             \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Caregiver is checked in',
-            \App\Models\CareBooking::STATUS_PAUSED => 'Shift is paused',
+            \App\Models\CareBooking::STATUS_PAUSED => 'Visit is paused',
             \App\Models\CareBooking::STATUS_COMPLETED => 'Timesheet needs review',
-            \App\Models\CareBooking::STATUS_REVIEWED => 'Shift is closed',
-            \App\Models\CareBooking::STATUS_CANCELLED => 'Shift was cancelled',
-            \App\Models\CareBooking::STATUS_DISPUTED => 'Shift is in dispute',
-            default => 'Shift status',
+            \App\Models\CareBooking::STATUS_REVIEWED => $timesheetNeedsReview ? 'Timesheet needs review' : 'Visit is closed',
+            \App\Models\CareBooking::STATUS_CANCELLED => 'Visit was cancelled',
+            \App\Models\CareBooking::STATUS_DISPUTED => 'Visit is in dispute',
+            default => 'Visit status',
         };
         $shiftStatusBody = match ((string) ($booking?->status ?? '')) {
             \App\Models\CareBooking::STATUS_SCHEDULED => 'Waiting for caregiver check-in. You can cancel before check-in, or mark no-show 30 minutes after scheduled start.',
-            \App\Models\CareBooking::STATUS_IN_PROGRESS => 'The caregiver has started the shift. Watch check-in details, message them, or mark complete when care is finished.',
-            \App\Models\CareBooking::STATUS_PAUSED => 'The caregiver paused the shift. They can resume or end from their shift screen.',
+            \App\Models\CareBooking::STATUS_IN_PROGRESS => 'The caregiver has started the visit. Watch check-in details, message them, or mark complete when care is finished.',
+            \App\Models\CareBooking::STATUS_PAUSED => 'The caregiver paused the visit. They can resume or end from their visit screen.',
             \App\Models\CareBooking::STATUS_COMPLETED => 'The caregiver submitted the timesheet. Review worked time before confirming.',
-            \App\Models\CareBooking::STATUS_REVIEWED => 'Payment and review flow is complete.',
-            \App\Models\CareBooking::STATUS_CANCELLED => $booking?->no_show_flag ? 'This shift was closed as caregiver no-show.' : 'This shift was cancelled.',
-            \App\Models\CareBooking::STATUS_DISPUTED => 'Support is reviewing this shift.',
-            default => 'Shift operations are available after hiring.',
+            \App\Models\CareBooking::STATUS_REVIEWED => $timesheetNeedsReview
+                ? 'The caregiver submitted the timesheet. Review worked time before confirming.'
+                : 'Payment and review flow is complete.',
+            \App\Models\CareBooking::STATUS_CANCELLED => $booking?->no_show_flag ? 'This visit was closed as caregiver no-show.' : 'This visit was cancelled.',
+            \App\Models\CareBooking::STATUS_DISPUTED => 'Support is reviewing this visit.',
+            default => 'Visit details are available after hiring.',
         };
         $shiftBadgeColor = match ((string) ($booking?->status ?? '')) {
             \App\Models\CareBooking::STATUS_IN_PROGRESS => 'green',
@@ -112,6 +166,128 @@
             \App\Models\CareBooking::STATUS_DISPUTED => 'red',
             default => 'blue',
         };
+        $visitStatusLabel = $booking
+            ? ucfirst(str_replace('_', ' ', (string) $booking->status))
+            : 'No visit';
+        $plainRequestType = $requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME
+            ? 'One visit'
+            : 'Repeats';
+        $plainSchedule = $booking
+            ? trim((optional($booking->scheduled_start_at)->format('M d, g:i A') ?: 'Time pending').' - '.(optional($booking->scheduled_end_at)->format('g:i A') ?: ''))
+            : ($requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME
+                ? (optional($requestItem->requested_start_at)->format('M d, g:i A') ?: 'Time not set')
+                : 'Weekly schedule');
+        $visitCaregiverDisplayName = trim((string) $hiredCaregiverFirstName) !== ''
+            ? trim((string) $hiredCaregiverFirstName)
+            : 'Your caregiver';
+        $visitStartLabel = $booking?->scheduled_start_at?->format('M d, g:i A');
+        $visitEndLabel = $booking?->scheduled_end_at?->format('g:i A');
+        $visitTimeRangeLabel = trim(($visitStartLabel ?: 'the scheduled time').($visitEndLabel ? ' - '.$visitEndLabel : ''));
+        $visitStageSummary = match ((string) ($booking?->status ?? '')) {
+            \App\Models\CareBooking::STATUS_SCHEDULED => $visitCaregiverDisplayName.' is coming on '.$visitTimeRangeLabel.'.',
+            \App\Models\CareBooking::STATUS_IN_PROGRESS => $visitCaregiverDisplayName.' checked in at '.($booking?->started_at?->format('g:i A') ?: 'the visit start').'.',
+            \App\Models\CareBooking::STATUS_PAUSED => $visitCaregiverDisplayName.' paused the visit. They can resume or end it from their visit screen.',
+            default => null,
+        };
+        $canRebookHiredCaregiver = ! $timesheetNeedsReview
+            && ! $requestItem->care_plan_id
+            && $booking
+            && $hiredApplication
+            && ! in_array($booking->status, [\App\Models\CareBooking::STATUS_CANCELLED, \App\Models\CareBooking::STATUS_DISPUTED], true)
+            && ($booking->family_confirmed_at || $booking->status === \App\Models\CareBooking::STATUS_REVIEWED);
+        $visitPanelEyebrow = match ((string) ($booking?->status ?? '')) {
+            \App\Models\CareBooking::STATUS_COMPLETED,
+            \App\Models\CareBooking::STATUS_REVIEWED => $timesheetNeedsReview ? 'Visit details' : 'Visit record',
+            \App\Models\CareBooking::STATUS_IN_PROGRESS,
+            \App\Models\CareBooking::STATUS_PAUSED => 'Live details',
+            \App\Models\CareBooking::STATUS_CANCELLED,
+            \App\Models\CareBooking::STATUS_DISPUTED => 'Visit record',
+            default => 'Visit essentials',
+        };
+        $visitPanelTitle = match ((string) ($booking?->status ?? '')) {
+            \App\Models\CareBooking::STATUS_SCHEDULED => 'Before the visit',
+            \App\Models\CareBooking::STATUS_COMPLETED,
+            \App\Models\CareBooking::STATUS_REVIEWED => $timesheetNeedsReview ? 'Visit details before approval' : 'Final details',
+            \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Live visit details',
+            \App\Models\CareBooking::STATUS_PAUSED => 'Paused visit details',
+            \App\Models\CareBooking::STATUS_CANCELLED => $booking?->no_show_flag ? 'No-show details' : 'Cancelled visit details',
+            \App\Models\CareBooking::STATUS_DISPUTED => 'Support review details',
+            default => 'Visit essentials',
+        };
+        $visitPanelBody = match ((string) ($booking?->status ?? '')) {
+            \App\Models\CareBooking::STATUS_SCHEDULED => 'Keep the caregiver, time, location, and late-arrival guidance in one simple place.',
+            \App\Models\CareBooking::STATUS_COMPLETED => $timesheetNeedsReview
+                ? 'Confirm schedule, caregiver, and location here. The hours and payment decision stay above.'
+                : 'Keep the final schedule, time, payment, notes, and feedback in one record.',
+            \App\Models\CareBooking::STATUS_REVIEWED => $timesheetNeedsReview
+                ? 'Confirm schedule, caregiver, and location here. The hours and payment decision stay above.'
+                : 'Keep the final schedule, time, payment, notes, and feedback in one record.',
+            \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Schedule, check-in, location, and payment stay here while live actions stay above.',
+            \App\Models\CareBooking::STATUS_PAUSED => 'Schedule, check-in, location, and payment stay here while pause details stay above.',
+            \App\Models\CareBooking::STATUS_CANCELLED => 'This visit is closed. Review the cancellation record or start care again.',
+            \App\Models\CareBooking::STATUS_DISPUTED => 'Support is reviewing the visit. Keep details and messages together here.',
+            default => 'Confirm time, caregiver, location, payment status, and support options before care starts.',
+        };
+        $isLiveVisit = $booking && in_array($booking->status, [
+            \App\Models\CareBooking::STATUS_IN_PROGRESS,
+            \App\Models\CareBooking::STATUS_PAUSED,
+        ], true);
+        $isFinalVisitRecord = $booking
+            && in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true)
+            && ! $timesheetNeedsReview;
+        $showVisitMapEmbed = $serviceMapEmbedUrl && ! $isFinalVisitRecord;
+        $isScheduledVisit = ($lifecycleStage['key'] ?? '') === 'visit_scheduled';
+        $showVisitActionStrip = (! $isLiveVisit || $needsPaymentAuthorization) && ! $isFinalVisitRecord;
+        $showVisitStatusNotice = $booking && in_array($booking->status, [
+            \App\Models\CareBooking::STATUS_PAUSED,
+            \App\Models\CareBooking::STATUS_CANCELLED,
+            \App\Models\CareBooking::STATUS_DISPUTED,
+        ], true);
+        $stageTabs = collect($lifecycleStage['tabs'] ?? []);
+        $stageTabGridClass = $stageTabs->count() <= 4
+            ? 'grid-cols-2 xl:grid-cols-4'
+            : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-4';
+        $isWaitingForCaregivers = ($lifecycleStage['key'] ?? '') === 'waiting_for_caregivers';
+        $isReviewingCaregivers = ($lifecycleStage['key'] ?? '') === 'reviewing_caregivers';
+        $caregiverScreenTitle = match (true) {
+            $isWaitingForCaregivers => 'Suggested caregivers',
+            $isReviewingCaregivers => 'Choose a caregiver',
+            (bool) $hiredApplication => 'Selected caregiver',
+            default => 'Caregivers',
+        };
+        $caregiverScreenBody = match (true) {
+            $isWaitingForCaregivers => 'No one has replied yet. Invite one or two trusted matches while the request stays open.',
+            $isReviewingCaregivers => 'Review the people who replied. You can chat first, view profiles, or hire when ready.',
+            (bool) $hiredApplication => ($hiredCaregiverName ?: 'The caregiver').' is selected. Keep profile and chat history here.',
+            default => 'Caregiver replies and past conversations stay here.',
+        };
+        $activeCaregiverResponses = $requestItem->applications
+            ->whereIn('status', [
+                \App\Models\CareRequestApplication::STATUS_APPLIED,
+                \App\Models\CareRequestApplication::STATUS_SHORTLISTED,
+            ])
+            ->count();
+        $visibleApplications = $this->visibleApplications;
+        $visibleApplicationCount = $visibleApplications->count();
+        $showCaregiverFilterControls = $requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $visibleApplicationCount >= 4;
+        $featuredCaregiverApplication = $isReviewingCaregivers ? $visibleApplications->first() : null;
+        $showFeaturedCaregiverDecision = $isReviewingCaregivers && $visibleApplicationCount === 1 && $featuredCaregiverApplication;
+        $showApplicationList = ! $showFeaturedCaregiverDecision;
+        $featuredCaregiverProfile = $featuredCaregiverApplication?->caregiver?->caregiverProfile;
+        $featuredCaregiverProfileHref = $featuredCaregiverProfile?->slug
+            ? route('caregivers.show', $featuredCaregiverProfile->slug)
+            : null;
+        $featuredCaregiverFirstName = $featuredCaregiverApplication
+            ? \Illuminate\Support\Str::of($featuredCaregiverApplication->caregiver->name)->before(' ')->trim()
+            : null;
+        if ($featuredCaregiverFirstName?->isEmpty()) {
+            $featuredCaregiverFirstName = 'caregiver';
+        }
+        $featuredCaregiverStatusLabel = match ((string) ($featuredCaregiverApplication?->status ?? '')) {
+            \App\Models\CareRequestApplication::STATUS_APPLIED => 'Interested',
+            \App\Models\CareRequestApplication::STATUS_SHORTLISTED => 'Saved',
+            default => ucfirst(str_replace('_', ' ', (string) ($featuredCaregiverApplication?->status ?? ''))),
+        };
     @endphp
 
     @if ($needsPaymentAuthorization)
@@ -119,7 +295,7 @@
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <p class="font-semibold">Card authorization needs attention.</p>
-                    <p class="text-sm">{{ $payment->last_error ?: 'Confirm the card authorization before the shift is financially protected.' }}</p>
+                    <p class="text-sm">{{ $payment->last_error ?: 'Confirm the card authorization before the visit is financially protected.' }}</p>
                 </div>
                 <x-button color="amber" wire:click="startPaymentAuthorization" class="w-full sm:w-auto">Confirm card authorization</x-button>
             </div>
@@ -128,85 +304,163 @@
 
     <x-card>
         <x-slot:header>
-            <div class="flex flex-col gap-4">
+            <div class="flex w-full flex-col gap-4">
                 <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
                         <h1 class="text-2xl font-display font-semibold text-[#17313F]">{{ $requestItem->title }}</h1>
                         <x-badge :text="strtoupper($requestItem->status)" color="blue" />
                     @if ($booking)
-                        <x-badge :text="'SHIFT '.strtoupper($booking->status)" :color="$shiftBadgeColor" />
+                        <x-badge :text="'VISIT '.$visitStatusLabel" :color="$shiftBadgeColor" />
                     @endif
                     @if ($payment)
                         <x-badge :text="'PAYMENT '.strtoupper($payment->status)" color="amber" />
                     @endif
                 </div>
-                    <p class="mt-1 text-sm text-[#607080]">
-                        {{ $requestItem->city }}, {{ $requestItem->state }}
-                        @if ($requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME)
-                            - One-time request
-                        @else
-                            - Recurring request
-                        @endif
-                        - {{ $requestItem->preferred_response_hours ?: 12 }}h response target
+                    <p class="mt-1 text-base text-[#607080]">
+                        {{ $plainRequestType }} - {{ $plainSchedule }} - {{ $requestItem->city }}, {{ $requestItem->state }}
                     </p>
                 </div>
                 <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                    @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN)
-                        <x-button color="blue" wire:click="setActiveTab('applicants')" class="w-full sm:w-auto">Review applicants</x-button>
+                    @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $activeTab !== 'applicants')
+                        <x-button color="blue" wire:click="setActiveTab('applicants')" class="w-full sm:w-auto">{{ $topCaregiverActionLabel }}</x-button>
                     @endif
-                    @if ($hiredConversation)
+                    @if ($hiredConversation && ! $isLiveVisit && ! $isScheduledVisit)
                         <a href="{{ route('messages.show', $hiredConversation->id) }}" wire:navigate>
                             <x-button color="indigo" light class="w-full sm:w-auto">Open chat</x-button>
                         </a>
                     @endif
-                    @if (! $requestItem->care_plan_id && $booking && $hiredApplication && ! in_array($booking->status, [\App\Models\CareBooking::STATUS_CANCELLED, \App\Models\CareBooking::STATUS_DISPUTED], true))
-                        <a href="{{ route('family.care.compose', $requestItem->id) }}" wire:navigate>
-                            <x-button color="green" light class="w-full sm:w-auto">Book {{ $hiredCaregiverFirstName }} again</x-button>
-                        </a>
-                    @endif
-                    @if ($canWithdrawRequest)
-                        <x-button
-                            color="red"
-                            light
-                            wire:click="withdrawRequest"
-                            onclick="if (!confirm('Withdraw this request? Caregivers will no longer be able to apply.')) return false;"
-                            class="w-full sm:w-auto"
-                        >
-                            Withdraw request
-                        </x-button>
-                    @endif
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <div class="rounded-[1.4rem] border border-[#DED6CA] bg-[#F5F1EB] p-4 sm:col-span-2 xl:col-span-1">
-                    <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Best next action</p>
-                    <p class="mt-1 font-display text-base font-semibold text-[#17313F]">{{ $bestNextAction['title'] }}</p>
-                    <p class="mt-1 text-sm text-[#607080]">{{ $bestNextAction['action'] }}</p>
-                </div>
-                <div class="rounded-2xl border border-[#E4DDD3] bg-white p-4">
-                    <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Response metrics</p>
-                    <p class="mt-1 text-sm text-[#4B5B6B]">Posted: <span class="font-semibold text-[#17313F]">{{ $postedAgo }}</span></p>
-                    <p class="text-sm text-[#4B5B6B]">First response: <span class="font-semibold text-[#17313F]">{{ $firstResponse }}</span></p>
-                    <p class="text-sm text-[#4B5B6B]">First hire: <span class="font-semibold text-[#17313F]">{{ $firstHire }}</span></p>
-                </div>
-                <div class="rounded-2xl border border-[#E4DDD3] bg-white p-4 sm:col-span-2">
-                    <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Pipeline status</p>
-                    <div class="mt-2 grid grid-cols-3 gap-2">
-                        <div class="rounded-[1rem] bg-[#F5F1EB] px-3 py-2">
-                            <p class="text-[11px] uppercase tracking-[0.12em] text-[#7B8794]">Applicants</p>
-                            <p class="mt-1 text-lg font-semibold text-[#17313F]">{{ $requestItem->applications->count() }}</p>
+            <div class="grid grid-cols-1 gap-3">
+                <div class="rounded-[1.4rem] border border-[#D8E1D7] bg-[#F2F8F4] p-4">
+                    <p class="text-xs uppercase tracking-[0.12em] text-emerald-700">{{ $lifecycleStage['eyebrow'] }}</p>
+                    <p class="mt-1 font-display text-xl font-semibold text-[#17313F]">{{ $lifecycleStage['title'] }}</p>
+                    <p class="mt-1 text-sm text-[#607080]">{{ $lifecycleStage['body'] }}</p>
+                    @if ($visitStageSummary)
+                        <div class="mt-3 rounded-2xl border border-[#CFE1D8] bg-white/80 px-4 py-3">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">Right now</p>
+                            <p class="mt-1 text-sm font-semibold text-[#17313F]">{{ $visitStageSummary }}</p>
                         </div>
-                        <div class="rounded-[1rem] bg-[#F5F1EB] px-3 py-2">
-                            <p class="text-[11px] uppercase tracking-[0.12em] text-[#7B8794]">Invites</p>
-                            <p class="mt-1 text-lg font-semibold text-[#17313F]">{{ $requestItem->invitations->count() }}</p>
+                    @endif
+                    @if ($canRebookHiredCaregiver)
+                        <div class="mt-4">
+                            <a href="{{ route('family.requests.book_again', $requestItem->id) }}" wire:navigate class="block sm:inline-block">
+                                <x-button color="green" light class="w-full sm:w-auto">Book {{ $hiredCaregiverFirstName }} again</x-button>
+                            </a>
                         </div>
-                        <div class="rounded-[1rem] bg-[#F5F1EB] px-3 py-2">
-                            <p class="text-[11px] uppercase tracking-[0.12em] text-[#7B8794]">Shift</p>
-                            <p class="mt-1 text-sm font-semibold text-[#17313F]">{{ strtoupper($booking?->status ?? 'NONE') }}</p>
+                    @endif
+                    @if ($isWaitingForCaregivers)
+                        <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                            <a href="{{ route('caregivers.search') }}" wire:navigate class="block">
+                                <x-button color="blue" light class="w-full sm:w-auto">Find matching caregivers</x-button>
+                            </a>
                         </div>
-                    </div>
+                    @elseif ($isScheduledVisit)
+                        <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                            @if ($hiredApplication)
+                                <x-button color="indigo" light wire:click="startConversation({{ $hiredApplication->id }})" class="w-full sm:w-auto">
+                                    Message caregiver
+                                </x-button>
+                            @endif
+                            <x-button color="white" light wire:click="setActiveTab('support')" class="w-full sm:w-auto">
+                                Change or cancel
+                            </x-button>
+                        </div>
+                    @elseif ($isLiveVisit)
+                        <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                            @if ($hiredApplication)
+                                <x-button color="indigo" light wire:click="startConversation({{ $hiredApplication->id }})" class="w-full sm:w-auto">
+                                    Message caregiver
+                                </x-button>
+                            @endif
+                            <x-button color="green" wire:click="completeBooking" class="w-full sm:w-auto">
+                                The visit has ended
+                            </x-button>
+                            <x-button color="white" light wire:click="setActiveTab('support')" class="w-full sm:w-auto">
+                                Get help
+                            </x-button>
+                        </div>
+                    @elseif ($timesheetNeedsReview)
+                        <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                            <div class="rounded-2xl border border-emerald-200 bg-white px-4 py-3">
+                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Submitted hours</p>
+                                <p class="mt-1 text-2xl font-semibold text-[#17313F]">{{ $workedLabel }}</p>
+                                <p class="text-xs text-[#607080]">{{ $booking->worked_minutes ?? 0 }} minute{{ (int) ($booking->worked_minutes ?? 0) === 1 ? '' : 's' }}</p>
+                            </div>
+                            <div class="rounded-2xl border border-emerald-200 bg-white px-4 py-3">
+                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Estimated payment</p>
+                                <p class="mt-1 text-2xl font-semibold text-[#17313F]">${{ number_format($estimatedPaymentTotal, 2) }}</p>
+                                <p class="text-xs text-[#607080]">
+                                    Care ${{ number_format($shiftEarnings, 2) }} at {{ '$'.number_format($shiftRate, 2) }}/hr
+                                    @if ($platformFeePercent > 0)
+                                        + {{ rtrim(rtrim(number_format($platformFeePercent, 2), '0'), '.') }}% platform fee
+                                    @endif
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                            <x-button color="green" wire:click="completeBooking" class="w-full sm:w-auto">
+                                Approve hours and pay ${{ number_format($estimatedPaymentTotal, 2) }}
+                            </x-button>
+                            <x-button color="white" light wire:click="setActiveTab('support')" class="w-full sm:w-auto">
+                                Question hours
+                            </x-button>
+                        </div>
+                    @elseif ($isReviewingCaregivers && $visibleApplicationCount > 1)
+                        <div class="mt-4 flex flex-col gap-3 rounded-2xl border border-[#CFE1D8] bg-white/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                            <p class="text-sm font-semibold text-[#17313F]">
+                                {{ $visibleApplicationCount }} caregiver{{ $visibleApplicationCount === 1 ? '' : 's' }} replied. Review each card below, then hire the person you trust.
+                            </p>
+                            <a href="{{ route('caregivers.search') }}" wire:navigate class="inline-flex min-h-11 items-center justify-center rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] px-4 text-sm font-semibold text-[#0F3D3E] transition hover:bg-[#F5F1EB]">
+                                Invite more
+                            </a>
+                        </div>
+                    @elseif ($showFeaturedCaregiverDecision)
+                        <div class="mt-4 rounded-2xl border border-[#CFE1D8] bg-white p-4">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Ready to choose</p>
+                                    <p class="mt-1 truncate font-display text-lg font-semibold text-[#17313F]">{{ $featuredCaregiverApplication->caregiver->name }}</p>
+                                    <div class="mt-2 flex flex-wrap gap-2 text-xs text-[#4B5B6B] sm:text-sm">
+                                        <span class="rounded-full border border-[#E4DDD3] bg-[#FFFCF8] px-2.5 py-1">{{ $featuredCaregiverStatusLabel }}</span>
+                                        @if ($featuredCaregiverProfile?->years_experience)
+                                            <span class="rounded-full border border-[#E4DDD3] bg-[#FFFCF8] px-2.5 py-1">{{ (int) $featuredCaregiverProfile->years_experience }} year{{ (int) $featuredCaregiverProfile->years_experience === 1 ? '' : 's' }} experience</span>
+                                        @endif
+                                        @if ($featuredCaregiverProfile?->average_rating && $featuredCaregiverProfile?->reviews_count)
+                                            <span class="rounded-full border border-[#E4DDD3] bg-[#FFFCF8] px-2.5 py-1">{{ number_format((float) $featuredCaregiverProfile->average_rating, 1) }} stars</span>
+                                        @endif
+                                    </div>
+                                    @if ($featuredCaregiverApplication->cover_note)
+                                        <p class="mt-3 rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] px-3 py-2 text-sm leading-6 text-[#4B5B6B]">
+                                            {{ \Illuminate\Support\Str::limit((string) $featuredCaregiverApplication->cover_note, 180) }}
+                                        </p>
+                                    @endif
+                                </div>
+                                <x-badge :text="$featuredCaregiverStatusLabel" color="blue" />
+                            </div>
+                            <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                <x-button color="green" wire:click="hire({{ $featuredCaregiverApplication->id }})" class="w-full">
+                                    Hire {{ $featuredCaregiverFirstName }}
+                                </x-button>
+                                <x-button color="indigo" light wire:click="startConversation({{ $featuredCaregiverApplication->id }})" class="w-full">
+                                    {{ $featuredCaregiverApplication->conversation ? 'Open chat' : 'Chat first' }}
+                                </x-button>
+                                @if ($featuredCaregiverProfileHref)
+                                    <a href="{{ $featuredCaregiverProfileHref }}" wire:navigate class="block">
+                                        <x-button color="blue" light class="w-full">View profile</x-button>
+                                    </a>
+                                @endif
+                            </div>
+                            <div class="mt-3 rounded-xl border border-dashed border-[#CFE1D8] bg-[#F6FBF8] px-3 py-2 text-sm text-[#4B5B6B]">
+                                Need more choices?
+                                <a href="{{ route('caregivers.search') }}" wire:navigate class="font-semibold text-[#0F3D3E] underline underline-offset-2">
+                                    Invite more caregivers
+                                </a>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
             </div>
@@ -218,42 +472,17 @@
             </div>
         @endif
 
-        <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <button
-                type="button"
-                wire:click="setActiveTab('overview')"
-                class="{{ $activeTab === 'overview' ? 'bg-[#0F3D3E] text-[#FAF9F7] border-[#0F3D3E] shadow-sm' : 'bg-[rgba(255,253,250,0.98)] text-[#0F3D3E] border-[#DED6CA] hover:border-[#B7ADA0]' }} rounded-[1.3rem] border px-4 py-3 text-left transition"
-            >
-                <p class="font-display text-base font-semibold">Overview</p>
-                <p class="text-xs opacity-80">Request details and contact context</p>
-            </button>
-
-            <button
-                type="button"
-                wire:click="setActiveTab('applicants')"
-                class="{{ $activeTab === 'applicants' ? 'bg-[#0F3D3E] text-[#FAF9F7] border-[#0F3D3E] shadow-sm' : 'bg-[rgba(255,253,250,0.98)] text-[#0F3D3E] border-[#DED6CA] hover:border-[#B7ADA0]' }} rounded-[1.3rem] border px-4 py-3 text-left transition"
-            >
-                <p class="font-display text-base font-semibold">Applicants</p>
-                <p class="text-xs opacity-80">{{ $requestItem->applications->count() }} candidate(s)</p>
-            </button>
-
-            <button
-                type="button"
-                wire:click="setActiveTab('shift')"
-                class="{{ $activeTab === 'shift' ? 'bg-[#0F3D3E] text-[#FAF9F7] border-[#0F3D3E] shadow-sm' : 'bg-[rgba(255,253,250,0.98)] text-[#0F3D3E] border-[#DED6CA] hover:border-[#B7ADA0]' }} rounded-[1.3rem] border px-4 py-3 text-left transition"
-            >
-                <p class="font-display text-base font-semibold">Shift</p>
-                <p class="text-xs opacity-80">{{ $booking ? 'Live operations' : 'No booking yet' }}</p>
-            </button>
-
-            <button
-                type="button"
-                wire:click="setActiveTab('support')"
-                class="{{ $activeTab === 'support' ? 'bg-[#0F3D3E] text-[#FAF9F7] border-[#0F3D3E] shadow-sm' : 'bg-[rgba(255,253,250,0.98)] text-[#0F3D3E] border-[#DED6CA] hover:border-[#B7ADA0]' }} rounded-[1.3rem] border px-4 py-3 text-left transition"
-            >
-                <p class="font-display text-base font-semibold">Support</p>
-                <p class="text-xs opacity-80">Reschedule, incidents, disputes</p>
-            </button>
+        <div class="grid gap-3 {{ $stageTabGridClass }}">
+            @foreach ($stageTabs as $tab)
+                <button
+                    type="button"
+                    wire:click="setActiveTab('{{ $tab['key'] }}')"
+                    class="{{ $activeTab === $tab['key'] ? 'bg-[#0F3D3E] text-[#FAF9F7] border-[#0F3D3E] shadow-sm' : 'bg-[rgba(255,253,250,0.98)] text-[#0F3D3E] border-[#DED6CA] hover:border-[#B7ADA0]' }} rounded-[1.3rem] border px-4 py-3 text-left transition"
+                >
+                    <p class="font-display text-base font-semibold">{{ $tab['label'] }}</p>
+                    <p class="text-xs opacity-80">{{ $tab['description'] }}</p>
+                </button>
+            @endforeach
         </div>
     </x-card>
 
@@ -388,137 +617,100 @@
                                 </a>
                             @endif
                             @if ($booking)
-                                <x-button color="blue" light wire:click="setActiveTab('shift')">Go to shift</x-button>
+                                <x-button color="blue" light wire:click="setActiveTab('shift')">Go to visit</x-button>
                             @endif
                         </div>
                     </div>
                 </div>
             @else
                 <div class="rounded-lg border border-dashed border-[#D6CCBE] px-4 py-5 text-sm text-[#607080]">
-                    No caregiver hired yet. Review applicants and shortlist/hire from the Applicants tab.
+                    No caregiver hired yet. Open the Caregivers tab to save, message, or hire someone.
                 </div>
             @endif
         </x-card>
     @endif
 
-    @if ($activeTab === 'applicants')
+    @if ($activeTab === 'applicants' && $showApplicationList)
         <x-card>
             <x-slot:header>
-                <div class="flex items-center justify-between gap-3">
-                    <h2 class="font-display text-lg font-semibold">Applicants</h2>
-                    <p class="text-sm text-[#607080]">{{ $requestItem->applications->count() }} total</p>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <p class="hc-brand-kicker">
+                            @if ($isWaitingForCaregivers)
+                                Suggested caregivers
+                            @elseif ($isReviewingCaregivers)
+                                Caregiver replies
+                            @else
+                                Caregiver selection
+                            @endif
+                        </p>
+                        <h2 class="mt-1 font-display text-xl font-semibold text-[#17313F]">
+                            @if ($isWaitingForCaregivers)
+                                Invite one or two caregivers
+                            @elseif ($isReviewingCaregivers)
+                                Review replies below
+                            @else
+                                {{ $caregiverScreenTitle }}
+                            @endif
+                        </h2>
+                        <p class="mt-1 max-w-2xl text-sm text-[#607080]">
+                            @if ($isWaitingForCaregivers)
+                                Your request is live. Inviting a strong match can help you get a reply faster.
+                            @elseif ($isReviewingCaregivers)
+                                Open profile details only when you need more context. The main actions stay on each caregiver card.
+                            @else
+                                {{ $caregiverScreenBody }}
+                            @endif
+                        </p>
+                    </div>
+                    @unless ($isWaitingForCaregivers || $isReviewingCaregivers)
+                        <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3 text-sm text-[#4B5B6B]">
+                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Ready</p>
+                            <p class="mt-1 font-semibold text-[#17313F]">
+                                {{ $activeCaregiverResponses }} to review
+                            </p>
+                        </div>
+                    @endunless
                 </div>
             </x-slot:header>
 
-            @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN)
-                <div class="mb-5 rounded-xl border border-[#BDD4F7] bg-[#EEF5FF] p-4">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                    <p class="text-xs uppercase tracking-[0.12em] text-[#7C5DDC]">Smart shortlist</p>
-                            <h3 class="font-display text-lg font-semibold text-[#17313F]">Top suggested caregivers for this request</h3>
-                            <p class="text-sm text-[#607080]">Invite individually to accelerate first response.</p>
-                        </div>
+            @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $isWaitingForCaregivers)
+                @include('livewire.family.partials.caregiver-suggestions', ['suggestedCaregivers' => $suggestedCaregivers])
+                <div class="mt-4 rounded-2xl border border-dashed border-[#D6CCBE] bg-[#FFFCF8] px-4 py-3 text-sm text-[#4B5B6B]">
+                    After a caregiver replies, this screen changes to compare, chat, and hire.
+                </div>
+            @endif
+
+            @if ($showCaregiverFilterControls)
+                <details class="mb-4 rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3">
+                    <summary class="cursor-pointer list-none text-sm font-semibold text-[#17313F] [&::-webkit-details-marker]:hidden">Filter or sort caregivers</summary>
+                    <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <x-native-select-field label="Status" wire:model.live="applicationStatus" :options="$applicationStatusOptions" />
+                        <x-native-select-field
+                            label="Sort"
+                            wire:model.live="applicationSort"
+                            :options="[
+                                ['label' => 'Latest first', 'value' => 'latest'],
+                                ['label' => 'Oldest first', 'value' => 'oldest'],
+                                ['label' => 'Rate high-low', 'value' => 'rate_high'],
+                                ['label' => 'Rate low-high', 'value' => 'rate_low'],
+                            ]"
+                        />
                     </div>
-
-                    @if ($suggestedCaregivers->isNotEmpty())
-                        <div class="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-3">
-                            @foreach ($suggestedCaregivers as $suggestion)
-                                @php
-                                    $suggestionPhotoUrl = !empty($suggestion['profile_photo_path'])
-                                        ? \Illuminate\Support\Facades\Storage::disk('public')->url($suggestion['profile_photo_path'])
-                                        : null;
-                                    $suggestionAverageRating = !empty($suggestion['average_rating'])
-                                        ? (float) $suggestion['average_rating']
-                                        : null;
-                                    $suggestionReviewsCount = (int) ($suggestion['reviews_count'] ?? 0);
-                                @endphp
-                                <div class="rounded-xl border border-[#BDD4F7] bg-white p-3">
-                                    <div class="flex items-start gap-3">
-                                        <div class="shrink-0">
-                                            @if ($suggestionPhotoUrl)
-                                                <img
-                                                    src="{{ $suggestionPhotoUrl }}"
-                                                    alt="{{ $suggestion['name'] }}"
-                                                    class="h-11 w-11 rounded-full border border-[#DED6CA] object-cover"
-                                                >
-                                            @else
-                                                <div class="flex h-11 w-11 items-center justify-center rounded-full border border-[#DED6CA] bg-[#F5F1EB] text-sm font-semibold text-[#0F3D3E]">
-                                                    {{ \Illuminate\Support\Str::of($suggestion['name'])->trim()->explode(' ')->take(2)->map(fn ($part) => \Illuminate\Support\Str::substr($part, 0, 1))->implode('') }}
-                                                </div>
-                                            @endif
-                                        </div>
-
-                                        <div class="min-w-0 flex-1">
-                                            <p class="font-display font-semibold text-[#17313F]">{{ $suggestion['name'] }}</p>
-                                            <p class="text-xs text-[#607080]">{{ $suggestion['proximity'] }} - Match score {{ $suggestion['score'] }}</p>
-                                            <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[#607080]">
-                                                @if ($suggestionAverageRating && $suggestionReviewsCount > 0)
-                                                    <span class="inline-flex items-center gap-1 font-medium text-[#17313F]">
-                                                        <svg viewBox="0 0 20 20" class="h-4 w-4 text-amber-400" fill="currentColor" aria-hidden="true">
-                                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81H7.03a1 1 0 00.951-.69l1.07-3.292z" />
-                                                        </svg>
-                                                        {{ number_format($suggestionAverageRating, 1) }}
-                                                    </span>
-                                                    <span>{{ $suggestionReviewsCount }} review{{ $suggestionReviewsCount === 1 ? '' : 's' }}</span>
-                                                @else
-                                                    <span class="text-[#7B8794]">No reviews yet</span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-2 flex flex-wrap gap-1">
-                                        @if ($suggestion['identity_verified'])
-                                            <span class="inline-flex rounded-full bg-[#E8F0FF] px-2 py-1 text-[11px] font-medium text-[#4F6FAF]">Identity verified</span>
-                                        @endif
-                                        @if ($suggestion['background_check'])
-                                            <span class="inline-flex rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-medium text-emerald-700">Background check</span>
-                                        @endif
-                                        @if ($suggestion['top_caregiver'])
-                                            <span class="inline-flex rounded-full bg-amber-100 px-2 py-1 text-[11px] font-medium text-amber-700">Top caregiver</span>
-                                        @endif
-                                    </div>
-
-                                    <p class="mt-2 text-xs text-[#7B8794]">{{ implode(' - ', array_slice($suggestion['reasons'], 0, 2)) }}</p>
-
-                                    <div class="mt-3">
-                                        <x-button color="blue" light wire:click="inviteSuggestedCaregiver({{ $suggestion['user_id'] }})">
-                                            Invite caregiver
-                                        </x-button>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
+                </details>
+            @elseif ($requestItem->status !== \App\Models\CareRequest::STATUS_OPEN)
+                <div class="mb-4 rounded-md border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-sm text-[#4B5B6B]">
+                    @if ($hiredApplication)
+                        {{ $hiredCaregiverName ?: 'The caregiver' }} is hired for this visit. You can still open the profile or chat here.
                     @else
-                        <div class="mt-3 rounded-lg border border-dashed border-[#BDD4F7] bg-white px-3 py-3 text-sm text-[#607080]">
-                            No auto-suggestions yet. You can still review incoming applicants as they arrive.
-                        </div>
+                        This request is no longer open. You can still open caregiver profiles or past chats here.
                     @endif
                 </div>
             @endif
 
-            @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN)
-                <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <x-native-select-field label="Status" wire:model.live="applicationStatus" :options="$applicationStatusOptions" />
-                    <x-native-select-field
-                        label="Sort"
-                        wire:model.live="applicationSort"
-                        :options="[
-                            ['label' => 'Latest first', 'value' => 'latest'],
-                            ['label' => 'Oldest first', 'value' => 'oldest'],
-                            ['label' => 'Rate high-low', 'value' => 'rate_high'],
-                            ['label' => 'Rate low-high', 'value' => 'rate_low'],
-                        ]"
-                    />
-                </div>
-            @else
-                <div class="mb-4 rounded-md border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-sm text-[#4B5B6B]">
-                    Hiring is closed for this request. Applicant list is now read-only.
-                </div>
-            @endif
-
-            <div class="space-y-3">
-                @forelse ($this->visibleApplications as $application)
+            @if ((! $isWaitingForCaregivers || $requestItem->applications->count() > 0) && $showApplicationList)
+            <div id="caregiver-comparison-list" class="space-y-3 scroll-mt-28">
+                @forelse ($visibleApplications as $application)
                     @php
                         $caregiverProfile = $application->caregiver->caregiverProfile;
                         $photoUrl = $caregiverProfile?->profile_photo_path
@@ -530,6 +722,19 @@
                         $yearsExperience = (int) ($caregiverProfile?->years_experience ?? 0);
                         $skills = $caregiverProfile?->skills ?? collect();
                         $languages = $caregiverProfile?->languages ?? collect();
+                        $applicationStatusLabel = match ((string) $application->status) {
+                            \App\Models\CareRequestApplication::STATUS_APPLIED => 'Interested',
+                            \App\Models\CareRequestApplication::STATUS_SHORTLISTED => 'Saved',
+                            \App\Models\CareRequestApplication::STATUS_HIRED => 'Hired',
+                            \App\Models\CareRequestApplication::STATUS_REJECTED => 'Declined',
+                            \App\Models\CareRequestApplication::STATUS_NOT_SELECTED => 'Not selected',
+                            \App\Models\CareRequestApplication::STATUS_WITHDRAWN => 'Withdrawn',
+                            default => ucfirst(str_replace('_', ' ', (string) $application->status)),
+                        };
+                        $applicationCaregiverFirstName = \Illuminate\Support\Str::of($application->caregiver->name)->before(' ')->trim();
+                        if ($applicationCaregiverFirstName->isEmpty()) {
+                            $applicationCaregiverFirstName = 'caregiver';
+                        }
                     @endphp
                     <div class="rounded-2xl border border-[#E4DDD3] p-4 shadow-sm">
                         <div class="flex items-start gap-3">
@@ -550,7 +755,7 @@
                             <div class="min-w-0 flex-1">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <p class="font-display text-lg font-semibold text-[#17313F]">{{ $application->caregiver->name }}</p>
-                                    <x-badge :text="strtoupper($application->status)" color="blue" />
+                                    <x-badge :text="$applicationStatusLabel" color="blue" />
                                 </div>
                                 <p class="mt-1 text-sm text-[#607080]">
                                     {{ $application->caregiver->city }}, {{ $application->caregiver->state }}
@@ -576,7 +781,9 @@
                         </div>
 
                         @if ($caregiverProfile)
-                            <div class="mt-3 flex flex-wrap gap-2">
+                            <details class="mt-3 rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] px-3 py-2">
+                                <summary class="cursor-pointer list-none text-sm font-semibold text-[#17313F] [&::-webkit-details-marker]:hidden">Profile details</summary>
+                                <div class="mt-3 flex flex-wrap gap-2">
                                 @if ($caregiverProfile->hasIdentityVerifiedBadge())
                                     <x-badge color="cyan" text="Identity verified" />
                                 @endif
@@ -587,161 +794,237 @@
                                     <x-badge color="amber" text="Top Caregiver" />
                                 @endif
                                 <x-badge color="{{ $caregiverProfile->is_accepting_new_clients ? 'green' : 'slate' }}" text="{{ $caregiverProfile->is_accepting_new_clients ? 'Accepting clients' : 'Limited availability' }}" />
-                            </div>
-
-                            @if ($caregiverProfile->bio)
-                                <p class="mt-3 text-sm leading-6 text-[#4B5B6B]">{{ \Illuminate\Support\Str::limit((string) $caregiverProfile->bio, 220) }}</p>
-                            @endif
-
-                            @if ($skills->isNotEmpty() || $languages->isNotEmpty())
-                                <div class="mt-3 space-y-2">
-                                    @if ($skills->isNotEmpty())
-                                        <div class="flex flex-wrap gap-2">
-                                            @foreach ($skills->take(5) as $skill)
-                                                <span class="rounded-full bg-[#F0E9E1] px-3 py-1 text-xs font-medium text-[#4B5B6B]">{{ $skill->name }}</span>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                    @if ($languages->isNotEmpty())
-                                        <p class="text-xs text-[#7B8794]">Languages: {{ $languages->take(4)->pluck('name')->implode(', ') }}</p>
-                                    @endif
                                 </div>
-                            @endif
+
+                                @if ($caregiverProfile->bio)
+                                    <p class="mt-3 text-sm leading-6 text-[#4B5B6B]">{{ \Illuminate\Support\Str::limit((string) $caregiverProfile->bio, 220) }}</p>
+                                @endif
+
+                                @if ($skills->isNotEmpty() || $languages->isNotEmpty())
+                                    <div class="mt-3 space-y-2">
+                                        @if ($skills->isNotEmpty())
+                                            <div class="flex flex-wrap gap-2">
+                                                @foreach ($skills->take(5) as $skill)
+                                                    <span class="rounded-full bg-[#F0E9E1] px-3 py-1 text-xs font-medium text-[#4B5B6B]">{{ $skill->name }}</span>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                        @if ($languages->isNotEmpty())
+                                            <p class="text-xs text-[#7B8794]">Languages: {{ $languages->take(4)->pluck('name')->implode(', ') }}</p>
+                                        @endif
+                                    </div>
+                                @endif
+                            </details>
                         @endif
 
                         @if ($application->cover_note)
                             <p class="mt-3 whitespace-pre-line text-sm text-[#4B5B6B]">{{ $application->cover_note }}</p>
                         @endif
 
-                        <div class="mt-4 space-y-2">
-                            @if ($profileHref)
-                                <a href="{{ $profileHref }}" wire:navigate class="block sm:inline-block">
-                                    <x-button color="blue" light class="w-full sm:w-auto">View full caregiver profile</x-button>
-                                </a>
-                            @endif
-
+                        <div class="mt-4 space-y-3">
                             @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN)
                                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                    <x-button color="green" wire:click="hire({{ $application->id }})" class="w-full">Hire caregiver</x-button>
+                                    <x-button color="green" wire:click="hire({{ $application->id }})" class="w-full {{ $profileHref ? '' : 'sm:col-span-2' }}">Hire {{ $applicationCaregiverFirstName }}</x-button>
 
-                                    @if (in_array($application->status, ['shortlisted', 'hired'], true))
-                                        <x-button color="indigo" light wire:click="startConversation({{ $application->id }})" class="w-full">
-                                            {{ $application->conversation ? 'Open chat' : 'Start chat' }}
-                                        </x-button>
+                                    @if ($profileHref)
+                                        <a href="{{ $profileHref }}" wire:navigate class="block">
+                                            <x-button color="blue" light class="w-full">View profile</x-button>
+                                        </a>
                                     @endif
                                 </div>
 
-                                <div class="flex flex-wrap gap-2">
-                                    <x-button color="blue" light wire:click="shortlist({{ $application->id }})">Shortlist</x-button>
-                                    <x-button color="red" outline wire:click="reject({{ $application->id }})">Reject</x-button>
-                                </div>
+                                @if (in_array($application->status, [
+                                    \App\Models\CareRequestApplication::STATUS_APPLIED,
+                                    \App\Models\CareRequestApplication::STATUS_SHORTLISTED,
+                                    \App\Models\CareRequestApplication::STATUS_HIRED,
+                                ], true))
+                                    <x-button color="indigo" light wire:click="startConversation({{ $application->id }})" class="w-full sm:w-auto">
+                                        {{ $application->conversation ? 'Open chat' : ($application->status === \App\Models\CareRequestApplication::STATUS_APPLIED ? 'Save & chat' : 'Start chat') }}
+                                    </x-button>
+                                @endif
+
+                                <details class="rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] px-3 py-2">
+                                    <summary class="cursor-pointer list-none text-sm font-semibold text-[#17313F] [&::-webkit-details-marker]:hidden">More options for {{ $applicationCaregiverFirstName }}</summary>
+                                    <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                                        <x-button color="blue" light wire:click="shortlist({{ $application->id }})" class="w-full sm:w-auto">Save for later</x-button>
+                                        <x-button color="red" outline wire:click="reject({{ $application->id }})" class="w-full sm:w-auto">Not this caregiver</x-button>
+                                    </div>
+                                </details>
                             @elseif ($application->conversation)
+                                @if ($profileHref)
+                                    <a href="{{ $profileHref }}" wire:navigate class="block sm:inline-block">
+                                        <x-button color="blue" light class="w-full sm:w-auto">View profile</x-button>
+                                    </a>
+                                @endif
                                 <a href="{{ route('messages.show', $application->conversation->id) }}" wire:navigate class="block sm:inline-block">
                                     <x-button color="indigo" light class="w-full sm:w-auto">Open chat</x-button>
+                                </a>
+                            @elseif ($profileHref)
+                                <a href="{{ $profileHref }}" wire:navigate class="block sm:inline-block">
+                                    <x-button color="blue" light class="w-full sm:w-auto">View profile</x-button>
                                 </a>
                             @endif
                         </div>
                     </div>
                 @empty
                     <div class="rounded-md border border-dashed border-[#D6CCBE] px-4 py-6 text-sm text-[#607080]">
-                        No applicants yet.
+                        No caregivers have replied yet.
                     </div>
                 @endforelse
             </div>
+            @endif
+
+            @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && ! $isWaitingForCaregivers)
+                <details class="mt-4 rounded-2xl border border-[#BDD4F7] bg-[#EEF5FF] px-4 py-3">
+                    <summary class="cursor-pointer list-none font-display text-base font-semibold text-[#17313F] [&::-webkit-details-marker]:hidden">
+                        Need more choices? Invite more caregivers
+                    </summary>
+                    <p class="mt-2 text-sm text-[#607080]">Keep reviewing replies above, or invite another matching caregiver if no one feels right yet.</p>
+                    <div class="mt-4">
+                        @include('livewire.family.partials.caregiver-suggestions', ['suggestedCaregivers' => $suggestedCaregivers])
+                    </div>
+                </details>
+            @endif
         </x-card>
     @endif
 
     @if ($activeTab === 'shift')
         @if (! $booking)
             <x-card>
-                <x-slot:header><h2 class="font-display text-lg font-semibold">Shift operations</h2></x-slot:header>
+                <x-slot:header><h2 class="font-display text-lg font-semibold">Visit details</h2></x-slot:header>
                 <div class="rounded-md border border-dashed border-[#D6CCBE] px-4 py-6 text-sm text-[#607080]">
-                    Shift operations become available once you hire a caregiver.
+                    Visit details become available once you hire a caregiver.
                 </div>
             </x-card>
         @else
-            <section class="space-y-5 rounded-3xl border border-[#D8E1D7] bg-white p-4 shadow-sm sm:p-5">
+            <section id="visit-section" class="space-y-5 rounded-3xl border border-[#D8E1D7] bg-white p-4 shadow-sm sm:p-5">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                        <p class="hc-brand-kicker">{{ $timesheetNeedsReview ? 'Timesheet review' : 'Shift details' }}</p>
+                        <p class="hc-brand-kicker">{{ $visitPanelEyebrow }}</p>
                         <h2 class="mt-1 font-display text-2xl font-semibold text-[#17313F]">
-                            {{ $timesheetNeedsReview ? 'Review and approve this completed shift' : $requestItem->title }}
+                            {{ $visitPanelTitle }}
                         </h2>
                         <p class="mt-1 max-w-3xl text-sm text-[#607080]">
-                            {{ $timesheetNeedsReview ? 'Check the hours, amount, caregiver, and location. If everything looks right, approve the timesheet to capture payment.' : 'Track care, location, cancellation, no-show timing, and shift records from one place.' }}
+                            {{ $visitPanelBody }}
                         </p>
                     </div>
-                    <x-badge :text="strtoupper(str_replace('_', ' ', $booking->status))" :color="$shiftBadgeColor" />
+                    <x-badge :text="$visitStatusLabel" :color="$shiftBadgeColor" />
                 </div>
 
-                <div class="rounded-2xl border px-4 py-3 {{ $shiftStatusTone }}">
-                    <p class="font-display text-lg font-semibold">{{ $shiftStatusTitle }}</p>
-                    <p class="mt-1 text-sm">{{ $shiftStatusBody }}</p>
-                </div>
-
-                @if ($timesheetNeedsReview)
-                    <div class="rounded-3xl border-2 border-emerald-300 bg-emerald-50 p-4 text-emerald-950 shadow-sm sm:p-5">
-                        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                            <div>
-                                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">Action needed</p>
-                                <h3 class="mt-1 font-display text-2xl font-semibold">Review caregiver timesheet</h3>
-                                <p class="mt-1 max-w-2xl text-sm text-emerald-900">
-                                    Approve only if the worked hours look right. Approval captures the family payment and moves the caregiver payout forward.
-                                </p>
-                            </div>
-                            <x-button color="green" wire:click="completeBooking" class="w-full sm:w-auto">
-                                Approve timesheet & capture payment
-                            </x-button>
-                        </div>
-
-                        <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
-                            <div class="rounded-2xl border border-emerald-200 bg-white px-4 py-3">
-                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Worked hours</p>
-                                <p class="mt-1 text-2xl font-semibold text-[#17313F]">{{ $workedLabel }}</p>
-                                <p class="text-xs text-[#607080]">{{ $booking->worked_minutes ?? 0 }} minute{{ (int) ($booking->worked_minutes ?? 0) === 1 ? '' : 's' }}</p>
-                            </div>
-                            <div class="rounded-2xl border border-emerald-200 bg-white px-4 py-3">
-                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Estimated payment</p>
-                                <p class="mt-1 text-2xl font-semibold text-[#17313F]">${{ number_format($estimatedPaymentTotal, 2) }}</p>
-                                <p class="text-xs text-[#607080]">
-                                    Care ${{ number_format($shiftEarnings, 2) }} at {{ '$'.number_format($shiftRate, 2) }}/hr
-                                    @if ($platformFeePercent > 0)
-                                        + {{ rtrim(rtrim(number_format($platformFeePercent, 2), '0'), '.') }}% platform fee
-                                    @endif
-                                </p>
-                            </div>
-                            <div class="rounded-2xl border border-emerald-200 bg-white px-4 py-3">
-                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Submitted</p>
-                                <p class="mt-1 text-base font-semibold text-[#17313F]">{{ optional($booking->timesheet_submitted_at)->format('M d, g:i A') ?: 'Pending' }}</p>
-                                <p class="text-xs text-[#607080]">Caregiver checkout {{ optional($booking->completed_at)->format('g:i A') ?: 'pending' }}</p>
-                            </div>
-                            <div class="rounded-2xl border border-emerald-200 bg-white px-4 py-3">
-                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Payment</p>
-                                <p class="mt-1 text-base font-semibold text-[#17313F]">{{ strtoupper($payment?->status ?? 'missing') }}</p>
-                                @if ($payment?->amount_authorized_cents)
-                                    <p class="text-xs text-[#607080]">Authorized ${{ number_format($payment->amount_authorized_cents / 100, 2) }}</p>
-                                @elseif (! $payment)
-                                    <p class="text-xs text-amber-700">Authorization needs attention before capture.</p>
-                                @else
-                                    <p class="text-xs text-[#607080]">Capture runs when you approve.</p>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-                            <x-input label="Confirmation note (optional)" wire:model="confirmationNote" />
-                            <div class="flex flex-col gap-2 sm:flex-row lg:justify-end">
-                                <x-button color="green" wire:click="completeBooking" class="w-full sm:w-auto">
-                                    Approve timesheet & capture payment
-                                </x-button>
-                                <x-button color="white" light wire:click="setActiveTab('support')" class="w-full sm:w-auto">
-                                    Question these hours
-                                </x-button>
-                            </div>
-                        </div>
+                @if ($showVisitStatusNotice)
+                    <div class="rounded-2xl border px-4 py-3 {{ $shiftStatusTone }}">
+                        <p class="font-display text-lg font-semibold">{{ $shiftStatusTitle }}</p>
+                        <p class="mt-1 text-sm">{{ $shiftStatusBody }}</p>
                     </div>
                 @endif
 
+                @if ($isScheduledVisit || $isLiveVisit)
+                    <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.45fr)]">
+                        <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
+                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">
+                                {{ $isLiveVisit ? 'Live check-in' : 'Visit plan' }}
+                            </p>
+                            <h3 class="mt-1 font-display text-xl font-semibold text-[#17313F]">
+                                @if ($isLiveVisit)
+                                    {{ $hiredCaregiverFirstName }} is with {{ $requestItem->recipient?->full_name ?: 'the care recipient' }}.
+                                @else
+                                    {{ $hiredCaregiverFirstName }} is scheduled to come.
+                                @endif
+                            </h3>
+                            <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                <div class="rounded-xl border border-[#E4DDD3] bg-white px-3 py-2">
+                                    <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Time</p>
+                                    <p class="mt-1 font-semibold text-[#17313F]">{{ optional($booking->scheduled_start_at)->format('M d') ?: 'Date pending' }}</p>
+                                    <p class="text-sm text-[#607080]">{{ optional($booking->scheduled_start_at)->format('g:i A') ?: '-' }} - {{ optional($booking->scheduled_end_at)->format('g:i A') ?: '-' }}</p>
+                                </div>
+                                <div class="rounded-xl border border-[#E4DDD3] bg-white px-3 py-2">
+                                    <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Caregiver</p>
+                                    <p class="mt-1 font-semibold text-[#17313F]">{{ $hiredApplication?->caregiver?->name ?: 'Selected caregiver' }}</p>
+                                    <p class="text-sm text-[#607080]">
+                                        {{ $booking->started_at ? 'Checked in '.$booking->started_at->format('g:i A') : 'Check-in pending' }}
+                                    </p>
+                                </div>
+                                <div class="rounded-xl border border-[#E4DDD3] bg-white px-3 py-2">
+                                    <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Payment</p>
+                                    <p class="mt-1 font-semibold text-[#17313F]">{{ $payment ? ucfirst(str_replace('_', ' ', (string) $payment->status)) : 'Needs setup' }}</p>
+                                    <p class="text-sm text-[#607080]">
+                                        @if ($payment?->amount_authorized_cents)
+                                            Authorized ${{ number_format($payment->amount_authorized_cents / 100, 2) }}
+                                        @else
+                                            Card authorization pending
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 rounded-xl border border-[#E4DDD3] bg-white px-3 py-3">
+                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Care location</p>
+                                <p class="mt-1 font-semibold text-[#17313F]">{{ $serviceAddress ?: 'Address not set' }}</p>
+                                <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-[#607080]">
+                                    @if ($serviceMapOpenUrl)
+                                        <a href="{{ $serviceMapOpenUrl }}" target="_blank" rel="noopener noreferrer" class="font-semibold text-[#7C5DDC] underline underline-offset-2">Open map</a>
+                                    @endif
+                                    <span>{{ $requestItem->recipient?->full_name ?: 'Recipient' }} - {{ $requestItem->recipient?->relationship_to_family ?: 'Care recipient' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <aside class="space-y-3">
+                            @if ($isLiveVisit)
+                                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+                                    <p class="font-display text-lg font-semibold">Checked in</p>
+                                    <p class="mt-1">{{ $hiredCaregiverFirstName }} checked in {{ optional($booking->started_at)->format('M d, g:i A') ?: 'at the visit start' }}.</p>
+                                    @if ($booking->check_in_lat && $booking->check_in_lng)
+                                        <p class="mt-2 text-xs text-emerald-800">GPS was captured at check-in.</p>
+                                    @endif
+                                </div>
+                            @elseif (! $canMarkNoShow)
+                                <details class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3 text-sm text-[#4B5B6B]">
+                                    <summary class="cursor-pointer list-none font-semibold text-[#17313F] [&::-webkit-details-marker]:hidden">
+                                        If the caregiver is late
+                                    </summary>
+                                    <div class="mt-2 space-y-2">
+                                        @if ($noShowEligibleAt)
+                                            <p>No-show becomes available at {{ $noShowEligibleAt->format('M d, g:i A') }}. Until then, message the caregiver or contact support.</p>
+                                        @else
+                                            <p>No-show needs a scheduled start time. Contact support if the caregiver has not arrived.</p>
+                                        @endif
+                                    </div>
+                                </details>
+                            @endif
+
+                            @if ($canMarkNoShow)
+                                <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-950">
+                                    <p class="font-display text-lg font-semibold">Caregiver has not arrived?</p>
+                                    <p class="mt-1">The no-show window is open for this visit.</p>
+                                    <x-button color="red" light wire:click="markNoShow" onclick="if (!confirm('Mark this caregiver as no-show? This cancels the visit and affects reliability.')) return false;" class="mt-3 w-full">Mark caregiver no-show</x-button>
+                                </div>
+                            @endif
+
+                            <details class="rounded-2xl border border-[#E4DDD3] bg-white px-4 py-3 text-sm text-[#4B5B6B]">
+                                <summary class="cursor-pointer list-none font-semibold text-[#17313F] [&::-webkit-details-marker]:hidden">
+                                    Map and visit record
+                                </summary>
+                                <div class="mt-3 space-y-3 border-t border-[#EFE6D8] pt-3">
+                                    @if ($showVisitMapEmbed)
+                                        <div wire:ignore class="overflow-hidden rounded-xl border border-[#E4DDD3] bg-[#F7F2EA]">
+                                            <iframe
+                                                title="Visit service location map"
+                                                src="{{ $serviceMapEmbedUrl }}"
+                                                loading="lazy"
+                                                referrerpolicy="no-referrer-when-downgrade"
+                                                class="h-44 w-full"
+                                            ></iframe>
+                                        </div>
+                                    @endif
+                                    <p>Started: {{ optional($booking->started_at)->format('M d, H:i') ?: 'Pending' }}</p>
+                                    <p>Completed: {{ optional($booking->completed_at)->format('M d, H:i') ?: 'Pending' }}</p>
+                                    <p>Payment: {{ $payment ? strtoupper((string) $payment->status) : 'NOT READY' }}</p>
+                                </div>
+                            </details>
+                        </aside>
+                    </div>
+                @else
                 <div class="grid grid-cols-1 gap-3 xl:grid-cols-4">
                     <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
                         <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Schedule</p>
@@ -767,10 +1050,10 @@
                     </div>
                 </div>
 
-                @if ($serviceMapEmbedUrl)
+                @if ($showVisitMapEmbed)
                     <div wire:ignore class="overflow-hidden rounded-2xl border border-[#E4DDD3] bg-[#F7F2EA]">
                         <iframe
-                            title="Shift service location map"
+                            title="Visit service location map"
                             src="{{ $serviceMapEmbedUrl }}"
                             loading="lazy"
                             referrerpolicy="no-referrer-when-downgrade"
@@ -779,7 +1062,7 @@
                     </div>
                 @endif
 
-                @if (! $timesheetNeedsReview)
+                @if (! $timesheetNeedsReview && ! $isFinalVisitRecord)
                     @if (! $payment)
                         <div class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
                             Payment authorization is not ready yet.
@@ -805,9 +1088,10 @@
                     @endif
                 @endif
 
+                @if ($showVisitActionStrip)
                 <div class="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_20rem]">
                     <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                        @if ($hiredConversation)
+                        @if ($hiredConversation && ! $isLiveVisit)
                             <a href="{{ route('messages.show', $hiredConversation->id) }}" wire:navigate>
                                 <x-button color="indigo" class="w-full sm:w-auto">Open chat</x-button>
                             </a>
@@ -817,234 +1101,275 @@
                             <x-button color="amber" wire:click="startPaymentAuthorization" class="w-full sm:w-auto">Confirm card authorization</x-button>
                         @endif
 
-                        @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true))
-                            <x-button color="green" wire:click="completeBooking" class="w-full sm:w-auto">Mark shift complete</x-button>
+                        @if (! $isLiveVisit && in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true))
+                            <x-button color="green" wire:click="completeBooking" class="w-full sm:w-auto">The visit has ended</x-button>
                         @endif
 
                         @if ($canMarkNoShow)
-                            <x-button color="red" light wire:click="markNoShow" onclick="if (!confirm('Mark this caregiver as no-show? This cancels the shift and affects reliability.')) return false;" class="w-full sm:w-auto">Mark caregiver no-show</x-button>
+                            <x-button color="red" light wire:click="markNoShow" onclick="if (!confirm('Mark this caregiver as no-show? This cancels the visit and affects reliability.')) return false;" class="w-full sm:w-auto">Mark caregiver no-show</x-button>
                         @endif
 
-                        <x-button color="white" light wire:click="setActiveTab('support')" class="w-full sm:w-auto">Safety/support</x-button>
+                        @if (! $isLiveVisit)
+                            <x-button color="white" light wire:click="setActiveTab('support')" class="w-full sm:w-auto">{{ $supportButtonLabel }}</x-button>
+                        @endif
                     </div>
 
-                    @if ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED)
-                        <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3 text-sm text-[#4B5B6B]">
-                            <p class="font-semibold text-[#17313F]">No-show rule</p>
-                            @if ($canMarkNoShow)
-                                <p class="mt-1">Available now because the scheduled start was more than 30 minutes ago.</p>
-                            @elseif ($noShowEligibleAt)
-                                <p class="mt-1">No-show unlocks at {{ $noShowEligibleAt->format('M d, g:i A') }}.</p>
-                            @else
-                                <p class="mt-1">No-show requires a scheduled start time.</p>
-                            @endif
-                        </div>
-                    @endif
-                </div>
-
-                @if ($canCancelScheduledShift)
-                    <details class="rounded-2xl border border-rose-200 bg-rose-50 p-4">
-                        <summary class="cursor-pointer font-display text-base font-semibold text-rose-900">Cancel this scheduled shift</summary>
-                        <div class="mt-3 space-y-3 text-sm text-rose-900">
-                            <p>
-                                This cancels the shift before caregiver check-in and releases the payment authorization when possible.
-                                @if ($lateCancel)
-                                    It is inside the late-cancellation window.
+                    @if ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED && ! $canMarkNoShow)
+                        <details class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3 text-sm text-[#4B5B6B]">
+                            <summary class="cursor-pointer list-none font-semibold text-[#17313F] [&::-webkit-details-marker]:hidden">
+                                If the caregiver is late
+                            </summary>
+                            <div class="mt-2 space-y-2">
+                                @if ($noShowEligibleAt)
+                                    <p>No-show becomes available at {{ $noShowEligibleAt->format('M d, g:i A') }}. Until then, message the caregiver or contact support.</p>
+                                @else
+                                    <p>No-show needs a scheduled start time. Contact support if the caregiver has not arrived.</p>
                                 @endif
-                            </p>
-                            <x-textarea label="Cancellation reason" wire:model="directCancelReason" />
-                            @error('directCancelReason') <p class="text-sm text-red-700">{{ $message }}</p> @enderror
-                            <x-button color="red" wire:click="cancelScheduledBooking" onclick="if (!confirm('Cancel this scheduled shift?')) return false;">Cancel shift</x-button>
-                        </div>
-                    </details>
-                @endif
-
-                <div class="space-y-4 text-sm">
-
-                    @if (($booking->timesheet_submitted_at || $booking->worked_minutes) && ! $timesheetNeedsReview)
-                        <div class="grid grid-cols-1 gap-3 rounded-lg border border-[#E4DDD3] bg-[#F7F2EA] p-3 md:grid-cols-3">
-                            <div>
-                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Worked time</p>
-                                <p class="mt-1 text-base font-semibold text-[#17313F]">{{ $workedLabel }}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Estimated shift total</p>
-                                <p class="mt-1 text-base font-semibold text-[#17313F]">${{ number_format($shiftEarnings, 2) }}</p>
-                                <p class="text-xs text-[#7B8794]">{{ '$'.number_format($shiftRate, 2) }}/hr</p>
-                            </div>
-                            <div>
-                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Timesheet</p>
-                                <p class="mt-1 text-base font-semibold text-[#17313F]">
-                                    {{ $booking->family_confirmed_at ? 'Confirmed' : 'Awaiting your confirmation' }}
-                                </p>
-                                <p class="text-xs text-[#7B8794]">
-                                    Submitted {{ optional($booking->timesheet_submitted_at)->format('M d, H:i') ?: 'Pending' }}
-                                </p>
-                            </div>
-                        </div>
-                    @endif
-
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-4 text-xs text-[#4B5B6B]">
-                        <div class="rounded-lg border border-[#E4DDD3] bg-white px-3 py-2">Caregiver check-in: {{ optional($booking->started_at)->format('M d, H:i') ?: 'Pending' }}</div>
-                        <div class="rounded-lg border border-[#E4DDD3] bg-white px-3 py-2">Caregiver check-out: {{ optional($booking->completed_at)->format('M d, H:i') ?: 'Pending' }}</div>
-                        <div class="rounded-lg border border-[#E4DDD3] bg-white px-3 py-2">Family confirmation: {{ optional($booking->family_confirmed_at)->format('M d, H:i') ?: 'Pending' }}</div>
-                        <div class="rounded-lg border border-[#E4DDD3] bg-white px-3 py-2">Dispute: {{ strtoupper($booking->dispute_status ?? 'none') }}</div>
-                    </div>
-
-                    @if ($booking->expected_minutes || $booking->worked_minutes)
-                        <p class="text-xs text-[#607080]">
-                            Minutes: expected {{ $booking->expected_minutes ?? '-' }} - worked {{ $booking->worked_minutes ?? '-' }}
-                        </p>
-                    @endif
-
-                    <details class="rounded-lg border border-[#E4DDD3] bg-white p-3">
-                        <summary class="cursor-pointer font-medium text-[#17313F]">Task completion snapshot</summary>
-                        <div class="mt-3 space-y-2">
-                            @forelse ($booking->taskChecks as $taskCheck)
-                                <div class="rounded border border-[#E4DDD3] px-3 py-2">
-                                    <p class="{{ $taskCheck->is_completed ? 'line-through text-[#7B8794]' : 'text-[#17313F]' }}">{{ $taskCheck->label }}</p>
-                                    @if ($taskCheck->notes)
-                                        <p class="text-xs text-[#7B8794]">{{ $taskCheck->notes }}</p>
-                                    @endif
-                                </div>
-                            @empty
-                                <p class="text-xs text-[#607080]">No task checks yet.</p>
-                            @endforelse
-                        </div>
-                    </details>
-
-                    <details class="rounded-lg border border-[#E4DDD3] bg-white p-3">
-                        <summary class="cursor-pointer font-medium text-[#17313F]">Timeline</summary>
-                        <div class="mt-3 max-h-52 space-y-1 overflow-auto text-xs text-[#607080]">
-                            @forelse ($booking->events->take(20) as $event)
-                                <p>{{ optional($event->happened_at)->format('M d H:i') }} - {{ strtoupper(str_replace('_', ' ', $event->event_type)) }}</p>
-                            @empty
-                                <p>No events yet.</p>
-                            @endforelse
-                        </div>
-                    </details>
-
-                    @if ($booking->changeRequests->count() > 0)
-                        <details class="rounded-lg border border-[#E4DDD3] bg-white p-3">
-                            <summary class="cursor-pointer font-medium text-[#17313F]">Change requests</summary>
-                            <div class="mt-3 space-y-2">
-                                @foreach ($booking->changeRequests as $change)
-                                    <div class="rounded-md border border-[#E4DDD3] px-3 py-2">
-                                        <p class="font-medium">{{ strtoupper($change->type) }} - {{ strtoupper($change->status) }}</p>
-                                        <p class="text-[#607080]">{{ $change->reason }}</p>
-                                        @if ($change->proposed_start_at)
-                                            <p class="text-xs text-[#7B8794]">
-                                                Proposed:
-                                                {{ optional($change->proposed_start_at)->format('M d, Y H:i') }}
-                                                to
-                                                {{ optional($change->proposed_end_at)->format('M d, Y H:i') }}
-                                            </p>
-                                        @endif
-                                        @if ($change->status === 'pending' && (int) $change->requester_user_id !== (int) auth()->id())
-                                            <div class="mt-2 flex gap-2">
-                                                <x-button color="green" light wire:click="resolveChangeRequest({{ $change->id }}, 'accept')">Accept</x-button>
-                                                <x-button color="red" light wire:click="resolveChangeRequest({{ $change->id }}, 'reject')">Reject</x-button>
-                                            </div>
-                                        @endif
-                                    </div>
-                                @endforeach
                             </div>
                         </details>
                     @endif
                 </div>
+                @endif
+
+                @if ($booking->status !== \App\Models\CareBooking::STATUS_SCHEDULED)
+                    <div class="space-y-4 text-sm">
+
+                        @if (($booking->timesheet_submitted_at || $booking->worked_minutes) && ! $timesheetNeedsReview)
+                            @if ($isFinalVisitRecord)
+                                <div class="rounded-2xl border border-[#CFE1D8] bg-[#F6FBF8] p-4">
+                                    <p class="text-xs uppercase tracking-[0.12em] text-emerald-700">Visit receipt</p>
+                                    <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+                                        <div class="rounded-xl border border-[#D8E1D7] bg-white px-3 py-2">
+                                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Worked time</p>
+                                            <p class="mt-1 text-lg font-semibold text-[#17313F]">{{ $workedLabel }}</p>
+                                        </div>
+                                        <div class="rounded-xl border border-[#D8E1D7] bg-white px-3 py-2">
+                                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Payment</p>
+                                            <p class="mt-1 text-lg font-semibold text-[#17313F]">
+                                                @if ($payment?->amount_captured_cents)
+                                                    ${{ number_format($payment->amount_captured_cents / 100, 2) }}
+                                                @else
+                                                    ${{ number_format($shiftEarnings, 2) }}
+                                                @endif
+                                            </p>
+                                            <p class="text-xs text-[#607080]">{{ $payment ? ucfirst(str_replace('_', ' ', (string) $payment->status)) : 'Finalized' }}</p>
+                                        </div>
+                                        <div class="rounded-xl border border-[#D8E1D7] bg-white px-3 py-2">
+                                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Timesheet</p>
+                                            <p class="mt-1 text-lg font-semibold text-[#17313F]">Confirmed</p>
+                                            <p class="text-xs text-[#607080]">
+                                                {{ optional($booking->family_confirmed_at)->format('M d, H:i') ?: 'Confirmed by family' }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="grid grid-cols-1 gap-3 rounded-lg border border-[#E4DDD3] bg-[#F7F2EA] p-3 md:grid-cols-3">
+                                    <div>
+                                        <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Worked time</p>
+                                        <p class="mt-1 text-base font-semibold text-[#17313F]">{{ $workedLabel }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Estimated visit total</p>
+                                        <p class="mt-1 text-base font-semibold text-[#17313F]">${{ number_format($shiftEarnings, 2) }}</p>
+                                        <p class="text-xs text-[#7B8794]">{{ '$'.number_format($shiftRate, 2) }}/hr</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Timesheet</p>
+                                        <p class="mt-1 text-base font-semibold text-[#17313F]">
+                                            {{ $booking->family_confirmed_at ? 'Confirmed' : 'Awaiting your confirmation' }}
+                                        </p>
+                                        <p class="text-xs text-[#7B8794]">
+                                            Submitted {{ optional($booking->timesheet_submitted_at)->format('M d, H:i') ?: 'Pending' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            @endif
+                        @endif
+
+                        @if ($isFinalVisitRecord && ($familyReview || $caregiverReview))
+                            <div class="rounded-2xl border border-[#E4DDD3] bg-white p-4">
+                                <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Reviews</p>
+                                <div class="mt-3 grid grid-cols-1 gap-3 {{ $caregiverReview ? 'lg:grid-cols-2' : '' }}">
+                                    @if ($familyReview)
+                                        <div class="rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] px-3 py-3">
+                                            <p class="font-semibold text-[#17313F]">Your review</p>
+                                            <div class="mt-2 flex items-center gap-1">
+                                                @for ($star = 1; $star <= 5; $star++)
+                                                    <svg viewBox="0 0 20 20" class="h-5 w-5 {{ ((int) ($familyReview?->rating ?? 0)) >= $star ? 'text-amber-400' : 'text-[#D7DEE6]' }}" fill="currentColor" aria-hidden="true">
+                                                        <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.14 3.5a1 1 0 00.95.69h3.68c.97 0 1.38 1.24.6 1.81l-2.98 2.17a1 1 0 00-.36 1.12l1.14 3.5c.3.92-.75 1.68-1.54 1.12l-2.98-2.17a1 1 0 00-1.18 0l-2.98 2.17c-.79.57-1.84-.2-1.54-1.12l1.14-3.5a1 1 0 00-.36-1.12L2.68 8.93c-.78-.57-.37-1.81.6-1.81h3.68a1 1 0 00.95-.69l1.14-3.5z"/>
+                                                    </svg>
+                                                @endfor
+                                                <span class="ml-1 text-sm font-medium text-[#4B5B6B]">{{ (int) ($familyReview?->rating ?? 0) }}/5</span>
+                                            </div>
+                                            <p class="mt-2 text-sm text-[#4B5B6B]">{{ $familyReview->comment ?: 'No additional comment was provided.' }}</p>
+                                        </div>
+                                    @endif
+
+                                    @if ($caregiverReview)
+                                        <div class="rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] px-3 py-3">
+                                            <p class="font-semibold text-[#17313F]">Caregiver feedback</p>
+                                            <div class="mt-2 flex items-center gap-1">
+                                                @for ($star = 1; $star <= 5; $star++)
+                                                    <svg viewBox="0 0 20 20" class="h-5 w-5 {{ ((int) ($caregiverReview->rating ?? 0)) >= $star ? 'text-amber-400' : 'text-[#D7DEE6]' }}" fill="currentColor" aria-hidden="true">
+                                                        <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.14 3.5a1 1 0 00.95.69h3.68c.97 0 1.38 1.24.6 1.81l-2.98 2.17a1 1 0 00-.36 1.12l1.14 3.5c.3.92-.75 1.68-1.54 1.12l-2.98-2.17a1 1 0 00-1.18 0l-2.98 2.17c-.79.57-1.84-.2-1.54-1.12l1.14-3.5a1 1 0 00-.36-1.12L2.68 8.93c-.78-.57-.37-1.81.6-1.81h3.68a1 1 0 00.95-.69l1.14-3.5z"/>
+                                                    </svg>
+                                                @endfor
+                                                <span class="ml-1 text-sm font-medium text-[#4B5B6B]">{{ (int) $caregiverReview->rating }}/5</span>
+                                            </div>
+                                            <p class="mt-2 text-sm text-[#4B5B6B]">{{ $caregiverReview->comment ?: 'No comment left by caregiver.' }}</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
+                        <details class="rounded-2xl border border-[#E4DDD3] bg-white p-4">
+                            <summary class="cursor-pointer list-none font-display text-base font-semibold text-[#17313F] [&::-webkit-details-marker]:hidden">
+                                Detailed visit record
+                            </summary>
+                            <div class="mt-4 space-y-4 border-t border-[#EFE6D8] pt-4">
+                                <div class="grid grid-cols-1 gap-3 md:grid-cols-4 text-xs text-[#4B5B6B]">
+                                    <div class="rounded-lg border border-[#E4DDD3] bg-[#FFFCF8] px-3 py-2">
+                                        <p class="font-semibold text-[#17313F]">Caregiver check-in</p>
+                                        <p class="mt-1">{{ optional($booking->started_at)->format('M d, H:i') ?: 'Pending' }}</p>
+                                    </div>
+                                    <div class="rounded-lg border border-[#E4DDD3] bg-[#FFFCF8] px-3 py-2">
+                                        <p class="font-semibold text-[#17313F]">Caregiver check-out</p>
+                                        <p class="mt-1">{{ optional($booking->completed_at)->format('M d, H:i') ?: 'Pending' }}</p>
+                                    </div>
+                                    <div class="rounded-lg border border-[#E4DDD3] bg-[#FFFCF8] px-3 py-2">
+                                        <p class="font-semibold text-[#17313F]">Family confirmation</p>
+                                        <p class="mt-1">{{ optional($booking->family_confirmed_at)->format('M d, H:i') ?: 'Pending' }}</p>
+                                    </div>
+                                    <div class="rounded-lg border border-[#E4DDD3] bg-[#FFFCF8] px-3 py-2">
+                                        <p class="font-semibold text-[#17313F]">Dispute</p>
+                                        <p class="mt-1">{{ strtoupper($booking->dispute_status ?? 'none') }}</p>
+                                    </div>
+                                </div>
+
+                                @if ($booking->expected_minutes || $booking->worked_minutes)
+                                    <p class="text-xs text-[#607080]">
+                                        Expected {{ $booking->expected_minutes ?? '-' }} minutes - worked {{ $booking->worked_minutes ?? '-' }} minutes.
+                                    </p>
+                                @endif
+
+                                <div class="rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] p-3">
+                                    <p class="font-medium text-[#17313F]">Care tasks</p>
+                                    <div class="mt-3 space-y-2">
+                                        @forelse ($booking->taskChecks as $taskCheck)
+                                            <div class="rounded border border-[#E4DDD3] bg-white px-3 py-2">
+                                                <p class="{{ $taskCheck->is_completed ? 'line-through text-[#7B8794]' : 'text-[#17313F]' }}">{{ $taskCheck->label }}</p>
+                                                @if ($taskCheck->notes)
+                                                    <p class="text-xs text-[#7B8794]">{{ $taskCheck->notes }}</p>
+                                                @endif
+                                            </div>
+                                        @empty
+                                            <p class="text-xs text-[#607080]">No task checks yet.</p>
+                                        @endforelse
+                                    </div>
+                                </div>
+
+                                <div class="rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] p-3">
+                                    <p class="font-medium text-[#17313F]">Visit timeline</p>
+                                    <div class="mt-3 max-h-52 space-y-1 overflow-auto text-xs text-[#607080]">
+                                        @forelse ($booking->events->take(20) as $event)
+                                            <p>{{ optional($event->happened_at)->format('M d H:i') }} - {{ strtoupper(str_replace('_', ' ', $event->event_type)) }}</p>
+                                        @empty
+                                            <p>No events yet.</p>
+                                        @endforelse
+                                    </div>
+                                </div>
+
+                                @if ($booking->changeRequests->count() > 0)
+                                    <div class="rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] p-3">
+                                        <p class="font-medium text-[#17313F]">Change requests</p>
+                                        <div class="mt-3 space-y-2">
+                                            @foreach ($booking->changeRequests as $change)
+                                                <div class="rounded-md border border-[#E4DDD3] bg-white px-3 py-2">
+                                                    <p class="font-medium">{{ strtoupper($change->type) }} - {{ strtoupper($change->status) }}</p>
+                                                    <p class="text-[#607080]">{{ $change->reason }}</p>
+                                                    @if ($change->proposed_start_at)
+                                                        <p class="text-xs text-[#7B8794]">
+                                                            Proposed:
+                                                            {{ optional($change->proposed_start_at)->format('M d, Y H:i') }}
+                                                            to
+                                                            {{ optional($change->proposed_end_at)->format('M d, Y H:i') }}
+                                                        </p>
+                                                    @endif
+                                                    @if ($change->status === 'pending' && (int) $change->requester_user_id !== (int) auth()->id())
+                                                        <div class="mt-2 flex gap-2">
+                                                            <x-button color="green" light wire:click="resolveChangeRequest({{ $change->id }}, 'accept')">Accept</x-button>
+                                                            <x-button color="red" light wire:click="resolveChangeRequest({{ $change->id }}, 'reject')">Reject</x-button>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </details>
+                    </div>
+                @elseif ($booking->changeRequests->count() > 0)
+                    <details class="rounded-lg border border-[#E4DDD3] bg-white p-3 text-sm">
+                        <summary class="cursor-pointer font-medium text-[#17313F]">Change requests</summary>
+                        <div class="mt-3 space-y-2">
+                            @foreach ($booking->changeRequests as $change)
+                                <div class="rounded-md border border-[#E4DDD3] px-3 py-2">
+                                    <p class="font-medium">{{ strtoupper($change->type) }} - {{ strtoupper($change->status) }}</p>
+                                    <p class="text-[#607080]">{{ $change->reason }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </details>
+                @endif
+                @endif
             </section>
 
-            @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true) && ! $timesheetNeedsReview)
-                <div class="mx-auto grid max-w-5xl grid-cols-1 gap-4 {{ $caregiverReview ? 'lg:grid-cols-2' : '' }}">
+            @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true) && ! $timesheetNeedsReview && $canLeaveFamilyReview)
+                <div class="mx-auto grid max-w-5xl grid-cols-1 gap-4">
                 <x-card>
                     <x-slot:header>
-                        @if ($canLeaveFamilyReview)
-                            <h2 class="font-display text-lg font-semibold">Leave a caregiver review</h2>
-                            <p class="text-xs text-[#7B8794]">Tap stars to rate this shift.</p>
-                        @else
-                            <h2 class="font-display text-lg font-semibold">Your caregiver review</h2>
-                            <p class="text-xs text-emerald-600">Review submitted successfully.</p>
-                        @endif
+                        <h2 class="font-display text-lg font-semibold">Leave a caregiver review</h2>
+                        <p class="text-xs text-[#7B8794]">Tap stars to rate this visit.</p>
                     </x-slot:header>
 
-                    @if ($canLeaveFamilyReview)
-                        <div class="space-y-4">
-                            <div>
-                                <p class="text-sm font-medium text-[#324457]">Rating</p>
-                                <div class="mt-2 flex items-center gap-1">
-                                    @for ($star = 1; $star <= 5; $star++)
-                                        <button
-                                            type="button"
-                                            wire:click="$set('reviewRating', {{ $star }})"
-                                            class="rounded-md p-1 transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-amber-300"
-                                            aria-label="Rate {{ $star }} out of 5"
-                                        >
-                                            <svg viewBox="0 0 20 20" class="h-8 w-8 {{ ($reviewRating ?? 0) >= $star ? 'text-amber-400' : 'text-[#D7DEE6]' }}" fill="currentColor" aria-hidden="true">
-                                                <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.14 3.5a1 1 0 00.95.69h3.68c.97 0 1.38 1.24.6 1.81l-2.98 2.17a1 1 0 00-.36 1.12l1.14 3.5c.3.92-.75 1.68-1.54 1.12l-2.98-2.17a1 1 0 00-1.18 0l-2.98 2.17c-.79.57-1.84-.2-1.54-1.12l1.14-3.5a1 1 0 00-.36-1.12L2.68 8.93c-.78-.57-.37-1.81.6-1.81h3.68a1 1 0 00.95-.69l1.14-3.5z"/>
-                                            </svg>
-                                        </button>
-                                    @endfor
-                                </div>
-                                <p class="mt-1 text-xs text-[#7B8794]">
-                                    @if ($reviewRating)
-                                        Selected rating: {{ $reviewRating }}/5
-                                    @else
-                                        No rating selected yet.
-                                    @endif
-                                </p>
-                                @error('reviewRating') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                            </div>
-
-                            <x-textarea label="Review comment" wire:model="reviewComment" />
-                            @error('reviewComment') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-
-                        <x-slot:footer>
-                            <x-button color="amber" wire:click="submitReview">Submit review</x-button>
-                        </x-slot:footer>
-                    @else
-                        <div class="space-y-3">
-                            <div class="flex items-center gap-1">
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm font-medium text-[#324457]">Rating</p>
+                            <div class="mt-2 flex items-center gap-1">
                                 @for ($star = 1; $star <= 5; $star++)
-                                    <svg viewBox="0 0 20 20" class="h-6 w-6 {{ ((int) ($familyReview?->rating ?? 0)) >= $star ? 'text-amber-400' : 'text-[#D7DEE6]' }}" fill="currentColor" aria-hidden="true">
-                                        <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.14 3.5a1 1 0 00.95.69h3.68c.97 0 1.38 1.24.6 1.81l-2.98 2.17a1 1 0 00-.36 1.12l1.14 3.5c.3.92-.75 1.68-1.54 1.12l-2.98-2.17a1 1 0 00-1.18 0l-2.98 2.17c-.79.57-1.84-.2-1.54-1.12l1.14-3.5a1 1 0 00-.36-1.12L2.68 8.93c-.78-.57-.37-1.81.6-1.81h3.68a1 1 0 00.95-.69l1.14-3.5z"/>
-                                    </svg>
+                                    <button
+                                        type="button"
+                                        wire:click="$set('reviewRating', {{ $star }})"
+                                        class="rounded-md p-1 transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                        aria-label="Rate {{ $star }} out of 5"
+                                    >
+                                        <svg viewBox="0 0 20 20" class="h-8 w-8 {{ ($reviewRating ?? 0) >= $star ? 'text-amber-400' : 'text-[#D7DEE6]' }}" fill="currentColor" aria-hidden="true">
+                                            <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.14 3.5a1 1 0 00.95.69h3.68c.97 0 1.38 1.24.6 1.81l-2.98 2.17a1 1 0 00-.36 1.12l1.14 3.5c.3.92-.75 1.68-1.54 1.12l-2.98-2.17a1 1 0 00-1.18 0l-2.98 2.17c-.79.57-1.84-.2-1.54-1.12l1.14-3.5a1 1 0 00-.36-1.12L2.68 8.93c-.78-.57-.37-1.81.6-1.81h3.68a1 1 0 00.95-.69l1.14-3.5z"/>
+                                        </svg>
+                                    </button>
                                 @endfor
-                                <span class="ml-1 text-sm font-medium text-[#4B5B6B]">{{ (int) ($familyReview?->rating ?? 0) }}/5</span>
                             </div>
-
-                            @if ($familyReview?->comment)
-                                <p class="rounded-lg border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-sm text-[#4B5B6B]">{{ $familyReview->comment }}</p>
-                            @else
-                                <p class="text-sm text-[#7B8794]">No additional comment was provided.</p>
-                            @endif
+                            <p class="mt-1 text-xs text-[#7B8794]">
+                                @if ($reviewRating)
+                                    Selected rating: {{ $reviewRating }}/5
+                                @else
+                                    No rating selected yet.
+                                @endif
+                            </p>
+                            @error('reviewRating') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
-                    @endif
+
+                        <x-textarea label="Review comment" wire:model="reviewComment" />
+                        @error('reviewComment') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <x-slot:footer>
+                        <x-button color="amber" wire:click="submitReview">Submit review</x-button>
+                    </x-slot:footer>
                 </x-card>
-
-                @if ($caregiverReview)
-                    <x-card>
-                        <x-slot:header>
-                            <h2 class="font-display text-lg font-semibold">Caregiver feedback about this shift</h2>
-                        </x-slot:header>
-                        <div class="space-y-3">
-                            <div class="flex items-center gap-1">
-                                @for ($star = 1; $star <= 5; $star++)
-                                    <svg viewBox="0 0 20 20" class="h-6 w-6 {{ ((int) ($caregiverReview->rating ?? 0)) >= $star ? 'text-amber-400' : 'text-[#D7DEE6]' }}" fill="currentColor" aria-hidden="true">
-                                        <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.14 3.5a1 1 0 00.95.69h3.68c.97 0 1.38 1.24.6 1.81l-2.98 2.17a1 1 0 00-.36 1.12l1.14 3.5c.3.92-.75 1.68-1.54 1.12l-2.98-2.17a1 1 0 00-1.18 0l-2.98 2.17c-.79.57-1.84-.2-1.54-1.12l1.14-3.5a1 1 0 00-.36-1.12L2.68 8.93c-.78-.57-.37-1.81.6-1.81h3.68a1 1 0 00.95-.69l1.14-3.5z"/>
-                                    </svg>
-                                @endfor
-                                <span class="ml-1 text-sm font-medium text-[#4B5B6B]">{{ (int) $caregiverReview->rating }}/5</span>
-                            </div>
-
-                            @if ($caregiverReview->comment)
-                                <p class="rounded-lg border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-sm text-[#4B5B6B]">{{ $caregiverReview->comment }}</p>
-                            @else
-                                <p class="text-sm text-[#7B8794]">No comment left by caregiver.</p>
-                            @endif
-                        </div>
-                    </x-card>
-                @endif
                 </div>
             @endif
         @endif
@@ -1055,23 +1380,35 @@
             <x-card>
                 <x-slot:header><h2 class="font-display text-lg font-semibold">Support</h2></x-slot:header>
                 <div class="rounded-md border border-dashed border-[#D6CCBE] px-4 py-6 text-sm text-[#607080]">
-                    Support operations become contextual after a caregiver is hired and a shift exists.
+                    Support tools appear after a caregiver is hired and a visit exists.
                 </div>
             </x-card>
         @else
             <x-card>
-                <x-slot:header><h2 class="font-display text-lg font-semibold">Safety and support</h2></x-slot:header>
-                <div class="space-y-3">
-                    @if (! in_array($booking->status, [\App\Models\CareBooking::STATUS_CANCELLED, \App\Models\CareBooking::STATUS_REVIEWED], true))
-                        <details class="rounded border border-[#E4DDD3] p-3">
-                            <summary class="cursor-pointer font-medium">Request cancellation or reschedule</summary>
-                            <div class="mt-3 space-y-4">
+                <x-slot:header>
+                    <div>
+                        <p class="hc-brand-kicker">{{ $supportScreenEyebrow }}</p>
+                        <h2 class="mt-1 font-display text-xl font-semibold text-[#17313F]">{{ $supportScreenTitle }}</h2>
+                        <p class="mt-1 max-w-2xl text-sm text-[#607080]">{{ $supportScreenBody }}</p>
+                    </div>
+                </x-slot:header>
+                <div class="space-y-4">
+                    @if ($canRequestVisitChange)
+                        <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
+                            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                <div>
+                                    <h3 class="font-display text-lg font-semibold text-[#17313F]">Request cancellation or reschedule</h3>
+                                    <p class="mt-1 text-sm text-[#607080]">Use this for schedule changes before the caregiver checks in.</p>
+                                </div>
+                                <x-badge color="blue" text="Before check-in" />
+                            </div>
+                            <div class="mt-4 space-y-4">
                                 <x-native-select-field
                                     label="Change type"
                                     wire:model="changeType"
                                     :options="[
-                                        ['label' => 'Cancel booking', 'value' => 'cancel'],
-                                        ['label' => 'Reschedule booking', 'value' => 'reschedule'],
+                                        ['label' => 'Cancel visit', 'value' => 'cancel'],
+                                        ['label' => 'Reschedule visit', 'value' => 'reschedule'],
                                     ]"
                                 />
                                 <x-textarea label="Reason" wire:model="changeReason" />
@@ -1083,7 +1420,48 @@
                                 @endif
                                 <x-button color="blue" wire:click="submitChangeRequest">Send request</x-button>
                             </div>
-                        </details>
+                            @if ($canCancelScheduledShift)
+                                <details class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-950">
+                                    <summary class="cursor-pointer list-none font-semibold [&::-webkit-details-marker]:hidden">
+                                        Need to cancel now?
+                                    </summary>
+                                    <div class="mt-3 space-y-3 text-sm">
+                                        <p>
+                                            This cancels the visit before caregiver check-in and releases the payment authorization when possible.
+                                            @if ($lateCancel)
+                                                It is inside the late-cancellation window.
+                                            @endif
+                                        </p>
+                                        <x-textarea label="Cancellation reason" wire:model="directCancelReason" />
+                                        @error('directCancelReason') <p class="text-sm text-red-700">{{ $message }}</p> @enderror
+                                        <x-button color="red" wire:click="cancelScheduledBooking" onclick="if (!confirm('Cancel this scheduled visit?')) return false;">Cancel visit</x-button>
+                                    </div>
+                                </details>
+                            @endif
+                        </div>
+                    @elseif ($timesheetNeedsReview)
+                        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-950">
+                            <h3 class="font-display text-lg font-semibold">Question the submitted hours</h3>
+                            <p class="mt-1 text-sm">
+                                Use this before approving if the worked time, location, or payment amount looks wrong.
+                            </p>
+                            <div class="mt-4 space-y-3">
+                                <x-textarea label="What looks wrong?" wire:model="disputeReason" />
+                                <x-button color="red" wire:click="openDispute">Open dispute</x-button>
+                            </div>
+                        </div>
+                    @elseif (in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true))
+                        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-950">
+                            <h3 class="font-display text-lg font-semibold">During the visit</h3>
+                            <p class="mt-1 text-sm">
+                                Message the caregiver for ordinary updates. Use an incident report if there is a safety concern or something needs LoLo review.
+                            </p>
+                            @if ($hiredConversation)
+                                <a href="{{ route('messages.show', $hiredConversation->id) }}" wire:navigate class="mt-3 inline-flex min-h-11 items-center rounded-xl bg-white px-4 text-sm font-semibold text-emerald-950 shadow-sm">
+                                    Open chat
+                                </a>
+                            @endif
+                        </div>
                     @endif
 
                     <details class="rounded border border-[#E4DDD3] p-3">
@@ -1094,11 +1472,11 @@
                                 label="Category"
                                 wire:model="supportCategory"
                                 :options="[
-                                    ['label' => 'General', 'value' => 'general'],
-                                    ['label' => 'Dispute', 'value' => 'dispute'],
-                                    ['label' => 'Incident', 'value' => 'incident'],
-                                    ['label' => 'Cancellation', 'value' => 'cancellation'],
-                                    ['label' => 'Billing', 'value' => 'billing'],
+                                    ['label' => 'General question', 'value' => 'general'],
+                                    ['label' => 'The hours look wrong', 'value' => 'dispute'],
+                                    ['label' => 'I am worried about safety', 'value' => 'incident'],
+                                    ['label' => 'I need to cancel or reschedule', 'value' => 'cancellation'],
+                                    ['label' => 'Payment question', 'value' => 'billing'],
                                 ]"
                             />
                             <x-textarea label="Describe issue" wire:model="supportDescription" />
@@ -1124,7 +1502,7 @@
                         </div>
                     </details>
 
-                    @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true))
+                    @if ($canDisputeVisit && ! $timesheetNeedsReview)
                         <details class="rounded border border-[#E4DDD3] p-3">
                             <summary class="cursor-pointer font-medium text-red-700">Open dispute</summary>
                             <div class="mt-3 space-y-3">
@@ -1134,15 +1512,28 @@
                         </details>
                     @endif
                 </div>
-                @if (! $requestItem->care_plan_id && $hiredApplication && ! in_array($booking->status, [\App\Models\CareBooking::STATUS_CANCELLED, \App\Models\CareBooking::STATUS_DISPUTED], true))
-                    <x-slot:footer>
-                        <a href="{{ route('family.care.compose', $requestItem->id) }}" wire:navigate>
-                            <x-button color="green" light>Book {{ $hiredCaregiverFirstName }} again</x-button>
-                        </a>
-                    </x-slot:footer>
-                @endif
             </x-card>
         @endif
+    @endif
+
+    @if ($canWithdrawRequest && $activeTab === 'overview')
+        <details class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3">
+            <summary class="cursor-pointer list-none text-sm font-semibold text-[#17313F] [&::-webkit-details-marker]:hidden">
+                Request options
+            </summary>
+            <div class="mt-3 flex flex-col gap-3 border-t border-[#EFE6D8] pt-3 text-sm text-[#4B5B6B] sm:flex-row sm:items-center sm:justify-between">
+                <p>Only withdraw this request if you no longer need caregivers to reply. Pending invitations will close.</p>
+                <x-button
+                    color="red"
+                    light
+                    wire:click="withdrawRequest"
+                    onclick="if (!confirm('Withdraw this request? Caregivers will no longer be able to apply.')) return false;"
+                    class="w-full sm:w-auto"
+                >
+                    Withdraw request
+                </x-button>
+            </div>
+        </details>
     @endif
 </div>
 

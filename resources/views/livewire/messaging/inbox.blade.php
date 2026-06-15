@@ -4,6 +4,52 @@
         $messages = $this->messages;
         $currentUser = auth()->user();
         $canSend = $active ? $currentUser->can('sendMessage', $active) : false;
+        $activeRequest = $active?->careRequest;
+        $activeApplication = $active?->application;
+        $requestHref = $activeRequest
+            ? ($currentUser->role === 'family'
+                ? route('family.requests.show', $activeRequest->id)
+                : route('care-requests.apply', $activeRequest->id))
+            : null;
+        $isFamilyHireDecision = $currentUser->role === 'family'
+            && $activeRequest?->status === \App\Models\CareRequest::STATUS_OPEN
+            && $activeApplication
+            && in_array($activeApplication->status, [
+                \App\Models\CareRequestApplication::STATUS_APPLIED,
+                \App\Models\CareRequestApplication::STATUS_SHORTLISTED,
+            ], true);
+        $isCaregiverWaitingForHire = $currentUser->role === 'caregiver'
+            && $activeRequest?->status === \App\Models\CareRequest::STATUS_OPEN
+            && $activeApplication
+            && in_array($activeApplication->status, [
+                \App\Models\CareRequestApplication::STATUS_APPLIED,
+                \App\Models\CareRequestApplication::STATUS_SHORTLISTED,
+            ], true);
+        $isHiredConversation = $activeApplication?->status === \App\Models\CareRequestApplication::STATUS_HIRED
+            || $activeRequest?->status === \App\Models\CareRequest::STATUS_FILLED;
+        $requestContextEyebrow = match (true) {
+            $isFamilyHireDecision => 'Hire decision',
+            $isCaregiverWaitingForHire => 'Waiting for family',
+            $isHiredConversation => 'Visit coordination',
+            default => 'Request context',
+        };
+        $requestContextTitle = match (true) {
+            $isFamilyHireDecision => 'Chat here, then hire from the request page.',
+            $isCaregiverWaitingForHire => 'The family is still deciding.',
+            $isHiredConversation => 'This chat is tied to a booked visit.',
+            default => 'This chat is tied to a care request.',
+        };
+        $requestContextBody = match (true) {
+            $isFamilyHireDecision => 'Use messages to confirm fit, then return to the request when you are ready to hire.',
+            $isCaregiverWaitingForHire => 'Reply to questions here. If they hire you, visit tools will appear on the request page.',
+            $isHiredConversation => 'Use this thread for simple coordination. Visit details, support, and review stay on the request page.',
+            default => 'Keep request-specific questions here so both sides have the same context.',
+        };
+        $requestContextAction = match (true) {
+            $isFamilyHireDecision => 'Open request to hire',
+            $isHiredConversation => 'Open visit',
+            default => $currentUser->role === 'family' ? 'Open request' : 'Open request details',
+        };
     @endphp
 
     <div
@@ -37,7 +83,7 @@
                         <button
                             type="button"
                             wire:click="openConversation({{ $conversation->id }})"
-                            x-on:click="mobileThreadOpen = true"
+                            x-on:click="manualInboxOpen = false; mobileThreadOpen = true"
                             class="w-full border-b border-[#E6DED3] px-4 py-3.5 text-left transition {{ $isActive ? 'bg-[rgba(124,93,220,0.12)]' : 'bg-[rgba(255,252,248,0.92)] hover:bg-[rgba(245,241,235,0.88)]' }}"
                         >
                             <div class="flex items-center justify-between gap-2">
@@ -75,7 +121,7 @@
                                 <button
                                     type="button"
                                     x-show="!isDesktop"
-                                    x-on:click="mobileThreadOpen = false"
+                                    x-on:click="manualInboxOpen = true; mobileThreadOpen = false"
                                     class="mb-3 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#DED6CA] bg-[#FFFCF8] px-3 py-2 text-sm font-medium text-[#0F3D3E]"
                                 >
                                     <span aria-hidden="true"><<</span>
@@ -90,6 +136,21 @@
                                 <x-badge :text="strtoupper((string) $active->careRequest?->status)" color="primary" />
                             </div>
                         </div>
+
+                        @if ($activeRequest && $requestHref)
+                            <div class="mt-4 rounded-2xl border border-[#D8E1D7] bg-[#F2F8F4] px-4 py-3">
+                                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">{{ $requestContextEyebrow }}</p>
+                                        <p class="mt-1 font-display text-base font-semibold leading-snug text-[#17313F]">{{ $requestContextTitle }}</p>
+                                        <p class="mt-1 text-sm leading-5 text-[#4B5B6B]">{{ $requestContextBody }}</p>
+                                    </div>
+                                    <a href="{{ $requestHref }}" wire:navigate class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-[#DED6CA] bg-white px-4 text-sm font-semibold text-[#0F3D3E] transition hover:bg-[#FFFCF8]">
+                                        {{ $requestContextAction }}
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     <div
@@ -129,7 +190,7 @@
 
                         <form wire:submit="sendMessage" class="space-y-3" data-chat-compose>
                             <textarea
-                                wire:model.live.debounce.250ms="messageBody"
+                                wire:model="messageBody"
                                 rows="3"
                                 placeholder="Type your message..."
                                 @disabled(! $canSend)
@@ -140,7 +201,7 @@
                             @error('messageBody') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
                             <div class="flex items-center justify-between gap-3">
-                                <p class="text-xs text-[#7A8091]">Syncs live while you chat.</p>
+                                <p class="text-xs text-[#7A8091]">Messages send when you tap Send.</p>
                                 <button type="submit" class="hc-primary-button" @disabled(! $canSend)>Send</button>
                             </div>
                         </form>
@@ -166,6 +227,8 @@
                 intervalMs: Number(config.intervalMs || 2000),
                 timer: null,
                 paused: false,
+                startsInThread: Boolean(config.startsInThread || false),
+                manualInboxOpen: false,
                 mobileThreadOpen: Boolean(config.startsInThread || false),
                 isDesktop: false,
                 init() {
@@ -194,6 +257,8 @@
                     this.isDesktop = window.innerWidth >= 1024;
 
                     if (this.isDesktop) {
+                        this.mobileThreadOpen = true;
+                    } else if (this.startsInThread && ! this.manualInboxOpen) {
                         this.mobileThreadOpen = true;
                     }
                 },

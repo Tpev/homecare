@@ -65,9 +65,9 @@ class ApplyToCareRequest extends Component
 
         $this->refreshExistingApplication();
 
-        if ($this->requestItem->status === CareRequest::STATUS_OPEN) {
+        if ($this->requestItem->status === CareRequest::STATUS_OPEN && ! $this->existingApplication) {
             abort_unless(auth()->user()->can('apply', $this->requestItem), 403);
-        } else {
+        } elseif (! $this->existingApplication) {
             abort_unless($this->existingApplication !== null, 403);
         }
 
@@ -88,6 +88,11 @@ class ApplyToCareRequest extends Component
 
         if (in_array($tab, ['shift', 'support'], true) && ! $this->existingApplication?->booking) {
             $this->activeTab = 'application';
+            return;
+        }
+
+        if ($tab === 'application' && $this->existingApplication?->booking) {
+            $this->activeTab = 'shift';
             return;
         }
 
@@ -193,7 +198,7 @@ class ApplyToCareRequest extends Component
         }
 
         if (! $booking->caregiver_terms_accepted_at) {
-            session()->flash('status', 'Accept the booking agreement before check-in.');
+            session()->flash('status', 'Accept the visit agreement before check-in.');
             return;
         }
 
@@ -236,8 +241,8 @@ class ApplyToCareRequest extends Component
             app(MarketplaceNotificationService::class)->notify(
                 recipients: $booking->family,
                 eventKey: MarketplaceEvent::SHIFT_STARTED,
-                title: 'Care shift started',
-                body: auth()->user()->name.' checked in and started this shift.',
+                title: 'Care visit started',
+                body: auth()->user()->name.' checked in and started this visit.',
                 url: route('family.requests.show', $this->requestItem->id),
                 payload: ['care_booking_id' => $booking->id],
                 subject: $booking,
@@ -249,7 +254,7 @@ class ApplyToCareRequest extends Component
         app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
         $this->reset(['checkInNote', 'checkInLat', 'checkInLng', 'checkInAccuracy']);
         $this->refreshExistingApplication();
-        session()->flash('status', $capturedByGps ? 'Shift started with GPS check-in.' : 'Shift started.');
+        session()->flash('status', $capturedByGps ? 'Visit started with GPS check-in.' : 'Visit started.');
     }
 
     public function pauseBooking(): void
@@ -272,7 +277,7 @@ class ApplyToCareRequest extends Component
         );
 
         $this->refreshExistingApplication();
-        session()->flash('status', 'Shift paused.');
+        session()->flash('status', 'Visit paused.');
     }
 
     public function resumeBooking(): void
@@ -300,7 +305,7 @@ class ApplyToCareRequest extends Component
         );
 
         $this->refreshExistingApplication();
-        session()->flash('status', 'Shift resumed.');
+        session()->flash('status', 'Visit resumed.');
     }
 
     public function completeBooking(): void
@@ -311,7 +316,7 @@ class ApplyToCareRequest extends Component
         }
 
         if (! in_array($booking->status, [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED], true)) {
-            session()->flash('status', 'Start shift first before checking out.');
+            session()->flash('status', 'Start the visit first before checking out.');
             return;
         }
 
@@ -367,7 +372,7 @@ class ApplyToCareRequest extends Component
             app(MarketplaceNotificationService::class)->notify(
                 recipients: $booking->family,
                 eventKey: MarketplaceEvent::SHIFT_COMPLETED,
-                title: 'Care shift completed',
+                title: 'Care visit completed',
                 body: auth()->user()->name.' checked out and submitted timesheet.',
                 url: route('family.requests.show', $this->requestItem->id),
                 payload: ['care_booking_id' => $booking->id],
@@ -389,7 +394,7 @@ class ApplyToCareRequest extends Component
         ];
         $this->reset(['checkOutNote', 'checkOutLat', 'checkOutLng', 'checkOutAccuracy']);
         $this->refreshExistingApplication();
-        session()->flash('status', 'Shift completed. Review your recap below.');
+        session()->flash('status', 'Visit completed. Review your recap below.');
     }
 
     public function startBookingWithGeo($lat, $lng, $accuracy = null): void
@@ -429,7 +434,7 @@ class ApplyToCareRequest extends Component
         );
 
         $this->refreshExistingApplication();
-        session()->flash('status', 'Booking agreement accepted.');
+        session()->flash('status', 'Visit agreement accepted.');
     }
 
     public function toggleTaskCheck(int $taskCheckId): void
@@ -488,7 +493,7 @@ class ApplyToCareRequest extends Component
             'care_booking_id' => $booking->id,
             'category' => 'dispute',
             'priority' => 'high',
-            'subject' => 'Booking dispute for request #'.$this->requestItem->id,
+            'subject' => 'Visit dispute for request #'.$this->requestItem->id,
             'description' => trim($this->disputeReason),
         ]);
 
@@ -595,7 +600,7 @@ class ApplyToCareRequest extends Component
                 recipients: $booking->family,
                 eventKey: MarketplaceEvent::SHIFT_COMPLETED,
                 title: 'New caregiver review',
-                body: auth()->user()->name.' left a review after the shift.',
+                body: auth()->user()->name.' left a review after the visit.',
                 url: route('family.requests.show', $this->requestItem->id),
                 payload: ['care_booking_id' => $booking->id, 'rating' => $this->reviewRating],
                 subject: $booking
@@ -656,8 +661,8 @@ class ApplyToCareRequest extends Component
             app(MarketplaceNotificationService::class)->notify(
                 recipients: $booking->family,
                 eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
-                title: 'Booking change request',
-                body: auth()->user()->name.' requested to '.$this->changeType.' this booking.',
+                title: 'Visit change request',
+                body: auth()->user()->name.' requested to '.$this->changeType.' this visit.',
                 url: route('family.requests.show', $this->requestItem->id),
                 payload: ['care_booking_id' => $booking->id, 'change_type' => $this->changeType],
                 subject: $changeRequest
@@ -709,7 +714,7 @@ class ApplyToCareRequest extends Component
                     recipients: $changeRequest->requester,
                     eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
                     title: 'Change request rejected',
-                    body: 'Your booking change request was rejected.',
+                    body: 'Your visit change request was rejected.',
                     url: route('care-requests.apply', $this->requestItem->id),
                     payload: ['care_booking_id' => $booking->id, 'change_request_id' => $changeRequest->id],
                     subject: $changeRequest
@@ -768,7 +773,7 @@ class ApplyToCareRequest extends Component
                 recipients: $changeRequest->requester,
                 eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
                 title: 'Change request accepted',
-                body: 'Your booking change request was accepted.',
+                body: 'Your visit change request was accepted.',
                 url: route('care-requests.apply', $this->requestItem->id),
                 payload: ['care_booking_id' => $booking->id, 'change_request_id' => $changeRequest->id],
                 subject: $changeRequest
@@ -776,7 +781,7 @@ class ApplyToCareRequest extends Component
         }
 
         $this->refreshExistingApplication();
-        session()->flash('status', 'Change request accepted and booking updated.');
+        session()->flash('status', 'Change request accepted and visit updated.');
     }
 
     public function createSupportTicket(): void
@@ -862,6 +867,73 @@ class ApplyToCareRequest extends Component
         }
 
         return round(($workedMinutes / 60) * $ratePerHour, 2);
+    }
+
+    public function estimatedRequestMinutes(): ?int
+    {
+        if ($this->requestItem->request_type === CareRequest::TYPE_ONE_TIME && $this->requestItem->requested_start_at && $this->requestItem->requested_end_at) {
+            $minutes = (int) $this->requestItem->requested_start_at->diffInMinutes($this->requestItem->requested_end_at, false);
+
+            return $minutes > 0 ? $minutes : null;
+        }
+
+        if ($this->requestItem->request_type === CareRequest::TYPE_RECURRING) {
+            $startMinutes = $this->timeStringToMinutes($this->requestItem->recurring_start_time);
+            $endMinutes = $this->timeStringToMinutes($this->requestItem->recurring_end_time);
+
+            if ($startMinutes === null || $endMinutes === null) {
+                return null;
+            }
+
+            $diff = $endMinutes - $startMinutes;
+            if ($diff <= 0) {
+                $diff += 24 * 60;
+            }
+
+            return $diff > 0 ? $diff : null;
+        }
+
+        return null;
+    }
+
+    public function requestScheduleSummary(): array
+    {
+        if ($this->requestItem->request_type === CareRequest::TYPE_RECURRING) {
+            $dayMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            $days = collect($this->requestItem->recurring_days ?? [])
+                ->map(fn ($day) => $dayMap[(int) $day] ?? null)
+                ->filter()
+                ->implode(', ');
+
+            return [
+                'primary' => $days !== '' ? $days : 'Recurring care',
+                'secondary' => trim((string) $this->requestItem->recurring_start_time.' - '.(string) $this->requestItem->recurring_end_time, ' -'),
+            ];
+        }
+
+        return [
+            'primary' => $this->requestItem->requested_start_at?->format('M d, Y') ?: 'Date pending',
+            'secondary' => trim(
+                ($this->requestItem->requested_start_at?->format('g:i A') ?: 'Start time pending')
+                .' - '.
+                ($this->requestItem->requested_end_at?->format('g:i A') ?: 'End time pending')
+            ),
+        ];
+    }
+
+    private function timeStringToMinutes(?string $time): ?int
+    {
+        if (! $time) {
+            return null;
+        }
+
+        try {
+            $parsed = \Illuminate\Support\Carbon::parse($time);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return ((int) $parsed->format('H') * 60) + (int) $parsed->format('i');
     }
 
     private function finalizePausedSeconds(CareBooking $booking): int

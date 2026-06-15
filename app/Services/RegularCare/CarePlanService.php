@@ -179,9 +179,9 @@ class CarePlanService
             ]);
         }
 
-        if (! CaregiverPrelaunch::familyCanProceedWithCaregiver($caregiver->email)) {
+        if (! CaregiverPrelaunch::familyCanProceedWithCaregiver($caregiver->email, $source, (int) $caregiver->id)) {
             throw ValidationException::withMessages([
-                'source' => CaregiverPrelaunch::message(),
+                'source' => CaregiverPrelaunch::familyHireMessage(),
             ]);
         }
 

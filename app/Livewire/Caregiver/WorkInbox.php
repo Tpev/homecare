@@ -35,7 +35,48 @@ class WorkInbox extends Component
     public function mount(): void
     {
         abort_unless(auth()->user()?->role === 'caregiver', 403);
+
+        $requestedScope = (string) request()->query('scope', '');
+        if ($this->scopeIsValid($requestedScope)) {
+            $this->scope = $requestedScope;
+        } else {
+            $counts = app(CaregiverWorkInboxBuilder::class)->countsForUser(auth()->user());
+            $this->scope = $this->defaultScopeForCounts($counts);
+        }
+
         FunnelTracker::track('work_inbox_viewed', auth()->user());
+    }
+
+    private function defaultScopeForCounts(array $counts): string
+    {
+        if ((int) ($counts['needs_response'] ?? 0) > 0) {
+            return 'needs_response';
+        }
+
+        if ((int) ($counts['new_requests'] ?? 0) > 0) {
+            return 'new_requests';
+        }
+
+        if ((int) ($counts['hired'] ?? 0) > 0) {
+            return 'hired';
+        }
+
+        if ((int) ($counts['applied'] ?? 0) > 0) {
+            return 'applied';
+        }
+
+        if ((int) ($counts['completed'] ?? 0) > 0) {
+            return 'completed';
+        }
+
+        return 'all';
+    }
+
+    private function scopeIsValid(string $scope): bool
+    {
+        return collect($this->scopeOptions)
+            ->pluck('value')
+            ->contains($scope);
     }
 
     public function acceptInvitation(int $invitationId): void
@@ -47,11 +88,13 @@ class WorkInbox extends Component
             'work_inbox'
         );
 
-        session()->flash('status', $result['message']);
+        if ($result['ok'] ?? false) {
+            $this->redirect(route('care-requests.apply', $invitation->care_request_id, false), navigate: true);
 
-        if (($result['ok'] ?? false) && isset($result['conversation'])) {
-            $this->redirect(route('messages.show', $result['conversation']->id, false), navigate: true);
+            return;
         }
+
+        session()->flash('status', $result['message']);
     }
 
     public function declineInvitation(int $invitationId): void

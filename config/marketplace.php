@@ -11,7 +11,7 @@ return [
                 ',',
                 (string) env(
                     'MARKETPLACE_FAMILY_PRELAUNCH_AUTO_APPLICANT_EMAILS',
-                    'carolinepetrinipoli@gmail.com,charlespetrinipoli@gmail.com'
+                    ''
                 )
             )
         ))),

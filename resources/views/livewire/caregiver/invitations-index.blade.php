@@ -6,7 +6,7 @@
 
         @if (!empty($prelaunchMode))
             <x-alert color="yellow">
-                Caregiver pre-launch mode is active. You can review invitations now, but acceptance opens at launch.
+                Caregiver pre-launch mode is active. You can still accept direct invitations sent by a family.
             </x-alert>
         @endif
 
@@ -68,11 +68,25 @@
                     @endif
 
                     @if ($invitation->status === \App\Models\CareRequestInvitation::STATUS_PENDING)
-                        <div class="mt-4 flex items-center gap-2">
-                            <x-button color="green" wire:click="accept({{ $invitation->id }})" :disabled="!empty($prelaunchMode)">
-                                {{ !empty($prelaunchMode) ? 'Accept at launch' : 'Accept' }}
-                            </x-button>
-                            <x-button color="red" outline wire:click="decline({{ $invitation->id }})">Decline</x-button>
+                        <div class="mt-4 flex flex-wrap items-center gap-2">
+                            <form method="POST" action="{{ route('caregiver.invitations.accept', $invitation->id) }}">
+                                @csrf
+                                <button
+                                    type="submit"
+                                    class="inline-flex min-h-11 items-center justify-center rounded-[1rem] bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                                >
+                                    Accept
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ route('caregiver.invitations.decline', $invitation->id) }}">
+                                @csrf
+                                <button
+                                    type="submit"
+                                    class="inline-flex min-h-11 items-center justify-center rounded-[1rem] border border-rose-200 bg-white px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/30"
+                                >
+                                    Decline
+                                </button>
+                            </form>
                         </div>
                     @elseif ($invitation->status === \App\Models\CareRequestInvitation::STATUS_ACCEPTED && $invitation->care_request_application_id)
                         <div class="mt-4">

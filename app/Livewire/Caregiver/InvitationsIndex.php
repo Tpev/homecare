@@ -26,11 +26,13 @@ class InvitationsIndex extends Component
             auth()->user()
         );
 
-        session()->flash('status', $result['message']);
+        if ($result['ok'] ?? false) {
+            $this->redirect(route('care-requests.apply', $invitation->care_request_id, false), navigate: true);
 
-        if (($result['ok'] ?? false) && isset($result['conversation'])) {
-            $this->redirect(route('messages.show', $result['conversation']->id, false), navigate: true);
+            return;
         }
+
+        session()->flash('status', $result['message']);
     }
 
     public function decline(int $invitationId): void

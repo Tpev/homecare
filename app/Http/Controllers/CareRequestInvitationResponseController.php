@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
 use App\Services\Marketplace\CareRequestInvitationResponseService;
 use Illuminate\Http\RedirectResponse;
@@ -15,12 +14,15 @@ class CareRequestInvitationResponseController extends Controller
     ): RedirectResponse {
         $result = $responder->accept($invitation, auth()->user(), 'work_inbox_form');
 
-        $conversation = $result['conversation'] ?? null;
-        $redirect = $conversation instanceof CareRequestConversation
-            ? route('messages.show', $conversation->id)
+        $redirect = ($result['ok'] ?? false)
+            ? route('care-requests.apply', $invitation->care_request_id)
             : route('caregiver.work-inbox.index');
 
-        return redirect($redirect)->with('status', $result['message']);
+        $response = redirect($redirect);
+
+        return ($result['ok'] ?? false)
+            ? $response
+            : $response->with('status', $result['message']);
     }
 
     public function decline(

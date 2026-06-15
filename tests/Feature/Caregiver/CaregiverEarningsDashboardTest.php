@@ -92,7 +92,7 @@ class CaregiverEarningsDashboardTest extends TestCase
         $overview->assertSee('$84.00');
         $overview->assertSee('$86.00');
         $overview->assertSee('Best next action');
-        $overview->assertSee('Open active shift');
+        $overview->assertSee('Open active visit');
 
         $shifts = $this->actingAs($caregiver)->get('/caregiver/earnings?tab=shifts');
         $shifts->assertOk();

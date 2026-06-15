@@ -12,6 +12,7 @@ use App\Models\CaregiverProfile;
 use App\Support\CaregiverPrelaunch;
 use App\Support\CaregiverOnboardingState;
 use App\Support\CaregiverWorkInboxBuilder;
+use App\Support\FamilyRebookingOptions;
 use App\Support\MarketplaceEvent;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
@@ -108,7 +109,7 @@ class Home extends Component
                 ->get();
 
             $familyData['active_shifts'] = CareRequest::query()
-                ->with(['recipient', 'booking'])
+                ->with(['recipient', 'booking.caregiver.caregiverProfile:id,user_id,profile_photo_path'])
                 ->where('family_user_id', $user->id)
                 ->whereHas('booking', function ($query) {
                     $query->whereIn('status', [
@@ -143,26 +144,7 @@ class Home extends Component
                 ->limit(4)
                 ->get();
 
-            $familyData['regular_care_sources'] = CareRequest::query()
-                ->with([
-                    'recipient',
-                    'booking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
-                    'applications' => fn ($query) => $query
-                        ->where('status', CareRequestApplication::STATUS_HIRED)
-                        ->with('caregiver:id,name'),
-                ])
-                ->where('family_user_id', $user->id)
-                ->whereNull('care_plan_id')
-                ->whereHas('booking', function ($query) {
-                    $query->whereIn('status', [
-                        CareBooking::STATUS_COMPLETED,
-                        CareBooking::STATUS_REVIEWED,
-                        CareBooking::STATUS_SCHEDULED,
-                    ]);
-                })
-                ->latest()
-                ->limit(3)
-                ->get();
+            $familyData['regular_care_sources'] = app(FamilyRebookingOptions::class)->forUser($user, 3);
 
             $familyData['notification_digest'] = $this->notificationDigestForRole($user, 'family');
         }

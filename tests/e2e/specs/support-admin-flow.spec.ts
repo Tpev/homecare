@@ -4,41 +4,39 @@ import { createOneTimeRequest } from '../helpers/family-request';
 
 test.describe('Support + Admin Ticket Flow', () => {
     test('caregiver opens support ticket and admin resolves it', async ({ page }) => {
-        const requestTitle = `E2E Support Flow ${Date.now()}`;
         const ticketSubject = `E2E Support Ticket ${Date.now()}`;
 
         await loginAs(page, 'family');
-        const requestId = await createOneTimeRequest(page, requestTitle);
+        const { requestId, requestTitle } = await createOneTimeRequest(page);
         await expect(page.getByRole('heading', { name: requestTitle })).toBeVisible();
 
         await loginAs(page, 'caregiverReady');
         await page.goto(`/care-requests/${requestId}/apply`);
         await expect(page.getByText(requestTitle)).toBeVisible();
-        await page.getByRole('button', { name: /Application/i }).first().click();
-        await page.getByLabel('Your proposed hourly rate ($)').fill('30');
-        await page.getByLabel('Cover note').fill('I can support this one-time shift and follow all household instructions with clear communication.');
-        await page.getByRole('button', { name: /Send application|Update application/i }).click();
+        await page.getByRole('button', { name: 'I can do this visit' }).click();
         await expect(page.getByText('Application sent to family.')).toBeVisible();
 
         await loginAs(page, 'family');
         await page.goto(`/family/requests/${requestId}`);
-        await page.getByRole('button', { name: /Applicants/i }).first().click();
-        await page.getByRole('button', { name: 'Hire caregiver' }).click();
+        await page.getByRole('button', { name: /Caregivers|Review caregivers/i }).first().click();
+        await page.getByRole('button', { name: /^Hire /i }).first().click();
         await expect(page.getByText(/caregiver hired/i)).toBeVisible();
 
         await loginAs(page, 'caregiverReady');
         await page.goto(`/care-requests/${requestId}/apply`);
-        await page.getByRole('button', { name: 'Shift' }).click();
+        await page.context().grantPermissions(['geolocation']);
+        await page.context().setGeolocation({ latitude: 35.7796, longitude: -78.6382 });
+        await page.getByRole('button', { name: 'Visit' }).click();
         await page.getByRole('button', { name: 'Accept agreement' }).click();
-        await page.getByRole('button', { name: 'Check in / Start' }).click();
-        await expect(page.getByText(/Shift marked in progress/i)).toBeVisible();
-        await page.getByRole('button', { name: 'Check out / Submit timesheet' }).click();
-        await expect(page.getByText('Shift marked completed and timesheet submitted.')).toBeVisible();
+        await page.getByRole('button', { name: 'Start visit' }).click();
+        await expect(page.getByText(/Visit started/i)).toBeVisible();
+        await page.getByRole('button', { name: 'End visit' }).click();
+        await expect(page.getByText('Visit completed. Review your recap below.')).toBeVisible();
 
         await loginAs(page, 'family');
         await page.goto(`/family/requests/${requestId}`);
-        await page.getByRole('button', { name: 'Shift' }).click();
-        await page.getByRole('button', { name: 'Confirm timesheet' }).click();
+        await page.getByRole('button', { name: 'Visit' }).click();
+        await page.getByRole('button', { name: /Approve hours and pay/ }).click();
         await expect(page.getByText('Timesheet confirmed.')).toBeVisible();
 
         await loginAs(page, 'caregiverReady');

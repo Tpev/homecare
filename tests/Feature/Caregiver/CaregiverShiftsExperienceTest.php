@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Caregiver;
 
+use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Models\CareBooking;
 use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
@@ -9,21 +10,22 @@ use App\Models\CareRequestApplication;
 use App\Models\CareReview;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class CaregiverShiftsExperienceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_caregiver_can_open_my_shifts_and_reach_shift_command_center(): void
+    public function test_caregiver_can_open_my_shifts_and_reach_visit_screen(): void
     {
         [$caregiver, $request] = $this->seedScheduledShift();
 
         $response = $this->actingAs($caregiver)->get('/caregiver/shifts');
 
         $response->assertOk();
-        $response->assertSee('My shifts');
-        $response->assertSee('Start shift');
+        $response->assertSee('My visits');
+        $response->assertSee('Start visit');
         $response->assertSee($request->title);
         $response->assertSee('/care-requests/'.$request->id.'/apply', false);
     }
@@ -47,8 +49,8 @@ class CaregiverShiftsExperienceTest extends TestCase
         $response = $this->actingAs($caregiver)->get('/dashboard');
 
         $response->assertOk();
-        $response->assertSee('My shifts');
-        $response->assertSee('Shift quick access');
+        $response->assertSee('My visits');
+        $response->assertSee('Visit quick access');
         $response->assertSee($request->title);
         $response->assertSee('/care-requests/'.$request->id.'/apply', false);
     }
@@ -79,8 +81,73 @@ class CaregiverShiftsExperienceTest extends TestCase
         $response = $this->actingAs($caregiver)->get('/care-requests/'.$request->id.'/apply');
 
         $response->assertOk();
-        $response->assertSee('Family feedback on this shift');
+        $response->assertSee('Visit recap');
+        $response->assertSee('Completed visit');
+        $response->assertSee('Visit is fully closed');
+        $response->assertSee('This visit is closed.');
+        $response->assertSee('Family review is complete. Your visit record is saved here.');
+        $response->assertSee('Family feedback on this visit');
         $response->assertSee('Great caregiver, very punctual.');
+
+        $content = $response->getContent();
+        $recapPosition = strpos($content, 'Visit recap');
+        $schedulePosition = strpos($content, 'Scheduled window');
+        $this->assertNotFalse($recapPosition);
+        $this->assertNotFalse($schedulePosition);
+        $this->assertLessThan($schedulePosition, $recapPosition);
+    }
+
+    public function test_live_visit_surface_hides_payout_setup_distraction(): void
+    {
+        [$caregiver, $request] = $this->seedScheduledShift();
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+
+        $this->actingAs($caregiver)
+            ->get('/care-requests/'.$request->id.'/apply')
+            ->assertOk()
+            ->assertSee('Payout setup is incomplete.');
+
+        $booking->update([
+            'status' => CareBooking::STATUS_IN_PROGRESS,
+            'started_at' => now()->subMinutes(20),
+        ]);
+
+        $this->actingAs($caregiver)
+            ->get('/care-requests/'.$request->id.'/apply')
+            ->assertOk()
+            ->assertSee('You are checked in.')
+            ->assertSee('Stay focused on Margaret Johnson.')
+            ->assertSee('Live timer')
+            ->assertSee('Time with client')
+            ->assertSee('Pause visit')
+            ->assertSee('End visit')
+            ->assertSee('Care location')
+            ->assertDontSee('Payout setup is incomplete.');
+    }
+
+    public function test_booked_request_workspace_is_visit_first_not_application_first(): void
+    {
+        [$caregiver, $request] = $this->seedScheduledShift();
+
+        $this->actingAs($caregiver)
+            ->get('/care-requests/'.$request->id.'/apply')
+            ->assertOk()
+            ->assertSee('Upcoming visit')
+            ->assertSee('Get ready for Margaret Johnson')
+            ->assertSee('Right now')
+            ->assertSee('Check in when you arrive.')
+            ->assertSee('Next visit for Margaret Johnson')
+            ->assertSee('Visit record and notes')
+            ->assertSee('Map and visit record')
+            ->assertSee('Care details')
+            ->assertSee('Support')
+            ->assertDontSee('setActiveTab(\'application\')', false);
+
+        Livewire::actingAs($caregiver)
+            ->test(ApplyToCareRequest::class, ['careRequest' => $request->id])
+            ->assertSet('activeTab', 'shift')
+            ->call('setActiveTab', 'application')
+            ->assertSet('activeTab', 'shift');
     }
 
     /**

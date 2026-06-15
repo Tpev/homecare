@@ -274,7 +274,7 @@ class StripeMarketplacePaymentTest extends TestCase
         $this->actingAs($family)
             ->get(route('family.billing.show'))
             ->assertOk()
-            ->assertSee('Add card with Stripe')
+            ->assertSee('Add card securely')
             ->assertSee('type="submit"', false);
     }
 

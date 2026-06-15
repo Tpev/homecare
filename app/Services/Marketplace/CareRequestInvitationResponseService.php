@@ -7,7 +7,6 @@ use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
 use App\Models\User;
 use App\Services\Notifications\MarketplaceNotificationService;
-use App\Support\CaregiverPrelaunch;
 use App\Support\CaregiverResponseMetrics;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
@@ -29,10 +28,6 @@ class CareRequestInvitationResponseService
     {
         if ((int) $invitation->caregiver_user_id !== (int) $caregiver->id) {
             abort(404);
-        }
-
-        if (CaregiverPrelaunch::enabled()) {
-            return ['ok' => false, 'message' => CaregiverPrelaunch::message()];
         }
 
         $caregiverProfile = $caregiver->caregiverProfile;
@@ -118,7 +113,7 @@ class CareRequestInvitationResponseService
 
         return [
             'ok' => true,
-            'message' => 'Invitation accepted. Conversation opened.',
+            'message' => 'Invitation accepted. The family can now hire you.',
             'conversation' => $conversation,
         ];
     }

@@ -24,10 +24,6 @@ class CaregiverWorkInboxBuilder
             return collect();
         }
 
-        if (CaregiverPrelaunch::enabled()) {
-            return collect();
-        }
-
         $caregiverId = (int) $user->id;
         $now = now();
         $profile = $user->caregiverProfile()->with('skills:id')->first();
@@ -203,13 +199,13 @@ class CaregiverWorkInboxBuilder
                 'fit_reason' => $paymentNeedsFamily
                     ? 'Family needs to update payment. No action needed from you right now.'
                     : ($plan->nextBooking
-                    ? 'Next regular-care shift is ready in your shift workflow.'
+                    ? 'Next regular-care visit is ready in your visit workflow.'
                     : 'Regular-care schedule accepted.'),
                 'recipient_context' => $this->planRecipientContext($plan),
                 'note' => null,
                 'primary_action' => [
                     'kind' => 'link',
-                    'label' => $plan->nextBooking ? 'Open next shift' : 'Open plan',
+                    'label' => $plan->nextBooking ? 'Open next visit' : 'Open plan',
                     'href' => $plan->nextBooking
                         ? route('care-requests.apply', $plan->nextBooking->care_request_id)
                         : route('caregiver.regular-clients.index'),
@@ -230,18 +226,21 @@ class CaregiverWorkInboxBuilder
             ->unique()
             ->values();
 
-        $recommendedRequests = CareRequest::query()
-            ->with([
-                'tasks:id,name',
-                'family:id,email',
-                'recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
-            ])
-            ->withCount('applications')
-            ->where('status', CareRequest::STATUS_OPEN)
-            ->when($excludedRequestIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $excludedRequestIds))
-            ->latest()
-            ->limit(30)
-            ->get();
+        $recommendedRequests = collect();
+        if (! CaregiverPrelaunch::enabled()) {
+            $recommendedRequests = CareRequest::query()
+                ->with([
+                    'tasks:id,name',
+                    'family:id,email',
+                    'recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
+                ])
+                ->withCount('applications')
+                ->where('status', CareRequest::STATUS_OPEN)
+                ->when($excludedRequestIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $excludedRequestIds))
+                ->latest()
+                ->limit(30)
+                ->get();
+        }
 
         foreach ($recommendedRequests as $request) {
             $score = $this->recommendationScore($request, $user, $skillIds);
@@ -448,12 +447,12 @@ class CaregiverWorkInboxBuilder
                     'compensation_line' => $compensation['line'] ?? null,
                     'status_label' => 'Hired',
                     'status_tone' => 'success',
-                    'fit_reason' => 'You were hired. Open shift details and confirm agreement.',
+                    'fit_reason' => 'You were hired. Open visit details and confirm agreement.',
                     'recipient_context' => $recipientContext,
                     'note' => null,
                     'primary_action' => [
                         'kind' => 'link',
-                        'label' => 'Open shift setup',
+                        'label' => 'Open visit setup',
                         'href' => route('care-requests.apply', $request->id),
                     ],
                     'secondary_action' => $application->conversation
@@ -464,20 +463,20 @@ class CaregiverWorkInboxBuilder
                         ]
                         : null,
                     'open_href' => route('care-requests.apply', $request->id),
-                    'meta' => 'Ready for shift setup',
+                    'meta' => 'Ready for visit setup',
                 ];
             }
 
             $bookingStatus = (string) $booking->status;
             [$scope, $priority, $label, $tone, $fitReason, $primaryLabel] = match ($bookingStatus) {
-                CareBooking::STATUS_SCHEDULED => ['hired', 420, 'Scheduled', 'info', 'Shift scheduled. Start when you arrive.', 'Start shift'],
-                CareBooking::STATUS_IN_PROGRESS => ['hired', 500, 'In progress', 'success', 'Shift is live right now.', 'Continue shift'],
-                CareBooking::STATUS_PAUSED => ['hired', 490, 'Paused', 'warning', 'Shift paused. Resume or end when ready.', 'Resume shift'],
+                CareBooking::STATUS_SCHEDULED => ['hired', 420, 'Scheduled', 'info', 'Visit scheduled. Start when you arrive.', 'Start visit'],
+                CareBooking::STATUS_IN_PROGRESS => ['hired', 500, 'In progress', 'success', 'Visit is live right now.', 'Continue visit'],
+                CareBooking::STATUS_PAUSED => ['hired', 490, 'Paused', 'warning', 'Visit paused. Resume or end when ready.', 'Resume visit'],
                 CareBooking::STATUS_COMPLETED => ['completed', 140, 'Completed', 'warning', 'Timesheet submitted and waiting family confirmation.', 'View recap'],
-                CareBooking::STATUS_REVIEWED => ['completed', 120, 'Reviewed', 'success', 'Shift closed. Great job.', 'View shift'],
-                CareBooking::STATUS_DISPUTED => ['completed', 110, 'Disputed', 'danger', 'Dispute in review with support.', 'Open shift'],
-                CareBooking::STATUS_CANCELLED => ['completed', 100, 'Cancelled', 'neutral', 'Shift was cancelled.', 'View shift'],
-                default => ['hired', 300, 'Hired', 'success', 'Shift ready.', 'Open shift'],
+                CareBooking::STATUS_REVIEWED => ['completed', 120, 'Reviewed', 'success', 'Visit closed. Great job.', 'View visit'],
+                CareBooking::STATUS_DISPUTED => ['completed', 110, 'Disputed', 'danger', 'Dispute in review with support.', 'Open visit'],
+                CareBooking::STATUS_CANCELLED => ['completed', 100, 'Cancelled', 'neutral', 'Visit was cancelled.', 'View visit'],
+                default => ['hired', 300, 'Hired', 'success', 'Visit ready.', 'Open visit'],
             };
             $minutes = $this->estimatedShiftMinutes($request, $booking);
             $rate = $this->effectiveRequestRate($request, (float) ($application->proposed_rate ?: $defaultRate));
@@ -657,7 +656,7 @@ class CaregiverWorkInboxBuilder
             'hourly_rate' => round($hourlyRate, 2),
             'total' => $total,
             'line' => sprintf(
-                '%sh @ $%s/hr • $%s total shift',
+                '%sh @ $%s/hr • $%s total visit',
                 $hoursLabel,
                 number_format($hourlyRate, 2),
                 number_format($total, 2)

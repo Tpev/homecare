@@ -58,6 +58,53 @@ class DiditIdentityVerificationTest extends TestCase
         ]);
     }
 
+    public function test_caregiver_can_restart_didit_after_closing_first_session(): void
+    {
+        config()->set('services.didit.api_key', 'test-key');
+        config()->set('services.didit.workflow_id', 'workflow-123');
+        config()->set('services.didit.base_url', 'https://verification.didit.me');
+
+        Http::fake([
+            'https://verification.didit.me/v3/session/*' => Http::sequence()
+                ->push([
+                    'session_id' => 'sess_first',
+                    'verification_url' => 'https://verify.didit.me/session/sess_first',
+                    'status' => 'Not Started',
+                ], 201)
+                ->push([
+                    'session_id' => 'sess_second',
+                    'verification_url' => 'https://verify.didit.me/session/sess_second',
+                    'status' => 'Not Started',
+                ], 201),
+        ]);
+
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'draft']);
+
+        $this->actingAs($caregiver)
+            ->post(route('caregiver.verification.session'))
+            ->assertRedirect('https://verify.didit.me/session/sess_first');
+
+        $this->actingAs($caregiver)
+            ->post(route('caregiver.verification.session'))
+            ->assertRedirect('https://verify.didit.me/session/sess_second');
+
+        $this->assertDatabaseCount('caregiver_identity_verifications', 2);
+        $this->assertDatabaseHas('caregiver_profiles', [
+            'user_id' => $caregiver->id,
+            'identity_verification_session_id' => 'sess_second',
+        ]);
+
+        $vendorData = Http::recorded()
+            ->map(fn (array $record) => (string) ($record[0]['vendor_data'] ?? ''))
+            ->filter()
+            ->values();
+
+        $this->assertCount(2, $vendorData);
+        $this->assertCount(2, $vendorData->unique());
+        $this->assertTrue($vendorData->every(fn (string $value): bool => str_contains($value, '_attempt_')));
+    }
+
     public function test_didit_webhook_approved_updates_profile_and_logs_moderation_event(): void
     {
         config()->set('services.didit.webhook_secret', 'webhook-secret');

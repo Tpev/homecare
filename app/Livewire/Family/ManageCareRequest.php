@@ -56,11 +56,11 @@ class ManageCareRequest extends Component
     public string $incidentSeverity = 'medium';
 
     public array $applicationStatusOptions = [
-        ['label' => 'All applicants', 'value' => 'all'],
-        ['label' => 'Applied', 'value' => CareRequestApplication::STATUS_APPLIED],
-        ['label' => 'Shortlisted', 'value' => CareRequestApplication::STATUS_SHORTLISTED],
+        ['label' => 'All caregivers', 'value' => 'all'],
+        ['label' => 'Interested', 'value' => CareRequestApplication::STATUS_APPLIED],
+        ['label' => 'Saved', 'value' => CareRequestApplication::STATUS_SHORTLISTED],
         ['label' => 'Hired', 'value' => CareRequestApplication::STATUS_HIRED],
-        ['label' => 'Rejected', 'value' => CareRequestApplication::STATUS_REJECTED],
+        ['label' => 'Declined', 'value' => CareRequestApplication::STATUS_REJECTED],
         ['label' => 'Not selected', 'value' => CareRequestApplication::STATUS_NOT_SELECTED],
         ['label' => 'Withdrawn', 'value' => CareRequestApplication::STATUS_WITHDRAWN],
     ];
@@ -94,19 +94,21 @@ class ManageCareRequest extends Component
 
         abort_unless(auth()->user()->can('manageApplicants', $this->requestItem), 403);
 
-        $this->activeTab = $this->requestItem->booking
-            ? 'shift'
-            : ($this->requestItem->status === CareRequest::STATUS_OPEN ? 'applicants' : 'overview');
+        $this->activeTab = CareRequestProgress::familyLifecycleStage($this->requestItem)['primary_tab'];
     }
 
     public function setActiveTab(string $tab): void
     {
-        if (! in_array($tab, ['overview', 'applicants', 'shift', 'support'], true)) {
+        $visibleTabs = collect(CareRequestProgress::familyLifecycleStage($this->requestItem)['tabs'])
+            ->pluck('key')
+            ->all();
+
+        if (! in_array($tab, $visibleTabs, true)) {
             return;
         }
 
         if ($tab === 'shift' && ! $this->requestItem->booking) {
-            $this->activeTab = 'overview';
+            $this->activeTab = CareRequestProgress::familyLifecycleStage($this->requestItem)['primary_tab'];
             return;
         }
 
@@ -126,7 +128,7 @@ class ManageCareRequest extends Component
             $this->requestItem->update(['first_shortlist_at' => now()]);
         }
         $this->refreshRequestItem();
-        session()->flash('status', 'Applicant shortlisted for follow-up.');
+        session()->flash('status', 'Caregiver saved for follow-up.');
     }
 
     public function reject(int $applicationId): void
@@ -139,7 +141,7 @@ class ManageCareRequest extends Component
 
         $application->update(['status' => CareRequestApplication::STATUS_REJECTED]);
         $this->refreshRequestItem();
-        session()->flash('status', 'Applicant rejected.');
+        session()->flash('status', 'Caregiver declined.');
     }
 
     public function withdrawRequest(): void
@@ -151,7 +153,7 @@ class ManageCareRequest extends Component
         }
 
         if ($this->requestItem->booking) {
-            session()->flash('status', 'This request already has a booking. Use the shift support tools to cancel or change it.');
+            session()->flash('status', 'This request already has a visit. Use the visit help tools to cancel or change it.');
 
             return;
         }
@@ -207,7 +209,7 @@ class ManageCareRequest extends Component
                 ->values();
         });
 
-        $this->refreshRequestItem();
+        $this->refreshRequestItem(preferLifecyclePrimary: true);
 
         if ($this->requestItem->status !== CareRequest::STATUS_CANCELLED) {
             session()->flash('status', 'This request could not be withdrawn. Please refresh and try again.');
@@ -242,12 +244,18 @@ class ManageCareRequest extends Component
     public function hire(int $applicationId): void
     {
         if ($this->requestItem->status !== CareRequest::STATUS_OPEN) {
+            session()->flash('status', 'This request already has a caregiver or is no longer open. You can still open caregiver profiles or chat from this page.');
+
             return;
         }
 
         $application = $this->findOwnedApplication($applicationId)->loadMissing('caregiver:id,email,name');
-        if (! CaregiverPrelaunch::familyCanProceedWithCaregiver($application->caregiver?->email)) {
-            session()->flash('status', CaregiverPrelaunch::message());
+        if (! CaregiverPrelaunch::familyCanProceedWithCaregiver(
+            $application->caregiver?->email,
+            $this->requestItem,
+            (int) $application->caregiver_user_id,
+        )) {
+            session()->flash('status', CaregiverPrelaunch::familyHireMessage());
 
             return;
         }
@@ -310,7 +318,7 @@ class ManageCareRequest extends Component
                 $payment = app(BookingPaymentService::class)->prepareOnSessionAuthorization($booking);
                 if ($payment->status === CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED) {
                     $paymentConfirmationId = $payment->id;
-                    $paymentWarning = 'Confirm the card authorization to protect this booking.';
+                    $paymentWarning = 'Confirm the card authorization to protect this visit.';
                 }
             });
         } catch (PaymentException $e) {
@@ -333,9 +341,9 @@ class ManageCareRequest extends Component
 
         app(MarketplaceNotificationService::class)->notify(
             recipients: auth()->user(),
-            eventKey: MarketplaceEvent::HIRE_CONFIRMED,
-            title: 'Hire confirmed',
-            body: 'Caregiver hired and shift created for this request.',
+                eventKey: MarketplaceEvent::HIRE_CONFIRMED,
+                title: 'Hire confirmed',
+                body: 'Caregiver hired and visit created for this request.',
             url: route('family.requests.show', $this->requestItem->id),
             payload: ['care_request_id' => $this->requestItem->id],
             subject: $application,
@@ -346,7 +354,7 @@ class ManageCareRequest extends Component
             'care_request_id' => $this->requestItem->id,
         ]);
 
-        $this->refreshRequestItem();
+        $this->refreshRequestItem(preferLifecyclePrimary: true);
         if ($paymentConfirmationId) {
             $payment = CareBookingPayment::query()->find($paymentConfirmationId);
             if ($payment) {
@@ -354,19 +362,18 @@ class ManageCareRequest extends Component
             }
         }
 
-        session()->flash(
-            'status',
-            $paymentWarning
-                ? 'Caregiver hired and shift created. Payment still needs attention: '.$paymentWarning
-                : 'Care request filled and caregiver hired. Booking created.'
-        );
+        if ($paymentWarning) {
+            session()->flash('status', 'Caregiver hired and visit created. Payment still needs attention: '.$paymentWarning);
+        } else {
+            session()->flash('status', 'Caregiver hired and visit created.');
+        }
     }
 
     public function startPaymentAuthorization(): void
     {
         $booking = $this->requestItem->booking;
         if (! $booking) {
-            session()->flash('status', 'No booking is ready for payment authorization yet.');
+            session()->flash('status', 'No visit is ready for payment authorization yet.');
 
             return;
         }
@@ -395,7 +402,7 @@ class ManageCareRequest extends Component
     {
         $booking = $this->requestItem->booking;
         if (! $booking) {
-            session()->flash('status', 'No booking is ready for payment authorization yet.');
+            session()->flash('status', 'No visit is ready for payment authorization yet.');
 
             return;
         }
@@ -411,7 +418,7 @@ class ManageCareRequest extends Component
         $this->refreshRequestItem();
 
         if ($payment->status === CareBookingPayment::STATUS_AUTHORIZED) {
-            session()->flash('status', 'Card pre-authorization complete. This booking is now payment protected.');
+            session()->flash('status', 'Card pre-authorization complete. This visit is now payment protected.');
 
             return;
         }
@@ -482,7 +489,7 @@ class ManageCareRequest extends Component
 
             app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
             $this->confirmationNote = '';
-            $this->refreshRequestItem();
+            $this->refreshRequestItem(preferLifecyclePrimary: true);
             session()->flash('status', 'Timesheet confirmed.');
             return;
         } else {
@@ -494,8 +501,8 @@ class ManageCareRequest extends Component
             app(MarketplaceNotificationService::class)->notify(
                 recipients: $booking->caregiver,
                 eventKey: MarketplaceEvent::SHIFT_COMPLETED,
-                title: 'Care shift completed',
-                body: auth()->user()->name.' marked this shift as completed.',
+                title: 'Care visit completed',
+                body: auth()->user()->name.' marked this visit as completed.',
                 url: route('care-requests.apply', $this->requestItem->id),
                 payload: ['care_booking_id' => $booking->id],
                 subject: $booking,
@@ -505,8 +512,8 @@ class ManageCareRequest extends Component
 
         FunnelTracker::track('care_booking_completed', auth()->user(), $booking);
         app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
-        $this->refreshRequestItem();
-        session()->flash('status', 'Shift marked completed.');
+        $this->refreshRequestItem(preferLifecyclePrimary: true);
+        session()->flash('status', 'Visit marked completed.');
     }
 
     public function submitReview(): void
@@ -578,7 +585,7 @@ class ManageCareRequest extends Component
                 recipients: $booking->caregiver,
                 eventKey: MarketplaceEvent::REVIEW_RECEIVED,
                 title: 'New family review',
-                body: auth()->user()->name.' left a review after the shift.',
+                body: auth()->user()->name.' left a review after the visit.',
                 url: route('care-requests.apply', $this->requestItem->id),
                 payload: ['care_booking_id' => $booking->id, 'rating' => $this->reviewRating],
                 subject: $booking
@@ -591,14 +598,15 @@ class ManageCareRequest extends Component
         app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
 
         $this->reset(['reviewRating', 'reviewComment']);
-        $this->refreshRequestItem();
+        $this->refreshRequestItem(preferLifecyclePrimary: true);
         session()->flash('status', 'Review submitted.');
     }
 
     public function submitChangeRequest(): void
     {
         $booking = $this->requestItem->booking;
-        if (! $booking || in_array($booking->status, [CareBooking::STATUS_CANCELLED, CareBooking::STATUS_REVIEWED], true)) {
+        if (! $booking || $booking->status !== CareBooking::STATUS_SCHEDULED) {
+            session()->flash('status', 'Visit changes are only available before caregiver check-in. Use support for active or completed visits.');
             return;
         }
 
@@ -639,8 +647,8 @@ class ManageCareRequest extends Component
             app(MarketplaceNotificationService::class)->notify(
                 recipients: $booking->caregiver,
                 eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
-                title: 'Booking change request',
-                body: auth()->user()->name.' requested to '.$this->changeType.' this booking.',
+                title: 'Visit change request',
+                body: auth()->user()->name.' requested to '.$this->changeType.' this visit.',
                 url: route('care-requests.apply', $this->requestItem->id),
                 payload: ['care_booking_id' => $booking->id, 'change_type' => $this->changeType],
                 subject: $changeRequest
@@ -652,7 +660,7 @@ class ManageCareRequest extends Component
         ]);
 
         $this->reset(['changeReason', 'proposedStartAt', 'proposedEndAt']);
-        $this->refreshRequestItem();
+        $this->refreshRequestItem(preferLifecyclePrimary: true);
         session()->flash('status', 'Change request sent to caregiver.');
     }
 
@@ -690,14 +698,14 @@ class ManageCareRequest extends Component
                     recipients: $changeRequest->requester,
                     eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
                     title: 'Change request rejected',
-                    body: 'Your booking change request was rejected.',
+                    body: 'Your visit change request was rejected.',
                     url: route('care-requests.apply', $this->requestItem->id),
                     payload: ['care_booking_id' => $booking->id, 'change_request_id' => $changeRequest->id],
                     subject: $changeRequest
                 );
             }
 
-            $this->refreshRequestItem();
+            $this->refreshRequestItem(preferLifecyclePrimary: true);
             session()->flash('status', 'Change request rejected.');
             return;
         }
@@ -749,15 +757,15 @@ class ManageCareRequest extends Component
                 recipients: $changeRequest->requester,
                 eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
                 title: 'Change request accepted',
-                body: 'Your booking change request was accepted.',
+                body: 'Your visit change request was accepted.',
                 url: route('care-requests.apply', $this->requestItem->id),
                 payload: ['care_booking_id' => $booking->id, 'change_request_id' => $changeRequest->id],
                 subject: $changeRequest
             );
         }
 
-        $this->refreshRequestItem();
-        session()->flash('status', 'Change request accepted and booking updated.');
+        $this->refreshRequestItem(preferLifecyclePrimary: true);
+        session()->flash('status', 'Change request accepted and visit updated.');
     }
 
     public function createSupportTicket(): void
@@ -832,7 +840,7 @@ class ManageCareRequest extends Component
         app(BookingTrustService::class)->recomputeReliabilityForBooking($booking);
 
         $this->disputeReason = '';
-        $this->refreshRequestItem();
+        $this->refreshRequestItem(preferLifecyclePrimary: true);
         session()->flash('status', 'Dispute opened and support ticket created.');
     }
 
@@ -869,8 +877,8 @@ class ManageCareRequest extends Component
             app(MarketplaceNotificationService::class)->notify(
                 recipients: $booking->caregiver,
                 eventKey: MarketplaceEvent::SHIFT_CANCELLED,
-                title: 'Shift marked no-show',
-                body: auth()->user()->name.' marked the shift as caregiver no-show.',
+                title: 'Visit marked no-show',
+                body: auth()->user()->name.' marked the visit as caregiver no-show.',
                 url: route('care-requests.apply', $this->requestItem->id),
                 payload: ['care_booking_id' => $booking->id, 'care_request_id' => $this->requestItem->id],
                 subject: $booking,
@@ -878,15 +886,15 @@ class ManageCareRequest extends Component
             );
         }
 
-        $this->refreshRequestItem();
-        session()->flash('status', 'Booking marked as no-show.');
+        $this->refreshRequestItem(preferLifecyclePrimary: true);
+        session()->flash('status', 'Visit marked as no-show.');
     }
 
     public function cancelScheduledBooking(): void
     {
         $booking = $this->requestItem->booking;
         if (! $booking || $booking->status !== CareBooking::STATUS_SCHEDULED) {
-            session()->flash('status', 'Only scheduled shifts can be cancelled here.');
+            session()->flash('status', 'Only scheduled visits can be cancelled here.');
 
             return;
         }
@@ -923,8 +931,8 @@ class ManageCareRequest extends Component
             app(MarketplaceNotificationService::class)->notify(
                 recipients: $booking->caregiver,
                 eventKey: MarketplaceEvent::SHIFT_CANCELLED,
-                title: 'Shift cancelled',
-                body: auth()->user()->name.' cancelled a scheduled shift.',
+                title: 'Visit cancelled',
+                body: auth()->user()->name.' cancelled a scheduled visit.',
                 url: route('care-requests.apply', $this->requestItem->id),
                 payload: [
                     'care_booking_id' => $booking->id,
@@ -942,10 +950,10 @@ class ManageCareRequest extends Component
         ]);
 
         $this->directCancelReason = '';
-        $this->refreshRequestItem();
+        $this->refreshRequestItem(preferLifecyclePrimary: true);
         session()->flash('status', $lateCancel
-            ? 'Shift cancelled. This was inside the late-cancellation window.'
-            : 'Shift cancelled and payment authorization released.'
+            ? 'Visit cancelled. This was inside the late-cancellation window.'
+            : 'Visit cancelled and payment authorization released.'
         );
     }
 
@@ -1005,8 +1013,12 @@ class ManageCareRequest extends Component
         }
 
         $hiredApplication->loadMissing('caregiver:id,email');
-        if (! CaregiverPrelaunch::familyCanProceedWithCaregiver($hiredApplication->caregiver?->email)) {
-            session()->flash('status', CaregiverPrelaunch::message());
+        if (! CaregiverPrelaunch::familyCanProceedWithCaregiver(
+            $hiredApplication->caregiver?->email,
+            $this->requestItem,
+            (int) $hiredApplication->caregiver_user_id,
+        )) {
+            session()->flash('status', CaregiverPrelaunch::familyHireMessage());
 
             return;
         }
@@ -1104,11 +1116,19 @@ class ManageCareRequest extends Component
 
         if ((int) $application->careRequest->family_user_id !== (int) auth()->id()
             || ! in_array($application->status, [
+                CareRequestApplication::STATUS_APPLIED,
                 CareRequestApplication::STATUS_SHORTLISTED,
                 CareRequestApplication::STATUS_HIRED,
             ], true)) {
-            session()->flash('status', 'You can chat after shortlisting this applicant.');
+            session()->flash('status', 'You can chat with active caregivers in this request.');
             return;
+        }
+
+        if ($application->status === CareRequestApplication::STATUS_APPLIED) {
+            $application->update(['status' => CareRequestApplication::STATUS_SHORTLISTED]);
+            if (! $this->requestItem->first_shortlist_at) {
+                $this->requestItem->update(['first_shortlist_at' => now()]);
+            }
         }
 
         $conversation = CareRequestConversation::findOrCreateForApplication($application, auth()->id());
@@ -1118,9 +1138,8 @@ class ManageCareRequest extends Component
     public function inviteSuggestedCaregiver(int $caregiverUserId): void
     {
         $caregiver = User::query()->select(['id', 'email'])->find($caregiverUserId);
-        if (! CaregiverPrelaunch::familyCanProceedWithCaregiver($caregiver?->email)) {
-            session()->flash('status', CaregiverPrelaunch::message());
-
+        if (! $caregiver) {
+            session()->flash('status', 'Caregiver could not be found.');
             return;
         }
 
@@ -1152,7 +1171,7 @@ class ManageCareRequest extends Component
                 recipients: $caregiver,
                 eventKey: MarketplaceEvent::MATCHING_REQUEST_REMINDER,
                 title: 'You have a new invitation',
-                body: 'A family invited you to review and apply to their request.',
+                body: 'A family invited you to review their care request.',
                 url: route('caregiver.invitations.index'),
                 payload: ['care_request_id' => $this->requestItem->id],
                 subject: $invitation
@@ -1246,7 +1265,7 @@ class ManageCareRequest extends Component
             ->firstOrFail();
     }
 
-    private function refreshRequestItem(): void
+    private function refreshRequestItem(bool $preferLifecyclePrimary = false): void
     {
         $this->requestItem = $this->requestItem->fresh([
             'family:id,name,email,phone',
@@ -1270,6 +1289,14 @@ class ManageCareRequest extends Component
                 'booking:id,care_request_id,care_request_application_id,status,scheduled_start_at,scheduled_end_at',
             ]),
         ]);
+
+        $visibleTabs = collect(CareRequestProgress::familyLifecycleStage($this->requestItem)['tabs'])
+            ->pluck('key')
+            ->all();
+
+        if ($preferLifecyclePrimary || ! in_array($this->activeTab, $visibleTabs, true)) {
+            $this->activeTab = CareRequestProgress::familyLifecycleStage($this->requestItem)['primary_tab'];
+        }
     }
 
     private function dispatchPaymentConfirmation(CareBookingPayment $payment): void
@@ -1317,11 +1344,15 @@ class ManageCareRequest extends Component
                 ->topMatchesForRequest($this->requestItem, 3);
         }
 
-        $bestNextAction = CareRequestProgress::bestNextAction($this->requestItem);
+        $lifecycleStage = CareRequestProgress::familyLifecycleStage($this->requestItem);
+
+        if (! collect($lifecycleStage['tabs'])->pluck('key')->contains($this->activeTab)) {
+            $this->activeTab = $lifecycleStage['primary_tab'];
+        }
 
         return view('livewire.family.manage-care-request', [
             'suggestedCaregivers' => $suggestedCaregivers,
-            'bestNextAction' => $bestNextAction,
+            'lifecycleStage' => $lifecycleStage,
         ]);
     }
 }

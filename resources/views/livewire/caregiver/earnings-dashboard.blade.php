@@ -31,7 +31,7 @@
                 </div>
                 <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <a href="{{ route('caregiver.shifts.index') }}" wire:navigate>
-                        <x-button color="white" light class="w-full sm:w-auto" sm>My shifts</x-button>
+                        <x-button color="white" light class="w-full sm:w-auto" sm>My visits</x-button>
                     </a>
                     <a href="{{ route('caregiver.work-inbox.index') }}" wire:navigate>
                         <x-button color="white" light class="w-full sm:w-auto" sm>Find work</x-button>
@@ -74,7 +74,7 @@
             Overview
         </button>
         <button type="button" wire:click="setActiveTab('shifts')" class="rounded-xl px-3 py-2 text-sm font-medium transition {{ $activeTab === 'shifts' ? 'bg-[#0F3D3E] text-[#FAF9F7]' : 'text-[#6E746F] hover:text-[#0F3D3E]' }}">
-            Shifts
+            Visits
         </button>
         <button type="button" wire:click="setActiveTab('payouts')" class="rounded-xl px-3 py-2 text-sm font-medium transition {{ $activeTab === 'payouts' ? 'bg-[#0F3D3E] text-[#FAF9F7]' : 'text-[#6E746F] hover:text-[#0F3D3E]' }}">
             Payouts
@@ -125,7 +125,7 @@
                 </x-slot:header>
                 @if ((float) collect($trend)->sum('amount') <= 0)
                     <div class="rounded-xl border border-dashed border-[#D6CCBE] bg-[#F5F1EB] px-4 py-8 text-center text-sm text-[#607080]">
-                        No earnings trend yet. Once you complete paid shifts, your weekly history will appear here.
+                        No earnings trend yet. Once you complete paid visits, your weekly history will appear here.
                     </div>
                 @else
                     <div class="grid grid-cols-8 items-end gap-2">
@@ -207,14 +207,14 @@
 
                             @if (! empty($item['care_request_id']))
                                 <a href="{{ route('care-requests.apply', $item['care_request_id']) }}" wire:navigate class="text-xs font-medium text-[#7C5DDC] underline underline-offset-2">
-                                    Open shift
+                                    Open visit
                                 </a>
                             @endif
                         </div>
                     </article>
                 @empty
                     <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-[rgba(255,253,250,0.98)] px-4 py-8 text-center text-sm text-[#607080]">
-                        No shifts in this range yet.
+                        No visits in this range yet.
                     </div>
                 @endforelse
             </div>
@@ -257,7 +257,7 @@
                                         {{ optional($payout['period_start_on'])->format('M d') }} - {{ optional($payout['period_end_on'])->format('M d, Y') }}
                                     </p>
                                     <p class="text-xs text-[#7B8794] mt-1">
-                                        {{ $payout['items_count'] }} shift(s)
+                                        {{ $payout['items_count'] }} visit(s)
                                         @if ($payout['scheduled_for'])
                                              -  Scheduled {{ $payout['scheduled_for']->format('M d, H:i') }}
                                         @endif
@@ -281,7 +281,7 @@
                         </div>
                     @empty
                         <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-[rgba(255,253,250,0.98)] px-4 py-8 text-center text-sm text-[#607080]">
-                            No payout batches yet. Completed confirmed shifts will appear here automatically.
+                            No payout batches yet. Completed confirmed visits will appear here automatically.
                         </div>
                     @endforelse
                 </div>

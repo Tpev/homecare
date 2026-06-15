@@ -32,7 +32,7 @@ class CaregiverPrelaunchModeTest extends TestCase
         $response->assertDontSee($caregiver->name);
     }
 
-    public function test_prelaunch_blocks_caregiver_accepting_invitation(): void
+    public function test_prelaunch_allows_caregiver_accepting_direct_invitation(): void
     {
         config(['marketplace.caregiver_prelaunch_mode' => true]);
 
@@ -49,17 +49,25 @@ class CaregiverPrelaunchModeTest extends TestCase
             'expires_at' => now()->addHours(24),
         ]);
 
+        $this->actingAs($caregiver)
+            ->get(route('caregiver.invitations.index'))
+            ->assertOk()
+            ->assertSee('You can still accept direct invitations sent by a family.')
+            ->assertSee(route('caregiver.invitations.accept', $invitation), false)
+            ->assertDontSee('Accept at launch');
+
         Livewire::actingAs($caregiver)
             ->test(WorkInbox::class)
             ->call('acceptInvitation', $invitation->id);
 
         $this->assertDatabaseHas('care_request_invitations', [
             'id' => $invitation->id,
-            'status' => CareRequestInvitation::STATUS_PENDING,
+            'status' => CareRequestInvitation::STATUS_ACCEPTED,
         ]);
-        $this->assertDatabaseMissing('care_request_applications', [
+        $this->assertDatabaseHas('care_request_applications', [
             'care_request_id' => $request->id,
             'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_SHORTLISTED,
         ]);
     }
 
@@ -92,6 +100,28 @@ class CaregiverPrelaunchModeTest extends TestCase
             'status' => CareRequest::STATUS_OPEN,
         ]);
         $this->assertDatabaseCount('care_bookings', 0);
+    }
+
+    public function test_prelaunch_allows_caregiver_to_open_existing_application(): void
+    {
+        config(['marketplace.caregiver_prelaunch_mode' => true]);
+
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = $this->createReadyCaregiver();
+        $request = $this->createOpenRequest($family->id, 'Accepted invite detail page');
+
+        CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_SHORTLISTED,
+            'proposed_rate' => 27.00,
+            'cover_note' => null,
+        ]);
+
+        $this->actingAs($caregiver)
+            ->get(route('care-requests.apply', $request->id))
+            ->assertOk()
+            ->assertSee('Application');
     }
 
     public function test_prelaunch_banner_is_visible_on_caregiver_dashboard(): void

@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('homecare:dispatch-notifications --type=all')->everyTenMinutes();
+Schedule::command('homecare:auto-approve-timesheets')->hourly();

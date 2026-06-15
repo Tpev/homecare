@@ -13,6 +13,7 @@ new #[Layout('layouts.guest')] class extends Component
 {
     public string $name = '';
     public string $email = '';
+    public string $phone = '';
     public string $password = '';
     public string $password_confirmation = '';
     public bool $accept_terms = false;
@@ -22,6 +23,7 @@ new #[Layout('layouts.guest')] class extends Component
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'phone' => ['required', 'string', 'min:7', 'max:30'],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
             'accept_terms' => ['accepted'],
         ]);
@@ -70,6 +72,10 @@ new #[Layout('layouts.guest')] class extends Component
             <div class="md:col-span-2">
                 <x-input type="email" label="Email" wire:model="email" required />
                 <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            </div>
+            <div class="md:col-span-2">
+                <x-input type="tel" label="Phone number" wire:model="phone" autocomplete="tel" required />
+                <x-input-error :messages="$errors->get('phone')" class="mt-2" />
             </div>
             <div>
                 <x-password label="Password" wire:model="password" required />

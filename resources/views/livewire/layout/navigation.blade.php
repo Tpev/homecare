@@ -144,7 +144,7 @@ new class extends Component
         } else {
             if ($user && ! $caregiverOnboardingMode) {
                 $primaryLinks[] = [
-                    'label' => 'Dashboard',
+                    'label' => $isFamily ? 'Home' : 'Dashboard',
                     'href' => route('dashboard'),
                     'active' => request()->routeIs('dashboard'),
                 ];
@@ -152,19 +152,11 @@ new class extends Component
 
             if ($isFamily) {
                 $primaryLinks[] = [
-                    'label' => 'My Care',
-                    'href' => route('family.care.index'),
-                    'active' => request()->routeIs('family.care.*'),
-                ];
-                $primaryLinks[] = [
-                    'label' => 'My Requests',
+                    'label' => 'Care',
                     'href' => route('family.requests.index'),
-                    'active' => request()->routeIs('family.requests.index') || request()->routeIs('family.requests.show'),
-                ];
-                $primaryLinks[] = [
-                    'label' => 'Post Request',
-                    'href' => route('family.requests.create'),
-                    'active' => request()->routeIs('family.requests.create'),
+                    'active' => request()->routeIs('family.requests.index')
+                        || request()->routeIs('family.requests.show')
+                        || request()->routeIs('family.care.*'),
                 ];
                 $primaryLinks[] = [
                     'label' => 'Find Caregivers',
@@ -175,6 +167,12 @@ new class extends Component
                     'label' => $messageUnread > 0 ? "Messages ($messageUnread)" : 'Messages',
                     'href' => route('messages.index'),
                     'active' => request()->routeIs('messages.*'),
+                ];
+                $primaryLinks[] = [
+                    'label' => 'Start care',
+                    'href' => route('family.requests.create'),
+                    'active' => request()->routeIs('family.requests.create') || request()->routeIs('family.requests.create_ai'),
+                    'primary' => true,
                 ];
             }
 
@@ -208,7 +206,7 @@ new class extends Component
                         'active' => request()->routeIs('caregiver.regular-clients.*'),
                     ];
                     $primaryLinks[] = [
-                        'label' => 'My Shifts',
+                        'label' => 'My Visits',
                         'href' => route('caregiver.shifts.index'),
                         'active' => request()->routeIs('caregiver.shifts.*'),
                     ];
@@ -243,9 +241,19 @@ new class extends Component
 
             <div class="hidden min-w-0 flex-1 space-x-2 overflow-x-auto sm:ml-8 sm:mr-72 sm:flex">
                 @foreach ($primaryLinks as $link)
-                    <x-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
-                        {{ __($link['label']) }}
-                    </x-nav-link>
+                    @if (!empty($link['primary']))
+                        <a
+                            href="{{ $link['href'] }}"
+                            wire:navigate
+                            class="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition {{ $link['active'] ? 'bg-[#C96B55] text-white shadow-sm' : 'bg-[#23483F] text-[#FFFBF4] shadow-sm hover:bg-[#1B3D35]' }}"
+                        >
+                            {{ __($link['label']) }}
+                        </a>
+                    @else
+                        <x-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
+                            {{ __($link['label']) }}
+                        </x-nav-link>
+                    @endif
                 @endforeach
             </div>
 
@@ -330,7 +338,7 @@ new class extends Component
                                 {{ $notificationUnread > 0 ? 'Notifications ('.$notificationUnread.')' : 'Notifications' }}
                             </a>
                             <a href="{{ route('caregiver.shifts.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">
-                                My Shifts
+                                My Visits
                             </a>
                             <a href="{{ route('caregiver.earnings.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">
                                 My Earnings
@@ -368,9 +376,19 @@ new class extends Component
     >
         <div class="space-y-1 px-2 pb-3 pt-2">
             @foreach ($primaryLinks as $link)
-                <x-responsive-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
-                    {{ __($link['label']) }}
-                </x-responsive-nav-link>
+                @if (!empty($link['primary']))
+                    <a
+                        href="{{ $link['href'] }}"
+                        wire:navigate
+                        class="mt-2 flex min-h-12 items-center justify-center rounded-2xl bg-[#23483F] px-4 text-base font-semibold text-[#FFFBF4] shadow-sm"
+                    >
+                        {{ __($link['label']) }}
+                    </a>
+                @else
+                    <x-responsive-nav-link :href="$link['href']" :active="$link['active']" wire:navigate>
+                        {{ __($link['label']) }}
+                    </x-responsive-nav-link>
+                @endif
             @endforeach
         </div>
 
@@ -410,7 +428,7 @@ new class extends Component
                                 {{ $notificationUnread > 0 ? __('Notifications').' ('.$notificationUnread.')' : __('Notifications') }}
                             </x-responsive-nav-link>
                             <x-responsive-nav-link :href="route('caregiver.shifts.index')" wire:navigate>
-                                {{ __('My Shifts') }}
+                                {{ __('My Visits') }}
                             </x-responsive-nav-link>
                             <x-responsive-nav-link :href="route('caregiver.earnings.index')" wire:navigate>
                                 {{ __('My Earnings') }}

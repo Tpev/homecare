@@ -1,123 +1,290 @@
 <div>
-    <div class="hc-page py-8 space-y-6">
-        <section class="hc-brand-panel relative overflow-hidden">
-            <div class="pointer-events-none absolute -right-10 top-0 h-28 w-28 rounded-full bg-[#7C5DDC]/20 blur-2xl"></div>
-            <div class="pointer-events-none absolute -left-8 bottom-0 h-24 w-24 rounded-full bg-[#4F6FAF]/20 blur-2xl"></div>
-
-            <div class="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                <div class="max-w-2xl">
-                    <p class="hc-brand-kicker inline-flex rounded-full px-3 py-1">Family workspace</p>
-                    <h1 class="mt-3 text-3xl font-display font-semibold sm:text-4xl">Your care requests, all in one place.</h1>
-                    <p class="mt-3 max-w-xl text-sm text-[#E5E7EB] sm:text-base">
-                        Review applicants, keep track of response timing, and move each request from posted to booked with a calmer, clearer workflow.
-                    </p>
-                    <p class="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-[#CFC6F7]">Average first response: {{ $avgFirstResponseLabel ?? '-' }}</p>
-                </div>
-
-                <div class="w-full lg:w-auto">
-                    <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-secondary-button w-full sm:w-auto">
-                        Create request
-                    </a>
-                </div>
-            </div>
-        </section>
-
+    <div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
         @if (session('status'))
             <x-alert color="green">{{ session('status') }}</x-alert>
         @endif
 
-        <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div class="hc-brand-card">
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <x-native-select-field label="Status" wire:model.live="status" :options="$statusOptions" />
-                    <x-native-select-field label="Type" wire:model.live="requestType" :options="$requestTypeOptions" />
-                    <x-native-select-field label="Sort" wire:model.live="sort" :options="$sortOptions" />
+        @php
+            $carePlans = $carePlans ?? collect();
+            $rebookableRequests = $rebookableRequests ?? collect();
+            $attentionRequests = $requests->getCollection()->filter(function ($request) {
+                $bookingStatus = (string) ($request->booking?->status ?? '');
+
+                return ($request->status === \App\Models\CareRequest::STATUS_OPEN && (int) $request->applications_count > 0)
+                    || in_array($bookingStatus, [
+                        \App\Models\CareBooking::STATUS_IN_PROGRESS,
+                        \App\Models\CareBooking::STATUS_PAUSED,
+                    ], true)
+                    || (in_array($bookingStatus, [
+                        \App\Models\CareBooking::STATUS_COMPLETED,
+                        \App\Models\CareBooking::STATUS_REVIEWED,
+                    ], true) && ! $request->booking?->family_confirmed_at);
+            })->values();
+            $upcomingRequests = $requests->getCollection()->filter(function ($request) {
+                return (string) ($request->booking?->status ?? '') === \App\Models\CareBooking::STATUS_SCHEDULED;
+            })->sortBy(fn ($request) => optional($request->booking?->scheduled_start_at)->timestamp ?? PHP_INT_MAX)->values();
+        @endphp
+
+        <section class="rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm sm:p-6">
+            <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
+                <div>
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#C96B55]">Care</p>
+                    <h1 class="mt-2 max-w-3xl text-3xl font-display font-semibold leading-tight text-[#17313F] sm:text-4xl">
+                        Your care, visits, and caregivers in one place.
+                    </h1>
+                    <p class="mt-3 max-w-2xl text-base leading-7 text-[#4B5B6B]">
+                        Open requests, upcoming visits, weekly care, and rebooking all live here. Start with the item that needs attention.
+                    </p>
+                    <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                        <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button w-full sm:w-auto">Start care</a>
+                        <a href="{{ route('caregivers.search') }}" wire:navigate class="hc-secondary-button w-full sm:w-auto">Find caregivers</a>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="rounded-2xl border border-[#E4DDD3] bg-white p-4 text-center">
+                        <p class="text-3xl font-semibold text-[#17313F]">{{ (int) ($attentionCount ?? 0) }}</p>
+                        <p class="mt-1 text-xs text-[#607080]">need action</p>
+                    </div>
+                    <div class="rounded-2xl border border-[#E4DDD3] bg-white p-4 text-center">
+                        <p class="text-3xl font-semibold text-[#17313F]">{{ $carePlans->count() }}</p>
+                        <p class="mt-1 text-xs text-[#607080]">weekly</p>
+                    </div>
+                    <div class="rounded-2xl border border-[#E4DDD3] bg-white p-4 text-center">
+                        <p class="text-3xl font-semibold text-[#17313F]">{{ $avgFirstResponseLabel ?? '-' }}</p>
+                        <p class="mt-1 text-xs text-[#607080]">avg reply</p>
+                    </div>
                 </div>
             </div>
+        </section>
 
-            <div class="hc-brand-card">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#7C5DDC]">Request guidance</p>
-                <div class="mt-3 space-y-3 text-sm text-[#3C4A5B]">
-                    <div class="rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] px-4 py-3">
-                        <p class="font-semibold text-[#0F3D3E]">Best practice</p>
-                        <p class="mt-1">Keep each request focused on one household need so caregivers can answer faster.</p>
+        <section class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+            <div class="space-y-5">
+                <x-card>
+                    <x-slot:header>
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h2 class="font-display text-xl font-semibold">Needs your action</h2>
+                                <p class="text-sm text-[#607080]">Care items where you need to decide, approve, or reply.</p>
+                            </div>
+                        </div>
+                    </x-slot:header>
+
+                    <div class="space-y-3">
+                        @forelse ($attentionRequests->take(4) as $request)
+                            @php
+                                $bookingStatus = (string) ($request->booking?->status ?? '');
+                                $actionTitle = 'Review request';
+                                $actionBody = $request->applications_count.' caregiver'.((int) $request->applications_count === 1 ? '' : 's').' to review.';
+                                $actionLabel = 'Review';
+                                $tone = 'border-sky-200 bg-sky-50 text-sky-950';
+
+                                if (in_array($bookingStatus, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true)) {
+                                    $actionTitle = match ($bookingStatus) {
+                                        \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Care is happening now',
+                                        \App\Models\CareBooking::STATUS_PAUSED => 'Visit is paused',
+                                    };
+                                    $actionBody = optional($request->booking?->scheduled_start_at)->format('M d, g:i A') ?: 'Time pending';
+                                    $actionLabel = 'Track visit';
+                                    $tone = 'border-emerald-200 bg-emerald-50 text-emerald-950';
+                                }
+
+                                if (in_array($bookingStatus, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true) && ! $request->booking?->family_confirmed_at) {
+                                    $actionTitle = 'Approve hours';
+                                    $actionBody = 'The caregiver submitted their timesheet.';
+                                    $actionLabel = 'Review hours';
+                                    $tone = 'border-emerald-200 bg-emerald-50 text-emerald-950';
+                                }
+                            @endphp
+                            <a href="{{ route('family.requests.show', $request->id) }}" wire:navigate class="block rounded-2xl border p-4 transition hover:shadow-sm {{ $tone }}">
+                                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <p class="font-display text-lg font-semibold">{{ $actionTitle }}</p>
+                                        <p class="mt-1 font-semibold">{{ $request->title }}</p>
+                                        <p class="mt-1 text-sm opacity-80">{{ $actionBody }}</p>
+                                    </div>
+                                    <span class="inline-flex min-h-11 items-center justify-center rounded-xl bg-white/85 px-4 text-sm font-semibold text-[#23483F]">{{ $actionLabel }}</span>
+                                </div>
+                            </a>
+                        @empty
+                            <div class="rounded-2xl border border-[#D8E1D7] bg-[#F2F8F4] p-5">
+                                <p class="font-display text-lg font-semibold text-[#17313F]">Nothing urgent right now.</p>
+                                <p class="mt-1 text-sm text-[#607080]">You can start new care, rebook a trusted caregiver, or browse all care below.</p>
+                            </div>
+                        @endforelse
                     </div>
-                    <div class="rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] px-4 py-3">
-                        <p class="font-semibold text-[#0F3D3E]">What to review first</p>
-                        <p class="mt-1">Look at trust badges, response speed, and schedule fit before making your shortlist.</p>
+                </x-card>
+
+                @if ($upcomingRequests->isNotEmpty())
+                    <x-card>
+                        <x-slot:header>
+                            <div>
+                                <h2 class="font-display text-xl font-semibold">Upcoming visits</h2>
+                                <p class="text-sm text-[#607080]">Scheduled care that is already set. No decision needed unless something changed.</p>
+                            </div>
+                        </x-slot:header>
+
+                        <div class="space-y-3">
+                            @foreach ($upcomingRequests->take(4) as $request)
+                                <a href="{{ route('family.requests.show', $request->id) }}" wire:navigate class="block rounded-2xl border border-[#D8E1D7] bg-[#F2F8F4] p-4 transition hover:shadow-sm">
+                                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                        <div>
+                                            <p class="font-display text-lg font-semibold text-[#17313F]">{{ $request->title }}</p>
+                                            <p class="mt-1 text-sm text-[#4B5B6B]">
+                                                {{ optional($request->booking?->scheduled_start_at)->format('M d, g:i A') ?: 'Time pending' }}
+                                                @if ($request->booking?->scheduled_end_at)
+                                                    to {{ $request->booking->scheduled_end_at->format('g:i A') }}
+                                                @endif
+                                            </p>
+                                        </div>
+                                        <span class="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-4 text-sm font-semibold text-[#23483F]">Open visit</span>
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    </x-card>
+                @endif
+
+                <x-card>
+                    <x-slot:header>
+                        <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                            <div>
+                                <h2 class="font-display text-xl font-semibold">All care</h2>
+                                <p class="text-sm text-[#607080]">Requests and visits, from newest to oldest.</p>
+                            </div>
+                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:min-w-[620px]">
+                                <x-native-select-field label="Status" wire:model.live="status" :options="$statusOptions" />
+                                <x-native-select-field label="Type" wire:model.live="requestType" :options="$requestTypeOptions" />
+                                <x-native-select-field label="Sort" wire:model.live="sort" :options="$sortOptions" />
+                            </div>
+                        </div>
+                    </x-slot:header>
+
+                    <div class="space-y-3">
+                        @forelse ($requests as $request)
+                            @php
+                                $nextAction = \App\Support\CareRequestProgress::bestNextAction($request);
+                                $bookingStatus = (string) ($request->booking?->status ?? '');
+                                $statusLabel = $request->booking
+                                    ? 'Visit '.str_replace('_', ' ', $bookingStatus)
+                                    : match ((string) $request->status) {
+                                        \App\Models\CareRequest::STATUS_FILLED => 'Visit scheduled',
+                                        \App\Models\CareRequest::STATUS_CANCELLED => 'Withdrawn',
+                                        default => ucfirst((string) $request->status),
+                                    };
+                                $scheduleLabel = $request->request_type === \App\Models\CareRequest::TYPE_ONE_TIME
+                                    ? (optional($request->requested_start_at)->format('M d, g:i A') ?: 'Time not set')
+                                    : 'Repeats every week';
+                                $cardActionLabel = match (true) {
+                                    $bookingStatus === \App\Models\CareBooking::STATUS_COMPLETED => 'Review hours',
+                                    in_array($bookingStatus, [\App\Models\CareBooking::STATUS_SCHEDULED, \App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true) => 'Open visit',
+                                    $request->status === \App\Models\CareRequest::STATUS_OPEN && (int) $request->applications_count > 0 => 'Review caregivers',
+                                    $request->status === \App\Models\CareRequest::STATUS_OPEN => 'View request',
+                                    default => 'View details',
+                                };
+                                $canBookAgain = $request->booking
+                                    && in_array($bookingStatus, [
+                                        \App\Models\CareBooking::STATUS_COMPLETED,
+                                        \App\Models\CareBooking::STATUS_REVIEWED,
+                                    ], true)
+                                    && $request->booking?->family_confirmed_at;
+                            @endphp
+
+                            <article class="rounded-2xl border border-[#E4DDD3] bg-white p-4 shadow-sm">
+                                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                    <div class="min-w-0">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h3 class="font-display text-xl font-semibold text-[#17313F]">{{ $request->title }}</h3>
+                                            <span class="rounded-full bg-[#F5F1EB] px-3 py-1 text-xs font-semibold text-[#4B5B6B]">{{ $statusLabel }}</span>
+                                        </div>
+                                        <p class="mt-2 text-sm text-[#607080]">{{ $scheduleLabel }} - {{ $request->city }}, {{ $request->state }}</p>
+                                        <p class="mt-1 text-sm text-[#607080]">For {{ $request->recipient?->full_name ?? 'care recipient' }}</p>
+                                        <p class="mt-3 text-sm text-[#324457]">
+                                            <span class="font-semibold">{{ $nextAction['title'] }}</span>
+                                            <span class="text-[#607080]"> - {{ $nextAction['action'] }}</span>
+                                        </p>
+                                    </div>
+
+                                    <div class="flex flex-col gap-2 sm:flex-row lg:flex-col lg:items-stretch">
+                                        <a href="{{ route('family.requests.show', $request->id) }}" wire:navigate class="hc-primary-button w-full lg:w-44">{{ $cardActionLabel }}</a>
+                                        @if ($canBookAgain)
+                                            <a href="{{ route('family.requests.book_again', $request->id) }}" wire:navigate class="hc-secondary-button w-full lg:w-44">Book again</a>
+                                        @endif
+                                    </div>
+                                </div>
+                            </article>
+                        @empty
+                            <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-[#F7F2EA] px-4 py-8 text-center">
+                                <p class="font-display text-xl font-semibold text-[#17313F]">No care yet.</p>
+                                <p class="mx-auto mt-2 max-w-xl text-sm text-[#607080]">Start with a simple request. You can choose the caregiver after replies arrive.</p>
+                                <div class="mt-5">
+                                    <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button">Start care</a>
+                                </div>
+                            </div>
+                        @endforelse
                     </div>
-                </div>
+
+                    <div class="mt-5">{{ $requests->links() }}</div>
+                </x-card>
             </div>
-        </div>
 
-        <div class="grid grid-cols-1 gap-4">
-            @forelse ($requests as $request)
-                @php
-                    $nextAction = \App\Support\CareRequestProgress::bestNextAction($request);
-                @endphp
+            <aside class="space-y-5">
+                <x-card>
+                    <x-slot:header>
+                        <h2 class="font-display text-xl font-semibold">Book the same caregiver again</h2>
+                    </x-slot:header>
 
-                <article class="hc-brand-card space-y-4">
-                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div class="space-y-2">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <h2 class="text-2xl font-display font-semibold text-[#0F172A]">{{ $request->title }}</h2>
-                                <span class="hc-muted-chip">{{ strtoupper((string) $request->status) }}</span>
+                    <div class="space-y-3">
+                        @forelse ($rebookableRequests as $request)
+                            @php
+                                $hired = $request->applications->first();
+                                $caregiverName = trim((string) ($hired?->caregiver?->name ?? ''));
+                                $caregiverFirstName = $caregiverName !== ''
+                                    ? \Illuminate\Support\Str::of($caregiverName)->before(' ')
+                                    : 'caregiver';
+                            @endphp
+                            <div class="rounded-2xl border border-[#E4DDD3] bg-white p-4">
+                                <p class="font-display text-lg font-semibold text-[#17313F]">{{ $hired?->caregiver?->name ?: 'Hired caregiver' }}</p>
+                                <p class="mt-1 text-sm text-[#607080]">{{ $request->title }}</p>
+                                <p class="mt-1 text-xs text-[#7B8794]">{{ optional($request->booking?->scheduled_start_at)->format('M d, Y') ?: 'Recent care' }}</p>
+                                <div class="mt-3">
+                                    <a href="{{ route('family.requests.book_again', $request->id) }}" wire:navigate class="hc-secondary-button w-full">Book {{ $caregiverFirstName }} again</a>
+                                </div>
                             </div>
+                        @empty
+                            <p class="rounded-2xl border border-dashed border-[#D6CCBE] p-4 text-sm text-[#607080]">Trusted caregivers appear here after you schedule or complete a visit.</p>
+                        @endforelse
+                    </div>
+                </x-card>
 
-                            <p class="text-sm text-[#5B6472]">
-                                {{ $request->city }}, {{ $request->state }}
-                                @if ($request->request_type === \App\Models\CareRequest::TYPE_ONE_TIME)
-                                    - {{ optional($request->requested_start_at)->format('M d, Y H:i') }}
-                                @else
-                                    - Recurring
-                                @endif
-                            </p>
-
-                            <p class="text-sm text-[#5B6472]">Recipient: {{ $request->recipient?->full_name ?? 'Not set' }}</p>
-
-                            <p class="text-xs uppercase tracking-[0.14em] text-[#7C5DDC]">
-                                Posted {{ \App\Support\CareRequestProgress::postedAgoLabel($request) }}
-                                - First response {{ \App\Support\CareRequestProgress::firstResponseLabel($request) }}
-                                - First hire {{ \App\Support\CareRequestProgress::firstHireLabel($request) }}
-                            </p>
+                <x-card>
+                    <x-slot:header>
+                        <div class="flex items-center justify-between gap-3">
+                            <h2 class="font-display text-xl font-semibold">Weekly care</h2>
+                            <a href="{{ route('family.care.index') }}" wire:navigate class="hc-link">Manage</a>
                         </div>
+                    </x-slot:header>
 
-                        <div class="grid w-full gap-3 sm:grid-cols-3 lg:w-[420px]">
-                            <div class="hc-metric-card">
-                                <p class="text-[11px] uppercase tracking-[0.14em] text-[#7C5DDC]">Applicants</p>
-                                <p class="mt-2 text-2xl font-display font-semibold text-[#0F3D3E]">{{ $request->applications_count }}</p>
+                    <div class="space-y-3">
+                        @forelse ($carePlans as $plan)
+                            @php
+                                $planStatusLabel = $plan->status === \App\Models\CarePlan::STATUS_PAYMENT_ATTENTION
+                                    ? 'Payment needed'
+                                    : ucfirst(str_replace('_', ' ', (string) $plan->status));
+                            @endphp
+                            <a href="{{ route('family.care.show', $plan->id) }}" wire:navigate class="block rounded-2xl border border-[#E4DDD3] bg-white p-4 transition hover:bg-[#F7F2EA]">
+                                <p class="font-display text-lg font-semibold text-[#17313F]">{{ $plan->title }}</p>
+                                <p class="mt-1 text-sm text-[#607080]">{{ $plan->caregiver?->name ?: 'Caregiver' }}</p>
+                                <p class="mt-2 text-sm font-semibold text-[#4B5B6B]">{{ $planStatusLabel }}</p>
+                            </a>
+                        @empty
+                            <div class="rounded-2xl border border-dashed border-[#D6CCBE] p-4 text-sm text-[#607080]">
+                                No weekly care plan yet. Use "Book again" after an approved visit, then choose weekly care.
                             </div>
-                            <div class="hc-metric-card">
-                                <p class="text-[11px] uppercase tracking-[0.14em] text-[#7C5DDC]">Request type</p>
-                                <p class="mt-2 text-sm font-semibold text-[#0F3D3E]">{{ $request->request_type === \App\Models\CareRequest::TYPE_ONE_TIME ? 'One-time' : 'Recurring' }}</p>
-                            </div>
-                            <div class="hc-metric-card">
-                                <p class="text-[11px] uppercase tracking-[0.14em] text-[#7C5DDC]">Status</p>
-                                <p class="mt-2 text-sm font-semibold text-[#0F3D3E]">{{ ucfirst((string) $request->status) }}</p>
-                            </div>
-                        </div>
+                        @endforelse
                     </div>
-
-                    <div class="rounded-[1.4rem] border border-[#DED6CA] bg-[#FFFCF8] px-4 py-4">
-                        <p class="text-xs uppercase tracking-[0.14em] text-[#7C5DDC]">Best next action</p>
-                        <p class="mt-2 text-lg font-display font-semibold text-[#0F172A]">{{ $nextAction['title'] }}</p>
-                        <p class="mt-1 text-sm text-[#5B6472]">{{ $nextAction['action'] }}</p>
-                    </div>
-
-                    <div class="flex flex-col gap-3 border-t border-[#E6DED3] pt-4 sm:flex-row sm:items-center sm:justify-between">
-                        <p class="text-sm text-[#5B6472]">{{ $request->applications_count }} applicant(s) ready for review</p>
-                        <a href="{{ route('family.requests.show', $request->id) }}" wire:navigate class="hc-primary-button w-full sm:w-auto">
-                            Open request
-                        </a>
-                    </div>
-                </article>
-            @empty
-                <div class="hc-brand-card">
-                    <p class="text-sm text-[#5B6472]">No requests yet. Create your first one to start receiving applications.</p>
-                </div>
-            @endforelse
-        </div>
-
-        <div>{{ $requests->links() }}</div>
+                </x-card>
+            </aside>
+        </section>
     </div>
 </div>

@@ -22,7 +22,7 @@
                 <div>
                     <p class="hc-brand-kicker">Notifications</p>
                     <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Family updates, clearly organized.</h1>
-                    <p class="mt-1 text-sm text-[#E5E7EB]">Invites, applicants, hires, shifts, messages, and billing updates.</p>
+                    <p class="mt-1 text-sm text-[#E5E7EB]">Invites, caregivers, visits, messages, and billing updates.</p>
                 </div>
                 <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-right">
                     <p class="text-[11px] uppercase tracking-[0.14em] text-[#CFC6F7]">Unread</p>

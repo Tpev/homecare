@@ -41,6 +41,36 @@ class CaregiverQualitySetupTest extends TestCase
         $response->assertSee('Intro video');
     }
 
+    public function test_active_caregiver_dashboard_shows_setup_ready_instead_of_partial_count(): void
+    {
+        $caregiver = User::factory()->create([
+            'role' => 'caregiver',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'date_of_birth' => now()->subYears(35)->toDateString(),
+        ]);
+
+        CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'active',
+            'bio' => str_repeat('Experienced caregiver profile. ', 4),
+            'years_experience' => 5,
+            'service_area_zip' => '27601',
+            'service_radius_miles' => 10,
+            'identity_verified_at' => now(),
+            'identity_verification_status' => 'approved',
+        ]);
+
+        $this->actingAs($caregiver)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Profile status')
+            ->assertSee('active')
+            ->assertSee('Setup')
+            ->assertSee('Ready')
+            ->assertDontSee('1/3');
+    }
+
     public function test_caregiver_can_save_task_comfort_preferences(): void
     {
         $skillA = Skill::query()->create(['name' => 'Companionship']);

@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\Family;
 
-use App\Support\MarketplaceEvent;
+use App\Models\CareBooking;
+use App\Models\CareRequest;
 use App\Models\CaregiverProfile;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
+use App\Support\MarketplaceEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Str;
@@ -26,11 +28,16 @@ class FamilyDashboardTest extends TestCase
         $response = $this->actingAs($family)->get('/dashboard');
 
         $response->assertOk();
-        $response->assertSee('Family Dashboard');
-        $response->assertSee('How it works');
-        $response->assertSee('Ready to review');
-        $response->assertSee('Waiting applicants');
-        $response->assertSee('Get started');
+        $response->assertSee('Right now');
+        $response->assertSee('Billing is not ready yet.');
+        $response->assertSee('Next visit');
+        $response->assertSee('Book again');
+        $response->assertDontSee('Care overview');
+        $response->assertDontSee('Your care');
+        $response->assertDontSee('Needs attention');
+        $response->assertDontSee('Needs your attention');
+        $response->assertDontSee('Also needs attention');
+        $response->assertDontSee('What to do now');
     }
 
     public function test_caregiver_user_sees_caregiver_dashboard_sections(): void
@@ -60,9 +67,61 @@ class FamilyDashboardTest extends TestCase
         $response = $this->actingAs($family)->get('/dashboard');
 
         $response->assertOk();
-        $response->assertSee('Top unread updates');
+        $response->assertSee('New updates');
         $response->assertSee('New caregiver application');
-        $response->assertSee('Hire confirmed');
+    }
+
+    public function test_family_dashboard_next_visit_shows_who_is_coming(): void
+    {
+        $family = User::factory()->create([
+            'role' => 'family',
+            'email_verified_at' => now(),
+            'stripe_customer_id' => 'cus_dashboard_next_visit',
+        ]);
+        $caregiver = User::factory()->create([
+            'role' => 'caregiver',
+            'name' => 'Caroline Petrini-Poli',
+        ]);
+        CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'active',
+        ]);
+
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Afternoon companionship visit',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_FILLED,
+            'requested_start_at' => now()->addDay()->setTime(14, 0),
+            'requested_end_at' => now()->addDay()->setTime(16, 0),
+            'city' => 'Durham',
+            'state' => 'NC',
+            'zip' => '27703',
+            'address_line1' => '1520 Home Creek Drive',
+        ]);
+
+        CareBooking::query()->create([
+            'care_request_id' => $request->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+            'scheduled_start_at' => now()->addDay()->setTime(14, 0),
+            'scheduled_end_at' => now()->addDay()->setTime(16, 0),
+        ]);
+
+        $response = $this->actingAs($family)->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertSee('Next visit');
+        $response->assertSee('Right now');
+        $response->assertSee('You have 1 upcoming visit.');
+        $response->assertSee('Caroline Petrini-Poli is coming');
+        $response->assertSee('No action needed right now.');
+        $response->assertSee('Coming');
+        $response->assertSee('Caroline Petrini-Poli');
+        $response->assertDontSee('Needs your attention');
+        $response->assertDontSee('Also needs attention');
+        $response->assertDontSee('What to do now');
     }
 
     public function test_caregiver_dashboard_shows_top_unread_updates_digest(): void

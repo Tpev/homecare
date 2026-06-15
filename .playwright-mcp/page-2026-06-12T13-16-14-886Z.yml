@@ -1,0 +1,42 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - link "LoLo" [ref=e6] [cursor=pointer]:
+      - /url: /
+      - img "LoLo" [ref=e7]
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - heading "Welcome back" [level=1] [ref=e11]
+        - paragraph [ref=e12]: Sign in to continue to your LoLo dashboard.
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - generic [ref=e15]:
+            - generic [ref=e16]: Email
+            - textbox "Email" [active] [ref=e19]
+          - generic [ref=e21]:
+            - generic [ref=e22]: Password
+            - generic [ref=e24]:
+              - textbox "Password" [ref=e25]
+              - button [ref=e28]:
+                - img [ref=e29] [cursor=pointer]
+        - generic [ref=e33]:
+          - checkbox "Remember me" [ref=e34]
+          - generic [ref=e35]: Remember me
+        - generic [ref=e36]:
+          - link "Forgot your password?" [ref=e37] [cursor=pointer]:
+            - /url: http://127.0.0.1:8000/forgot-password
+          - button "Log in" [ref=e38] [cursor=pointer]
+    - generic [ref=e41]:
+      - link "Terms of Service" [ref=e42] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/legal/platform-terms-of-service
+      - link "Privacy Policy" [ref=e43] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/legal/privacy-policy
+      - link "Payments & Cancellation" [ref=e44] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/legal/payment-terms-and-cancellation-policy
+      - link "Caregiver Terms" [ref=e45] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/legal/caregiver-terms
+      - link "Family Terms" [ref=e46] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/legal/client-and-family-terms
+      - link "Safety Policy" [ref=e47] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/legal/acceptable-use-and-safety-policy
+      - link "All Legal Documents" [ref=e48] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000/legal

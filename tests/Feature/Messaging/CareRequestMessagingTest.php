@@ -43,6 +43,21 @@ class CareRequestMessagingTest extends TestCase
         ]);
     }
 
+    public function test_family_chat_shows_request_handoff_for_hire_decision(): void
+    {
+        [$family, $caregiver, $request] = $this->seedRequestContext(CareRequestApplication::STATUS_SHORTLISTED);
+
+        $application = CareRequestApplication::query()->where('care_request_id', $request->id)->firstOrFail();
+        $conversation = CareRequestConversation::findOrCreateForApplication($application, $family->id);
+
+        Livewire::actingAs($family)
+            ->test(Inbox::class, ['conversation' => $conversation->id])
+            ->assertSee('Hire decision')
+            ->assertSee('Chat here, then hire from the request page.')
+            ->assertSee('Open request to hire')
+            ->assertSee(route('family.requests.show', $request->id), false);
+    }
+
     public function test_caregiver_cannot_send_message_when_application_not_shortlisted_or_hired(): void
     {
         [$family, $caregiver, $request] = $this->seedRequestContext(CareRequestApplication::STATUS_APPLIED);

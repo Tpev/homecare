@@ -555,7 +555,6 @@ class CreateCareRequestWizard extends Component
             'tasks_count' => count($this->selectedTasks),
         ]);
 
-        session()->flash('status', 'Care request is live. Caregivers can now apply.');
         $this->redirect(route('family.requests.show', $careRequest->id, false), navigate: true);
     }
 

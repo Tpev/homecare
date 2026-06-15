@@ -90,7 +90,13 @@ class CareRequestInvitationTest extends TestCase
             'expires_at' => now()->addHours(24),
         ]);
 
-        Livewire::actingAs($caregiver)
+        $this->actingAs($caregiver)
+            ->get(route('caregiver.invitations.index'))
+            ->assertOk()
+            ->assertSee(route('caregiver.invitations.accept', $invitation), false)
+            ->assertSee(route('caregiver.invitations.decline', $invitation), false);
+
+        $component = Livewire::actingAs($caregiver)
             ->test(InvitationsIndex::class)
             ->call('accept', $invitation->id);
 
@@ -114,6 +120,24 @@ class CareRequestInvitationTest extends TestCase
             'caregiver_user_id' => $caregiver->id,
             'care_request_application_id' => $application->id,
         ]);
+
+        $component->assertRedirect(route('care-requests.apply', $request->id, false));
+
+        $this->actingAs($caregiver)
+            ->get(route('care-requests.apply', $request->id))
+            ->assertOk()
+            ->assertSee('Waiting for family')
+            ->assertSee('You accepted the invitation.')
+            ->assertSee('No action needed.')
+            ->assertSee('What happens next')
+            ->assertSee('If hired')
+            ->assertSee('Open chat')
+            ->assertSee('Review request details')
+            ->assertSee('Tasks, address, and notes')
+            ->assertSee('Your reply')
+            ->assertDontSee('caregiver-apply-tabs', false)
+            ->assertDontSee('No active visit yet')
+            ->assertDontSee('setActiveTab(\'support\')', false);
     }
 
     public function test_caregiver_can_apply_without_cover_note(): void

@@ -209,7 +209,7 @@ class BookingTrustOpsTest extends TestCase
         ]);
     }
 
-    public function test_family_can_cancel_scheduled_shift_from_shift_view(): void
+    public function test_family_can_cancel_scheduled_shift_from_help_view(): void
     {
         [$family, $caregiver, $request, $application] = $this->seedHireScenario();
 
@@ -225,7 +225,8 @@ class BookingTrustOpsTest extends TestCase
 
         Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $request->id])
-            ->assertSee('Cancel this scheduled shift')
+            ->call('setActiveTab', 'support')
+            ->assertSee('Need to cancel now?')
             ->set('directCancelReason', 'Family needs to cancel because the care recipient has another appointment.')
             ->call('cancelScheduledBooking')
             ->assertHasNoErrors();
@@ -320,7 +321,7 @@ class BookingTrustOpsTest extends TestCase
 
         Livewire::actingAs($caregiver)
             ->test(ApplyToCareRequest::class, ['careRequest' => $request->id])
-            ->assertSee('Tap stars to rate this shift.')
+            ->assertSee('Tap stars to rate this visit.')
             ->set('reviewRating', 5)
             ->set('reviewComment', 'Clear request, smooth shift, and respectful communication.')
             ->call('submitReview');

@@ -12,75 +12,137 @@
                 ->map(fn ($id) => $taskLookup->get($id)['name'] ?? null)
                 ->filter()
                 ->values();
+            $hasMoreDetails = trim($additional_info) !== ''
+                || trim($recipient_care_notes) !== ''
+                || trim($time_expectations) !== ''
+                || trim($home_access_notes) !== ''
+                || $includeThirdPartyContact
+                || trim($third_party_full_name) !== ''
+                || trim($third_party_phone) !== '';
             $dayLabels = collect($dayOptions)
                 ->whereIn('value', $selectedDayIds)
                 ->pluck('label')
                 ->implode(', ');
             $scheduleLine = $this->scheduleSummary;
+            $careRecipientReady = $this->recipientIsRequester || trim($recipient_full_name) !== '';
+            $helpReady = count($selectedTaskIds) > 0;
+            $scheduleReady = $this->estimatedHours !== null && trim($scheduleLine) !== '';
+            $addressReady = trim($address_line1) !== '' && trim($city) !== '' && trim($state) !== '' && trim($zip) !== '';
+            $publishChecklist = [
+                ['label' => 'Person', 'ready' => $careRecipientReady, 'help' => $this->resolvedRecipientName],
+                ['label' => 'Help', 'ready' => $helpReady, 'help' => $selectedTaskNames->implode(', ') ?: 'Choose help'],
+                ['label' => 'Time', 'ready' => $scheduleReady, 'help' => trim($scheduleLine) !== '' ? $scheduleLine : 'Choose day and time'],
+                ['label' => 'Address', 'ready' => $addressReady, 'help' => $addressReady ? trim($city.', '.$state.' '.$zip) : 'Add care address'],
+            ];
+            $readyChecklistCount = collect($publishChecklist)->where('ready', true)->count();
+            $publishChecklistStatus = $readyChecklistCount === 4
+                ? 'All essentials are ready. Review once, then publish.'
+                : $readyChecklistCount.' of 4 essentials ready. Fill the missing pieces, then publish.';
         @endphp
 
-        <section class="hc-brand-panel">
-            <div class="relative grid grid-cols-1 gap-5 lg:grid-cols-5">
-                <div class="lg:col-span-3">
-                    <p class="hc-brand-kicker text-[#E8E0FF]">New care request</p>
-                    <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Tell us what care you need.</h1>
-                    <p class="mt-2 max-w-2xl text-sm text-[#F7F1E8]/82">
-                        A short request is enough to start. LoLo uses your answers to show caregivers the schedule, location, and care needs clearly.
+        <section class="hc-brand-panel p-4 sm:p-5">
+            <div class="relative max-w-3xl">
+                <p class="hc-brand-kicker text-[#E8E0FF]">New care request</p>
+                <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Tell us what care you need.</h1>
+                <p class="mt-2 text-sm leading-6 text-[#F7F1E8]/82">
+                    Start with the person, the help needed, the time, and the address.
+                </p>
+            </div>
+        </section>
+
+        <section class="rounded-2xl border border-[#E4DDD3] bg-[rgba(255,253,250,0.98)] p-3 shadow-sm sm:p-4">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[#7B8794]">Before publishing</p>
+                    <p class="mt-1 text-sm text-[#3C4A5B]">
+                        {{ $publishChecklistStatus }}
                     </p>
                 </div>
-                <div class="grid grid-cols-2 gap-3 lg:col-span-2">
-                    <div class="hc-brand-stat">
-                        <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Type</p>
-                        <p class="mt-1 text-lg font-semibold">{{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring' : 'One-time' }}</p>
-                    </div>
-                    <div class="hc-brand-stat">
-                        <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Tasks</p>
-                        <p class="mt-1 text-lg font-semibold">{{ count($selectedTaskIds) }}</p>
-                    </div>
-                    <div class="col-span-2 hc-brand-stat">
-                        <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Location</p>
-                        <p class="mt-1 text-sm font-semibold">{{ trim($city) !== '' && trim($state) !== '' ? $city.', '.$state : 'Add the care address' }}</p>
-                    </div>
+                <div class="mt-2 flex flex-wrap gap-2 sm:hidden">
+                    @foreach ($publishChecklist as $item)
+                        <span class="rounded-full border px-3 py-1 text-xs font-semibold {{ $item['ready'] ? 'border-[#CFE1D8] bg-[#F2F8F4] text-emerald-800' : 'border-[#E4DDD3] bg-[#FFFCF8] text-[#6E746F]' }}">
+                            {{ $item['label'] }} {{ $item['ready'] ? 'ready' : 'needed' }}
+                        </span>
+                    @endforeach
+                </div>
+                <div class="hidden gap-2 sm:grid sm:grid-cols-2 lg:grid-cols-4 lg:min-w-[38rem]">
+                    @foreach ($publishChecklist as $item)
+                        <div class="rounded-xl border px-3 py-2 {{ $item['ready'] ? 'border-[#CFE1D8] bg-[#F2F8F4]' : 'border-[#E4DDD3] bg-[#FFFCF8]' }}">
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="text-xs font-semibold uppercase tracking-[0.12em] {{ $item['ready'] ? 'text-emerald-700' : 'text-[#7B8794]' }}">{{ $item['label'] }}</p>
+                                <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold {{ $item['ready'] ? 'bg-emerald-100 text-emerald-800' : 'bg-[#F0E9E1] text-[#6E746F]' }}">
+                                    {{ $item['ready'] ? 'Ready' : 'Needed' }}
+                                </span>
+                            </div>
+                            <p class="mt-1 text-sm font-medium leading-5 text-[#17313F]">{{ $item['help'] }}</p>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         </section>
 
         @if ($lastRequestId || $hasSavedHouseholdProfile || $hasSavedRecipientProfile)
-            <section class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                @if ($lastRequestId)
-                    <div class="hc-brand-card flex flex-col justify-between gap-4">
-                        <div>
-                            <p class="text-xs uppercase tracking-[0.14em] text-[#7C5DDC] font-semibold">Recent request</p>
-                            <p class="mt-1 text-sm text-[#3C4A5B]">
-                                Use details from <span class="font-semibold">{{ $lastRequestSummary['title'] ?? 'your last request' }}</span>.
+            <section class="rounded-2xl border border-[#E4DDD3] bg-[rgba(255,253,250,0.98)] px-4 py-3 shadow-sm">
+                <details class="sm:hidden">
+                    <summary class="cursor-pointer list-none font-semibold text-[#17313F] [&::-webkit-details-marker]:hidden">
+                        Use saved information <span class="font-normal text-[#7B8794]">(optional)</span>
+                    </summary>
+                    <div class="mt-3 space-y-3 border-t border-[#EFE6D8] pt-3">
+                        <p class="text-sm text-[#3C4A5B]">
+                            Reuse saved information, then adjust today&apos;s date and time.
+                        </p>
+                        @if ($prefillApplied || $savedProfilesApplied)
+                            <p class="text-xs font-semibold text-[#0F3D3E]">
+                                {{ $prefillApplied ? 'Last request loaded.' : 'Saved details loaded.' }} Check the schedule before publishing.
                             </p>
-                            @if ($prefillApplied)
-                                <p class="mt-1 text-xs text-[#0F3D3E]">Loaded. Check the schedule before publishing.</p>
+                        @endif
+                        <div class="grid grid-cols-1 gap-2">
+                            @if ($lastRequestId)
+                                <button type="button" wire:click="prefillFromLastRequest" class="hc-secondary-button w-full">
+                                    Use last request
+                                </button>
                             @endif
-                        </div>
-                        <button type="button" wire:click="prefillFromLastRequest" class="hc-secondary-button w-full sm:w-auto">Use last request</button>
-                    </div>
-                @endif
 
-                @if ($hasSavedHouseholdProfile || $hasSavedRecipientProfile)
-                    <div class="hc-brand-card flex flex-col justify-between gap-4">
-                        <div>
-                            <p class="text-xs uppercase tracking-[0.14em] text-[#0F3D3E] font-semibold">Saved family details</p>
-                            <p class="mt-1 text-sm text-[#3C4A5B]">
-                                Fill in the care address and recipient details you saved before.
-                            </p>
-                            @if ($savedProfilesApplied)
-                                <p class="mt-1 text-xs text-[#0F3D3E]">Saved details loaded.</p>
+                            @if ($hasSavedHouseholdProfile || $hasSavedRecipientProfile)
+                                <button type="button" wire:click="applySavedProfiles" class="hc-secondary-button w-full">
+                                    Use saved details
+                                </button>
                             @endif
                         </div>
-                        <button type="button" wire:click="applySavedProfiles" class="hc-secondary-button w-full sm:w-auto">Use saved details</button>
                     </div>
-                @endif
+                </details>
+
+                <div class="hidden flex-col gap-3 sm:flex lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[#7B8794]">Save time</p>
+                        <p class="mt-1 text-sm text-[#3C4A5B]">
+                            Reuse saved information, then adjust today&apos;s date and time.
+                        </p>
+                        @if ($prefillApplied || $savedProfilesApplied)
+                            <p class="mt-1 text-xs font-semibold text-[#0F3D3E]">
+                                {{ $prefillApplied ? 'Last request loaded.' : 'Saved details loaded.' }} Check the schedule before publishing.
+                            </p>
+                        @endif
+                    </div>
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:shrink-0">
+                        @if ($lastRequestId)
+                            <button type="button" wire:click="prefillFromLastRequest" class="hc-secondary-button w-full lg:w-auto">
+                                Use last request
+                            </button>
+                        @endif
+
+                        @if ($hasSavedHouseholdProfile || $hasSavedRecipientProfile)
+                            <button type="button" wire:click="applySavedProfiles" class="hc-secondary-button w-full lg:w-auto">
+                                Use saved details
+                            </button>
+                        @endif
+                    </div>
+                </div>
             </section>
         @endif
 
-        <section class="grid grid-cols-1 gap-5 xl:grid-cols-12">
-            <form wire:submit="publish" class="space-y-5 xl:col-span-8">
+        <section class="mx-auto max-w-5xl">
+            <form wire:submit="publish" class="space-y-5">
                 <x-card>
                     <x-slot:header>
                         <div>
@@ -136,14 +198,82 @@
                             @error('selectedTasks.*') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
 
-                        <div>
-                            <x-textarea
-                                label="Anything important the caregiver should know?"
-                                wire:model="additional_info"
-                                placeholder="Example: Mom likes a quiet morning routine and needs help with lunch."
-                            />
-                            @error('additional_info') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
+                        <details class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3" {{ $hasMoreDetails ? 'open' : '' }}>
+                            <summary class="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                                <div class="flex items-center justify-between gap-3">
+                                    <div>
+                                        <p class="font-display text-base font-semibold text-[#17313F]">More details if you want</p>
+                                        <p class="mt-1 text-sm text-[#607080]">Skip this unless it helps the caregiver arrive prepared.</p>
+                                    </div>
+                                    <span class="rounded-full bg-[#F5F1EB] px-3 py-1 text-xs font-semibold text-[#607080]">Optional</span>
+                                </div>
+                            </summary>
+
+                            <div class="mt-4 space-y-4 border-t border-[#EFE6D8] pt-4">
+                                <x-textarea
+                                    label="Anything important for the caregiver?"
+                                    wire:model="additional_info"
+                                    placeholder="Example: Mom likes a quiet morning routine and needs help with lunch."
+                                />
+                                @error('additional_info') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <div>
+                                        <x-textarea
+                                            label="Care notes"
+                                            wire:model="recipient_care_notes"
+                                            placeholder="Example: Needs reminders to drink water."
+                                        />
+                                        @error('recipient_care_notes') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+                                    <div>
+                                        <x-textarea
+                                            label="Home access"
+                                            wire:model="home_access_notes"
+                                            placeholder="Example: Use side door. Small dog at home."
+                                        />
+                                        @error('home_access_notes') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+                                </div>
+
+                                <x-input
+                                    label="Timing note"
+                                    wire:model="time_expectations"
+                                    placeholder="Example: Please arrive right at 9:00 AM."
+                                />
+                                @error('time_expectations') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+
+                                <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-[#E4DDD3] bg-white p-3">
+                                    <input type="checkbox" class="mt-1 rounded border-[#B7ADA0] text-[#0F3D3E] focus:ring-[#0F3D3E]" wire:model.live="includeThirdPartyContact">
+                                    <span>
+                                        <span class="block font-semibold text-[#17313F]">Add another contact</span>
+                                        <span class="mt-1 block text-sm text-[#607080]">Use this if a family member or helper should also be reachable.</span>
+                                    </span>
+                                </label>
+                                @error('includeThirdPartyContact') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+
+                                @if ($includeThirdPartyContact)
+                                    <div class="grid grid-cols-1 gap-4 rounded-xl border border-[#E4DDD3] bg-white p-4 md:grid-cols-2">
+                                        <div>
+                                            <x-input label="Contact name" wire:model="third_party_full_name" />
+                                            @error('third_party_full_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                        </div>
+                                        <div>
+                                            <x-input label="Relationship" wire:model="third_party_relationship_to_recipient" placeholder="Son, daughter, neighbor" />
+                                            @error('third_party_relationship_to_recipient') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                        </div>
+                                        <div>
+                                            <x-input label="Phone" wire:model="third_party_phone" />
+                                            @error('third_party_phone') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                        </div>
+                                        <div>
+                                            <x-input label="Email (optional)" wire:model="third_party_email" />
+                                            @error('third_party_email') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </details>
                     </div>
                 </x-card>
 
@@ -271,6 +401,61 @@
                         </div>
                     </div>
 
+                </x-card>
+
+                <x-card>
+                    <x-slot:header>
+                        <div>
+                            <h2 class="font-display text-lg font-semibold">Review and publish</h2>
+                            <p class="text-sm text-[#607080]">Check the essentials before caregivers see the request.</p>
+                        </div>
+                    </x-slot:header>
+
+                    <div class="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
+                        <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
+                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">For</p>
+                            <p class="mt-1 font-semibold text-[#17313F]">{{ $this->resolvedRecipientName }}</p>
+                            <p class="text-[#607080]">{{ $this->resolvedRecipientRelationship }}</p>
+                        </div>
+                        <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
+                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Help</p>
+                            <p class="mt-1 font-semibold text-[#17313F]">{{ $selectedTaskNames->implode(', ') ?: 'Choose at least one service' }}</p>
+                        </div>
+                        <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
+                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Schedule</p>
+                            <p class="mt-1 font-semibold text-[#17313F]">{{ trim($scheduleLine) !== '' ? $scheduleLine : 'Schedule not set' }}</p>
+                        </div>
+                        <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
+                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Address</p>
+                            <p class="mt-1 font-semibold text-[#17313F]">
+                                {{ trim($address_line1) !== '' ? $address_line1 : 'Street address' }}
+                            </p>
+                            <p class="text-[#607080]">{{ trim($city.', '.$state.' '.$zip) !== ',' ? trim($city.', '.$state.' '.$zip) : 'City, state, ZIP' }}</p>
+                        </div>
+                        <div class="rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4 md:col-span-2">
+                            <p class="text-xs uppercase tracking-[0.12em] text-[#0F7A55]">
+                                {{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated weekly cost' : 'Estimated one-time cost' }}
+                            </p>
+                            @if ($this->estimatedCost !== null && $this->estimatedHours !== null)
+                                <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                                    <p class="text-sm text-[#3C4A5B]">
+                                        <span class="font-semibold">{{ number_format($this->estimatedHours, 2) }}h</span>
+                                        x
+                                        <span class="font-semibold">${{ number_format($this->estimateHourlyRate, 2) }}/hr</span>
+                                    </p>
+                                    <p class="font-display text-3xl font-semibold text-[#0F3D3E]">
+                                        ${{ number_format($this->estimatedCost, 2) }}
+                                        @if ($request_type === \App\Models\CareRequest::TYPE_RECURRING)
+                                            <span class="text-base font-sans font-medium">/week</span>
+                                        @endif
+                                    </p>
+                                </div>
+                            @else
+                                <p class="mt-2 text-sm text-[#607080]">Add the schedule to see the estimate.</p>
+                            @endif
+                        </div>
+                    </div>
+
                     <x-slot:footer>
                         <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <a href="{{ route('family.requests.index') }}" wire:navigate class="hc-secondary-button w-full sm:w-auto">Cancel</a>
@@ -281,67 +466,6 @@
                     </x-slot:footer>
                 </x-card>
             </form>
-
-            <aside class="space-y-5 xl:col-span-4">
-                <x-card>
-                    <x-slot:header>
-                        <h2 class="font-display text-lg font-semibold">Request summary</h2>
-                    </x-slot:header>
-
-                    <div class="space-y-4 text-sm">
-                        <div>
-                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Title</p>
-                            <p class="mt-1 font-semibold text-[#17313F]">{{ $this->resolvedTitle }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">For</p>
-                            <p class="mt-1 font-semibold text-[#17313F]">{{ $this->resolvedRecipientName }}</p>
-                            <p class="text-[#607080]">{{ $this->resolvedRecipientRelationship }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Schedule</p>
-                            <p class="mt-1 font-semibold text-[#17313F]">{{ trim($scheduleLine) !== '' ? $scheduleLine : 'Schedule not set' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Services</p>
-                            <p class="mt-1 font-semibold text-[#17313F]">{{ $selectedTaskNames->implode(', ') ?: 'Choose at least one' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Address</p>
-                            <p class="mt-1 font-semibold text-[#17313F]">
-                                {{ trim($address_line1) !== '' ? $address_line1 : 'Street address' }}
-                            </p>
-                            <p class="text-[#607080]">{{ trim($city.', '.$state.' '.$zip) !== ',' ? trim($city.', '.$state.' '.$zip) : 'City, state, ZIP' }}</p>
-                        </div>
-                    </div>
-                </x-card>
-
-                <x-card>
-                    <x-slot:header>
-                        <h2 class="font-display text-lg font-semibold">
-                            {{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated weekly cost' : 'Estimated one-time cost' }}
-                        </h2>
-                    </x-slot:header>
-
-                    @if ($this->estimatedCost !== null && $this->estimatedHours !== null)
-                        <div class="space-y-2 text-sm text-[#3C4A5B]">
-                            <p>
-                                <span class="font-semibold">{{ number_format($this->estimatedHours, 2) }}h</span>
-                                x
-                                <span class="font-semibold">${{ number_format($this->estimateHourlyRate, 2) }}/hr</span>
-                            </p>
-                            <p class="font-display text-3xl font-semibold text-[#0F3D3E]">
-                                ${{ number_format($this->estimatedCost, 2) }}
-                                @if ($request_type === \App\Models\CareRequest::TYPE_RECURRING)
-                                    <span class="text-base font-sans font-medium">/week</span>
-                                @endif
-                            </p>
-                        </div>
-                    @else
-                        <p class="text-sm text-[#607080]">Add the schedule to see the estimate.</p>
-                    @endif
-                </x-card>
-            </aside>
         </section>
     </div>
 </div>

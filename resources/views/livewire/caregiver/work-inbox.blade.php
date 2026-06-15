@@ -1,4 +1,4 @@
-﻿<div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
+<div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -17,8 +17,38 @@
             'info' => 'bg-[#E8F0FF] text-[#4F6FAF]',
             'neutral' => 'bg-[#F0E9E1] text-[#4B5B6B]',
         ];
-        $visibleShiftValue = collect($items)->sum(fn ($item) => (float) data_get($item, 'compensation.total', 0));
+        $needsResponseCount = (int) ($counts['needs_response'] ?? 0);
+        $newRequestCount = (int) ($counts['new_requests'] ?? $counts['recommended'] ?? 0);
+        $appliedCount = (int) ($counts['applied'] ?? 0);
+        $hiredCount = (int) ($counts['hired'] ?? 0);
         $responsiveValue = collect($items)->where('scope', 'needs_response')->sum(fn ($item) => (float) data_get($item, 'compensation.total', 0));
+        $workInboxTitle = 'No action needed right now.';
+        $workInboxBody = 'You can browse new requests or check your upcoming visits when you are ready.';
+        $workInboxMeta = 'New requests and visits will appear below.';
+
+        if ($needsResponseCount > 0) {
+            $workInboxTitle = $needsResponseCount === 1
+                ? 'You have 1 request to answer.'
+                : 'You have '.$needsResponseCount.' requests to answer.';
+            $workInboxBody = 'Start with invitations and time-sensitive requests that need a yes or no.';
+            $workInboxMeta = $responsiveValue > 0
+                ? '$'.number_format($responsiveValue, 2).' in requests waiting for your response.'
+                : 'Requests waiting for your response are shown first.';
+        } elseif ($hiredCount > 0) {
+            $workInboxTitle = $hiredCount === 1
+                ? 'You have 1 hired visit.'
+                : 'You have '.$hiredCount.' hired visits.';
+            $workInboxBody = 'Open your visits to check schedule, address, check-in, and visit tools.';
+            $workInboxMeta = 'Nothing needs an answer before you work.';
+        } elseif ($appliedCount > 0) {
+            $workInboxTitle = 'Waiting for families to choose.';
+            $workInboxBody = 'Your sent applications are below. Open one if you need to review or chat.';
+            $workInboxMeta = $appliedCount === 1 ? '1 application is waiting.' : $appliedCount.' applications are waiting.';
+        } elseif ($newRequestCount > 0) {
+            $workInboxTitle = 'New requests are available.';
+            $workInboxBody = 'Review the requests below and apply only to the visits that fit your schedule.';
+            $workInboxMeta = $newRequestCount === 1 ? '1 new request to review.' : $newRequestCount.' new requests to review.';
+        }
 
         $primaryActionClasses = 'inline-flex h-11 w-full items-center justify-center rounded-[1rem] bg-[#0F3D3E] px-4 text-sm font-semibold text-[#FAF9F7] shadow-sm transition hover:bg-[#123f40] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF]/30 sm:w-auto';
         $successActionClasses = 'inline-flex h-11 w-full items-center justify-center rounded-[1rem] bg-[#4F6FAF] px-4 text-sm font-semibold text-[#FAF9F7] shadow-sm transition hover:bg-[#44639f] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF]/30 sm:w-auto';
@@ -27,64 +57,23 @@
     @endphp
 
     <section class="hc-brand-panel p-4 sm:p-5">
-        <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#7C5DDC]/20 blur-2xl"></div>
-        <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-[#4F6FAF]/20 blur-2xl"></div>
-
-        <div class="relative space-y-4">
-            <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
-                <div>
-                    <p class="hc-brand-kicker text-[#E8E0FF]">Caregiver Work Inbox</p>
-                    <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Stay on top of new opportunities.</h1>
-                    <p class="mt-1 text-sm text-[#F7F1E8]/82">Offers, applications, hired shifts, and recaps in one place.</p>
-                </div>
-                <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                    <a href="{{ route('caregiver.shifts.index') }}" wire:navigate>
-                        <x-button color="white" light class="w-full sm:w-auto" sm>My shifts</x-button>
-                    </a>
-                    <a href="{{ route('caregiver.earnings.index') }}" wire:navigate>
-                        <x-button color="white" light class="w-full sm:w-auto" sm>Earnings</x-button>
-                    </a>
+        <div class="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div class="max-w-3xl">
+                <p class="hc-brand-kicker text-[#E8E0FF]">Caregiver Work Inbox</p>
+                <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">{{ $workInboxTitle }}</h1>
+                <p class="mt-2 text-sm leading-6 text-[#F7F1E8]/82">{{ $workInboxBody }}</p>
+                <div class="mt-4 rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
+                    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[#D7DEE6]">Right now</p>
+                    <p class="mt-1 text-sm font-medium text-white">{{ $workInboxMeta }}</p>
                 </div>
             </div>
-
-            <div class="grid grid-cols-2 gap-2 lg:grid-cols-6">
-                <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#D7DEE6]">Needs response</p>
-                    <p class="mt-1 text-lg font-semibold">{{ $counts['needs_response'] ?? 0 }}</p>
-                </div>
-                <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#D7DEE6]">New requests</p>
-                    <p class="mt-1 text-lg font-semibold">{{ $counts['new_requests'] ?? $counts['recommended'] ?? 0 }}</p>
-                </div>
-                <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#D7DEE6]">Applied</p>
-                    <p class="mt-1 text-lg font-semibold">{{ $counts['applied'] ?? 0 }}</p>
-                </div>
-                <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#D7DEE6]">Hired</p>
-                    <p class="mt-1 text-lg font-semibold">{{ $counts['hired'] ?? 0 }}</p>
-                </div>
-                <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#D7DEE6]">Completed</p>
-                    <p class="mt-1 text-lg font-semibold">{{ $counts['completed'] ?? 0 }}</p>
-                </div>
-                <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#D7DEE6]">Total</p>
-                    <p class="mt-1 text-lg font-semibold">{{ $counts['all'] ?? 0 }}</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
-                <div class="rounded-[1.4rem] border border-[#BFD6CE] bg-[rgba(255,255,255,0.08)] px-4 py-3">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-emerald-100">Visible shift value</p>
-                    <p class="mt-1 text-2xl font-display font-semibold text-white">${{ number_format($visibleShiftValue, 2) }}</p>
-                    <p class="text-xs text-emerald-100/90">Estimated total from jobs currently on this screen.</p>
-                </div>
-                <div class="rounded-[1.4rem] border border-[#D3CBF0] bg-[rgba(255,255,255,0.08)] px-4 py-3">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-[#CFC6F7]">Ready-to-respond value</p>
-                    <p class="mt-1 text-2xl font-display font-semibold text-white">${{ number_format($responsiveValue, 2) }}</p>
-                    <p class="text-xs text-[#CFC6F7]/90">Fast opportunities waiting for your response.</p>
-                </div>
+            <div class="hidden shrink-0 flex-col gap-2 sm:flex sm:flex-row lg:justify-end">
+                <a href="{{ route('caregiver.shifts.index') }}" wire:navigate>
+                    <x-button color="white" light class="w-full sm:w-auto" sm>My visits</x-button>
+                </a>
+                <a href="{{ route('caregiver.earnings.index') }}" wire:navigate>
+                    <x-button color="white" light class="w-full sm:w-auto" sm>Earnings</x-button>
+                </a>
             </div>
         </div>
     </section>
@@ -92,19 +81,27 @@
     <div class="sticky top-16 z-20 -mx-1 px-1">
         <div class="grid grid-cols-1 gap-2 rounded-2xl border border-[#E4DDD3] bg-white/95 p-2 shadow-sm backdrop-blur lg:grid-cols-4">
             <div class="overflow-x-auto lg:col-span-3">
-                <div class="grid min-w-full grid-cols-2 gap-1 sm:flex sm:min-w-max lg:min-w-0 lg:grid lg:grid-cols-6 lg:gap-1">
+                <div class="flex min-w-max gap-1 lg:min-w-0 lg:grid lg:grid-cols-6 lg:gap-1">
                 @foreach ($scopeOptions as $option)
+                    @php
+                        $scopeCount = (int) ($counts[$option['value']] ?? 0);
+                    @endphp
                     <button
                         type="button"
                         wire:click="$set('scope', '{{ $option['value'] }}')"
-                            class="h-11 rounded-xl px-3 text-sm font-medium transition {{ $scope === $option['value'] ? 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm' : 'text-[#6E746F] hover:bg-[#F5F1EB] hover:text-[#0F3D3E]' }}"
+                            class="flex h-11 min-w-[8.5rem] items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium transition lg:min-w-0 {{ $scope === $option['value'] ? 'bg-[#0F3D3E] text-[#FAF9F7] shadow-sm' : 'text-[#6E746F] hover:bg-[#F5F1EB] hover:text-[#0F3D3E]' }}"
                     >
-                        {{ $option['label'] }}
+                        <span class="whitespace-nowrap">{{ $option['label'] }}</span>
+                        @if ($scopeCount > 0)
+                            <span class="inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold {{ $scope === $option['value'] ? 'bg-white/18 text-white' : 'bg-[#F0E9E1] text-[#4B5B6B]' }}">
+                                {{ $scopeCount }}
+                            </span>
+                        @endif
                     </button>
                 @endforeach
                 </div>
             </div>
-            <div class="rounded-[1rem] border border-[#DED6CA] bg-[rgba(255,253,250,0.96)] p-2">
+            <div class="hidden rounded-[1rem] border border-[#DED6CA] bg-[rgba(255,253,250,0.96)] p-2 sm:block">
                 <label for="work-inbox-sort" class="sr-only">Sort inbox</label>
                 <select
                     id="work-inbox-sort"
@@ -169,20 +166,33 @@
                                         ? route('caregiver.invitations.accept', $primaryId)
                                         : '#';
                                 @endphp
-                                <form
-                                    method="POST"
-                                    action="{{ $primaryFallbackRoute }}"
-                                    class="w-full sm:w-auto"
-                                >
-                                    @csrf
+                                @if ($primaryFallbackRoute !== '#')
+                                    <form
+                                        method="POST"
+                                        action="{{ $primaryFallbackRoute }}"
+                                        class="w-full sm:w-auto"
+                                    >
+                                        @csrf
+                                        <button
+                                            type="submit"
+                                            class="{{ $primaryMethod === 'acceptInvitation' ? $successActionClasses : $primaryActionClasses }}"
+                                            aria-label="{{ $item['primary_action']['label'] }}"
+                                        >
+                                            {{ $item['primary_action']['label'] }}
+                                        </button>
+                                    </form>
+                                @else
                                     <button
-                                        type="submit"
-                                        class="{{ $primaryMethod === 'acceptInvitation' ? $successActionClasses : $primaryActionClasses }}"
+                                        type="button"
+                                        wire:click="{{ $primaryMethod }}({{ $primaryId }})"
+                                        wire:loading.attr="disabled"
+                                        wire:target="{{ $primaryMethod }}"
+                                        class="{{ $primaryActionClasses }}"
                                         aria-label="{{ $item['primary_action']['label'] }}"
                                     >
                                         {{ $item['primary_action']['label'] }}
                                     </button>
-                                </form>
+                                @endif
                             @elseif (($item['primary_action']['kind'] ?? null) === 'link')
                                 <a href="{{ $item['primary_action']['href'] }}" wire:navigate class="{{ $primaryActionClasses }}" aria-label="{{ $item['primary_action']['label'] }}">
                                     {{ $item['primary_action']['label'] }}
@@ -198,20 +208,33 @@
                                             ? route('caregiver.invitations.decline', $secondaryId)
                                             : '#';
                                     @endphp
-                                    <form
-                                        method="POST"
-                                        action="{{ $secondaryFallbackRoute }}"
-                                        class="w-full sm:w-auto"
-                                    >
-                                        @csrf
+                                    @if ($secondaryFallbackRoute !== '#')
+                                        <form
+                                            method="POST"
+                                            action="{{ $secondaryFallbackRoute }}"
+                                            class="w-full sm:w-auto"
+                                        >
+                                            @csrf
+                                            <button
+                                                type="submit"
+                                                class="{{ $secondaryMethod === 'declineInvitation' ? $dangerActionClasses : $secondaryActionClasses }}"
+                                                aria-label="{{ $item['secondary_action']['label'] }}"
+                                            >
+                                                {{ $item['secondary_action']['label'] }}
+                                            </button>
+                                        </form>
+                                    @else
                                         <button
-                                            type="submit"
-                                            class="{{ $secondaryMethod === 'declineInvitation' ? $dangerActionClasses : $secondaryActionClasses }}"
+                                            type="button"
+                                            wire:click="{{ $secondaryMethod }}({{ $secondaryId }})"
+                                            wire:loading.attr="disabled"
+                                            wire:target="{{ $secondaryMethod }}"
+                                            class="{{ $secondaryActionClasses }}"
                                             aria-label="{{ $item['secondary_action']['label'] }}"
                                         >
                                             {{ $item['secondary_action']['label'] }}
                                         </button>
-                                    </form>
+                                    @endif
                                 @elseif (($item['secondary_action']['kind'] ?? null) === 'link')
                                     <a href="{{ $item['secondary_action']['href'] }}" wire:navigate class="{{ $secondaryActionClasses }}" aria-label="{{ $item['secondary_action']['label'] }}">
                                         {{ $item['secondary_action']['label'] }}
@@ -230,7 +253,7 @@
                                 </p>
                                 <div class="mt-3 space-y-1 text-sm">
                                     <p class="text-[#E7ECF1]">
-                                        {{ data_get($item, 'compensation.hours_label') }}h shift
+                                        {{ data_get($item, 'compensation.hours_label') }}h visit
                                     </p>
                                     <p class="text-[#E7ECF1]">
                                         @ ${{ number_format((float) data_get($item, 'compensation.hourly_rate', 0), 2) }}/hr
