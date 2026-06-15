@@ -194,12 +194,8 @@ class GoogleSheetsLeadWebhookController extends Controller
         $status = $this->firstValue($normalizedRow, ['crm_stage', 'stage', 'status']);
         $status = $status && array_key_exists($status, $stageOptions) ? $status : 'new';
 
-        $facebookLeadId = $this->firstValue($normalizedRow, [
-            'facebook_lead_id',
-            'fb_lead_id',
-            'leadgen_id',
-            'meta_lead_id',
-        ]);
+        $facebookLeadId = $this->facebookLeadId($normalizedRow);
+        $isFacebookLead = filled($facebookLeadId) || $this->isFacebookExportRow($normalizedRow);
 
         $source = $this->normalizeSource($this->firstValue($normalizedRow, [
             'crm_source',
@@ -207,7 +203,7 @@ class GoogleSheetsLeadWebhookController extends Controller
             'source',
             'utm_source',
             'platform',
-        ]) ?: ($facebookLeadId ? 'facebook_lead_ad' : 'google_sheet'));
+        ]) ?: ($isFacebookLead ? 'facebook_lead_ad' : 'google_sheet'));
 
         $spreadsheetId = $this->stringValue(Arr::get($payload, 'spreadsheet_id'));
         $sheetName = $this->stringValue(Arr::get($payload, 'sheet_name'));
@@ -227,6 +223,7 @@ class GoogleSheetsLeadWebhookController extends Controller
             'comments',
             'description',
             'what_kind_of_care_do_you_need',
+            '1_what_kind_of_help_is_needed',
         ]);
 
         $data = [
@@ -246,8 +243,13 @@ class GoogleSheetsLeadWebhookController extends Controller
         if ($facebookLeadId) {
             $data['facebook'] = [
                 'lead_id' => $facebookLeadId,
+                'ad_id' => $this->firstValue($normalizedRow, ['ad_id']),
+                'adset_id' => $this->firstValue($normalizedRow, ['adset_id']),
+                'campaign_id' => $this->firstValue($normalizedRow, ['campaign_id']),
+                'form_id' => $this->firstValue($normalizedRow, ['form_id']),
                 'campaign' => $this->firstValue($normalizedRow, ['campaign', 'campaign_name', 'utm_campaign']),
                 'ad' => $this->firstValue($normalizedRow, ['ad', 'ad_name']),
+                'adset' => $this->firstValue($normalizedRow, ['adset', 'adset_name']),
                 'form' => $this->firstValue($normalizedRow, ['form', 'form_name']),
             ];
         }
@@ -257,7 +259,7 @@ class GoogleSheetsLeadWebhookController extends Controller
             'status' => $status,
             'name' => $this->firstValue($normalizedRow, ['full_name', 'name', 'contact_name', 'customer_name', 'person_name']),
             'email' => $this->firstValue($normalizedRow, ['email', 'email_address', 'contact_email']),
-            'phone' => $this->firstValue($normalizedRow, ['phone', 'phone_number', 'mobile', 'cell', 'contact_phone']),
+            'phone' => $this->cleanPhone($this->firstValue($normalizedRow, ['phone', 'phone_number', 'mobile', 'cell', 'contact_phone'])),
             'company' => $this->firstValue($normalizedRow, ['company', 'organization', 'facility', 'practice']),
             'location' => $this->location($normalizedRow),
             'zip' => $this->firstValue($normalizedRow, ['zip', 'zipcode', 'zip_code', 'postal_code', 'postcode']),
@@ -390,7 +392,10 @@ class GoogleSheetsLeadWebhookController extends Controller
             ->trim('_')
             ->toString();
 
-        return $value !== '' ? $value : 'google_sheet';
+        return match ((string) $value) {
+            'fb', 'facebook', 'meta' => 'facebook_lead_ad',
+            default => $value !== '' ? $value : 'google_sheet',
+        };
     }
 
     /**
@@ -434,6 +439,11 @@ class GoogleSheetsLeadWebhookController extends Controller
             return $location;
         }
 
+        $facebookCareLocation = $this->firstValue($row, ['4_where_is_care_needed']);
+        if ($facebookCareLocation) {
+            return $facebookCareLocation;
+        }
+
         $address = $this->firstValue($row, ['address', 'street_address']);
         $city = $this->firstValue($row, ['city', 'town']);
         $state = $this->firstValue($row, ['state', 'province']);
@@ -468,5 +478,46 @@ class GoogleSheetsLeadWebhookController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function facebookLeadId(array $row): ?string
+    {
+        $explicit = $this->firstValue($row, [
+            'facebook_lead_id',
+            'fb_lead_id',
+            'leadgen_id',
+            'meta_lead_id',
+        ]);
+
+        if ($explicit) {
+            return $explicit;
+        }
+
+        $genericId = $this->firstValue($row, ['id']);
+
+        return $genericId && $this->isFacebookExportRow($row) ? $genericId : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function isFacebookExportRow(array $row): bool
+    {
+        $platform = Str::of((string) $this->firstValue($row, ['platform']))->lower()->toString();
+
+        return in_array($platform, ['fb', 'facebook', 'meta'], true)
+            || filled($this->firstValue($row, ['form_id', 'campaign_id', 'ad_id', 'adset_id']));
+    }
+
+    private function cleanPhone(?string $phone): ?string
+    {
+        if (! filled($phone)) {
+            return null;
+        }
+
+        return Str::of($phone)->replaceMatches('/^p:/i', '')->trim()->toString();
     }
 }

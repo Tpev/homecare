@@ -118,6 +118,55 @@ class GoogleSheetsLeadWebhookTest extends TestCase
         ]);
     }
 
+    public function test_google_sheets_lead_webhook_maps_facebook_export_columns(): void
+    {
+        config()->set('services.google_sheets_leads.webhook_secret', 'sheet-secret');
+
+        $payload = [
+            'spreadsheet_id' => 'sheet_123',
+            'sheet_name' => 'Facebook Leads',
+            'row_number' => 14,
+            'import_key' => 'row-14',
+            'row' => [
+                'id' => 'l:1016701897485241',
+                'created_time' => '2026-06-08T17:39:32-05:00',
+                'ad_id' => 'ag:120246312371920597',
+                'ad_name' => 'New Leads Ad',
+                'adset_id' => 'as:120246312371910597',
+                'adset_name' => 'New Leads Ad Set',
+                'campaign_id' => 'c:120246312371930597',
+                'campaign_name' => 'New Leads Campaign',
+                'form_id' => 'f:1293671349640626',
+                'form_name' => 'First form-copy-copy',
+                'platform' => 'fb',
+                '1._what_kind_of_help_is_needed?' => 'companionship_or_check-ins',
+                '2._when_would_you_like_help_to_start?' => 'planning_ahead',
+                '3._when_is_the_best_time_to_reach_you?' => 'tomorrow',
+                '4._where_is_care_needed?' => 'Momâ€™s apartment',
+                'email' => 'crmnflwr@aim.com',
+                'full_name' => "Luna's MeeMee",
+                'phone_number' => 'p:+19198510230',
+            ],
+        ];
+
+        $this->postJson(route('webhooks.google-sheets.leads'), $payload, $this->signatureHeaders($payload))
+            ->assertOk()
+            ->assertJson([
+                'ok' => true,
+                'created' => true,
+            ]);
+
+        $lead = Lead::query()->sole();
+
+        $this->assertSame("Luna's MeeMee", $lead->name);
+        $this->assertSame('+19198510230', $lead->phone);
+        $this->assertSame('Momâ€™s apartment', $lead->location);
+        $this->assertSame('facebook_lead_ad', $lead->source);
+        $this->assertSame('New Leads Campaign', $lead->source_detail);
+        $this->assertSame('l:1016701897485241', data_get($lead->data, 'facebook.lead_id'));
+        $this->assertSame('companionship_or_check-ins', data_get($lead->data, 'notes'));
+    }
+
     /**
      * @param  array<string, mixed>  $payload
      * @return array<string, string>

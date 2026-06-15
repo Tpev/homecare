@@ -67,7 +67,11 @@ function syncAllUnsyncedRows() {
   for (let rowNumber = 2; rowNumber <= lastRow; rowNumber++) {
     const syncedAt = sheet.getRange(rowNumber, syncedAtIndex).getValue();
     if (!syncedAt) {
-      syncRow_(sheet, rowNumber);
+      try {
+        syncRow_(sheet, rowNumber);
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
 }
@@ -163,7 +167,7 @@ function getHeaders_(sheet) {
 }
 
 function hmacSha256Hex_(value, secret) {
-  const signature = Utilities.computeHmacSha256Signature(value, secret);
+  const signature = Utilities.computeHmacSha256Signature(value, secret, Utilities.Charset.UTF_8);
   let hex = '';
 
   for (let i = 0; i < signature.length; i++) {
