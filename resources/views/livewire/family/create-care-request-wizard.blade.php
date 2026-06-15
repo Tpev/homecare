@@ -299,11 +299,11 @@
                         @if ($request_type === \App\Models\CareRequest::TYPE_ONE_TIME)
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                 <div>
-                                    <x-input type="date" label="Starting day" min="{{ $this->minimumStartDate }}" wire:model.live="requested_start_date" />
+                                    <x-input type="date" label="Starting day" min="{{ $this->minimumStartDate }}" wire:model.change="requested_start_date" />
                                     @error('requested_start_date') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
-                                    <x-input type="time" label="Starting time" wire:model.live="requested_start_time" />
+                                    <x-input type="time" label="Starting time" wire:model.change="requested_start_time" />
                                     @error('requested_start_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                     @error('requested_start_at') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
@@ -337,11 +337,11 @@
 
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <div>
-                                        <x-input type="date" label="Starting day" min="{{ $this->minimumStartDate }}" wire:model.live="recurring_starts_on" />
+                                        <x-input type="date" label="Starting day" min="{{ $this->minimumStartDate }}" wire:model.change="recurring_starts_on" />
                                         @error('recurring_starts_on') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                     </div>
                                     <div>
-                                        <x-input type="time" label="Starting time" wire:model.live="recurring_start_time" />
+                                        <x-input type="time" label="Starting time" wire:model.change="recurring_start_time" />
                                         @error('recurring_start_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                     </div>
                                     <div>

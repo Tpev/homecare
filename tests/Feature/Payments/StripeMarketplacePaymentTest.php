@@ -684,6 +684,69 @@ class StripeMarketplacePaymentTest extends TestCase
         ]);
     }
 
+    public function test_retry_payout_transfers_waits_when_platform_balance_is_not_available(): void
+    {
+        config()->set('services.stripe.bypass', true);
+
+        [$family, $request, $application, $caregiverProfile] = $this->seedScenario(returnProfile: true);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $booking->update([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'timesheet_submitted_at' => now(),
+            'worked_minutes' => 120,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('completeBooking');
+
+        $payment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->firstOrFail();
+        $caregiverProfile->update([
+            'stripe_connect_account_id' => 'acct_retry_command_waiting_balance',
+            'stripe_charges_enabled' => true,
+            'stripe_payouts_enabled' => true,
+            'stripe_connect_onboarding_completed_at' => now(),
+        ]);
+
+        app()->instance(StripeClient::class, new class extends StripeClient
+        {
+            public function availableBalanceCents(?string $currency = null): int
+            {
+                return 0;
+            }
+
+            public function createTransfer(
+                string $destinationAccountId,
+                int $amountCents,
+                string $currency,
+                array $metadata = [],
+                ?string $idempotencyKey = null,
+            ): array {
+                throw new PaymentException('Unexpected transfer attempt.');
+            }
+        });
+
+        $this->artisan('homecare:retry-payout-transfers --limit=10')
+            ->expectsOutputToContain('Waiting payment #'.$payment->id)
+            ->expectsOutputToContain('waiting on balance 1')
+            ->assertSuccessful();
+
+        $payment->refresh();
+        $this->assertSame(CareBookingPayment::STATUS_CAPTURED, $payment->status);
+        $this->assertNull($payment->stripe_transfer_id);
+
+        $this->assertDatabaseHas('caregiver_payout_items', [
+            'care_booking_id' => $booking->id,
+            'status' => 'scheduled',
+        ]);
+    }
+
     private function bindDeclinedStripeClient(): void
     {
         app()->instance(StripeClient::class, new class extends StripeClient

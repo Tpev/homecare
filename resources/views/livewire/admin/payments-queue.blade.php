@@ -23,7 +23,7 @@
             <x-input
                 label="Search"
                 placeholder="Family, caregiver, payment intent, transfer id"
-                wire:model.live.debounce.300ms="search"
+                wire:model.blur="search"
             />
             <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-xs text-slate-600">
                 Amount values are in cents for precise ops actions.

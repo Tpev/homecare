@@ -91,7 +91,7 @@
                 <x-input
                     label="Search"
                     placeholder="Phone, body, or Twilio SID"
-                    wire:model.live.debounce.300ms="q"
+                    wire:model.blur="q"
                 />
             </div>
             <x-select.styled label="Direction" wire:model.live="direction" :options="$directionOptions" />

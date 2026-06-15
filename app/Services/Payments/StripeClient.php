@@ -810,6 +810,30 @@ class StripeClient
         ];
     }
 
+    public function availableBalanceCents(?string $currency = null): int
+    {
+        if ($this->isBypass()) {
+            return PHP_INT_MAX;
+        }
+
+        $currency = strtolower((string) ($currency ?: $this->currency()));
+
+        try {
+            $balance = $this->client()->balance->retrieve();
+        } catch (Throwable $e) {
+            throw new PaymentException('Unable to retrieve Stripe available balance.', $e->getMessage());
+        }
+
+        $total = 0;
+        foreach (($balance->available ?? []) as $bucket) {
+            if (strtolower((string) ($bucket->currency ?? '')) === $currency) {
+                $total += (int) ($bucket->amount ?? 0);
+            }
+        }
+
+        return $total;
+    }
+
     public function constructWebhookEvent(string $payload, string $signature): Event
     {
         if ($this->isBypass()) {

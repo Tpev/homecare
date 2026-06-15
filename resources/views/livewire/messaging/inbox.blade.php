@@ -70,7 +70,7 @@
                     <p class="text-xs uppercase tracking-[0.16em] text-[#7C5DDC]">Messages</p>
                     <h1 class="text-lg font-display font-semibold text-[#0F172A]">Inbox</h1>
                     <div class="mt-3">
-                        <x-input wire:model.live.debounce.300ms="search" placeholder="Search by request or name" />
+                        <x-input wire:model.blur="search" placeholder="Search by request or name" />
                     </div>
                 </div>
 

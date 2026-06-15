@@ -11,59 +11,88 @@
         <p class="mt-2 text-sm text-[#CFC6F7]">Filter by trust badges, skills, language, and experience to shortlist faster.</p>
     </section>
 
-    <div class="grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)] gap-6">
-        <aside class="rounded-2xl border border-[#E4DDD3] bg-white p-4 shadow-sm h-fit xl:sticky xl:top-20 space-y-4">
-            <x-input label="Search name, city, bio" placeholder="Example: Raleigh companionship" wire:model.live.debounce.300ms="search" />
-            <x-input label="ZIP" wire:model.live="zip" />
-
-            <div>
-                <p class="text-sm font-medium text-[#324457]">Skills</p>
-                <div class="mt-2 max-h-44 space-y-2 overflow-y-auto rounded-xl border border-[#DED6CA] bg-[#FFFCF8] p-2">
-                    @foreach ($skillOptions as $skill)
-                        <label class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm text-[#324457] hover:bg-white" wire:key="caregiver-skill-filter-{{ $skill->id }}">
-                            <input type="checkbox" value="{{ $skill->id }}" wire:model.live="skills" class="rounded border-[#B7ADA0] text-[#0F3D3E] focus:ring-[#4F6FAF]">
-                            <span>{{ $skill->name }}</span>
-                        </label>
-                    @endforeach
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
+        <aside class="h-fit rounded-2xl border border-[#E4DDD3] bg-white p-4 shadow-sm lg:sticky lg:top-20">
+            <form wire:submit.prevent="applyFilters" class="grid gap-4 sm:grid-cols-2 lg:block lg:space-y-4">
+                <div>
+                    <label for="caregiver-search" class="block text-sm font-medium text-[#324457]">Search name, city, bio</label>
+                    <input
+                        id="caregiver-search"
+                        type="search"
+                        placeholder="Example: Raleigh companionship"
+                        autocomplete="off"
+                        wire:model="search"
+                        class="mt-1 block min-h-11 w-full rounded-xl border border-[#DED6CA] bg-white px-3 py-2 text-base text-[#17313F] shadow-sm transition placeholder:text-[#8A98A8] focus:border-[#4F6FAF] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF]/20"
+                    >
                 </div>
-            </div>
 
-            <div>
-                <p class="text-sm font-medium text-[#324457]">Languages</p>
-                <div class="mt-2 max-h-36 space-y-2 overflow-y-auto rounded-xl border border-[#DED6CA] bg-[#FFFCF8] p-2">
-                    @foreach ($languageOptions as $language)
-                        <label class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm text-[#324457] hover:bg-white" wire:key="caregiver-language-filter-{{ $language->id }}">
-                            <input type="checkbox" value="{{ $language->id }}" wire:model.live="languages" class="rounded border-[#B7ADA0] text-[#0F3D3E] focus:ring-[#4F6FAF]">
-                            <span>{{ $language->name }}</span>
-                        </label>
-                    @endforeach
+                <div>
+                    <label for="caregiver-zip" class="block text-sm font-medium text-[#324457]">ZIP</label>
+                    <input
+                        id="caregiver-zip"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="postal-code"
+                        wire:model="zip"
+                        class="mt-1 block min-h-11 w-full rounded-xl border border-[#DED6CA] bg-white px-3 py-2 text-base text-[#17313F] shadow-sm transition placeholder:text-[#8A98A8] focus:border-[#4F6FAF] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF]/20"
+                    >
                 </div>
-            </div>
 
-            <x-native-select-field
-                label="Trust badges"
-                wire:model.live="trust"
-                :options="[
-                    ['label'=>'All caregivers','value'=>'all'],
-                    ['label'=>'Verified only','value'=>'verified'],
-                    ['label'=>'Top Caregiver only','value'=>'top'],
-                ]"
-            />
+                <div>
+                    <p class="text-sm font-medium text-[#324457]">Skills</p>
+                    <div class="mt-2 grid max-h-40 gap-1 overflow-y-auto rounded-xl border border-[#DED6CA] bg-[#FFFCF8] p-2 sm:grid-cols-2 lg:grid-cols-1">
+                        @foreach ($skillOptions as $skill)
+                            <label class="flex min-h-10 cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm text-[#324457] hover:bg-white" wire:key="caregiver-skill-filter-{{ $skill->id }}">
+                                <input type="checkbox" value="{{ $skill->id }}" wire:model="skills" class="rounded border-[#B7ADA0] text-[#0F3D3E] focus:ring-[#4F6FAF]">
+                                <span>{{ $skill->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
 
-            <x-native-select-field
-                label="Sort"
-                wire:model.live="sort"
-                :options="[
-                    ['label'=>'Relevance','value'=>'relevance'],
-                    ['label'=>'Top caregivers first','value'=>'top'],
-                    ['label'=>'Reliability high-low','value'=>'reliability'],
-                    ['label'=>'Experience high-low','value'=>'experience'],
-                ]"
-            />
+                <div>
+                    <p class="text-sm font-medium text-[#324457]">Languages</p>
+                    <div class="mt-2 grid max-h-36 gap-1 overflow-y-auto rounded-xl border border-[#DED6CA] bg-[#FFFCF8] p-2 sm:grid-cols-2 lg:grid-cols-1">
+                        @foreach ($languageOptions as $language)
+                            <label class="flex min-h-10 cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm text-[#324457] hover:bg-white" wire:key="caregiver-language-filter-{{ $language->id }}">
+                                <input type="checkbox" value="{{ $language->id }}" wire:model="languages" class="rounded border-[#B7ADA0] text-[#0F3D3E] focus:ring-[#4F6FAF]">
+                                <span>{{ $language->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
 
-            <button type="button" wire:click="clearFilters" class="w-full rounded-xl border border-[#DED6CA] bg-white px-3 py-2 text-sm font-semibold text-[#0F3D3E] transition hover:bg-[#F5F1EB]">
-                Clear filters
-            </button>
+                <x-native-select-field
+                    label="Trust badges"
+                    wire:model="trust"
+                    :options="[
+                        ['label'=>'All caregivers','value'=>'all'],
+                        ['label'=>'Verified only','value'=>'verified'],
+                        ['label'=>'Top Caregiver only','value'=>'top'],
+                    ]"
+                />
+
+                <x-native-select-field
+                    label="Sort"
+                    wire:model="sort"
+                    :options="[
+                        ['label'=>'Relevance','value'=>'relevance'],
+                        ['label'=>'Top caregivers first','value'=>'top'],
+                        ['label'=>'Reliability high-low','value'=>'reliability'],
+                        ['label'=>'Experience high-low','value'=>'experience'],
+                    ]"
+                />
+
+                <div class="flex flex-col gap-2 sm:col-span-2 sm:flex-row lg:col-span-1 lg:flex-col">
+                    <button type="submit" class="min-h-11 w-full rounded-xl bg-[#0F3D3E] px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#17313F] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF]/30">
+                        Search caregivers
+                    </button>
+
+                    <button type="button" wire:click="clearFilters" class="min-h-11 w-full rounded-xl border border-[#DED6CA] bg-white px-3 py-2 text-sm font-semibold text-[#0F3D3E] transition hover:bg-[#F5F1EB]">
+                        Clear filters
+                    </button>
+                </div>
+            </form>
         </aside>
 
         <section class="space-y-4 min-w-0">

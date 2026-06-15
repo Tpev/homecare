@@ -26,7 +26,7 @@
             <div class="hub-request-grid-two">
                 <div class="hub-request-field">
                     <label for="homepage_zip" class="hub-request-label">ZIP</label>
-                    <input id="homepage_zip" type="text" wire:model.live="zip" inputmode="numeric" class="hub-input" placeholder="27601">
+                    <input id="homepage_zip" type="text" wire:model.blur="zip" inputmode="numeric" class="hub-input" placeholder="27601">
                     @error('zip') <p class="hub-error">{{ $message }}</p> @enderror
                 </div>
 

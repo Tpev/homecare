@@ -46,8 +46,8 @@
                     <p class="mt-1 text-sm text-[#607080]">Keep the list focused on requests you can realistically cover.</p>
                 </div>
 
-                <x-input label="City" wire:model.live="city" />
-                <x-input label="State (2 letters)" wire:model.live="state" maxlength="2" />
+                <x-input label="City" wire:model.blur="city" />
+                <x-input label="State (2 letters)" wire:model.blur="state" maxlength="2" />
 
                 <div>
                     <p class="text-sm font-medium text-[#324457]">Tasks</p>

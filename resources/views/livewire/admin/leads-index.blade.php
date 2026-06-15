@@ -14,7 +14,7 @@
         <div class="md:col-span-5">
             <input
                 type="text"
-                wire:model.live="q"
+                wire:model.blur="q"
                 placeholder="Search email, phone, name, company, location, zip..."
                 class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
             />

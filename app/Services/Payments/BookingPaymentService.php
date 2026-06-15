@@ -682,17 +682,26 @@ class BookingPaymentService
             throw new PaymentException('Caregiver payout account is not ready.');
         }
 
-        $transfer = $this->stripe->createTransfer(
-            (string) $profile->stripe_connect_account_id,
-            $caregiverAmountCents,
-            (string) $payment->currency,
-            [
-                'care_booking_id' => (string) $booking->id,
-                'care_request_id' => (string) $booking->care_request_id,
-                'caregiver_user_id' => (string) $booking->caregiver_user_id,
-            ],
-            $this->idempotencyKey($booking->id, 'transfer-retry', $caregiverAmountCents)
-        );
+        try {
+            $transfer = $this->stripe->createTransfer(
+                (string) $profile->stripe_connect_account_id,
+                $caregiverAmountCents,
+                (string) $payment->currency,
+                [
+                    'care_booking_id' => (string) $booking->id,
+                    'care_request_id' => (string) $booking->care_request_id,
+                    'caregiver_user_id' => (string) $booking->caregiver_user_id,
+                ],
+                $this->idempotencyKey($booking->id, 'transfer-retry', $caregiverAmountCents)
+            );
+        } catch (PaymentException $e) {
+            $payment->forceFill([
+                'status' => CareBookingPayment::STATUS_TRANSFER_FAILED,
+                'last_error' => $e->userMessage,
+            ])->save();
+
+            throw $e;
+        }
 
         $payment->forceFill([
             'status' => CareBookingPayment::STATUS_TRANSFERRED,

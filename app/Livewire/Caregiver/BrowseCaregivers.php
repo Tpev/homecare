@@ -64,6 +64,11 @@ class BrowseCaregivers extends Component
         $this->resetPage();
     }
 
+    public function applyFilters(): void
+    {
+        $this->resetPage();
+    }
+
     public function clearFilters(): void
     {
         $this->reset([

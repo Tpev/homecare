@@ -4,6 +4,7 @@ namespace Tests\Feature\Caregiver;
 
 use App\Livewire\Admin\CaregiverModerationLogs;
 use App\Livewire\Admin\CaregiverReviewsQueue;
+use App\Livewire\Caregiver\BrowseCaregivers;
 use App\Livewire\Caregiver\OnboardingWizard;
 use App\Livewire\Caregiver\ProfileEditor;
 use App\Mail\Ops\CaregiverReadyForReviewOpsAlertMail;
@@ -463,6 +464,68 @@ class CaregiverRegressionTest extends TestCase
         $response->assertSee('Identity verified');
         $response->assertSee('Background check');
         $response->assertSee('Top Caregiver');
+    }
+
+    public function test_search_filters_apply_on_submit_without_live_typing_updates(): void
+    {
+        $viewer = User::factory()->create(['role' => 'family']);
+
+        $raleighUser = User::factory()->create([
+            'name' => 'Raleigh Match',
+            'role' => 'caregiver',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+        ]);
+        $durhamUser = User::factory()->create([
+            'name' => 'Durham Helper',
+            'role' => 'caregiver',
+            'city' => 'Durham',
+            'state' => 'NC',
+        ]);
+
+        $raleighProfile = CaregiverProfile::query()->create([
+            'user_id' => $raleighUser->id,
+            'slug' => 'raleigh-match',
+            'status' => 'active',
+            'bio' => str_repeat('Calm companionship support. ', 4),
+            'platform_hourly_rate' => 30,
+            'years_experience' => 6,
+            'service_area_zip' => '27601',
+            'service_radius_miles' => 10,
+            'insurance_status' => CaregiverProfile::INSURANCE_NO,
+        ]);
+        $durhamProfile = CaregiverProfile::query()->create([
+            'user_id' => $durhamUser->id,
+            'slug' => 'durham-helper',
+            'status' => 'active',
+            'bio' => str_repeat('Reliable home support. ', 4),
+            'platform_hourly_rate' => 30,
+            'years_experience' => 6,
+            'service_area_zip' => '27703',
+            'service_radius_miles' => 10,
+            'insurance_status' => CaregiverProfile::INSURANCE_NO,
+        ]);
+
+        $this->markProfileMarketplaceReady($raleighProfile, 'raleigh-search');
+        $this->markProfileMarketplaceReady($durhamProfile, 'durham-search');
+
+        $html = $this->actingAs($viewer)
+            ->get('/caregivers/search')
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('wire:submit.prevent="applyFilters"', $html);
+        $this->assertStringContainsString('wire:model="search"', $html);
+        $this->assertStringNotContainsString('wire:model.live.debounce.300ms="search"', $html);
+
+        Livewire::actingAs($viewer)
+            ->test(BrowseCaregivers::class)
+            ->assertSee('Raleigh Match')
+            ->assertSee('Durham Helper')
+            ->set('search', 'Raleigh')
+            ->call('applyFilters')
+            ->assertSee('Raleigh Match')
+            ->assertDontSee('Durham Helper');
     }
 
     public function test_admin_can_toggle_trust_badges_for_active_caregiver(): void

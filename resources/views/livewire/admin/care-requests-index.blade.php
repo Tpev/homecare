@@ -50,7 +50,7 @@
                 <x-input
                     label="Search"
                     placeholder="Title, family, email, city, ZIP"
-                    wire:model.live.debounce.300ms="q"
+                    wire:model.blur="q"
                 />
             </div>
             <x-select.styled label="Status" wire:model.live="status" :options="$statusOptions" />

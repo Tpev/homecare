@@ -41,11 +41,11 @@
             <div class="space-y-5">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
-                        <x-input type="date" label="Starting day" wire:model.live="visitDate" />
+                        <x-input type="date" label="Starting day" wire:model.change="visitDate" />
                         @error('visitDate') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <x-input type="time" label="Starting time" wire:model.live="startTime" />
+                        <x-input type="time" label="Starting time" wire:model.change="startTime" />
                         @error('startTime') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                     <div>

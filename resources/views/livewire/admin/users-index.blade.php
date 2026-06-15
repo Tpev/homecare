@@ -14,7 +14,7 @@
             <x-input
                 label="Search"
                 placeholder="Name, email, city, state"
-                wire:model.live.debounce.300ms="q"
+                wire:model.blur="q"
             />
 
             <x-select.styled

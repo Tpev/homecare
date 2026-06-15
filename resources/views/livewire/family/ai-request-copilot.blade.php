@@ -134,23 +134,23 @@
                         ]"
                     />
 
-                    <x-input label="Title" wire:model.live="draft.title" />
-                    <x-textarea label="Scope of work" rows="2" wire:model.live="draft.scope_of_work" />
-                    <x-textarea label="Additional info" rows="2" wire:model.live="draft.additional_info" />
-                    <x-textarea label="Time expectations" rows="2" wire:model.live="draft.time_expectations" />
-                    <x-textarea label="Home access notes" rows="2" wire:model.live="draft.home_access_notes" />
+                    <x-input label="Title" wire:model.blur="draft.title" />
+                    <x-textarea label="Scope of work" rows="2" wire:model.blur="draft.scope_of_work" />
+                    <x-textarea label="Additional info" rows="2" wire:model.blur="draft.additional_info" />
+                    <x-textarea label="Time expectations" rows="2" wire:model.blur="draft.time_expectations" />
+                    <x-textarea label="Home access notes" rows="2" wire:model.blur="draft.home_access_notes" />
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <x-input label="Address line 1" wire:model.live="draft.address_line1" />
-                        <x-input label="Address line 2 (optional)" wire:model.live="draft.address_line2" />
-                        <x-input label="City" wire:model.live="draft.city" />
+                        <x-input label="Address line 1" wire:model.blur="draft.address_line1" />
+                        <x-input label="Address line 2 (optional)" wire:model.blur="draft.address_line2" />
+                        <x-input label="City" wire:model.blur="draft.city" />
                         <x-native-select-field
                             label="State"
                             wire:model.live="draft.state"
                             :options="collect($usStates)->map(fn($label,$value)=>['label'=>$label,'value'=>$value])->values()->all()"
                         />
-                        <x-input label="ZIP" wire:model.live="draft.zip" />
-                        <x-input label="Preferred response (hours)" type="number" min="1" max="72" wire:model.live="draft.preferred_response_hours" />
+                        <x-input label="ZIP" wire:model.blur="draft.zip" />
+                        <x-input label="Preferred response (hours)" type="number" min="1" max="72" wire:model.blur="draft.preferred_response_hours" />
                     </div>
 
                     <div>
@@ -167,8 +167,8 @@
 
                     @if(($draft['request_type'] ?? null) === \App\Models\CareRequest::TYPE_ONE_TIME)
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <x-input label="Start" type="datetime-local" wire:model.live="draft.requested_start_at" />
-                            <x-input label="End" type="datetime-local" wire:model.live="draft.requested_end_at" />
+                            <x-input label="Start" type="datetime-local" wire:model.change="draft.requested_start_at" />
+                            <x-input label="End" type="datetime-local" wire:model.change="draft.requested_end_at" />
                         </div>
                     @else
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -183,15 +183,15 @@
                                     @endforeach
                                 </div>
                             </div>
-                            <x-input label="Starts on" type="date" wire:model.live="draft.recurring_starts_on" />
-                            <x-input label="Start time" type="time" wire:model.live="draft.recurring_start_time" />
-                            <x-input label="End time" type="time" wire:model.live="draft.recurring_end_time" />
+                            <x-input label="Starts on" type="date" wire:model.change="draft.recurring_starts_on" />
+                            <x-input label="Start time" type="time" wire:model.change="draft.recurring_start_time" />
+                            <x-input label="End time" type="time" wire:model.change="draft.recurring_end_time" />
                         </div>
                     @endif
 
-                    <x-input label="Recipient full name" wire:model.live="draft.recipient.full_name" />
-                    <x-input label="Relationship to recipient" wire:model.live="draft.recipient.relationship_to_family" />
-                    <x-textarea label="Recipient care notes" rows="2" wire:model.live="draft.recipient.care_notes" />
+                    <x-input label="Recipient full name" wire:model.blur="draft.recipient.full_name" />
+                    <x-input label="Relationship to recipient" wire:model.blur="draft.recipient.relationship_to_family" />
+                    <x-textarea label="Recipient care notes" rows="2" wire:model.blur="draft.recipient.care_notes" />
                 </div>
 
                 <div class="mt-5 flex flex-wrap gap-2">
