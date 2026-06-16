@@ -44,7 +44,7 @@
         <div class="mt-5 space-y-3 md:hidden">
             @forelse($users as $user)
                 @php
-                    $isProtectedAdmin = $user->role === 'admin' || strtolower((string) $user->email) === 'test@test.com';
+                    $isProtectedStaff = in_array($user->role, ['admin', 'sales'], true) || strtolower((string) $user->email) === 'test@test.com';
                     $readiness = $reviewReadiness[$user->id] ?? null;
                     $statusClasses = match ($readiness['status'] ?? 'missing') {
                         'active' => 'text-emerald-700 bg-emerald-50 border-emerald-200',
@@ -91,7 +91,7 @@
                         <a href="{{ route('admin.users.show', $user) }}" wire:navigate class="block">
                             <x-button color="cyan" light class="w-full justify-center">View profile</x-button>
                         </a>
-                        @if($isProtectedAdmin)
+                        @if($isProtectedStaff)
                             <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs text-slate-500">Protected account</div>
                         @else
                             <x-button color="amber" light class="w-full justify-center" wire:click="loginAs({{ $user->id }})" onclick="if (!confirm('Log in as this user now?')) return false;">Login as</x-button>
@@ -121,7 +121,7 @@
                 <tbody class="divide-y divide-slate-200 bg-white">
                     @forelse($users as $user)
                         @php
-                            $isProtectedAdmin = $user->role === 'admin' || strtolower((string) $user->email) === 'test@test.com';
+                            $isProtectedStaff = in_array($user->role, ['admin', 'sales'], true) || strtolower((string) $user->email) === 'test@test.com';
                         @endphp
                         <tr>
                             <td class="px-4 py-3">
@@ -170,7 +170,7 @@
                                         <x-button color="cyan" light sm>View profile</x-button>
                                     </a>
 
-                                    @if($isProtectedAdmin)
+                                    @if($isProtectedStaff)
                                         <span class="text-xs text-slate-500">Protected</span>
                                     @else
                                         <x-button

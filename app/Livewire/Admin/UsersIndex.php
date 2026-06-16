@@ -3,9 +3,9 @@
 namespace App\Livewire\Admin;
 
 use App\Models\User;
-use Illuminate\Support\Collection;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -16,7 +16,9 @@ class UsersIndex extends Component
     use WithPagination;
 
     public string $q = '';
+
     public string $role = 'all';
+
     public int $perPage = 25;
 
     protected $queryString = [
@@ -51,7 +53,7 @@ class UsersIndex extends Component
         }
 
         if ($this->isAdminUser($target)) {
-            $this->addError('delete', 'Admin users cannot be deleted from this screen.');
+            $this->addError('delete', 'Staff users cannot be deleted from this screen.');
 
             return;
         }
@@ -123,13 +125,14 @@ class UsersIndex extends Component
                 ['label' => 'All user types', 'value' => 'all'],
                 ['label' => 'Caregivers', 'value' => 'caregiver'],
                 ['label' => 'Families', 'value' => 'family'],
+                ['label' => 'Sales', 'value' => 'sales'],
                 ['label' => 'Admins', 'value' => 'admin'],
             ],
         ]);
     }
 
     /**
-     * @param Collection<int, User> $users
+     * @param  Collection<int, User>  $users
      * @return array<int, array{status: string, status_label: string, missing: array<int, string>}>
      */
     private function buildReviewReadinessMap(Collection $users): array
@@ -193,6 +196,6 @@ class UsersIndex extends Component
 
     private function isAdminUser(User $user): bool
     {
-        return $user->role === 'admin' || strtolower((string) $user->email) === 'test@test.com';
+        return in_array($user->role, ['admin', 'sales'], true) || strtolower((string) $user->email) === 'test@test.com';
     }
 }

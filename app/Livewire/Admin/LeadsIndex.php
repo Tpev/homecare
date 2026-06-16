@@ -20,16 +20,25 @@ class LeadsIndex extends Component
     use WithPagination;
 
     public string $q = '';
+
     public string $pipeline = Lead::TYPE_FAMILY;
+
     public string $status = 'all';
+
     public string $assigned = 'all';
+
     public string $source = 'all';
+
     public string $priority = 'all';
+
     public string $sort = 'next_follow_up_at';
+
     public string $dir = 'asc';
+
     public int $perPage = 25;
 
     public bool $showCreateForm = false;
+
     public ?int $selectedLeadId = null;
 
     /** @var array<string, mixed> */
@@ -60,12 +69,35 @@ class LeadsIndex extends Component
         $this->resetActivityForm();
     }
 
-    public function updatingQ(): void { $this->resetPage(); }
-    public function updatingStatus(): void { $this->resetPage(); }
-    public function updatingAssigned(): void { $this->resetPage(); }
-    public function updatingSource(): void { $this->resetPage(); }
-    public function updatingPriority(): void { $this->resetPage(); }
-    public function updatingPerPage(): void { $this->resetPage(); }
+    public function updatingQ(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingStatus(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingAssigned(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSource(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingPriority(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingPerPage(): void
+    {
+        $this->resetPage();
+    }
 
     public function setPipeline(string $pipeline): void
     {
@@ -90,6 +122,7 @@ class LeadsIndex extends Component
 
         if ($this->sort === $field) {
             $this->dir = $this->dir === 'asc' ? 'desc' : 'asc';
+
             return;
         }
 
@@ -451,6 +484,7 @@ class LeadsIndex extends Component
 
         if (! $lead) {
             $this->resetLeadForm();
+
             return;
         }
 
@@ -589,7 +623,7 @@ class LeadsIndex extends Component
     {
         return User::query()
             ->where(function (Builder $query) {
-                $query->where('role', 'admin')
+                $query->whereIn('role', ['admin', 'sales'])
                     ->orWhereRaw('lower(email) = ?', ['test@test.com']);
             })
             ->orderBy('name')

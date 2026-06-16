@@ -3,14 +3,14 @@
 namespace App\Livewire\Dashboard;
 
 use App\Models\CareBooking;
+use App\Models\CaregiverProfile;
 use App\Models\CarePlan;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
-use App\Models\CaregiverProfile;
-use App\Support\CaregiverPrelaunch;
 use App\Support\CaregiverOnboardingState;
+use App\Support\CaregiverPrelaunch;
 use App\Support\CaregiverWorkInboxBuilder;
 use App\Support\FamilyRebookingOptions;
 use App\Support\MarketplaceEvent;
@@ -25,6 +25,12 @@ class Home extends Component
     public function mount(CaregiverOnboardingState $onboardingState): void
     {
         $user = auth()->user();
+        if ($user && $user->role === 'sales') {
+            $this->redirect(route('admin.crm.index', absolute: false), navigate: true);
+
+            return;
+        }
+
         if (! $user || $user->role !== 'caregiver') {
             return;
         }

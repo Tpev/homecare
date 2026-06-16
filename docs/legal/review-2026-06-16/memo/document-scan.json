@@ -1,0 +1,496 @@
+[
+  {
+    "file": "Legal\\DRAFTS\\Board Governance\\01-governance-summary.docx",
+    "suffix": ".docx",
+    "chars": 2040,
+    "placeholders": [
+      "[COMPANY LEGAL NAME]",
+      "[DATE]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Governance Summary",
+      "Company: [COMPANY LEGAL NAME]",
+      "State of incorporation: Delaware",
+      "Date: [DATE]",
+      "Current Founder Ownership",
+      "The company also has 2,000,000 authorized but unissued shares of Common Stock."
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Board Governance\\02-bylaws.docx",
+    "suffix": ".docx",
+    "chars": 14867,
+    "placeholders": [
+      "[COMPANY LEGAL NAME]",
+      "[DATE]",
+      "[PRINCIPAL OFFICE ADDRESS]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Bylaws",
+      "of",
+      "[COMPANY LEGAL NAME]",
+      "a Delaware corporation",
+      "Adopted as of [DATE]",
+      "Article I - Offices and Corporate Records"
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Board Governance\\03-action-by-sole-incorporator-electing-directors.docx",
+    "suffix": ".docx",
+    "chars": 1693,
+    "placeholders": [
+      "[CHARLES ADDRESS]",
+      "[COMPANY LEGAL NAME]",
+      "[DATE]",
+      "[INCORPORATOR NAME]",
+      "[THIBAUD ADDRESS]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Action by Written Consent of Sole Incorporator",
+      "of",
+      "[COMPANY LEGAL NAME]",
+      "Election of Initial Directors",
+      "Delivery of Corporate Records",
+      "Resignation of Incorporator"
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Board Governance\\04-stockholder-written-consent-electing-directors.docx",
+    "suffix": ".docx",
+    "chars": 2390,
+    "placeholders": [
+      "[COMPANY LEGAL NAME]",
+      "[DATE]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Action by Unanimous Written Consent of Stockholders",
+      "of",
+      "[COMPANY LEGAL NAME]",
+      "Stockholders",
+      "Election and Confirmation of Directors",
+      "RESOLVED, that the number of directors constituting the Board is fixed at two;"
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Board Governance\\05-board-consent-adopting-governance.docx",
+    "suffix": ".docx",
+    "chars": 3683,
+    "placeholders": [
+      "[COMPANY LEGAL NAME]",
+      "[DATE]",
+      "[OFFICER NAME]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Action by Unanimous Written Consent of the Board of Directors",
+      "of",
+      "[COMPANY LEGAL NAME]",
+      "Directors",
+      "Adoption of Bylaws",
+      "Founder Voting and Governance Agreement"
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Board Governance\\06-founder-voting-and-governance-agreement.docx",
+    "suffix": ".docx",
+    "chars": 8755,
+    "placeholders": [
+      "[COMPANY LEGAL NAME]",
+      "[DATE]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Founder Voting and Governance Agreement",
+      "1. Background",
+      "2. Board Composition",
+      "2.1 Two-Person Board. The Board shall initially consist of two directors.",
+      "2.2 Initial Directors. The initial directors shall be:",
+      "3. Board Approval and Reserved Matters"
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Board Governance\\07-reserved-matters-schedule.docx",
+    "suffix": ".docx",
+    "chars": 4441,
+    "placeholders": [
+      "[AMOUNT]",
+      "[COMPANY LEGAL NAME]",
+      "[DATE]",
+      "[TERM]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Reserved Matters Schedule",
+      "Exhibit A to the Founder Voting and Governance Agreement",
+      "Company: [COMPANY LEGAL NAME]",
+      "Date: [DATE]",
+      "Approval Standard",
+      "approval of both Founders under the Founder Voting and Governance Agreement."
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Board Governance\\08-indemnification-agreement-charles-petrini-poli.docx",
+    "suffix": ".docx",
+    "chars": 2577,
+    "placeholders": [
+      "[COMPANY LEGAL NAME]",
+      "[DATE]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Director and Officer Indemnification Agreement",
+      "1. Service",
+      "2. Indemnification",
+      "3. Advancement of Expenses",
+      "4. Determination of Right to Indemnification",
+      "5. Insurance"
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Board Governance\\09-indemnification-agreement-thibaud-peverelli.docx",
+    "suffix": ".docx",
+    "chars": 2571,
+    "placeholders": [
+      "[COMPANY LEGAL NAME]",
+      "[DATE]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Director and Officer Indemnification Agreement",
+      "1. Service",
+      "2. Indemnification",
+      "3. Advancement of Expenses",
+      "4. Determination of Right to Indemnification",
+      "5. Insurance"
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Board Governance\\10-board-approval-authority-matrix.docx",
+    "suffix": ".docx",
+    "chars": 3386,
+    "placeholders": [
+      "[AMOUNT]",
+      "[COMPANY LEGAL NAME]",
+      "[DATE]",
+      "[TERM]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Board Approval Authority Matrix",
+      "Company: [COMPANY LEGAL NAME]",
+      "Adopted: [DATE]",
+      "General Rule",
+      "Authority Matrix",
+      "Signature Authority"
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Board Governance\\11-conflict-of-interest-policy.docx",
+    "suffix": ".docx",
+    "chars": 3060,
+    "placeholders": [
+      "[COMPANY LEGAL NAME]",
+      "[DATE]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Conflict of Interest Policy",
+      "Company: [COMPANY LEGAL NAME]",
+      "Adopted: [DATE]",
+      "1. Purpose",
+      "2. Covered Persons",
+      "3. Conflict of Interest"
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Board Governance\\board-governance-complete-package.docx",
+    "suffix": ".docx",
+    "chars": 49483,
+    "placeholders": [
+      "[AMOUNT]",
+      "[CHARLES ADDRESS]",
+      "[COMPANY LEGAL NAME]",
+      "[DATE]",
+      "[INCORPORATOR NAME]",
+      "[OFFICER NAME]",
+      "[PRINCIPAL OFFICE ADDRESS]",
+      "[TERM]",
+      "[THIBAUD ADDRESS]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Governance Summary",
+      "Company: [COMPANY LEGAL NAME]",
+      "State of incorporation: Delaware",
+      "Date: [DATE]",
+      "Current Founder Ownership",
+      "The company also has 2,000,000 authorized but unissued shares of Common Stock."
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Stocks\\01-initial-cap-table.docx",
+    "suffix": ".docx",
+    "chars": 1551,
+    "placeholders": [
+      "[COMPANY LEGAL NAME]",
+      "[DATE]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Initial Cap Table",
+      "Company: [COMPANY LEGAL NAME]",
+      "State of incorporation: Delaware",
+      "Date: [DATE]",
+      "Authorized Capitalization",
+      "Issued and Outstanding Shares"
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Stocks\\02-board-consent-initial-founder-share-issuance.docx",
+    "suffix": ".docx",
+    "chars": 5344,
+    "placeholders": [
+      "[CHARLES TOTAL PURCHASE PRICE]",
+      "[COMPANY LEGAL NAME]",
+      "[DATE]",
+      "[PAR VALUE]",
+      "[PRICE PER SHARE]",
+      "[THIBAUD TOTAL PURCHASE PRICE]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Action by Written Consent of the Board of Directors",
+      "of",
+      "[COMPANY LEGAL NAME]",
+      "Recitals",
+      "Approval of Founder Stock Issuances",
+      "Uncertificated Shares"
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Stocks\\03-founder-stock-purchase-agreement-charles-petrini-poli.docx",
+    "suffix": ".docx",
+    "chars": 8885,
+    "placeholders": [
+      "[BOARD APPROVAL DATE]",
+      "[CHARLES ADDRESS]",
+      "[CHARLES TOTAL PURCHASE PRICE]",
+      "[CLOSING DATE]",
+      "[COMPANY LEGAL NAME]",
+      "[DATE]",
+      "[PAR VALUE]",
+      "[PRICE PER SHARE]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Founder Restricted Stock Purchase Agreement",
+      "1. Purchase and Sale of Shares",
+      "2. No Vesting or Service-Based Repurchase",
+      "2.1 Fully Vested Shares. The Shares shall be fully vested as of the Closing.",
+      "3. Issuance and Evidence of Ownership",
+      "THE SHARES REPRESENTED HEREBY HAVE NOT BEEN REGISTERED UNDER THE SECURITIES ACT OF 1933, AS AMENDED, OR ANY APPLICABLE STATE SECURITIES LAWS. THE SHARES MAY NOT BE SOLD, TRANSFERRED, PLEDGED, OR OTHERWISE DISPOSED OF EXCEPT IN COMPLIANCE WITH APPLICABLE SECURITIES LAWS."
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Stocks\\04-founder-stock-purchase-agreement-thibaud-peverelli.docx",
+    "suffix": ".docx",
+    "chars": 8876,
+    "placeholders": [
+      "[BOARD APPROVAL DATE]",
+      "[CLOSING DATE]",
+      "[COMPANY LEGAL NAME]",
+      "[DATE]",
+      "[PAR VALUE]",
+      "[PRICE PER SHARE]",
+      "[THIBAUD ADDRESS]",
+      "[THIBAUD TOTAL PURCHASE PRICE]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Founder Restricted Stock Purchase Agreement",
+      "1. Purchase and Sale of Shares",
+      "2. No Vesting or Service-Based Repurchase",
+      "2.1 Fully Vested Shares. The Shares shall be fully vested as of the Closing.",
+      "3. Issuance and Evidence of Ownership",
+      "THE SHARES REPRESENTED HEREBY HAVE NOT BEEN REGISTERED UNDER THE SECURITIES ACT OF 1933, AS AMENDED, OR ANY APPLICABLE STATE SECURITIES LAWS. THE SHARES MAY NOT BE SOLD, TRANSFERRED, PLEDGED, OR OTHERWISE DISPOSED OF EXCEPT IN COMPLIANCE WITH APPLICABLE SECURITIES LAWS."
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Stocks\\05-uncertificated-share-notice-charles-petrini-poli.docx",
+    "suffix": ".docx",
+    "chars": 1266,
+    "placeholders": [
+      "[CHARLES ADDRESS]",
+      "[CLOSING DATE]",
+      "[COMPANY LEGAL NAME]",
+      "[DATE]",
+      "[PAR VALUE]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Notice of Issuance of Uncertificated Shares",
+      "[DATE]",
+      "To: Charles Petrini Poli",
+      "Address: [CHARLES ADDRESS]",
+      "Transfer and Securities Law Notice",
+      "THE SHARES DESCRIBED IN THIS NOTICE HAVE NOT BEEN REGISTERED UNDER THE SECURITIES ACT OF 1933, AS AMENDED, OR ANY APPLICABLE STATE SECURITIES LAWS. THE SHARES MAY NOT BE SOLD, TRANSFERRED, PLEDGED, OR OTHERWISE DISPOSED OF EXCEPT IN COMPLIANCE WITH APPLICABLE SECURITIES LAWS."
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Stocks\\06-uncertificated-share-notice-thibaud-peverelli.docx",
+    "suffix": ".docx",
+    "chars": 1260,
+    "placeholders": [
+      "[CLOSING DATE]",
+      "[COMPANY LEGAL NAME]",
+      "[DATE]",
+      "[PAR VALUE]",
+      "[THIBAUD ADDRESS]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Notice of Issuance of Uncertificated Shares",
+      "[DATE]",
+      "To: Thibaud Peverelli",
+      "Address: [THIBAUD ADDRESS]",
+      "Transfer and Securities Law Notice",
+      "THE SHARES DESCRIBED IN THIS NOTICE HAVE NOT BEEN REGISTERED UNDER THE SECURITIES ACT OF 1933, AS AMENDED, OR ANY APPLICABLE STATE SECURITIES LAWS. THE SHARES MAY NOT BE SOLD, TRANSFERRED, PLEDGED, OR OTHERWISE DISPOSED OF EXCEPT IN COMPLIANCE WITH APPLICABLE SECURITIES LAWS."
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Stocks\\07-stock-ledger.docx",
+    "suffix": ".docx",
+    "chars": 1248,
+    "placeholders": [
+      "[CHARLES ADDRESS]",
+      "[CHARLES TOTAL PURCHASE PRICE]",
+      "[CLOSING DATE]",
+      "[COMPANY LEGAL NAME]",
+      "[PAR VALUE]",
+      "[THIBAUD ADDRESS]",
+      "[THIBAUD TOTAL PURCHASE PRICE]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Stock Ledger",
+      "Company: [COMPANY LEGAL NAME]",
+      "State of incorporation: Delaware",
+      "Stock class: Common Stock",
+      "Authorized shares: 10,000,000",
+      "Par value: $[PAR VALUE]"
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Stocks\\08-founder-payment-receipts.docx",
+    "suffix": ".docx",
+    "chars": 1436,
+    "placeholders": [
+      "[CHARLES TOTAL PURCHASE PRICE]",
+      "[COMPANY LEGAL NAME]",
+      "[DATE]",
+      "[PAYMENT DATE]",
+      "[PAYMENT METHOD]",
+      "[PRICE PER SHARE]",
+      "[THIBAUD TOTAL PURCHASE PRICE]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Founder Share Purchase Payment Receipts",
+      "Receipt - Charles Petrini Poli",
+      "[DATE]",
+      "Company:",
+      "[COMPANY LEGAL NAME]",
+      "By: ______________________________"
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Stocks\\09-closing-checklist.docx",
+    "suffix": ".docx",
+    "chars": 2254,
+    "placeholders": [
+      "[ ]",
+      "[CHARLES TOTAL PURCHASE PRICE]",
+      "[COMPANY LEGAL NAME]",
+      "[DATE]",
+      "[PAR VALUE]",
+      "[PRICE PER SHARE]",
+      "[THIBAUD TOTAL PURCHASE PRICE]"
+    ],
+    "company_tokens": [
+      "[COMPANY LEGAL NAME]"
+    ],
+    "sample_headings": [
+      "Initial Founder Share Issuance Closing Checklist",
+      "Company: [COMPANY LEGAL NAME]",
+      "Date: [DATE]",
+      "Before Signing",
+      "Signing Package",
+      "Closing Steps"
+    ]
+  },
+  {
+    "file": "Legal\\DRAFTS\\Stocks\\initial-cap-table-and-stock-ledger.xlsx",
+    "suffix": ".xlsx",
+    "chars": 1294,
+    "placeholders": [
+      "[CHARLES ADDRESS]",
+      "[CHARLES TOTAL PURCHASE PRICE]",
+      "[CLOSING DATE]",
+      "[THIBAUD ADDRESS]",
+      "[THIBAUD TOTAL PURCHASE PRICE]"
+    ],
+    "company_tokens": [],
+    "sample_headings": [
+      "Worksheet: Cap Table",
+      "Holder",
+      "Class",
+      "Shares",
+      "Status",
+      "Percent of Authorized Shares"
+    ]
+  }
+]

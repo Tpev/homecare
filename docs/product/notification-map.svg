@@ -1,0 +1,232 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1300" viewBox="0 0 1800 1300" role="img" aria-labelledby="title desc">
+  <title id="title">LoLo Notification Map</title>
+  <desc id="desc">Diagram of current notifications by recipient type, channel, and known gaps.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff8ef"/>
+      <stop offset="52%" stop-color="#f7fbff"/>
+      <stop offset="100%" stop-color="#f6fff7"/>
+    </linearGradient>
+    <linearGradient id="engine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#124f4a"/>
+      <stop offset="100%" stop-color="#315f9e"/>
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#102a43" flood-opacity="0.13"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#64748b"/>
+    </marker>
+    <style>
+      .title { font: 800 48px Georgia, "Times New Roman", serif; fill: #0f2f2b; }
+      .subtitle { font: 500 20px Arial, sans-serif; fill: #475569; }
+      .small { font: 500 15px Arial, sans-serif; fill: #64748b; }
+      .tiny { font: 600 13px Arial, sans-serif; fill: #64748b; letter-spacing: .08em; }
+      .section-title { font: 800 25px Georgia, "Times New Roman", serif; fill: #102a43; }
+      .card-title { font: 800 18px Arial, sans-serif; fill: #12312d; }
+      .card-body { font: 500 15px Arial, sans-serif; fill: #334155; }
+      .pill-text { font: 700 14px Arial, sans-serif; fill: #0f2f2b; }
+      .engine-title { font: 800 24px Arial, sans-serif; fill: #ffffff; }
+      .engine-body { font: 500 16px Arial, sans-serif; fill: #dff7f2; }
+      .column { fill: rgba(255,255,255,.82); stroke: #d9e2ec; stroke-width: 1.4; filter: url(#softShadow); }
+      .card { fill: #ffffff; stroke: #d5ded9; stroke-width: 1.2; }
+      .family-accent { fill: #e8fff1; stroke: #9dd8b0; }
+      .caregiver-accent { fill: #eff6ff; stroke: #9dc6f2; }
+      .ops-accent { fill: #fff7ed; stroke: #f3bc78; }
+      .flag { fill: #fff1f2; stroke: #f1a4af; }
+      .line { stroke: #64748b; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+      .muted-line { stroke: #94a3b8; stroke-width: 1.6; stroke-dasharray: 8 8; fill: none; marker-end: url(#arrow); }
+      .badge { fill: #ecfdf5; stroke: #8dd7ad; }
+      .badge-warn { fill: #fff7ed; stroke: #f3bc78; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1300" fill="url(#bg)"/>
+
+  <g transform="translate(70 54)">
+    <text class="title" x="0" y="0" dominant-baseline="hanging">LoLo Notification Map</text>
+    <text class="subtitle" x="0" y="70">Current notification flows by user type, based on the Laravel code paths reviewed on June 16, 2026.</text>
+    <g transform="translate(1230 4)">
+      <rect class="badge" x="0" y="0" width="355" height="42" rx="21"/>
+      <text class="pill-text" x="24" y="27">Default lifecycle channels: in-app + email</text>
+    </g>
+  </g>
+
+  <g transform="translate(110 164)">
+    <rect x="0" y="0" width="1580" height="150" rx="26" fill="url(#engine)" filter="url(#softShadow)"/>
+    <text class="engine-title" x="36" y="42">Notification Sources</text>
+    <text class="engine-body" x="36" y="77">MarketplaceNotificationService sends user lifecycle updates. OpsAlertService sends internal alerts. Twilio SMS is admin/manual today.</text>
+
+    <g transform="translate(44 102)">
+      <rect fill="#ffffff" opacity=".14" x="0" y="-24" width="245" height="40" rx="20"/>
+      <text class="engine-body" x="22" y="3">Lifecycle events</text>
+    </g>
+    <g transform="translate(314 102)">
+      <rect fill="#ffffff" opacity=".14" x="0" y="-24" width="222" height="40" rx="20"/>
+      <text class="engine-body" x="22" y="3">Scheduled reminders</text>
+    </g>
+    <g transform="translate(562 102)">
+      <rect fill="#ffffff" opacity=".14" x="0" y="-24" width="186" height="40" rx="20"/>
+      <text class="engine-body" x="22" y="3">Ops alerts</text>
+    </g>
+    <g transform="translate(774 102)">
+      <rect fill="#ffffff" opacity=".14" x="0" y="-24" width="180" height="40" rx="20"/>
+      <text class="engine-body" x="22" y="3">Admin SMS</text>
+    </g>
+    <g transform="translate(980 102)">
+      <rect fill="#ffffff" opacity=".14" x="0" y="-24" width="180" height="40" rx="20"/>
+      <text class="engine-body" x="22" y="3">Auth emails</text>
+    </g>
+    <g transform="translate(1186 102)">
+      <rect fill="#ffffff" opacity=".14" x="0" y="-24" width="315" height="40" rx="20"/>
+      <text class="engine-body" x="22" y="3">Delivery tracking + preferences</text>
+    </g>
+  </g>
+
+  <path class="line" d="M 410 318 C 410 355 410 356 410 390"/>
+  <path class="line" d="M 910 318 C 910 355 910 356 910 390"/>
+  <path class="line" d="M 1410 318 C 1410 355 1410 356 1410 390"/>
+
+  <g transform="translate(70 390)">
+    <rect class="column" x="0" y="0" width="520" height="760" rx="24"/>
+    <rect class="family-accent" x="24" y="24" width="472" height="72" rx="18"/>
+    <text class="section-title" x="48" y="55">Family / Care Receiver</text>
+    <text class="small" x="48" y="82">Receives lifecycle updates in app + email by default.</text>
+
+    <g transform="translate(28 122)">
+      <rect class="card" x="0" y="0" width="464" height="112" rx="16"/>
+      <text class="tiny" x="22" y="27">REQUEST AND MATCHING</text>
+      <text class="card-title" x="22" y="55">Applications, invitations, hiring</text>
+      <text class="card-body" x="22" y="82">new_applicant, invite_accepted, invite_declined,</text>
+      <text class="card-body" x="22" y="104">invitation_sent, hire_confirmed</text>
+    </g>
+
+    <g transform="translate(28 250)">
+      <rect class="card" x="0" y="0" width="464" height="118" rx="16"/>
+      <text class="tiny" x="22" y="27">VISIT STATUS</text>
+      <text class="card-title" x="22" y="55">Shift reminders and progress</text>
+      <text class="card-body" x="22" y="82">shift_starting_soon, shift_started,</text>
+      <text class="card-body" x="22" y="104">shift_completed, shift_cancelled</text>
+    </g>
+
+    <g transform="translate(28 384)">
+      <rect class="card" x="0" y="0" width="464" height="96" rx="16"/>
+      <text class="tiny" x="22" y="27">MESSAGING</text>
+      <text class="card-title" x="22" y="55">Chat and visit-change requests</text>
+      <text class="card-body" x="22" y="82">message_received</text>
+    </g>
+
+    <g transform="translate(28 496)">
+      <rect class="card" x="0" y="0" width="464" height="132" rx="16"/>
+      <text class="tiny" x="22" y="27">PAYMENT</text>
+      <text class="card-title" x="22" y="55">Pre-auth, capture, refunds</text>
+      <text class="card-body" x="22" y="82">payment_authorized, payment_action_required,</text>
+      <text class="card-body" x="22" y="104">payment_authorization_failed, payment_captured,</text>
+      <text class="card-body" x="22" y="126">payment_refunded</text>
+    </g>
+
+    <g transform="translate(28 644)">
+      <rect class="card" x="0" y="0" width="464" height="92" rx="16"/>
+      <text class="tiny" x="22" y="27">REGULAR CARE</text>
+      <text class="card-title" x="22" y="55">Plan responses and payment attention</text>
+      <text class="card-body" x="22" y="82">accepted, countered, declined, payment_attention</text>
+    </g>
+  </g>
+
+  <g transform="translate(640 390)">
+    <rect class="column" x="0" y="0" width="520" height="760" rx="24"/>
+    <rect class="caregiver-accent" x="24" y="24" width="472" height="72" rx="18"/>
+    <text class="section-title" x="48" y="55">Caregiver</text>
+    <text class="small" x="48" y="82">Receives opportunities, schedule, review, payout, and onboarding updates.</text>
+
+    <g transform="translate(28 122)">
+      <rect class="card" x="0" y="0" width="464" height="122" rx="16"/>
+      <text class="tiny" x="22" y="27">WORK OPPORTUNITIES</text>
+      <text class="card-title" x="22" y="55">Matching, invites, applications</text>
+      <text class="card-body" x="22" y="82">matching_request_reminder, application_submitted,</text>
+      <text class="card-body" x="22" y="104">care_request_withdrawn, caregiver_hired</text>
+    </g>
+
+    <g transform="translate(28 260)">
+      <rect class="card" x="0" y="0" width="464" height="112" rx="16"/>
+      <text class="tiny" x="22" y="27">VISIT STATUS</text>
+      <text class="card-title" x="22" y="55">Reminders, cancellation, messages</text>
+      <text class="card-body" x="22" y="82">shift_starting_soon, shift_cancelled,</text>
+      <text class="card-body" x="22" y="104">message_received</text>
+    </g>
+
+    <g transform="translate(28 388)">
+      <rect class="card" x="0" y="0" width="464" height="112" rx="16"/>
+      <text class="tiny" x="22" y="27">REPUTATION AND PAYOUT</text>
+      <text class="card-title" x="22" y="55">Reviews, payout, adjustments</text>
+      <text class="card-body" x="22" y="82">review_received, payout_transferred,</text>
+      <text class="card-body" x="22" y="104">payment_refunded</text>
+    </g>
+
+    <g transform="translate(28 516)">
+      <rect class="card" x="0" y="0" width="464" height="96" rx="16"/>
+      <text class="tiny" x="22" y="27">REGULAR CARE</text>
+      <text class="card-title" x="22" y="55">Plan offer and ongoing relationship</text>
+      <text class="card-body" x="22" y="82">regular_care_offered, accepted, ended</text>
+    </g>
+
+    <g transform="translate(28 628)">
+      <rect class="card" x="0" y="0" width="464" height="108" rx="16"/>
+      <text class="tiny" x="22" y="27">ONBOARDING AND CAMPAIGN EMAILS</text>
+      <text class="card-title" x="22" y="55">Caregiver setup and launch</text>
+      <text class="card-body" x="22" y="82">caregiver_welcome, onboarding_reminder_24h,</text>
+      <text class="card-body" x="22" y="104">manual caregiver launch email command</text>
+    </g>
+  </g>
+
+  <g transform="translate(1210 390)">
+    <rect class="column" x="0" y="0" width="520" height="760" rx="24"/>
+    <rect class="ops-accent" x="24" y="24" width="472" height="72" rx="18"/>
+    <text class="section-title" x="48" y="55">Ops / Admin</text>
+    <text class="small" x="48" y="82">Receives internal operational emails and manages manual SMS.</text>
+
+    <g transform="translate(28 122)">
+      <rect class="card" x="0" y="0" width="464" height="118" rx="16"/>
+      <text class="tiny" x="22" y="27">OPS EMAILS</text>
+      <text class="card-title" x="22" y="55">New accounts and demand</text>
+      <text class="card-body" x="22" y="82">new family registration, new user registration,</text>
+      <text class="card-body" x="22" y="104">new care request, callback request lead</text>
+    </g>
+
+    <g transform="translate(28 256)">
+      <rect class="card" x="0" y="0" width="464" height="108" rx="16"/>
+      <text class="tiny" x="22" y="27">OPS REVIEW</text>
+      <text class="card-title" x="22" y="55">Human-review moments</text>
+      <text class="card-body" x="22" y="82">caregiver ready for review, voice call report</text>
+    </g>
+
+    <g transform="translate(28 380)">
+      <rect class="card" x="0" y="0" width="464" height="120" rx="16"/>
+      <text class="tiny" x="22" y="27">SMS CONSOLE</text>
+      <text class="card-title" x="22" y="55">Twilio manual messaging</text>
+      <text class="card-body" x="22" y="82">admin sends SMS, incoming SMS stored,</text>
+      <text class="card-body" x="22" y="104">delivery status webhook updates records</text>
+    </g>
+
+    <g transform="translate(28 516)">
+      <rect class="card" x="0" y="0" width="464" height="96" rx="16"/>
+      <text class="tiny" x="22" y="27">AUTH EMAILS</text>
+      <text class="card-title" x="22" y="55">Laravel account emails</text>
+      <text class="card-body" x="22" y="82">password reset, email verification when requested</text>
+    </g>
+
+    <g transform="translate(28 628)">
+      <rect class="flag" x="0" y="0" width="464" height="108" rx="16"/>
+      <text class="tiny" x="22" y="27">KNOWN GAPS / MISMATCHES</text>
+      <text class="card-title" x="22" y="55">Things to clean up</text>
+      <text class="card-body" x="22" y="82">payout_transfer_failed recipient/UI mismatch;</text>
+      <text class="card-body" x="22" y="104">family-completed caregiver notify appears unreachable</text>
+    </g>
+  </g>
+
+  <g transform="translate(110 1186)">
+    <rect class="badge-warn" x="0" y="0" width="1580" height="64" rx="22"/>
+    <text class="card-title" x="28" y="26">Channel note</text>
+    <text class="card-body" x="28" y="49">User lifecycle preferences show in-app, email, SMS, and push. Today, lifecycle SMS/push are placeholders only; real outbound SMS exists in the admin SMS console.</text>
+  </g>
+</svg>

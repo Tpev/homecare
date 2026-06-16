@@ -1,0 +1,235 @@
+[
+  {
+    "file": "DRAFTS\\Board Governance\\01-governance-summary.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[DATE]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Board Governance\\02-bylaws.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[DATE]",
+      "[PRINCIPAL OFFICE ADDRESS]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Board Governance\\03-action-by-sole-incorporator-electing-directors.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[CHARLES ADDRESS]",
+      "[DATE]",
+      "[INCORPORATOR NAME]",
+      "[THIBAUD ADDRESS]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Board Governance\\04-stockholder-written-consent-electing-directors.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[DATE]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Board Governance\\05-board-consent-adopting-governance.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[DATE]",
+      "[OFFICER NAME]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Board Governance\\06-founder-voting-and-governance-agreement.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[DATE]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Board Governance\\07-reserved-matters-schedule.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[AMOUNT]",
+      "[DATE]",
+      "[TERM]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Board Governance\\08-indemnification-agreement-charles-petrini-poli.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[DATE]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Board Governance\\09-indemnification-agreement-thibaud-peverelli.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[DATE]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Board Governance\\10-board-approval-authority-matrix.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[AMOUNT]",
+      "[DATE]",
+      "[TERM]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Board Governance\\11-conflict-of-interest-policy.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[DATE]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Board Governance\\board-governance-complete-package.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[AMOUNT]",
+      "[CHARLES ADDRESS]",
+      "[DATE]",
+      "[INCORPORATOR NAME]",
+      "[OFFICER NAME]",
+      "[PRINCIPAL OFFICE ADDRESS]",
+      "[TERM]",
+      "[THIBAUD ADDRESS]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Stocks\\01-initial-cap-table.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[DATE]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Stocks\\02-board-consent-initial-founder-share-issuance.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[CHARLES TOTAL PURCHASE PRICE]",
+      "[DATE]",
+      "[PAR VALUE]",
+      "[PRICE PER SHARE]",
+      "[THIBAUD TOTAL PURCHASE PRICE]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Stocks\\03-founder-stock-purchase-agreement-charles-petrini-poli.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[BOARD APPROVAL DATE]",
+      "[CHARLES ADDRESS]",
+      "[CHARLES TOTAL PURCHASE PRICE]",
+      "[CLOSING DATE]",
+      "[DATE]",
+      "[PAR VALUE]",
+      "[PRICE PER SHARE]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Stocks\\04-founder-stock-purchase-agreement-thibaud-peverelli.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[BOARD APPROVAL DATE]",
+      "[CLOSING DATE]",
+      "[DATE]",
+      "[PAR VALUE]",
+      "[PRICE PER SHARE]",
+      "[THIBAUD ADDRESS]",
+      "[THIBAUD TOTAL PURCHASE PRICE]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Stocks\\05-uncertificated-share-notice-charles-petrini-poli.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[CHARLES ADDRESS]",
+      "[CLOSING DATE]",
+      "[DATE]",
+      "[PAR VALUE]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Stocks\\06-uncertificated-share-notice-thibaud-peverelli.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[CLOSING DATE]",
+      "[DATE]",
+      "[PAR VALUE]",
+      "[THIBAUD ADDRESS]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Stocks\\07-stock-ledger.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[CHARLES ADDRESS]",
+      "[CHARLES TOTAL PURCHASE PRICE]",
+      "[CLOSING DATE]",
+      "[PAR VALUE]",
+      "[THIBAUD ADDRESS]",
+      "[THIBAUD TOTAL PURCHASE PRICE]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Stocks\\08-founder-payment-receipts.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[CHARLES TOTAL PURCHASE PRICE]",
+      "[DATE]",
+      "[PAYMENT DATE]",
+      "[PAYMENT METHOD]",
+      "[PRICE PER SHARE]",
+      "[THIBAUD TOTAL PURCHASE PRICE]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Stocks\\09-closing-checklist.docx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": true,
+    "placeholders": [
+      "[ ]",
+      "[CHARLES TOTAL PURCHASE PRICE]",
+      "[DATE]",
+      "[PAR VALUE]",
+      "[PRICE PER SHARE]",
+      "[THIBAUD TOTAL PURCHASE PRICE]"
+    ]
+  },
+  {
+    "file": "DRAFTS\\Stocks\\initial-cap-table-and-stock-ledger.xlsx",
+    "contains_old_company_placeholder": false,
+    "contains_lolo": false,
+    "placeholders": [
+      "[CHARLES ADDRESS]",
+      "[CHARLES TOTAL PURCHASE PRICE]",
+      "[CLOSING DATE]",
+      "[THIBAUD ADDRESS]",
+      "[THIBAUD TOTAL PURCHASE PRICE]"
+    ]
+  }
+]

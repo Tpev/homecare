@@ -7,6 +7,7 @@ use App\Models\Lead;
 use App\Models\LeadActivity;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -100,6 +101,108 @@ class AdminCrmTest extends TestCase
             'lead_id' => $lead->id,
             'type' => LeadActivity::TYPE_STAGE_CHANGE,
         ]);
+    }
+
+    public function test_sales_user_can_access_only_crm_and_own_referral_leads(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'test@test.com',
+            'role' => 'admin',
+            'name' => 'Ops Admin',
+        ]);
+        $sales = User::factory()->create([
+            'email' => 'jess.eberdt@gmail.com',
+            'role' => 'sales',
+            'name' => 'Jess Eberdt',
+        ]);
+        $otherSales = User::factory()->create([
+            'email' => 'rj@antonellilawfirm.com',
+            'role' => 'sales',
+            'name' => 'RJ Antonelli',
+        ]);
+
+        $this->actingAs($sales)
+            ->get(route('admin.crm.index'))
+            ->assertOk()
+            ->assertSee('Lead command center')
+            ->assertSee('CRM')
+            ->assertDontSee('Admin Users')
+            ->assertDontSee('Admin Requests')
+            ->assertDontSee('Comms &amp; money', false);
+
+        $this->actingAs($sales)->get(route('admin.leads.index'))->assertOk();
+        $this->actingAs($sales)->get(route('admin.users.index'))->assertForbidden();
+        $this->actingAs($sales)->get(route('admin.requests.index'))->assertForbidden();
+        $this->actingAs($sales)->get(route('admin.sms.index'))->assertForbidden();
+        $this->actingAs($sales)->get(route('admin.payments.ops'))->assertForbidden();
+
+        Livewire::actingAs($sales)
+            ->test(LeadsIndex::class, ['pipeline' => Lead::TYPE_REFERRAL])
+            ->set('leadForm.name', 'Duke discharge team')
+            ->set('leadForm.contact_role', 'Case manager')
+            ->set('leadForm.company', 'Duke Hospital')
+            ->set('leadForm.email', 'duke@example.com')
+            ->set('leadForm.phone', '555-111-4444')
+            ->set('leadForm.location', 'Durham, NC')
+            ->set('leadForm.source', 'hospital')
+            ->set('leadForm.priority', Lead::PRIORITY_HIGH)
+            ->set('leadForm.assigned_admin_id', (string) $otherSales->id)
+            ->call('createLead')
+            ->assertHasNoErrors();
+
+        $lead = Lead::query()->sole();
+
+        $this->assertSame(Lead::TYPE_REFERRAL, $lead->lead_type);
+        $this->assertSame($otherSales->id, $lead->assigned_admin_id);
+
+        Livewire::actingAs($admin)
+            ->test(LeadsIndex::class)
+            ->set('leadForm.name', 'Don Johnson')
+            ->set('leadForm.status', 'new')
+            ->set('leadForm.priority', Lead::PRIORITY_NORMAL)
+            ->set('leadForm.assigned_admin_id', (string) $sales->id)
+            ->call('createLead')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('leads', [
+            'name' => 'Don Johnson',
+            'assigned_admin_id' => $sales->id,
+        ]);
+    }
+
+    public function test_sales_user_dashboard_redirects_to_crm(): void
+    {
+        $sales = User::factory()->create([
+            'email' => 'rj@antonellilawfirm.com',
+            'role' => 'sales',
+            'name' => 'RJ Antonelli',
+        ]);
+
+        $this->actingAs($sales)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('admin.crm.index', absolute: false));
+    }
+
+    public function test_create_sales_user_command_upserts_crm_only_accounts(): void
+    {
+        $this->artisan('crm:create-sales-user rj@antonellilawfirm.com --name="RJ Antonelli" --password=TemporaryPass123!')
+            ->assertSuccessful();
+
+        $user = User::query()->where('email', 'rj@antonellilawfirm.com')->sole();
+
+        $this->assertSame('sales', $user->role);
+        $this->assertSame('RJ Antonelli', $user->name);
+        $this->assertTrue(Hash::check('TemporaryPass123!', $user->password));
+
+        $this->artisan('crm:create-sales-user rj@antonellilawfirm.com --name="RJ Sales" --password=ChangedPass123!')
+            ->assertSuccessful();
+
+        $this->assertDatabaseCount('users', 1);
+        $user->refresh();
+
+        $this->assertSame('RJ Sales', $user->name);
+        $this->assertSame('sales', $user->role);
+        $this->assertTrue(Hash::check('ChangedPass123!', $user->password));
     }
 
     public function test_admin_can_create_and_advance_referral_source_lead(): void

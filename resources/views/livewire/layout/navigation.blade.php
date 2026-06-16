@@ -20,6 +20,8 @@ new class extends Component
         $isCaregiver = $user?->role === 'caregiver';
         $isFamily = $user?->role === 'family';
         $isAdmin = $user && ($user->role === 'admin' || strtolower($user->email) === 'test@test.com');
+        $isSales = $user?->role === 'sales';
+        $canAccessCrm = $isAdmin || $isSales;
         $caregiverProfile = $isCaregiver ? $user?->caregiverProfile : null;
         $caregiverOnboardingState = $isCaregiver
             ? app(\App\Support\CaregiverOnboardingState::class)->build($user)
@@ -178,7 +180,7 @@ new class extends Component
 
         $primaryLinks = [];
 
-        if ($isAdmin) {
+        if ($canAccessCrm) {
             $primaryLinks = [$adminCrmLink];
         } else {
             if ($user && ! $caregiverOnboardingMode) {
@@ -273,50 +275,52 @@ new class extends Component
                     </span>
                     <span class="block">
                         <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo" class="block h-6 w-auto object-contain sm:h-7" />
-                        <span class="mt-1 hidden text-[11px] font-medium uppercase tracking-[0.16em] text-[#6E746F] md:block">{{ $isAdmin ? 'Admin console' : ($isCaregiver ? 'Caregiver workspace' : ($isFamily ? 'Family workspace' : 'Care that feels personal.')) }}</span>
+                        <span class="mt-1 hidden text-[11px] font-medium uppercase tracking-[0.16em] text-[#6E746F] md:block">{{ $canAccessCrm ? ($isAdmin ? 'Admin console' : 'Sales workspace') : ($isCaregiver ? 'Caregiver workspace' : ($isFamily ? 'Family workspace' : 'Care that feels personal.')) }}</span>
                     </span>
                 </a>
             </div>
 
             <div class="hidden min-w-0 flex-1 items-center gap-2 sm:ml-8 sm:mr-72 sm:flex">
-                @if ($isAdmin)
+                @if ($canAccessCrm)
                     <x-nav-link :href="$adminCrmLink['href']" :active="$adminCrmLink['active']" wire:navigate>
                         {{ __($adminCrmLink['label']) }}
                     </x-nav-link>
 
-                    @foreach ($adminNavGroups as $group)
-                        <div class="relative" x-data="{ open: false }">
-                            <button
-                                type="button"
-                                @click="open = !open"
-                                class="inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-semibold transition {{ $group['active'] ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#547067] hover:bg-[#F8F0E2] hover:text-[#23483F]' }}"
-                            >
-                                <span>{{ $group['label'] }}</span>
-                                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.12l3.71-3.89a.75.75 0 111.08 1.04l-4.25 4.46a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
+                    @if ($isAdmin)
+                        @foreach ($adminNavGroups as $group)
+                            <div class="relative" x-data="{ open: false }">
+                                <button
+                                    type="button"
+                                    @click="open = !open"
+                                    class="inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-semibold transition {{ $group['active'] ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#547067] hover:bg-[#F8F0E2] hover:text-[#23483F]' }}"
+                                >
+                                    <span>{{ $group['label'] }}</span>
+                                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.12l3.71-3.89a.75.75 0 111.08 1.04l-4.25 4.46a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
 
-                            <div
-                                x-cloak
-                                x-show="open"
-                                x-transition
-                                @click.outside="open = false"
-                                class="absolute left-0 z-50 mt-2 w-56 rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] p-2 shadow-xl"
-                                style="display: none;"
-                            >
-                                @foreach ($group['items'] as $item)
-                                    <a
-                                        href="{{ $item['href'] }}"
-                                        wire:navigate
-                                        class="block rounded-xl px-3 py-2 text-sm font-medium {{ $item['active'] ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#23483F] hover:bg-[#F8F0E2]' }}"
-                                    >
-                                        {{ __($item['label']) }}
-                                    </a>
-                                @endforeach
+                                <div
+                                    x-cloak
+                                    x-show="open"
+                                    x-transition
+                                    @click.outside="open = false"
+                                    class="absolute left-0 z-50 mt-2 w-56 rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] p-2 shadow-xl"
+                                    style="display: none;"
+                                >
+                                    @foreach ($group['items'] as $item)
+                                        <a
+                                            href="{{ $item['href'] }}"
+                                            wire:navigate
+                                            class="block rounded-xl px-3 py-2 text-sm font-medium {{ $item['active'] ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#23483F] hover:bg-[#F8F0E2]' }}"
+                                        >
+                                            {{ __($item['label']) }}
+                                        </a>
+                                    @endforeach
+                                </div>
                             </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    @endif
                 @else
                     @foreach ($primaryLinks as $link)
                         @if (!empty($link['primary']))
@@ -378,11 +382,11 @@ new class extends Component
                     class="absolute right-0 z-50 mt-2 w-72 rounded-[1.4rem] border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] p-2 shadow-xl space-y-1"
                     style="display: none;"
                 >
-                    @if ($isAdmin)
+                    @if ($canAccessCrm)
                         <div class="rounded-2xl border border-[#E3D6C5] bg-[#F8F0E2] px-3 py-3 text-sm text-[#23483F]">
                             <p class="font-semibold text-[#23483F]">{{ $user->name }}</p>
                             <p class="mt-1 text-xs text-[#6E746F]">{{ $user->email }}</p>
-                            <p class="mt-2 text-xs font-medium uppercase tracking-[0.14em] text-[#6E746F]">Admin account</p>
+                            <p class="mt-2 text-xs font-medium uppercase tracking-[0.14em] text-[#6E746F]">{{ $isAdmin ? 'Admin account' : 'Sales account' }}</p>
                         </div>
                     @else
                         @if ($isCaregiver && $caregiverOnboardingMode)
@@ -454,19 +458,21 @@ new class extends Component
         class="sm:hidden border-t border-[#E3D6C5]/80 bg-[rgba(255,253,250,0.98)] backdrop-blur"
     >
         <div class="space-y-1 px-2 pb-3 pt-2">
-            @if ($isAdmin)
+            @if ($canAccessCrm)
                 <x-responsive-nav-link :href="$adminCrmLink['href']" :active="$adminCrmLink['active']" wire:navigate>
                     {{ __($adminCrmLink['label']) }}
                 </x-responsive-nav-link>
 
-                @foreach ($adminNavGroups as $group)
-                    <div class="px-2 pt-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#6E746F]">{{ $group['label'] }}</div>
-                    @foreach ($group['items'] as $item)
-                        <x-responsive-nav-link :href="$item['href']" :active="$item['active']" wire:navigate>
-                            {{ __($item['label']) }}
-                        </x-responsive-nav-link>
+                @if ($isAdmin)
+                    @foreach ($adminNavGroups as $group)
+                        <div class="px-2 pt-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#6E746F]">{{ $group['label'] }}</div>
+                        @foreach ($group['items'] as $item)
+                            <x-responsive-nav-link :href="$item['href']" :active="$item['active']" wire:navigate>
+                                {{ __($item['label']) }}
+                            </x-responsive-nav-link>
+                        @endforeach
                     @endforeach
-                @endforeach
+                @endif
             @else
                 @foreach ($primaryLinks as $link)
                     @if (!empty($link['primary']))
@@ -495,7 +501,7 @@ new class extends Component
                 </div>
 
                 <div class="mt-3 space-y-1 px-2">
-                    @if (! $isAdmin)
+                    @if (! $canAccessCrm)
                         @if ($isCaregiver && $caregiverOnboardingMode)
                             <x-responsive-nav-link :href="route('caregiver.setup.index')" wire:navigate>{{ __('Setup Hub') }}</x-responsive-nav-link>
                         @endif

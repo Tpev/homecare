@@ -59,12 +59,18 @@ use App\Livewire\Support\TicketsCenter;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['web', 'auth', 'admin.email'])
+Route::middleware(['web', 'auth', 'crm.access'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
         Route::get('/crm', LeadsIndex::class)->name('crm.index');
         Route::get('/leads', LeadsIndex::class)->name('leads.index');
+    });
+
+Route::middleware(['web', 'auth', 'admin.email'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
         Route::get('/caregivers/reviews', CaregiverReviewsQueue::class)->name('caregivers.reviews');
         Route::get('/caregivers/moderation-logs', \App\Livewire\Admin\CaregiverModerationLogs::class)
             ->name('caregivers.moderation_logs');
