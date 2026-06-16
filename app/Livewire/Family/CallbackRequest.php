@@ -4,6 +4,8 @@ namespace App\Livewire\Family;
 
 use App\Models\Lead;
 use App\Services\Ops\OpsAlertService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 
@@ -23,7 +25,16 @@ class CallbackRequest extends Component
 
     public string $notes = '';
 
+    public bool $consent_to_contact = false;
+
     public bool $submitted = false;
+
+    public string $landing_url = '';
+
+    public ?string $landing_referrer_url = null;
+
+    /** @var array<string, string> */
+    public array $tracking = [];
 
     /** @var array<int, string> */
     public array $serviceOptions = [
@@ -47,6 +58,10 @@ class CallbackRequest extends Component
         $serviceType = (string) request()->query('service_type', $this->service_type);
         $timePreference = (string) request()->query('time_preference', $this->callback_time);
 
+        $this->landing_url = request()->fullUrl();
+        $this->landing_referrer_url = request()->headers->get('referer');
+        $this->tracking = $this->trackingFromRequest(request());
+
         if (in_array($serviceType, $this->serviceOptions, true)) {
             $this->service_type = $serviceType;
         }
@@ -68,7 +83,11 @@ class CallbackRequest extends Component
             'service_type' => ['required', 'string', Rule::in($this->serviceOptions)],
             'callback_time' => ['required', 'string', Rule::in(array_keys($this->callbackOptions))],
             'notes' => ['nullable', 'string', 'max:1200'],
+            'consent_to_contact' => ['accepted'],
         ]);
+
+        $source = $this->leadSource();
+        $sourceDetail = $this->leadSourceDetail();
 
         $lead = Lead::query()->create([
             'lead_type' => 'family',
@@ -85,11 +104,16 @@ class CallbackRequest extends Component
                 'callback_time_label' => $this->callbackOptions[$validated['callback_time']],
                 'notes' => filled($validated['notes']) ? trim($validated['notes']) : null,
                 'starting_rate' => '$30/hr',
+                'consent_to_contact' => true,
+                'tracking' => $this->tracking,
+                'meta_pixel_event' => 'Lead',
             ],
             'status' => 'new',
-            'source' => 'callback_page',
-            'source_url' => request()->fullUrl(),
-            'referrer_url' => request()->headers->get('referer'),
+            'source' => $source,
+            'source_detail' => $sourceDetail,
+            'external_source' => $source === 'meta_ads' ? 'meta_ads' : null,
+            'source_url' => $this->landing_url ?: request()->fullUrl(),
+            'referrer_url' => $this->landing_referrer_url ?: request()->headers->get('referer'),
             'ip' => request()->ip(),
             'user_agent' => request()->userAgent(),
         ]);
@@ -97,10 +121,95 @@ class CallbackRequest extends Component
         app(OpsAlertService::class)->notifyCallbackRequestCreated($lead);
 
         $this->submitted = true;
+
+        $this->dispatch(
+            'lolo-callback-submitted',
+            lead_id: $lead->id,
+            event_name: 'Lead',
+            content_name: 'Family callback request',
+            content_category: 'home_care_callback',
+            value: 45,
+            currency: 'USD',
+        );
     }
 
     public function render()
     {
         return view('livewire.family.callback-request');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function trackingFromRequest(Request $request): array
+    {
+        $keys = [
+            'utm_source',
+            'utm_medium',
+            'utm_campaign',
+            'utm_term',
+            'utm_content',
+            'fbclid',
+            'gclid',
+            'msclkid',
+            'campaign_id',
+            'adset_id',
+            'ad_id',
+            'placement',
+            'site_source_name',
+        ];
+
+        $tracking = [];
+
+        foreach ($keys as $key) {
+            $value = $request->query($key);
+
+            if (! is_string($value) || trim($value) === '') {
+                continue;
+            }
+
+            $tracking[$key] = Str::limit(trim($value), 255, '');
+        }
+
+        return $tracking;
+    }
+
+    private function leadSource(): string
+    {
+        $utmSource = strtolower((string) ($this->tracking['utm_source'] ?? ''));
+
+        if (
+            str_contains($utmSource, 'meta')
+            || str_contains($utmSource, 'facebook')
+            || str_contains($utmSource, 'instagram')
+            || array_key_exists('fbclid', $this->tracking)
+        ) {
+            return 'meta_ads';
+        }
+
+        if (str_contains($utmSource, 'google') || array_key_exists('gclid', $this->tracking)) {
+            return 'google_ads';
+        }
+
+        if ($utmSource !== '') {
+            return Str::limit($utmSource, 40, '');
+        }
+
+        return 'callback_page';
+    }
+
+    private function leadSourceDetail(): ?string
+    {
+        $parts = array_filter([
+            $this->tracking['utm_campaign'] ?? null,
+            $this->tracking['utm_term'] ?? null,
+            $this->tracking['utm_content'] ?? null,
+        ], fn (?string $value) => filled($value));
+
+        if ($parts === []) {
+            return null;
+        }
+
+        return Str::limit(implode(' / ', $parts), 255, '');
     }
 }

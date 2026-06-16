@@ -10,10 +10,10 @@ Date: [DATE]
 | --- | --- |
 | [ ] | Confirm LoLo Care Inc has at least 1,000,000 authorized but unissued Common Stock shares available. |
 | [ ] | Confirm par value and purchase price per share. |
-| [ ] | Confirm RJ's address, bar jurisdiction, and bar number. |
-| [ ] | Confirm RJ is in good standing. |
+| [ ] | Confirm RJ's address and North Carolina State Bar number. |
+| [ ] | Confirm RJ is in good standing with the North Carolina State Bar. |
 | [ ] | Confirm securities-law exemption strategy with counsel, including Rule 701 or another available exemption. |
-| [ ] | Confirm professional-responsibility compliance in RJ's jurisdiction. |
+| [ ] | Confirm compliance with the North Carolina Rules of Professional Conduct, including Rules 1.8(a), 1.7, and 5.4. |
 | [ ] | Confirm whether LoLo Care Inc has independent counsel for the RJ transaction. |
 | [ ] | Confirm whether the $1,000 per month for 6 months should be a capital contribution, loan, SAFE, or separate stock purchase. |
 | [ ] | Confirm initial tasks, deliverables, deadlines, and monthly review process. |
@@ -31,10 +31,11 @@ Date: [DATE]
 | 6 | Restricted Stock Purchase Agreement | LoLo Care Inc and RJ |
 | 7 | Stockholder Joinder, Transfer Restriction, ROFR, and Confidentiality Agreement | LoLo Care Inc, RJ, Charles, Thibaud |
 | 8 | Capital Contribution and Funding Commitment Agreement | LoLo Care Inc and RJ |
-| 9 | Payment receipt for stock purchase price | LoLo Care Inc |
+| 9 | RJ Stock Purchase Payment Receipt | LoLo Care Inc |
 | 10 | Uncertificated Share Notice | LoLo Care Inc |
 | 11 | Updated cap table and stock ledger | Company record |
-| 12 | 83(b) election, if advised | RJ files with IRS within deadline |
+| 12 | RJ Funding Tracker and Contribution Receipts | Company record |
+| 13 | 83(b) election, if advised | RJ files with IRS within deadline |
 
 ## Closing Steps
 
@@ -59,4 +60,3 @@ Date: [DATE]
 | Monthly for 18 months | Update vesting tracker |
 | As needed | Issue default notice and cure period if services or funding are deficient |
 | At end of 18 months | Confirm vested/unvested share status and update stock ledger |
-

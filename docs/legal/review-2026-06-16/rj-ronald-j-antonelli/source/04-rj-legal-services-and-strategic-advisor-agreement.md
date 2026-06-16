@@ -1,6 +1,6 @@
 # Legal Services and Strategic Advisor Agreement
 
-This Legal Services and Strategic Advisor Agreement (this "Agreement") is entered into as of [DATE] (the "Effective Date"), by and between LoLo Care Inc, a Delaware corporation (the "Company"), and Ronald J. Antonelli ("Advisor" or "RJ").
+This Legal Services and Strategic Advisor Agreement (this "Agreement") is entered into as of [DATE] (the "Effective Date"), by and between LoLo Care Inc, a Delaware corporation (the "Company"), and Ronald J. Antonelli, a Raleigh, North Carolina-based lawyer ("Advisor" or "RJ").
 
 ## 1. Engagement
 
@@ -50,17 +50,17 @@ This Legal Services and Strategic Advisor Agreement (this "Agreement") is entere
 
 ## 6. Legal Ethics, Conflicts, and Independent Counsel
 
-6.1 **Professional Responsibility.** RJ shall comply with all professional-responsibility rules applicable to RJ and the services.
+6.1 **Professional Responsibility.** RJ shall comply with all professional-responsibility rules applicable to RJ and the services, including the North Carolina Rules of Professional Conduct to the extent applicable.
 
-6.2 **Business Transaction with Client.** The parties acknowledge that RJ's equity and funding arrangements may be treated as a lawyer business transaction with a client or as acquisition of a pecuniary interest in a client.
+6.2 **Business Transaction with Client.** The parties acknowledge that RJ's equity and funding arrangements may be treated as a lawyer business transaction with a client or as acquisition of a pecuniary interest in a client under North Carolina Rule of Professional Conduct 1.8(a).
 
-6.3 **Independent Counsel.** The Company is advised to seek independent legal counsel regarding this Agreement, the equity transaction, the funding commitment, professional-responsibility issues, securities-law issues, and tax issues.
+6.3 **Independent Counsel.** The Company is advised to seek independent legal counsel regarding this Agreement, the equity transaction, the funding commitment, North Carolina professional-responsibility issues, securities-law issues, and tax issues.
 
 6.4 **Separate Consent.** The parties shall sign a separate Professional Responsibility Disclosure and Consent before or concurrently with this Agreement.
 
 6.5 **Conflicts.** RJ shall disclose known conflicts of interest and shall not undertake work for the Company if prohibited by applicable professional-responsibility rules.
 
-6.6 **Good Standing.** RJ represents that RJ is duly licensed and in good standing in [RJ BAR DETAILS], subject to confirmation before signing.
+6.6 **Good Standing.** RJ represents that RJ is duly licensed and in good standing with the North Carolina State Bar, Bar No. [RJ NC BAR NUMBER], subject to confirmation before signing.
 
 ## 7. Confidentiality and Privilege
 
@@ -143,4 +143,3 @@ Ronald J. Antonelli
 Initial Statement of Work
 
 Attach `05-rj-initial-statement-of-work.md`.
-

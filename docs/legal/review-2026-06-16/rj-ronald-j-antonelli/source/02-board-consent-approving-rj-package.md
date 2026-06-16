@@ -8,7 +8,7 @@ The undersigned, being all of the members of the board of directors (the "Board"
 
 ## Recitals
 
-WHEREAS, the Company desires to engage Ronald J. Antonelli ("RJ") as a legal services provider and strategic advisor;
+WHEREAS, the Company desires to engage Ronald J. Antonelli ("RJ"), a Raleigh, North Carolina-based lawyer, as a legal services provider and strategic advisor;
 
 WHEREAS, RJ has agreed, subject to final documentation, to receive equity consisting of 500,000 vested shares and 500,000 shares subject to vesting over 18 months;
 
@@ -16,7 +16,7 @@ WHEREAS, RJ has also agreed, subject to final documentation, to contribute $1,00
 
 WHEREAS, the Board has reviewed the proposed RJ onboarding documents, including the Legal Services and Strategic Advisor Agreement, Restricted Stock Purchase Agreement, Stockholder Joinder, Capital Contribution and Funding Commitment Agreement, Professional Responsibility Disclosure and Consent, and related documents;
 
-WHEREAS, the Board has considered the fact that RJ is a lawyer and that the proposed equity and funding arrangement may require compliance with applicable lawyer professional-responsibility rules; and
+WHEREAS, the Board has considered the fact that RJ is a North Carolina lawyer and that the proposed equity and funding arrangement may require compliance with the North Carolina Rules of Professional Conduct, including Rules 1.8(a), 1.7, and 5.4; and
 
 WHEREAS, the Board has determined that the proposed transaction is advisable and in the best interests of the Company, subject to completion of the open items and counsel review.
 
@@ -93,4 +93,3 @@ Director:
 __________________________________
 
 Thibaud Peverelli
-

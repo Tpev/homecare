@@ -2,7 +2,7 @@
 
 Company: LoLo Care Inc  
 Prepared: June 16, 2026  
-Recipient: Ronald J. Antonelli
+Recipient: Ronald J. Antonelli, a Raleigh, North Carolina-based lawyer
 
 ## Deal Summary
 
@@ -49,13 +49,15 @@ After the full RJ package is issued, LoLo Care Inc would have 9,000,000 issued s
 12. `12-rj-cap-table-update.md`
 13. `12-rj-cap-table-update.csv`
 14. `13-rj-signing-and-closing-checklist.md`
+15. `14-rj-stock-purchase-payment-receipt.md`
+16. `15-rj-funding-tracker-and-receipts.md`
 
 ## Open Items Before Signature
 
 | Item | Needed value |
 | --- | --- |
 | RJ address | [RJ ADDRESS] |
-| RJ bar jurisdiction and bar number | [RJ BAR DETAILS] |
+| RJ bar jurisdiction and bar number | North Carolina State Bar; Bar No. [RJ NC BAR NUMBER] |
 | Effective date | [DATE] |
 | Board approval date | [BOARD APPROVAL DATE] |
 | Closing date | [CLOSING DATE] |
@@ -69,3 +71,6 @@ After the full RJ package is issued, LoLo Care Inc would have 9,000,000 issued s
 | Required monthly time commitment, if any | [HOURS] |
 | Independent counsel confirmation | [COUNSEL NAME] |
 
+## North Carolina Ethics Note
+
+Because RJ is a North Carolina lawyer based in Raleigh, the professional-responsibility review should specifically address the North Carolina Rules of Professional Conduct, including Rule 1.8(a) for business transactions with clients, Rule 1.7 for personal-interest conflicts, and Rule 5.4 for lawyer professional independence.

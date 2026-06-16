@@ -61,7 +61,7 @@ class HomepageQuickRequestFlowTest extends TestCase
         $this->get(route('landing.get-care'))
             ->assertOk()
             ->assertSeeText('Request a callback')
-            ->assertSeeText('Tell us what kind of support you need.');
+            ->assertSeeText('Tell us what kind of support would help.');
 
         Livewire::test(CallbackRequest::class)
             ->set('full_name', 'Jane Family')
@@ -71,8 +71,10 @@ class HomepageQuickRequestFlowTest extends TestCase
             ->set('service_type', 'Companion care')
             ->set('callback_time', 'tomorrow_morning')
             ->set('notes', 'My mom needs companionship twice a week.')
+            ->set('consent_to_contact', true)
             ->call('submit')
-            ->assertSet('submitted', true);
+            ->assertSet('submitted', true)
+            ->assertDispatched('lolo-callback-submitted');
 
         $lead = Lead::query()->sole();
 
@@ -83,6 +85,7 @@ class HomepageQuickRequestFlowTest extends TestCase
         $this->assertSame('callback_request', $lead->data['intent']);
         $this->assertSame('Companion care', $lead->data['service_type']);
         $this->assertSame('Tomorrow morning', $lead->data['callback_time_label']);
+        $this->assertTrue($lead->data['consent_to_contact']);
 
         Mail::assertSent(CallbackRequestOpsAlertMail::class, function (CallbackRequestOpsAlertMail $mail) use ($lead) {
             return $mail->lead->is($lead)
@@ -90,6 +93,40 @@ class HomepageQuickRequestFlowTest extends TestCase
                 && $mail->hasTo('cpetrinipoli@hub.healthcare')
                 && str_contains($mail->render(), 'My mom needs companionship twice a week.');
         });
+    }
+
+    public function test_callback_page_preserves_paid_social_tracking_on_lead(): void
+    {
+        config(['marketplace.ops_alert_recipients' => []]);
+        Mail::fake();
+
+        Livewire::withQueryParams([
+            'utm_source' => 'meta',
+            'utm_medium' => 'paid_social',
+            'utm_campaign' => 'Lolo_Care_Callback_Wake_County',
+            'utm_term' => 'Adult_Children_35_64',
+            'utm_content' => 'Short_Visits_Relief',
+            'fbclid' => 'IwAR-test-click-id',
+        ])
+            ->test(CallbackRequest::class)
+            ->set('full_name', 'Sam Family')
+            ->set('phone', '(984) 400-1234')
+            ->set('email', 'sam@example.com')
+            ->set('zip', '27607')
+            ->set('service_type', 'Errands and rides')
+            ->set('callback_time', 'today')
+            ->set('consent_to_contact', true)
+            ->call('submit')
+            ->assertSet('submitted', true);
+
+        $lead = Lead::query()->sole();
+
+        $this->assertSame('meta_ads', $lead->source);
+        $this->assertSame('meta_ads', $lead->external_source);
+        $this->assertSame('Lolo_Care_Callback_Wake_County / Adult_Children_35_64 / Short_Visits_Relief', $lead->source_detail);
+        $this->assertSame('meta', $lead->data['tracking']['utm_source']);
+        $this->assertSame('paid_social', $lead->data['tracking']['utm_medium']);
+        $this->assertSame('IwAR-test-click-id', $lead->data['tracking']['fbclid']);
     }
 
     public function test_family_request_wizard_prefills_from_homepage_quick_request_draft(): void

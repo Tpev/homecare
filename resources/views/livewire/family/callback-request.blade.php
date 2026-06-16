@@ -10,8 +10,8 @@
         <form wire:submit="submit" class="lolo-callback-form">
             <div>
                 <p class="lolo-callback-kicker">Care callback</p>
-                <h2>Tell us what kind of support you need.</h2>
-                <p class="lolo-callback-intro">Share a few details and we will call you back to help plan the next step.</p>
+                <h2>Tell us what kind of support would help.</h2>
+                <p class="lolo-callback-intro">Share the basics. A LoLo care coordinator will call back with the clearest next step.</p>
             </div>
 
             <div class="lolo-callback-grid">
@@ -66,8 +66,17 @@
 
             <label>
                 <span>Anything we should know?</span>
-                <textarea wire:model.blur="notes" rows="4" placeholder="Example: My mom needs companionship twice a week and help with light meals."></textarea>
+                <textarea wire:model.blur="notes" rows="4" placeholder="Example: We are looking for companionship twice a week and help with light meals."></textarea>
                 @error('notes') <small>{{ $message }}</small> @enderror
+            </label>
+
+            <label class="lolo-callback-consent">
+                <input type="checkbox" wire:model="consent_to_contact">
+                <span>
+                    I agree LoLo may call or text me about this care request. Message and data rates may apply. I can reply STOP to texts.
+                    <a href="{{ route('legal.show', ['slug' => 'privacy-policy']) }}" target="_blank" rel="noopener noreferrer">Privacy policy</a>
+                </span>
+                @error('consent_to_contact') <small>{{ $message }}</small> @enderror
             </label>
 
             <button type="submit" class="lolo-callback-submit" wire:loading.attr="disabled">
@@ -75,7 +84,7 @@
                 <span wire:loading>Sending request...</span>
             </button>
 
-            <p class="lolo-callback-note">Care starts at $30/hr. No long-term commitment.</p>
+            <p class="lolo-callback-note">Care starts at $30/hr. Non-medical support only. Not for emergencies.</p>
         </form>
     @endif
 </div>

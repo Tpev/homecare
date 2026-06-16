@@ -1,7 +1,7 @@
 # RJ Strategy and Document Memo
 
 Company: LoLo Care Inc  
-Recipient: Ronald J. Antonelli  
+Recipient: Ronald J. Antonelli, a Raleigh, North Carolina-based lawyer  
 Date: June 16, 2026
 
 ## Executive Summary
@@ -84,14 +84,14 @@ Counsel and tax/accounting advisors should confirm whether this should instead b
 
 ## Lawyer Ethics Strategy
 
-Because RJ is a lawyer, the package includes a professional-responsibility disclosure and written consent. The company should be advised in writing to seek independent legal counsel, should have a reasonable opportunity to do so, and should give written informed consent only after understanding:
+Because RJ is a Raleigh, North Carolina-based lawyer, the package includes a professional-responsibility disclosure and written consent tailored to North Carolina. The company should be advised in writing to seek independent legal counsel, should have a reasonable opportunity to do so, and should give written informed consent only after understanding:
 
 - RJ's equity interest may create conflicts;
 - RJ's personal investment interest may diverge from the company's interest;
 - RJ should not advise the company as sole counsel on the fairness of his own transaction;
 - local lawyer ethics rules may impose additional requirements.
 
-The package is drafted around ABA Model Rule 1.8(a)-style principles, but RJ's actual jurisdiction must be checked.
+The package is drafted around the North Carolina Rules of Professional Conduct, especially Rule 1.8(a), which addresses a lawyer entering a business transaction with a client or acquiring a pecuniary interest adverse to a client; Rule 1.7, which addresses conflicts created by a lawyer's personal interests; and Rule 5.4, which protects a lawyer's professional independence. RJ's North Carolina State Bar number still needs to be inserted.
 
 ## Securities and Tax Strategy
 
@@ -157,7 +157,9 @@ Step-by-step closing checklist.
 - Delaware DGCL Section 157 addresses rights and options respecting stock.
 - SEC Rule 701 can apply to compensatory equity issued by private companies to employees, consultants, and advisors if requirements are met.
 - IRS Section 83(b) election timing is generally 30 days after restricted stock is transferred.
-- ABA Model Rule 1.8(a) addresses lawyer business transactions with clients and lawyer acquisition of pecuniary interests adverse to clients.
+- North Carolina Rule of Professional Conduct 1.8(a) addresses lawyer business transactions with clients and lawyer acquisition of pecuniary interests adverse to clients.
+- North Carolina Rule of Professional Conduct 1.7 addresses concurrent conflicts, including conflicts created by a lawyer's personal interests.
+- North Carolina Rule of Professional Conduct 5.4 addresses lawyer professional independence.
 
 Sources:
 
@@ -166,5 +168,6 @@ Sources:
 - Delaware DGCL Sections 212 and 218: https://delcode.delaware.gov/title8/c001/sc07/
 - SEC Rule 701 overview: https://www.sec.gov/resources-small-businesses/exempt-offerings/employee-benefit-plans-rule-701-0
 - IRS Form 15620 / Section 83(b): https://www.irs.gov/pub/irs-pdf/f15620.pdf
-- ABA Model Rule 1.8: https://www.americanbar.org/groups/professional_responsibility/publications/model_rules_of_professional_conduct/rule_1_8_current_clients_specific_rules/
-
+- North Carolina Rule 1.8: https://www.ncbar.gov/for-lawyers/ethics-and-governing-rules/rules-of-professional-conduct/10-119-client-lawyer-relationship/18-conflict-of-interest-current-clients-specific-rules/
+- North Carolina Rule 1.7: https://www.ncbar.gov/for-lawyers/ethics-and-governing-rules/rules-of-professional-conduct/10-119-client-lawyer-relationship/17-conflict-of-interest-current-clients/
+- North Carolina Rule 5.4: https://www.ncbar.gov/for-lawyers/ethics-and-governing-rules/rules-of-professional-conduct/51-57-law-firms-and-associations/54-professional-independence-of-a-lawyer/

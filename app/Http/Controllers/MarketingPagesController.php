@@ -32,6 +32,16 @@ class MarketingPagesController extends Controller
         );
     }
 
+    public function getCare(Request $request, PageViewTracker $tracker): View|Response
+    {
+        return $this->trackedLandingResponse(
+            request: $request,
+            tracker: $tracker,
+            view: 'marketing.family-callback',
+            event: 'family'
+        );
+    }
+
     public function familyVariant(Request $request, PageViewTracker $tracker, string $variant): View|Response
     {
         abort_unless(in_array($variant, self::FAMILY_VARIANTS, true), 404);

@@ -4,7 +4,7 @@ This Professional Responsibility Disclosure and Written Consent (this "Disclosur
 
 ## 1. Purpose
 
-RJ is a lawyer and is expected to provide legal services and strategic advisory services to the Company. RJ is also expected to receive equity in the Company and contribute $1,000 per month for 6 months. This creates legal ethics and conflict-of-interest issues that must be disclosed and consented to before signing.
+RJ is a Raleigh, North Carolina-based lawyer and is expected to provide legal services and strategic advisory services to the Company. RJ is also expected to receive equity in the Company and contribute $1,000 per month for 6 months. This creates legal ethics and conflict-of-interest issues that must be disclosed and consented to before signing.
 
 ## 2. Transaction Summary
 
@@ -25,8 +25,10 @@ The Company acknowledges that:
 - RJ's funding commitment may create business and investment interests that differ from the Company's interests;
 - RJ may have a personal interest in how the equity, vesting, funding, tax, securities, and governance documents are drafted;
 - RJ should not be the Company's only legal advisor on the fairness or legal effect of RJ's own transaction;
-- professional-responsibility rules may require full written disclosure, fair and reasonable terms, advice to seek independent counsel, a reasonable opportunity to seek independent counsel, and written informed consent;
-- local rules in RJ's jurisdiction may impose additional or different requirements.
+- North Carolina Rule of Professional Conduct 1.8(a) may require fair and reasonable terms, full written disclosure in a reasonably understandable manner, written advice to seek independent counsel, a reasonable opportunity to seek independent counsel, and written informed consent;
+- North Carolina Rule of Professional Conduct 1.7 may require analysis of whether RJ's personal equity and funding interests materially limit the representation and whether any conflict is consentable;
+- North Carolina Rule of Professional Conduct 5.4 may require confirmation that the arrangement does not interfere with RJ's independent professional judgment or the client-lawyer relationship;
+- other North Carolina rules, ethics opinions, or facts may impose additional requirements.
 
 ## 4. Independent Counsel Recommendation
 
@@ -37,7 +39,7 @@ The Company is advised in writing to seek independent legal counsel regarding:
 - the funding commitment;
 - securities-law compliance;
 - tax consequences;
-- professional-responsibility compliance;
+- North Carolina professional-responsibility compliance;
 - conflicts of interest;
 - whether RJ can ethically provide legal services to the Company while holding the equity and funding obligations described above.
 
@@ -49,11 +51,11 @@ The Company acknowledges that it has had, or before signing the operative docume
 
 RJ represents that:
 
-- RJ will comply with all professional-responsibility rules applicable to RJ;
+- RJ will comply with all professional-responsibility rules applicable to RJ, including the North Carolina Rules of Professional Conduct;
 - RJ has disclosed any known conflict that would materially affect RJ's ability to provide services to the Company;
 - RJ will not advise the Company as sole counsel on whether the RJ transaction is fair and reasonable to the Company;
 - RJ will cooperate with independent counsel review of the transaction;
-- RJ will promptly inform the Company if any bar rule, conflict rule, or professional obligation affects RJ's ability to perform services or hold the equity.
+- RJ will promptly inform the Company if any North Carolina State Bar rule, conflict rule, ethics opinion, or professional obligation affects RJ's ability to perform services or hold the equity.
 
 ## 7. Company Consent
 
@@ -94,4 +96,3 @@ Name: [COUNSEL NAME]
 Firm: _____________________________
 
 Date: _____________________________
-
