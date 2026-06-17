@@ -165,6 +165,11 @@ new class extends Component
                 'active' => request()->routeIs('admin.analytics.*'),
                 'items' => [
                     [
+                        'label' => 'Usage Analytics',
+                        'href' => route('admin.analytics.usage'),
+                        'active' => request()->routeIs('admin.analytics.usage'),
+                    ],
+                    [
                         'label' => 'Admin Funnel',
                         'href' => route('admin.analytics.funnel'),
                         'active' => request()->routeIs('admin.analytics.funnel'),

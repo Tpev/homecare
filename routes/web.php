@@ -26,6 +26,7 @@ use App\Livewire\Admin\LeadsIndex;
 use App\Livewire\Admin\PaymentsQueue;
 use App\Livewire\Admin\SmsInbox;
 use App\Livewire\Admin\SupportTicketsQueue;
+use App\Livewire\Admin\UsageAnalytics;
 use App\Livewire\Admin\UserShow;
 use App\Livewire\Admin\UsersIndex;
 use App\Livewire\Caregiver\ApplyToCareRequest;
@@ -77,6 +78,7 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/support/tickets', SupportTicketsQueue::class)->name('support.tickets');
         Route::get('/sms', SmsInbox::class)->name('sms.index');
         Route::get('/payments/ops', PaymentsQueue::class)->name('payments.ops');
+        Route::get('/analytics/usage', UsageAnalytics::class)->name('analytics.usage');
         Route::get('/analytics/funnel', FunnelAnalytics::class)->name('analytics.funnel');
         Route::get('/analytics/caregiver-map', CaregiverCoverageMap::class)->name('analytics.caregiver-map');
         Route::get('/users', UsersIndex::class)->name('users.index');

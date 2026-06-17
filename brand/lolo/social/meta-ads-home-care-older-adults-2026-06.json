@@ -1,0 +1,35 @@
+[
+  {
+    "id": "01-stay-home",
+    "angle": "older adult independence",
+    "image": "public/images/marketing/homepage/hero-care.jpg",
+    "kicker": "Non-medical home care",
+    "headline": "Home care that helps you stay home.",
+    "body": "Companionship, meals, errands, and everyday support from LoLo.",
+    "proof": "Clear support from $30/hr",
+    "cta": "Request a callback",
+    "theme": "cream"
+  },
+  {
+    "id": "02-this-week",
+    "angle": "near-term need",
+    "image": "public/images/marketing/homepage/families.jpg",
+    "kicker": "Home care this week",
+    "headline": "Need home care soon?",
+    "body": "Start with one visit or recurring help at home. LoLo calls back with clear next steps.",
+    "proof": "Companionship, errands, meals",
+    "cta": "Get a callback",
+    "theme": "deep"
+  },
+  {
+    "id": "03-easier-day",
+    "angle": "everyday routines",
+    "image": "public/images/marketing/homepage/human-moment.jpg",
+    "kicker": "Home care for daily life",
+    "headline": "Make the day easier at home.",
+    "body": "Friendly non-medical help with routines, meals, rides, and company.",
+    "proof": "Flexible visits. No pressure.",
+    "cta": "Talk to LoLo",
+    "theme": "light"
+  }
+]
