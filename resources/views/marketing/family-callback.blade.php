@@ -1,246 +1,311 @@
 @extends('layouts.marketing')
 
-@section('title', 'Private home care callback | LoLo')
-@section('meta_description', 'Request a LoLo callback for non-medical home care, companionship, errands, meal support, and flexible everyday help at home.')
+@section('title', 'Find trusted home care support | LoLo')
+@section('meta_description', 'Answer a few quick questions and request a LoLo callback for non-medical home care, companionship, errands, meals, and flexible support at home.')
 @section('canonical', route('landing.get-care'))
 @section('og_image', asset('images/marketing/homepage/hero-care.jpg'))
 @section('og_image_alt', 'A caregiver and older adult smiling together at home.')
 
 @section('content')
     <style>
-        .lolo-callback-page {
+        .lolo-getcare-page {
             --care-deep: #0f3d3e;
-            --care-deep-soft: #23483f;
+            --care-ink: #24302d;
+            --care-cream: #f5f1eb;
+            --care-ivory: #faf9f7;
+            --care-oat: #f1e5d2;
             --care-blue: #4f6faf;
             --care-lavender: #7c5ddc;
-            --care-cream: #f5f1eb;
-            --care-white: #faf9f7;
-            --care-oat: #f1e5d2;
             --care-coral: #c96b55;
             --care-cta: #b95745;
-            --care-ink: #24302d;
             --care-muted: #64736f;
+            min-height: 100svh;
+            background:
+                linear-gradient(180deg, rgba(250, 249, 247, 0.86), rgba(245, 241, 235, 0.98)),
+                var(--care-cream);
             color: var(--care-deep);
-            background: var(--care-cream);
             font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
         }
 
-        .lolo-callback-page *,
-        .lolo-callback-page *::before,
-        .lolo-callback-page *::after {
+        .lolo-getcare-page *,
+        .lolo-getcare-page *::before,
+        .lolo-getcare-page *::after {
             box-sizing: border-box;
         }
 
-        .lolo-callback-page h1,
-        .lolo-callback-page h2,
-        .lolo-callback-page h3 {
+        .lolo-getcare-page h1,
+        .lolo-getcare-page h2,
+        .lolo-getcare-page h3 {
             margin: 0;
             color: var(--care-deep);
             font-family: 'Source Serif 4', ui-serif, Georgia, serif;
             letter-spacing: 0;
         }
 
-        .lolo-callback-page p {
+        .lolo-getcare-page p {
             margin: 0;
         }
 
-        .lolo-callback-container {
-            width: min(1160px, calc(100vw - 2rem));
+        .lolo-getcare-container {
+            width: min(1180px, calc(100vw - 2rem));
             margin-inline: auto;
         }
 
-        .lolo-callback-hero {
-            position: relative;
-            isolation: isolate;
-            overflow: hidden;
-            background-image:
-                linear-gradient(90deg, rgba(250, 249, 247, 0.96) 0%, rgba(250, 249, 247, 0.87) 40%, rgba(250, 249, 247, 0.32) 72%),
-                linear-gradient(180deg, rgba(15, 61, 62, 0.12) 0%, rgba(15, 61, 62, 0.34) 100%),
-                url('{{ asset('images/marketing/homepage/hero-care.jpg') }}');
-            background-size: cover;
-            background-position: center;
-        }
-
-        .lolo-callback-hero::after {
-            content: "";
-            position: absolute;
-            inset: auto 0 0;
-            height: 5rem;
-            background: var(--care-cream);
-            z-index: -1;
-        }
-
-        .lolo-callback-nav {
+        .lolo-getcare-nav {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            padding-block: 1.1rem;
+            padding-block: 1rem;
         }
 
-        .lolo-callback-logo {
+        .lolo-getcare-logo {
+            display: block;
             width: auto;
-            height: 2.15rem;
+            height: 2rem;
         }
 
-        .lolo-callback-phone {
+        .lolo-getcare-phone {
             display: inline-flex;
             min-height: 2.75rem;
             align-items: center;
             justify-content: center;
-            border: 1px solid rgba(15, 61, 62, 0.14);
+            border: 1px solid rgba(15, 61, 62, 0.12);
             border-radius: 8px;
             background: rgba(250, 249, 247, 0.78);
             color: var(--care-deep);
-            padding: 0.7rem 0.95rem;
-            font-size: 0.9rem;
-            font-weight: 750;
+            padding: 0.68rem 0.9rem;
+            font-size: 0.88rem;
+            font-weight: 780;
             text-decoration: none;
+            white-space: nowrap;
         }
 
-        .lolo-callback-hero-grid {
+        .lolo-getcare-hero {
+            position: relative;
+            overflow: hidden;
+            padding-bottom: 3rem;
+        }
+
+        .lolo-getcare-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background-image:
+                linear-gradient(90deg, rgba(245, 241, 235, 0.98) 0%, rgba(245, 241, 235, 0.92) 45%, rgba(245, 241, 235, 0.52) 100%),
+                url('{{ asset('images/marketing/homepage/hero-care.jpg') }}');
+            background-position: center;
+            background-size: cover;
+            opacity: 0.96;
+        }
+
+        .lolo-getcare-hero > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .lolo-getcare-grid {
             display: grid;
             gap: 2rem;
             align-items: center;
-            padding-block: 2.2rem 3.2rem;
+            padding-block: 2.8rem 1.75rem;
         }
 
-        .lolo-callback-copy {
-            max-width: 36rem;
+        .lolo-getcare-copy {
+            max-width: 34rem;
         }
 
-        .lolo-callback-eyebrow,
-        .lolo-callback-kicker {
+        .lolo-getcare-pill,
+        .lolo-wizard-eyebrow {
             color: var(--care-cta);
-            font-size: 0.76rem;
+            font-size: 0.74rem;
             font-weight: 850;
             letter-spacing: 0.12em;
             text-transform: uppercase;
         }
 
-        .lolo-callback-copy h1 {
-            margin-top: 1rem;
-            max-width: 8.4ch;
-            font-size: 4.65rem;
-            line-height: 0.96;
+        .lolo-getcare-copy h1 {
+            margin-top: 0.9rem;
+            max-width: 12ch;
+            font-size: 4.8rem;
+            line-height: 0.95;
         }
 
-        .lolo-callback-copy h1 span {
+        .lolo-getcare-copy h1 span {
             color: var(--care-cta);
         }
 
-        .lolo-callback-body {
-            margin-top: 1.2rem;
+        .lolo-getcare-copy p.lolo-getcare-body {
+            margin-top: 1.1rem;
             max-width: 31rem;
-            color: rgba(36, 48, 45, 0.78);
-            font-size: 1.12rem;
+            color: rgba(36, 48, 45, 0.76);
+            font-size: 1.08rem;
+            font-weight: 550;
             line-height: 1.65;
-            font-weight: 520;
         }
 
-        .lolo-callback-signals {
+        .lolo-getcare-proof {
             display: grid;
-            gap: 0.8rem;
-            margin-top: 1.6rem;
-            max-width: 34rem;
-        }
-
-        .lolo-callback-signal {
-            display: grid;
-            grid-template-columns: 1.9rem minmax(0, 1fr);
             gap: 0.75rem;
-            align-items: start;
+            margin-top: 1.5rem;
         }
 
-        .lolo-callback-signal-icon {
-            display: inline-flex;
-            width: 1.9rem;
-            height: 1.9rem;
-            align-items: center;
-            justify-content: center;
-            border-radius: 999px;
-            background: rgba(79, 111, 175, 0.13);
-            color: var(--care-blue);
-            font-size: 0.82rem;
-            font-weight: 850;
-        }
-
-        .lolo-callback-signal strong {
-            display: block;
-            color: var(--care-deep);
-            font-size: 0.96rem;
-        }
-
-        .lolo-callback-signal span {
-            display: block;
-            margin-top: 0.18rem;
-            color: rgba(36, 48, 45, 0.68);
-            font-size: 0.9rem;
-            line-height: 1.45;
-        }
-
-        .lolo-callback-availability {
+        .lolo-getcare-proof span {
             display: flex;
-            flex-wrap: wrap;
-            gap: 0.65rem;
-            margin-top: 1.65rem;
+            align-items: center;
+            gap: 0.55rem;
+            color: rgba(36, 48, 45, 0.72);
+            font-size: 0.92rem;
+            font-weight: 740;
         }
 
-        .lolo-callback-availability span {
-            border: 1px solid rgba(124, 93, 220, 0.2);
+        .lolo-getcare-proof span::before {
+            content: "";
+            width: 0.52rem;
+            height: 0.52rem;
+            border-radius: 999px;
+            background: var(--care-blue);
+            box-shadow: 0 0 0 0.32rem rgba(79, 111, 175, 0.12);
+            flex: 0 0 auto;
+        }
+
+        .lolo-getcare-proof span:nth-child(2)::before {
+            background: var(--care-lavender);
+            box-shadow: 0 0 0 0.32rem rgba(124, 93, 220, 0.12);
+        }
+
+        .lolo-getcare-proof span:nth-child(3)::before {
+            background: var(--care-coral);
+            box-shadow: 0 0 0 0.32rem rgba(201, 107, 85, 0.12);
+        }
+
+        .lolo-getcare-wizard {
+            width: min(100%, 33.5rem);
+            justify-self: end;
+        }
+
+        .lolo-wizard-card {
+            width: 100%;
+            border: 1px solid rgba(15, 61, 62, 0.14);
             border-radius: 8px;
-            background: rgba(250, 249, 247, 0.82);
-            color: var(--care-deep);
-            padding: 0.6rem 0.72rem;
-            font-size: 0.84rem;
-            font-weight: 760;
+            background: rgba(250, 249, 247, 0.97);
+            box-shadow: 0 32px 88px -42px rgba(15, 61, 62, 0.42);
+            padding: 1.15rem;
         }
 
-        .lolo-callback-card {
-            border: 1px solid rgba(15, 61, 62, 0.16);
-            border-radius: 8px;
-            background: rgba(250, 249, 247, 0.96);
-            box-shadow: 0 28px 80px -44px rgba(15, 61, 62, 0.42);
-            padding: 1.25rem;
+        .lolo-wizard-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
         }
 
-        .lolo-callback-form,
-        .lolo-callback-success {
+        .lolo-wizard-step-label,
+        .lolo-wizard-time {
+            color: rgba(36, 48, 45, 0.58);
+            font-size: 0.76rem;
+            font-weight: 800;
+        }
+
+        .lolo-wizard-progress {
+            width: 8.5rem;
+            height: 0.42rem;
+            margin-top: 0.42rem;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(15, 61, 62, 0.1);
+        }
+
+        .lolo-wizard-progress span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--care-blue), var(--care-lavender), var(--care-coral));
+            transition: width .22s ease;
+        }
+
+        .lolo-wizard-step,
+        .lolo-wizard-contact,
+        .lolo-wizard-success {
             display: grid;
-            gap: 0.95rem;
+            gap: 1rem;
         }
 
-        .lolo-callback-form h2,
-        .lolo-callback-success h2 {
-            margin-top: 0.35rem;
+        .lolo-wizard-step h2,
+        .lolo-wizard-contact h2,
+        .lolo-wizard-success h2 {
+            margin-top: 0.32rem;
             font-size: 2rem;
             line-height: 1.05;
         }
 
-        .lolo-callback-intro,
-        .lolo-callback-success p {
-            margin-top: 0.55rem;
-            color: rgba(36, 48, 45, 0.72);
-            font-size: 0.96rem;
-            line-height: 1.56;
+        .lolo-wizard-intro,
+        .lolo-wizard-success p {
+            color: rgba(36, 48, 45, 0.68);
+            font-size: 0.95rem;
+            line-height: 1.55;
         }
 
-        .lolo-callback-grid {
+        .lolo-wizard-options {
             display: grid;
-            gap: 0.9rem;
+            gap: 0.72rem;
         }
 
-        .lolo-callback-form label {
+        .lolo-wizard-option {
+            width: 100%;
+            min-height: 4.7rem;
+            border: 1px solid rgba(15, 61, 62, 0.12);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--care-deep);
+            padding: 0.9rem 1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease, background-color .16s ease;
+        }
+
+        .lolo-wizard-option:hover,
+        .lolo-wizard-option.is-selected {
+            border-color: rgba(79, 111, 175, 0.58);
+            background: rgba(79, 111, 175, 0.07);
+            box-shadow: 0 14px 28px -24px rgba(15, 61, 62, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .lolo-wizard-option-title {
+            display: block;
+            color: var(--care-deep);
+            font-size: 1rem;
+            font-weight: 850;
+            line-height: 1.2;
+        }
+
+        .lolo-wizard-option-body {
+            display: block;
+            margin-top: 0.28rem;
+            color: rgba(36, 48, 45, 0.62);
+            font-size: 0.86rem;
+            font-weight: 650;
+            line-height: 1.35;
+        }
+
+        .lolo-wizard-field-grid {
             display: grid;
-            gap: 0.42rem;
+            gap: 0.85rem;
+        }
+
+        .lolo-wizard-contact label {
+            display: grid;
+            gap: 0.4rem;
             color: rgba(36, 48, 45, 0.78);
             font-size: 0.82rem;
-            font-weight: 800;
+            font-weight: 820;
         }
 
-        .lolo-callback-form input,
-        .lolo-callback-form select,
-        .lolo-callback-form textarea {
+        .lolo-wizard-contact input:not([type="checkbox"]),
+        .lolo-wizard-contact textarea {
             width: 100%;
             min-height: 3rem;
             border: 1px solid rgba(15, 61, 62, 0.13);
@@ -253,285 +318,323 @@
             outline: 0;
         }
 
-        .lolo-callback-form textarea {
-            min-height: 6.5rem;
+        .lolo-wizard-contact textarea {
+            min-height: 6.3rem;
             resize: vertical;
         }
 
-        .lolo-callback-form input:focus,
-        .lolo-callback-form select:focus,
-        .lolo-callback-form textarea:focus {
+        .lolo-wizard-contact input:not([type="checkbox"]):focus,
+        .lolo-wizard-contact textarea:focus {
             border-color: rgba(79, 111, 175, 0.72);
             box-shadow: 0 0 0 4px rgba(79, 111, 175, 0.13);
         }
 
-        .lolo-callback-form small {
+        .lolo-wizard-contact small,
+        .lolo-wizard-error {
             color: var(--care-cta);
+            font-size: 0.78rem;
             font-weight: 780;
         }
 
-        .lolo-callback-consent {
-            grid-template-columns: 1rem minmax(0, 1fr);
-            column-gap: 0.65rem;
-            align-items: start;
-            font-size: 0.8rem;
-            line-height: 1.48;
+        .lolo-wizard-consent {
+            display: grid;
+            grid-template-columns: 1.2rem minmax(0, 1fr);
+            align-items: flex-start;
+            gap: 0.7rem;
+            border: 1px solid rgba(15, 61, 62, 0.12);
+            border-radius: 8px;
+            background: #fff;
+            padding: 0.82rem 0.88rem;
+            color: rgba(36, 48, 45, 0.74);
+            font-size: 0.78rem;
+            font-weight: 750;
+            line-height: 1.45;
         }
 
-        .lolo-callback-consent input {
-            width: 1rem;
-            height: 1rem;
-            min-height: 0;
-            margin-top: 0.15rem;
+        .lolo-wizard-consent-input {
+            appearance: auto;
+            -webkit-appearance: auto;
+            width: 1.12rem;
+            height: 1.12rem;
+            min-width: 1.12rem;
+            min-height: 1.12rem;
+            margin: 0.08rem 0 0;
+            padding: 0;
             accent-color: var(--care-deep);
+            cursor: pointer;
         }
 
-        .lolo-callback-consent a {
+        .lolo-wizard-contact .lolo-wizard-consent-label {
+            display: block;
+            min-width: 0;
+            color: inherit;
+            font-size: inherit;
+            font-weight: inherit;
+            line-height: inherit;
+            overflow-wrap: anywhere;
+            cursor: pointer;
+        }
+
+        .lolo-wizard-consent a {
             color: var(--care-lavender);
             text-decoration: underline;
             text-underline-offset: 0.16rem;
         }
 
-        .lolo-callback-consent small {
-            grid-column: 2;
+        .lolo-wizard-consent-wrap {
+            display: grid;
+            gap: 0.35rem;
         }
 
-        .lolo-callback-submit,
-        .lolo-callback-secondary {
+        .lolo-wizard-actions {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .lolo-wizard-back,
+        .lolo-wizard-submit,
+        .lolo-wizard-secondary {
             display: inline-flex;
-            min-height: 3.2rem;
+            min-height: 3.05rem;
             align-items: center;
             justify-content: center;
-            border: 0;
             border-radius: 8px;
-            background: var(--care-deep);
-            color: #fff;
-            padding: 0.88rem 1.1rem;
-            font-size: 0.96rem;
-            font-weight: 820;
+            padding: 0.82rem 1rem;
+            font-size: 0.92rem;
+            font-weight: 850;
             text-decoration: none;
-            box-shadow: 0 18px 34px -24px rgba(15, 61, 62, 0.54);
-            transition: transform .16s ease, background-color .16s ease;
+            transition: transform .16s ease, background-color .16s ease, border-color .16s ease;
         }
 
-        .lolo-callback-submit:hover,
-        .lolo-callback-secondary:hover {
-            background: #0b3334;
+        .lolo-wizard-back {
+            border: 1px solid rgba(15, 61, 62, 0.14);
+            background: rgba(250, 249, 247, 0.82);
+            color: var(--care-deep);
+        }
+
+        .lolo-wizard-back-inline {
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .lolo-wizard-submit,
+        .lolo-wizard-secondary {
+            border: 0;
+            background: var(--care-deep);
+            color: #fff;
+            box-shadow: 0 18px 34px -24px rgba(15, 61, 62, 0.54);
+        }
+
+        .lolo-wizard-submit:hover,
+        .lolo-wizard-secondary:hover,
+        .lolo-wizard-back:hover {
             transform: translateY(-1px);
         }
 
-        .lolo-callback-submit:disabled {
+        .lolo-wizard-submit:hover,
+        .lolo-wizard-secondary:hover {
+            background: #0b3334;
+        }
+
+        .lolo-wizard-submit:disabled {
             cursor: wait;
             opacity: 0.72;
         }
 
-        .lolo-callback-note {
-            color: rgba(36, 48, 45, 0.62);
-            font-size: 0.8rem;
+        .lolo-wizard-note {
+            color: rgba(36, 48, 45, 0.6);
+            font-size: 0.78rem;
             font-weight: 720;
             line-height: 1.45;
             text-align: center;
         }
 
-        .lolo-callback-success {
-            min-height: 22rem;
+        .lolo-wizard-summary {
+            margin-top: 1rem;
+            border-top: 1px solid rgba(15, 61, 62, 0.1);
+            padding-top: 0.9rem;
+        }
+
+        .lolo-wizard-summary p {
+            color: rgba(36, 48, 45, 0.6);
+            font-size: 0.74rem;
+            font-weight: 850;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .lolo-wizard-summary div {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-top: 0.6rem;
+        }
+
+        .lolo-wizard-summary span {
+            border: 1px solid rgba(15, 61, 62, 0.11);
+            border-radius: 8px;
+            background: rgba(245, 241, 235, 0.72);
+            color: rgba(36, 48, 45, 0.72);
+            padding: 0.42rem 0.55rem;
+            font-size: 0.76rem;
+            font-weight: 680;
+            line-height: 1.25;
+        }
+
+        .lolo-wizard-summary strong {
+            color: var(--care-deep);
+        }
+
+        .lolo-wizard-success {
+            min-height: 27rem;
             align-content: center;
             text-align: center;
         }
 
-        .lolo-callback-trust {
-            background: var(--care-cream);
-            padding-block: 2.2rem 3rem;
-        }
-
-        .lolo-callback-trust-grid {
-            display: grid;
-            gap: 1rem;
-        }
-
-        .lolo-callback-trust-item {
-            border-left: 3px solid var(--care-blue);
-            padding: 0.25rem 0 0.25rem 1rem;
-        }
-
-        .lolo-callback-trust-item:nth-child(2) {
-            border-color: var(--care-lavender);
-        }
-
-        .lolo-callback-trust-item:nth-child(3) {
-            border-color: var(--care-coral);
-        }
-
-        .lolo-callback-trust-item strong {
-            display: block;
-            color: var(--care-deep);
-            font-size: 1rem;
-        }
-
-        .lolo-callback-trust-item span {
-            display: block;
-            margin-top: 0.42rem;
-            color: rgba(36, 48, 45, 0.66);
-            font-size: 0.92rem;
-            line-height: 1.55;
-        }
-
         @media (min-width: 760px) {
-            .lolo-callback-grid {
+            .lolo-wizard-field-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
-
-            .lolo-callback-trust-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
         }
 
-        @media (min-width: 960px) {
-            .lolo-callback-hero-grid {
-                grid-template-columns: minmax(0, 0.92fr) minmax(25rem, 0.78fr);
+        @media (min-width: 980px) {
+            .lolo-getcare-grid {
+                grid-template-columns: minmax(0, 0.9fr) minmax(28rem, 0.78fr);
                 gap: 4rem;
-                padding-block: 3.2rem 4rem;
+                min-height: 46rem;
             }
 
-            .lolo-callback-card {
-                padding: 1.5rem;
+            .lolo-wizard-card {
+                padding: 1.35rem;
             }
         }
 
-        @media (max-width: 720px) {
-            .lolo-callback-hero {
+        @media (max-width: 760px) {
+            .lolo-getcare-container {
+                width: min(100%, calc(100% - 1.1rem));
+            }
+
+            .lolo-getcare-hero {
+                padding-bottom: 1.4rem;
+            }
+
+            .lolo-getcare-hero::before {
                 background-image:
-                    linear-gradient(180deg, rgba(250, 249, 247, 0.96) 0%, rgba(250, 249, 247, 0.9) 52%, rgba(250, 249, 247, 0.74) 100%),
+                    linear-gradient(180deg, rgba(245, 241, 235, 0.98) 0%, rgba(245, 241, 235, 0.94) 58%, rgba(245, 241, 235, 0.82) 100%),
                     url('{{ asset('images/marketing/homepage/hero-care.jpg') }}');
                 background-position: center top;
             }
 
-            .lolo-callback-container {
-                width: min(100%, calc(100% - 1.25rem));
+            .lolo-getcare-logo {
+                height: 1.75rem;
             }
 
-            .lolo-callback-logo {
-                height: 1.85rem;
+            .lolo-getcare-phone {
+                min-height: 2.35rem;
+                padding: 0.58rem 0.68rem;
+                font-size: 0.76rem;
             }
 
-            .lolo-callback-phone {
-                min-height: 2.45rem;
-                padding: 0.6rem 0.68rem;
-                font-size: 0.78rem;
+            .lolo-getcare-grid {
+                gap: 1rem;
+                padding-block: 1.2rem 0;
             }
 
-            .lolo-callback-hero-grid {
-                padding-block: 1.5rem 2.25rem;
-            }
-
-            .lolo-callback-copy h1 {
-                max-width: 10ch;
-                font-size: 2.8rem;
+            .lolo-getcare-copy h1 {
+                max-width: 12ch;
+                font-size: 2.65rem;
                 line-height: 1;
             }
 
-            .lolo-callback-body {
-                font-size: 1rem;
+            .lolo-getcare-copy p.lolo-getcare-body {
+                margin-top: 0.78rem;
+                font-size: 0.95rem;
+                line-height: 1.5;
             }
 
-            .lolo-callback-signals {
-                gap: 0.55rem;
-                margin-top: 1rem;
-            }
-
-            .lolo-callback-signal {
-                grid-template-columns: 1.55rem minmax(0, 1fr);
-                gap: 0.6rem;
-            }
-
-            .lolo-callback-signal-icon {
-                width: 1.55rem;
-                height: 1.55rem;
-                font-size: 0.72rem;
-            }
-
-            .lolo-callback-signal span:not(.lolo-callback-signal-icon) {
+            .lolo-getcare-proof {
                 display: none;
             }
 
-            .lolo-callback-availability {
+            .lolo-getcare-wizard {
+                width: 100%;
+            }
+
+            .lolo-wizard-card {
+                padding: 0.9rem;
+            }
+
+            .lolo-wizard-top {
+                margin-bottom: 0.95rem;
+            }
+
+            .lolo-wizard-time {
                 display: none;
             }
 
-            .lolo-callback-form h2,
-            .lolo-callback-success h2 {
-                font-size: 1.75rem;
+            .lolo-wizard-step,
+            .lolo-wizard-contact {
+                gap: 0.82rem;
+            }
+
+            .lolo-wizard-step h2,
+            .lolo-wizard-contact h2,
+            .lolo-wizard-success h2 {
+                font-size: 1.58rem;
+                line-height: 1.06;
+            }
+
+            .lolo-wizard-intro {
+                font-size: 0.88rem;
+            }
+
+            .lolo-wizard-option {
+                min-height: 4.2rem;
+                padding: 0.78rem 0.85rem;
+            }
+
+            .lolo-wizard-option-title {
+                font-size: 0.95rem;
+            }
+
+            .lolo-wizard-option-body {
+                font-size: 0.8rem;
+            }
+
+            .lolo-wizard-summary div {
+                max-height: 5.6rem;
+                overflow: auto;
             }
         }
     </style>
 
-    <main class="lolo-callback-page">
-        <section class="lolo-callback-hero">
-            <nav class="lolo-callback-container lolo-callback-nav" aria-label="LoLo callback page">
+    <main class="lolo-getcare-page">
+        <section class="lolo-getcare-hero">
+            <nav class="lolo-getcare-container lolo-getcare-nav" aria-label="LoLo callback page">
                 <a href="{{ route('landing') }}" aria-label="LoLo homepage">
-                    <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo" class="lolo-callback-logo">
+                    <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo" class="lolo-getcare-logo">
                 </a>
 
-                <a href="tel:9844004008" class="lolo-callback-phone">Call or text (984) 400-4008</a>
+                <a href="tel:9844004008" class="lolo-getcare-phone">Call or text (984) 400-4008</a>
             </nav>
 
-            <div class="lolo-callback-container lolo-callback-hero-grid">
-                <div class="lolo-callback-copy">
-                    <p class="lolo-callback-eyebrow">Private-pay non-medical care</p>
-                    <h1>A calmer way to start <span>home care.</span></h1>
-                    <p class="lolo-callback-body">
-                        Tell us what kind of support your family is arranging. LoLo will review the details and call back with a clear next step for companionship and everyday help at home.
-                    </p>
+            <div class="lolo-getcare-container lolo-getcare-grid">
+                <div class="lolo-getcare-copy">
+                    <p class="lolo-getcare-pill">Private-pay non-medical support</p>
+                    <h1>Find trusted home care <span>support.</span></h1>
+                    <p class="lolo-getcare-body">Answer a few quick questions, then LoLo calls back with clear next steps for non-medical support at home.</p>
 
-                    <div class="lolo-callback-signals" aria-label="Care highlights">
-                        <div class="lolo-callback-signal">
-                            <span class="lolo-callback-signal-icon">1</span>
-                            <div>
-                                <strong>Clear hourly care from $30/hr</strong>
-                                <span>Companionship and everyday support without long-term pressure.</span>
-                            </div>
-                        </div>
-                        <div class="lolo-callback-signal">
-                            <span class="lolo-callback-signal-icon">2</span>
-                            <div>
-                                <strong>Vetted caregiver profiles</strong>
-                                <span>Families can review fit, availability, and expectations before booking.</span>
-                            </div>
-                        </div>
-                        <div class="lolo-callback-signal">
-                            <span class="lolo-callback-signal-icon">3</span>
-                            <div>
-                                <strong>Flexible first step</strong>
-                                <span>Start with one visit, a few hours, or recurring support around real life.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="lolo-callback-availability" aria-label="Care options">
-                        <span>Companion care</span>
-                        <span>Meal support</span>
-                        <span>Errands and rides</span>
-                        <span>Light housekeeping</span>
+                    <div class="lolo-getcare-proof" aria-label="LoLo care highlights">
+                        <span>Companionship and everyday help from $30/hr</span>
+                        <span>One visit, recurring care, or planning ahead</span>
+                        <span>Vetted caregiver profiles and clear next steps</span>
                     </div>
                 </div>
 
-                <livewire:family.callback-request />
-            </div>
-        </section>
-
-        <section class="lolo-callback-trust" aria-label="Why families choose LoLo">
-            <div class="lolo-callback-container lolo-callback-trust-grid">
-                <div class="lolo-callback-trust-item">
-                    <strong>Built for the first conversation</strong>
-                    <span>The form gathers only the details needed to call back prepared.</span>
-                </div>
-                <div class="lolo-callback-trust-item">
-                    <strong>Local, practical support</strong>
-                    <span>Everyday help for home routines, check-ins, meals, and companionship.</span>
-                </div>
-                <div class="lolo-callback-trust-item">
-                    <strong>No medical claims, no pressure</strong>
-                    <span>LoLo focuses on non-medical home support and a clear next step.</span>
+                <div class="lolo-getcare-wizard">
+                    <livewire:family.callback-request />
                 </div>
             </div>
         </section>

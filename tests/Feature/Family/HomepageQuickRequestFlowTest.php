@@ -60,16 +60,27 @@ class HomepageQuickRequestFlowTest extends TestCase
 
         $this->get(route('landing.get-care'))
             ->assertOk()
-            ->assertSeeText('Request a callback')
-            ->assertSeeText('Tell us what kind of support would help.');
+            ->assertSeeText('Find trusted home care support')
+            ->assertSeeText('What kind of help would be most useful first?');
 
         Livewire::test(CallbackRequest::class)
+            ->assertSet('step', 1)
+            ->call('choose', 'service_type', 'Companion care')
+            ->assertSet('step', 2)
+            ->call('choose', 'recipient_relationship', 'Parent or older relative')
+            ->assertSet('step', 3)
+            ->call('choose', 'start_time', 'this_week')
+            ->assertSet('step', 4)
+            ->call('choose', 'visit_frequency', 'few_times_week')
+            ->assertSet('step', 5)
+            ->call('choose', 'visit_length', 'two_to_three_hours')
+            ->assertSet('step', 6)
+            ->call('choose', 'callback_time', 'tomorrow_morning')
+            ->assertSet('step', 7)
             ->set('full_name', 'Jane Family')
             ->set('phone', '(984) 400-0000')
             ->set('email', 'jane@example.com')
             ->set('zip', '27601')
-            ->set('service_type', 'Companion care')
-            ->set('callback_time', 'tomorrow_morning')
             ->set('notes', 'My mom needs companionship twice a week.')
             ->set('consent_to_contact', true)
             ->call('submit')
@@ -84,8 +95,13 @@ class HomepageQuickRequestFlowTest extends TestCase
         $this->assertSame('27601', $lead->zip);
         $this->assertSame('callback_request', $lead->data['intent']);
         $this->assertSame('Companion care', $lead->data['service_type']);
+        $this->assertSame('Parent or older relative', $lead->data['recipient_relationship']);
+        $this->assertSame('This week', $lead->data['start_time_label']);
+        $this->assertSame('A few times a week', $lead->data['visit_frequency_label']);
+        $this->assertSame('2-3 hours', $lead->data['visit_length_label']);
         $this->assertSame('Tomorrow morning', $lead->data['callback_time_label']);
         $this->assertTrue($lead->data['consent_to_contact']);
+        $this->assertSame(Lead::PRIORITY_NORMAL, $lead->priority);
 
         Mail::assertSent(CallbackRequestOpsAlertMail::class, function (CallbackRequestOpsAlertMail $mail) use ($lead) {
             return $mail->lead->is($lead)
@@ -114,6 +130,10 @@ class HomepageQuickRequestFlowTest extends TestCase
             ->set('email', 'sam@example.com')
             ->set('zip', '27607')
             ->set('service_type', 'Errands and rides')
+            ->set('recipient_relationship', 'Parent or older relative')
+            ->set('start_time', 'asap')
+            ->set('visit_frequency', 'one_visit')
+            ->set('visit_length', 'half_day')
             ->set('callback_time', 'today')
             ->set('consent_to_contact', true)
             ->call('submit')
@@ -127,6 +147,7 @@ class HomepageQuickRequestFlowTest extends TestCase
         $this->assertSame('meta', $lead->data['tracking']['utm_source']);
         $this->assertSame('paid_social', $lead->data['tracking']['utm_medium']);
         $this->assertSame('IwAR-test-click-id', $lead->data['tracking']['fbclid']);
+        $this->assertSame(Lead::PRIORITY_HIGH, $lead->priority);
     }
 
     public function test_family_request_wizard_prefills_from_homepage_quick_request_draft(): void

@@ -1,0 +1,68 @@
+[
+  {
+    "id": "01-callback-calm",
+    "angle": "first step",
+    "image": "brand/lolo/social/source/meta-ads-fresh-2026-06/morning-tea.png",
+    "kicker": "Home care callback",
+    "headline": "Start home care calmly.",
+    "body": "Tell LoLo what kind of support would help. We call back with a clear next step.",
+    "proof": "Non-medical support from $30/hr",
+    "cta": "Request a callback",
+    "theme": "light"
+  },
+  {
+    "id": "02-little-help",
+    "angle": "everyday support",
+    "image": "brand/lolo/social/source/meta-ads-fresh-2026-06/meal-support.png",
+    "kicker": "Everyday help at home",
+    "headline": "A little help changes the week.",
+    "body": "Companionship, meal support, errands, and steady check-ins around real life.",
+    "proof": "One visit or recurring care",
+    "cta": "Start with LoLo",
+    "theme": "cream"
+  },
+  {
+    "id": "03-doorstep-trust",
+    "angle": "trust",
+    "image": "brand/lolo/social/source/meta-ads-fresh-2026-06/doorstep-arrival.png",
+    "kicker": "Vetted caregiver profiles",
+    "headline": "Someone kind at the door.",
+    "body": "Flexible non-medical support from people families can review before booking.",
+    "proof": "Companionship, errands, meals",
+    "cta": "Request callback",
+    "theme": "deep"
+  },
+  {
+    "id": "04-plan-without-pressure",
+    "angle": "planning",
+    "image": "brand/lolo/social/source/meta-ads-fresh-2026-06/care-planning.png",
+    "kicker": "Care planning made simpler",
+    "headline": "Plan care without the pressure.",
+    "body": "Share the basics. A LoLo care coordinator will help with the next step.",
+    "proof": "No long-term commitment",
+    "cta": "Talk to LoLo",
+    "theme": "light"
+  },
+  {
+    "id": "05-one-visit",
+    "angle": "low commitment",
+    "image": "brand/lolo/social/source/meta-ads-fresh-2026-06/morning-tea.png",
+    "kicker": "Start small",
+    "headline": "One visit is enough to begin.",
+    "body": "Book a few calm hours, then adjust support as life changes.",
+    "proof": "Clear hourly care from $30/hr",
+    "cta": "Get a callback",
+    "theme": "deep"
+  },
+  {
+    "id": "06-calm-care",
+    "angle": "premium reassurance",
+    "image": "brand/lolo/social/source/meta-ads-fresh-2026-06/meal-support.png",
+    "kicker": "LoLo care",
+    "headline": "Care that feels calm.",
+    "body": "Practical non-medical help for home routines, meals, errands, and companionship.",
+    "proof": "Vetted profiles. Flexible timing.",
+    "cta": "Request callback",
+    "theme": "cream"
+  }
+]

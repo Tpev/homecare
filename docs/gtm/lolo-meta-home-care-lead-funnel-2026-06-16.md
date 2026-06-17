@@ -139,44 +139,67 @@ Fallback if Meta restricts health/wellness event optimization:
 
 ## Ad Creative Assets
 
-Use the existing Meta ad image files in:
+Use the fresh creative pack generated specifically for this funnel:
 
 ```text
-brand/lolo/social/output/meta-ads-v2/
+brand/lolo/social/output/meta-ads-fresh-2026-06/
 ```
 
-Recommended first six ads:
+Source concepts:
 
-1. `01-this-week-square.png` and `01-this-week-portrait.png`
-   - Ad name: `A01_Need_Help_This_Week`
-   - Angle: immediate but calm callback.
-2. `03-short-visits-square.png` and `03-short-visits-portrait.png`
-   - Ad name: `A02_Short_Visits_Real_Relief`
-   - Angle: small visits, real support.
-3. `04-real-door-square.png` and `04-real-door-portrait.png`
-   - Ad name: `A03_Real_Person_At_The_Door`
-   - Angle: human reassurance.
-4. `06-price-square.png` and `06-price-portrait.png`
-   - Ad name: `A04_Care_From_30`
-   - Angle: price clarity.
-5. `07-one-visit-square.png` and `07-one-visit-portrait.png`
-   - Ad name: `A05_Start_With_One_Visit`
-   - Angle: low-pressure first step.
-6. `09-evening-square.png` and `09-evening-portrait.png`
-   - Ad name: `A06_Help_After_Work`
-   - Angle: flexible timing.
+```text
+brand/lolo/social/meta-ads-fresh-2026-06.json
+brand/lolo/social/render-meta-ads-fresh-2026-06.mjs
+brand/lolo/social/source/meta-ads-fresh-2026-06/
+```
 
-Hold back for now:
+Review sheet:
 
-- `02-mom-fine-*`: stronger personal-attribute risk.
-- `08-less-worry-*`: usable later, but start with more neutral wording.
-- `05-no-agency-*`: can be tested after proof of performance, but avoid aggressive competitor framing early.
-- `10-cant-be-there-*`: useful retargeting angle, but softer as a second-wave ad.
+```text
+brand/lolo/social/output/meta-ads-fresh-2026-06/lolo-meta-ads-fresh-2026-06-contact-sheet.png
+```
+
+Launch the first six ads:
+
+1. `01-callback-calm-square.png` and `01-callback-calm-portrait.png`
+   - Ad name: `A01_Callback_Calm`
+   - Angle: first step, care callback.
+   - On-image headline: `Start home care calmly.`
+2. `02-little-help-square.png` and `02-little-help-portrait.png`
+   - Ad name: `A02_Little_Help_Changes_Week`
+   - Angle: everyday support.
+   - On-image headline: `A little help changes the week.`
+3. `03-doorstep-trust-square.png` and `03-doorstep-trust-portrait.png`
+   - Ad name: `A03_Doorstep_Trust`
+   - Angle: trust and arrival.
+   - On-image headline: `Someone kind at the door.`
+4. `04-plan-without-pressure-square.png` and `04-plan-without-pressure-portrait.png`
+   - Ad name: `A04_Plan_Without_Pressure`
+   - Angle: care planning.
+   - On-image headline: `Plan care without the pressure.`
+5. `05-one-visit-square.png` and `05-one-visit-portrait.png`
+   - Ad name: `A05_One_Visit_To_Begin`
+   - Angle: low commitment.
+   - On-image headline: `One visit is enough to begin.`
+6. `06-calm-care-square.png` and `06-calm-care-portrait.png`
+   - Ad name: `A06_Care_That_Feels_Calm`
+   - Angle: premium reassurance.
+   - On-image headline: `Care that feels calm.`
+
+Creative source notes:
+
+- Four new AI-generated lifestyle source images were created for this campaign: meal support, caregiver arrival, care planning, and companionship at home.
+- Final text/logo/layouts are rendered deterministically with the local Playwright renderer so ad copy is exact and not AI-distorted.
+- Regenerate the pack after copy changes with:
+
+```bash
+node brand/lolo/social/render-meta-ads-fresh-2026-06.mjs
+```
 
 Creative specs to upload:
 
-- Feed: use square or 4:5 where available.
-- Stories/Reels: use portrait assets.
+- Feed: use square assets from `square/`.
+- Stories/Reels: use portrait assets from `portrait/`.
 - File type: PNG.
 - Keep automated creative enhancements on only if previews preserve readable text. Turn off any enhancement that crops the wordmark, price, phone number, or CTA.
 
