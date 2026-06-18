@@ -64,6 +64,7 @@ return [
         'account_sid' => env('TWILIO_ACCOUNT_SID'),
         'auth_token' => env('TWILIO_AUTH_TOKEN'),
         'phone_number' => env('TWILIO_PHONE_NUMBER'),
+        'voice_from' => env('TWILIO_VOICE_FROM', env('TWILIO_PHONE_NUMBER')),
         'sms_from' => env('TWILIO_SMS_FROM', env('TWILIO_PHONE_NUMBER')),
         'messaging_service_sid' => env('TWILIO_MESSAGING_SERVICE_SID'),
         'webhook_base_url' => env('TWILIO_WEBHOOK_BASE_URL'),

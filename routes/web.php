@@ -17,6 +17,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TwilioSmsStatusWebhookController;
 use App\Http\Controllers\TwilioSmsWebhookController;
+use App\Http\Controllers\TwilioVoiceWebhookController;
 use App\Livewire\Admin\CaregiverCoverageMap;
 use App\Livewire\Admin\CaregiverReviewsQueue;
 use App\Livewire\Admin\CareRequestShow as AdminCareRequestShow;
@@ -29,6 +30,7 @@ use App\Livewire\Admin\SupportTicketsQueue;
 use App\Livewire\Admin\UsageAnalytics;
 use App\Livewire\Admin\UserShow;
 use App\Livewire\Admin\UsersIndex;
+use App\Livewire\Admin\VoiceAiTest;
 use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Caregiver\BrowseCaregivers;
 use App\Livewire\Caregiver\BrowseCareRequests;
@@ -77,6 +79,7 @@ Route::middleware(['web', 'auth', 'admin.email'])
             ->name('caregivers.moderation_logs');
         Route::get('/support/tickets', SupportTicketsQueue::class)->name('support.tickets');
         Route::get('/sms', SmsInbox::class)->name('sms.index');
+        Route::get('/voice-ai', VoiceAiTest::class)->name('voice-ai.index');
         Route::get('/payments/ops', PaymentsQueue::class)->name('payments.ops');
         Route::get('/analytics/usage', UsageAnalytics::class)->name('analytics.usage');
         Route::get('/analytics/funnel', FunnelAnalytics::class)->name('analytics.funnel');
@@ -123,6 +126,18 @@ Route::post('/webhooks/twilio/sms', TwilioSmsWebhookController::class)
 Route::post('/webhooks/twilio/sms/status', TwilioSmsStatusWebhookController::class)
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('webhooks.twilio.sms.status');
+Route::post('/webhooks/twilio/voice/{voiceAiCall}/answer', [TwilioVoiceWebhookController::class, 'answer'])
+    ->whereNumber('voiceAiCall')
+    ->withoutMiddleware([VerifyCsrfToken::class])
+    ->name('webhooks.twilio.voice.answer');
+Route::post('/webhooks/twilio/voice/{voiceAiCall}/gather', [TwilioVoiceWebhookController::class, 'gather'])
+    ->whereNumber('voiceAiCall')
+    ->withoutMiddleware([VerifyCsrfToken::class])
+    ->name('webhooks.twilio.voice.gather');
+Route::post('/webhooks/twilio/voice/{voiceAiCall}/status', [TwilioVoiceWebhookController::class, 'status'])
+    ->whereNumber('voiceAiCall')
+    ->withoutMiddleware([VerifyCsrfToken::class])
+    ->name('webhooks.twilio.voice.status');
 Route::post('/webhooks/google-sheets/leads', GoogleSheetsLeadWebhookController::class)
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('webhooks.google-sheets.leads');

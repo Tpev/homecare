@@ -146,12 +146,18 @@ new class extends Component
             [
                 'label' => 'Comms & money',
                 'active' => request()->routeIs('admin.sms.*')
+                    || request()->routeIs('admin.voice-ai.*')
                     || request()->routeIs('admin.payments.ops'),
                 'items' => [
                     [
                         'label' => 'Admin SMS',
                         'href' => route('admin.sms.index'),
                         'active' => request()->routeIs('admin.sms.*'),
+                    ],
+                    [
+                        'label' => 'Voice AI Test',
+                        'href' => route('admin.voice-ai.index'),
+                        'active' => request()->routeIs('admin.voice-ai.*'),
                     ],
                     [
                         'label' => 'Admin Payments',
