@@ -84,7 +84,7 @@ func (s *Server) healthz(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (s *Server) handleTwilioVoice(w http.ResponseWriter, r *http.Request) {
-	s.handleTwilioVoiceProfile(w, r, ProfileInbound)
+	s.handleTwilioVoiceProfile(w, r, supportedProfile(r.URL.Query().Get("prompt_profile")))
 }
 
 func (s *Server) handleTwilioCallbackDiscovery(w http.ResponseWriter, r *http.Request) {

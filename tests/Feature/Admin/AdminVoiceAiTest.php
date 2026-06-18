@@ -53,7 +53,7 @@ class AdminVoiceAiTest extends TestCase
         config()->set('services.twilio.account_sid', 'AC123');
         config()->set('services.twilio.auth_token', 'twilio-secret');
         config()->set('services.twilio.voice_from', '+19844004008');
-        config()->set('services.twilio.voice_agent_callback_url', 'https://voice.carelolo.com/twilio/callback-discovery');
+        config()->set('services.twilio.voice_agent_callback_url', 'https://voice.carelolo.com/twilio/voice?prompt_profile=callback_discovery');
         config()->set('services.twilio.webhook_base_url', 'https://carelolo.com');
 
         Http::fake([
@@ -72,7 +72,7 @@ class AdminVoiceAiTest extends TestCase
             return $request->url() === 'https://api.twilio.com/2010-04-01/Accounts/AC123/Calls.json'
                 && $request['To'] === '+19195551234'
                 && $request['From'] === '+19844004008'
-                && $request['Url'] === 'https://voice.carelolo.com/twilio/callback-discovery?voice_ai_call_id='.$call->id
+                && $request['Url'] === 'https://voice.carelolo.com/twilio/voice?prompt_profile=callback_discovery&voice_ai_call_id='.$call->id
                 && $request['Method'] === 'POST'
                 && $request['StatusCallback'] === 'https://carelolo.com/webhooks/twilio/voice/'.$call->id.'/status'
                 && $request['StatusCallbackMethod'] === 'POST';

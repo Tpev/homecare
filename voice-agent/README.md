@@ -5,7 +5,8 @@ This Go service answers Twilio phone calls, bridges live audio to the Deepgram V
 ## What It Does
 
 - `POST /twilio/voice` validates the Twilio webhook and returns TwiML with `<Connect><Stream>`.
-- `POST /twilio/callback-discovery` does the same for outbound callback/discovery calls started from Laravel.
+- Outbound callback/discovery calls can reuse `POST /twilio/voice?prompt_profile=callback_discovery`, which is preferred when `/twilio/voice` is already working in production.
+- `POST /twilio/callback-discovery` is also available as a separate callback route if the reverse proxy explicitly forwards it.
 - `GET /ws/twilio` accepts the Twilio Media Streams WebSocket.
 - Opens a Deepgram Voice Agent WebSocket at `wss://agent.deepgram.com/v1/agent/converse`.
 - Uses Deepgram STT plus TTS and OpenAI `gpt-4o-mini` through Deepgram's `think` provider.
@@ -17,7 +18,7 @@ This Go service answers Twilio phone calls, bridges live audio to the Deepgram V
 2. Set `PUBLIC_BASE_URL` to the public HTTPS base URL for this service.
 3. Set `LARAVEL_BASE_URL` to the Laravel app and `LARAVEL_INTERNAL_API_TOKEN` to the same value as Laravel's `VOICE_AGENT_INTERNAL_API_TOKEN`.
 4. Point your Twilio number's voice webhook to `https://<your-voice-domain>/twilio/voice`.
-5. In Laravel, set `TWILIO_VOICE_AGENT_CALLBACK_URL=https://<your-voice-domain>/twilio/callback-discovery` so admin callback tests use this Deepgram voice bridge.
+5. In Laravel, set `TWILIO_VOICE_AGENT_CALLBACK_URL=https://<your-voice-domain>/twilio/voice?prompt_profile=callback_discovery` so admin callback tests reuse the working Deepgram voice bridge.
 6. Run:
 
 ```bash
