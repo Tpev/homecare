@@ -62,6 +62,7 @@ class VoiceAiTest extends Component
                 ])->count(),
             ],
             'voiceFrom' => TwilioSmsClient::normalizePhone((string) config('services.twilio.voice_from')),
+            'voiceAgentCallbackUrl' => trim((string) config('services.twilio.voice_agent_callback_url')),
             'twilioBypass' => (bool) config('services.twilio.bypass', false),
         ]);
     }

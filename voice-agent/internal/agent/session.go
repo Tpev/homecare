@@ -21,17 +21,19 @@ import (
 )
 
 type Session struct {
-	cfg           config.Config
-	logger        *log.Logger
-	laravel       *laravel.Client
-	promptBuilder *PromptBuilder
-	twilioConn    *websocket.Conn
+	cfg            config.Config
+	logger         *log.Logger
+	laravel        *laravel.Client
+	promptBuilders map[string]*PromptBuilder
+	twilioConn     *websocket.Conn
 
 	twilioWriteMu sync.Mutex
 	dgWriteMu     sync.Mutex
 
 	streamSID         string
 	callSID           string
+	promptProfile     string
+	voiceAICallID     string
 	callerName        string
 	callerPhone       string
 	relationship      string
@@ -84,13 +86,13 @@ type dgErrorMessage struct {
 	Code    string `json:"code,omitempty"`
 }
 
-func NewSession(cfg config.Config, logger *log.Logger, laravelClient *laravel.Client, promptBuilder *PromptBuilder, twilioConn *websocket.Conn) *Session {
+func NewSession(cfg config.Config, logger *log.Logger, laravelClient *laravel.Client, promptBuilders map[string]*PromptBuilder, twilioConn *websocket.Conn) *Session {
 	return &Session{
-		cfg:           cfg,
-		logger:        logger,
-		laravel:       laravelClient,
-		promptBuilder: promptBuilder,
-		twilioConn:    twilioConn,
+		cfg:            cfg,
+		logger:         logger,
+		laravel:        laravelClient,
+		promptBuilders: promptBuilders,
+		twilioConn:     twilioConn,
 	}
 }
 
@@ -129,7 +131,9 @@ func (s *Session) Run(parent context.Context) error {
 
 	s.streamSID = start.StreamSID
 	s.callSID = start.CallSID
-	s.callerPhone = firstNonEmpty(start.CustomParameters["from"], s.callerPhone)
+	s.promptProfile = supportedProfile(start.CustomParameters["prompt_profile"])
+	s.voiceAICallID = start.CustomParameters["voice_ai_call_id"]
+	s.callerPhone = firstNonEmpty(start.CustomParameters["customer_phone"], start.CustomParameters["from"], s.callerPhone)
 	s.leadType = "family"
 	s.intent = "unknown"
 	s.callStartedAt = time.Now().UTC()
@@ -141,7 +145,13 @@ func (s *Session) Run(parent context.Context) error {
 	}
 	s.knowledge = knowledge
 
-	prompt, err := s.promptBuilder.Render(knowledge)
+	promptBuilder := s.promptBuilder()
+	if promptBuilder == nil {
+		runErr = fmt.Errorf("missing prompt builder for profile %q", s.promptProfile)
+		return runErr
+	}
+
+	prompt, err := promptBuilder.Render(knowledge)
 	if err != nil {
 		runErr = fmt.Errorf("render prompt: %w", err)
 		return runErr
@@ -363,7 +373,7 @@ func (s *Session) connectDeepgram(ctx context.Context, prompt string) (*websocke
 					"model": s.cfg.DeepgramTTSModel,
 				},
 			},
-			"greeting": s.cfg.DeepgramGreeting,
+			"greeting": s.greeting(),
 		},
 	}
 
@@ -565,8 +575,7 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 			Reason:            stringValue(args["reason"]),
 			CallSID:           s.callSID,
 			TranscriptExcerpt: s.transcriptWithLimit(4000),
-			Metadata: map[string]any{
-				"channel":        "voice_agent",
+			Metadata: s.metadata(map[string]any{
 				"relationship":   s.relationship,
 				"care_recipient": s.careRecipient,
 				"care_needs":     s.careNeeds,
@@ -574,7 +583,7 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 				"address":        s.address,
 				"city":           s.city,
 				"zip":            s.zip,
-			},
+			}),
 		}
 		if err := s.laravel.CreateCallback(ctx, payload); err != nil {
 			return "", err
@@ -604,8 +613,7 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 			ConsentReceived:   consent,
 			CallSID:           s.callSID,
 			TranscriptExcerpt: s.transcriptWithLimit(4000),
-			Metadata: map[string]any{
-				"channel":        "voice_agent",
+			Metadata: s.metadata(map[string]any{
 				"relationship":   s.relationship,
 				"care_recipient": s.careRecipient,
 				"care_needs":     s.careNeeds,
@@ -613,7 +621,7 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 				"address":        s.address,
 				"city":           s.city,
 				"zip":            s.zip,
-			},
+			}),
 		})
 		if err != nil {
 			return "", err
@@ -693,9 +701,7 @@ func (s *Session) finalize() error {
 		CallSID:           s.callSID,
 		TranscriptExcerpt: s.transcriptWithLimit(4000),
 		Notes:             "Captured automatically from an informational voice-agent call.",
-		Metadata: map[string]any{
-			"channel": "voice_agent",
-		},
+		Metadata:          s.metadata(nil),
 	})
 
 	if err == nil {
@@ -821,9 +827,7 @@ func (s *Session) reportCall(runErr error) error {
 		Transcript:        s.transcriptWithLimit(20000),
 		CallbackRequested: s.callbackRequested,
 		SignupLinkSent:    s.signupLinkSent,
-		Metadata: map[string]any{
-			"channel": "voice_agent",
-		},
+		Metadata:          s.metadata(nil),
 	})
 }
 
@@ -838,6 +842,49 @@ func (s *Session) absorbCallerDetails(args map[string]any) {
 	s.city = firstNonEmpty(stringValue(args["city"]), s.city)
 	s.zip = firstNonEmpty(stringValue(args["zip"]), s.zip)
 	s.callbackTime = firstNonEmpty(stringValue(args["callback_time"]), s.callbackTime)
+}
+
+func (s *Session) promptBuilder() *PromptBuilder {
+	profile := supportedProfile(s.promptProfile)
+	if builder := s.promptBuilders[profile]; builder != nil {
+		return builder
+	}
+
+	return s.promptBuilders[ProfileInbound]
+}
+
+func (s *Session) greeting() string {
+	if supportedProfile(s.promptProfile) == ProfileCallbackDiscovery {
+		return s.cfg.DeepgramCallbackGreeting
+	}
+
+	return s.cfg.DeepgramGreeting
+}
+
+func (s *Session) metadata(extra map[string]any) map[string]any {
+	metadata := map[string]any{
+		"channel":             "voice_agent",
+		"voice_agent_profile": supportedProfile(s.promptProfile),
+	}
+
+	if s.voiceAICallID != "" {
+		metadata["voice_ai_call_id"] = s.voiceAICallID
+	}
+
+	for key, value := range extra {
+		metadata[key] = value
+	}
+
+	return metadata
+}
+
+func supportedProfile(profile string) string {
+	switch strings.TrimSpace(profile) {
+	case ProfileCallbackDiscovery:
+		return ProfileCallbackDiscovery
+	default:
+		return ProfileInbound
+	}
 }
 
 func nonNegativeDurationSeconds(duration time.Duration) int {

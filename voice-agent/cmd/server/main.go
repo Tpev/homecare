@@ -22,13 +22,21 @@ func main() {
 
 	logger := log.New(os.Stdout, "[voice-agent] ", log.LstdFlags|log.LUTC)
 
-	promptBuilder, err := agent.NewPromptBuilder(cfg.PromptFile)
+	inboundPromptBuilder, err := agent.NewPromptBuilder(cfg.PromptFile)
 	if err != nil {
 		logger.Fatalf("load prompt template: %v", err)
 	}
 
+	callbackPromptBuilder, err := agent.NewPromptBuilder(cfg.CallbackPromptFile)
+	if err != nil {
+		logger.Fatalf("load callback discovery prompt template: %v", err)
+	}
+
 	laravelClient := laravel.NewClient(cfg)
-	server := agent.NewServer(cfg, logger, promptBuilder, laravelClient)
+	server := agent.NewServer(cfg, logger, map[string]*agent.PromptBuilder{
+		agent.ProfileInbound:           inboundPromptBuilder,
+		agent.ProfileCallbackDiscovery: callbackPromptBuilder,
+	}, laravelClient)
 
 	httpServer := &http.Server{
 		Addr:              ":" + cfg.Port,

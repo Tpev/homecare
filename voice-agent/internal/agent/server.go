@@ -16,12 +16,17 @@ import (
 )
 
 type Server struct {
-	cfg           config.Config
-	logger        *log.Logger
-	promptBuilder *PromptBuilder
-	laravel       *laravel.Client
-	upgrader      websocket.Upgrader
+	cfg            config.Config
+	logger         *log.Logger
+	promptBuilders map[string]*PromptBuilder
+	laravel        *laravel.Client
+	upgrader       websocket.Upgrader
 }
+
+const (
+	ProfileInbound           = "inbound"
+	ProfileCallbackDiscovery = "callback_discovery"
+)
 
 type voiceResponse struct {
 	XMLName xml.Name `xml:"Response"`
@@ -48,12 +53,12 @@ type parameter struct {
 	Value string `xml:"value,attr"`
 }
 
-func NewServer(cfg config.Config, logger *log.Logger, promptBuilder *PromptBuilder, laravelClient *laravel.Client) *Server {
+func NewServer(cfg config.Config, logger *log.Logger, promptBuilders map[string]*PromptBuilder, laravelClient *laravel.Client) *Server {
 	return &Server{
-		cfg:           cfg,
-		logger:        logger,
-		promptBuilder: promptBuilder,
-		laravel:       laravelClient,
+		cfg:            cfg,
+		logger:         logger,
+		promptBuilders: promptBuilders,
+		laravel:        laravelClient,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(_ *http.Request) bool { return true },
 		},
@@ -64,6 +69,9 @@ func (s *Server) Routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", s.healthz)
 	mux.HandleFunc(s.cfg.TwilioVoiceWebhookPath, s.handleTwilioVoice)
+	if s.cfg.TwilioCallbackWebhookPath != "" && s.cfg.TwilioCallbackWebhookPath != s.cfg.TwilioVoiceWebhookPath {
+		mux.HandleFunc(s.cfg.TwilioCallbackWebhookPath, s.handleTwilioCallbackDiscovery)
+	}
 	mux.HandleFunc(s.cfg.TwilioStreamPath, s.handleTwilioStream)
 
 	return mux
@@ -76,6 +84,14 @@ func (s *Server) healthz(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (s *Server) handleTwilioVoice(w http.ResponseWriter, r *http.Request) {
+	s.handleTwilioVoiceProfile(w, r, ProfileInbound)
+}
+
+func (s *Server) handleTwilioCallbackDiscovery(w http.ResponseWriter, r *http.Request) {
+	s.handleTwilioVoiceProfile(w, r, ProfileCallbackDiscovery)
+}
+
+func (s *Server) handleTwilioVoiceProfile(w http.ResponseWriter, r *http.Request, profile string) {
 	if err := r.ParseForm(); err != nil {
 		s.logger.Printf("twilio voice webhook rejected: invalid form body: %v", err)
 		http.Error(w, "invalid form body", http.StatusBadRequest)
@@ -97,6 +113,11 @@ func (s *Server) handleTwilioVoice(w http.ResponseWriter, r *http.Request) {
 
 	callSID := r.PostForm.Get("CallSid")
 	from := r.PostForm.Get("From")
+	to := r.PostForm.Get("To")
+	customerPhone := from
+	if profile == ProfileCallbackDiscovery {
+		customerPhone = firstNonEmpty(to, r.URL.Query().Get("to"), from)
+	}
 
 	payload := voiceResponse{
 		Say: say{
@@ -110,6 +131,10 @@ func (s *Server) handleTwilioVoice(w http.ResponseWriter, r *http.Request) {
 					{Name: "bridge_token", Value: s.cfg.StreamAuthToken},
 					{Name: "call_sid", Value: callSID},
 					{Name: "from", Value: from},
+					{Name: "to", Value: to},
+					{Name: "customer_phone", Value: customerPhone},
+					{Name: "prompt_profile", Value: profile},
+					{Name: "voice_ai_call_id", Value: r.URL.Query().Get("voice_ai_call_id")},
 				},
 			},
 		},
@@ -135,7 +160,7 @@ func (s *Server) handleTwilioStream(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	session := NewSession(s.cfg, s.logger, s.laravel, s.promptBuilder, conn)
+	session := NewSession(s.cfg, s.logger, s.laravel, s.promptBuilders, conn)
 	if err := session.Run(r.Context()); err != nil {
 		s.logger.Printf("session ended with error: %v", err)
 	}

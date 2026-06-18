@@ -68,6 +68,7 @@ return [
         'sms_from' => env('TWILIO_SMS_FROM', env('TWILIO_PHONE_NUMBER')),
         'messaging_service_sid' => env('TWILIO_MESSAGING_SERVICE_SID'),
         'webhook_base_url' => env('TWILIO_WEBHOOK_BASE_URL'),
+        'voice_agent_callback_url' => env('TWILIO_VOICE_AGENT_CALLBACK_URL'),
         'status_callback_url' => env('TWILIO_SMS_STATUS_CALLBACK_URL'),
         'timeout' => (int) env('TWILIO_TIMEOUT_SECONDS', 15),
         'bypass' => filter_var(env('TWILIO_BYPASS', false), FILTER_VALIDATE_BOOL),

@@ -20,4 +20,12 @@ func TestLoadUsesAppURLAsPublicBaseFallback(t *testing.T) {
 	if cfg.PublicBaseURL != "https://carelolo.com" {
 		t.Fatalf("expected APP_URL fallback for PublicBaseURL, got %q", cfg.PublicBaseURL)
 	}
+
+	if cfg.TwilioCallbackWebhookPath != "/twilio/callback-discovery" {
+		t.Fatalf("expected callback webhook default, got %q", cfg.TwilioCallbackWebhookPath)
+	}
+
+	if cfg.CallbackPromptFile != "prompts/callback-discovery.md" {
+		t.Fatalf("expected callback prompt default, got %q", cfg.CallbackPromptFile)
+	}
 }

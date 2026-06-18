@@ -53,6 +53,7 @@ class AdminVoiceAiTest extends TestCase
         config()->set('services.twilio.account_sid', 'AC123');
         config()->set('services.twilio.auth_token', 'twilio-secret');
         config()->set('services.twilio.voice_from', '+19844004008');
+        config()->set('services.twilio.voice_agent_callback_url', 'https://voice.carelolo.com/twilio/callback-discovery');
         config()->set('services.twilio.webhook_base_url', 'https://carelolo.com');
 
         Http::fake([
@@ -71,7 +72,7 @@ class AdminVoiceAiTest extends TestCase
             return $request->url() === 'https://api.twilio.com/2010-04-01/Accounts/AC123/Calls.json'
                 && $request['To'] === '+19195551234'
                 && $request['From'] === '+19844004008'
-                && $request['Url'] === 'https://carelolo.com/webhooks/twilio/voice/'.$call->id.'/answer'
+                && $request['Url'] === 'https://voice.carelolo.com/twilio/callback-discovery?voice_ai_call_id='.$call->id
                 && $request['Method'] === 'POST'
                 && $request['StatusCallback'] === 'https://carelolo.com/webhooks/twilio/voice/'.$call->id.'/status'
                 && $request['StatusCallbackMethod'] === 'POST';
@@ -79,6 +80,21 @@ class AdminVoiceAiTest extends TestCase
 
         $this->assertSame('CA_real_test', $call->twilio_call_sid);
         $this->assertSame(VoiceAiCall::STATUS_QUEUED, $call->status);
+    }
+
+    public function test_twilio_voice_client_requires_deepgram_voice_agent_callback_url(): void
+    {
+        config()->set('services.twilio.bypass', false);
+        config()->set('services.twilio.account_sid', 'AC123');
+        config()->set('services.twilio.auth_token', 'twilio-secret');
+        config()->set('services.twilio.voice_from', '+19844004008');
+        config()->set('services.twilio.voice_agent_callback_url', '');
+
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->expectExceptionMessage('Configure TWILIO_VOICE_AGENT_CALLBACK_URL');
+
+        app(TwilioVoiceClient::class)->startTestCall('919-555-1234', $admin);
     }
 
     public function test_twilio_voice_webhooks_collect_transcript_and_status(): void

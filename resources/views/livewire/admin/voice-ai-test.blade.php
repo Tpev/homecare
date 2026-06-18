@@ -54,7 +54,7 @@
                         @if($twilioBypass)
                             Twilio bypass is on. Calls are simulated locally.
                         @else
-                            Twilio will call the number and request per-call voice webhooks.
+                            Twilio will call the number and connect it to the Deepgram voice agent.
                         @endif
                     </p>
                 </div>
@@ -67,9 +67,10 @@
             </div>
 
             <div class="lg:col-span-12 text-xs text-slate-500">
-                Voice webhooks: {{ url('/webhooks/twilio/voice/{call}/answer') }},
-                {{ url('/webhooks/twilio/voice/{call}/gather') }},
-                {{ url('/webhooks/twilio/voice/{call}/status') }}
+                Deepgram callback bridge:
+                {{ $voiceAgentCallbackUrl !== '' ? $voiceAgentCallbackUrl : 'Configure TWILIO_VOICE_AGENT_CALLBACK_URL' }}
+                <span class="mx-1">|</span>
+                Twilio status callback: {{ url('/webhooks/twilio/voice/{call}/status') }}
             </div>
         </form>
     </x-card>

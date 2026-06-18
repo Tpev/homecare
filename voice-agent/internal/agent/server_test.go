@@ -115,6 +115,45 @@ func TestTwilioVoiceStillAcceptsConfiguredPublicBaseURL(t *testing.T) {
 	}
 }
 
+func TestTwilioCallbackDiscoveryAddsProfileAndCustomerPhone(t *testing.T) {
+	server := testServer(config.Config{
+		Port:                      "8088",
+		PublicBaseURL:             "https://voice.carelolo.com",
+		TwilioAuthToken:           "twilio-secret",
+		TwilioCallbackWebhookPath: "/twilio/callback-discovery",
+		TwilioStreamPath:          "/ws/twilio",
+		StreamAuthToken:           "bridge-secret",
+	})
+
+	form := url.Values{
+		"CallSid": {"CA789"},
+		"From":    {"+19844004008"},
+		"To":      {"+19195551234"},
+	}
+	req := httptest.NewRequest(http.MethodPost, "http://localhost:8088/twilio/callback-discovery?voice_ai_call_id=42", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("X-Twilio-Signature", twilioSignature("twilio-secret", "https://voice.carelolo.com/twilio/callback-discovery?voice_ai_call_id=42", form))
+
+	res := httptest.NewRecorder()
+	server.handleTwilioCallbackDiscovery(res, req)
+
+	if res.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d: %s", http.StatusOK, res.Code, res.Body.String())
+	}
+
+	body := res.Body.String()
+	for _, expected := range []string{
+		`<Parameter name="prompt_profile" value="callback_discovery"></Parameter>`,
+		`<Parameter name="customer_phone" value="+19195551234"></Parameter>`,
+		`<Parameter name="voice_ai_call_id" value="42"></Parameter>`,
+		`url="wss://voice.carelolo.com/ws/twilio"`,
+	} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("expected TwiML to contain %q, got:\n%s", expected, body)
+		}
+	}
+}
+
 func testServer(cfg config.Config) *Server {
 	return NewServer(cfg, log.New(io.Discard, "", 0), nil, nil)
 }

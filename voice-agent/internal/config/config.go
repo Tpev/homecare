@@ -8,48 +8,54 @@ import (
 )
 
 type Config struct {
-	Port                    string
-	PublicBaseURL           string
-	TwilioAccountSID        string
-	TwilioAuthToken         string
-	TwilioPhoneNumber       string
-	TwilioSMSFrom           string
-	TwilioVoiceWebhookPath  string
-	TwilioStreamPath        string
-	StreamAuthToken         string
-	DeepgramAPIKey          string
-	DeepgramWSURL           string
-	DeepgramLanguage        string
-	DeepgramSTTModel        string
-	DeepgramLLMModel        string
-	DeepgramTTSModel        string
-	DeepgramGreeting        string
-	LaravelBaseURL          string
-	LaravelInternalAPIToken string
-	PromptFile              string
+	Port                      string
+	PublicBaseURL             string
+	TwilioAccountSID          string
+	TwilioAuthToken           string
+	TwilioPhoneNumber         string
+	TwilioSMSFrom             string
+	TwilioVoiceWebhookPath    string
+	TwilioCallbackWebhookPath string
+	TwilioStreamPath          string
+	StreamAuthToken           string
+	DeepgramAPIKey            string
+	DeepgramWSURL             string
+	DeepgramLanguage          string
+	DeepgramSTTModel          string
+	DeepgramLLMModel          string
+	DeepgramTTSModel          string
+	DeepgramGreeting          string
+	DeepgramCallbackGreeting  string
+	LaravelBaseURL            string
+	LaravelInternalAPIToken   string
+	PromptFile                string
+	CallbackPromptFile        string
 }
 
 func Load() (Config, error) {
 	cfg := Config{
-		Port:                    env("PORT", "8088"),
-		PublicBaseURL:           strings.TrimRight(env("PUBLIC_BASE_URL", env("APP_URL", "")), "/"),
-		TwilioAccountSID:        env("TWILIO_ACCOUNT_SID", ""),
-		TwilioAuthToken:         env("TWILIO_AUTH_TOKEN", ""),
-		TwilioPhoneNumber:       env("TWILIO_PHONE_NUMBER", ""),
-		TwilioSMSFrom:           env("TWILIO_SMS_FROM", env("TWILIO_PHONE_NUMBER", "")),
-		TwilioVoiceWebhookPath:  env("TWILIO_VOICE_WEBHOOK_PATH", "/twilio/voice"),
-		TwilioStreamPath:        env("TWILIO_STREAM_PATH", "/ws/twilio"),
-		StreamAuthToken:         env("TWILIO_STREAM_AUTH_TOKEN", ""),
-		DeepgramAPIKey:          env("DEEPGRAM_API_KEY", ""),
-		DeepgramWSURL:           env("DEEPGRAM_WS_URL", "wss://agent.deepgram.com/v1/agent/converse"),
-		DeepgramLanguage:        env("DEEPGRAM_LANGUAGE", "en"),
-		DeepgramSTTModel:        env("DEEPGRAM_STT_MODEL", "flux-general-en"),
-		DeepgramLLMModel:        env("DEEPGRAM_LLM_MODEL", "gpt-4o-mini"),
-		DeepgramTTSModel:        env("DEEPGRAM_TTS_MODEL", "aura-2-thalia-en"),
-		DeepgramGreeting:        env("DEEPGRAM_GREETING", "Thanks for calling Homecare. How can I help you today?"),
-		LaravelBaseURL:          strings.TrimRight(env("LARAVEL_BASE_URL", "http://localhost"), "/"),
-		LaravelInternalAPIToken: env("LARAVEL_INTERNAL_API_TOKEN", ""),
-		PromptFile:              env("PROMPT_FILE", "prompts/system.md"),
+		Port:                      env("PORT", "8088"),
+		PublicBaseURL:             strings.TrimRight(env("PUBLIC_BASE_URL", env("APP_URL", "")), "/"),
+		TwilioAccountSID:          env("TWILIO_ACCOUNT_SID", ""),
+		TwilioAuthToken:           env("TWILIO_AUTH_TOKEN", ""),
+		TwilioPhoneNumber:         env("TWILIO_PHONE_NUMBER", ""),
+		TwilioSMSFrom:             env("TWILIO_SMS_FROM", env("TWILIO_PHONE_NUMBER", "")),
+		TwilioVoiceWebhookPath:    env("TWILIO_VOICE_WEBHOOK_PATH", "/twilio/voice"),
+		TwilioCallbackWebhookPath: env("TWILIO_CALLBACK_WEBHOOK_PATH", "/twilio/callback-discovery"),
+		TwilioStreamPath:          env("TWILIO_STREAM_PATH", "/ws/twilio"),
+		StreamAuthToken:           env("TWILIO_STREAM_AUTH_TOKEN", ""),
+		DeepgramAPIKey:            env("DEEPGRAM_API_KEY", ""),
+		DeepgramWSURL:             env("DEEPGRAM_WS_URL", "wss://agent.deepgram.com/v1/agent/converse"),
+		DeepgramLanguage:          env("DEEPGRAM_LANGUAGE", "en"),
+		DeepgramSTTModel:          env("DEEPGRAM_STT_MODEL", "flux-general-en"),
+		DeepgramLLMModel:          env("DEEPGRAM_LLM_MODEL", "gpt-4o-mini"),
+		DeepgramTTSModel:          env("DEEPGRAM_TTS_MODEL", "aura-2-thalia-en"),
+		DeepgramGreeting:          env("DEEPGRAM_GREETING", "Thanks for calling Homecare. How can I help you today?"),
+		DeepgramCallbackGreeting:  env("DEEPGRAM_CALLBACK_GREETING", "Hi, this is LoLo calling about your care request. Did I catch you at an okay time?"),
+		LaravelBaseURL:            strings.TrimRight(env("LARAVEL_BASE_URL", "http://localhost"), "/"),
+		LaravelInternalAPIToken:   env("LARAVEL_INTERNAL_API_TOKEN", ""),
+		PromptFile:                env("PROMPT_FILE", "prompts/system.md"),
+		CallbackPromptFile:        env("VOICE_AGENT_CALLBACK_PROMPT_FILE", "prompts/callback-discovery.md"),
 	}
 
 	if cfg.StreamAuthToken == "" {

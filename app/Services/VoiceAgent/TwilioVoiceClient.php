@@ -35,6 +35,9 @@ class TwilioVoiceClient
             'current_step' => 'intro',
             'gathered_phone' => $to,
             'started_at' => now(),
+            'metadata' => [
+                'voice_agent_profile' => 'callback_discovery',
+            ],
         ]);
 
         if ((bool) config('services.twilio.bypass', false)) {
@@ -60,6 +63,16 @@ class TwilioVoiceClient
             throw new RuntimeException('Twilio Voice credentials are not configured.');
         }
 
+        $voiceAgentCallbackUrl = $this->voiceAgentCallbackUrl($call);
+        if ($voiceAgentCallbackUrl === '') {
+            $call->update([
+                'status' => VoiceAiCall::STATUS_FAILED,
+                'last_error' => 'Twilio Voice Agent callback URL is not configured.',
+            ]);
+
+            throw new RuntimeException('Configure TWILIO_VOICE_AGENT_CALLBACK_URL to the Go Deepgram voice agent callback endpoint before starting discovery calls.');
+        }
+
         try {
             $response = Http::asForm()
                 ->withBasicAuth($accountSid, $authToken)
@@ -67,7 +80,7 @@ class TwilioVoiceClient
                 ->post($this->callsEndpoint($accountSid), [
                     'To' => $to,
                     'From' => $from,
-                    'Url' => $this->publicRoute('webhooks.twilio.voice.answer', $call),
+                    'Url' => $voiceAgentCallbackUrl,
                     'Method' => 'POST',
                     'StatusCallback' => $this->publicRoute('webhooks.twilio.voice.status', $call),
                     'StatusCallbackMethod' => 'POST',
@@ -141,6 +154,20 @@ class TwilioVoiceClient
     private function callsEndpoint(string $accountSid): string
     {
         return 'https://api.twilio.com/2010-04-01/Accounts/'.$accountSid.'/Calls.json';
+    }
+
+    private function voiceAgentCallbackUrl(VoiceAiCall $call): string
+    {
+        $url = trim((string) config('services.twilio.voice_agent_callback_url'));
+        if ($url === '') {
+            return '';
+        }
+
+        $separator = str_contains($url, '?') ? '&' : '?';
+
+        return $url.$separator.http_build_query([
+            'voice_ai_call_id' => $call->id,
+        ]);
     }
 
     private function responseErrorMessage(Response $response): string
