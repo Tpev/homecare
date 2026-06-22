@@ -55,6 +55,8 @@ type Session struct {
 	signupLinkSent    bool
 	transcriptMu      sync.Mutex
 	transcript        []string
+	recorder          *LocalRecorder
+	recordingErr      error
 }
 
 type dgEnvelope struct {
@@ -137,6 +139,7 @@ func (s *Session) Run(parent context.Context) error {
 	s.leadType = "family"
 	s.intent = "unknown"
 	s.callStartedAt = time.Now().UTC()
+	s.startRecorder()
 
 	knowledge, err := s.laravel.GetKnowledge(ctx)
 	if err != nil {
@@ -238,6 +241,12 @@ func (s *Session) readTwilio(ctx context.Context, cancel context.CancelFunc, sta
 			if err != nil {
 				s.logger.Printf("decode twilio audio: %v", err)
 				continue
+			}
+			if s.recorder != nil {
+				if err := s.recorder.WriteMuLaw(audio); err != nil {
+					s.recordingErr = err
+					s.logger.Printf("record caller audio: %v", err)
+				}
 			}
 
 			select {
@@ -648,6 +657,13 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 }
 
 func (s *Session) sendAudioToTwilio(raw []byte) error {
+	if s.recorder != nil {
+		if err := s.recorder.WriteMuLaw(raw); err != nil {
+			s.recordingErr = err
+			s.logger.Printf("record assistant audio: %v", err)
+		}
+	}
+
 	message := twilio.OutboundMediaMessage{
 		Event:     "media",
 		StreamSID: s.streamSID,
@@ -774,6 +790,7 @@ func (s *Session) reportCall(runErr error) error {
 		return nil
 	}
 
+	s.closeRecorder()
 	s.callEndedAt = time.Now().UTC()
 	if s.callStartedAt.IsZero() {
 		s.callStartedAt = s.callEndedAt
@@ -844,6 +861,36 @@ func (s *Session) absorbCallerDetails(args map[string]any) {
 	s.callbackTime = firstNonEmpty(stringValue(args["callback_time"]), s.callbackTime)
 }
 
+func (s *Session) startRecorder() {
+	if !s.cfg.RecordingsEnabled {
+		return
+	}
+	if supportedProfile(s.promptProfile) != ProfileCallbackDiscovery && s.voiceAICallID == "" {
+		return
+	}
+
+	identifier := firstNonEmpty(s.voiceAICallID, s.callSID, "voice-call")
+	recorder, err := NewLocalRecorder(s.cfg.RecordingsDir, s.cfg.RecordingsPublicBaseURL, identifier)
+	if err != nil {
+		s.recordingErr = err
+		s.logger.Printf("start local recording: %v", err)
+		return
+	}
+
+	s.recorder = recorder
+}
+
+func (s *Session) closeRecorder() {
+	if s.recorder == nil {
+		return
+	}
+
+	if err := s.recorder.Close(); err != nil {
+		s.recordingErr = err
+		s.logger.Printf("close local recording: %v", err)
+	}
+}
+
 func (s *Session) promptBuilder() *PromptBuilder {
 	profile := supportedProfile(s.promptProfile)
 	if builder := s.promptBuilders[profile]; builder != nil {
@@ -869,6 +916,19 @@ func (s *Session) metadata(extra map[string]any) map[string]any {
 
 	if s.voiceAICallID != "" {
 		metadata["voice_ai_call_id"] = s.voiceAICallID
+	}
+	if s.recorder != nil {
+		if path := s.recorder.Path(); path != "" {
+			metadata["recording_path"] = path
+		}
+		if publicURL := s.recorder.PublicURL(); publicURL != "" {
+			metadata["recording_url"] = publicURL
+		}
+		metadata["recording_mime_type"] = "audio/wav"
+		metadata["recording_source"] = "local_voice_agent"
+	}
+	if s.recordingErr != nil {
+		metadata["recording_error"] = s.recordingErr.Error()
 	}
 
 	for key, value := range extra {

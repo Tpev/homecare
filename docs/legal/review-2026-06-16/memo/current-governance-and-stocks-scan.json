@@ -1,0 +1,291 @@
+{
+  "Stocks": [
+    {
+      "file": "01-initial-cap-table.docx",
+      "placeholders": [
+        "[DATE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "02-board-consent-initial-founder-share-issuance.docx",
+      "placeholders": [
+        "[CHARLES TOTAL PURCHASE PRICE]",
+        "[DATE]",
+        "[PAR VALUE]",
+        "[PRICE PER SHARE]",
+        "[THIBAUD TOTAL PURCHASE PRICE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "03-founder-stock-purchase-agreement-charles-petrini-poli.docx",
+      "placeholders": [
+        "[BOARD APPROVAL DATE]",
+        "[CHARLES ADDRESS]",
+        "[CHARLES TOTAL PURCHASE PRICE]",
+        "[CLOSING DATE]",
+        "[DATE]",
+        "[PAR VALUE]",
+        "[PRICE PER SHARE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "04-founder-stock-purchase-agreement-thibaud-peverelli.docx",
+      "placeholders": [
+        "[BOARD APPROVAL DATE]",
+        "[CLOSING DATE]",
+        "[DATE]",
+        "[PAR VALUE]",
+        "[PRICE PER SHARE]",
+        "[THIBAUD ADDRESS]",
+        "[THIBAUD TOTAL PURCHASE PRICE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "05-uncertificated-share-notice-charles-petrini-poli.docx",
+      "placeholders": [
+        "[CHARLES ADDRESS]",
+        "[CLOSING DATE]",
+        "[DATE]",
+        "[PAR VALUE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "06-uncertificated-share-notice-thibaud-peverelli.docx",
+      "placeholders": [
+        "[CLOSING DATE]",
+        "[DATE]",
+        "[PAR VALUE]",
+        "[THIBAUD ADDRESS]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "07-stock-ledger.docx",
+      "placeholders": [
+        "[CHARLES ADDRESS]",
+        "[CHARLES TOTAL PURCHASE PRICE]",
+        "[CLOSING DATE]",
+        "[PAR VALUE]",
+        "[THIBAUD ADDRESS]",
+        "[THIBAUD TOTAL PURCHASE PRICE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "08-founder-payment-receipts.docx",
+      "placeholders": [
+        "[CHARLES TOTAL PURCHASE PRICE]",
+        "[DATE]",
+        "[PAYMENT DATE]",
+        "[PAYMENT METHOD]",
+        "[PRICE PER SHARE]",
+        "[THIBAUD TOTAL PURCHASE PRICE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "09-closing-checklist.docx",
+      "placeholders": [
+        "[ ]",
+        "[CHARLES TOTAL PURCHASE PRICE]",
+        "[DATE]",
+        "[PAR VALUE]",
+        "[PRICE PER SHARE]",
+        "[THIBAUD TOTAL PURCHASE PRICE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "initial-cap-table-and-stock-ledger.xlsx",
+      "placeholders": [
+        "[CHARLES ADDRESS]",
+        "[CHARLES TOTAL PURCHASE PRICE]",
+        "[CLOSING DATE]",
+        "[THIBAUD ADDRESS]",
+        "[THIBAUD TOTAL PURCHASE PRICE]"
+      ],
+      "has_lolo": false,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": false
+    }
+  ],
+  "Board Governance": [
+    {
+      "file": "01-governance-summary.docx",
+      "placeholders": [
+        "[DATE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": true
+    },
+    {
+      "file": "02-bylaws.docx",
+      "placeholders": [
+        "[DATE]",
+        "[PRINCIPAL OFFICE ADDRESS]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": true,
+      "has_thibaud_role": true,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "03-action-by-sole-incorporator-electing-directors.docx",
+      "placeholders": [
+        "[CHARLES ADDRESS]",
+        "[DATE]",
+        "[INCORPORATOR NAME]",
+        "[THIBAUD ADDRESS]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "04-stockholder-written-consent-electing-directors.docx",
+      "placeholders": [
+        "[DATE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "05-board-consent-adopting-governance.docx",
+      "placeholders": [
+        "[DATE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": true,
+      "has_thibaud_role": true,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "06-founder-voting-and-governance-agreement.docx",
+      "placeholders": [
+        "[DATE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": true
+    },
+    {
+      "file": "07-reserved-matters-schedule.docx",
+      "placeholders": [
+        "[AMOUNT]",
+        "[DATE]",
+        "[TERM]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": true,
+      "has_thibaud_role": true,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "08-indemnification-agreement-charles-petrini-poli.docx",
+      "placeholders": [
+        "[DATE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "09-indemnification-agreement-thibaud-peverelli.docx",
+      "placeholders": [
+        "[DATE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "10-board-approval-authority-matrix.docx",
+      "placeholders": [
+        "[AMOUNT]",
+        "[DATE]",
+        "[TERM]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": true,
+      "has_thibaud_role": true,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "11-conflict-of-interest-policy.docx",
+      "placeholders": [
+        "[DATE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": false,
+      "has_thibaud_role": false,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "12-officer-roles-and-authority-appendix.docx",
+      "placeholders": [
+        "[DATE]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": true,
+      "has_thibaud_role": true,
+      "has_deadlock_stockholder_vote": false
+    },
+    {
+      "file": "board-governance-complete-package.docx",
+      "placeholders": [
+        "[AMOUNT]",
+        "[CHARLES ADDRESS]",
+        "[DATE]",
+        "[INCORPORATOR NAME]",
+        "[PRINCIPAL OFFICE ADDRESS]",
+        "[TERM]",
+        "[THIBAUD ADDRESS]"
+      ],
+      "has_lolo": true,
+      "has_charles_role": true,
+      "has_thibaud_role": true,
+      "has_deadlock_stockholder_vote": true
+    }
+  ]
+}

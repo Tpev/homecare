@@ -1,7 +1,7 @@
-HUB Healthcare, LLC
+LoLo Care Inc
 Platform Terms of Service
 Effective Date: March 13, 2026 | Last Updated: March 13, 2026
-These Platform Terms of Service (the “Terms”) are a binding legal agreement between you and HUB Healthcare, LLC (“HUB,” “we,” “us,” or “our”) governing your access to and use of our websites, mobile applications, software, communication tools, marketplaces, scheduling tools, messaging tools, and related products and services (collectively, the “Platform”).
+These Platform Terms of Service (the “Terms”) are a binding legal agreement between you and LoLo Care Inc (“LoLo,” “we,” “us,” or “our”) governing your access to and use of our websites, mobile applications, software, communication tools, marketplaces, scheduling tools, messaging tools, and related products and services (collectively, the “Platform”).
 By accessing, browsing, registering for, or using the Platform, you agree to be bound by these Terms. If you do not agree to these Terms, you may not access or use the Platform.
 Important: These Terms are intended as a business draft for review and customization by qualified legal counsel. Because the Platform may involve caregiving, home access, healthcare-adjacent interactions, scheduling, communications, and payments, these Terms should be reviewed for compliance with the laws of each state or jurisdiction in which the Platform operates.
 1. Scope and Acceptance
@@ -9,12 +9,12 @@ By using the Platform, you represent and warrant that:
 you are at least eighteen (18) years old and able to form a binding contract;
 you have authority to agree to these Terms for yourself and, if applicable, on behalf of any entity you represent;
 you will comply with these Terms and all applicable laws, rules, and regulations;
-all information you provide to HUB is true, accurate, current, and complete; and
+all information you provide to LoLo is true, accurate, current, and complete; and
 if you use the Platform on behalf of another person, family member, business, or organization, you are authorized to bind that person or organization to these Terms.
 2. Description of the Platform
 The Platform is a technology-enabled marketplace and coordination tool that may allow users to create accounts, communicate, request support services, review opportunities, post or accept assignments, schedule visits, exchange information, process payments, and otherwise connect with one another.
-HUB provides software and related technology services only. HUB is not a provider of caregiving, nursing, home health, medical, clinical, therapy, transportation, housekeeping, companionship, or other in-person services.
-HUB does not directly provide care, supervise care, direct how care is delivered, control professional judgment, or guarantee the quality, legality, safety, appropriateness, timeliness, or outcome of any services arranged through the Platform.
+LoLo provides software and related technology services only. LoLo is not a provider of caregiving, nursing, home health, medical, clinical, therapy, transportation, housekeeping, companionship, or other in-person services.
+LoLo does not directly provide care, supervise care, direct how care is delivered, control professional judgment, or guarantee the quality, legality, safety, appropriateness, timeliness, or outcome of any services arranged through the Platform.
 The Platform may be used by different categories of users, including without limitation:
 individuals or families seeking services or support;
 caregivers or service providers seeking opportunities;
@@ -22,30 +22,30 @@ agencies, facilities, partners, coordinators, or other organizations; and
 visitors who browse or otherwise interact with the Platform.
 The specific roles, rights, and responsibilities of each category of user may also be addressed in separate agreements, policies, or acknowledgements.
 3. Marketplace Status; No Employment or Agency Relationship
-HUB operates as a technology marketplace and communications platform.
-Unless HUB expressly states otherwise in a separate written agreement signed by HUB, you acknowledge and agree that:
-HUB is not the employer of any caregiver, service provider, or other user;
-HUB is not a staffing agency, home care agency, nurse registry, or healthcare provider;
-HUB does not control, direct, supervise, train, manage, or require the manner, means, timing, methods, or details by which any caregiver or service provider performs services;
+LoLo operates as a technology marketplace and communications platform.
+Unless LoLo expressly states otherwise in a separate written agreement signed by LoLo, you acknowledge and agree that:
+LoLo is not the employer of any caregiver, service provider, or other user;
+LoLo is not a staffing agency, home care agency, nurse registry, or healthcare provider;
+LoLo does not control, direct, supervise, train, manage, or require the manner, means, timing, methods, or details by which any caregiver or service provider performs services;
 any relationship formed between a caregiver and a client, family, agency, facility, or other user is solely between those parties;
-no joint venture, partnership, franchise, employment, fiduciary, agency, or similar relationship is created between HUB and any user by virtue of the Platform or these Terms; and
+no joint venture, partnership, franchise, employment, fiduciary, agency, or similar relationship is created between LoLo and any user by virtue of the Platform or these Terms; and
 to the extent caregivers or service providers use the Platform, they do so as independent businesses or independent contractors unless otherwise expressly agreed in writing.
 4. Eligibility and Geographic Limits
-You may use the Platform only if you are legally permitted to do so under applicable law. HUB may restrict access to the Platform or certain features based on geography, licensing concerns, risk considerations, age, or other business or legal reasons.
+You may use the Platform only if you are legally permitted to do so under applicable law. LoLo may restrict access to the Platform or certain features based on geography, licensing concerns, risk considerations, age, or other business or legal reasons.
 You may not use the Platform if:
 your use would violate any law or regulation;
 you have been suspended, removed, or prohibited from using the Platform;
 you are using the Platform for fraudulent, harmful, abusive, or unauthorized purposes; or
 you are acting on behalf of another person without authority.
-HUB reserves the right to verify eligibility at any time.
+LoLo reserves the right to verify eligibility at any time.
 5. Account Registration and Security
 To access certain features, you may be required to create an account. You agree to:
 provide complete and accurate registration information;
 keep your account information current;
 maintain the confidentiality of your login credentials;
-notify HUB immediately of any unauthorized access to or use of your account; and
+notify LoLo immediately of any unauthorized access to or use of your account; and
 accept responsibility for all activity occurring under your account, whether or not authorized by you, to the fullest extent permitted by law.
-HUB may require identity verification, phone verification, email verification, multifactor authentication, documentation uploads, profile completion, or additional onboarding steps.
+LoLo may require identity verification, phone verification, email verification, multifactor authentication, documentation uploads, profile completion, or additional onboarding steps.
 We may refuse registration, reclaim usernames, suspend access, or close accounts at our discretion.
 6. User Categories and Supplemental Agreements
 Certain users may be required to agree to additional terms, including but not limited to:
@@ -73,25 +73,25 @@ copy, scrape, reverse engineer, decompile, extract, or mine data from the Platfo
 circumvent fees, workflows, safety procedures, verification processes, or required acknowledgements;
 upload viruses, malware, malicious code, or other harmful materials;
 collect or misuse personal information of other users except as permitted through the Platform and applicable law; or
-use the Platform to advertise unrelated products or services without HUB’s written permission.
+use the Platform to advertise unrelated products or services without LoLo’s written permission.
 8. No Emergency Use; No Medical or Clinical Services
 The Platform is not an emergency response service and must not be used for urgent, emergency, crisis, or life-threatening situations. If you believe someone is experiencing a medical emergency, call 911 or your local emergency services immediately.
 You acknowledge and agree that:
-HUB does not provide medical advice;
-HUB does not diagnose, treat, monitor, direct, or supervise medical or clinical care;
-HUB is not a hospital, physician practice, nurse registry, licensed home care agency, emergency response service, or healthcare provider; and
+LoLo does not provide medical advice;
+LoLo does not diagnose, treat, monitor, direct, or supervise medical or clinical care;
+LoLo is not a hospital, physician practice, nurse registry, licensed home care agency, emergency response service, or healthcare provider; and
 information presented through the Platform is for coordination, communication, and marketplace purposes only unless expressly stated otherwise.
 9. Content, Profiles, and Communications
 The Platform may permit users to submit, upload, transmit, or display text, images, files, profile information, availability information, ratings, reviews, messages, and other content (“User Content”).
-You retain ownership of your User Content, but you grant HUB a non-exclusive, worldwide, royalty-free, transferable, sublicensable right to host, store, use, reproduce, modify, display, distribute, and otherwise process your User Content for purposes of operating, improving, securing, promoting, and supporting the Platform.
+You retain ownership of your User Content, but you grant LoLo a non-exclusive, worldwide, royalty-free, transferable, sublicensable right to host, store, use, reproduce, modify, display, distribute, and otherwise process your User Content for purposes of operating, improving, securing, promoting, and supporting the Platform.
 You represent and warrant that:
 you own or have sufficient rights to the User Content;
 the User Content is accurate and not misleading;
 the User Content does not violate applicable law or third-party rights; and
 the User Content is not defamatory, obscene, abusive, discriminatory, fraudulent, or otherwise improper.
-HUB may, but is not obligated to, monitor, review, screen, edit, refuse, remove, or disable any User Content at any time and for any reason.
+LoLo may, but is not obligated to, monitor, review, screen, edit, refuse, remove, or disable any User Content at any time and for any reason.
 10. Communications Consent
-By using the Platform or providing contact information to HUB, you consent, to the extent permitted by law, to receive communications from HUB and, where applicable, from other users through the Platform, including by email, text message, push notification, phone call, voicemail, or in-app messaging.
+By using the Platform or providing contact information to LoLo, you consent, to the extent permitted by law, to receive communications from LoLo and, where applicable, from other users through the Platform, including by email, text message, push notification, phone call, voicemail, or in-app messaging.
 These communications may include:
 account and security notifications;
 scheduling or service-related messages;
@@ -102,34 +102,34 @@ reminders, alerts, and workflow notifications; and
 marketing communications, subject to applicable opt-out rights.
 You are responsible for any charges imposed by your communications provider. Consent to receive communications is not a condition of purchase where prohibited by law.
 11. Background Checks and Verification
-HUB may, directly or through third parties, offer or require identity checks, reference checks, license checks, certification reviews, sanctions screening, criminal history checks, motor vehicle checks, document reviews, or other verification measures for some users.
+LoLo may, directly or through third parties, offer or require identity checks, reference checks, license checks, certification reviews, sanctions screening, criminal history checks, motor vehicle checks, document reviews, or other verification measures for some users.
 You acknowledge and agree that:
 any such screening or verification may be limited in scope, timing, geography, sources, and accuracy;
 screening results may change over time and may not reflect all relevant information;
 the absence of adverse information does not mean a person is safe, trustworthy, qualified, licensed, suitable, or appropriate;
 users remain solely responsible for using independent judgment and taking appropriate precautions when interacting with others; and
-HUB may suspend, deny, or revoke access based on screening or verification results, incomplete information, inconsistencies, safety concerns, or risk determinations.
-Nothing in these Terms creates an obligation for HUB to conduct background checks or ongoing monitoring unless HUB expressly states otherwise in writing.
+LoLo may suspend, deny, or revoke access based on screening or verification results, incomplete information, inconsistencies, safety concerns, or risk determinations.
+Nothing in these Terms creates an obligation for LoLo to conduct background checks or ongoing monitoring unless LoLo expressly states otherwise in writing.
 12. User Interactions and Off-Platform Activity
 Users may communicate, meet, exchange information, enter homes or facilities, provide or receive services, exchange keys, transport people or property, handle equipment, or otherwise interact in ways that involve personal, property, health, safety, or financial risk.
 You acknowledge and agree that:
 all interactions with other users are at your own risk;
-HUB is not responsible for the acts, omissions, negligence, misconduct, or legal compliance of any user;
-HUB does not guarantee the conduct, honesty, qualifications, licensing, insurance, background, identity, or performance of any user; and
-HUB is not responsible for what happens before, during, or after any offline interaction or service arrangement.
+LoLo is not responsible for the acts, omissions, negligence, misconduct, or legal compliance of any user;
+LoLo does not guarantee the conduct, honesty, qualifications, licensing, insurance, background, identity, or performance of any user; and
+LoLo is not responsible for what happens before, during, or after any offline interaction or service arrangement.
 Users are solely responsible for evaluating whether any interaction, service arrangement, location, or request is appropriate and safe.
 13. Payments, Fees, and Processors
 The Platform may include or later add features relating to pricing, rates, fees, payment processing, invoicing, disbursements, tips, refunds, holds, or other financial transactions.
 If payments are enabled:
 you agree to pay all applicable charges, fees, taxes, and other amounts disclosed to you;
-HUB may use one or more third-party payment processors;
+LoLo may use one or more third-party payment processors;
 you may be required to agree to additional payment processor terms;
-HUB may collect service fees, processing fees, subscription fees, convenience fees, cancellation fees, or other fees as disclosed on the Platform or in supplemental policies; and
-HUB may place holds, delay disbursements, reverse payments, offset amounts owed, or suspend transactions where necessary for fraud prevention, dispute resolution, compliance, chargebacks, refunds, or risk management.
+LoLo may collect service fees, processing fees, subscription fees, convenience fees, cancellation fees, or other fees as disclosed on the Platform or in supplemental policies; and
+LoLo may place holds, delay disbursements, reverse payments, offset amounts owed, or suspend transactions where necessary for fraud prevention, dispute resolution, compliance, chargebacks, refunds, or risk management.
 All payment features are subject to change.
 14. Cancellation, No-Show, and Rescheduling
 If the Platform offers scheduling or booking functionality, users may be subject to cancellation, no-show, lateness, rescheduling, refund, or dispute rules stated on the Platform or in a separate Payment and Cancellation Policy.
-Unless otherwise stated in a supplemental policy, HUB reserves the right to determine or modify marketplace-level rules for:
+Unless otherwise stated in a supplemental policy, LoLo reserves the right to determine or modify marketplace-level rules for:
 cancellation windows;
 partial or full refunds;
 no-show fees;
@@ -139,28 +139,28 @@ user penalties for repeated cancellations; and
 account restrictions related to abuse of scheduling features.
 15. Taxes and Financial Responsibility
 Users are solely responsible for determining and fulfilling their own tax obligations arising from use of the Platform, including any obligations related to income, payroll, sales, use, excise, withholding, employment, contractor, or other taxes.
-HUB does not provide tax advice and does not guarantee the accuracy of any tax-related information presented through the Platform.
+LoLo does not provide tax advice and does not guarantee the accuracy of any tax-related information presented through the Platform.
 To the extent caregivers or service providers earn money through the Platform, they are solely responsible for their own tax reporting, filings, and remittances unless a separate written agreement expressly states otherwise.
 16. Safety; Right to Refuse or Remove Access
-HUB may establish and enforce safety standards, conduct expectations, prohibited activity rules, community guidelines, documentation requirements, and risk management procedures.
-HUB may investigate complaints, request information, require corrective steps, pause access, remove listings or opportunities, restrict functionality, or terminate accounts based on safety, legal, operational, reputational, or trust concerns.
-HUB has no obligation to allow any person to continue using the Platform and may act preemptively to protect users, the Platform, or the business.
+LoLo may establish and enforce safety standards, conduct expectations, prohibited activity rules, community guidelines, documentation requirements, and risk management procedures.
+LoLo may investigate complaints, request information, require corrective steps, pause access, remove listings or opportunities, restrict functionality, or terminate accounts based on safety, legal, operational, reputational, or trust concerns.
+LoLo has no obligation to allow any person to continue using the Platform and may act preemptively to protect users, the Platform, or the business.
 17. Intellectual Property
-The Platform, including all software, workflows, user interfaces, designs, text, graphics, logos, trademarks, service marks, trade names, compilations, and related materials, are owned by HUB or its licensors and are protected by intellectual property laws.
+The Platform, including all software, workflows, user interfaces, designs, text, graphics, logos, trademarks, service marks, trade names, compilations, and related materials, are owned by LoLo or its licensors and are protected by intellectual property laws.
 Except for the limited right to use the Platform in accordance with these Terms, no rights are granted to you.
 You may not:
 copy, modify, distribute, sell, lease, sublicense, or exploit the Platform;
-use HUB’s branding without written permission;
+use LoLo’s branding without written permission;
 reverse engineer or attempt to access source code except as permitted by law; or
 use data from the Platform to build a competing service.
-“HUB,” “HUB Healthcare,” and related names, logos, and marks are proprietary to HUB Healthcare, LLC unless otherwise indicated.
+“LoLo,” “LoLo Care,” and related names, logos, and marks are proprietary to LoLo Care Inc unless otherwise indicated.
 18. Third-Party Services and Links
 The Platform may contain links to third-party websites, software, communication tools, payment processors, background check providers, integrations, maps, calendars, EHR connectors, marketing tools, or other external services.
-HUB does not control and is not responsible for third-party services, their content, availability, accuracy, privacy practices, terms, security, or actions.
+LoLo does not control and is not responsible for third-party services, their content, availability, accuracy, privacy practices, terms, security, or actions.
 Your use of third-party services is at your own risk and subject to their terms.
 19. Disclaimers
 TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE PLATFORM IS PROVIDED “AS IS” AND “AS AVAILABLE” WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE.
-HUB disclaims all warranties, including without limitation:
+LoLo disclaims all warranties, including without limitation:
 merchantability;
 fitness for a particular purpose;
 title;
@@ -171,7 +171,7 @@ security;
 reliability;
 quality of services arranged through the Platform; and
 that the Platform will be uninterrupted, error-free, or free of harmful components.
-HUB DOES NOT WARRANT OR GUARANTEE:
+LoLo DOES NOT WARRANT OR GUARANTEE:
 the identity, honesty, conduct, performance, credentials, licensing, certification, insurance, qualifications, or suitability of any user;
 the legality, safety, quality, timeliness, appropriateness, or outcome of any service or interaction;
 that any service request will be fulfilled;
@@ -179,8 +179,8 @@ that any caregiver or service provider is available, competent, or appropriate f
 that any information or content on the Platform is complete, current, or error-free; or
 that use of the Platform will meet your expectations or business needs.
 20. Limitation of Liability
-TO THE MAXIMUM EXTENT PERMITTED BY LAW, HUB AND ITS AFFILIATES, OFFICERS, DIRECTORS, MEMBERS, MANAGERS, EMPLOYEES, CONTRACTORS, AGENTS, LICENSORS, AND SERVICE PROVIDERS SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, PUNITIVE, OR ENHANCED DAMAGES, OR FOR ANY LOSS OF PROFITS, REVENUE, BUSINESS, OPPORTUNITY, DATA, GOODWILL, OR USE, ARISING OUT OF OR RELATING TO THE PLATFORM OR THESE TERMS, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
-TO THE MAXIMUM EXTENT PERMITTED BY LAW, HUB SHALL NOT BE LIABLE FOR ANY CLAIMS ARISING FROM OR RELATING TO:
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, LoLo AND ITS AFFILIATES, OFFICERS, DIRECTORS, MEMBERS, MANAGERS, EMPLOYEES, CONTRACTORS, AGENTS, LICENSORS, AND SERVICE PROVIDERS SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, PUNITIVE, OR ENHANCED DAMAGES, OR FOR ANY LOSS OF PROFITS, REVENUE, BUSINESS, OPPORTUNITY, DATA, GOODWILL, OR USE, ARISING OUT OF OR RELATING TO THE PLATFORM OR THESE TERMS, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, LoLo SHALL NOT BE LIABLE FOR ANY CLAIMS ARISING FROM OR RELATING TO:
 services requested, offered, or performed by users;
 personal injury, death, property damage, theft, assault, abuse, harassment, negligence, misconduct, or illegal acts by any user or third party;
 disputes or disagreements between users;
@@ -189,12 +189,12 @@ user content or communications;
 interruptions, outages, delays, system failures, cyber incidents, or data loss;
 unauthorized access to accounts or information; or
 any off-platform interaction or arrangement.
-TO THE MAXIMUM EXTENT PERMITTED BY LAW, HUB’S TOTAL AGGREGATE LIABILITY FOR ALL CLAIMS ARISING OUT OF OR RELATING TO THE PLATFORM OR THESE TERMS SHALL NOT EXCEED THE GREATER OF:
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, LoLo’S TOTAL AGGREGATE LIABILITY FOR ALL CLAIMS ARISING OUT OF OR RELATING TO THE PLATFORM OR THESE TERMS SHALL NOT EXCEED THE GREATER OF:
 one hundred U.S. dollars (US $100); or
-the total amount of fees, if any, paid by you directly to HUB in the twelve (12) months preceding the event giving rise to the claim.
+the total amount of fees, if any, paid by you directly to LoLo in the twelve (12) months preceding the event giving rise to the claim.
 Some jurisdictions do not allow certain limitations of liability. In those jurisdictions, liability will be limited to the fullest extent permitted by law.
 21. Indemnification
-You agree to defend, indemnify, and hold harmless HUB and its affiliates, officers, directors, members, managers, employees, contractors, agents, licensors, and service providers from and against any and all claims, demands, actions, suits, investigations, liabilities, damages, judgments, settlements, penalties, fines, costs, and expenses, including reasonable attorneys’ fees, arising out of or relating to:
+You agree to defend, indemnify, and hold harmless LoLo and its affiliates, officers, directors, members, managers, employees, contractors, agents, licensors, and service providers from and against any and all claims, demands, actions, suits, investigations, liabilities, damages, judgments, settlements, penalties, fines, costs, and expenses, including reasonable attorneys’ fees, arising out of or relating to:
 your use of or access to the Platform;
 your User Content;
 your violation of these Terms or any supplemental policy;
@@ -202,17 +202,17 @@ your violation of applicable law;
 your interactions, arrangements, or disputes with any other user or third party;
 services you request, offer, provide, supervise, or receive; or
 your negligence, misconduct, fraud, abuse, misrepresentation, or infringement of any rights.
-HUB reserves the right to assume the exclusive defense and control of any matter subject to indemnification, and you agree to cooperate with HUB’s defense.
+LoLo reserves the right to assume the exclusive defense and control of any matter subject to indemnification, and you agree to cooperate with LoLo’s defense.
 22. Release
-To the maximum extent permitted by law, you release HUB and its affiliates, officers, directors, members, managers, employees, contractors, agents, licensors, and service providers from any and all claims, demands, damages, losses, and liabilities arising out of or related to disputes, injuries, losses, or damages involving other users or third parties, including those arising from services arranged through the Platform.
+To the maximum extent permitted by law, you release LoLo and its affiliates, officers, directors, members, managers, employees, contractors, agents, licensors, and service providers from any and all claims, demands, damages, losses, and liabilities arising out of or related to disputes, injuries, losses, or damages involving other users or third parties, including those arising from services arranged through the Platform.
 If you are a California resident, you waive California Civil Code Section 1542, which states that a general release does not extend to claims that the creditor or releasing party does not know or suspect to exist in their favor at the time of executing the release and that, if known, would have materially affected the settlement.
 23. Suspension and Termination
-HUB may, at any time and without prior notice, suspend, restrict, investigate, or terminate your access to the Platform or any feature of it for any reason, including if HUB believes:
+LoLo may, at any time and without prior notice, suspend, restrict, investigate, or terminate your access to the Platform or any feature of it for any reason, including if LoLo believes:
 you violated these Terms or any policy;
 your conduct creates risk or possible legal exposure;
 your account information is inaccurate or misleading;
 your activity is fraudulent, abusive, unsafe, or unlawful; or
-suspension or termination is necessary to protect users, HUB, or third parties.
+suspension or termination is necessary to protect users, LoLo, or third parties.
 You may stop using the Platform at any time.
 Any provisions that by their nature should survive termination will survive, including without limitation provisions on payments owed, intellectual property, disclaimers, limitation of liability, indemnification, release, dispute resolution, governing law, and any accrued rights or obligations.
 24. Dispute Resolution; Arbitration; Class Action Waiver
@@ -220,23 +220,23 @@ Please read this section carefully. It affects your legal rights.
 24.1 Informal Resolution
 Before filing a claim, the parties agree to attempt in good faith to resolve the dispute informally by written notice. The notice must describe the nature of the dispute, the basis of the claim, and the relief sought.
 24.2 Binding Arbitration
-Except to the extent prohibited by law, any dispute, claim, or controversy arising out of or relating to these Terms, the Platform, or the relationship between you and HUB shall be resolved by final and binding arbitration on an individual basis, rather than in court.
-The arbitration shall be administered by a nationally recognized arbitration provider selected by HUB, under its applicable consumer or commercial arbitration rules as appropriate, except as modified by these Terms. The arbitration may be conducted remotely, by written submissions, or in the county and state designated by HUB in the Governing Law section, unless applicable law requires otherwise.
+Except to the extent prohibited by law, any dispute, claim, or controversy arising out of or relating to these Terms, the Platform, or the relationship between you and LoLo shall be resolved by final and binding arbitration on an individual basis, rather than in court.
+The arbitration shall be administered by a nationally recognized arbitration provider selected by LoLo, under its applicable consumer or commercial arbitration rules as appropriate, except as modified by these Terms. The arbitration may be conducted remotely, by written submissions, or in the county and state designated by LoLo in the Governing Law section, unless applicable law requires otherwise.
 24.3 Exceptions
 Either party may bring an individual action in small claims court if the claim qualifies. Either party may seek temporary or preliminary injunctive relief in court to protect intellectual property, confidential information, or safety pending arbitration.
 24.4 No Class Actions
-TO THE MAXIMUM EXTENT PERMITTED BY LAW, YOU AND HUB AGREE THAT EACH MAY BRING CLAIMS AGAINST THE OTHER ONLY IN AN INDIVIDUAL CAPACITY AND NOT AS A PLAINTIFF, CLASS MEMBER, COLLECTIVE MEMBER, PRIVATE ATTORNEY GENERAL, OR REPRESENTATIVE IN ANY PURPORTED CLASS, COLLECTIVE, CONSOLIDATED, OR REPRESENTATIVE PROCEEDING.
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, YOU AND LoLo AGREE THAT EACH MAY BRING CLAIMS AGAINST THE OTHER ONLY IN AN INDIVIDUAL CAPACITY AND NOT AS A PLAINTIFF, CLASS MEMBER, COLLECTIVE MEMBER, PRIVATE ATTORNEY GENERAL, OR REPRESENTATIVE IN ANY PURPORTED CLASS, COLLECTIVE, CONSOLIDATED, OR REPRESENTATIVE PROCEEDING.
 24.5 Jury Trial Waiver
-TO THE MAXIMUM EXTENT PERMITTED BY LAW, YOU AND HUB WAIVE ANY RIGHT TO A JURY TRIAL.
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, YOU AND LoLo WAIVE ANY RIGHT TO A JURY TRIAL.
 24.6 Arbitration Opt-Out
-You may opt out of this arbitration agreement by sending written notice of your decision to opt out within thirty (30) days after first accepting these Terms. Your opt-out notice must include your full name, the email address associated with your account, and a clear statement that you wish to opt out of the arbitration provision in these Terms. Opt-out notices must be sent to admin@hub.healthcare. Opting out of arbitration will not affect any other part of these Terms.
+You may opt out of this arbitration agreement by sending written notice of your decision to opt out within thirty (30) days after first accepting these Terms. Your opt-out notice must include your full name, the email address associated with your account, and a clear statement that you wish to opt out of the arbitration provision in these Terms. Opt-out notices must be sent to admin@carelolo.com. Opting out of arbitration will not affect any other part of these Terms.
 This arbitration section should be reviewed by counsel for state-specific enforceability requirements.
 25. Governing Law and Venue
 These Terms shall be governed by and construed in accordance with the laws of the State of North Carolina, without regard to conflict of laws principles, except to the extent superseded by the Federal Arbitration Act or other applicable law.
 If a dispute is permitted to proceed in court, the exclusive venue shall be the state or federal courts located in Wake County, North Carolina, and each party consents to the personal jurisdiction of those courts.
 26. Privacy
-Your use of the Platform is also subject to HUB’s Privacy Policy, which is incorporated into these Terms by reference.
-The Privacy Policy should describe how HUB collects, uses, stores, shares, and protects personal information, communications data, profile data, device information, and other information processed through the Platform.
+Your use of the Platform is also subject to LoLo’s Privacy Policy, which is incorporated into these Terms by reference.
+The Privacy Policy should describe how LoLo collects, uses, stores, shares, and protects personal information, communications data, profile data, device information, and other information processed through the Platform.
 Where health-related, caregiving-related, or sensitive information may be involved, separate notices, consents, or business associate arrangements may be required depending on how the Platform is implemented and who uses it.
 27. Confidentiality and Sensitive Information
 You acknowledge that the Platform may involve information that is sensitive, personal, financial, operational, or health-related.
@@ -245,29 +245,32 @@ disclose information obtained through the Platform except as permitted by law an
 request or share more information than reasonably necessary for lawful use of the Platform;
 misuse another person’s personal or health-related information; or
 upload or transmit sensitive information unless authorized and reasonably necessary for Platform use.
-HUB may establish additional confidentiality, HIPAA-adjacent, or data handling requirements for specific workflows, enterprise implementations, or regulated use cases.
+LoLo may establish additional confidentiality, HIPAA-adjacent, or data handling requirements for specific workflows, enterprise implementations, or regulated use cases.
 28. Electronic Signatures and Records
 You agree that your electronic acceptance of these Terms and your use of the Platform constitute your signature and agreement to conduct transactions electronically.
 You consent to receive records, disclosures, notices, and agreements electronically, except where law requires otherwise.
 29. Changes to the Platform and Terms
-HUB may modify the Platform, these Terms, or any related policy at any time.
+LoLo may modify the Platform, these Terms, or any related policy at any time.
 If we make material changes, we may provide notice by posting updated Terms, sending an email, providing in-app notice, or using other reasonable means. Changes will become effective on the date stated in the updated Terms unless otherwise required by law.
 Your continued use of the Platform after the effective date of updated Terms constitutes acceptance of the revised Terms.
 30. Assignment
-You may not assign, transfer, delegate, or sublicense your rights or obligations under these Terms without HUB’s prior written consent.
-HUB may assign or transfer these Terms or any rights or obligations under them without restriction, including in connection with a merger, acquisition, reorganization, sale of assets, financing, or by operation of law.
+You may not assign, transfer, delegate, or sublicense your rights or obligations under these Terms without LoLo’s prior written consent.
+LoLo may assign or transfer these Terms or any rights or obligations under them without restriction, including in connection with a merger, acquisition, reorganization, sale of assets, financing, or by operation of law.
 31. Severability
 If any provision of these Terms is found to be invalid, illegal, or unenforceable, that provision shall be enforced to the maximum extent permitted and the remaining provisions shall remain in full force and effect.
 If the class action waiver in the arbitration section is found unenforceable as to a particular claim or request for relief, then that claim or request for relief shall be severed and litigated in court, and the remaining claims shall be arbitrated.
 32. No Waiver
-No waiver by HUB of any provision or right under these Terms shall be deemed a further or continuing waiver of that provision or right or any other provision or right.
+No waiver by LoLo of any provision or right under these Terms shall be deemed a further or continuing waiver of that provision or right or any other provision or right.
 33. Entire Agreement
-These Terms, together with any supplemental agreements, policies, and notices incorporated by reference, constitute the entire agreement between you and HUB regarding the Platform and supersede all prior or contemporaneous communications, understandings, and proposals regarding the Platform.
+These Terms, together with any supplemental agreements, policies, and notices incorporated by reference, constitute the entire agreement between you and LoLo regarding the Platform and supersede all prior or contemporaneous communications, understandings, and proposals regarding the Platform.
 34. Force Majeure
-HUB shall not be liable for any delay or failure in performance resulting from causes beyond its reasonable control, including acts of God, natural disasters, weather events, epidemics, pandemics, war, terrorism, civil unrest, labor disputes, power failures, internet or telecommunications outages, governmental actions, or failures of third-party service providers.
+LoLo shall not be liable for any delay or failure in performance resulting from causes beyond its reasonable control, including acts of God, natural disasters, weather events, epidemics, pandemics, war, terrorism, civil unrest, labor disputes, power failures, internet or telecommunications outages, governmental actions, or failures of third-party service providers.
 35. Contact Information
-HUB Healthcare, LLC8801 Fast Park Drive, Raleigh, NC 27617admin@hub.healthcarewww.hub.healthcare
-For legal notices, questions regarding these Terms, or dispute notices, please contact HUB using the information above.
+LoLo Care Inc
+8801 Fast Park Drive, Raleigh, NC 27617
+admin@carelolo.com
+carelolo.com
+For legal notices, questions regarding these Terms, or dispute notices, please contact LoLo using the information above.
 36. State-Specific and Operational Placeholders for Counsel Review
 The following issues should be reviewed and tailored by counsel before launch:
 state home care, nurse registry, referral, and marketplace laws;

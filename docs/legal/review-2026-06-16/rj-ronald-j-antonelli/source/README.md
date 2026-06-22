@@ -1,16 +1,16 @@
 # Ronald J. Antonelli Onboarding Package
 
-Company: LoLo Care Inc  
+Company: Lolo Care, Inc.  
 Prepared: June 16, 2026  
 Recipient: Ronald J. Antonelli, a Raleigh, North Carolina-based lawyer
 
 ## Deal Summary
 
-This package assumes that LoLo Care Inc has 10,000,000 authorized shares of Common Stock and that the current founder capitalization is:
+This package assumes that Lolo Care, Inc. has 10,000,000 authorized shares of Common Stock and that the current founder capitalization is:
 
 | Holder / category | Shares | Status |
 | --- | ---: | --- |
-| Charles Petrini Poli | 5,000,000 | Issued founder shares |
+| Charles Petrini-Poli | 5,000,000 | Issued founder shares |
 | Thibaud Peverelli | 3,000,000 | Issued founder shares |
 | Unassigned / company reserve | 2,000,000 | Authorized but unissued |
 
@@ -22,14 +22,14 @@ The proposed RJ package uses 1,000,000 of the 2,000,000 unassigned shares:
 | Vesting equity | 500,000 | Issued at closing but subject to 18-month vesting, company repurchase rights, service conditions, funding compliance, and transfer restrictions |
 | Monthly funding | $6,000 total | $1,000 per month for 6 months as a capital contribution unless counsel changes the structure |
 
-After the full RJ package is issued, LoLo Care Inc would have 9,000,000 issued shares and 1,000,000 authorized but unissued shares.
+After the full RJ package is issued, Lolo Care, Inc. would have 9,000,000 issued shares and 1,000,000 authorized but unissued shares.
 
 ## Important Legal Design Notes
 
 - RJ is a lawyer. Equity compensation and a funding commitment between a lawyer and a client can trigger legal ethics and conflict-of-interest rules.
 - This package includes a separate professional-responsibility disclosure and written consent.
-- LoLo Care Inc should have independent counsel review the transaction before signing.
-- RJ should not be the only lawyer advising LoLo Care Inc on the fairness, legality, tax treatment, securities-law treatment, or professional-responsibility treatment of his own equity and funding transaction.
+- Lolo Care, Inc. should have independent counsel review the transaction before signing.
+- RJ should not be the only lawyer advising Lolo Care, Inc. on the fairness, legality, tax treatment, securities-law treatment, or professional-responsibility treatment of his own equity and funding transaction.
 - The unvested shares are designed to be limited through vesting, repurchase rights, transfer restrictions, and funding/service default provisions.
 - The documents do not make RJ a director and do not grant RJ founder governance veto rights.
 
@@ -61,10 +61,10 @@ After the full RJ package is issued, LoLo Care Inc would have 9,000,000 issued s
 | Effective date | [DATE] |
 | Board approval date | [BOARD APPROVAL DATE] |
 | Closing date | [CLOSING DATE] |
-| LoLo Care Inc principal office | [PRINCIPAL OFFICE ADDRESS] |
-| Par value | $[PAR VALUE] |
-| Purchase price per share | $[PRICE PER SHARE] |
-| Total RJ purchase price | $[RJ TOTAL PURCHASE PRICE] |
+| Lolo Care, Inc. principal office | [PRINCIPAL OFFICE ADDRESS] |
+| Par value | $0.00001 |
+| Purchase price per share | $0.00001 |
+| Total RJ purchase price | $10.00 |
 | Funding start date | [FUNDING START DATE] |
 | First six funding due dates | [FUNDING DUE DATES] |
 | Initial legal/task milestones | [TASKS] |

@@ -28,6 +28,20 @@ class LegalPagesTest extends TestCase
         }
     }
 
+    public function test_public_privacy_policy_uses_lolo_company_and_sms_consent_language(): void
+    {
+        $this->get(route('legal.show', ['slug' => 'privacy-policy']))
+            ->assertOk()
+            ->assertSeeText('LoLo Care Inc')
+            ->assertSeeText('Privacy Policy')
+            ->assertSeeText('mobile information')
+            ->assertSeeText('SMS consent')
+            ->assertSeeText('third parties or affiliates')
+            ->assertSeeText('marketing or promotional purposes')
+            ->assertDontSeeText('HUB Healthcare')
+            ->assertDontSeeText('HomeCare');
+    }
+
     public function test_registration_pages_show_terms_links(): void
     {
         $this->get('/register')

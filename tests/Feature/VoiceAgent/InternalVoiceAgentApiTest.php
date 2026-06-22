@@ -177,6 +177,9 @@ class InternalVoiceAgentApiTest extends TestCase
                     'channel' => 'voice_agent',
                     'voice_agent_profile' => 'callback_discovery',
                     'voice_ai_call_id' => (string) $call->id,
+                    'recording_url' => '/storage/voice-agent-recordings/call-42.wav',
+                    'recording_path' => '../storage/app/public/voice-agent-recordings/call-42.wav',
+                    'recording_mime_type' => 'audio/wav',
                 ],
             ])
             ->assertCreated();
@@ -193,5 +196,7 @@ class InternalVoiceAgentApiTest extends TestCase
         $this->assertSame(121, $call->duration_seconds);
         $this->assertStringContainsString('user: My mom needs help this week.', (string) $call->transcript_text);
         $this->assertSame('callback_discovery', $call->metadata['voice_agent_profile']);
+        $this->assertSame('/storage/voice-agent-recordings/call-42.wav', $call->metadata['recording_url']);
+        $this->assertSame('../storage/app/public/voice-agent-recordings/call-42.wav', $call->metadata['recording_path']);
     }
 }

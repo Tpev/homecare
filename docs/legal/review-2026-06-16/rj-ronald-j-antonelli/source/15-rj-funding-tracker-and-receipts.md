@@ -1,6 +1,6 @@
 # RJ Funding Tracker and Contribution Receipts
 
-Company: LoLo Care Inc  
+Company: Lolo Care, Inc.  
 Contributor: Ronald J. Antonelli  
 Total funding commitment: $6,000  
 Installment amount: $1,000 per month for 6 months
@@ -19,12 +19,12 @@ Installment amount: $1,000 per month for 6 months
 
 ## Form of Monthly Receipt
 
-LoLo Care Inc acknowledges receipt from Ronald J. Antonelli of $1,000 for installment number [INSTALLMENT NUMBER] under that certain Capital Contribution and Funding Commitment Agreement dated [DATE].
+Lolo Care, Inc. acknowledges receipt from Ronald J. Antonelli of $1,000 for installment number [INSTALLMENT NUMBER] under that certain Capital Contribution and Funding Commitment Agreement dated [DATE].
 
 Payment date: [PAYMENT DATE]  
 Payment method: [PAYMENT METHOD]
 
-LoLo Care Inc
+Lolo Care, Inc.
 
 By: ______________________________
 

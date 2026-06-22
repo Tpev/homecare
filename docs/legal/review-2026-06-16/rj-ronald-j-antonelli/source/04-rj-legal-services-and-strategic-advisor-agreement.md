@@ -1,6 +1,6 @@
 # Legal Services and Strategic Advisor Agreement
 
-This Legal Services and Strategic Advisor Agreement (this "Agreement") is entered into as of [DATE] (the "Effective Date"), by and between LoLo Care Inc, a Delaware corporation (the "Company"), and Ronald J. Antonelli, a Raleigh, North Carolina-based lawyer ("Advisor" or "RJ").
+This Legal Services and Strategic Advisor Agreement (this "Agreement") is entered into as of [DATE] (the "Effective Date"), by and between Lolo Care, Inc., a Delaware corporation (the "Company"), and Ronald J. Antonelli, a Raleigh, North Carolina-based lawyer ("Advisor" or "RJ").
 
 ## 1. Engagement
 
@@ -122,7 +122,7 @@ IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective
 
 ### Company
 
-LoLo Care Inc
+Lolo Care, Inc.
 
 By: ______________________________
 

@@ -1,6 +1,6 @@
 # RJ Strategy and Document Memo
 
-Company: LoLo Care Inc  
+Company: Lolo Care, Inc.  
 Recipient: Ronald J. Antonelli, a Raleigh, North Carolina-based lawyer  
 Date: June 16, 2026
 
@@ -16,7 +16,7 @@ Recommended structure:
 - make the unvested shares subject to company repurchase if RJ stops providing services, fails to cure a service default, fails to stay current on the funding commitment, loses legal good standing, or breaches key covenants;
 - require RJ to sign strong transfer restrictions, right of first refusal, confidentiality, and joinder provisions;
 - require professional-responsibility disclosure and written consent before signing;
-- require independent counsel review for LoLo Care Inc.
+- require independent counsel review for Lolo Care, Inc..
 
 This memo is not legal advice. It is a strategy and drafting memo for review by counsel.
 
@@ -45,7 +45,7 @@ The package assumes 10,000,000 authorized shares:
 
 | Holder / category | Shares after RJ issuance | Percent of authorized shares | Percent of issued shares after RJ issuance |
 | --- | ---: | ---: | ---: |
-| Charles Petrini Poli | 5,000,000 | 50.00% | 55.56% |
+| Charles Petrini-Poli | 5,000,000 | 50.00% | 55.56% |
 | Thibaud Peverelli | 3,000,000 | 30.00% | 33.33% |
 | Ronald J. Antonelli | 1,000,000 | 10.00% | 11.11% |
 | Authorized but unissued | 1,000,000 | 10.00% | N/A |

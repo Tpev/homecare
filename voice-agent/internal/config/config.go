@@ -30,6 +30,9 @@ type Config struct {
 	LaravelInternalAPIToken   string
 	PromptFile                string
 	CallbackPromptFile        string
+	RecordingsEnabled         bool
+	RecordingsDir             string
+	RecordingsPublicBaseURL   string
 }
 
 func Load() (Config, error) {
@@ -56,6 +59,9 @@ func Load() (Config, error) {
 		LaravelInternalAPIToken:   env("LARAVEL_INTERNAL_API_TOKEN", ""),
 		PromptFile:                env("PROMPT_FILE", "prompts/system.md"),
 		CallbackPromptFile:        env("VOICE_AGENT_CALLBACK_PROMPT_FILE", "prompts/callback-discovery.md"),
+		RecordingsEnabled:         boolEnv("VOICE_AGENT_RECORDINGS_ENABLED", true),
+		RecordingsDir:             env("VOICE_AGENT_RECORDINGS_DIR", "../storage/app/public/voice-agent-recordings"),
+		RecordingsPublicBaseURL:   env("VOICE_AGENT_RECORDINGS_PUBLIC_BASE_URL", "/storage/voice-agent-recordings"),
 	}
 
 	if cfg.StreamAuthToken == "" {
@@ -92,4 +98,13 @@ func env(key, fallback string) string {
 	}
 
 	return fallback
+}
+
+func boolEnv(key string, fallback bool) bool {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+
+	return strings.EqualFold(value, "true") || value == "1" || strings.EqualFold(value, "yes")
 }

@@ -2,9 +2,9 @@
 
 of
 
-# LoLo Care Inc
+# Lolo Care, Inc.
 
-The undersigned, being all of the members of the board of directors (the "Board") of LoLo Care Inc, a Delaware corporation (the "Company"), hereby adopt the following resolutions by written consent as of [DATE], pursuant to the Delaware General Corporation Law, the Company's certificate of incorporation, bylaws, and applicable governance agreements.
+The undersigned, being all of the members of the board of directors (the "Board") of Lolo Care, Inc., a Delaware corporation (the "Company"), hereby adopt the following resolutions by written consent as of [DATE], pursuant to the Delaware General Corporation Law, the Company's certificate of incorporation, bylaws, and applicable governance agreements.
 
 ## Recitals
 
@@ -28,11 +28,11 @@ RESOLVED FURTHER, that the officers of the Company are authorized and directed t
 
 ## Approval of RJ Equity Issuance
 
-RESOLVED, that the Company is authorized to issue to RJ 1,000,000 shares of the Company's Common Stock, par value $[PAR VALUE] per share, pursuant to a Restricted Stock Purchase Agreement in substantially the form presented to the Board;
+RESOLVED, that the Company is authorized to issue to RJ 1,000,000 shares of the Company's Common Stock, par value $0.00001 per share, pursuant to a Restricted Stock Purchase Agreement in substantially the form presented to the Board;
 
 RESOLVED FURTHER, that 500,000 shares shall be vested at closing and 500,000 shares shall be subject to vesting over 18 months and company repurchase rights;
 
-RESOLVED FURTHER, that the purchase price for the shares shall be $[PRICE PER SHARE] per share, for an aggregate purchase price of $[RJ TOTAL PURCHASE PRICE], subject to confirmation that the purchase price is not less than par value;
+RESOLVED FURTHER, that the purchase price for the shares shall be $0.00001 per share, for an aggregate purchase price of $10.00, subject to confirmation that the purchase price is not less than par value;
 
 RESOLVED FURTHER, that the Board determines that the consideration for the shares, including cash, services, covenants, funding commitments, and other benefits to the Company, is adequate and in the best interests of the Company.
 
@@ -86,7 +86,7 @@ Director:
 
 __________________________________
 
-Charles Petrini Poli
+Charles Petrini-Poli
 
 Director:
 

@@ -1,7 +1,7 @@
 @extends('layouts.marketing')
 
-@section('title', ($page['title'] ?? 'Legal Document').' | HomeCare')
-@section('meta_description', $page['description'] ?? 'Legal document for HomeCare platform users.')
+@section('title', ($page['title'] ?? 'Legal Document').' | LoLo')
+@section('meta_description', $page['description'] ?? 'Legal document for LoLo platform users.')
 @section('canonical', route('legal.show', ['slug' => $slug]))
 @section('robots', 'noindex,follow')
 
@@ -12,7 +12,7 @@
                 <a href="{{ route('landing.caregiver') }}" class="flex items-center gap-3">
                     <x-application-logo class="h-9 w-9" />
                     <div>
-                        <div class="text-base font-bold tracking-tight">HomeCare</div>
+                        <div class="text-base font-bold tracking-tight">LoLo</div>
                         <div class="text-xs text-slate-500">Legal</div>
                     </div>
                 </a>

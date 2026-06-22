@@ -2,13 +2,13 @@
 
 Exhibit A to Legal Services and Strategic Advisor Agreement
 
-Company: LoLo Care Inc  
+Company: Lolo Care, Inc.  
 Advisor: Ronald J. Antonelli  
 Effective date: [DATE]
 
 ## 1. Initial Objectives
 
-RJ will assist LoLo Care Inc with legal, regulatory, corporate, operational, commercial, and strategic tasks assigned by the Board or authorized officers.
+RJ will assist Lolo Care, Inc. with legal, regulatory, corporate, operational, commercial, and strategic tasks assigned by the Board or authorized officers.
 
 ## 2. Initial Task Categories
 

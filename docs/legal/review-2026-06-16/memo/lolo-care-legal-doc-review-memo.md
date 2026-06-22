@@ -1,74 +1,115 @@
-# LoLo Care Inc Legal Document Review Memo
+# Lolo Care, Inc. Legal Document Review Memo
 
-Date: June 16, 2026
+Date: June 22, 2026
 
-Prepared for: LoLo Care Inc
+Prepared for: Lolo Care, Inc.
 
-Scope: Review of the uploaded initial equity and board governance documents, company-name replacement, recommended signing order, and explanation of each document.
+Scope: Update of the founder stock and governance package to match the filed Delaware Certificate of Incorporation and the registered-agent incorporator initial resolutions.
 
 ## Executive Summary
 
-The document package is a coherent initial Delaware C-corp startup package for founder stock issuance and basic founder governance. It is generally good as a working draft and internally consistent with a 10,000,000 authorized-share capitalization, with Charles Petrini Poli receiving 5,000,000 shares, Thibaud Peverelli receiving 3,000,000 shares, and 2,000,000 shares remaining authorized but unissued.
+The active legal package has been updated to match the official formation records for Lolo Care, Inc.
 
-The company name has been changed in the revised copies from `[COMPANY LEGAL NAME]` to `LoLo Care Inc`.
+Official formation facts now reflected in the package:
 
-The package is not yet signing-ready until the remaining business blanks are completed and counsel reviews the final documents. Key blanks include dates, par value, purchase price per share, aggregate purchase prices, founder addresses, officer names, spending/contract/debt thresholds, payment method, and payment date.
+- Legal name: Lolo Care, Inc.
+- Entity: Delaware stock corporation.
+- Delaware file number: 10661302.
+- Incorporation date: June 15, 2026.
+- Authorized stock: 10,000,000 shares of Common Stock.
+- Par value: $0.00001 per share.
+- Registered agent: A Registered Agent, Inc.
+- Registered office: 8 The Green, Ste A, Dover, DE 19901.
+- Initial registered-agent resolutions date: June 21, 2026.
+
+The founder capitalization is internally consistent with the official charter: Charles Petrini-Poli receives 5,000,000 shares for $50.00, Thibaud Peverelli receives 3,000,000 shares for $30.00, and 2,000,000 shares remain authorized but unissued.
+
+The registered-agent initial resolutions appointed Charles Petrini-Poli as the initial President, Treasurer, Secretary, and Director. Because of that, the old draft sole-incorporator consent has been marked "SUPERSEDED / DO NOT SIGN." A new bridge document, `03A-action-by-initial-sole-director-appointing-thibaud-and-officers.docx`, has been added so Charles can, as initial sole director, ratify/adopt the bylaws, fix the board at two, appoint Thibaud Peverelli as a director, and confirm the intended officer roles.
+
+The RJ / Ronald J. Antonelli package has also been updated to the official company name, official par value, and a $10.00 aggregate stock purchase price for 1,000,000 shares at $0.00001 per share.
+
+The documents are closer to signature, but they should still be reviewed by Delaware corporate counsel before execution.
 
 ## Review Verdict
 
-Overall: Good draft package, but should be lawyer-reviewed before execution.
+Overall: Strong working draft package, now aligned to the filed Delaware formation records.
 
 Strengths:
 
+- The company name, file number, incorporation date, registered agent information, authorized shares, and par value now match the filed certificate.
 - The founder share numbers and cap table math are consistent.
 - The unassigned 2,000,000 shares are correctly treated as authorized but unissued, not owned by anyone.
-- The board governance package clearly makes Charles Petrini Poli and Thibaud Peverelli the two directors.
-- The bylaws require both directors for quorum and both directors for board action while the board has two members.
-- The Founder Voting and Governance Agreement helps prevent one founder from using stockholder voting power to remove the other from the board.
+- The governance package now reflects the real starting point: Charles was initially appointed as the sole director/officer by the registered-agent incorporator resolutions.
+- The bridge action gives a clean path to add Thibaud as the second director and confirm Charles as CEO / President and Thibaud as Secretary / Treasurer.
+- The bylaws and governance agreement require both directors for board action while the board has two members.
 - The stock ledger, payment receipts, and uncertificated share notices support clean corporate records.
 
-Issues to resolve before signing:
+Remaining items before signing:
 
-- Confirm the certificate of incorporation authorizes at least 10,000,000 shares of Common Stock and confirm the par value.
-- Fill in purchase price per share and make sure it is not below par value.
-- Fill in founder addresses, dates, officer names, and approval thresholds.
-- Confirm whether the sole incorporator action is actually needed. Use it only if initial directors were not named or previously elected.
-- Decide whether no founder vesting is intentional. Investors often expect founder vesting, but the current documents intentionally provide fully vested founder shares.
-- Consider adding stronger founder transfer restrictions, such as company right of first refusal, co-sale/tag-along rights, and board/founder approval for transfers.
-- Consider adding a narrow for-cause removal process for fraud, willful misconduct, incapacity, abandonment, or legal disqualification.
-- Consider a stronger deadlock mechanism if the two-director unanimity structure becomes operationally difficult.
-- Confirm securities-law exemptions and any required state blue sky filings with counsel.
+- Fill in execution dates and closing dates.
+- Fill in Charles's address and Thibaud's address.
+- Fill in the Company's principal office address.
+- Fill in payment dates and payment method once the founder payments are actually made.
+- Fill in reserved-matter thresholds such as spending, contract, debt, hiring, and term limits.
+- Confirm with counsel that the new sole-director bridge action is valid under the final bylaws and whether any stockholder ratification should be added.
+- Confirm securities-law exemptions and any required state blue sky filings.
+- Decide whether the current no-founder-vesting structure is intentional.
+- Decide whether to add stronger transfer restrictions, such as company right of first refusal, co-sale/tag-along rights, and board/founder approval for transfers.
 
 ## Recommended Signing Order
 
-1. Confirm the Certificate of Incorporation
+1. File the Official Formation Records in the Minute Book
 
-Confirm that LoLo Care Inc is incorporated, the charter authorizes 10,000,000 shares of Common Stock, and the par value matches the documents.
+Keep the filed Certificate of Incorporation and the registered-agent incorporator initial resolutions in the corporate record book. These are already signed/official records.
 
-2. Sole Incorporator Consent, if needed
+Do not sign `03-action-by-sole-incorporator-electing-directors.docx`; it is now superseded because the registered-agent incorporator resolutions already appointed Charles Petrini-Poli as initial President, Treasurer, Secretary, and Director.
 
-Sign `03-action-by-sole-incorporator-electing-directors.docx` only if the certificate of incorporation did not name initial directors and the incorporator has not already elected them. This appoints Charles Petrini Poli and Thibaud Peverelli as the initial directors.
+2. Charles Signs the Initial Sole Director Bridge Action
+
+Charles signs `03A-action-by-initial-sole-director-appointing-thibaud-and-officers.docx`.
+
+This document:
+
+- Acknowledges the official formation records.
+- Ratifies/adopts the bylaws.
+- Fixes the board at two directors.
+- Appoints Thibaud Peverelli as the second director.
+- Confirms Charles Petrini-Poli as CEO / President.
+- Confirms Thibaud Peverelli as Secretary / Treasurer.
 
 3. Board Consent Approving Founder Stock Issuance
 
-Charles and Thibaud, as directors, sign `02-board-consent-initial-founder-share-issuance.docx`. This authorizes the founder stock issuances, purchase price, uncertificated shares, and stock ledger updates.
+Charles and Thibaud, as directors, sign `02-board-consent-initial-founder-share-issuance.docx`.
+
+This authorizes:
+
+- 5,000,000 shares to Charles Petrini-Poli at $0.00001 per share, for $50.00 total.
+- 3,000,000 shares to Thibaud Peverelli at $0.00001 per share, for $30.00 total.
+- Uncertificated shares.
+- Stock ledger updates.
+- Securities-law compliance steps.
 
 4. Founder Stock Purchase Agreements
 
-LoLo Care Inc signs one agreement with each founder:
+Lolo Care, Inc. signs one agreement with each founder:
 
 - `03-founder-stock-purchase-agreement-charles-petrini-poli.docx`
 - `04-founder-stock-purchase-agreement-thibaud-peverelli.docx`
 
 5. Founder Payments
 
-Each founder pays the company the aggregate purchase price for their shares. Keep proof of payment.
+Each founder pays the Company the aggregate purchase price for their shares:
+
+- Charles Petrini-Poli: $50.00.
+- Thibaud Peverelli: $30.00.
+
+Keep proof of payment.
 
 6. Payment Receipts
 
-LoLo Care Inc signs `08-founder-payment-receipts.docx` acknowledging payment from each founder.
+Lolo Care, Inc. signs `08-founder-payment-receipts.docx` acknowledging payment from each founder.
 
-7. Cap Table and Stock Ledger
+7. Cap Table, Stock Ledger, and Uncertificated Share Notices
 
 Update and retain:
 
@@ -76,33 +117,43 @@ Update and retain:
 - `07-stock-ledger.docx`
 - `initial-cap-table-and-stock-ledger.xlsx`
 
-8. Uncertificated Share Notices
-
-LoLo Care Inc delivers:
+Deliver:
 
 - `05-uncertificated-share-notice-charles-petrini-poli.docx`
 - `06-uncertificated-share-notice-thibaud-peverelli.docx`
 
-9. Stockholder Written Consent
+8. Stockholder Written Consent
 
-After the founder shares are issued, Charles and Thibaud sign `04-stockholder-written-consent-electing-directors.docx` as stockholders. This confirms both founders as directors and approves the governance framework.
+After the founder shares are issued, Charles and Thibaud sign `04-stockholder-written-consent-electing-directors.docx` as stockholders.
 
-10. Board Consent Adopting Governance
+This confirms both founders as directors and approves the governance framework from the stockholder side.
 
-Charles and Thibaud sign `05-board-consent-adopting-governance.docx`. This adopts bylaws, reserved matters, approval matrix, conflict policy, indemnification agreements, and officer appointments.
+9. Board Consent Adopting Governance
 
-11. Founder Voting and Governance Agreement
+Charles and Thibaud sign `05-board-consent-adopting-governance.docx`.
 
-LoLo Care Inc, Charles, and Thibaud sign `06-founder-voting-and-governance-agreement.docx`, with the Reserved Matters Schedule attached as Exhibit A.
+This adopts or confirms:
 
-12. Indemnification Agreements
+- Bylaws.
+- Founder Voting and Governance Agreement.
+- Reserved Matters Schedule.
+- Board Approval Authority Matrix.
+- Conflict of Interest Policy.
+- Indemnification agreements.
+- Officer Roles and Authority Appendix.
 
-LoLo Care Inc signs separate indemnification agreements with each director:
+10. Founder Voting and Governance Agreement
+
+Lolo Care, Inc., Charles, and Thibaud sign `06-founder-voting-and-governance-agreement.docx`, with the Reserved Matters Schedule attached as Exhibit A.
+
+11. Indemnification Agreements
+
+Lolo Care, Inc. signs separate indemnification agreements with each director/officer:
 
 - `08-indemnification-agreement-charles-petrini-poli.docx`
 - `09-indemnification-agreement-thibaud-peverelli.docx`
 
-13. File Corporate Records
+12. File Corporate Records
 
 Store signed originals and final records in the corporate minute book. Do not sign the combined package document as an operative agreement; it is a convenience copy only.
 
@@ -120,15 +171,15 @@ Spreadsheet version of the cap table and stock ledger. Useful as the working equ
 
 `02-board-consent-initial-founder-share-issuance.docx`
 
-Board approval authorizing issuance of 5,000,000 shares to Charles and 3,000,000 shares to Thibaud.
+Board approval authorizing issuance of 5,000,000 shares to Charles and 3,000,000 shares to Thibaud at the official par value of $0.00001 per share.
 
 `03-founder-stock-purchase-agreement-charles-petrini-poli.docx`
 
-Share purchase agreement between LoLo Care Inc and Charles Petrini Poli. No vesting or service-based repurchase right.
+Share purchase agreement between Lolo Care, Inc. and Charles Petrini-Poli. No vesting or service-based repurchase right.
 
 `04-founder-stock-purchase-agreement-thibaud-peverelli.docx`
 
-Share purchase agreement between LoLo Care Inc and Thibaud Peverelli. No vesting or service-based repurchase right.
+Share purchase agreement between Lolo Care, Inc. and Thibaud Peverelli. No vesting or service-based repurchase right.
 
 `05-uncertificated-share-notice-charles-petrini-poli.docx`
 
@@ -152,6 +203,10 @@ Operational checklist for completing and archiving the founder stock issuance.
 
 ### Board Governance Documents
 
+`00-official-formation-record-summary.docx`
+
+Plain-English summary of the filed Delaware formation facts and registered-agent initial resolutions. Keep this with the minute book as a quick reference.
+
 `01-governance-summary.docx`
 
 Plain-English summary of the intended governance structure. Useful internally, not usually signed.
@@ -162,7 +217,11 @@ Corporate bylaws governing stockholder meetings, board meetings, director voting
 
 `03-action-by-sole-incorporator-electing-directors.docx`
 
-Used only if the incorporator still needs to appoint Charles and Thibaud as initial directors.
+Superseded draft. Do not sign it unless counsel specifically tells you to revise and use it. The registered-agent incorporator resolutions already handled the initial incorporator action.
+
+`03A-action-by-initial-sole-director-appointing-thibaud-and-officers.docx`
+
+Bridge action for Charles, as initial sole director, to ratify/adopt the bylaws, set the board at two, appoint Thibaud Peverelli as a director, and confirm Charles as CEO / President and Thibaud as Secretary / Treasurer.
 
 `04-stockholder-written-consent-electing-directors.docx`
 
@@ -174,7 +233,7 @@ Board consent adopting the bylaws, governance agreement, reserved matters, autho
 
 `06-founder-voting-and-governance-agreement.docx`
 
-Agreement among LoLo Care Inc, Charles, and Thibaud that keeps both founders on the board and requires heightened approval for major actions.
+Agreement among Lolo Care, Inc., Charles, and Thibaud that keeps both founders on the board and requires heightened approval for major actions.
 
 `07-reserved-matters-schedule.docx`
 
@@ -196,6 +255,10 @@ Internal delegation matrix showing what officers may approve and what requires b
 
 Policy requiring disclosure and proper approval of related-party and conflict transactions.
 
+`12-officer-roles-and-authority-appendix.docx`
+
+Appendix adopted by the board explaining that Charles Petrini-Poli serves as Chief Executive Officer and President, while Thibaud Peverelli serves as Secretary and Treasurer. It summarizes each officer's responsibilities, practical authority, and limits under the bylaws, approval matrix, reserved matters schedule, and governance agreement.
+
 `board-governance-complete-package.docx`
 
 Combined convenience copy of the governance documents. Do not use it as the signed operative version if individual documents are signed separately.
@@ -211,4 +274,3 @@ Sources:
 - Delaware DGCL Sections 219-220 and 228: https://delcode.delaware.gov/title8/c001/sc07/
 
 This memo is not legal advice. Have Delaware corporate counsel review the final package before signature.
-

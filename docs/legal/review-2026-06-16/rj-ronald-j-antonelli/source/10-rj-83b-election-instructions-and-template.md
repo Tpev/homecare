@@ -1,7 +1,7 @@
 # 83(b) Election Instructions and Template
 
 Recipient: Ronald J. Antonelli  
-Company: LoLo Care Inc  
+Company: Lolo Care, Inc.  
 Stock: 1,000,000 shares of Common Stock, including 500,000 shares subject to vesting and repurchase rights
 
 ## Important Notice
@@ -23,7 +23,7 @@ The Restricted Stock Purchase Agreement issues shares at closing, but 500,000 sh
 | [ ] | Complete IRS Form 15620 or a tax-counsel-approved 83(b) election form. |
 | [ ] | File with the IRS within 30 days after transfer. |
 | [ ] | Keep proof of timely filing. |
-| [ ] | Provide a copy to LoLo Care Inc for its records. |
+| [ ] | Provide a copy to Lolo Care, Inc. for its records. |
 | [ ] | Keep a copy with RJ's personal tax records. |
 
 ## Template Information for Tax Counsel
@@ -32,15 +32,15 @@ The Restricted Stock Purchase Agreement issues shares at closing, but 500,000 sh
 | --- | --- |
 | Taxpayer | Ronald J. Antonelli |
 | Taxpayer address | [RJ ADDRESS] |
-| Company | LoLo Care Inc |
+| Company | Lolo Care, Inc. |
 | Property | 1,000,000 shares of Common Stock |
 | Transfer date | [CLOSING DATE] |
 | Tax year | [TAX YEAR] |
 | Restrictions | 500,000 shares subject to 18-month vesting and company repurchase right |
-| Amount paid | $[RJ TOTAL PURCHASE PRICE] |
+| Amount paid | $10.00 |
 | Fair market value | $[FAIR MARKET VALUE] |
 
 ## Suggested Attachment Description
 
-Ronald J. Antonelli acquired 1,000,000 shares of Common Stock of LoLo Care Inc, a Delaware corporation. Of those shares, 500,000 shares are vested at transfer and 500,000 shares are subject to vesting over 18 months and a company repurchase right under the Restricted Stock Purchase Agreement.
+Ronald J. Antonelli acquired 1,000,000 shares of Common Stock of Lolo Care, Inc., a Delaware corporation. Of those shares, 500,000 shares are vested at transfer and 500,000 shares are subject to vesting over 18 months and a company repurchase right under the Restricted Stock Purchase Agreement.
 

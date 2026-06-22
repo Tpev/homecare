@@ -2,15 +2,15 @@
 
 of
 
-# LoLo Care Inc
+# Lolo Care, Inc.
 
-The undersigned, being all of the current stockholders of LoLo Care Inc, a Delaware corporation (the "Company"), hereby adopt the following resolutions by written consent as of [DATE], pursuant to the Delaware General Corporation Law, the Company's certificate of incorporation, bylaws, and applicable governance agreements.
+The undersigned, being all of the current stockholders of Lolo Care, Inc., a Delaware corporation (the "Company"), hereby adopt the following resolutions by written consent as of [DATE], pursuant to the Delaware General Corporation Law, the Company's certificate of incorporation, bylaws, and applicable governance agreements.
 
 ## Stockholders
 
 | Stockholder | Shares of Common Stock |
 | --- | ---: |
-| Charles Petrini Poli | 5,000,000 |
+| Charles Petrini-Poli | 5,000,000 |
 | Thibaud Peverelli | 3,000,000 |
 
 ## Approval of RJ Package
@@ -39,7 +39,7 @@ Stockholder:
 
 __________________________________
 
-Charles Petrini Poli
+Charles Petrini-Poli
 
 Stockholder:
 

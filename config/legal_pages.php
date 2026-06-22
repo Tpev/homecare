@@ -4,7 +4,7 @@ return [
     'pages' => [
         'platform-terms-of-service' => [
             'title' => 'Platform Terms of Service',
-            'description' => 'Terms governing access and use of the HUB/HomeCare platform.',
+            'description' => 'Terms governing access and use of the LoLo platform.',
             'file' => 'platform-terms-of-service.txt',
         ],
         'privacy-policy' => [
@@ -44,4 +44,3 @@ return [
         ],
     ],
 ];
-

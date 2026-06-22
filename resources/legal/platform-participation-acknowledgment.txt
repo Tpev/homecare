@@ -1,16 +1,16 @@
-HUB Healthcare, LLC
+LoLo Care Inc
 Platform Participation Acknowledgment
 Effective Date: [Insert Date] | Last Updated: [Insert Date]
-This Platform Participation Acknowledgment explains the role of HUB Healthcare, LLC (“HUB,” “we,” “us,” or “our”) in connection with the HUB platform (the “Platform”). By creating an account, accessing, or using the Platform, you acknowledge and agree to the following.
-1. HUB Is a Technology Platform
-HUB Healthcare operates a technology platform that allows individuals and organizations to connect, communicate, coordinate services, schedule activities, exchange information, and manage workflows.
-HUB does not provide caregiving services, medical services, home care services, healthcare services, or any other professional services. The Platform only provides tools that enable users to connect and coordinate with one another.
+This Platform Participation Acknowledgment explains the role of LoLo Care Inc (“LoLo,” “we,” “us,” or “our”) in connection with the LoLo platform (the “Platform”). By creating an account, accessing, or using the Platform, you acknowledge and agree to the following.
+1. LoLo Is a Technology Platform
+LoLo Care operates a technology platform that allows individuals and organizations to connect, communicate, coordinate services, schedule activities, exchange information, and manage workflows.
+LoLo does not provide caregiving services, medical services, home care services, healthcare services, or any other professional services. The Platform only provides tools that enable users to connect and coordinate with one another.
 2. Services Are Provided by Independent Users
 Any services arranged through the Platform are performed by independent individuals, contractors, organizations, or providers who use the Platform.
-HUB does not employ, supervise, manage, or control these individuals or organizations. Users of the Platform are responsible for their own services, actions, qualifications, conduct, and compliance with applicable laws.
-Nothing in the Platform creates an employer–employee relationship, partnership, joint venture, agency relationship, or franchise relationship between HUB and any user.
-3. HUB Does Not Supervise or Direct Services
-HUB does not:
+LoLo does not employ, supervise, manage, or control these individuals or organizations. Users of the Platform are responsible for their own services, actions, qualifications, conduct, and compliance with applicable laws.
+Nothing in the Platform creates an employer–employee relationship, partnership, joint venture, agency relationship, or franchise relationship between LoLo and any user.
+3. LoLo Does Not Supervise or Direct Services
+LoLo does not:
 supervise or monitor services performed by users;
 train or instruct service providers;
 control how services are performed;
@@ -25,16 +25,16 @@ will exercise appropriate judgment and caution when engaging with others;
 will comply with applicable laws, regulations, and licensing requirements; and
 will follow all applicable Platform policies.
 5. No Healthcare Provider Relationship
-HUB Healthcare is not a healthcare provider, medical practice, home care agency, or clinical services provider.
+LoLo Care is not a healthcare provider, medical practice, home care agency, or clinical services provider.
 The Platform is not intended to diagnose, treat, monitor, or manage medical conditions. Nothing on the Platform should be interpreted as medical advice, clinical guidance, or professional healthcare services.
 If medical attention is required, users should seek assistance from licensed healthcare professionals or emergency services.
 6. Platform Role in Transactions
-HUB may provide features that support scheduling, messaging, payments, workflow coordination, or record keeping between users.
-However, HUB is not a party to the services or agreements between users unless explicitly stated in a separate written agreement.
+LoLo may provide features that support scheduling, messaging, payments, workflow coordination, or record keeping between users.
+However, LoLo is not a party to the services or agreements between users unless explicitly stated in a separate written agreement.
 All service arrangements are made directly between users of the Platform.
 7. Assumption of Risk
-By using the Platform, you acknowledge that interactions between users occur outside of HUB’s direct control. Users assume the risks associated with meeting, interacting, or coordinating services with other users.
-HUB is not responsible for the actions, omissions, conduct, performance, or behavior of users of the Platform.
+By using the Platform, you acknowledge that interactions between users occur outside of LoLo’s direct control. Users assume the risks associated with meeting, interacting, or coordinating services with other users.
+LoLo is not responsible for the actions, omissions, conduct, performance, or behavior of users of the Platform.
 8. Relationship to Other Agreements
 This acknowledgment should be read together with the following documents, which govern your use of the Platform:
 Platform Terms of Service
@@ -45,4 +45,7 @@ Any additional terms that apply to specific users, roles, or services
 If there is any conflict between this acknowledgment and the Terms of Service, the Terms of Service will control.
 9. Acknowledgment
 By accessing or using the Platform, you acknowledge that you have read, understood, and agree to this Platform Participation Acknowledgment.
-HUB Healthcare, LLC8801 Fast Park DriveRaleigh, NC 27617admin@hub.healthcarewww.hub.healthcare
+LoLo Care Inc
+8801 Fast Park Drive, Raleigh, NC 27617
+admin@carelolo.com
+carelolo.com

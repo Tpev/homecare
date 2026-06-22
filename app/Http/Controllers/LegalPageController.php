@@ -41,7 +41,7 @@ class LegalPageController extends Controller
             ->values();
 
         $documentHeader = null;
-        if ($lines->isNotEmpty() && str_contains(strtolower((string) $lines->first()), 'healthcare')) {
+        if ($lines->isNotEmpty() && $this->looksLikeDocumentHeader((string) $lines->first())) {
             $documentHeader = (string) $lines->shift();
         }
 
@@ -74,5 +74,14 @@ class LegalPageController extends Controller
                 ->all(),
         ]);
     }
-}
 
+    private function looksLikeDocumentHeader(string $line): bool
+    {
+        $normalized = strtolower(trim($line));
+
+        return str_contains($normalized, 'lolo care inc')
+            || str_contains($normalized, 'healthcare')
+            || str_ends_with($normalized, ' llc')
+            || str_ends_with($normalized, ' inc');
+    }
+}

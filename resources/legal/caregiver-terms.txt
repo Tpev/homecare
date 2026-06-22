@@ -1,17 +1,17 @@
-HUB Healthcare, LLC
+LoLo Care Inc
 Caregiver / Service Provider Terms
 Effective Date: March 13, 2026 | Last Updated: March 13, 2026
-These Caregiver / Service Provider Terms (“Caregiver Terms”) govern the participation of caregivers, service providers, contractors, and similar individuals (collectively, “Providers”) who use the HUB Healthcare platform (the “Platform”).
-These Terms supplement the HUB Platform Terms of Service. By registering as a caregiver or service provider on the Platform, you agree to comply with these Caregiver Terms as well as the Platform Terms of Service.
+These Caregiver / Service Provider Terms (“Caregiver Terms”) govern the participation of caregivers, service providers, contractors, and similar individuals (collectively, “Providers”) who use the LoLo Care platform (the “Platform”).
+These Terms supplement the LoLo Platform Terms of Service. By registering as a caregiver or service provider on the Platform, you agree to comply with these Caregiver Terms as well as the Platform Terms of Service.
 1. Independent Contractor Status
 Providers using the Platform are independent service providers.
 You acknowledge and agree that:
-you are not an employee of HUB Healthcare, LLC;
-HUB is not a staffing agency, home care agency, or nurse registry;
-HUB does not control how you perform services;
-HUB does not supervise, train, or manage Providers;
+you are not an employee of LoLo Care Inc;
+LoLo is not a staffing agency, home care agency, or nurse registry;
+LoLo does not control how you perform services;
+LoLo does not supervise, train, or manage Providers;
 you are responsible for how services are performed.
-Nothing in these Terms creates an employment, partnership, joint venture, or agency relationship between you and HUB.
+Nothing in these Terms creates an employment, partnership, joint venture, or agency relationship between you and LoLo.
 2. Provider Responsibilities
 As a Provider using the Platform, you are responsible for:
 determining whether you are qualified to perform any service offered;
@@ -38,7 +38,7 @@ claim licenses or certifications you do not possess;
 falsify credentials or background information.
 Providing false information may result in removal from the Platform.
 5. Background Checks and Verification
-HUB may offer or require background checks or identity verification through third-party providers.
+LoLo may offer or require background checks or identity verification through third-party providers.
 Providers acknowledge that:
 checks may be limited in scope;
 checks may not capture all criminal history;
@@ -50,7 +50,7 @@ Providers should:
 assess environments for safety risks;
 decline unsafe requests;
 report unsafe conditions where appropriate.
-HUB is not responsible for conditions in client homes or locations where services occur.
+LoLo is not responsible for conditions in client homes or locations where services occur.
 7. Scheduling and Availability
 Providers control their own schedules.
 You may choose whether to:
@@ -67,7 +67,7 @@ tax reporting;
 complying with all applicable financial obligations.
 9. Taxes
 Providers are responsible for all tax obligations arising from income earned through the Platform.
-HUB does not withhold taxes unless required by law.
+LoLo does not withhold taxes unless required by law.
 Providers should consult tax professionals regarding their obligations.
 10. Conduct Standards
 Providers must treat clients respectfully and professionally.
@@ -79,28 +79,31 @@ misuse the Platform.
 Violations may result in account suspension or removal.
 11. Insurance
 Providers are responsible for maintaining any insurance required for services they provide.
-HUB does not provide liability, professional, workers compensation, or health insurance coverage for Providers.
+LoLo does not provide liability, professional, workers compensation, or health insurance coverage for Providers.
 12. Reporting Concerns
 Providers should report safety concerns, misconduct, or illegal activity encountered through the Platform.
-HUB may review reports and take action where appropriate.
+LoLo may review reports and take action where appropriate.
 13. Suspension or Removal
-HUB may suspend or remove Providers from the Platform if:
+LoLo may suspend or remove Providers from the Platform if:
 these Terms are violated;
 unsafe conduct is reported;
 false information is discovered;
 fraud or illegal activity is suspected.
-HUB is not obligated to continue allowing access to the Platform.
-14. Limitation of HUB Responsibility
-HUB is a technology platform only.
-HUB is not responsible for:
+LoLo is not obligated to continue allowing access to the Platform.
+14. Limitation of LoLo Responsibility
+LoLo is a technology platform only.
+LoLo is not responsible for:
 service outcomes;
 provider conduct;
 client conduct;
 disputes between users.
 15. Changes to These Terms
-HUB may modify these Caregiver Terms at any time.
+LoLo may modify these Caregiver Terms at any time.
 Updated versions will be posted on the Platform with a revised effective date.
 Continued use of the Platform constitutes acceptance of revised Terms.
 16. Contact Information
-HUB Healthcare, LLC8801 Fast Park DriveRaleigh, NC 27617admin@hub.healthcarewww.hub.healthcare
-For questions regarding these Caregiver Terms, please contact HUB using the information above.
+LoLo Care Inc
+8801 Fast Park Drive, Raleigh, NC 27617
+admin@carelolo.com
+carelolo.com
+For questions regarding these Caregiver Terms, please contact LoLo using the information above.

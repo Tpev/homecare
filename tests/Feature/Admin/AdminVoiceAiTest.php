@@ -187,6 +187,29 @@ class AdminVoiceAiTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_admin_voice_log_shows_local_recording_player(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        VoiceAiCall::query()->create([
+            'admin_user_id' => $admin->id,
+            'direction' => VoiceAiCall::DIRECTION_OUTBOUND,
+            'status' => VoiceAiCall::STATUS_COMPLETED,
+            'to_phone' => '+19195551234',
+            'from_phone' => '+19844004008',
+            'metadata' => [
+                'recording_url' => '/storage/voice-agent-recordings/call-42.wav',
+                'recording_mime_type' => 'audio/wav',
+            ],
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.voice-ai.index'))
+            ->assertOk()
+            ->assertSee('Local audio recording')
+            ->assertSee('/storage/voice-agent-recordings/call-42.wav', false);
+    }
+
     /**
      * @param  array<string, string>  $payload
      */

@@ -1,7 +1,7 @@
 @extends('layouts.marketing')
 
-@section('title', 'Legal Center | HomeCare')
-@section('meta_description', 'Legal terms, privacy, payment, and policy documents for HomeCare users, caregivers, and partners.')
+@section('title', 'Legal Center | LoLo')
+@section('meta_description', 'Legal terms, privacy, payment, and policy documents for LoLo users, caregivers, and partners.')
 @section('canonical', route('legal.index'))
 
 @section('content')
@@ -11,7 +11,7 @@
                 <a href="{{ route('landing.caregiver') }}" class="flex items-center gap-3">
                     <x-application-logo class="h-9 w-9" />
                     <div>
-                        <div class="text-base font-bold tracking-tight">HomeCare</div>
+                        <div class="text-base font-bold tracking-tight">LoLo</div>
                         <div class="text-xs text-slate-500">Legal Center</div>
                     </div>
                 </a>
@@ -21,7 +21,7 @@
 
         <main class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
             <h1 class="text-3xl font-black tracking-tight sm:text-4xl">Legal Documents</h1>
-            <p class="mt-2 max-w-2xl text-sm text-slate-600">Review platform policies, terms, and acknowledgments currently published for HomeCare/HUB Healthcare.</p>
+            <p class="mt-2 max-w-2xl text-sm text-slate-600">Review platform policies, terms, and acknowledgments currently published for LoLo Care.</p>
 
             <div class="mt-8 grid gap-4 md:grid-cols-2">
                 @foreach ($pages as $item)

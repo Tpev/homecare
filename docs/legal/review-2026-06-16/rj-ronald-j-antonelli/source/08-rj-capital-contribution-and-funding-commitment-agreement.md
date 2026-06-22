@@ -1,6 +1,6 @@
 # Capital Contribution and Funding Commitment Agreement
 
-This Capital Contribution and Funding Commitment Agreement (this "Agreement") is entered into as of [DATE], by and between LoLo Care Inc, a Delaware corporation (the "Company"), and Ronald J. Antonelli ("RJ").
+This Capital Contribution and Funding Commitment Agreement (this "Agreement") is entered into as of [DATE], by and between Lolo Care, Inc., a Delaware corporation (the "Company"), and Ronald J. Antonelli ("RJ").
 
 ## 1. Funding Commitment
 
@@ -67,7 +67,7 @@ The parties acknowledge that RJ is a lawyer and that the Funding Commitment may 
 
 ### Company
 
-LoLo Care Inc
+Lolo Care, Inc.
 
 By: ______________________________
 

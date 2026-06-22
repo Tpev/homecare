@@ -1,6 +1,6 @@
 # Professional Responsibility Disclosure and Written Consent
 
-This Professional Responsibility Disclosure and Written Consent (this "Disclosure") is entered into as of [DATE], by and between LoLo Care Inc, a Delaware corporation (the "Company"), and Ronald J. Antonelli ("RJ").
+This Professional Responsibility Disclosure and Written Consent (this "Disclosure") is entered into as of [DATE], by and between Lolo Care, Inc., a Delaware corporation (the "Company"), and Ronald J. Antonelli ("RJ").
 
 ## 1. Purpose
 
@@ -71,7 +71,7 @@ Nothing in this Disclosure waives any duty, conflict rule, fiduciary duty, privi
 
 ### Company
 
-LoLo Care Inc
+Lolo Care, Inc.
 
 By: ______________________________
 
@@ -87,7 +87,7 @@ Ronald J. Antonelli
 
 ### Independent Counsel Acknowledgment, if applicable
 
-Reviewed by independent counsel for LoLo Care Inc:
+Reviewed by independent counsel for Lolo Care, Inc.:
 
 __________________________________
 

@@ -135,6 +135,11 @@ class VoiceAgentController extends Controller
         $rawPayload['voice_agent_report'] = $payload;
 
         $metadata = is_array($call->metadata) ? $call->metadata : [];
+        foreach ((array) ($payload['metadata'] ?? []) as $key => $value) {
+            if (is_string($key)) {
+                $metadata[$key] = $value;
+            }
+        }
         $metadata['voice_agent_reported_at'] = now()->toISOString();
         $metadata['voice_agent_outcome'] = (string) ($payload['outcome'] ?? '');
         $metadata['voice_agent_profile'] = (string) data_get($payload, 'metadata.voice_agent_profile', $metadata['voice_agent_profile'] ?? '');

@@ -1,7 +1,7 @@
-HUB Healthcare, LLC
+LoLo Care Inc
 Privacy Policy
-Effective Date: March 13, 2026 | Last Updated: March 13, 2026
-This Privacy Policy explains how HUB Healthcare, LLC (“HUB,” “we,” “us,” or “our”) collects, uses, discloses, stores, and protects personal information when you access or use our websites, mobile applications, software, communication tools, marketplaces, scheduling tools, messaging tools, and related products and services (collectively, the “Platform”).
+Effective Date: March 13, 2026 | Last Updated: June 20, 2026
+This Privacy Policy explains how LoLo Care Inc (“LoLo,” “we,” “us,” or “our”) collects, uses, discloses, stores, and protects personal information when you access or use our websites, mobile applications, software, communication tools, marketplaces, scheduling tools, messaging tools, and related products and services (collectively, the “Platform”).
 This Privacy Policy should be read together with our Platform Terms of Service and any supplemental agreements, notices, or consents that may apply to specific products, workflows, users, or services.
 Important: This Privacy Policy is intended as a business draft for review and customization by qualified legal counsel. Because the Platform may involve caregiving, scheduling, communication, operational workflows, payments, and healthcare-adjacent use cases, this Policy should be reviewed for compliance with applicable privacy, consumer protection, and health-information laws in each jurisdiction where the Platform operates.
 1. Scope
@@ -15,8 +15,8 @@ when you subscribe to communications from us;
 when you visit our website; and
 when we otherwise interact with you in connection with the Platform.
 This Privacy Policy does not apply to:
-information processed solely on behalf of an enterprise, provider, partner, or customer where HUB acts only as a service provider or processor under a separate agreement;
-third-party websites, services, software, processors, or integrations not controlled by HUB; or
+information processed solely on behalf of an enterprise, provider, partner, or customer where LoLo acts only as a service provider or processor under a separate agreement;
+third-party websites, services, software, processors, or integrations not controlled by LoLo; or
 offline services or activities not connected to the Platform, except where this Policy expressly says otherwise.
 2. Categories of Information We Collect
 Depending on how you use the Platform, we may collect the following categories of information.
@@ -49,7 +49,7 @@ social login providers or authentication providers, if enabled; and
 publicly available sources or lawful third-party data sources.
 2.4 Sensitive and Healthcare-Adjacent Information
 Depending on how the Platform is implemented, users may submit information that is sensitive, caregiving-related, operationally sensitive, or health-related. This may include information concerning care needs, scheduling constraints, service preferences, mobility or support needs, household context, operational workflows, or related details.
-HUB does not intend for users to submit medical records, full clinical charts, diagnoses, treatment plans, insurance numbers, or other regulated health information unless expressly authorized as part of a specific workflow and supported by appropriate agreements, notices, and safeguards.
+LoLo does not intend for users to submit medical records, full clinical charts, diagnoses, treatment plans, insurance numbers, or other regulated health information unless expressly authorized as part of a specific workflow and supported by appropriate agreements, notices, and safeguards.
 3. How We Use Information
 We may use personal information for the following purposes:
 to provide, operate, maintain, and improve the Platform;
@@ -62,7 +62,7 @@ to provide customer service, troubleshooting, and technical support;
 to analyze usage, trends, adoption, and performance;
 to personalize content, features, workflows, and user experiences;
 to detect, investigate, prevent, and address fraud, abuse, unauthorized access, safety incidents, policy violations, and illegal activity;
-to protect users, HUB, and third parties;
+to protect users, LoLo, and third parties;
 to enforce our agreements, policies, and legal rights;
 to comply with legal obligations, regulatory requirements, lawful requests, and dispute-related needs; and
 to send marketing communications where permitted by law and subject to available opt-out rights.
@@ -80,15 +80,16 @@ We may share personal information in the following circumstances:
 If a Platform workflow requires interaction, coordination, scheduling, matching, or communication between users, we may share relevant profile, scheduling, request, communication, and workflow information with other users or authorized participants as reasonably necessary for the Platform to function.
 5.2 With Service Providers
 We may share information with vendors, contractors, and service providers that perform services on our behalf, including providers of hosting, infrastructure, analytics, communications, customer support, verification, background checks, scheduling, payments, email delivery, text messaging, document storage, security, and professional services.
+Mobile phone numbers, SMS opt-in consent, and text messaging consent records are not sold, rented, or shared with third parties or affiliates for their own marketing or promotional purposes. We may share mobile information and SMS consent records only with service providers that help us deliver messages, operate the Platform, comply with law, protect users, or complete communications you request, and those providers may use the information only to provide services to LoLo.
 5.3 With Payment Processors
-If payment features are enabled, payment-related information may be collected, processed, and stored by third-party processors under their own terms and privacy policies. HUB may receive limited transaction details, billing status, payout status, and related records necessary to support the Platform.
+If payment features are enabled, payment-related information may be collected, processed, and stored by third-party processors under their own terms and privacy policies. LoLo may receive limited transaction details, billing status, payout status, and related records necessary to support the Platform.
 5.4 With Enterprise Customers, Partners, or Organizations
 If you use the Platform through or in connection with an employer, facility, agency, enterprise customer, referral partner, or other organization, we may share information with that organization consistent with the applicable workflow, relationship, permissions, and any governing agreements.
 5.5 For Legal, Safety, and Compliance Reasons
 We may disclose information if we believe in good faith that disclosure is necessary to:
 comply with law, regulation, legal process, or governmental request;
 enforce our terms, policies, and agreements;
-protect the rights, property, safety, or security of HUB, users, or others;
+protect the rights, property, safety, or security of LoLo, users, or others;
 investigate fraud, abuse, harassment, unlawful conduct, or security incidents; or
 respond to emergencies or urgent situations where disclosure is appropriate or required by law.
 5.6 Business Transfers
@@ -105,15 +106,16 @@ improve security and site performance;
 support communications, analytics, and marketing activities;
 measure campaign performance and audience behavior; and
 help us improve user experience and business operations.
-For caregiver pre-launch marketing pages, HUB may also use first-party analytics events and a first-party anonymous identifier cookie to measure unique visits, understand conversion to signup, and improve onboarding flow quality. These records may include hashed IP and hashed user-agent values, URL/referrer context, and campaign parameters (such as UTM tags) for operational analytics purposes.
+For caregiver pre-launch marketing pages, LoLo may also use first-party analytics events and a first-party anonymous identifier cookie to measure unique visits, understand conversion to signup, and improve onboarding flow quality. These records may include hashed IP and hashed user-agent values, URL/referrer context, and campaign parameters (such as UTM tags) for operational analytics purposes.
 The Platform may use analytics tools, advertising technologies, retargeting tools, and similar services provided by third parties. These tools may collect information about your device, browser, IP address, activity on the Platform, pages viewed, clicks, session information, and referral sources.
 The Platform may also use session replay or similar diagnostic tools to help us understand usability issues, troubleshoot technical problems, improve workflows, and optimize the user experience. Where used, these tools are intended to support product improvement, operations, and security.
-Depending on the jurisdiction and the way the Platform is configured, HUB may also use cookie banners, consent management tools, or similar mechanisms to provide notice and obtain or record user consent for certain tracking activities.
+Depending on the jurisdiction and the way the Platform is configured, LoLo may also use cookie banners, consent management tools, or similar mechanisms to provide notice and obtain or record user consent for certain tracking activities.
 You may be able to manage cookies through your browser settings, device controls, or available consent preferences. Blocking certain cookies or tracking technologies may affect Platform functionality.
 7. Communications Preferences
 We may send you service-related and transactional communications, including account notices, verification messages, security alerts, reminders, scheduling updates, workflow notifications, and payment-related notices.
 We may also send marketing or promotional communications where permitted by law. You may opt out of marketing emails by using the unsubscribe link in those emails. You may not be able to opt out of service-related or legally required communications.
-If we use text messaging, automated calls, prerecorded calls, or similar communications, those communications will be subject to applicable law, your permissions, and any separate notices or consent language presented to you.
+If we use text messaging, automated calls, prerecorded calls, or similar communications, those communications will be subject to applicable law, your permissions, and any separate notices or consent language presented to you. By providing a mobile number and opting in where required, you authorize LoLo to send text messages related to your account, care requests, caregiver activity, scheduling, support, and other Platform communications. Message and data rates may apply. Message frequency may vary. You may opt out of non-essential SMS messages by replying STOP, and you may request help by replying HELP where supported.
+LoLo does not share mobile information, text messaging opt-in data, or SMS consent with third parties or affiliates for marketing or promotional purposes.
 8. Data Retention
 We retain personal information for as long as reasonably necessary for the purposes described in this Privacy Policy, including to:
 provide the Platform;
@@ -132,7 +134,7 @@ Users are responsible for maintaining the confidentiality of their credentials a
 The Platform is not intended for use by children under thirteen (13), and we do not knowingly collect personal information directly from children under thirteen through the Platform.
 If you believe a child has provided personal information to us without appropriate authorization, please contact us so we can take appropriate steps.
 11. State Privacy Rights and Other Jurisdiction-Specific Rights
-HUB is initially operating in North Carolina, but the Platform may be made available to users in other states. Because privacy laws may apply based on the residence of the user, the location of the activity, the nature of the data collected, or the scale of the business, HUB may provide additional state-specific privacy notices, rights disclosures, or consumer-request mechanisms as needed.
+LoLo is initially operating in North Carolina, but the Platform may be made available to users in other states. Because privacy laws may apply based on the residence of the user, the location of the activity, the nature of the data collected, or the scale of the business, LoLo may provide additional state-specific privacy notices, rights disclosures, or consumer-request mechanisms as needed.
 Depending on where you live, you may have rights under applicable privacy laws, which may include the right to:
 know whether we process your personal information;
 access personal information we maintain about you;
@@ -142,28 +144,31 @@ obtain a copy of certain information in a portable format;
 opt out of certain types of targeted advertising, profiling, or sales or sharing of personal information, where applicable; and
 appeal certain privacy-rights decisions, where required by law.
 These rights are subject to limitations, exceptions, identity verification, and applicability under law.
-If HUB becomes subject to state-specific privacy laws, including laws in California or other states with consumer privacy statutes, HUB may publish supplemental privacy notices and additional procedures to address those requirements.
+If LoLo becomes subject to state-specific privacy laws, including laws in California or other states with consumer privacy statutes, LoLo may publish supplemental privacy notices and additional procedures to address those requirements.
 12. “Do Not Track” and Similar Signals
-Some browsers and devices may offer “Do Not Track” or similar privacy preference signals. Because there is not yet a universally accepted standard for responding to these signals across all environments, HUB may not respond to them unless required by applicable law.
-If applicable law requires recognition of specific opt-out preference signals, HUB may implement those requirements for covered users.
+Some browsers and devices may offer “Do Not Track” or similar privacy preference signals. Because there is not yet a universally accepted standard for responding to these signals across all environments, LoLo may not respond to them unless required by applicable law.
+If applicable law requires recognition of specific opt-out preference signals, LoLo may implement those requirements for covered users.
 13. Cross-Border Data Transfers
-If the Platform is accessed from outside the United States, your information may be transferred to, stored in, or processed in the United States or other jurisdictions where HUB or its service providers operate.
+If the Platform is accessed from outside the United States, your information may be transferred to, stored in, or processed in the United States or other jurisdictions where LoLo or its service providers operate.
 By using the Platform, you acknowledge that information may be processed in jurisdictions that may have different data protection laws than those of your location, subject to any legal requirements that apply.
 14. Third-Party Sites, Tools, and Integrations
 The Platform may contain links to or integrations with third-party websites, payment processors, scheduling tools, communications tools, EHR connectors, analytics tools, customer support tools, advertising providers, or other external services.
-HUB does not control these third parties and is not responsible for their privacy practices, content, terms, or security. Your interactions with those services are governed by their own privacy policies and terms.
+LoLo does not control these third parties and is not responsible for their privacy practices, content, terms, or security. Your interactions with those services are governed by their own privacy policies and terms.
 15. Service Provider / Processor Role for Enterprise Workflows
-In some enterprise, partner, or organization-specific workflows, HUB may process personal information on behalf of a customer, provider, agency, facility, or other organization under separate contractual terms.
-In those situations, HUB may act as a service provider, processor, or similar role, and the relevant customer or organization may control certain processing decisions. If so, privacy rights requests or questions about those specific workflows may need to be directed to that organization in the first instance.
+In some enterprise, partner, or organization-specific workflows, LoLo may process personal information on behalf of a customer, provider, agency, facility, or other organization under separate contractual terms.
+In those situations, LoLo may act as a service provider, processor, or similar role, and the relevant customer or organization may control certain processing decisions. If so, privacy rights requests or questions about those specific workflows may need to be directed to that organization in the first instance.
 16. Health Information and HIPAA-Adjacent Workflows
-The Platform may be used in environments where scheduling, coordination, referrals, discharge, intake, operational, or healthcare-adjacent information is present. However, the Platform is not intended for the collection, storage, or transmission of regulated health information unless HUB has expressly approved that use in writing and implemented the required legal, contractual, and technical safeguards.
+The Platform may be used in environments where scheduling, coordination, referrals, discharge, intake, operational, or healthcare-adjacent information is present. However, the Platform is not intended for the collection, storage, or transmission of regulated health information unless LoLo has expressly approved that use in writing and implemented the required legal, contractual, and technical safeguards.
 Users should not upload, submit, message, or otherwise provide medical records, full clinical charts, diagnoses, treatment plans, insurance member numbers, prescription information, or other regulated health information through the Platform unless a specific workflow expressly permits it.
-Unless expressly stated in a separate agreement, HUB is not acting as a healthcare provider, and this Privacy Policy is not a substitute for any business associate agreement, covered entity notice of privacy practices, healthcare provider privacy notice, or state-specific health information notice that may be required in a particular implementation.
-If HUB later supports workflows involving regulated health information, HUB may require additional notices, permissions, business associate or similar agreements, access controls, data-minimization rules, security safeguards, and workflow-specific restrictions before that functionality is made available.
+Unless expressly stated in a separate agreement, LoLo is not acting as a healthcare provider, and this Privacy Policy is not a substitute for any business associate agreement, covered entity notice of privacy practices, healthcare provider privacy notice, or state-specific health information notice that may be required in a particular implementation.
+If LoLo later supports workflows involving regulated health information, LoLo may require additional notices, permissions, business associate or similar agreements, access controls, data-minimization rules, security safeguards, and workflow-specific restrictions before that functionality is made available.
 17. Changes to This Privacy Policy
 We may modify this Privacy Policy at any time.
 If we make material changes, we may provide notice by posting the updated Privacy Policy on the Platform, updating the effective date, sending an email, providing in-app notice, or using other reasonable means.
 Your continued use of the Platform after the effective date of an updated Privacy Policy constitutes acceptance of the revised Policy to the extent permitted by law.
 18. Contact Information
-HUB Healthcare, LLC8801 Fast Park Drive, Raleigh, NC 27617admin@hub.healthcarewww.hub.healthcare
+LoLo Care Inc
+8801 Fast Park Drive, Raleigh, NC 27617
+admin@carelolo.com
+carelolo.com
 If you have questions about this Privacy Policy or would like to submit a privacy-related request, please contact us using the information above.

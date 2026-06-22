@@ -11,6 +11,7 @@ This Go service answers Twilio phone calls, bridges live audio to the Deepgram V
 - Opens a Deepgram Voice Agent WebSocket at `wss://agent.deepgram.com/v1/agent/converse`.
 - Uses Deepgram STT plus TTS and OpenAI `gpt-4o-mini` through Deepgram's `think` provider.
 - Executes client-side tools for approved service lookup, human callback requests, and signup link creation.
+- For callback/admin-profile calls, saves a local WAV recording and reports its URL back to Laravel.
 
 ## Setup
 
@@ -32,3 +33,4 @@ go run ./cmd/server
 - The WebSocket bridge is protected by a custom stream token embedded in the TwiML `<Parameter>` block.
 - If no callback or signup action is taken, the service records the call as an informational lead at the end of the session.
 - Inbound call guidance lives in `prompts/system.md`; outbound callback/discovery guidance lives in `prompts/callback-discovery.md`.
+- Local callback recordings default to `../storage/app/public/voice-agent-recordings` with public URLs under `/storage/voice-agent-recordings`. In production, prefer an absolute `VOICE_AGENT_RECORDINGS_DIR`.

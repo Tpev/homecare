@@ -1,8 +1,8 @@
-HUB Healthcare, LLC
+LoLo Care Inc
 Acceptable Use and Safety Policy
 Effective Date: March 13, 2026 | Last Updated: March 13, 2026
-This Acceptable Use and Safety Policy (“Safety Policy”) establishes standards of conduct for all users of the HUB Healthcare platform (the “Platform”), including clients, caregivers, providers, partners, and visitors (collectively, “Users”).
-This Policy is incorporated into the HUB Platform Terms of Service and related agreements. By using the Platform, you agree to comply with this Safety Policy.
+This Acceptable Use and Safety Policy (“Safety Policy”) establishes standards of conduct for all users of the LoLo Care platform (the “Platform”), including clients, caregivers, providers, partners, and visitors (collectively, “Users”).
+This Policy is incorporated into the LoLo Platform Terms of Service and related agreements. By using the Platform, you agree to comply with this Safety Policy.
 1. Purpose
 The purpose of this Policy is to maintain a safe, respectful, and lawful environment for all participants using the Platform.
 Users must conduct themselves in a manner that protects the safety, dignity, privacy, and legal rights of others.
@@ -20,7 +20,7 @@ illegal activity
 misuse of personal information
 attempts to bypass Platform safeguards
 3. Discrimination and Harassment
-HUB prohibits discrimination or harassment based on protected characteristics, including but not limited to:
+LoLo prohibits discrimination or harassment based on protected characteristics, including but not limited to:
 race
 ethnicity
 national origin
@@ -76,14 +76,14 @@ unsafe behavior
 harassment or discrimination
 fraud or impersonation
 abuse of vulnerable individuals
-Reports may be submitted through the Platform or by contacting HUB.
+Reports may be submitted through the Platform or by contacting LoLo.
 10. Investigations
-HUB may investigate reported incidents.
+LoLo may investigate reported incidents.
 Investigations may include:
 reviewing communications
 requesting additional information
 restricting account access
-HUB may cooperate with law enforcement where appropriate.
+LoLo may cooperate with law enforcement where appropriate.
 11. Enforcement
 Violations of this Safety Policy may result in:
 warnings
@@ -91,14 +91,17 @@ account suspension
 account termination
 removal of content
 referral to law enforcement
-HUB reserves the right to take action to protect the safety of the Platform and its users.
+LoLo reserves the right to take action to protect the safety of the Platform and its users.
 12. Emergency Situations
 The Platform is not an emergency service.
 If an emergency occurs, users should contact local emergency services immediately.
 13. Changes to This Policy
-HUB may update this Safety Policy periodically.
+LoLo may update this Safety Policy periodically.
 Updated versions will be posted on the Platform with a revised effective date.
 Continued use of the Platform constitutes acceptance of the revised Policy.
 14. Contact Information
-HUB Healthcare, LLC8801 Fast Park DriveRaleigh, NC 27617admin@hub.healthcarewww.hub.healthcare
-For questions or to report safety concerns, please contact HUB using the information above.
+LoLo Care Inc
+8801 Fast Park Drive, Raleigh, NC 27617
+admin@carelolo.com
+carelolo.com
+For questions or to report safety concerns, please contact LoLo using the information above.

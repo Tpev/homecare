@@ -1,6 +1,6 @@
 # Stockholder Joinder, Transfer Restriction, Right of First Refusal, and Confidentiality Agreement
 
-This Stockholder Joinder, Transfer Restriction, Right of First Refusal, and Confidentiality Agreement (this "Agreement") is entered into as of [DATE], by and among LoLo Care Inc, a Delaware corporation (the "Company"), Ronald J. Antonelli ("RJ"), Charles Petrini Poli, and Thibaud Peverelli.
+This Stockholder Joinder, Transfer Restriction, Right of First Refusal, and Confidentiality Agreement (this "Agreement") is entered into as of [DATE], by and among Lolo Care, Inc., a Delaware corporation (the "Company"), Ronald J. Antonelli ("RJ"), Charles Petrini-Poli, and Thibaud Peverelli.
 
 ## 1. Background
 
@@ -26,7 +26,7 @@ RJ is acquiring shares of the Company's Common Stock pursuant to a Restricted St
 
 3.4 **Right of First Refusal.** Before transferring any vested shares to a third party, RJ shall give the Company written notice of the proposed transfer, including the number of shares, proposed transferee, purchase price, and all material terms. The Company shall have 30 days to elect to purchase all or any portion of the shares on the same terms.
 
-3.5 **Founder Secondary Right.** If the Company does not purchase all offered shares, Charles Petrini Poli and Thibaud Peverelli shall have an additional 15 days to purchase the remaining offered shares pro rata or as they otherwise agree.
+3.5 **Founder Secondary Right.** If the Company does not purchase all offered shares, Charles Petrini-Poli and Thibaud Peverelli shall have an additional 15 days to purchase the remaining offered shares pro rata or as they otherwise agree.
 
 3.6 **Permitted Estate Planning Transfers.** RJ may transfer vested shares to a trust, estate planning vehicle, or entity controlled by RJ, provided the transferee signs a joinder to this Agreement and RJ continues to control the voting and disposition of the shares.
 
@@ -56,7 +56,7 @@ The Company may place legends or book-entry notations on RJ's shares stating tha
 
 7.1 **Governing Law.** This Agreement shall be governed by the laws of the State of Delaware.
 
-7.2 **Amendments.** This Agreement may be amended only by a written instrument signed by the Company, RJ, Charles Petrini Poli, and Thibaud Peverelli.
+7.2 **Amendments.** This Agreement may be amended only by a written instrument signed by the Company, RJ, Charles Petrini-Poli, and Thibaud Peverelli.
 
 7.3 **Counterparts; Electronic Signatures.** This Agreement may be executed in counterparts and by electronic signature.
 
@@ -66,7 +66,7 @@ The Company may place legends or book-entry notations on RJ's shares stating tha
 
 ### Company
 
-LoLo Care Inc
+Lolo Care, Inc.
 
 By: ______________________________
 
@@ -84,7 +84,7 @@ Ronald J. Antonelli
 
 __________________________________
 
-Charles Petrini Poli
+Charles Petrini-Poli
 
 __________________________________
 

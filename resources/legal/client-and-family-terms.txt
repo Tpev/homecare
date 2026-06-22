@@ -1,15 +1,15 @@
-HUB Healthcare, LLC
+LoLo Care Inc
 Client and Family Terms
 Effective Date: March 13, 2026 | Last Updated: March 13, 2026
-These Client and Family Terms (“Client Terms”) govern the use of the HUB Healthcare platform (the “Platform”) by individuals, families, households, or representatives requesting services (collectively, “Clients”).
-These Terms supplement the HUB Platform Terms of Service. By requesting services, creating an account, or otherwise using the Platform as a client, you agree to comply with these Client Terms and the Platform Terms of Service.
+These Client and Family Terms (“Client Terms”) govern the use of the LoLo Care platform (the “Platform”) by individuals, families, households, or representatives requesting services (collectively, “Clients”).
+These Terms supplement the LoLo Platform Terms of Service. By requesting services, creating an account, or otherwise using the Platform as a client, you agree to comply with these Client Terms and the Platform Terms of Service.
 1. Platform Role
-HUB Healthcare operates a technology platform that helps connect individuals and organizations. HUB does not provide caregiving, home health, nursing, or in‑person services.
+LoLo Care operates a technology platform that helps connect individuals and organizations. LoLo does not provide caregiving, home health, nursing, or in‑person services.
 By using the Platform, you acknowledge that:
-HUB is not a home care agency;
-HUB is not a healthcare provider;
-HUB does not employ caregivers;
-HUB does not supervise services performed by caregivers or providers.
+LoLo is not a home care agency;
+LoLo is not a healthcare provider;
+LoLo does not employ caregivers;
+LoLo does not supervise services performed by caregivers or providers.
 Any services arranged through the Platform are provided by independent providers.
 2. Client Responsibilities
 Clients are responsible for:
@@ -51,7 +51,7 @@ engage in abusive or unsafe conduct
 Violations may result in suspension or termination of Platform access.
 7. Payments
 Clients are responsible for paying agreed service fees.
-Payments may be processed through third‑party payment processors. Payment timing, refunds, cancellations, and related rules are governed by the HUB Payment Terms and Cancellation Policy.
+Payments may be processed through third‑party payment processors. Payment timing, refunds, cancellations, and related rules are governed by the LoLo Payment Terms and Cancellation Policy.
 Clients must ensure valid payment information is provided when required.
 8. Cancellations and Scheduling
 Clients may cancel or reschedule services subject to the Platform’s scheduling rules and cancellation policies.
@@ -61,34 +61,37 @@ Repeated cancellations may result in account restrictions.
 Clients may review provider profiles when available.
 Clients acknowledge that:
 providers are independent contractors;
-HUB does not guarantee provider performance;
+LoLo does not guarantee provider performance;
 background checks or verifications may be limited in scope.
 Clients should exercise independent judgment when selecting providers.
 10. Property and Personal Items
 Clients are responsible for safeguarding valuables and personal property during services.
-HUB is not responsible for loss, theft, or damage involving personal items unless required by law.
+LoLo is not responsible for loss, theft, or damage involving personal items unless required by law.
 11. Disputes Between Users
 If a dispute arises between a client and a provider, the parties should attempt to resolve the matter directly where appropriate.
-HUB may review disputes but is not obligated to resolve them.
+LoLo may review disputes but is not obligated to resolve them.
 12. Reporting Concerns
 Clients should report safety concerns, misconduct, or illegal activity encountered through the Platform.
-HUB may review reports and take action where appropriate.
+LoLo may review reports and take action where appropriate.
 13. Suspension or Termination
-HUB may suspend or terminate client access to the Platform if:
+LoLo may suspend or terminate client access to the Platform if:
 these Terms are violated
 abusive behavior occurs
 fraudulent activity is suspected
-HUB is not obligated to continue providing access to the Platform.
-14. Limitation of HUB Responsibility
-HUB provides technology services only.
-HUB is not responsible for:
+LoLo is not obligated to continue providing access to the Platform.
+14. Limitation of LoLo Responsibility
+LoLo provides technology services only.
+LoLo is not responsible for:
 provider conduct
 service outcomes
 disputes between users
 conditions at service locations.
 15. Changes to These Terms
-HUB may update these Client Terms from time to time. Updated versions will be posted on the Platform with a revised effective date.
+LoLo may update these Client Terms from time to time. Updated versions will be posted on the Platform with a revised effective date.
 Continued use of the Platform constitutes acceptance of revised Terms.
 16. Contact Information
-HUB Healthcare, LLC8801 Fast Park DriveRaleigh, NC 27617admin@hub.healthcarewww.hub.healthcare
-For questions regarding these Client Terms, please contact HUB using the information above.
+LoLo Care Inc
+8801 Fast Park Drive, Raleigh, NC 27617
+admin@carelolo.com
+carelolo.com
+For questions regarding these Client Terms, please contact LoLo using the information above.

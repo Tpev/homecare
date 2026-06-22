@@ -1,10 +1,10 @@
 # Restricted Stock Purchase Agreement
 
-This Restricted Stock Purchase Agreement (this "Agreement") is entered into as of [DATE] (the "Effective Date"), by and between LoLo Care Inc, a Delaware corporation (the "Company"), and Ronald J. Antonelli (the "Purchaser" or "RJ").
+This Restricted Stock Purchase Agreement (this "Agreement") is entered into as of [DATE] (the "Effective Date"), by and between Lolo Care, Inc., a Delaware corporation (the "Company"), and Ronald J. Antonelli (the "Purchaser" or "RJ").
 
 ## 1. Purchase and Sale of Shares
 
-1.1 **Sale of Shares.** Subject to this Agreement, the Company sells to Purchaser, and Purchaser purchases from the Company, 1,000,000 shares of the Company's Common Stock, par value $[PAR VALUE] per share (the "Shares").
+1.1 **Sale of Shares.** Subject to this Agreement, the Company sells to Purchaser, and Purchaser purchases from the Company, 1,000,000 shares of the Company's Common Stock, par value $0.00001 per share (the "Shares").
 
 1.2 **Vested and Vesting Shares.** The Shares consist of:
 
@@ -13,7 +13,7 @@ This Restricted Stock Purchase Agreement (this "Agreement") is entered into as o
 | Initial Vested Shares | 500,000 | Vested at closing |
 | Vesting Shares | 500,000 | Subject to vesting, repurchase, and other restrictions |
 
-1.3 **Purchase Price.** The purchase price for the Shares is $[PRICE PER SHARE] per share, for an aggregate purchase price of $[RJ TOTAL PURCHASE PRICE] (the "Purchase Price").
+1.3 **Purchase Price.** The purchase price for the Shares is $0.00001 per share, for an aggregate purchase price of $10.00 (the "Purchase Price").
 
 1.4 **Payment.** Purchaser shall pay the Purchase Price to the Company at the closing by cash, check, wire transfer, or another method approved by the Company.
 
@@ -147,7 +147,7 @@ IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective
 
 ### Company
 
-LoLo Care Inc
+Lolo Care, Inc.
 
 By: ______________________________
 
@@ -167,16 +167,16 @@ Ronald J. Antonelli
 
 | Field | Value |
 | --- | --- |
-| Company | LoLo Care Inc |
+| Company | Lolo Care, Inc. |
 | Purchaser | Ronald J. Antonelli |
 | Purchaser address | [RJ ADDRESS] |
 | Number of shares | 1,000,000 |
 | Initial vested shares | 500,000 |
 | Vesting shares | 500,000 |
 | Vesting period | 18 months |
-| Par value | $[PAR VALUE] |
-| Purchase price per share | $[PRICE PER SHARE] |
-| Aggregate purchase price | $[RJ TOTAL PURCHASE PRICE] |
+| Par value | $0.00001 |
+| Purchase price per share | $0.00001 |
+| Aggregate purchase price | $10.00 |
 | Board approval date | [BOARD APPROVAL DATE] |
 | Closing date | [CLOSING DATE] |
 | Ledger entry ID | CS-003 |

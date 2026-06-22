@@ -28,4 +28,12 @@ func TestLoadUsesAppURLAsPublicBaseFallback(t *testing.T) {
 	if cfg.CallbackPromptFile != "prompts/callback-discovery.md" {
 		t.Fatalf("expected callback prompt default, got %q", cfg.CallbackPromptFile)
 	}
+
+	if !cfg.RecordingsEnabled {
+		t.Fatal("expected local recordings to default on")
+	}
+
+	if cfg.RecordingsPublicBaseURL != "/storage/voice-agent-recordings" {
+		t.Fatalf("expected recording public URL default, got %q", cfg.RecordingsPublicBaseURL)
+	}
 }

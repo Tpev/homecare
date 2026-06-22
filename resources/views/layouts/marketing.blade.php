@@ -72,11 +72,11 @@
     <footer class="border-t border-[#DED6CA] bg-[#FFF7EA]/95 backdrop-blur">
         <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
             <div class="space-y-2 sm:hidden">
-                <p class="text-[11px] text-slate-500">&copy; {{ now()->year }} LoLo / HUB Healthcare, LLC</p>
+                <p class="text-[11px] text-slate-500">&copy; {{ now()->year }} LoLo Care Inc</p>
                 <x-legal-links class="gap-x-3 gap-y-2 text-[11px]" />
             </div>
             <div class="hidden sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                <p class="text-xs text-slate-500">&copy; {{ now()->year }} LoLo / HUB Healthcare, LLC</p>
+                <p class="text-xs text-slate-500">&copy; {{ now()->year }} LoLo Care Inc</p>
                 <x-legal-links />
             </div>
         </div>

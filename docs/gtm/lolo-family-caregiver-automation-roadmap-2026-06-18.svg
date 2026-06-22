@@ -1,0 +1,340 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1400" viewBox="0 0 2200 1400" role="img" aria-labelledby="title desc">
+  <title id="title">LoLo Family and Caregiver Automation Roadmap</title>
+  <desc id="desc">Two-lane business roadmap showing family and caregiver acquisition, matching, first visit, and recurring care, with automated-today, manual-test-now, and future-automation statuses.</desc>
+  <defs>
+    <linearGradient id="pageBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff7ea"/>
+      <stop offset="42%" stop-color="#f7fbff"/>
+      <stop offset="100%" stop-color="#f3faf5"/>
+    </linearGradient>
+    <linearGradient id="heroBand" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#23483f"/>
+      <stop offset="58%" stop-color="#315f9e"/>
+      <stop offset="100%" stop-color="#c96b55"/>
+    </linearGradient>
+    <linearGradient id="matchHub" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#143832"/>
+      <stop offset="100%" stop-color="#315f9e"/>
+    </linearGradient>
+    <filter id="softShadow" x="-12%" y="-12%" width="124%" height="135%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#102a43" flood-opacity="0.13"/>
+    </filter>
+    <filter id="tinyShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#102a43" flood-opacity="0.10"/>
+    </filter>
+    <marker id="arrowEvergreen" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto">
+      <path d="M 0 0 L 13 6.5 L 0 13 z" fill="#23483f"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto">
+      <path d="M 0 0 L 13 6.5 L 0 13 z" fill="#315f9e"/>
+    </marker>
+    <marker id="arrowMuted" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto">
+      <path d="M 0 0 L 13 6.5 L 0 13 z" fill="#8594a5"/>
+    </marker>
+    <style>
+      .title { font: 800 54px Georgia, "Times New Roman", serif; fill: #17313f; }
+      .subtitle { font: 500 23px Arial, sans-serif; fill: #4b5b6b; }
+      .eyebrow { font: 800 15px Arial, sans-serif; fill: #607080; }
+      .brand { font: 800 38px Georgia, "Times New Roman", serif; fill: #23483f; }
+      .date { font: 700 16px Arial, sans-serif; fill: #607080; }
+      .heroText { font: 700 18px Arial, sans-serif; fill: #ffffff; }
+      .legendText { font: 700 16px Arial, sans-serif; fill: #24302d; }
+      .stageTitle { font: 800 18px Arial, sans-serif; fill: #17313f; }
+      .laneTitle { font: 800 26px Arial, sans-serif; fill: #17313f; }
+      .laneSub { font: 500 17px Arial, sans-serif; fill: #607080; }
+      .cardTitle { font: 800 21px Arial, sans-serif; fill: #17313f; }
+      .cardBody { font: 500 16px Arial, sans-serif; fill: #465667; }
+      .chipText { font: 800 13px Arial, sans-serif; fill: #17313f; }
+      .chipTextDark { font: 800 13px Arial, sans-serif; fill: #ffffff; }
+      .tiny { font: 700 13px Arial, sans-serif; fill: #607080; }
+      .calloutTitle { font: 800 22px Arial, sans-serif; fill: #7a3b13; }
+      .calloutBody { font: 600 16px Arial, sans-serif; fill: #854d0e; }
+      .hubTitle { font: 800 22px Arial, sans-serif; fill: #ffffff; }
+      .hubBody { font: 500 15px Arial, sans-serif; fill: #dff7f2; }
+      .summaryTitle { font: 800 19px Arial, sans-serif; fill: #17313f; }
+      .summaryBody { font: 500 16px Arial, sans-serif; fill: #4b5b6b; }
+      .stageBox { fill: rgba(255,255,255,0.78); stroke: #d8e0e8; stroke-width: 1.4; }
+      .laneBox { fill: rgba(255,255,255,0.80); stroke: #d9e2df; stroke-width: 1.5; filter: url(#softShadow); }
+      .familyLane { fill: #f3fbf5; stroke: #b9d8c8; }
+      .caregiverLane { fill: #eef6ff; stroke: #bdd4f7; }
+      .card { fill: #ffffff; stroke: #d8e0e8; stroke-width: 1.3; filter: url(#tinyShadow); }
+      .cardFamily { stroke: #b9d8c8; }
+      .cardCaregiver { stroke: #bdd4f7; }
+      .cardMatch { stroke: #97b3db; stroke-width: 2; }
+      .todayChip { fill: #e8fff1; stroke: #83caa0; stroke-width: 1.2; }
+      .partialChip { fill: #fff7e7; stroke: #e9b96c; stroke-width: 1.2; }
+      .futureChip { fill: #eef5ff; stroke: #9dbdf1; stroke-width: 1.2; }
+      .manualChip { fill: #fff1e8; stroke: #db8a62; stroke-width: 1.2; }
+      .lineFamily { stroke: #23483f; stroke-width: 3; fill: none; marker-end: url(#arrowEvergreen); }
+      .lineCaregiver { stroke: #315f9e; stroke-width: 3; fill: none; marker-end: url(#arrowBlue); }
+      .lineMuted { stroke: #8594a5; stroke-width: 2.4; fill: none; marker-end: url(#arrowMuted); stroke-dasharray: 8 8; }
+      .divider { stroke: #d8e0e8; stroke-width: 1.5; }
+    </style>
+  </defs>
+
+  <rect width="2200" height="1400" fill="url(#pageBg)"/>
+
+  <g transform="translate(74 52)">
+    <text class="brand" x="0" y="0" dominant-baseline="hanging">LoLo</text>
+    <text class="date" x="0" y="52">Business workflow document - June 18, 2026</text>
+  </g>
+
+  <g transform="translate(310 52)">
+    <text class="title" id="main-title" x="0" y="0" dominant-baseline="hanging">Family and Caregiver Growth Roadmap</text>
+    <text class="subtitle" x="3" y="72">From first touch to matching, first visit, and recurring care: what is automated today and what gets automated next.</text>
+  </g>
+
+  <g transform="translate(1530 54)">
+    <rect x="0" y="0" width="560" height="120" rx="24" fill="#ffffff" stroke="#d8e0e8" filter="url(#tinyShadow)"/>
+    <g transform="translate(24 20)">
+      <rect class="todayChip" x="0" y="0" width="160" height="30" rx="15"/>
+      <text class="chipText" x="18" y="20">Automated today</text>
+    </g>
+    <g transform="translate(206 20)">
+      <rect class="manualChip" x="0" y="0" width="150" height="30" rx="15"/>
+      <text class="chipText" x="18" y="20">Manual test now</text>
+    </g>
+    <g transform="translate(378 20)">
+      <rect class="futureChip" x="0" y="0" width="154" height="30" rx="15"/>
+      <text class="chipText" x="18" y="20">Future automation</text>
+    </g>
+    <text class="tiny" x="26" y="78">Green is live platform automation. Coral is the callback mode being</text>
+    <text class="tiny" x="26" y="98">tested manually now. Blue is the planned automation layer.</text>
+  </g>
+
+  <g transform="translate(74 206)">
+    <rect x="0" y="0" width="2052" height="78" rx="26" fill="url(#heroBand)" filter="url(#softShadow)"/>
+    <text class="heroText" x="34" y="32">Core thesis: LoLo already has the marketplace rails; the next win is automating speed-to-conversation, smart matching, and repeat care.</text>
+    <text class="heroText" x="34" y="56" opacity="0.88">Today proves the path. Tomorrow removes manual follow-up and makes the best next action happen by default.</text>
+  </g>
+
+  <!-- Stage labels -->
+  <g transform="translate(294 316)">
+    <rect class="stageBox" x="0" y="0" width="290" height="62" rx="18"/>
+    <text class="eyebrow" x="24" y="24">STAGE 1</text>
+    <text class="stageTitle" x="24" y="47">First touch</text>
+  </g>
+  <g transform="translate(604 316)">
+    <rect class="stageBox" x="0" y="0" width="290" height="62" rx="18"/>
+    <text class="eyebrow" x="24" y="24">STAGE 2</text>
+    <text class="stageTitle" x="24" y="47">Lead or signup</text>
+  </g>
+  <g transform="translate(914 316)">
+    <rect class="stageBox" x="0" y="0" width="290" height="62" rx="18"/>
+    <text class="eyebrow" x="24" y="24">STAGE 3</text>
+    <text class="stageTitle" x="24" y="47">Intake or onboarding</text>
+  </g>
+  <g transform="translate(1224 316)">
+    <rect class="stageBox" x="0" y="0" width="290" height="62" rx="18"/>
+    <text class="eyebrow" x="24" y="24">STAGE 4</text>
+    <text class="stageTitle" x="24" y="47">Matching</text>
+  </g>
+  <g transform="translate(1534 316)">
+    <rect class="stageBox" x="0" y="0" width="290" height="62" rx="18"/>
+    <text class="eyebrow" x="24" y="24">STAGE 5</text>
+    <text class="stageTitle" x="24" y="47">First care</text>
+  </g>
+  <g transform="translate(1844 316)">
+    <rect class="stageBox" x="0" y="0" width="290" height="62" rx="18"/>
+    <text class="eyebrow" x="24" y="24">STAGE 6</text>
+    <text class="stageTitle" x="24" y="47">Recurring customer</text>
+  </g>
+
+  <!-- Family lane -->
+  <g transform="translate(74 412)">
+    <rect class="laneBox familyLane" x="0" y="0" width="2052" height="312" rx="30"/>
+    <text class="laneTitle" x="28" y="50">Getting</text>
+    <text class="laneTitle" x="28" y="80">Families</text>
+    <text class="laneSub" x="28" y="118">Demand side</text>
+    <text class="laneSub" x="28" y="142">Need -> request</text>
+    <text class="laneSub" x="28" y="166">Match -> repeat care</text>
+
+    <g transform="translate(220 44)">
+      <rect class="card cardFamily" x="0" y="0" width="270" height="206" rx="22"/>
+      <text class="cardTitle" x="22" y="36">Audience touch</text>
+      <text class="cardBody" x="22" y="66">Meta ads, referrals,</text>
+      <text class="cardBody" x="22" y="88">flyers, SEO pages</text>
+      <rect class="todayChip" x="20" y="116" width="222" height="28" rx="14"/>
+      <text class="chipText" x="36" y="135">UTMs + Pixel PageView</text>
+      <rect class="futureChip" x="20" y="154" width="228" height="28" rx="14"/>
+      <text class="chipText" x="36" y="173">Source scoring + retargeting</text>
+    </g>
+
+    <g transform="translate(530 44)">
+      <rect class="card cardFamily" x="0" y="0" width="270" height="206" rx="22"/>
+      <text class="cardTitle" x="22" y="36">Callback lead</text>
+      <text class="cardBody" x="22" y="66">Get-care form or</text>
+      <text class="cardBody" x="22" y="88">voice callback request</text>
+      <rect class="todayChip" x="20" y="116" width="216" height="28" rx="14"/>
+      <text class="chipText" x="36" y="135">CRM lead + ops alert</text>
+      <rect class="manualChip" x="20" y="154" width="222" height="28" rx="14"/>
+      <text class="chipText" x="36" y="173">Manual callback test now</text>
+    </g>
+
+    <g transform="translate(840 44)">
+      <rect class="card cardFamily" x="0" y="0" width="270" height="206" rx="22"/>
+      <text class="cardTitle" x="22" y="36">Care intake</text>
+      <text class="cardBody" x="22" y="66">Wizard or AI copilot</text>
+      <text class="cardBody" x="22" y="88">publishes request</text>
+      <rect class="todayChip" x="20" y="116" width="222" height="28" rx="14"/>
+      <text class="chipText" x="36" y="135">Self-serve publish flow</text>
+      <rect class="futureChip" x="20" y="154" width="228" height="28" rx="14"/>
+      <text class="chipText" x="36" y="173">Auto qualify + next step</text>
+    </g>
+
+    <g transform="translate(1150 44)">
+      <rect class="card cardFamily cardMatch" x="0" y="0" width="270" height="206" rx="22"/>
+      <text class="cardTitle" x="22" y="36">Match</text>
+      <text class="cardBody" x="22" y="66">Suggestions, invites,</text>
+      <text class="cardBody" x="22" y="88">applications, chat</text>
+      <rect class="partialChip" x="20" y="116" width="224" height="28" rx="14"/>
+      <text class="chipText" x="36" y="135">Part automated, ops-guided</text>
+      <rect class="futureChip" x="20" y="154" width="222" height="28" rx="14"/>
+      <text class="chipText" x="36" y="173">Rank + auto invite sequence</text>
+    </g>
+
+    <g transform="translate(1460 44)">
+      <rect class="card cardFamily" x="0" y="0" width="270" height="206" rx="22"/>
+      <text class="cardTitle" x="22" y="36">Hire + first visit</text>
+      <text class="cardBody" x="22" y="66">Compare profile, chat,</text>
+      <text class="cardBody" x="22" y="88">payment, visit</text>
+      <rect class="todayChip" x="20" y="116" width="224" height="28" rx="14"/>
+      <text class="chipText" x="36" y="135">Booking + payment rails</text>
+      <rect class="futureChip" x="20" y="154" width="222" height="28" rx="14"/>
+      <text class="chipText" x="36" y="173">Auto reminders + routing</text>
+    </g>
+
+    <g transform="translate(1770 44)">
+      <rect class="card cardFamily" x="0" y="0" width="270" height="206" rx="22"/>
+      <text class="cardTitle" x="22" y="36">Repeat care</text>
+      <text class="cardBody" x="22" y="66">Book again or send</text>
+      <text class="cardBody" x="22" y="88">regular-care offer</text>
+      <rect class="todayChip" x="20" y="116" width="224" height="28" rx="14"/>
+      <text class="chipText" x="36" y="135">Rebooking + regular care</text>
+      <rect class="futureChip" x="20" y="154" width="224" height="28" rx="14"/>
+      <text class="chipText" x="36" y="173">Proactive renewal nudges</text>
+    </g>
+
+    <path class="lineFamily" d="M 490 147 H 524"/>
+    <path class="lineFamily" d="M 800 147 H 834"/>
+    <path class="lineFamily" d="M 1110 147 H 1144"/>
+    <path class="lineFamily" d="M 1420 147 H 1454"/>
+    <path class="lineFamily" d="M 1730 147 H 1764"/>
+  </g>
+
+  <!-- Matching hub between lanes -->
+  <g transform="translate(1185 742)">
+    <rect x="0" y="0" width="348" height="120" rx="28" fill="url(#matchHub)" filter="url(#softShadow)"/>
+    <text class="hubTitle" x="34" y="36">Matching exchange</text>
+    <text class="hubBody" x="34" y="65">Family demand meets caregiver supply.</text>
+    <text class="hubBody" x="34" y="88">Profile fit, availability, response, and trust.</text>
+  </g>
+  <path class="lineMuted" d="M 1359 662 C 1359 704 1359 704 1359 742"/>
+  <path class="lineMuted" d="M 1359 862 C 1359 898 1359 898 1359 928"/>
+
+  <!-- Manual callback callout -->
+  <g transform="translate(568 746)">
+    <rect x="0" y="0" width="456" height="104" rx="24" fill="#fff7e7" stroke="#db8a62" stroke-width="1.6" filter="url(#tinyShadow)"/>
+    <text class="calloutTitle" x="26" y="36">Callback mode: manual test now</text>
+    <text class="calloutBody" x="26" y="64">For the test, ops manually calls/texts callback leads.</text>
+    <text class="calloutBody" x="26" y="86">Next: automate discovery calls and signup-link follow-up.</text>
+  </g>
+  <path class="lineMuted" d="M 736 618 C 736 680 754 704 798 746"/>
+
+  <!-- Caregiver lane -->
+  <g transform="translate(74 926)">
+    <rect class="laneBox caregiverLane" x="0" y="0" width="2052" height="312" rx="30"/>
+    <text class="laneTitle" x="28" y="50">Getting</text>
+    <text class="laneTitle" x="28" y="80">Caregivers</text>
+    <text class="laneSub" x="28" y="118">Supply side</text>
+    <text class="laneSub" x="28" y="142">Interest -> launch</text>
+    <text class="laneSub" x="28" y="166">Work -> clients</text>
+
+    <g transform="translate(220 44)">
+      <rect class="card cardCaregiver" x="0" y="0" width="270" height="206" rx="22"/>
+      <text class="cardTitle" x="22" y="36">Supply touch</text>
+      <text class="cardBody" x="22" y="66">Caregiver page,</text>
+      <text class="cardBody" x="22" y="88">outreach, referrals</text>
+      <rect class="todayChip" x="20" y="116" width="222" height="28" rx="14"/>
+      <text class="chipText" x="36" y="135">Landing + analytics</text>
+      <rect class="futureChip" x="20" y="154" width="228" height="28" rx="14"/>
+      <text class="chipText" x="36" y="173">Campaign + referral loops</text>
+    </g>
+
+    <g transform="translate(530 44)">
+      <rect class="card cardCaregiver" x="0" y="0" width="270" height="206" rx="22"/>
+      <text class="cardTitle" x="22" y="36">Signup</text>
+      <text class="cardBody" x="22" y="66">Register account</text>
+      <text class="cardBody" x="22" y="88">and start setup</text>
+      <rect class="todayChip" x="20" y="116" width="222" height="28" rx="14"/>
+      <text class="chipText" x="36" y="135">Self-serve onboarding</text>
+      <rect class="futureChip" x="20" y="154" width="228" height="28" rx="14"/>
+      <text class="chipText" x="36" y="173">Drop-off nurture reminders</text>
+    </g>
+
+    <g transform="translate(840 44)">
+      <rect class="card cardCaregiver" x="0" y="0" width="270" height="206" rx="22"/>
+      <text class="cardTitle" x="22" y="36">Trust review</text>
+      <text class="cardBody" x="22" y="66">Identity, profile,</text>
+      <text class="cardBody" x="22" y="88">insurance, intro video</text>
+      <rect class="todayChip" x="20" y="104" width="224" height="28" rx="14"/>
+      <text class="chipText" x="36" y="123">KYC + ID + location checks</text>
+      <rect class="partialChip" x="20" y="138" width="224" height="28" rx="14"/>
+      <text class="chipText" x="36" y="157">Admin review queue</text>
+      <rect class="futureChip" x="20" y="172" width="222" height="28" rx="14"/>
+      <text class="chipText" x="36" y="191">Risk flags + queue routing</text>
+    </g>
+
+    <g transform="translate(1150 44)">
+      <rect class="card cardCaregiver cardMatch" x="0" y="0" width="270" height="206" rx="22"/>
+      <text class="cardTitle" x="22" y="36">Match</text>
+      <text class="cardBody" x="22" y="66">Invitations, open</text>
+      <text class="cardBody" x="22" y="88">requests, work inbox</text>
+      <rect class="todayChip" x="20" y="116" width="224" height="28" rx="14"/>
+      <text class="chipText" x="36" y="135">Notifications + responses</text>
+      <rect class="futureChip" x="20" y="154" width="222" height="28" rx="14"/>
+      <text class="chipText" x="36" y="173">Best-fit routing + nudges</text>
+    </g>
+
+    <g transform="translate(1460 44)">
+      <rect class="card cardCaregiver" x="0" y="0" width="270" height="206" rx="22"/>
+      <text class="cardTitle" x="22" y="36">First job</text>
+      <text class="cardBody" x="22" y="66">Accept, visit,</text>
+      <text class="cardBody" x="22" y="88">timesheet, earnings</text>
+      <rect class="todayChip" x="20" y="116" width="224" height="28" rx="14"/>
+      <text class="chipText" x="36" y="135">Shift + payment flows</text>
+      <rect class="futureChip" x="20" y="154" width="222" height="28" rx="14"/>
+      <text class="chipText" x="36" y="173">Arrival + support triage</text>
+    </g>
+
+    <g transform="translate(1770 44)">
+      <rect class="card cardCaregiver" x="0" y="0" width="270" height="206" rx="22"/>
+      <text class="cardTitle" x="22" y="36">Regular clients</text>
+      <text class="cardBody" x="22" y="66">Repeat work and</text>
+      <text class="cardBody" x="22" y="88">client relationships</text>
+      <rect class="todayChip" x="20" y="116" width="224" height="28" rx="14"/>
+      <text class="chipText" x="36" y="135">Regular clients dashboard</text>
+      <rect class="futureChip" x="20" y="154" width="224" height="28" rx="14"/>
+      <text class="chipText" x="36" y="173">Retention + demand forecast</text>
+    </g>
+
+    <path class="lineCaregiver" d="M 490 147 H 524"/>
+    <path class="lineCaregiver" d="M 800 147 H 834"/>
+    <path class="lineCaregiver" d="M 1110 147 H 1144"/>
+    <path class="lineCaregiver" d="M 1420 147 H 1454"/>
+    <path class="lineCaregiver" d="M 1730 147 H 1764"/>
+  </g>
+
+  <!-- Bottom summary -->
+  <g transform="translate(74 1280)">
+    <rect x="0" y="0" width="2052" height="74" rx="24" fill="#ffffff" stroke="#d8e0e8" filter="url(#tinyShadow)"/>
+    <line class="divider" x1="684" y1="14" x2="684" y2="60"/>
+    <line class="divider" x1="1368" y1="14" x2="1368" y2="60"/>
+    <text class="summaryTitle" x="30" y="29">Automated today</text>
+    <text class="summaryBody" x="30" y="54">Lead capture, alerts, request publishing, onboarding, invites, booking, payment, rebooking.</text>
+    <text class="summaryTitle" x="714" y="29">Testing now</text>
+    <text class="summaryBody" x="714" y="54">Callback mode is manually operated so the script, timing, and lead quality can be learned.</text>
+    <text class="summaryTitle" x="1398" y="29">Future automation</text>
+    <text class="summaryBody" x="1398" y="54">AI callback discovery, smart matching, retention nudges, demand forecast.</text>
+  </g>
+</svg>

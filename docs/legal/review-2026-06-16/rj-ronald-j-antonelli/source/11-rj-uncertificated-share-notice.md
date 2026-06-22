@@ -5,7 +5,7 @@
 To: Ronald J. Antonelli  
 Address: [RJ ADDRESS]
 
-LoLo Care Inc, a Delaware corporation (the "Company"), hereby gives notice that the following shares of the Company's capital stock have been issued to you in uncertificated form:
+Lolo Care, Inc., a Delaware corporation (the "Company"), hereby gives notice that the following shares of the Company's capital stock have been issued to you in uncertificated form:
 
 | Field | Value |
 | --- | --- |
@@ -15,7 +15,7 @@ LoLo Care Inc, a Delaware corporation (the "Company"), hereby gives notice that 
 | Initial vested shares | 500,000 |
 | Vesting shares | 500,000 |
 | Vesting schedule | 18 months |
-| Par value | $[PAR VALUE] |
+| Par value | $0.00001 |
 | Ledger entry ID | CS-003 |
 | Date of issuance | [CLOSING DATE] |
 
@@ -29,7 +29,7 @@ THE SHARES DESCRIBED IN THIS NOTICE HAVE NOT BEEN REGISTERED UNDER THE SECURITIE
 
 ## Company
 
-LoLo Care Inc
+Lolo Care, Inc.
 
 By: ______________________________
 

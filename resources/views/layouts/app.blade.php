@@ -71,14 +71,14 @@
                             </div>
                         @else
                             <div class="space-y-2">
-                                <p class="text-[11px] text-[#6E746F]">&copy; {{ now()->year }} LoLo / HUB Healthcare, LLC</p>
+                                <p class="text-[11px] text-[#6E746F]">&copy; {{ now()->year }} LoLo Care Inc</p>
                                 <x-legal-links class="flex-col items-start gap-x-3 gap-y-2 text-[11px]" />
                             </div>
                         @endif
                     </div>
 
                     <div class="hidden items-center justify-between gap-4 sm:flex">
-                        <p class="text-xs text-[#6E746F]">&copy; {{ now()->year }} LoLo / HUB Healthcare, LLC</p>
+                        <p class="text-xs text-[#6E746F]">&copy; {{ now()->year }} LoLo Care Inc</p>
                         <x-legal-links />
                     </div>
                 </div>

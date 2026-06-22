@@ -155,6 +155,28 @@
 
                         <div class="lg:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
                             <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Transcript</p>
+                            @php
+                                $recordingUrl = data_get($call->metadata, 'recording_url');
+                                $recordingMimeType = data_get($call->metadata, 'recording_mime_type', 'audio/wav');
+                                $recordingError = data_get($call->metadata, 'recording_error');
+                            @endphp
+                            @if($recordingUrl)
+                                <div class="mt-2 rounded-lg border border-blue-200 bg-white px-3 py-2">
+                                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                        <p class="text-sm font-semibold text-slate-900">Local audio recording</p>
+                                        <a href="{{ $recordingUrl }}" target="_blank" rel="noopener" class="text-sm font-semibold text-blue-700 hover:underline">
+                                            Open WAV
+                                        </a>
+                                    </div>
+                                    <audio controls preload="none" class="mt-2 w-full">
+                                        <source src="{{ $recordingUrl }}" type="{{ $recordingMimeType }}">
+                                    </audio>
+                                </div>
+                            @elseif($recordingError)
+                                <p class="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                                    Recording issue: {{ $recordingError }}
+                                </p>
+                            @endif
                             @if($call->transcript_text)
                                 <pre class="mt-2 max-h-64 overflow-auto whitespace-pre-wrap text-sm leading-6 text-slate-800">{{ $call->transcript_text }}</pre>
                             @else
