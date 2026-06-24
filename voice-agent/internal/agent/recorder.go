@@ -11,15 +11,29 @@ import (
 	"time"
 )
 
-const wavSampleRate = 8000
+const (
+	wavSampleRate           = 8000
+	wavChannels             = 2
+	wavBitsPerSample        = 16
+	recordingTrackCaller    = "caller"
+	recordingTrackAssistant = "assistant"
+)
+
+type stereoFrame struct {
+	left  int16
+	right int16
+}
 
 type LocalRecorder struct {
-	mu        sync.Mutex
-	file      *os.File
-	path      string
-	publicURL string
-	dataBytes uint32
-	closed    bool
+	mu              sync.Mutex
+	file            *os.File
+	path            string
+	publicURL       string
+	closed          bool
+	startedAt       time.Time
+	frames          []stereoFrame
+	callerCursor    int
+	assistantCursor int
 }
 
 func NewLocalRecorder(dir, publicBaseURL, identifier string) (*LocalRecorder, error) {
@@ -48,6 +62,7 @@ func NewLocalRecorder(dir, publicBaseURL, identifier string) (*LocalRecorder, er
 		file:      file,
 		path:      path,
 		publicURL: joinPublicURL(publicBaseURL, filename),
+		startedAt: time.Now(),
 	}
 
 	if err := recorder.writeHeader(0); err != nil {
@@ -59,6 +74,14 @@ func NewLocalRecorder(dir, publicBaseURL, identifier string) (*LocalRecorder, er
 }
 
 func (r *LocalRecorder) WriteMuLaw(payload []byte) error {
+	return r.WriteMuLawTrack(recordingTrackCaller, payload)
+}
+
+func (r *LocalRecorder) WriteMuLawTrack(track string, payload []byte) error {
+	return r.WriteMuLawTrackAt(track, payload, -1)
+}
+
+func (r *LocalRecorder) WriteMuLawTrackAt(track string, payload []byte, timestampMs int) error {
 	if r == nil || len(payload) == 0 {
 		return nil
 	}
@@ -70,16 +93,28 @@ func (r *LocalRecorder) WriteMuLaw(payload []byte) error {
 		return nil
 	}
 
-	pcm := make([]byte, len(payload)*2)
+	track = normalizeRecordingTrack(track)
+	startFrame := r.startFrame(track, timestampMs)
+	r.ensureFrames(startFrame + len(payload))
+
 	for i, sample := range payload {
-		binary.LittleEndian.PutUint16(pcm[i*2:], uint16(muLawToLinear(sample)))
+		frameIndex := startFrame + i
+		linear := muLawToLinear(sample)
+		frame := &r.frames[frameIndex]
+
+		if track == recordingTrackAssistant {
+			frame.right = mixInt16(frame.right, linear)
+			continue
+		}
+
+		frame.left = mixInt16(frame.left, linear)
 	}
 
-	if _, err := r.file.Write(pcm); err != nil {
-		return err
+	if track == recordingTrackAssistant {
+		r.assistantCursor = max(r.assistantCursor, startFrame+len(payload))
+	} else {
+		r.callerCursor = max(r.callerCursor, startFrame+len(payload))
 	}
-
-	r.dataBytes += uint32(len(pcm))
 
 	return nil
 }
@@ -97,13 +132,31 @@ func (r *LocalRecorder) Close() error {
 	}
 	r.closed = true
 
+	dataBytes := uint32(len(r.frames) * wavChannels * (wavBitsPerSample / 8))
+
+	if err := r.file.Truncate(0); err != nil {
+		_ = r.file.Close()
+		return err
+	}
 	if _, err := r.file.Seek(0, 0); err != nil {
 		_ = r.file.Close()
 		return err
 	}
-	if err := r.writeHeader(r.dataBytes); err != nil {
+	if err := r.writeHeader(dataBytes); err != nil {
 		_ = r.file.Close()
 		return err
+	}
+	if len(r.frames) > 0 {
+		pcm := make([]byte, len(r.frames)*wavChannels*(wavBitsPerSample/8))
+		for i, frame := range r.frames {
+			offset := i * wavChannels * (wavBitsPerSample / 8)
+			binary.LittleEndian.PutUint16(pcm[offset:], uint16(frame.left))
+			binary.LittleEndian.PutUint16(pcm[offset+2:], uint16(frame.right))
+		}
+		if _, err := r.file.Write(pcm); err != nil {
+			_ = r.file.Close()
+			return err
+		}
 	}
 
 	return r.file.Close()
@@ -126,8 +179,8 @@ func (r *LocalRecorder) PublicURL() string {
 }
 
 func (r *LocalRecorder) writeHeader(dataBytes uint32) error {
-	byteRate := uint32(wavSampleRate * 2)
-	blockAlign := uint16(2)
+	byteRate := uint32(wavSampleRate * wavChannels * (wavBitsPerSample / 8))
+	blockAlign := uint16(wavChannels * (wavBitsPerSample / 8))
 
 	header := make([]byte, 44)
 	copy(header[0:4], "RIFF")
@@ -136,11 +189,11 @@ func (r *LocalRecorder) writeHeader(dataBytes uint32) error {
 	copy(header[12:16], "fmt ")
 	binary.LittleEndian.PutUint32(header[16:20], 16)
 	binary.LittleEndian.PutUint16(header[20:22], 1)
-	binary.LittleEndian.PutUint16(header[22:24], 1)
+	binary.LittleEndian.PutUint16(header[22:24], wavChannels)
 	binary.LittleEndian.PutUint32(header[24:28], wavSampleRate)
 	binary.LittleEndian.PutUint32(header[28:32], byteRate)
 	binary.LittleEndian.PutUint16(header[32:34], blockAlign)
-	binary.LittleEndian.PutUint16(header[34:36], 16)
+	binary.LittleEndian.PutUint16(header[34:36], wavBitsPerSample)
 	copy(header[36:40], "data")
 	binary.LittleEndian.PutUint32(header[40:44], dataBytes)
 
@@ -149,12 +202,58 @@ func (r *LocalRecorder) writeHeader(dataBytes uint32) error {
 	return err
 }
 
+func (r *LocalRecorder) startFrame(track string, timestampMs int) int {
+	if timestampMs >= 0 {
+		return timestampMs * wavSampleRate / 1000
+	}
+
+	elapsedFrame := int(time.Since(r.startedAt) * wavSampleRate / time.Second)
+	cursor := r.callerCursor
+	if track == recordingTrackAssistant {
+		cursor = r.assistantCursor
+	}
+	if elapsedFrame > cursor {
+		return elapsedFrame
+	}
+
+	return cursor
+}
+
+func (r *LocalRecorder) ensureFrames(count int) {
+	if count <= len(r.frames) {
+		return
+	}
+
+	r.frames = append(r.frames, make([]stereoFrame, count-len(r.frames))...)
+}
+
+func normalizeRecordingTrack(track string) string {
+	switch strings.ToLower(strings.TrimSpace(track)) {
+	case recordingTrackAssistant, "outbound", "agent", "julie", "assistant_audio":
+		return recordingTrackAssistant
+	default:
+		return recordingTrackCaller
+	}
+}
+
+func mixInt16(existing, next int16) int16 {
+	sum := int(existing) + int(next)
+	if sum > 32767 {
+		return 32767
+	}
+	if sum < -32768 {
+		return -32768
+	}
+
+	return int16(sum)
+}
+
 func muLawToLinear(value byte) int16 {
 	value = ^value
 	sign := value & 0x80
-	exponent := (value >> 4) & 0x07
-	mantissa := value & 0x0F
-	sample := int(((mantissa << 3) + 0x84) << exponent)
+	exponent := int((value >> 4) & 0x07)
+	mantissa := int(value & 0x0F)
+	sample := ((mantissa << 3) + 0x84) << exponent
 	sample -= 0x84
 
 	if sign != 0 {

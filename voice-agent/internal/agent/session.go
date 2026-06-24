@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -277,7 +278,11 @@ func (s *Session) readTwilio(ctx context.Context, cancel context.CancelFunc, sta
 				continue
 			}
 			if s.recorder != nil {
-				if err := s.recorder.WriteMuLaw(audio); err != nil {
+				timestampMs := -1
+				if parsed, err := strconv.Atoi(message.Media.Timestamp); err == nil {
+					timestampMs = parsed
+				}
+				if err := s.recorder.WriteMuLawTrackAt(recordingTrackCaller, audio, timestampMs); err != nil {
 					s.recordingErr = err
 					s.logger.Printf("record caller audio: %v", err)
 				}
@@ -760,7 +765,7 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 
 func (s *Session) sendAudioToTwilio(raw []byte) error {
 	if s.recorder != nil {
-		if err := s.recorder.WriteMuLaw(raw); err != nil {
+		if err := s.recorder.WriteMuLawTrack(recordingTrackAssistant, raw); err != nil {
 			s.recordingErr = err
 			s.logger.Printf("record assistant audio: %v", err)
 		}
