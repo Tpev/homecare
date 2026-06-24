@@ -119,6 +119,7 @@ class VoiceAgentIntakeService
             'objection' => $this->firstFilled($payload['objection'] ?? null, data_get($providerMetadata, 'objection')),
             'reported_at' => now()->toISOString(),
         ];
+        $result['interaction_rating'] = $this->providerInteractionRating($result);
 
         $lead = $this->providerOutreachLead($payload, $metadata, $target);
 
@@ -132,6 +133,7 @@ class VoiceAgentIntakeService
                 'resource_requested' => $result['resource_requested'],
                 'follow_up_needed' => $result['follow_up_needed'],
                 'do_not_call' => $result['do_not_call'],
+                'last_interaction_rating' => $result['interaction_rating'],
                 'last_result' => $result,
             ],
         );
@@ -159,11 +161,97 @@ class VoiceAgentIntakeService
 
         if ($result['do_not_call']) {
             $updates['closed_reason'] = 'Do-not-call requested during Julie AI provider outreach.';
+        } elseif ($status === 'lost') {
+            $updates['closed_reason'] = 'Lost after Julie AI provider outreach: '.$result['outcome'].'.';
         }
 
         $lead->forceFill($updates)->save();
 
         $this->recordProviderOutreachActivity($lead, $payload, $target, $result);
+        $this->syncProviderOutreachCallOutcome($payload, $result, $status);
+
+        return $lead->fresh();
+    }
+
+    public function recordProviderOutreachCallFailure(VoiceAiCall $call, string $callStatus): ?Lead
+    {
+        if (data_get($call->metadata, 'voice_agent_profile') !== VoiceAiCall::PROFILE_PROVIDER_OUTREACH) {
+            return null;
+        }
+
+        if (filled(data_get($call->metadata, 'provider_outreach.last_result.reported_at'))) {
+            return null;
+        }
+
+        $metadata = is_array($call->metadata) ? $call->metadata : [];
+        $target = [
+            'name' => $this->firstFilled(data_get($metadata, 'target_name'), $call->gathered_name),
+            'organization' => $this->firstFilled(data_get($metadata, 'target_organization')),
+            'role' => $this->firstFilled(data_get($metadata, 'target_role'), $call->gathered_relationship),
+            'phone' => $this->firstFilled(data_get($metadata, 'target_phone'), $call->to_phone, $call->gathered_phone),
+            'email' => $this->firstFilled(data_get($metadata, 'target_email')),
+            'fax' => $this->firstFilled(data_get($metadata, 'target_fax')),
+            'location' => $this->firstFilled(data_get($metadata, 'target_location'), $call->gathered_location),
+        ];
+
+        $outcome = str_replace('-', '_', strtolower(trim($callStatus)));
+        $result = [
+            'outcome' => $outcome,
+            'summary' => match ($outcome) {
+                'no_answer' => 'Julie could not reach a person. The call was not answered.',
+                'busy' => 'Julie could not reach a person. The line was busy.',
+                'cancelled', 'canceled' => 'The outbound call was cancelled before a conversation happened.',
+                default => 'The outbound call failed before a useful conversation happened.',
+            },
+            'notes' => '',
+            'contact_name' => '',
+            'contact_role' => '',
+            'email' => '',
+            'fax' => '',
+            'resource_requested' => false,
+            'follow_up_needed' => false,
+            'best_follow_up' => '',
+            'do_not_call' => false,
+            'voicemail_detected' => false,
+            'ivr_detected' => false,
+            'ai_detected' => false,
+            'objection' => '',
+            'reported_at' => now()->toISOString(),
+        ];
+        $result['interaction_rating'] = $this->providerInteractionRating($result);
+
+        $payload = [
+            'call_sid' => $call->twilio_call_sid,
+            'voice_ai_call_id' => $call->id,
+            'metadata' => $metadata,
+        ];
+        $lead = $this->providerOutreachLead($payload, $metadata, $target);
+        $existingData = is_array($lead->data) ? $lead->data : [];
+        $providerOutreach = array_replace_recursive(
+            (array) data_get($existingData, 'provider_outreach', []),
+            [
+                'target' => $target,
+                'last_summary' => $result['summary'],
+                'last_outcome' => $result['outcome'],
+                'last_interaction_rating' => $result['interaction_rating'],
+                'last_result' => $result,
+            ],
+        );
+        $status = $this->providerOutreachStatus($lead, $result);
+
+        $lead->forceFill([
+            'status' => $status,
+            'last_contacted_at' => now(),
+            'closed_reason' => $status === 'lost' ? 'Lost after Julie AI provider outreach: '.$result['outcome'].'.' : $lead->closed_reason,
+            'data' => array_replace_recursive($existingData, [
+                'source' => 'voice_agent',
+                'intent' => 'provider_outreach',
+                'provider_outreach' => $providerOutreach,
+            ]),
+        ])->save();
+
+        $this->recordProviderOutreachActivity($lead, $payload, $target, $result);
+        $this->syncProviderOutreachCallOutcome($payload, $result, $status);
 
         return $lead->fresh();
     }
@@ -254,6 +342,18 @@ class VoiceAgentIntakeService
             return 'closed';
         }
 
+        if ($result['outcome'] === 'not_fit') {
+            return 'not_fit';
+        }
+
+        if (in_array($result['interaction_rating'] ?? '', ['bad', 'error'], true)) {
+            return 'lost';
+        }
+
+        if (($result['interaction_rating'] ?? '') === 'ivr_vm') {
+            return $lead->status ?: 'outreach';
+        }
+
         if ($result['resource_requested'] || $result['follow_up_needed']) {
             return 'nurturing';
         }
@@ -262,8 +362,8 @@ class VoiceAgentIntakeService
             return 'nurturing';
         }
 
-        if (in_array($result['outcome'], ['not_fit', 'not_interested'], true)) {
-            return 'not_fit';
+        if ($result['outcome'] === 'not_interested') {
+            return 'lost';
         }
 
         return $lead->status ?: 'outreach';
@@ -289,6 +389,9 @@ class VoiceAgentIntakeService
         $summary = match (true) {
             $result['do_not_call'] => 'Julie AI provider outreach: do not call',
             $result['resource_requested'] => 'Julie AI provider outreach: resource requested',
+            ($result['interaction_rating'] ?? '') === 'bad' => 'Julie AI provider outreach: bad interaction',
+            ($result['interaction_rating'] ?? '') === 'error' => 'Julie AI provider outreach: call error',
+            ($result['interaction_rating'] ?? '') === 'ivr_vm' => 'Julie AI provider outreach: IVR or voicemail',
             $result['voicemail_detected'] => 'Julie AI provider outreach: voicemail',
             $result['ivr_detected'] => 'Julie AI provider outreach: IVR',
             $result['ai_detected'] => 'Julie AI provider outreach: AI system',
@@ -298,10 +401,11 @@ class VoiceAgentIntakeService
         $body = collect([
             'Target: '.($target['organization'] ?: $target['name'] ?: 'Unknown provider source'),
             'Outcome: '.$result['outcome'],
+            'Rating: '.strtoupper(str_replace('_', '/', (string) ($result['interaction_rating'] ?? 'unknown'))),
             $result['summary'] ? 'Summary: '.$result['summary'] : null,
             $result['notes'] ? 'Notes: '.$result['notes'] : null,
             $result['objection'] ? 'Objection: '.$result['objection'] : null,
-            $result['resource_requested'] ? 'Resource requested. Send the one-page LoLo resource to the captured email or fax.' : null,
+            $result['resource_requested'] ? 'Resource requested. Send the LoLo family resource sheet to the captured email or fax.' : null,
             $result['best_follow_up'] ? 'Follow-up: '.$result['best_follow_up'] : null,
             $result['do_not_call'] ? 'Do not call again.' : null,
             $payload['transcript_excerpt'] ?? $payload['transcript'] ?? null,
@@ -319,6 +423,77 @@ class VoiceAgentIntakeService
                 'provider_outreach' => $result,
             ],
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $result
+     */
+    private function providerInteractionRating(array $result): string
+    {
+        $outcome = str_replace(['-', ' '], '_', strtolower(trim((string) ($result['outcome'] ?? ''))));
+
+        if (($result['voicemail_detected'] ?? false) || ($result['ivr_detected'] ?? false) || ($result['ai_detected'] ?? false)) {
+            return 'ivr_vm';
+        }
+
+        if (in_array($outcome, ['voicemail', 'voice_mail', 'ivr', 'ai_system', 'answering_machine'], true)) {
+            return 'ivr_vm';
+        }
+
+        if (in_array($outcome, ['error', 'failed', 'busy', 'no_answer', 'noanswer', 'cancelled', 'canceled', 'wrong_number'], true)) {
+            return 'error';
+        }
+
+        if (($result['do_not_call'] ?? false) || in_array($outcome, ['bad', 'hangup', 'hung_up', 'angry', 'not_interested', 'not_fit', 'do_not_call'], true)) {
+            return 'bad';
+        }
+
+        if (($result['resource_requested'] ?? false) || ($result['follow_up_needed'] ?? false)) {
+            return 'good';
+        }
+
+        if (in_array($outcome, ['completed', 'interested', 'resource_requested', 'follow_up_needed', 'sent_resource', 'warm'], true)) {
+            return 'good';
+        }
+
+        return 'good';
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $result
+     */
+    private function syncProviderOutreachCallOutcome(array $payload, array $result, string $leadStatus): void
+    {
+        $call = null;
+        $id = $this->firstFilled($payload['voice_ai_call_id'] ?? null, data_get($payload, 'metadata.voice_ai_call_id'));
+        if ($id !== '' && ctype_digit((string) $id)) {
+            $call = VoiceAiCall::query()->find((int) $id);
+        }
+
+        $callSid = $this->firstFilled($payload['call_sid'] ?? null, data_get($payload, 'metadata.call_sid'));
+        if (! $call && $callSid !== '') {
+            $call = VoiceAiCall::query()->where('twilio_call_sid', $callSid)->first();
+        }
+
+        if (! $call) {
+            return;
+        }
+
+        $metadata = is_array($call->metadata) ? $call->metadata : [];
+        $metadata['provider_outreach'] = array_replace_recursive((array) data_get($metadata, 'provider_outreach', []), $result);
+        $metadata['provider_outreach_interaction_rating'] = $result['interaction_rating'] ?? null;
+        $metadata['provider_outreach_lead_status'] = $leadStatus;
+
+        if (filled(data_get($metadata, 'provider_outreach_batch_id'))) {
+            $metadata['provider_outreach_batch_status'] = 'completed';
+            $metadata['provider_outreach_batch_completed_at'] = now()->toISOString();
+        }
+
+        $call->forceFill([
+            'summary' => $result['summary'] ?: $call->summary,
+            'metadata' => $metadata,
+        ])->save();
     }
 
     /**

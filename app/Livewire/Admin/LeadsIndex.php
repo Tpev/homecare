@@ -637,7 +637,7 @@ class LeadsIndex extends Component
         $base = Lead::query()->where('lead_type', $this->pipeline);
 
         $closedStages = $this->pipeline === Lead::TYPE_REFERRAL
-            ? ['active_referral', 'not_fit', 'closed']
+            ? ['active_referral', 'not_fit', 'lost', 'closed']
             : ['converted', 'lost', 'closed'];
 
         return [

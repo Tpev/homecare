@@ -37,6 +37,7 @@ class Lead extends Model
         'active_referral' => 'Active referral source',
         'nurturing' => 'Nurturing',
         'not_fit' => 'Not a fit',
+        'lost' => 'Lost',
         'closed' => 'Closed',
     ];
 

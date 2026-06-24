@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\VoiceAiCall;
 use App\Services\VoiceAgent\TwilioVoiceClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -88,6 +89,45 @@ class AdminVoiceAiTest extends TestCase
         $this->assertSame($lead->id, $call->metadata['referral_lead_id']);
         $this->assertSame(VoiceAiCall::PROFILE_PROVIDER_OUTREACH, $call->metadata['voice_agent_profile']);
         $this->assertStringContainsString('prompt_profile=provider_outreach', (string) data_get($call->raw_payload, 'voice_agent_callback_url'));
+    }
+
+    public function test_admin_can_upload_provider_outreach_csv_and_start_next_call(): void
+    {
+        config()->set('services.twilio.bypass', true);
+        config()->set('services.twilio.voice_from', '+19195550000');
+        config()->set('services.twilio.voice_agent_callback_url', 'https://voice.carelolo.com/twilio/voice?prompt_profile=callback_discovery');
+
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'email' => 'admin@example.com',
+        ]);
+
+        $csv = implode("\n", [
+            'practice,contact,role,phone,email,location',
+            'Triangle Primary Care,Megan,Office manager,919-555-4444,office@example.com,Raleigh NC',
+            'Wake Senior Center,Steve,Director,919-555-5555,steve@example.com,Wake County',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(ProviderOutreachAi::class)
+            ->set('batchLabel', 'Wake County resources')
+            ->set('csvFile', UploadedFile::fake()->createWithContent('providers.csv', $csv))
+            ->call('uploadCsvBatch')
+            ->assertHasNoErrors()
+            ->assertSee('CSV batch ready')
+            ->call('startNextBatchCall')
+            ->assertHasNoErrors()
+            ->assertSee('Started next Julie call');
+
+        $this->assertSame(2, VoiceAiCall::query()->count());
+
+        $queued = VoiceAiCall::query()->where('status', VoiceAiCall::STATUS_QUEUED)->sole();
+        $waiting = VoiceAiCall::query()->where('status', VoiceAiCall::STATUS_DRAFT)->sole();
+
+        $this->assertSame('Wake County resources', $queued->metadata['provider_outreach_batch_label']);
+        $this->assertSame($queued->metadata['provider_outreach_batch_id'], $waiting->metadata['provider_outreach_batch_id']);
+        $this->assertSame('calling', $queued->metadata['provider_outreach_batch_status']);
+        $this->assertStringContainsString('prompt_profile=provider_outreach', (string) data_get($queued->raw_payload, 'voice_agent_callback_url'));
     }
 
     public function test_twilio_voice_client_sends_call_with_voice_webhooks(): void
@@ -267,6 +307,61 @@ class AdminVoiceAiTest extends TestCase
             'status' => VoiceAiCall::STATUS_COMPLETED,
             'duration_seconds' => 93,
         ]);
+    }
+
+    public function test_provider_outreach_no_answer_status_marks_referral_lead_lost(): void
+    {
+        config()->set('services.twilio.bypass', false);
+        config()->set('services.twilio.auth_token', 'twilio-secret');
+
+        $lead = Lead::query()->create([
+            'lead_type' => Lead::TYPE_REFERRAL,
+            'name' => 'Triangle Primary Care',
+            'company' => 'Triangle Primary Care',
+            'phone' => '+19195554444',
+            'status' => 'outreach',
+            'priority' => Lead::PRIORITY_NORMAL,
+            'source' => 'ai_provider_outreach',
+            'data' => ['source' => 'test'],
+        ]);
+
+        $call = VoiceAiCall::query()->create([
+            'direction' => VoiceAiCall::DIRECTION_OUTBOUND,
+            'status' => VoiceAiCall::STATUS_RINGING,
+            'to_phone' => '+19195554444',
+            'from_phone' => '+19844004008',
+            'twilio_call_sid' => 'CA_PROVIDER_NO_ANSWER',
+            'metadata' => [
+                'voice_agent_profile' => VoiceAiCall::PROFILE_PROVIDER_OUTREACH,
+                'referral_lead_id' => $lead->id,
+                'target_organization' => 'Triangle Primary Care',
+                'target_name' => 'Office Manager',
+                'target_phone' => '+19195554444',
+                'provider_outreach_batch_id' => 'batch_1',
+            ],
+        ]);
+
+        $payload = [
+            'AccountSid' => 'AC123',
+            'CallDuration' => '0',
+            'CallSid' => 'CA_PROVIDER_NO_ANSWER',
+            'CallStatus' => 'no-answer',
+            'From' => '+19844004008',
+            'To' => '+19195554444',
+        ];
+
+        $this->post(route('webhooks.twilio.voice.status', $call), $payload, [
+            'X-Twilio-Signature' => $this->twilioSignature(route('webhooks.twilio.voice.status', $call), $payload, 'twilio-secret'),
+        ])->assertOk();
+
+        $call->refresh();
+        $lead->refresh();
+
+        $this->assertSame(VoiceAiCall::STATUS_NO_ANSWER, $call->status);
+        $this->assertSame('error', $call->metadata['provider_outreach_interaction_rating']);
+        $this->assertSame('completed', $call->metadata['provider_outreach_batch_status']);
+        $this->assertSame('lost', $lead->status);
+        $this->assertSame('error', $lead->data['provider_outreach']['last_interaction_rating']);
     }
 
     public function test_non_admin_cannot_access_voice_ai_console(): void

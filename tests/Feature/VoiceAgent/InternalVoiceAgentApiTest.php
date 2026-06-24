@@ -247,6 +247,7 @@ class InternalVoiceAgentApiTest extends TestCase
     public function test_provider_outreach_report_syncs_call_and_marks_do_not_call(): void
     {
         Mail::fake();
+        config()->set('marketplace.ops_alert_recipients', ['ops@example.com']);
 
         $lead = Lead::query()->create([
             'lead_type' => Lead::TYPE_REFERRAL,
@@ -314,5 +315,79 @@ class InternalVoiceAgentApiTest extends TestCase
         $this->assertSame('closed', $lead->status);
         $this->assertTrue($lead->data['provider_outreach']['do_not_call']);
         $this->assertSame('Do-not-call requested during Julie AI provider outreach.', $lead->closed_reason);
+        Mail::assertNotSent(VoiceCallReportOpsAlertMail::class);
+    }
+
+    public function test_provider_outreach_bad_report_is_lost_and_does_not_email_ops(): void
+    {
+        Mail::fake();
+        config()->set('marketplace.ops_alert_recipients', ['ops@example.com']);
+
+        $lead = Lead::query()->create([
+            'lead_type' => Lead::TYPE_REFERRAL,
+            'name' => 'Wake Senior Center',
+            'company' => 'Wake Senior Center',
+            'phone' => '+19195556666',
+            'status' => 'outreach',
+            'priority' => Lead::PRIORITY_NORMAL,
+            'source' => 'ai_provider_outreach',
+            'data' => ['source' => 'test'],
+        ]);
+
+        $call = VoiceAiCall::query()->create([
+            'direction' => VoiceAiCall::DIRECTION_OUTBOUND,
+            'status' => VoiceAiCall::STATUS_IN_PROGRESS,
+            'to_phone' => '+19195556666',
+            'from_phone' => '+19844004008',
+            'twilio_call_sid' => 'CA_PROVIDER_BAD',
+            'metadata' => [
+                'voice_agent_profile' => VoiceAiCall::PROFILE_PROVIDER_OUTREACH,
+                'referral_lead_id' => $lead->id,
+                'target_organization' => 'Wake Senior Center',
+                'target_name' => 'Front desk',
+                'target_phone' => '+19195556666',
+                'provider_outreach_batch_id' => 'batch_bad',
+            ],
+        ]);
+
+        $this->withToken('voice-secret')
+            ->postJson('/api/internal/voice/reports', [
+                'call_sid' => 'CA_PROVIDER_BAD',
+                'phone' => '+19195556666',
+                'lead_type' => 'referral',
+                'intent' => 'provider_outreach',
+                'outcome' => 'hangup',
+                'call_status' => 'completed',
+                'duration_seconds' => 10,
+                'summary' => 'Front desk hung up and sounded annoyed.',
+                'transcript' => "assistant: Hi, this is Julie.\nuser: Stop calling.",
+                'callback_requested' => false,
+                'signup_link_sent' => false,
+                'metadata' => [
+                    'channel' => 'voice_agent',
+                    'voice_agent_profile' => VoiceAiCall::PROFILE_PROVIDER_OUTREACH,
+                    'voice_ai_call_id' => (string) $call->id,
+                    'referral_lead_id' => (string) $lead->id,
+                    'target_organization' => 'Wake Senior Center',
+                    'target_name' => 'Front desk',
+                    'target_phone' => '+19195556666',
+                    'provider_outreach' => [
+                        'outcome' => 'hangup',
+                        'summary' => 'Front desk hung up and sounded annoyed.',
+                    ],
+                ],
+            ])
+            ->assertCreated();
+
+        $call->refresh();
+        $lead->refresh();
+
+        $this->assertSame(VoiceAiCall::STATUS_COMPLETED, $call->status);
+        $this->assertSame('bad', $call->metadata['provider_outreach_interaction_rating']);
+        $this->assertSame('completed', $call->metadata['provider_outreach_batch_status']);
+        $this->assertSame('lost', $lead->status);
+        $this->assertSame('bad', $lead->data['provider_outreach']['last_interaction_rating']);
+        $this->assertSame('Lost after Julie AI provider outreach: hangup.', $lead->closed_reason);
+        Mail::assertNotSent(VoiceCallReportOpsAlertMail::class);
     }
 }

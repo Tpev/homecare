@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\VoiceAiCall;
 use App\Services\Messaging\TwilioSmsClient;
 use App\Services\VoiceAgent\TwilioVoiceClient;
+use App\Services\VoiceAgent\VoiceAgentIntakeService;
 use App\Services\VoiceAgent\VoiceAiCallResponder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -90,6 +91,7 @@ class TwilioVoiceWebhookController extends Controller
         VoiceAiCall $voiceAiCall,
         TwilioSmsClient $twilio,
         TwilioVoiceClient $voiceClient,
+        VoiceAgentIntakeService $intake,
     ): Response {
         if (! $twilio->hasValidWebhookSignature($request)) {
             Log::warning('Twilio Voice status webhook signature validation failed', [
@@ -101,6 +103,12 @@ class TwilioVoiceWebhookController extends Controller
         }
 
         $this->syncCallFromTwilioPayload($voiceAiCall, $request, $voiceClient);
+        $voiceAiCall->refresh();
+
+        if (data_get($voiceAiCall->metadata, 'voice_agent_profile') === VoiceAiCall::PROFILE_PROVIDER_OUTREACH
+            && in_array($voiceAiCall->status, [VoiceAiCall::STATUS_FAILED, VoiceAiCall::STATUS_BUSY, VoiceAiCall::STATUS_NO_ANSWER, VoiceAiCall::STATUS_CANCELLED], true)) {
+            $intake->recordProviderOutreachCallFailure($voiceAiCall, $voiceAiCall->status);
+        }
 
         return $this->twiml('');
     }

@@ -130,7 +130,9 @@ class VoiceAgentController extends Controller
         if (data_get($payload, 'metadata.voice_agent_profile') === VoiceAiCall::PROFILE_PROVIDER_OUTREACH) {
             $intake->recordProviderOutreachResult($payload, $request);
         }
-        $opsAlerts->notifyVoiceCallReported($payload);
+        if ($this->shouldSendOpsReport($payload)) {
+            $opsAlerts->notifyVoiceCallReported($payload);
+        }
 
         return response()->json([
             'message' => 'Voice call report sent.',
@@ -273,6 +275,27 @@ class VoiceAgentController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function shouldSendOpsReport(array $payload): bool
+    {
+        if (data_get($payload, 'metadata.voice_agent_profile') === VoiceAiCall::PROFILE_PROVIDER_OUTREACH) {
+            return false;
+        }
+
+        if (strtolower((string) data_get($payload, 'metadata.direction')) === VoiceAiCall::DIRECTION_OUTBOUND) {
+            return false;
+        }
+
+        $call = $this->voiceAiCallForReport($payload);
+        if ($call?->direction === VoiceAiCall::DIRECTION_OUTBOUND) {
+            return false;
+        }
+
+        return true;
     }
 
     private function voiceAiStatusFromReport(string $status): string
