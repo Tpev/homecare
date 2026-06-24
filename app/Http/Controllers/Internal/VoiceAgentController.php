@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Internal;
 use App\Http\Controllers\Controller;
 use App\Models\VoiceAiCall;
 use App\Services\Ops\OpsAlertService;
+use App\Services\VoiceAgent\TwilioVoiceClient;
 use App\Services\VoiceAgent\VoiceAgentIntakeService;
 use App\Services\VoiceAgent\VoiceAgentKnowledgeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class VoiceAgentController extends Controller
@@ -98,7 +100,7 @@ class VoiceAgentController extends Controller
         ], 201);
     }
 
-    public function report(Request $request, OpsAlertService $opsAlerts, VoiceAgentIntakeService $intake): JsonResponse
+    public function report(Request $request, OpsAlertService $opsAlerts, VoiceAgentIntakeService $intake, TwilioVoiceClient $voiceClient): JsonResponse
     {
         $payload = $request->validate([
             'call_sid' => ['nullable', 'string', 'max:64'],
@@ -129,6 +131,7 @@ class VoiceAgentController extends Controller
         $this->syncVoiceAiCallReport($payload);
         if (data_get($payload, 'metadata.voice_agent_profile') === VoiceAiCall::PROFILE_PROVIDER_OUTREACH) {
             $intake->recordProviderOutreachResult($payload, $request);
+            $this->maybeStartNextProviderOutreachBatchCall($payload, $voiceClient);
         }
         if ($this->shouldSendOpsReport($payload)) {
             $opsAlerts->notifyVoiceCallReported($payload);
@@ -296,6 +299,27 @@ class VoiceAgentController extends Controller
         }
 
         return true;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function maybeStartNextProviderOutreachBatchCall(array $payload, TwilioVoiceClient $voiceClient): void
+    {
+        $call = $this->voiceAiCallForReport($payload);
+        if (! $call) {
+            return;
+        }
+
+        try {
+            $voiceClient->startNextProviderOutreachBatchCallAfter($call->fresh(), $call->admin);
+        } catch (\Throwable $e) {
+            Log::warning('Unable to auto-start next provider outreach batch call from voice report.', [
+                'voice_ai_call_id' => $call->id,
+                'batch_id' => data_get($call->metadata, 'provider_outreach_batch_id'),
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function voiceAiStatusFromReport(string $status): string

@@ -100,7 +100,7 @@
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">CSV call queue</p>
-                            <h3 class="mt-1 text-base font-semibold text-slate-950">Load a list, call one at a time</h3>
+                            <h3 class="mt-1 text-base font-semibold text-slate-950">Load a list, then run the batch</h3>
                             <p class="mt-1 text-sm text-slate-700">Accepted columns: practice/name, contact, role, phone, email, fax, location, notes.</p>
                         </div>
                         <x-button type="submit" color="green" sm>Upload queue</x-button>
@@ -124,14 +124,14 @@
                             <h3 class="mt-1 text-base font-semibold text-slate-950">{{ $batchLabelForView ?: 'No CSV batch selected' }}</h3>
                             <p class="mt-1 text-sm text-slate-600">
                                 @if($batchId)
-                                    {{ $batchSummary['waiting'] }} waiting · {{ $batchSummary['active'] }} live · {{ $batchSummary['done'] }} finished
+                                    {{ $batchSummary['waiting'] }} waiting · {{ $batchSummary['active'] }} live · {{ $batchSummary['done'] }} finished. After you start it, the next waiting row starts automatically when a call ends.
                                 @else
                                     Upload a CSV to create a controlled outreach queue.
                                 @endif
                             </p>
                         </div>
                         <x-button type="button" color="green" sm wire:click="startNextBatchCall" :disabled="! $batchId || $batchSummary['active'] > 0 || $batchSummary['waiting'] === 0">
-                            Start next call
+                            Start / resume batch
                         </x-button>
                     </div>
 

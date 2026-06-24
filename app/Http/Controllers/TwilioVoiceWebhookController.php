@@ -109,6 +109,7 @@ class TwilioVoiceWebhookController extends Controller
             && in_array($voiceAiCall->status, [VoiceAiCall::STATUS_FAILED, VoiceAiCall::STATUS_BUSY, VoiceAiCall::STATUS_NO_ANSWER, VoiceAiCall::STATUS_CANCELLED], true)) {
             $intake->recordProviderOutreachCallFailure($voiceAiCall, $voiceAiCall->status);
         }
+        $this->maybeStartNextProviderOutreachBatchCall($voiceAiCall, $voiceClient);
 
         return $this->twiml('');
     }
@@ -151,6 +152,33 @@ class TwilioVoiceWebhookController extends Controller
         }
 
         $call->update($updates);
+    }
+
+    private function maybeStartNextProviderOutreachBatchCall(VoiceAiCall $call, TwilioVoiceClient $voiceClient): void
+    {
+        if (data_get($call->metadata, 'voice_agent_profile') !== VoiceAiCall::PROFILE_PROVIDER_OUTREACH) {
+            return;
+        }
+
+        if (! in_array($call->status, [
+            VoiceAiCall::STATUS_COMPLETED,
+            VoiceAiCall::STATUS_FAILED,
+            VoiceAiCall::STATUS_BUSY,
+            VoiceAiCall::STATUS_NO_ANSWER,
+            VoiceAiCall::STATUS_CANCELLED,
+        ], true)) {
+            return;
+        }
+
+        try {
+            $voiceClient->startNextProviderOutreachBatchCallAfter($call->fresh(), $call->admin);
+        } catch (\Throwable $e) {
+            Log::warning('Unable to auto-start next provider outreach batch call from Twilio status.', [
+                'voice_ai_call_id' => $call->id,
+                'batch_id' => data_get($call->metadata, 'provider_outreach_batch_id'),
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function gatherTwiml(string $message, string $actionUrl, string $redirectUrl): string

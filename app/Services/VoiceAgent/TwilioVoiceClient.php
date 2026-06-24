@@ -124,9 +124,19 @@ class TwilioVoiceClient
 
     public function startQueuedProviderOutreachCall(VoiceAiCall $call, ?User $admin = null): VoiceAiCall
     {
-        if ($call->status !== VoiceAiCall::STATUS_DRAFT) {
+        $claimed = VoiceAiCall::query()
+            ->whereKey($call->id)
+            ->where('status', VoiceAiCall::STATUS_DRAFT)
+            ->update([
+                'status' => VoiceAiCall::STATUS_QUEUED,
+                'current_step' => 'provider_outreach_dispatching',
+            ]);
+
+        if ($claimed !== 1) {
             throw new RuntimeException('This provider outreach item has already been started.');
         }
+
+        $call->refresh();
 
         if (data_get($call->metadata, 'voice_agent_profile') !== VoiceAiCall::PROFILE_PROVIDER_OUTREACH) {
             throw new RuntimeException('This queued call is not a provider outreach call.');
@@ -180,6 +190,48 @@ class TwilioVoiceClient
         );
 
         return $this->dispatchProviderOutreachCall($call->fresh(), $lead, $target);
+    }
+
+    public function startNextProviderOutreachBatchCallAfter(VoiceAiCall $finishedCall, ?User $admin = null): ?VoiceAiCall
+    {
+        if (! in_array($finishedCall->status, [
+            VoiceAiCall::STATUS_COMPLETED,
+            VoiceAiCall::STATUS_FAILED,
+            VoiceAiCall::STATUS_BUSY,
+            VoiceAiCall::STATUS_NO_ANSWER,
+            VoiceAiCall::STATUS_CANCELLED,
+        ], true)) {
+            return null;
+        }
+
+        $batchId = (string) data_get($finishedCall->metadata, 'provider_outreach_batch_id', '');
+        if ($batchId === '') {
+            return null;
+        }
+
+        $activeCallExists = VoiceAiCall::query()
+            ->where('metadata->voice_agent_profile', VoiceAiCall::PROFILE_PROVIDER_OUTREACH)
+            ->where('metadata->provider_outreach_batch_id', $batchId)
+            ->whereKeyNot($finishedCall->id)
+            ->whereIn('status', [VoiceAiCall::STATUS_QUEUED, VoiceAiCall::STATUS_RINGING, VoiceAiCall::STATUS_IN_PROGRESS])
+            ->exists();
+
+        if ($activeCallExists) {
+            return null;
+        }
+
+        $nextCall = VoiceAiCall::query()
+            ->where('metadata->voice_agent_profile', VoiceAiCall::PROFILE_PROVIDER_OUTREACH)
+            ->where('metadata->provider_outreach_batch_id', $batchId)
+            ->where('status', VoiceAiCall::STATUS_DRAFT)
+            ->oldest()
+            ->first();
+
+        if (! $nextCall) {
+            return null;
+        }
+
+        return $this->startQueuedProviderOutreachCall($nextCall, $admin);
     }
 
     /**
