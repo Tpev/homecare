@@ -57,7 +57,7 @@ func Load() (Config, error) {
 		DeepgramTTSModel:           env("DEEPGRAM_TTS_MODEL", "aura-2-thalia-en"),
 		DeepgramGreeting:           env("DEEPGRAM_GREETING", "Thanks for calling Homecare. How can I help you today?"),
 		DeepgramCallbackGreeting:   env("DEEPGRAM_CALLBACK_GREETING", "Hi, this is LoLo calling about your care request. Did I catch you at an okay time?"),
-		DeepgramProviderGreeting:   env("DEEPGRAM_PROVIDER_OUTREACH_GREETING", "Hi, this is Julie calling from LoLo Care. We are a new home care service based in Raleigh."),
+		DeepgramProviderGreeting:   env("DEEPGRAM_PROVIDER_OUTREACH_GREETING", "Hi, this is Julie calling from LoLo Care. Did I catch you at an okay time for a quick question?"),
 		LaravelBaseURL:             strings.TrimRight(env("LARAVEL_BASE_URL", "http://localhost"), "/"),
 		LaravelInternalAPIToken:    env("LARAVEL_INTERNAL_API_TOKEN", ""),
 		PromptFile:                 env("PROMPT_FILE", "prompts/system.md"),

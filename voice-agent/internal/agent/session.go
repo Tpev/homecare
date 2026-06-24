@@ -65,6 +65,10 @@ type Session struct {
 	transcript                []string
 	recorder                  *LocalRecorder
 	recordingErr              error
+	assistantPacingMu         sync.Mutex
+	assistantTurnActive       bool
+	suppressAssistantTurn     bool
+	lastCallerAudioAt         time.Time
 	providerOutcome           string
 	providerSummary           string
 	providerNotes             string
@@ -81,6 +85,8 @@ type Session struct {
 	providerAIDetected        bool
 	providerObjection         string
 }
+
+var providerAssistantTurnDelay = 650 * time.Millisecond
 
 type dgEnvelope struct {
 	Type string `json:"type"`
@@ -287,6 +293,7 @@ func (s *Session) readTwilio(ctx context.Context, cancel context.CancelFunc, sta
 					s.logger.Printf("record caller audio: %v", err)
 				}
 			}
+			s.noteCallerAudio()
 
 			select {
 			case audioCh <- audio:
@@ -456,9 +463,9 @@ func (s *Session) deepgramFunctions() []map[string]any {
 				"notes":              map[string]any{"type": "string", "description": "Additional operational notes for the CRM"},
 				"contact_name":       map[string]any{"type": "string", "description": "Person reached or best contact identified"},
 				"contact_role":       map[string]any{"type": "string", "description": "Role of the person reached"},
-				"email":              map[string]any{"type": "string", "description": "Email to send the one-page resource if provided"},
-				"fax":                map[string]any{"type": "string", "description": "Fax number to send the one-page resource if provided"},
-				"resource_requested": map[string]any{"type": "boolean", "description": "Whether they agreed that a one-page resource would be useful"},
+				"email":              map[string]any{"type": "string", "description": "Email to send the family resource sheet if provided"},
+				"fax":                map[string]any{"type": "string", "description": "Fax number to send the family resource sheet if provided"},
+				"resource_requested": map[string]any{"type": "boolean", "description": "Whether they agreed that a family resource sheet would be useful"},
 				"follow_up_needed":   map[string]any{"type": "boolean", "description": "Whether a human follow-up is useful"},
 				"best_follow_up":     map[string]any{"type": "string", "description": "Best time or method for human follow-up"},
 				"do_not_call":        map[string]any{"type": "boolean", "description": "True if they requested no future calls"},
@@ -525,7 +532,7 @@ func (s *Session) readDeepgram(ctx context.Context, cancel context.CancelFunc, c
 
 		switch messageType {
 		case websocket.BinaryMessage:
-			if err := s.sendAudioToTwilio(payload); err != nil {
+			if err := s.sendAudioToTwilio(ctx, payload); err != nil {
 				errCh <- err
 				cancel()
 				return
@@ -570,6 +577,7 @@ func (s *Session) handleDeepgramText(ctx context.Context, conn *websocket.Conn, 
 			s.addTranscript(message.Role + ": " + message.Content)
 		}
 	case "UserStartedSpeaking":
+		s.suppressCurrentAssistantTurn()
 		return s.writeTwilioJSON(twilio.ClearMessage{
 			Event:     "clear",
 			StreamSID: s.streamSID,
@@ -608,7 +616,10 @@ func (s *Session) handleDeepgramText(ctx context.Context, conn *websocket.Conn, 
 		}
 
 		return fmt.Errorf("deepgram error: %s", strings.TrimSpace(string(payload)))
-	case "Warning", "AgentThinking", "AgentAudioDone", "Welcome", "SettingsApplied":
+	case "AgentAudioDone":
+		s.finishAssistantTurn()
+		s.logger.Printf("deepgram %s: %s", envelope.Type, strings.TrimSpace(string(payload)))
+	case "Warning", "AgentThinking", "Welcome", "SettingsApplied":
 		s.logger.Printf("deepgram %s: %s", envelope.Type, strings.TrimSpace(string(payload)))
 	}
 
@@ -763,7 +774,15 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 	}
 }
 
-func (s *Session) sendAudioToTwilio(raw []byte) error {
+func (s *Session) sendAudioToTwilio(ctx context.Context, raw []byte) error {
+	shouldSend, err := s.beforeAssistantAudio(ctx)
+	if err != nil {
+		return err
+	}
+	if !shouldSend {
+		return nil
+	}
+
 	if s.recorder != nil {
 		if err := s.recorder.WriteMuLawTrack(recordingTrackAssistant, raw); err != nil {
 			s.recordingErr = err
@@ -780,6 +799,82 @@ func (s *Session) sendAudioToTwilio(raw []byte) error {
 	}
 
 	return s.writeTwilioJSON(message)
+}
+
+func (s *Session) beforeAssistantAudio(ctx context.Context) (bool, error) {
+	if !s.isProviderOutreach() {
+		return true, nil
+	}
+
+	var delay time.Duration
+	startedWaitingAt := time.Now()
+
+	s.assistantPacingMu.Lock()
+	if s.suppressAssistantTurn {
+		s.assistantPacingMu.Unlock()
+		return false, nil
+	}
+	if !s.assistantTurnActive {
+		s.assistantTurnActive = true
+		delay = providerAssistantTurnDelay
+	}
+	s.assistantPacingMu.Unlock()
+
+	if delay <= 0 {
+		return true, nil
+	}
+
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+
+	select {
+	case <-timer.C:
+	case <-ctx.Done():
+		return false, ctx.Err()
+	}
+
+	if s.callerSpokeAfter(startedWaitingAt) {
+		s.suppressCurrentAssistantTurn()
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (s *Session) noteCallerAudio() {
+	if !s.isProviderOutreach() {
+		return
+	}
+
+	s.assistantPacingMu.Lock()
+	s.lastCallerAudioAt = time.Now()
+	s.assistantPacingMu.Unlock()
+}
+
+func (s *Session) callerSpokeAfter(t time.Time) bool {
+	s.assistantPacingMu.Lock()
+	defer s.assistantPacingMu.Unlock()
+
+	return !s.lastCallerAudioAt.IsZero() && s.lastCallerAudioAt.After(t)
+}
+
+func (s *Session) suppressCurrentAssistantTurn() {
+	if !s.isProviderOutreach() {
+		return
+	}
+
+	s.assistantPacingMu.Lock()
+	if s.assistantTurnActive {
+		s.suppressAssistantTurn = true
+	}
+	s.assistantPacingMu.Unlock()
+}
+
+func (s *Session) finishAssistantTurn() {
+	s.assistantPacingMu.Lock()
+	s.assistantTurnActive = false
+	s.suppressAssistantTurn = false
+	s.assistantPacingMu.Unlock()
 }
 
 func (s *Session) writeTwilioJSON(payload any) error {

@@ -28,6 +28,8 @@ func TestProviderOutreachPromptIncludesProductionConversationGuardrails(t *testi
 	for _, expected := range []string{
 		"Never say internal CRM labels out loud",
 		"Do not deliver the full opening as one long monologue",
+		"Did I catch you at an okay time for a quick question?",
+		"Do not continue into the explanation until the person responds",
 		"new home care service based in Raleigh",
 		"older adults and families arrange non-medical support",
 		"rides, meal prep, respite, light household help, and check-ins",
@@ -50,5 +52,9 @@ func TestProviderOutreachPromptIncludesProductionConversationGuardrails(t *testi
 
 	if strings.Contains(prompt, "say you will mark that") {
 		t.Fatal("provider outreach prompt still tells Julie to say an internal CRM action out loud")
+	}
+
+	if strings.Contains(prompt, "Then continue with opening turn 3") {
+		t.Fatal("provider outreach prompt still uses a forced multi-step opening")
 	}
 }

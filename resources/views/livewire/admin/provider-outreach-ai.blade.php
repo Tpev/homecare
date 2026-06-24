@@ -92,9 +92,9 @@
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Julie opening</p>
                     <div class="mt-2 space-y-2 text-sm leading-6 text-slate-800">
-                        <p>1. Hi, this is Julie calling from LoLo Care. We are a new home care service based in Raleigh.</p>
-                        <p>2. We help older adults and families arrange non-medical support at home, like companionship, errands, rides, meal prep, respite, light household help, and check-ins.</p>
-                        <p>3. I am calling to understand the best way to make our services available as an option for your patients, residents, or families when they ask about help at home. Who would be the right person to speak with about that?</p>
+                        <p>1. Hi, this is Julie calling from LoLo Care. Did I catch you at an okay time for a quick question?</p>
+                        <p>2. If they give room: Thank you. We are a new home care service based in Raleigh. We help older adults and families arrange non-medical support at home, like companionship, errands, rides, meal prep, respite, light household help, and check-ins.</p>
+                        <p>3. I am trying to understand the best way to make our services available as an option for your patients, residents, or families when they ask about help at home. Who would be the right person to speak with about that?</p>
                     </div>
                 </div>
 
