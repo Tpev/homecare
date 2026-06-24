@@ -92,7 +92,7 @@
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Julie opening</p>
                     <p class="mt-2 text-sm leading-6 text-slate-800">
-                        Hi, this is Julie with LoLo Care. I am trying to reach the person who manages community resources or local options for families asking about non-medical help at home, like companionship, errands, meal prep, or respite. Who would be the best person to speak with?
+                        Hi, this is Julie with LoLo Care. Who handles local resource options for families asking about non-medical help at home, like companionship, errands, meal prep, or respite?
                     </p>
                 </div>
 
