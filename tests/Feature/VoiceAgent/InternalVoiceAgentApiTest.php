@@ -4,6 +4,7 @@ namespace Tests\Feature\VoiceAgent;
 
 use App\Mail\Ops\VoiceCallReportOpsAlertMail;
 use App\Models\Lead;
+use App\Models\LeadActivity;
 use App\Models\VoiceAiCall;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -198,5 +199,120 @@ class InternalVoiceAgentApiTest extends TestCase
         $this->assertSame('callback_discovery', $call->metadata['voice_agent_profile']);
         $this->assertSame('/storage/voice-agent-recordings/call-42.wav', $call->metadata['recording_url']);
         $this->assertSame('../storage/app/public/voice-agent-recordings/call-42.wav', $call->metadata['recording_path']);
+    }
+
+    public function test_provider_outreach_result_creates_referral_lead_activity(): void
+    {
+        $this->withToken('voice-secret')
+            ->postJson('/api/internal/voice/provider-outreach-results', [
+                'call_sid' => 'CA_PROVIDER_1',
+                'target_name' => 'Office Manager',
+                'target_organization' => 'Triangle Primary Care',
+                'target_role' => 'office_manager',
+                'target_phone' => '+19195554444',
+                'target_location' => 'Raleigh, NC',
+                'outcome' => 'resource_requested',
+                'summary' => 'Office manager asked for the one-page resource.',
+                'contact_name' => 'Megan',
+                'contact_role' => 'Office manager',
+                'email' => 'office@example.com',
+                'resource_requested' => true,
+                'follow_up_needed' => true,
+                'best_follow_up' => 'Email first, then call next week.',
+                'metadata' => [
+                    'voice_agent_profile' => 'provider_outreach',
+                    'voice_ai_call_id' => '44',
+                ],
+            ])
+            ->assertCreated()
+            ->assertJsonPath('message', 'Provider outreach result captured.');
+
+        $lead = Lead::query()->sole();
+
+        $this->assertSame(Lead::TYPE_REFERRAL, $lead->lead_type);
+        $this->assertSame('Megan', $lead->name);
+        $this->assertSame('Triangle Primary Care', $lead->company);
+        $this->assertSame('nurturing', $lead->status);
+        $this->assertSame('ai_provider_outreach', $lead->source);
+        $this->assertTrue($lead->data['provider_outreach']['resource_requested']);
+        $this->assertTrue($lead->data['provider_outreach']['follow_up_needed']);
+
+        $this->assertDatabaseHas('lead_activities', [
+            'lead_id' => $lead->id,
+            'type' => LeadActivity::TYPE_CALL,
+            'summary' => 'Julie AI provider outreach: resource requested',
+        ]);
+    }
+
+    public function test_provider_outreach_report_syncs_call_and_marks_do_not_call(): void
+    {
+        Mail::fake();
+
+        $lead = Lead::query()->create([
+            'lead_type' => Lead::TYPE_REFERRAL,
+            'name' => 'Triangle Primary Care',
+            'company' => 'Triangle Primary Care',
+            'phone' => '+19195554444',
+            'status' => 'outreach',
+            'priority' => Lead::PRIORITY_NORMAL,
+            'source' => 'ai_provider_outreach',
+            'data' => ['source' => 'test'],
+        ]);
+
+        $call = VoiceAiCall::query()->create([
+            'direction' => VoiceAiCall::DIRECTION_OUTBOUND,
+            'status' => VoiceAiCall::STATUS_IN_PROGRESS,
+            'to_phone' => '+19195554444',
+            'from_phone' => '+19844004008',
+            'twilio_call_sid' => 'CA_PROVIDER_2',
+            'metadata' => [
+                'voice_agent_profile' => VoiceAiCall::PROFILE_PROVIDER_OUTREACH,
+                'referral_lead_id' => $lead->id,
+                'target_organization' => 'Triangle Primary Care',
+                'target_name' => 'Office Manager',
+                'target_role' => 'office_manager',
+            ],
+        ]);
+
+        $this->withToken('voice-secret')
+            ->postJson('/api/internal/voice/reports', [
+                'call_sid' => 'CA_PROVIDER_2',
+                'phone' => '+19195554444',
+                'lead_type' => 'referral',
+                'intent' => 'provider_outreach',
+                'outcome' => 'do_not_call',
+                'call_status' => 'completed',
+                'duration_seconds' => 22,
+                'summary' => 'Front desk asked not to receive future calls.',
+                'transcript' => "assistant: Hi, this is Julie.\nuser: Please remove us.",
+                'callback_requested' => false,
+                'signup_link_sent' => false,
+                'metadata' => [
+                    'channel' => 'voice_agent',
+                    'voice_agent_profile' => VoiceAiCall::PROFILE_PROVIDER_OUTREACH,
+                    'voice_ai_call_id' => (string) $call->id,
+                    'referral_lead_id' => (string) $lead->id,
+                    'target_organization' => 'Triangle Primary Care',
+                    'target_name' => 'Office Manager',
+                    'target_role' => 'office_manager',
+                    'target_phone' => '+19195554444',
+                    'provider_outreach' => [
+                        'outcome' => 'do_not_call',
+                        'summary' => 'Front desk asked not to receive future calls.',
+                        'do_not_call' => true,
+                    ],
+                ],
+            ])
+            ->assertCreated();
+
+        $call->refresh();
+        $lead->refresh();
+
+        $this->assertSame(VoiceAiCall::STATUS_COMPLETED, $call->status);
+        $this->assertSame(22, $call->duration_seconds);
+        $this->assertSame('do_not_call', $call->metadata['provider_outreach']['outcome']);
+        $this->assertSame('closed', $lead->status);
+        $this->assertTrue($lead->data['provider_outreach']['do_not_call']);
+        $this->assertSame('Do-not-call requested during Julie AI provider outreach.', $lead->closed_reason);
     }
 }

@@ -11,5 +11,6 @@ Route::middleware('voice.agent')
         Route::post('/leads', [VoiceAgentController::class, 'createLead'])->name('leads.create');
         Route::post('/callbacks', [VoiceAgentController::class, 'requestCallback'])->name('callbacks.create');
         Route::post('/reports', [VoiceAgentController::class, 'report'])->name('reports.create');
+        Route::post('/provider-outreach-results', [VoiceAgentController::class, 'providerOutreachResult'])->name('provider-outreach-results.create');
         Route::post('/signup-link', [VoiceAgentController::class, 'signupLink'])->name('signup-link.create');
     });

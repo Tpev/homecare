@@ -25,6 +25,7 @@ use App\Livewire\Admin\CareRequestsIndex;
 use App\Livewire\Admin\FunnelAnalytics;
 use App\Livewire\Admin\LeadsIndex;
 use App\Livewire\Admin\PaymentsQueue;
+use App\Livewire\Admin\ProviderOutreachAi;
 use App\Livewire\Admin\SmsInbox;
 use App\Livewire\Admin\SupportTicketsQueue;
 use App\Livewire\Admin\UsageAnalytics;
@@ -80,6 +81,7 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/support/tickets', SupportTicketsQueue::class)->name('support.tickets');
         Route::get('/sms', SmsInbox::class)->name('sms.index');
         Route::get('/voice-ai', VoiceAiTest::class)->name('voice-ai.index');
+        Route::get('/provider-outreach-ai', ProviderOutreachAi::class)->name('provider-outreach-ai.index');
         Route::get('/payments/ops', PaymentsQueue::class)->name('payments.ops');
         Route::get('/analytics/usage', UsageAnalytics::class)->name('analytics.usage');
         Route::get('/analytics/funnel', FunnelAnalytics::class)->name('analytics.funnel');

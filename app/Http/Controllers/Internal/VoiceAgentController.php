@@ -22,8 +22,8 @@ class VoiceAgentController extends Controller
     public function createLead(Request $request, VoiceAgentIntakeService $intake): JsonResponse
     {
         $payload = $request->validate([
-            'lead_type' => ['required', 'string', Rule::in(['family', 'caregiver', 'agency', 'general'])],
-            'intent' => ['required', 'string', Rule::in(['information', 'callback_request', 'signup_link', 'general'])],
+            'lead_type' => ['required', 'string', Rule::in(['family', 'caregiver', 'agency', 'general', 'referral'])],
+            'intent' => ['required', 'string', Rule::in(['information', 'callback_request', 'signup_link', 'general', 'provider_outreach'])],
             'name' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
@@ -85,7 +85,20 @@ class VoiceAgentController extends Controller
         return response()->json($result, 201);
     }
 
-    public function report(Request $request, OpsAlertService $opsAlerts): JsonResponse
+    public function providerOutreachResult(Request $request, VoiceAgentIntakeService $intake): JsonResponse
+    {
+        $payload = $request->validate($this->providerOutreachRules());
+
+        $lead = $intake->recordProviderOutreachResult($payload, $request);
+
+        return response()->json([
+            'lead_id' => $lead->id,
+            'status' => $lead->status,
+            'message' => 'Provider outreach result captured.',
+        ], 201);
+    }
+
+    public function report(Request $request, OpsAlertService $opsAlerts, VoiceAgentIntakeService $intake): JsonResponse
     {
         $payload = $request->validate([
             'call_sid' => ['nullable', 'string', 'max:64'],
@@ -99,8 +112,8 @@ class VoiceAgentController extends Controller
             'city' => ['nullable', 'string', 'max:255'],
             'zip' => ['nullable', 'string', 'max:20'],
             'callback_time' => ['nullable', 'string', 'max:255'],
-            'lead_type' => ['nullable', 'string', Rule::in(['family', 'caregiver', 'agency', 'general'])],
-            'intent' => ['nullable', 'string', Rule::in(['information', 'callback_request', 'signup_link', 'general', 'unknown'])],
+            'lead_type' => ['nullable', 'string', Rule::in(['family', 'caregiver', 'agency', 'general', 'referral'])],
+            'intent' => ['nullable', 'string', Rule::in(['information', 'callback_request', 'signup_link', 'general', 'provider_outreach', 'unknown'])],
             'outcome' => ['required', 'string', 'max:100'],
             'call_status' => ['required', 'string', 'max:100'],
             'duration_seconds' => ['nullable', 'integer', 'min:0'],
@@ -114,11 +127,50 @@ class VoiceAgentController extends Controller
         ]);
 
         $this->syncVoiceAiCallReport($payload);
+        if (data_get($payload, 'metadata.voice_agent_profile') === VoiceAiCall::PROFILE_PROVIDER_OUTREACH) {
+            $intake->recordProviderOutreachResult($payload, $request);
+        }
         $opsAlerts->notifyVoiceCallReported($payload);
 
         return response()->json([
             'message' => 'Voice call report sent.',
         ], 201);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function providerOutreachRules(): array
+    {
+        return [
+            'call_sid' => ['nullable', 'string', 'max:64'],
+            'voice_ai_call_id' => ['nullable', 'integer'],
+            'referral_lead_id' => ['nullable', 'integer'],
+            'target_name' => ['nullable', 'string', 'max:255'],
+            'target_organization' => ['nullable', 'string', 'max:255'],
+            'target_role' => ['nullable', 'string', 'max:255'],
+            'target_phone' => ['nullable', 'string', 'max:40'],
+            'target_email' => ['nullable', 'string', 'max:255'],
+            'target_fax' => ['nullable', 'string', 'max:80'],
+            'target_location' => ['nullable', 'string', 'max:255'],
+            'outcome' => ['required', 'string', 'max:100'],
+            'summary' => ['nullable', 'string', 'max:2000'],
+            'notes' => ['nullable', 'string', 'max:4000'],
+            'contact_name' => ['nullable', 'string', 'max:255'],
+            'contact_role' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'string', 'max:255'],
+            'fax' => ['nullable', 'string', 'max:80'],
+            'resource_requested' => ['nullable', 'boolean'],
+            'follow_up_needed' => ['nullable', 'boolean'],
+            'best_follow_up' => ['nullable', 'string', 'max:255'],
+            'do_not_call' => ['nullable', 'boolean'],
+            'voicemail_detected' => ['nullable', 'boolean'],
+            'ivr_detected' => ['nullable', 'boolean'],
+            'ai_detected' => ['nullable', 'boolean'],
+            'objection' => ['nullable', 'string', 'max:2000'],
+            'transcript_excerpt' => ['nullable', 'string', 'max:4000'],
+            'metadata' => ['nullable', 'array'],
+        ];
     }
 
     /**

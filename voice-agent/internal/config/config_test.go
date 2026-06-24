@@ -29,6 +29,14 @@ func TestLoadUsesAppURLAsPublicBaseFallback(t *testing.T) {
 		t.Fatalf("expected callback prompt default, got %q", cfg.CallbackPromptFile)
 	}
 
+	if cfg.ProviderOutreachPromptFile != "prompts/provider-outreach.md" {
+		t.Fatalf("expected provider outreach prompt default, got %q", cfg.ProviderOutreachPromptFile)
+	}
+
+	if cfg.DeepgramProviderGreeting == "" {
+		t.Fatal("expected provider outreach greeting default")
+	}
+
 	if !cfg.RecordingsEnabled {
 		t.Fatal("expected local recordings to default on")
 	}

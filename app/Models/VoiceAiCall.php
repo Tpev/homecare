@@ -11,6 +11,10 @@ class VoiceAiCall extends Model
 {
     use HasFactory;
 
+    public const PROFILE_CALLBACK_DISCOVERY = 'callback_discovery';
+
+    public const PROFILE_PROVIDER_OUTREACH = 'provider_outreach';
+
     public const DIRECTION_OUTBOUND = 'outbound';
 
     public const STATUS_DRAFT = 'draft';

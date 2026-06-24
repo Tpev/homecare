@@ -30,33 +30,55 @@ type Session struct {
 	twilioWriteMu sync.Mutex
 	dgWriteMu     sync.Mutex
 
-	streamSID         string
-	callSID           string
-	promptProfile     string
-	voiceAICallID     string
-	callerName        string
-	callerPhone       string
-	relationship      string
-	careRecipient     string
-	careNeeds         string
-	urgency           string
-	address           string
-	city              string
-	zip               string
-	callbackTime      string
-	leadCreated       bool
-	leadType          string
-	intent            string
-	outcome           string
-	knowledge         laravel.Knowledge
-	callStartedAt     time.Time
-	callEndedAt       time.Time
-	callbackRequested bool
-	signupLinkSent    bool
-	transcriptMu      sync.Mutex
-	transcript        []string
-	recorder          *LocalRecorder
-	recordingErr      error
+	streamSID                 string
+	callSID                   string
+	promptProfile             string
+	voiceAICallID             string
+	referralLeadID            string
+	targetName                string
+	targetOrganization        string
+	targetRole                string
+	targetEmail               string
+	targetFax                 string
+	targetLocation            string
+	callerName                string
+	callerPhone               string
+	relationship              string
+	careRecipient             string
+	careNeeds                 string
+	urgency                   string
+	address                   string
+	city                      string
+	zip                       string
+	callbackTime              string
+	leadCreated               bool
+	leadType                  string
+	intent                    string
+	outcome                   string
+	knowledge                 laravel.Knowledge
+	callStartedAt             time.Time
+	callEndedAt               time.Time
+	callbackRequested         bool
+	signupLinkSent            bool
+	transcriptMu              sync.Mutex
+	transcript                []string
+	recorder                  *LocalRecorder
+	recordingErr              error
+	providerOutcome           string
+	providerSummary           string
+	providerNotes             string
+	providerContactName       string
+	providerContactRole       string
+	providerEmail             string
+	providerFax               string
+	providerResourceRequested bool
+	providerFollowUpNeeded    bool
+	providerBestFollowUp      string
+	providerDoNotCall         bool
+	providerVoicemailDetected bool
+	providerIVRDetected       bool
+	providerAIDetected        bool
+	providerObjection         string
 }
 
 type dgEnvelope struct {
@@ -135,9 +157,21 @@ func (s *Session) Run(parent context.Context) error {
 	s.callSID = start.CallSID
 	s.promptProfile = supportedProfile(start.CustomParameters["prompt_profile"])
 	s.voiceAICallID = start.CustomParameters["voice_ai_call_id"]
+	s.referralLeadID = start.CustomParameters["referral_lead_id"]
+	s.targetName = start.CustomParameters["target_name"]
+	s.targetOrganization = start.CustomParameters["target_organization"]
+	s.targetRole = start.CustomParameters["target_role"]
+	s.targetEmail = start.CustomParameters["target_email"]
+	s.targetFax = start.CustomParameters["target_fax"]
+	s.targetLocation = start.CustomParameters["target_location"]
 	s.callerPhone = firstNonEmpty(start.CustomParameters["customer_phone"], start.CustomParameters["from"], s.callerPhone)
-	s.leadType = "family"
-	s.intent = "unknown"
+	if s.isProviderOutreach() {
+		s.leadType = "referral"
+		s.intent = "provider_outreach"
+	} else {
+		s.leadType = "family"
+		s.intent = "unknown"
+	}
 	s.callStartedAt = time.Now().UTC()
 	s.startRecorder()
 
@@ -154,7 +188,7 @@ func (s *Session) Run(parent context.Context) error {
 		return runErr
 	}
 
-	prompt, err := promptBuilder.Render(knowledge)
+	prompt, err := promptBuilder.Render(knowledge, s.callContext())
 	if err != nil {
 		runErr = fmt.Errorf("render prompt: %w", err)
 		return runErr
@@ -315,66 +349,8 @@ func (s *Session) connectDeepgram(ctx context.Context, prompt string) (*websocke
 					"model":       s.cfg.DeepgramLLMModel,
 					"temperature": 0.2,
 				},
-				"prompt": prompt,
-				"functions": []map[string]any{
-					{
-						"name":        "lookup_service_info",
-						"description": "Retrieve approved information about the service, signup paths, and common FAQs.",
-						"parameters": map[string]any{
-							"type": "object",
-							"properties": map[string]any{
-								"topic": map[string]any{
-									"type":        "string",
-									"description": "The topic or question the caller wants clarified.",
-								},
-							},
-							"required": []string{"topic"},
-						},
-					},
-					{
-						"name":        "request_human_callback",
-						"description": "Create a callback request for a human team member.",
-						"parameters": map[string]any{
-							"type": "object",
-							"properties": map[string]any{
-								"lead_type":      map[string]any{"type": "string", "description": "family, caregiver, agency, or general"},
-								"name":           map[string]any{"type": "string", "description": "Caller name"},
-								"phone":          map[string]any{"type": "string", "description": "Best callback number"},
-								"relationship":   map[string]any{"type": "string", "description": "Relationship to the person needing care"},
-								"care_recipient": map[string]any{"type": "string", "description": "Who needs care"},
-								"care_needs":     map[string]any{"type": "string", "description": "Type of help or support needed"},
-								"urgency":        map[string]any{"type": "string", "description": "How urgent the situation is"},
-								"address":        map[string]any{"type": "string", "description": "Street address if shared"},
-								"city":           map[string]any{"type": "string", "description": "City if shared"},
-								"zip":            map[string]any{"type": "string", "description": "Zip code if shared"},
-								"callback_time":  map[string]any{"type": "string", "description": "Best callback time or window"},
-								"reason":         map[string]any{"type": "string"},
-							},
-							"required": []string{"phone"},
-						},
-					},
-					{
-						"name":        "send_signup_link",
-						"description": "Create a signup-link request and send the link by SMS after the caller has explicitly agreed to receive it.",
-						"parameters": map[string]any{
-							"type": "object",
-							"properties": map[string]any{
-								"lead_type":        map[string]any{"type": "string", "description": "family, caregiver, agency, or general"},
-								"name":             map[string]any{"type": "string", "description": "Caller name"},
-								"phone":            map[string]any{"type": "string", "description": "SMS-capable phone number"},
-								"relationship":     map[string]any{"type": "string", "description": "Relationship to the person needing care"},
-								"care_recipient":   map[string]any{"type": "string", "description": "Who needs care"},
-								"care_needs":       map[string]any{"type": "string", "description": "Type of help or support needed"},
-								"urgency":          map[string]any{"type": "string", "description": "How urgent the situation is"},
-								"address":          map[string]any{"type": "string", "description": "Street address if shared"},
-								"city":             map[string]any{"type": "string", "description": "City if shared"},
-								"zip":              map[string]any{"type": "string", "description": "Zip code if shared"},
-								"consent_received": map[string]any{"type": "boolean"},
-							},
-							"required": []string{"lead_type", "phone", "consent_received"},
-						},
-					},
-				},
+				"prompt":    prompt,
+				"functions": s.deepgramFunctions(),
 			},
 			"speak": map[string]any{
 				"provider": map[string]any{
@@ -397,6 +373,98 @@ func (s *Session) connectDeepgram(ctx context.Context, prompt string) (*websocke
 	}
 
 	return conn, nil
+}
+
+func (s *Session) deepgramFunctions() []map[string]any {
+	functions := []map[string]any{
+		{
+			"name":        "lookup_service_info",
+			"description": "Retrieve approved information about the service, signup paths, and common FAQs.",
+			"parameters": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"topic": map[string]any{
+						"type":        "string",
+						"description": "The topic or question the caller wants clarified.",
+					},
+				},
+				"required": []string{"topic"},
+			},
+		},
+		{
+			"name":        "request_human_callback",
+			"description": "Create a callback request for a human team member.",
+			"parameters": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"lead_type":      map[string]any{"type": "string", "description": "family, caregiver, agency, or general"},
+					"name":           map[string]any{"type": "string", "description": "Caller name"},
+					"phone":          map[string]any{"type": "string", "description": "Best callback number"},
+					"relationship":   map[string]any{"type": "string", "description": "Relationship to the person needing care"},
+					"care_recipient": map[string]any{"type": "string", "description": "Who needs care"},
+					"care_needs":     map[string]any{"type": "string", "description": "Type of help or support needed"},
+					"urgency":        map[string]any{"type": "string", "description": "How urgent the situation is"},
+					"address":        map[string]any{"type": "string", "description": "Street address if shared"},
+					"city":           map[string]any{"type": "string", "description": "City if shared"},
+					"zip":            map[string]any{"type": "string", "description": "Zip code if shared"},
+					"callback_time":  map[string]any{"type": "string", "description": "Best callback time or window"},
+					"reason":         map[string]any{"type": "string"},
+				},
+				"required": []string{"phone"},
+			},
+		},
+		{
+			"name":        "send_signup_link",
+			"description": "Create a signup-link request and send the link by SMS after the caller has explicitly agreed to receive it.",
+			"parameters": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"lead_type":        map[string]any{"type": "string", "description": "family, caregiver, agency, or general"},
+					"name":             map[string]any{"type": "string", "description": "Caller name"},
+					"phone":            map[string]any{"type": "string", "description": "SMS-capable phone number"},
+					"relationship":     map[string]any{"type": "string", "description": "Relationship to the person needing care"},
+					"care_recipient":   map[string]any{"type": "string", "description": "Who needs care"},
+					"care_needs":       map[string]any{"type": "string", "description": "Type of help or support needed"},
+					"urgency":          map[string]any{"type": "string", "description": "How urgent the situation is"},
+					"address":          map[string]any{"type": "string", "description": "Street address if shared"},
+					"city":             map[string]any{"type": "string", "description": "City if shared"},
+					"zip":              map[string]any{"type": "string", "description": "Zip code if shared"},
+					"consent_received": map[string]any{"type": "boolean"},
+				},
+				"required": []string{"lead_type", "phone", "consent_received"},
+			},
+		},
+	}
+
+	if !s.isProviderOutreach() {
+		return functions
+	}
+
+	return append(functions, map[string]any{
+		"name":        "record_provider_outreach_result",
+		"description": "Record the outcome of Julie's provider-relations outreach call into the LoLo referral-source CRM.",
+		"parameters": map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"outcome":            map[string]any{"type": "string", "description": "completed, resource_requested, follow_up_needed, voicemail, ivr, ai_system, not_interested, not_fit, do_not_call, wrong_number, or incomplete"},
+				"summary":            map[string]any{"type": "string", "description": "Concise one or two sentence outcome summary"},
+				"notes":              map[string]any{"type": "string", "description": "Additional operational notes for the CRM"},
+				"contact_name":       map[string]any{"type": "string", "description": "Person reached or best contact identified"},
+				"contact_role":       map[string]any{"type": "string", "description": "Role of the person reached"},
+				"email":              map[string]any{"type": "string", "description": "Email to send the one-page resource if provided"},
+				"fax":                map[string]any{"type": "string", "description": "Fax number to send the one-page resource if provided"},
+				"resource_requested": map[string]any{"type": "boolean", "description": "Whether they agreed that a one-page resource would be useful"},
+				"follow_up_needed":   map[string]any{"type": "boolean", "description": "Whether a human follow-up is useful"},
+				"best_follow_up":     map[string]any{"type": "string", "description": "Best time or method for human follow-up"},
+				"do_not_call":        map[string]any{"type": "boolean", "description": "True if they requested no future calls"},
+				"voicemail_detected": map[string]any{"type": "boolean", "description": "True if voicemail was reached"},
+				"ivr_detected":       map[string]any{"type": "boolean", "description": "True if an IVR/phone tree was reached"},
+				"ai_detected":        map[string]any{"type": "boolean", "description": "True if an AI receptionist/agent was detected"},
+				"objection":          map[string]any{"type": "string", "description": "Main objection or refusal, if any"},
+			},
+			"required": []string{"outcome", "summary"},
+		},
+	})
 }
 
 func (s *Session) waitForDeepgramMessage(conn *websocket.Conn, wantType string) error {
@@ -651,6 +719,40 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 			"signup_link": signup.SignupLink,
 			"message":     "Signup link sent by SMS.",
 		}), nil
+	case "record_provider_outreach_result":
+		if !s.isProviderOutreach() {
+			return "", fmt.Errorf("provider outreach results are only available on provider outreach calls")
+		}
+
+		s.absorbProviderOutreachDetails(args)
+		if s.providerOutcome == "" {
+			s.providerOutcome = "completed"
+		}
+		if s.providerSummary == "" {
+			s.providerSummary = "Provider outreach call completed."
+		}
+
+		payload := s.providerOutreachPayload()
+		if err := s.laravel.CreateProviderOutreachResult(ctx, payload); err != nil {
+			return "", err
+		}
+
+		s.leadCreated = true
+		s.leadType = "referral"
+		s.intent = "provider_outreach"
+		s.outcome = firstNonEmpty(s.providerOutcome, "completed")
+
+		return mustJSON(map[string]any{
+			"status":             "ok",
+			"message":            "Provider outreach result captured.",
+			"outcome":            s.providerOutcome,
+			"resource_requested": s.providerResourceRequested,
+			"follow_up_needed":   s.providerFollowUpNeeded,
+			"do_not_call":        s.providerDoNotCall,
+			"voicemail_detected": s.providerVoicemailDetected,
+			"ivr_detected":       s.providerIVRDetected,
+			"ai_detected":        s.providerAIDetected,
+		}), nil
 	default:
 		return "", fmt.Errorf("unsupported function: %s", fn.Name)
 	}
@@ -697,6 +799,16 @@ func (s *Session) writeDeepgramBinary(conn *websocket.Conn, payload []byte) erro
 }
 
 func (s *Session) finalize() error {
+	if s.isProviderOutreach() {
+		if s.outcome == "" {
+			s.outcome = firstNonEmpty(s.providerOutcome, "completed")
+		}
+		if s.intent == "" || s.intent == "unknown" {
+			s.intent = "provider_outreach"
+		}
+		return nil
+	}
+
 	if s.leadCreated || len(s.transcript) == 0 {
 		if s.outcome == "" {
 			s.outcome = "information_only"
@@ -806,13 +918,20 @@ func (s *Session) reportCall(runErr error) error {
 	leadType := firstNonEmpty(s.leadType, "family")
 
 	summary := "Informational family call."
-	switch outcome {
-	case "callback_request":
-		summary = "Family caller requested a human callback."
-	case "signup_link_sent":
-		summary = "Family caller received the signup link by SMS."
-	case "information_only":
-		summary = "Family caller received information without a callback or signup link."
+	if s.isProviderOutreach() {
+		leadType = "referral"
+		intent = "provider_outreach"
+		outcome = firstNonEmpty(s.providerOutcome, outcome, "completed")
+		summary = firstNonEmpty(s.providerSummary, "Provider outreach call completed by Julie.")
+	} else {
+		switch outcome {
+		case "callback_request":
+			summary = "Family caller requested a human callback."
+		case "signup_link_sent":
+			summary = "Family caller received the signup link by SMS."
+		case "information_only":
+			summary = "Family caller received information without a callback or signup link."
+		}
 	}
 	if runErr != nil && runErr != context.Canceled {
 		summary = fmt.Sprintf("%s Session ended with error: %v", summary, runErr)
@@ -861,6 +980,74 @@ func (s *Session) absorbCallerDetails(args map[string]any) {
 	s.callbackTime = firstNonEmpty(stringValue(args["callback_time"]), s.callbackTime)
 }
 
+func (s *Session) absorbProviderOutreachDetails(args map[string]any) {
+	s.providerOutcome = firstNonEmpty(stringValue(args["outcome"]), s.providerOutcome)
+	s.providerSummary = firstNonEmpty(stringValue(args["summary"]), s.providerSummary)
+	s.providerNotes = firstNonEmpty(stringValue(args["notes"]), s.providerNotes)
+	s.providerContactName = firstNonEmpty(stringValue(args["contact_name"]), s.providerContactName)
+	s.providerContactRole = firstNonEmpty(stringValue(args["contact_role"]), s.providerContactRole)
+	s.providerEmail = firstNonEmpty(stringValue(args["email"]), s.providerEmail)
+	s.providerFax = firstNonEmpty(stringValue(args["fax"]), s.providerFax)
+	s.providerBestFollowUp = firstNonEmpty(stringValue(args["best_follow_up"]), s.providerBestFollowUp)
+	s.providerObjection = firstNonEmpty(stringValue(args["objection"]), s.providerObjection)
+
+	s.providerResourceRequested = s.providerResourceRequested || boolValue(args["resource_requested"])
+	s.providerFollowUpNeeded = s.providerFollowUpNeeded || boolValue(args["follow_up_needed"])
+	s.providerDoNotCall = s.providerDoNotCall || boolValue(args["do_not_call"])
+	s.providerVoicemailDetected = s.providerVoicemailDetected || boolValue(args["voicemail_detected"])
+	s.providerIVRDetected = s.providerIVRDetected || boolValue(args["ivr_detected"])
+	s.providerAIDetected = s.providerAIDetected || boolValue(args["ai_detected"])
+}
+
+func (s *Session) providerOutreachPayload() laravel.ProviderOutreachResultPayload {
+	return laravel.ProviderOutreachResultPayload{
+		CallSID:            s.callSID,
+		VoiceAICallID:      s.voiceAICallID,
+		ReferralLeadID:     s.referralLeadID,
+		TargetName:         s.targetName,
+		TargetOrganization: s.targetOrganization,
+		TargetRole:         s.targetRole,
+		TargetPhone:        s.callerPhone,
+		TargetEmail:        s.targetEmail,
+		TargetFax:          s.targetFax,
+		TargetLocation:     s.targetLocation,
+		Outcome:            firstNonEmpty(s.providerOutcome, "completed"),
+		Summary:            s.providerSummary,
+		Notes:              s.providerNotes,
+		ContactName:        s.providerContactName,
+		ContactRole:        s.providerContactRole,
+		Email:              s.providerEmail,
+		Fax:                s.providerFax,
+		ResourceRequested:  s.providerResourceRequested,
+		FollowUpNeeded:     s.providerFollowUpNeeded,
+		BestFollowUp:       s.providerBestFollowUp,
+		DoNotCall:          s.providerDoNotCall,
+		VoicemailDetected:  s.providerVoicemailDetected,
+		IVRDetected:        s.providerIVRDetected,
+		AIDetected:         s.providerAIDetected,
+		Objection:          s.providerObjection,
+		TranscriptExcerpt:  s.transcriptWithLimit(4000),
+		Metadata:           s.metadata(nil),
+	}
+}
+
+func (s *Session) callContext() CallContext {
+	return CallContext{
+		Profile:            supportedProfile(s.promptProfile),
+		AssistantName:      "Julie",
+		VoiceAICallID:      s.voiceAICallID,
+		CallSID:            s.callSID,
+		CustomerPhone:      s.callerPhone,
+		ReferralLeadID:     s.referralLeadID,
+		TargetName:         s.targetName,
+		TargetOrganization: s.targetOrganization,
+		TargetRole:         s.targetRole,
+		TargetEmail:        s.targetEmail,
+		TargetFax:          s.targetFax,
+		TargetLocation:     s.targetLocation,
+	}
+}
+
 func (s *Session) startRecorder() {
 	if !s.cfg.RecordingsEnabled {
 		return
@@ -901,6 +1088,9 @@ func (s *Session) promptBuilder() *PromptBuilder {
 }
 
 func (s *Session) greeting() string {
+	if s.isProviderOutreach() {
+		return s.cfg.DeepgramProviderGreeting
+	}
 	if supportedProfile(s.promptProfile) == ProfileCallbackDiscovery {
 		return s.cfg.DeepgramCallbackGreeting
 	}
@@ -912,6 +1102,35 @@ func (s *Session) metadata(extra map[string]any) map[string]any {
 	metadata := map[string]any{
 		"channel":             "voice_agent",
 		"voice_agent_profile": supportedProfile(s.promptProfile),
+	}
+
+	if s.isProviderOutreach() {
+		metadata["assistant_name"] = "Julie"
+		metadata["referral_lead_id"] = s.referralLeadID
+		metadata["target_name"] = s.targetName
+		metadata["target_organization"] = s.targetOrganization
+		metadata["target_role"] = s.targetRole
+		metadata["target_email"] = s.targetEmail
+		metadata["target_fax"] = s.targetFax
+		metadata["target_location"] = s.targetLocation
+		metadata["target_phone"] = s.callerPhone
+		metadata["provider_outreach"] = map[string]any{
+			"outcome":            s.providerOutcome,
+			"summary":            s.providerSummary,
+			"notes":              s.providerNotes,
+			"contact_name":       s.providerContactName,
+			"contact_role":       s.providerContactRole,
+			"email":              s.providerEmail,
+			"fax":                s.providerFax,
+			"resource_requested": s.providerResourceRequested,
+			"follow_up_needed":   s.providerFollowUpNeeded,
+			"best_follow_up":     s.providerBestFollowUp,
+			"do_not_call":        s.providerDoNotCall,
+			"voicemail_detected": s.providerVoicemailDetected,
+			"ivr_detected":       s.providerIVRDetected,
+			"ai_detected":        s.providerAIDetected,
+			"objection":          s.providerObjection,
+		}
 	}
 
 	if s.voiceAICallID != "" {
@@ -942,9 +1161,15 @@ func supportedProfile(profile string) string {
 	switch strings.TrimSpace(profile) {
 	case ProfileCallbackDiscovery:
 		return ProfileCallbackDiscovery
+	case ProfileProviderOutreach:
+		return ProfileProviderOutreach
 	default:
 		return ProfileInbound
 	}
+}
+
+func (s *Session) isProviderOutreach() bool {
+	return supportedProfile(s.promptProfile) == ProfileProviderOutreach
 }
 
 func nonNegativeDurationSeconds(duration time.Duration) int {

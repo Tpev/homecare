@@ -13,6 +13,21 @@ type PromptBuilder struct {
 	tmpl *template.Template
 }
 
+type CallContext struct {
+	Profile            string `json:"profile"`
+	AssistantName      string `json:"assistant_name"`
+	VoiceAICallID      string `json:"voice_ai_call_id,omitempty"`
+	CallSID            string `json:"call_sid,omitempty"`
+	CustomerPhone      string `json:"customer_phone,omitempty"`
+	ReferralLeadID     string `json:"referral_lead_id,omitempty"`
+	TargetName         string `json:"target_name,omitempty"`
+	TargetOrganization string `json:"target_organization,omitempty"`
+	TargetRole         string `json:"target_role,omitempty"`
+	TargetEmail        string `json:"target_email,omitempty"`
+	TargetFax          string `json:"target_fax,omitempty"`
+	TargetLocation     string `json:"target_location,omitempty"`
+}
+
 func NewPromptBuilder(path string) (*PromptBuilder, error) {
 	body, err := os.ReadFile(path)
 	if err != nil {
@@ -36,11 +51,13 @@ func NewPromptBuilder(path string) (*PromptBuilder, error) {
 	return &PromptBuilder{tmpl: tmpl}, nil
 }
 
-func (p *PromptBuilder) Render(knowledge laravel.Knowledge) (string, error) {
+func (p *PromptBuilder) Render(knowledge laravel.Knowledge, call CallContext) (string, error) {
 	data := struct {
 		Knowledge laravel.Knowledge
+		Call      CallContext
 	}{
 		Knowledge: knowledge,
+		Call:      call,
 	}
 
 	var buffer bytes.Buffer

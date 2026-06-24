@@ -32,5 +32,6 @@ go run ./cmd/server
 - Twilio webhook validation uses `X-Twilio-Signature`.
 - The WebSocket bridge is protected by a custom stream token embedded in the TwiML `<Parameter>` block.
 - If no callback or signup action is taken, the service records the call as an informational lead at the end of the session.
-- Inbound call guidance lives in `prompts/system.md`; outbound callback/discovery guidance lives in `prompts/callback-discovery.md`.
+- Inbound call guidance lives in `prompts/system.md`; outbound callback/discovery guidance lives in `prompts/callback-discovery.md`; provider-relations outreach lives in `prompts/provider-outreach.md`.
+- Provider outreach calls use `prompt_profile=provider_outreach`, identify the assistant as Julie, inject target organization/person context into the prompt, and report outcomes back to Laravel referral leads.
 - Local callback recordings default to `../storage/app/public/voice-agent-recordings` with public URLs under `/storage/voice-agent-recordings`. In production, prefer an absolute `VOICE_AGENT_RECORDINGS_DIR`.

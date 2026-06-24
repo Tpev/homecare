@@ -193,6 +193,50 @@ func TestTwilioVoiceCanUseCallbackDiscoveryProfileViaQuery(t *testing.T) {
 	}
 }
 
+func TestTwilioVoiceCanUseProviderOutreachProfileViaQuery(t *testing.T) {
+	server := testServer(config.Config{
+		Port:                   "8088",
+		PublicBaseURL:          "https://carelolo.com",
+		TwilioAuthToken:        "twilio-secret",
+		TwilioVoiceWebhookPath: "/twilio/voice",
+		TwilioStreamPath:       "/ws/twilio",
+		StreamAuthToken:        "bridge-secret",
+	})
+
+	form := url.Values{
+		"CallSid": {"CA999"},
+		"From":    {"+19844004008"},
+		"To":      {"+19195551234"},
+	}
+	rawQuery := "prompt_profile=provider_outreach&voice_ai_call_id=77&referral_lead_id=12&target_organization=Triangle+Primary+Care&target_name=Office+Manager&target_role=office_manager"
+	req := httptest.NewRequest(http.MethodPost, "http://localhost:8088/twilio/voice?"+rawQuery, strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("X-Twilio-Signature", twilioSignature("twilio-secret", "https://carelolo.com/twilio/voice?"+rawQuery, form))
+
+	res := httptest.NewRecorder()
+	server.handleTwilioVoice(res, req)
+
+	if res.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d: %s", http.StatusOK, res.Code, res.Body.String())
+	}
+
+	body := res.Body.String()
+	for _, expected := range []string{
+		`<Parameter name="prompt_profile" value="provider_outreach"></Parameter>`,
+		`<Parameter name="customer_phone" value="+19195551234"></Parameter>`,
+		`<Parameter name="voice_ai_call_id" value="77"></Parameter>`,
+		`<Parameter name="referral_lead_id" value="12"></Parameter>`,
+		`<Parameter name="target_organization" value="Triangle Primary Care"></Parameter>`,
+		`<Parameter name="target_name" value="Office Manager"></Parameter>`,
+		`<Parameter name="target_role" value="office_manager"></Parameter>`,
+		`url="wss://carelolo.com/ws/twilio"`,
+	} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("expected TwiML to contain %q, got:\n%s", expected, body)
+		}
+	}
+}
+
 func testServer(cfg config.Config) *Server {
 	return NewServer(cfg, log.New(io.Discard, "", 0), nil, nil)
 }

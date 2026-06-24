@@ -3,6 +3,8 @@
 namespace Tests\Feature\Admin;
 
 use App\Livewire\Admin\VoiceAiTest;
+use App\Livewire\Admin\ProviderOutreachAi;
+use App\Models\Lead;
 use App\Models\User;
 use App\Models\VoiceAiCall;
 use App\Services\VoiceAgent\TwilioVoiceClient;
@@ -47,6 +49,47 @@ class AdminVoiceAiTest extends TestCase
         $this->assertStringStartsWith('CA_bypass_', (string) $call->twilio_call_sid);
     }
 
+    public function test_admin_can_start_provider_outreach_call_in_bypass_mode(): void
+    {
+        config()->set('services.twilio.bypass', true);
+        config()->set('services.twilio.voice_from', '+19195550000');
+        config()->set('services.twilio.voice_agent_callback_url', 'https://voice.carelolo.com/twilio/voice?prompt_profile=callback_discovery');
+
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'email' => 'admin@example.com',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.provider-outreach-ai.index'))
+            ->assertOk()
+            ->assertSee('Julie AI provider outreach')
+            ->assertSee('Provider AI Outreach');
+
+        Livewire::actingAs($admin)
+            ->test(ProviderOutreachAi::class)
+            ->set('targetForm.practice_name', 'Triangle Primary Care')
+            ->set('targetForm.contact_name', 'Office Manager')
+            ->set('targetForm.contact_role', 'office_manager')
+            ->set('targetForm.phone', '(919) 555-4444')
+            ->set('targetForm.email', 'office@example.com')
+            ->set('targetForm.location', 'Raleigh, NC')
+            ->call('startCall')
+            ->assertHasNoErrors()
+            ->assertSee('Triangle Primary Care');
+
+        $lead = Lead::query()->sole();
+        $call = VoiceAiCall::query()->sole();
+
+        $this->assertSame(Lead::TYPE_REFERRAL, $lead->lead_type);
+        $this->assertSame('Triangle Primary Care', $lead->company);
+        $this->assertSame('+19195554444', $lead->phone);
+        $this->assertSame('ai_provider_outreach', $lead->source);
+        $this->assertSame($lead->id, $call->metadata['referral_lead_id']);
+        $this->assertSame(VoiceAiCall::PROFILE_PROVIDER_OUTREACH, $call->metadata['voice_agent_profile']);
+        $this->assertStringContainsString('prompt_profile=provider_outreach', (string) data_get($call->raw_payload, 'voice_agent_callback_url'));
+    }
+
     public function test_twilio_voice_client_sends_call_with_voice_webhooks(): void
     {
         config()->set('services.twilio.bypass', false);
@@ -79,6 +122,54 @@ class AdminVoiceAiTest extends TestCase
         });
 
         $this->assertSame('CA_real_test', $call->twilio_call_sid);
+        $this->assertSame(VoiceAiCall::STATUS_QUEUED, $call->status);
+    }
+
+    public function test_twilio_voice_client_sends_provider_outreach_context_to_voice_agent(): void
+    {
+        config()->set('services.twilio.bypass', false);
+        config()->set('services.twilio.account_sid', 'AC123');
+        config()->set('services.twilio.auth_token', 'twilio-secret');
+        config()->set('services.twilio.voice_from', '+19844004008');
+        config()->set('services.twilio.voice_agent_callback_url', 'https://voice.carelolo.com/twilio/voice?prompt_profile=callback_discovery');
+        config()->set('services.twilio.webhook_base_url', 'https://carelolo.com');
+
+        Http::fake([
+            'api.twilio.com/*' => Http::response([
+                'sid' => 'CA_provider_test',
+                'status' => 'queued',
+                'account_sid' => 'AC123',
+            ], 201),
+        ]);
+
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $call = app(TwilioVoiceClient::class)->startProviderOutreachCall([
+            'practice_name' => 'Triangle Primary Care',
+            'contact_name' => 'Office Manager',
+            'contact_role' => 'office_manager',
+            'phone' => '919-555-4444',
+            'email' => 'office@example.com',
+            'fax' => '919-555-4445',
+            'location' => 'Raleigh, NC',
+        ], $admin);
+
+        $lead = Lead::query()->sole();
+
+        Http::assertSent(function ($request) use ($call, $lead): bool {
+            $url = (string) $request['Url'];
+
+            return $request->url() === 'https://api.twilio.com/2010-04-01/Accounts/AC123/Calls.json'
+                && $request['To'] === '+19195554444'
+                && $request['From'] === '+19844004008'
+                && str_contains($url, 'prompt_profile=provider_outreach')
+                && str_contains($url, 'voice_ai_call_id='.$call->id)
+                && str_contains($url, 'referral_lead_id='.$lead->id)
+                && str_contains($url, 'target_organization=Triangle+Primary+Care')
+                && $request['StatusCallback'] === 'https://carelolo.com/webhooks/twilio/voice/'.$call->id.'/status';
+        });
+
+        $this->assertSame('CA_provider_test', $call->twilio_call_sid);
         $this->assertSame(VoiceAiCall::STATUS_QUEUED, $call->status);
     }
 

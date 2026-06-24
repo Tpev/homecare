@@ -61,7 +61,7 @@ After the full RJ package is issued, Lolo Care, Inc. would have 9,000,000 issued
 | Effective date | [DATE] |
 | Board approval date | [BOARD APPROVAL DATE] |
 | Closing date | [CLOSING DATE] |
-| Lolo Care, Inc. principal office | [PRINCIPAL OFFICE ADDRESS] |
+| Lolo Care, Inc. principal office | 8801 Fast Park Drive, Raleigh, NC |
 | Par value | $0.00001 |
 | Purchase price per share | $0.00001 |
 | Total RJ purchase price | $10.00 |

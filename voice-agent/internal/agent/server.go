@@ -26,6 +26,7 @@ type Server struct {
 const (
 	ProfileInbound           = "inbound"
 	ProfileCallbackDiscovery = "callback_discovery"
+	ProfileProviderOutreach  = "provider_outreach"
 )
 
 type voiceResponse struct {
@@ -115,9 +116,11 @@ func (s *Server) handleTwilioVoiceProfile(w http.ResponseWriter, r *http.Request
 	from := r.PostForm.Get("From")
 	to := r.PostForm.Get("To")
 	customerPhone := from
-	if profile == ProfileCallbackDiscovery {
+	if profile == ProfileCallbackDiscovery || profile == ProfileProviderOutreach {
 		customerPhone = firstNonEmpty(to, r.URL.Query().Get("to"), from)
 	}
+
+	query := r.URL.Query()
 
 	payload := voiceResponse{
 		Say: say{
@@ -134,7 +137,14 @@ func (s *Server) handleTwilioVoiceProfile(w http.ResponseWriter, r *http.Request
 					{Name: "to", Value: to},
 					{Name: "customer_phone", Value: customerPhone},
 					{Name: "prompt_profile", Value: profile},
-					{Name: "voice_ai_call_id", Value: r.URL.Query().Get("voice_ai_call_id")},
+					{Name: "voice_ai_call_id", Value: query.Get("voice_ai_call_id")},
+					{Name: "referral_lead_id", Value: query.Get("referral_lead_id")},
+					{Name: "target_name", Value: query.Get("target_name")},
+					{Name: "target_organization", Value: query.Get("target_organization")},
+					{Name: "target_role", Value: query.Get("target_role")},
+					{Name: "target_email", Value: query.Get("target_email")},
+					{Name: "target_fax", Value: query.Get("target_fax")},
+					{Name: "target_location", Value: query.Get("target_location")},
 				},
 			},
 		},

@@ -147,6 +147,7 @@ new class extends Component
                 'label' => 'Comms & money',
                 'active' => request()->routeIs('admin.sms.*')
                     || request()->routeIs('admin.voice-ai.*')
+                    || request()->routeIs('admin.provider-outreach-ai.*')
                     || request()->routeIs('admin.payments.ops'),
                 'items' => [
                     [
@@ -158,6 +159,11 @@ new class extends Component
                         'label' => 'Voice AI Test',
                         'href' => route('admin.voice-ai.index'),
                         'active' => request()->routeIs('admin.voice-ai.*'),
+                    ],
+                    [
+                        'label' => 'Provider AI Outreach',
+                        'href' => route('admin.provider-outreach-ai.index'),
+                        'active' => request()->routeIs('admin.provider-outreach-ai.*'),
                     ],
                     [
                         'label' => 'Admin Payments',

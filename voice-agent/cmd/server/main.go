@@ -32,10 +32,16 @@ func main() {
 		logger.Fatalf("load callback discovery prompt template: %v", err)
 	}
 
+	providerOutreachPromptBuilder, err := agent.NewPromptBuilder(cfg.ProviderOutreachPromptFile)
+	if err != nil {
+		logger.Fatalf("load provider outreach prompt template: %v", err)
+	}
+
 	laravelClient := laravel.NewClient(cfg)
 	server := agent.NewServer(cfg, logger, map[string]*agent.PromptBuilder{
 		agent.ProfileInbound:           inboundPromptBuilder,
 		agent.ProfileCallbackDiscovery: callbackPromptBuilder,
+		agent.ProfileProviderOutreach:  providerOutreachPromptBuilder,
 	}, laravelClient)
 
 	httpServer := &http.Server{

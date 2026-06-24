@@ -102,6 +102,36 @@ type ReportPayload struct {
 	Metadata          map[string]any `json:"metadata,omitempty"`
 }
 
+type ProviderOutreachResultPayload struct {
+	CallSID            string         `json:"call_sid,omitempty"`
+	VoiceAICallID      string         `json:"voice_ai_call_id,omitempty"`
+	ReferralLeadID     string         `json:"referral_lead_id,omitempty"`
+	TargetName         string         `json:"target_name,omitempty"`
+	TargetOrganization string         `json:"target_organization,omitempty"`
+	TargetRole         string         `json:"target_role,omitempty"`
+	TargetPhone        string         `json:"target_phone,omitempty"`
+	TargetEmail        string         `json:"target_email,omitempty"`
+	TargetFax          string         `json:"target_fax,omitempty"`
+	TargetLocation     string         `json:"target_location,omitempty"`
+	Outcome            string         `json:"outcome"`
+	Summary            string         `json:"summary,omitempty"`
+	Notes              string         `json:"notes,omitempty"`
+	ContactName        string         `json:"contact_name,omitempty"`
+	ContactRole        string         `json:"contact_role,omitempty"`
+	Email              string         `json:"email,omitempty"`
+	Fax                string         `json:"fax,omitempty"`
+	ResourceRequested  bool           `json:"resource_requested"`
+	FollowUpNeeded     bool           `json:"follow_up_needed"`
+	BestFollowUp       string         `json:"best_follow_up,omitempty"`
+	DoNotCall          bool           `json:"do_not_call"`
+	VoicemailDetected  bool           `json:"voicemail_detected"`
+	IVRDetected        bool           `json:"ivr_detected"`
+	AIDetected         bool           `json:"ai_detected"`
+	Objection          string         `json:"objection,omitempty"`
+	TranscriptExcerpt  string         `json:"transcript_excerpt,omitempty"`
+	Metadata           map[string]any `json:"metadata,omitempty"`
+}
+
 func NewClient(cfg config.Config) *Client {
 	return &Client{
 		baseURL: cfg.LaravelBaseURL,
@@ -160,6 +190,15 @@ func (c *Client) CreateSignupLink(ctx context.Context, payload SignupPayload) (S
 
 func (c *Client) CreateCallReport(ctx context.Context, payload ReportPayload) error {
 	req, err := c.newRequest(ctx, http.MethodPost, "/api/internal/voice/reports", payload)
+	if err != nil {
+		return err
+	}
+
+	return c.do(req, nil)
+}
+
+func (c *Client) CreateProviderOutreachResult(ctx context.Context, payload ProviderOutreachResultPayload) error {
+	req, err := c.newRequest(ctx, http.MethodPost, "/api/internal/voice/provider-outreach-results", payload)
 	if err != nil {
 		return err
 	}
