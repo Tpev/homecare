@@ -27,6 +27,11 @@ func TestProviderOutreachPromptIncludesProductionConversationGuardrails(t *testi
 
 	for _, expected := range []string{
 		"Never say internal CRM labels out loud",
+		"Do not deliver the full opening as one long monologue",
+		"new home care service based in Raleigh",
+		"older adults and families arrange non-medical support",
+		"rides, meal prep, respite, light household help, and check-ins",
+		"patients, residents, or families",
 		"Who handles local resource options",
 		"simple family resource sheet",
 		"Would it be okay if I sent",

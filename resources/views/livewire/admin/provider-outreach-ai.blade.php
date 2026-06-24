@@ -91,9 +91,11 @@
             <div class="space-y-4">
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Julie opening</p>
-                    <p class="mt-2 text-sm leading-6 text-slate-800">
-                        Hi, this is Julie with LoLo Care. Who handles local resource options for families asking about non-medical help at home, like companionship, errands, meal prep, or respite?
-                    </p>
+                    <div class="mt-2 space-y-2 text-sm leading-6 text-slate-800">
+                        <p>1. Hi, this is Julie calling from LoLo Care. We are a new home care service based in Raleigh.</p>
+                        <p>2. We help older adults and families arrange non-medical support at home, like companionship, errands, rides, meal prep, respite, light household help, and check-ins.</p>
+                        <p>3. I am calling to understand the best way to make our services available as an option for your patients, residents, or families when they ask about help at home. Who would be the right person to speak with about that?</p>
+                    </div>
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-4">
