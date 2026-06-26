@@ -42,6 +42,18 @@ class LegalPagesTest extends TestCase
             ->assertDontSeeText('HomeCare');
     }
 
+    public function test_sms_opt_in_evidence_page_is_publicly_accessible(): void
+    {
+        $this->get(route('legal.sms-opt-in-evidence'))
+            ->assertOk()
+            ->assertSeeText('SMS opt-in appears on Step 7 of the public get-care form.')
+            ->assertSee(route('landing.get-care'), false)
+            ->assertSeeText('I agree LoLo may call or text me about this care request.')
+            ->assertSeeText('Message and data rates may apply.')
+            ->assertSeeText('I can reply STOP to texts.')
+            ->assertSee(route('legal.show', ['slug' => 'privacy-policy']), false);
+    }
+
     public function test_registration_pages_show_terms_links(): void
     {
         $this->get('/register')

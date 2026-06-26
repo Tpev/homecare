@@ -111,6 +111,7 @@ Route::get('/notifications/email/click/{delivery}/{token}', [NotificationEmailTr
     ->whereNumber('delivery')
     ->name('notifications.email.click');
 Route::get('/legal', [LegalPageController::class, 'index'])->name('legal.index');
+Route::view('/legal/sms-opt-in-evidence', 'legal.sms-opt-in-evidence')->name('legal.sms-opt-in-evidence');
 Route::get('/legal/{slug}', [LegalPageController::class, 'show'])
     ->whereIn('slug', array_keys(config('legal_pages.pages', [])))
     ->name('legal.show');
