@@ -31,6 +31,12 @@ class Home extends Component
             return;
         }
 
+        if ($user && $user->role === 'sdr') {
+            $this->redirect(route('sdr.calling', absolute: false), navigate: true);
+
+            return;
+        }
+
         if (! $user || $user->role !== 'caregiver') {
             return;
         }

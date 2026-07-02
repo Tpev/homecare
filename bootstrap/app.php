@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin.email' => \App\Http\Middleware\EnsureAdminEmail::class,
             'crm.access' => \App\Http\Middleware\EnsureCrmAccess::class,
+            'sdr.access' => \App\Http\Middleware\EnsureSdrAccess::class,
             'caregiver.role' => \App\Http\Middleware\EnsureCaregiverRole::class,
             'family.role' => \App\Http\Middleware\EnsureFamilyRole::class,
             'voice.agent' => \App\Http\Middleware\EnsureVoiceAgentToken::class,

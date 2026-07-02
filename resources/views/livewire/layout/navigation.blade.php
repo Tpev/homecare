@@ -21,7 +21,9 @@ new class extends Component
         $isFamily = $user?->role === 'family';
         $isAdmin = $user && ($user->role === 'admin' || strtolower($user->email) === 'test@test.com');
         $isSales = $user?->role === 'sales';
+        $isSdr = $user?->role === 'sdr';
         $canAccessCrm = $isAdmin || $isSales;
+        $canAccessSdr = $isAdmin || $isSales || $isSdr;
         $caregiverProfile = $isCaregiver ? $user?->caregiverProfile : null;
         $caregiverOnboardingState = $isCaregiver
             ? app(\App\Support\CaregiverOnboardingState::class)->build($user)
@@ -83,7 +85,7 @@ new class extends Component
         }
 
         $myProfileHref = $isCaregiver ? route('caregiver.profile.edit') : route('profile');
-        $myProfileLabel = $isCaregiver ? 'My Caregiver Profile' : 'My Family Profile';
+        $myProfileLabel = $isCaregiver ? 'My Caregiver Profile' : ($isFamily ? 'My Family Profile' : 'My Profile');
         $securityHref = route('profile').'#password-security';
         $publicProfileHref = $isCaregiver && $caregiverProfile?->slug ? route('caregivers.show', $caregiverProfile->slug) : null;
 
@@ -100,6 +102,12 @@ new class extends Component
             'label' => 'CRM',
             'href' => route('admin.crm.index'),
             'active' => request()->routeIs('admin.crm.*') || request()->routeIs('admin.leads.*'),
+        ];
+
+        $sdrCallLink = [
+            'label' => 'Call queue',
+            'href' => route('sdr.calling'),
+            'active' => request()->routeIs('sdr.*'),
         ];
 
         $adminNavGroups = [
@@ -148,6 +156,7 @@ new class extends Component
                 'active' => request()->routeIs('admin.sms.*')
                     || request()->routeIs('admin.voice-ai.*')
                     || request()->routeIs('admin.provider-outreach-ai.*')
+                    || request()->routeIs('admin.sdr-outreach.*')
                     || request()->routeIs('admin.payments.ops'),
                 'items' => [
                     [
@@ -164,6 +173,11 @@ new class extends Component
                         'label' => 'Provider AI Outreach',
                         'href' => route('admin.provider-outreach-ai.index'),
                         'active' => request()->routeIs('admin.provider-outreach-ai.*'),
+                    ],
+                    [
+                        'label' => 'SDR Outreach',
+                        'href' => route('admin.sdr-outreach.index'),
+                        'active' => request()->routeIs('admin.sdr-outreach.*'),
                     ],
                     [
                         'label' => 'Admin Payments',
@@ -199,6 +213,8 @@ new class extends Component
 
         if ($canAccessCrm) {
             $primaryLinks = [$adminCrmLink];
+        } elseif ($isSdr) {
+            $primaryLinks = [$sdrCallLink];
         } else {
             if ($user && ! $caregiverOnboardingMode) {
                 $primaryLinks[] = [
@@ -292,7 +308,7 @@ new class extends Component
                     </span>
                     <span class="block">
                         <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo" class="block h-6 w-auto object-contain sm:h-7" />
-                        <span class="mt-1 hidden text-[11px] font-medium uppercase tracking-[0.16em] text-[#6E746F] md:block">{{ $canAccessCrm ? ($isAdmin ? 'Admin console' : 'Sales workspace') : ($isCaregiver ? 'Caregiver workspace' : ($isFamily ? 'Family workspace' : 'Care that feels personal.')) }}</span>
+                        <span class="mt-1 hidden text-[11px] font-medium uppercase tracking-[0.16em] text-[#6E746F] md:block">{{ $canAccessCrm ? ($isAdmin ? 'Admin console' : 'Sales workspace') : ($isSdr ? 'SDR workspace' : ($isCaregiver ? 'Caregiver workspace' : ($isFamily ? 'Family workspace' : 'Care that feels personal.'))) }}</span>
                     </span>
                 </a>
             </div>
@@ -338,6 +354,10 @@ new class extends Component
                             </div>
                         @endforeach
                     @endif
+                @elseif ($isSdr)
+                    <x-nav-link :href="$sdrCallLink['href']" :active="$sdrCallLink['active']" wire:navigate>
+                        {{ __($sdrCallLink['label']) }}
+                    </x-nav-link>
                 @else
                     @foreach ($primaryLinks as $link)
                         @if (!empty($link['primary']))
@@ -405,6 +425,13 @@ new class extends Component
                             <p class="mt-1 text-xs text-[#6E746F]">{{ $user->email }}</p>
                             <p class="mt-2 text-xs font-medium uppercase tracking-[0.14em] text-[#6E746F]">{{ $isAdmin ? 'Admin account' : 'Sales account' }}</p>
                         </div>
+                    @elseif ($isSdr)
+                        <div class="rounded-2xl border border-[#E3D6C5] bg-[#F8F0E2] px-3 py-3 text-sm text-[#23483F]">
+                            <p class="font-semibold text-[#23483F]">{{ $user->name }}</p>
+                            <p class="mt-1 text-xs text-[#6E746F]">{{ $user->email }}</p>
+                            <p class="mt-2 text-xs font-medium uppercase tracking-[0.14em] text-[#6E746F]">SDR account</p>
+                        </div>
+                        <a href="{{ route('sdr.calling') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Call queue</a>
                     @else
                         @if ($isCaregiver && $caregiverOnboardingMode)
                             <a href="{{ route('caregiver.setup.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Setup Hub</a>
@@ -490,6 +517,10 @@ new class extends Component
                         @endforeach
                     @endforeach
                 @endif
+            @elseif ($isSdr)
+                <x-responsive-nav-link :href="$sdrCallLink['href']" :active="$sdrCallLink['active']" wire:navigate>
+                    {{ __($sdrCallLink['label']) }}
+                </x-responsive-nav-link>
             @else
                 @foreach ($primaryLinks as $link)
                     @if (!empty($link['primary']))
@@ -518,7 +549,11 @@ new class extends Component
                 </div>
 
                 <div class="mt-3 space-y-1 px-2">
-                    @if (! $canAccessCrm)
+                    @if ($isSdr)
+                        <x-responsive-nav-link :href="route('sdr.calling')" wire:navigate>{{ __('Call queue') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="$myProfileHref" wire:navigate>{{ __($myProfileLabel) }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('profile')" wire:navigate>{{ __('Account Settings') }}</x-responsive-nav-link>
+                    @elseif (! $canAccessCrm)
                         @if ($isCaregiver && $caregiverOnboardingMode)
                             <x-responsive-nav-link :href="route('caregiver.setup.index')" wire:navigate>{{ __('Setup Hub') }}</x-responsive-nav-link>
                         @endif

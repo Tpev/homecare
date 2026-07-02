@@ -26,6 +26,7 @@ use App\Livewire\Admin\FunnelAnalytics;
 use App\Livewire\Admin\LeadsIndex;
 use App\Livewire\Admin\PaymentsQueue;
 use App\Livewire\Admin\ProviderOutreachAi;
+use App\Livewire\Admin\SdrOutreachCenter;
 use App\Livewire\Admin\SmsInbox;
 use App\Livewire\Admin\SupportTicketsQueue;
 use App\Livewire\Admin\UsageAnalytics;
@@ -59,6 +60,7 @@ use App\Livewire\Family\RegularCareIndex;
 use App\Livewire\Family\RegularCareShow;
 use App\Livewire\Family\RequestsIndex;
 use App\Livewire\Messaging\Inbox;
+use App\Livewire\Sdr\CallingConsole;
 use App\Livewire\Support\TicketsCenter;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
@@ -69,6 +71,13 @@ Route::middleware(['web', 'auth', 'crm.access'])
     ->group(function () {
         Route::get('/crm', LeadsIndex::class)->name('crm.index');
         Route::get('/leads', LeadsIndex::class)->name('leads.index');
+    });
+
+Route::middleware(['web', 'auth', 'sdr.access'])
+    ->prefix('sdr')
+    ->name('sdr.')
+    ->group(function () {
+        Route::get('/calling', CallingConsole::class)->name('calling');
     });
 
 Route::middleware(['web', 'auth', 'admin.email'])
@@ -82,6 +91,7 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/sms', SmsInbox::class)->name('sms.index');
         Route::get('/voice-ai', VoiceAiTest::class)->name('voice-ai.index');
         Route::get('/provider-outreach-ai', ProviderOutreachAi::class)->name('provider-outreach-ai.index');
+        Route::get('/sdr-outreach', SdrOutreachCenter::class)->name('sdr-outreach.index');
         Route::get('/payments/ops', PaymentsQueue::class)->name('payments.ops');
         Route::get('/analytics/usage', UsageAnalytics::class)->name('analytics.usage');
         Route::get('/analytics/funnel', FunnelAnalytics::class)->name('analytics.funnel');

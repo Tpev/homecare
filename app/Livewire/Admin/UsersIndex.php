@@ -126,6 +126,7 @@ class UsersIndex extends Component
                 ['label' => 'Caregivers', 'value' => 'caregiver'],
                 ['label' => 'Families', 'value' => 'family'],
                 ['label' => 'Sales', 'value' => 'sales'],
+                ['label' => 'SDR', 'value' => 'sdr'],
                 ['label' => 'Admins', 'value' => 'admin'],
             ],
         ]);
@@ -196,6 +197,6 @@ class UsersIndex extends Component
 
     private function isAdminUser(User $user): bool
     {
-        return in_array($user->role, ['admin', 'sales'], true) || strtolower((string) $user->email) === 'test@test.com';
+        return in_array($user->role, ['admin', 'sales', 'sdr'], true) || strtolower((string) $user->email) === 'test@test.com';
     }
 }

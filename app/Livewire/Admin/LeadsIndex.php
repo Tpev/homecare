@@ -601,6 +601,7 @@ class LeadsIndex extends Component
             'case_manager' => 'Case manager',
             'hospital' => 'Hospital / discharge',
             'community_event' => 'Community event',
+            'sdr_import' => 'SDR call list',
             'referral' => 'Referral',
             'other' => 'Other',
         ];
@@ -623,7 +624,7 @@ class LeadsIndex extends Component
     {
         return User::query()
             ->where(function (Builder $query) {
-                $query->whereIn('role', ['admin', 'sales'])
+                $query->whereIn('role', ['admin', 'sales', 'sdr'])
                     ->orWhereRaw('lower(email) = ?', ['test@test.com']);
             })
             ->orderBy('name')
