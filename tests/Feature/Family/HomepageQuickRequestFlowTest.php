@@ -82,7 +82,7 @@ class HomepageQuickRequestFlowTest extends TestCase
             ->set('email', 'jane@example.com')
             ->set('zip', '27601')
             ->set('notes', 'My mom needs companionship twice a week.')
-            ->set('consent_to_contact', true)
+            ->set('sms_opt_in', true)
             ->call('submit')
             ->assertSet('submitted', true)
             ->assertDispatched('lolo-callback-submitted');
@@ -101,6 +101,9 @@ class HomepageQuickRequestFlowTest extends TestCase
         $this->assertSame('2-3 hours', $lead->data['visit_length_label']);
         $this->assertSame('Tomorrow morning', $lead->data['callback_time_label']);
         $this->assertTrue($lead->data['consent_to_contact']);
+        $this->assertTrue($lead->data['phone_callback_requested']);
+        $this->assertTrue($lead->data['consent_to_call']);
+        $this->assertTrue($lead->data['sms_opt_in']);
         $this->assertSame(Lead::PRIORITY_NORMAL, $lead->priority);
 
         Mail::assertSent(CallbackRequestOpsAlertMail::class, function (CallbackRequestOpsAlertMail $mail) use ($lead) {
@@ -135,7 +138,6 @@ class HomepageQuickRequestFlowTest extends TestCase
             ->set('visit_frequency', 'one_visit')
             ->set('visit_length', 'half_day')
             ->set('callback_time', 'today')
-            ->set('consent_to_contact', true)
             ->call('submit')
             ->assertSet('submitted', true);
 
@@ -147,7 +149,37 @@ class HomepageQuickRequestFlowTest extends TestCase
         $this->assertSame('meta', $lead->data['tracking']['utm_source']);
         $this->assertSame('paid_social', $lead->data['tracking']['utm_medium']);
         $this->assertSame('IwAR-test-click-id', $lead->data['tracking']['fbclid']);
+        $this->assertFalse($lead->data['sms_opt_in']);
         $this->assertSame(Lead::PRIORITY_HIGH, $lead->priority);
+    }
+
+    public function test_callback_page_can_be_submitted_without_sms_opt_in(): void
+    {
+        config(['marketplace.ops_alert_recipients' => []]);
+        Mail::fake();
+
+        Livewire::test(CallbackRequest::class)
+            ->set('full_name', 'No Sms Family')
+            ->set('phone', '(984) 400-2222')
+            ->set('zip', '27601')
+            ->set('service_type', 'Meal prep')
+            ->set('recipient_relationship', 'Myself')
+            ->set('start_time', 'this_week')
+            ->set('visit_frequency', 'one_visit')
+            ->set('visit_length', 'two_to_three_hours')
+            ->set('callback_time', 'today')
+            ->set('sms_opt_in', false)
+            ->call('submit')
+            ->assertHasNoErrors()
+            ->assertSet('submitted', true)
+            ->assertDispatched('lolo-callback-submitted');
+
+        $lead = Lead::query()->sole();
+
+        $this->assertSame('callback_request', $lead->data['intent']);
+        $this->assertTrue($lead->data['phone_callback_requested']);
+        $this->assertTrue($lead->data['consent_to_call']);
+        $this->assertFalse($lead->data['sms_opt_in']);
     }
 
     public function test_family_request_wizard_prefills_from_homepage_quick_request_draft(): void

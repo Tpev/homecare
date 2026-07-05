@@ -24,11 +24,11 @@
             <section class="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
                     <p class="text-xs font-semibold uppercase tracking-[0.14em] text-cyan-700">Twilio A2P evidence</p>
-                    <h1 class="mt-2 text-3xl font-black tracking-tight sm:text-4xl">SMS opt-in appears on Step 7 of the public get-care form.</h1>
+                    <h1 class="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Optional SMS opt-in appears on Step 7 of the public get-care form.</h1>
                     <p class="mt-4 text-sm leading-6 text-slate-600">
                         This page documents the public opt-in flow for LoLo Care Inc. The live form is available at
                         <a href="{{ route('landing.get-care') }}" class="font-semibold text-cyan-700 underline">{{ route('landing.get-care') }}</a>.
-                        The SMS consent checkbox appears on the final contact step before a visitor can submit the callback request.
+                        The SMS consent checkbox appears on the final contact step, but it is optional. Visitors can leave the checkbox unchecked and still submit the callback request.
                     </p>
 
                     <div class="mt-6 space-y-3 rounded-xl border border-cyan-100 bg-cyan-50 p-4 text-sm text-cyan-950">
@@ -36,16 +36,18 @@
                         <ul class="list-disc space-y-2 pl-5">
                             <li>Form URL: <a href="{{ route('landing.get-care') }}" class="font-semibold underline">{{ route('landing.get-care') }}</a></li>
                             <li>Opt-in location: Step 7 of 7, labeled "Final step" and "Where should we call you?"</li>
-                            <li>Consent is collected with an unchecked checkbox next to the SMS/call disclosure.</li>
-                            <li>The checkbox is required before the callback request can be submitted.</li>
-                            <li>The disclosure includes text/call consent, message and data rates, STOP opt-out instructions, and a Privacy Policy link.</li>
+                            <li>SMS consent is collected with a separate unchecked checkbox.</li>
+                            <li>The SMS checkbox is optional and is not required to request a callback.</li>
+                            <li>The label explicitly says visitors can leave the box unchecked if they prefer only a phone callback.</li>
+                            <li>The disclosure includes message and data rates, STOP opt-out instructions, and a Privacy Policy link.</li>
                         </ul>
                     </div>
 
                     <div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
                         <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Exact consent text</p>
                         <blockquote class="mt-2 border-l-4 border-cyan-600 pl-4 text-sm font-semibold leading-6 text-slate-800">
-                            I agree LoLo may call or text me about this care request. Message and data rates may apply. I can reply STOP to texts.
+                            Optional: I agree LoLo may text me about this care request. Message and data rates may apply. I can reply STOP to texts.
+                            Leave this unchecked if you prefer only a phone callback.
                             <a href="{{ route('legal.show', ['slug' => 'privacy-policy']) }}" class="text-cyan-700 underline">Privacy policy</a>
                         </blockquote>
                     </div>
@@ -119,9 +121,10 @@
                                         <div class="grid grid-cols-[1.25rem_minmax(0,1fr)] gap-3">
                                             <span class="mt-0.5 flex h-5 w-5 items-center justify-center rounded border-2 border-[#0f3d3e] bg-white text-xs font-black text-[#0f3d3e]" aria-hidden="true"></span>
                                             <div>
-                                                <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-700">Required SMS/call consent checkbox</p>
+                                                <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-700">Optional SMS checkbox</p>
                                                 <p class="mt-1 text-sm font-semibold leading-6 text-slate-800">
-                                                    I agree LoLo may call or text me about this care request. Message and data rates may apply. I can reply STOP to texts.
+                                                    Optional: I agree LoLo may text me about this care request. Message and data rates may apply. I can reply STOP to texts.
+                                                    Leave this unchecked if you prefer only a phone callback.
                                                     <span class="text-cyan-700 underline">Privacy policy</span>
                                                 </p>
                                             </div>
@@ -133,6 +136,10 @@
                                     <span class="inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-bold text-[#0f3d3e]">Back</span>
                                     <span class="inline-flex min-h-12 items-center justify-center rounded-lg bg-[#0f3d3e] px-4 text-sm font-bold text-white">Request my callback</span>
                                 </div>
+
+                                <p class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-center text-xs font-semibold leading-5 text-emerald-800">
+                                    This submit button remains available even when the optional SMS checkbox is unchecked.
+                                </p>
 
                                 <p class="mt-3 text-center text-xs font-semibold leading-5 text-slate-500">Care starts at $30/hr. LoLo provides non-medical support and is not for emergencies.</p>
                             </div>

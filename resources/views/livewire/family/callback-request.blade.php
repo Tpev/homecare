@@ -85,13 +85,13 @@
 
                 <div class="lolo-wizard-consent-wrap">
                     <div class="lolo-wizard-consent">
-                        <input id="lolo-callback-consent" class="lolo-wizard-consent-input" type="checkbox" wire:model.live="consent_to_contact">
-                        <label for="lolo-callback-consent" class="lolo-wizard-consent-label">
-                            I agree LoLo may call or text me about this care request. Message and data rates may apply. I can reply STOP to texts.
+                        <input id="lolo-callback-sms-opt-in" class="lolo-wizard-consent-input" type="checkbox" wire:model.live="sms_opt_in">
+                        <label for="lolo-callback-sms-opt-in" class="lolo-wizard-consent-label">
+                            Optional: I agree LoLo may text me about this care request. Message and data rates may apply. I can reply STOP to texts.
+                            Leave this unchecked if you prefer only a phone callback.
                             <a href="{{ route('legal.show', ['slug' => 'privacy-policy']) }}" target="_blank" rel="noopener noreferrer">Privacy policy</a>
                         </label>
                     </div>
-                    @error('consent_to_contact') <small class="lolo-wizard-error">{{ $message }}</small> @enderror
                 </div>
 
                 <div class="lolo-wizard-actions">

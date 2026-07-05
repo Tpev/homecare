@@ -35,7 +35,7 @@ class CallbackRequest extends Component
 
     public string $notes = '';
 
-    public bool $consent_to_contact = false;
+    public bool $sms_opt_in = false;
 
     public bool $submitted = false;
 
@@ -158,7 +158,7 @@ class CallbackRequest extends Component
             'visit_length' => ['required', 'string', Rule::in(array_keys($this->visitLengthOptions))],
             'callback_time' => ['required', 'string', Rule::in(array_keys($this->callbackOptions))],
             'notes' => ['nullable', 'string', 'max:1200'],
-            'consent_to_contact' => ['accepted'],
+            'sms_opt_in' => ['boolean'],
         ]);
 
         $source = $this->leadSource();
@@ -186,6 +186,9 @@ class CallbackRequest extends Component
                 'callback_time_label' => $this->callbackOptions[$validated['callback_time']],
                 'notes' => filled($validated['notes']) ? trim($validated['notes']) : null,
                 'starting_rate' => '$30/hr',
+                'phone_callback_requested' => true,
+                'consent_to_call' => true,
+                'sms_opt_in' => (bool) ($validated['sms_opt_in'] ?? false),
                 'consent_to_contact' => true,
                 'tracking' => $this->tracking,
                 'meta_pixel_event' => 'Lead',

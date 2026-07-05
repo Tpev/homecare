@@ -46,11 +46,15 @@ class LegalPagesTest extends TestCase
     {
         $this->get(route('legal.sms-opt-in-evidence'))
             ->assertOk()
-            ->assertSeeText('SMS opt-in appears on Step 7 of the public get-care form.')
+            ->assertSeeText('Optional SMS opt-in appears on Step 7 of the public get-care form.')
             ->assertSee(route('landing.get-care'), false)
-            ->assertSeeText('I agree LoLo may call or text me about this care request.')
+            ->assertSeeText('Optional: I agree LoLo may text me about this care request.')
             ->assertSeeText('Message and data rates may apply.')
             ->assertSeeText('I can reply STOP to texts.')
+            ->assertSeeText('Leave this unchecked if you prefer only a phone callback.')
+            ->assertSeeText('The SMS checkbox is optional and is not required to request a callback.')
+            ->assertDontSeeText('The checkbox is required before the callback request can be submitted.')
+            ->assertDontSeeText('Required SMS/call consent checkbox')
             ->assertSee(route('legal.show', ['slug' => 'privacy-policy']), false);
     }
 
