@@ -196,48 +196,85 @@
                 </section>
             </main>
 
-            <aside class="space-y-4 xl:sticky xl:top-24 xl:self-start">
+            <aside class="space-y-4 xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:self-start xl:overflow-y-auto xl:pr-1">
                 <section class="rounded-3xl border border-[#E3D6C5] bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Talk track</p>
-                    <h2 class="mt-1 text-xl font-extrabold tracking-tight text-slate-950">Open simply</h2>
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Goal</p>
+                    <p class="mt-3 text-sm font-semibold leading-6 text-slate-950">
+                        Validate that the office sees seniors/families who need support, identify the right contact, and secure permission for email or local drop-off.
+                    </p>
+                </section>
+
+                <section class="rounded-3xl border border-[#E3D6C5] bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">SDR script</p>
+                    <h2 class="mt-1 text-xl font-extrabold tracking-tight text-slate-950">Opening</h2>
                     <div class="mt-4 space-y-4 text-sm leading-6 text-slate-700">
                         <p>
-                            Hi, this is {{ auth()->user()?->name ?: 'Julie' }} calling from LoLo Care. We are a new home care service based in Raleigh.
+                            Hi, this is {{ auth()->user()?->name ?: '[Name]' }} calling from Lolo Care. We're a local Raleigh-area service that helps older adults and families find helpful senior resources and flexible non-medical support at home.
                         </p>
                         <p>
-                            We help older adults and families arrange non-medical support at home, like companionship, errands, rides, meal prep, respite, light household help, and check-ins.
+                            We're reaching out to local practices and care teams because many families ask about help for aging parents, transportation, errands, companionship, respite, or support after a health change.
                         </p>
                         <p class="font-semibold text-slate-950">
-                            Who would be the right person to speak with about making this available as an option when families ask about help at home?
+                            Is that something your team sees with patients or families?
+                        </p>
+                        <p class="rounded-2xl bg-amber-50 px-4 py-3 text-center font-bold uppercase tracking-[0.14em] text-amber-800">Pause.</p>
+                    </div>
+                </section>
+
+                <section class="rounded-3xl border border-[#E3D6C5] bg-white p-5 shadow-sm">
+                    <h2 class="text-lg font-bold text-slate-950">If yes</h2>
+                    <div class="mt-3 space-y-4 text-sm leading-6 text-slate-700">
+                        <p>
+                            That makes sense. We have helpful resources for seniors and families in Raleigh, and we'd like to share them with the right person in your office so your team has them available when families ask.
+                        </p>
+                        <p class="font-semibold text-slate-950">Who would be the best person to speak with about that?</p>
+                    </div>
+                </section>
+
+                <section class="rounded-3xl border border-[#E3D6C5] bg-white p-5 shadow-sm">
+                    <h2 class="text-lg font-bold text-slate-950">If they give a name</h2>
+                    <div class="mt-3 space-y-4 text-sm leading-6 text-slate-700">
+                        <p>Thank you. What is the best email for them?</p>
+                        <p>Would it also be okay if someone from our local team stopped by briefly with a one-page overview and senior resource information your team can keep on hand?</p>
+                    </div>
+                </section>
+
+                <section class="rounded-3xl border border-[#E3D6C5] bg-white p-5 shadow-sm">
+                    <h2 class="text-lg font-bold text-slate-950">If they ask what Lolo is</h2>
+                    <div class="mt-3 space-y-4 text-sm leading-6 text-slate-700">
+                        <p>
+                            Lolo Care helps older adults and families arrange flexible, non-medical support at home. That can include rides, errands, companionship, respite, meal support, light household help, and check-ins.
+                        </p>
+                        <p>
+                            We also share helpful resources for seniors and families in Raleigh, so provider teams have something simple to point families to when they need extra help at home.
                         </p>
                     </div>
                 </section>
 
                 <section class="rounded-3xl border border-[#E3D6C5] bg-white p-5 shadow-sm">
-                    <h2 class="text-lg font-bold text-slate-950">If they ask what this is</h2>
-                    <ul class="mt-3 space-y-3 text-sm leading-6 text-slate-700">
-                        <li>We are not asking for patient names or private information.</li>
-                        <li>No referral fee, gift, commission, or obligation.</li>
-                        <li>The goal is a simple one-page resource your team can keep on hand.</li>
-                        <li>Families choose if they want to contact us. Your team does not need to manage the process.</li>
-                    </ul>
+                    <h2 class="text-lg font-bold text-slate-950">If they ask whether you are looking for referrals</h2>
+                    <div class="mt-3 space-y-4 text-sm leading-6 text-slate-700">
+                        <p>
+                            We're mainly trying to share a helpful local resource and identify the right person in the practice. We're not asking for patient information on this call.
+                        </p>
+                        <p>
+                            If families ask your team about non-medical help at home, we'd like Lolo to be something your team can mention as an option.
+                        </p>
+                    </div>
                 </section>
 
                 <section class="rounded-3xl border border-[#E3D6C5] bg-white p-5 shadow-sm">
-                    <h2 class="text-lg font-bold text-slate-950">Objection help</h2>
+                    <h2 class="text-lg font-bold text-slate-950">If they already have home health</h2>
                     <div class="mt-3 space-y-4 text-sm leading-6 text-slate-700">
-                        <div>
-                            <p class="font-semibold text-slate-950">“We already have home health.”</p>
-                            <p>That makes sense. We are different: this is practical, non-medical help for families who do not need clinical care.</p>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-slate-950">“Send something.”</p>
-                            <p>Absolutely. What is the best email for the one-page resource, and should I address it to you?</p>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-slate-950">“Not interested.”</p>
-                            <p>No problem. I will make a note so we do not keep reaching out. Thank you for your time.</p>
-                        </div>
+                        <p>
+                            That makes sense. Lolo is different from home health. Home health is clinical care, while Lolo helps with flexible, non-medical support like rides, errands, companionship, respite, meals, household help, and check-ins.
+                        </p>
+                        <p>
+                            We also do not have hourly minimums, so families can book only the support they actually need. We're typically about 30% less expensive than traditional home care options, while paying caregivers up to 2x more than many standard caregiving roles. That helps us attract more consistent, dedicated caregivers and provide families with more reliable support at home.
+                        </p>
+                        <p class="font-semibold text-slate-950">
+                            We're usually helpful when someone does not need clinical care but still needs extra day-to-day support.
+                        </p>
                     </div>
                 </section>
             </aside>

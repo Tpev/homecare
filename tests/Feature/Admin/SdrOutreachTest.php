@@ -82,6 +82,10 @@ class SdrOutreachTest extends TestCase
             ->assertOk()
             ->assertSee('Provider calling queue')
             ->assertSee('Call queue')
+            ->assertSee('Validate that the office sees seniors/families who need support')
+            ->assertSee('Is that something your team sees with patients or families?')
+            ->assertSee('We also do not have hourly minimums')
+            ->assertDontSee('Open simply')
             ->assertDontSee('Admin Users');
 
         $this->actingAs($sdr)->get(route('admin.crm.index'))->assertForbidden();
