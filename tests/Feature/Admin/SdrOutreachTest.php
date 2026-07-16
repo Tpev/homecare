@@ -157,6 +157,87 @@ class SdrOutreachTest extends TestCase
             ->assertSee('SDR Caller');
     }
 
+    public function test_refresh_resumes_uncalled_claim_instead_of_future_follow_up(): void
+    {
+        $sdr = User::factory()->create([
+            'email' => 'caller@example.com',
+            'role' => 'sdr',
+            'name' => 'SDR Caller',
+        ]);
+
+        $firstLead = Lead::query()->create([
+            'lead_type' => Lead::TYPE_REFERRAL,
+            'name' => 'First Practice',
+            'company' => 'First Practice',
+            'phone' => '+19195550100',
+            'status' => 'new',
+            'priority' => Lead::PRIORITY_NORMAL,
+            'source' => SdrOutreach::SOURCE,
+        ]);
+        $secondLead = Lead::query()->create([
+            'lead_type' => Lead::TYPE_REFERRAL,
+            'name' => 'Second Practice',
+            'company' => 'Second Practice',
+            'phone' => '+19195550101',
+            'status' => 'new',
+            'priority' => Lead::PRIORITY_NORMAL,
+            'source' => SdrOutreach::SOURCE,
+        ]);
+
+        Livewire::actingAs($sdr)
+            ->test(CallingConsole::class)
+            ->call('claimNextLead')
+            ->assertSet('activeLeadId', $firstLead->id)
+            ->set('outcome', 'resource_requested')
+            ->call('logOutcome')
+            ->assertSet('activeLeadId', null)
+            ->call('claimNextLead')
+            ->assertSet('activeLeadId', $secondLead->id);
+
+        $firstLead->refresh();
+        $this->assertTrue($firstLead->next_follow_up_at->isFuture());
+
+        Livewire::actingAs($sdr)
+            ->test(CallingConsole::class)
+            ->assertSet('activeLeadId', $secondLead->id);
+    }
+
+    public function test_refresh_resumes_a_due_follow_up_but_not_a_future_one(): void
+    {
+        $sdr = User::factory()->create([
+            'email' => 'caller@example.com',
+            'role' => 'sdr',
+            'name' => 'SDR Caller',
+        ]);
+
+        Lead::query()->create([
+            'lead_type' => Lead::TYPE_REFERRAL,
+            'name' => 'Future Follow Up',
+            'phone' => '+19195550100',
+            'status' => 'nurturing',
+            'assigned_admin_id' => $sdr->id,
+            'priority' => Lead::PRIORITY_NORMAL,
+            'source' => SdrOutreach::SOURCE,
+            'last_contacted_at' => now()->subDay(),
+            'next_follow_up_at' => now()->addDay(),
+        ]);
+        $dueLead = Lead::query()->create([
+            'lead_type' => Lead::TYPE_REFERRAL,
+            'name' => 'Due Follow Up',
+            'phone' => '+19195550101',
+            'status' => 'nurturing',
+            'assigned_admin_id' => $sdr->id,
+            'priority' => Lead::PRIORITY_NORMAL,
+            'source' => SdrOutreach::SOURCE,
+            'last_contacted_at' => now()->subDays(2),
+            'next_follow_up_at' => now()->subMinute(),
+        ]);
+
+        Livewire::actingAs($sdr)
+            ->test(CallingConsole::class)
+            ->assertSet('activeLeadId', $dueLead->id);
+    }
+
     public function test_create_sdr_user_command_upserts_restricted_calling_accounts(): void
     {
         $this->artisan('crm:create-sdr-user caller@example.com --name="SDR Caller" --password=TemporaryPass123!')

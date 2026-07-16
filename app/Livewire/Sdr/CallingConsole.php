@@ -222,7 +222,14 @@ class CallingConsole extends Component
             ->where('source', SdrOutreach::SOURCE)
             ->where('assigned_admin_id', auth()->id())
             ->whereNotIn('status', ['active_referral', 'not_fit', 'lost', 'closed'])
-            ->orderByRaw('next_follow_up_at is null')
+            ->where(function ($query): void {
+                $query->where(function ($activeClaim): void {
+                    $activeClaim
+                        ->where('status', 'outreach')
+                        ->whereNull('next_follow_up_at');
+                })->orWhere('next_follow_up_at', '<=', now());
+            })
+            ->orderByRaw("case when status = 'outreach' and next_follow_up_at is null then 0 else 1 end")
             ->orderBy('next_follow_up_at')
             ->latest('updated_at')
             ->first();
