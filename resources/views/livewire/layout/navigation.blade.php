@@ -39,6 +39,7 @@ new class extends Component
         $invitationUnread = 0;
         $notificationUnread = 0;
         $supportUnread = 0;
+        $supportUnreadTickets = collect();
 
         if (\Illuminate\Support\Facades\Schema::hasTable('care_request_conversations')) {
             if ($isFamily) {
@@ -94,13 +95,23 @@ new class extends Component
                 ->whereNotNull('last_public_message_at');
 
             if ($isAdmin) {
-                $supportUnread = $supportUnreadQuery
+                $adminSupportUnreadQuery = $supportUnreadQuery
                     ->whereColumn('last_public_message_sender_id', 'opener_user_id')
                     ->where(function ($query) {
                         $query->whereNull('admin_last_read_at')
                             ->orWhereColumn('last_public_message_at', '>', 'admin_last_read_at');
-                    })
-                    ->count();
+                    });
+
+                $supportUnread = (clone $adminSupportUnreadQuery)->count();
+                $supportUnreadTickets = $adminSupportUnreadQuery
+                    ->with([
+                        'opener:id,name',
+                        'assignedAdmin:id,name',
+                        'latestPublicMessage.sender:id,name,role',
+                    ])
+                    ->orderByDesc('last_public_message_at')
+                    ->limit(5)
+                    ->get();
             } elseif ($isFamily || $isCaregiver) {
                 $supportUnread = $supportUnreadQuery
                     ->where('opener_user_id', $user->id)
@@ -406,7 +417,24 @@ new class extends Component
                 @endif
             </div>
 
-            <div class="sm:hidden ml-auto">
+            <div class="sm:hidden ml-auto flex items-center gap-2" @if ($isAdmin) wire:poll.10s.visible @endif>
+                @if ($isAdmin)
+                    <a
+                        href="{{ route('admin.support.tickets') }}"
+                        wire:navigate
+                        aria-label="{{ $supportUnread > 0 ? $supportUnread.' unread support tickets' : 'Support notifications' }}"
+                        class="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] text-[#23483F] shadow-sm hover:bg-[#F8F0E2]"
+                    >
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9a6 6 0 00-12 0v.75a8.967 8.967 0 01-2.312 6.022 23.848 23.848 0 005.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                        </svg>
+                        @if ($supportUnread > 0)
+                            <span class="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[#C96B55] px-1 text-[10px] font-bold leading-none text-white">
+                                {{ $supportUnread > 99 ? '99+' : $supportUnread }}
+                            </span>
+                        @endif
+                    </a>
+                @endif
                 <button @click="open = ! open" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] text-[#23483F] shadow-sm hover:bg-[#F8F0E2]">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': !open}" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -416,11 +444,90 @@ new class extends Component
             </div>
         </div>
 
-        <div class="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2" x-data="{ accountOpen: false }">
+        <div class="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 items-center gap-2" x-data="{ accountOpen: false, supportOpen: false }">
             @if ($user)
+                @if ($isAdmin)
+                    <div class="relative" wire:poll.10s.visible>
+                        <button
+                            type="button"
+                            @click="supportOpen = !supportOpen; accountOpen = false"
+                            :aria-expanded="supportOpen"
+                            aria-controls="admin-support-notifications"
+                            aria-label="{{ $supportUnread > 0 ? $supportUnread.' unread support tickets' : 'Support notifications' }}"
+                            title="Support notifications"
+                            class="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] text-[#23483F] shadow-sm transition hover:border-[#23483F]/12 hover:bg-[#F8F0E2]"
+                        >
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9a6 6 0 00-12 0v.75a8.967 8.967 0 01-2.312 6.022 23.848 23.848 0 005.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                            </svg>
+                            @if ($supportUnread > 0)
+                                <span class="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[#C96B55] px-1 text-[10px] font-bold leading-none text-white">
+                                    {{ $supportUnread > 99 ? '99+' : $supportUnread }}
+                                </span>
+                            @endif
+                        </button>
+
+                        <div
+                            id="admin-support-notifications"
+                            x-cloak
+                            x-show="supportOpen"
+                            x-transition
+                            @click.outside="supportOpen = false"
+                            class="absolute right-0 z-50 mt-2 w-[24rem] overflow-hidden rounded-[1.4rem] border border-[#E3D6C5] bg-[rgba(255,253,250,0.99)] shadow-xl"
+                            style="display: none;"
+                        >
+                            <div class="flex items-center justify-between border-b border-[#E3D6C5] px-4 py-3">
+                                <div>
+                                    <p class="text-sm font-semibold text-[#23483F]">Support activity</p>
+                                    <p class="mt-0.5 text-xs text-[#6E746F]">New customer and caregiver replies</p>
+                                </div>
+                                @if ($supportUnread > 0)
+                                    <span class="rounded-full bg-[#F5E7E1] px-2.5 py-1 text-xs font-semibold text-[#A84F3B]">{{ $supportUnread }} unread</span>
+                                @endif
+                            </div>
+
+                            <div class="max-h-[22rem] overflow-y-auto p-2">
+                                @forelse ($supportUnreadTickets as $unreadTicket)
+                                    <a
+                                        href="{{ route('admin.support.tickets.show', $unreadTicket) }}"
+                                        wire:navigate
+                                        class="block rounded-2xl px-3 py-3 text-left transition hover:bg-[#F8F0E2]"
+                                    >
+                                        <div class="flex items-start justify-between gap-3">
+                                            <p class="min-w-0 truncate text-sm font-semibold text-[#23483F]">#{{ $unreadTicket->id }} {{ $unreadTicket->subject }}</p>
+                                            <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#C96B55]" aria-hidden="true"></span>
+                                        </div>
+                                        <p class="mt-1 text-xs text-[#6E746F]">
+                                            {{ $unreadTicket->opener?->name ?: 'Former user' }}
+                                            ? {{ $unreadTicket->assignedAdmin?->name ? 'Assigned to '.$unreadTicket->assignedAdmin->name : 'Unassigned' }}
+                                        </p>
+                                        <p class="mt-1 truncate text-xs text-[#547067]">
+                                            {{ $unreadTicket->latestPublicMessage?->body ?: $unreadTicket->description }}
+                                        </p>
+                                        <p class="mt-1 text-[11px] text-[#8A8F8B]">{{ $unreadTicket->last_public_message_at?->diffForHumans() }}</p>
+                                    </a>
+                                @empty
+                                    <div class="px-4 py-8 text-center">
+                                        <p class="text-sm font-semibold text-[#23483F]">You?re all caught up</p>
+                                        <p class="mt-1 text-xs text-[#6E746F]">New support replies will appear here.</p>
+                                    </div>
+                                @endforelse
+                            </div>
+
+                            <a
+                                href="{{ route('admin.support.tickets') }}"
+                                wire:navigate
+                                class="block border-t border-[#E3D6C5] px-4 py-3 text-center text-sm font-semibold text-[#0F6B5B] hover:bg-[#F8F0E2]"
+                            >
+                                View all support tickets
+                            </a>
+                        </div>
+                    </div>
+                @endif
+
                 <button
                     type="button"
-                    @click="accountOpen = !accountOpen"
+                    @click="accountOpen = !accountOpen; supportOpen = false"
                     class="inline-flex items-center gap-3 rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] px-3 py-2 text-sm text-[#23483F] shadow-sm transition hover:border-[#23483F]/12 hover:bg-[#F8F0E2]"
                 >
                     @if ($avatarUrl)

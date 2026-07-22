@@ -201,10 +201,15 @@ class SupportTicketMessagingTest extends TestCase
         $ticket = $this->createTicket($user);
 
         $this->assertTrue($ticket->fresh()->isUnreadForAdmin());
+        $this->assertNull($ticket->assigned_admin_id);
         $this->actingAs($admin)
             ->get(route('admin.support.tickets'))
             ->assertOk()
-            ->assertSee('Admin Support (1)');
+            ->assertSee('Admin Support (1)')
+            ->assertSee('1 unread support tickets')
+            ->assertSee('Support activity')
+            ->assertSee('#'.$ticket->id.' '.$ticket->subject)
+            ->assertSee('Unassigned');
 
         Livewire::actingAs($admin)
             ->test(SupportTicketsQueue::class)
