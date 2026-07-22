@@ -1,215 +1,197 @@
-<div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
+<div class="hc-page space-y-6 py-6 sm:py-8">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
 
     @php
-        $pricing = app(\App\Support\MarketplacePricing::class);
-        $statusStyles = [
-            'active' => 'bg-emerald-100 text-emerald-700',
-            'payment_attention' => 'bg-amber-100 text-amber-800',
-            'paused' => 'bg-sky-100 text-sky-700',
-            'pending_caregiver' => 'bg-indigo-100 text-indigo-700',
-            'countered' => 'bg-amber-100 text-amber-800',
-            'declined' => 'bg-rose-100 text-rose-700',
-            'ended' => 'bg-slate-100 text-slate-700',
-            'cancelled' => 'bg-slate-100 text-slate-700',
-        ];
-        $statusStyle = $statusStyles[$plan->status] ?? 'bg-slate-100 text-slate-700';
-        $planStatusLabel = $plan->status === \App\Models\CarePlan::STATUS_PAYMENT_ATTENTION
-            ? 'PAYMENT NEEDED'
-            : strtoupper(str_replace('_', ' ', $plan->status));
-        $paymentLabel = $plan->payment_status === \App\Models\CarePlan::PAYMENT_ACTION_REQUIRED
-            ? 'ACTION NEEDED'
-            : strtoupper(str_replace('_', ' ', $plan->payment_status));
-        $tasks = collect($plan->task_snapshot ?? []);
+        $dayOptions = [0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'];
+        $next = $plan->nextBooking;
+        $nextPayment = $next?->payment;
+        $paymentNeedsAction = $nextPayment && in_array($nextPayment->status, [
+            \App\Models\CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
+            \App\Models\CareBookingPayment::STATUS_REAUTH_REQUIRED,
+            \App\Models\CareBookingPayment::STATUS_FAILED,
+        ], true);
+        $paymentProtected = $nextPayment && in_array($nextPayment->status, [
+            \App\Models\CareBookingPayment::STATUS_AUTHORIZED,
+            \App\Models\CareBookingPayment::STATUS_CAPTURED,
+            \App\Models\CareBookingPayment::STATUS_TRANSFERRED,
+        ], true);
         $address = $plan->address_snapshot ?? [];
-        $planRate = $pricing->hourlyRateForFamily($plan->family, (float) $plan->hourly_rate);
+        $tasks = collect($plan->task_snapshot ?? []);
+        $isPaused = $plan->status === \App\Models\CarePlan::STATUS_PAUSED;
+        $isEnded = in_array($plan->status, [\App\Models\CarePlan::STATUS_ENDED, \App\Models\CarePlan::STATUS_CANCELLED], true);
     @endphp
 
-    <section class="hc-brand-panel">
-        <div class="relative flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-                <p class="hc-brand-kicker text-[#E8E0FF]">Weekly care</p>
-                <div class="mt-1 flex flex-wrap items-center gap-2">
-                    <h1 class="text-2xl font-display font-semibold leading-tight sm:text-3xl">{{ $plan->title }}</h1>
-                    <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusStyle }}">{{ $planStatusLabel }}</span>
-                </div>
-                <p class="mt-2 max-w-2xl text-sm text-[#F7F1E8]/82">
-                    {{ $plan->caregiver?->name }} - {{ $scheduleLabel }} - ${{ number_format($planRate, 2) }}/hr
-                </p>
-            </div>
-            <div class="flex flex-col gap-2 sm:flex-row">
-                <a href="{{ route('family.care.index') }}" wire:navigate>
-                    <x-button color="white" light class="w-full sm:w-auto">All weekly care</x-button>
-                </a>
-                @if ($plan->nextBooking)
-                    <a href="{{ route('family.requests.show', $plan->nextBooking->care_request_id) }}" wire:navigate>
-                        <x-button color="white" class="w-full sm:w-auto">Open next visit</x-button>
-                    </a>
-                @endif
-            </div>
+    <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+            <a href="{{ route('family.care.index') }}" wire:navigate class="text-lg font-semibold text-[#0F5B52] underline underline-offset-4">Back to your care</a>
+            <h1 class="mt-3 font-display text-3xl font-semibold leading-tight text-[#17313F]">Regular care with {{ $plan->caregiver?->name }}</h1>
+            <p class="mt-2 text-lg text-[#526474]">{{ $scheduleLabel }}</p>
         </div>
-    </section>
-
-    @if ($plan->status === \App\Models\CarePlan::STATUS_PAYMENT_ATTENTION)
-        <x-alert color="amber">
-            {{ $plan->last_error ?: 'Payment action is needed before LoLo can keep this regular visit fully protected.' }}
-            @if ($plan->nextBooking)
-                <a href="{{ route('family.requests.show', $plan->nextBooking->care_request_id) }}" wire:navigate class="ml-1 font-semibold underline underline-offset-2">Open visit payment</a>
-            @else
-                <a href="{{ route('family.billing.show') }}" wire:navigate class="ml-1 font-semibold underline underline-offset-2">Open billing</a>
+        <div class="flex flex-wrap items-center gap-3">
+            @if ($plan->source_care_request_id)
+                <a href="{{ route('family.requests.show', $plan->source_care_request_id) }}" wire:navigate><x-button color="blue" light>Message caregiver</x-button></a>
             @endif
-        </x-alert>
-    @endif
-
-    @if ($plan->status === \App\Models\CarePlan::STATUS_COUNTERED)
-        <x-card>
-            <x-slot:header>
-                <div>
-                    <h2 class="font-display text-lg font-semibold">Caregiver suggested a different time</h2>
-                    <p class="text-sm text-[#607080]">{{ $counterScheduleLabel }}</p>
-                </div>
-            </x-slot:header>
-            <div class="space-y-3">
-                @if ($plan->counter_note)
-                    <div class="rounded-2xl border border-[#E4DDD3] bg-[#F7F2EA] p-3 text-sm text-[#4B5B6B]">{{ $plan->counter_note }}</div>
-                @endif
-                <div class="grid grid-cols-1 gap-2 md:grid-cols-3">
-                    @foreach ($counterVisits as $visit)
-                        <div class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{{ $visit['label'] }}</div>
-                    @endforeach
-                </div>
-            </div>
-            <x-slot:footer>
-                <x-button color="green" wire:click="acceptCounter">Accept counter schedule</x-button>
-            </x-slot:footer>
-        </x-card>
-    @endif
-
-    <section class="grid grid-cols-1 gap-5 xl:grid-cols-12">
-        <div class="space-y-5 xl:col-span-8">
-            <x-card>
-                <x-slot:header>
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <h2 class="font-display text-lg font-semibold">Upcoming visits</h2>
-                            <p class="text-sm text-[#607080]">LoLo creates each visit from this weekly schedule.</p>
-                        </div>
-                        <span class="rounded-full bg-[#F0E9E1] px-2.5 py-1 text-[11px] font-semibold text-[#4B5B6B]">
-                            {{ $paymentLabel }}
-                        </span>
-                    </div>
-                </x-slot:header>
-
-                <div class="space-y-3">
-                    @forelse ($upcomingVisits as $visit)
-                        @php
-                            $isGeneratedBooking = $plan->nextBooking
-                                && $plan->nextBooking->scheduled_start_at
-                                && $plan->nextBooking->scheduled_start_at->format('Y-m-d H:i') === $visit['start']->format('Y-m-d H:i');
-                        @endphp
-                        <div class="rounded-2xl border border-[#DED6CA] bg-white p-4">
-                            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                    <p class="font-semibold text-[#17313F]">{{ $visit['label'] }}</p>
-                                    <p class="mt-1 text-sm text-[#607080]">{{ $plan->recipientName() }} with {{ $plan->caregiver?->name }}</p>
-                                </div>
-                                @if ($isGeneratedBooking)
-                                    <x-badge color="green" text="Scheduled" />
-                                @else
-                                    <x-badge color="slate" text="PROJECTED" />
-                                @endif
-                            </div>
-                        </div>
-                    @empty
-                        <div class="rounded-2xl border border-dashed border-[#D6CCBE] px-4 py-6 text-sm text-[#607080]">
-                            No future visits are available from this schedule.
-                        </div>
-                    @endforelse
-                </div>
-            </x-card>
-
-            <x-card>
-                <x-slot:header>
-                    <h2 class="font-display text-lg font-semibold">Care instructions</h2>
-                </x-slot:header>
-                <div class="space-y-4 text-sm">
-                    <div>
-                        <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Notes</p>
-                        <p class="mt-1 text-[#324457]">{{ $plan->care_notes ?: 'No extra notes were added.' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Address</p>
-                        <p class="mt-1 text-[#324457]">
-                            {{ data_get($address, 'address_line1') }}{{ data_get($address, 'address_line2') ? ', '.data_get($address, 'address_line2') : '' }},
-                            {{ data_get($address, 'city') }}, {{ data_get($address, 'state') }} {{ data_get($address, 'zip') }}
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Tasks</p>
-                        <div class="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
-                            @forelse ($tasks as $task)
-                                <div class="rounded-xl border border-[#E4DDD3] bg-white px-3 py-2">
-                                    <p class="font-semibold text-[#17313F]">{{ $task['name'] ?? 'Care task' }}</p>
-                                    <p class="text-xs text-[#607080]">{{ $task['task_note'] ?? 'No additional note.' }}</p>
-                                </div>
-                            @empty
-                                <p class="text-sm text-[#607080]">No task list was copied from the source request.</p>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-            </x-card>
+            <span class="inline-flex min-h-11 items-center self-start rounded-full px-4 text-sm font-semibold {{ $isEnded ? 'bg-slate-100 text-slate-700' : ($isPaused ? 'bg-sky-100 text-sky-800' : 'bg-emerald-100 text-emerald-800') }}">
+                {{ $isEnded ? 'Regular care ended' : ($isPaused ? 'Care is paused' : 'Regular care is active') }}
+            </span>
         </div>
+    </header>
 
-        <aside class="space-y-5 xl:col-span-4">
-            <x-card>
-                <x-slot:header>
-                    <h2 class="font-display text-lg font-semibold">Caregiver</h2>
-                </x-slot:header>
-                <div class="space-y-3 text-sm">
-                    <div>
-                        <p class="font-display text-lg font-semibold text-[#17313F]">{{ $plan->caregiver?->name }}</p>
-                        <p class="text-[#607080]">{{ $plan->caregiver?->city }}, {{ $plan->caregiver?->state }}</p>
-                    </div>
-                    <div class="rounded-2xl border border-[#E4DDD3] bg-[#F7F2EA] p-3">
-                        <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Source</p>
-                        <p class="mt-1 font-semibold text-[#17313F]">{{ $plan->sourceCareRequest?->title ?: 'Previous request' }}</p>
-                    </div>
-                    @if ($plan->family_message)
-                        <div class="rounded-2xl border border-[#E4DDD3] bg-white p-3">
-                            <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Your message</p>
-                            <p class="mt-1 text-[#4B5B6B]">{{ $plan->family_message }}</p>
-                        </div>
+    @if ($next)
+        <section class="overflow-hidden rounded-lg border border-[#CFC5B8] bg-white shadow-sm">
+            <div class="border-b border-[#E7E0D8] bg-[#F3F8F5] px-5 py-4 sm:px-7">
+                <p class="text-sm font-bold uppercase tracking-wide text-[#0F6B5B]">Next visit</p>
+                <h2 class="mt-1 font-display text-2xl font-semibold text-[#17313F]">{{ $next->scheduled_start_at?->format('l, F j') }}</h2>
+                <p class="mt-1 text-xl font-semibold text-[#324457]">{{ $next->scheduled_start_at?->format('g:i A') }} to {{ $next->scheduled_end_at?->format('g:i A') }}</p>
+            </div>
+            <div class="grid gap-5 px-5 py-5 sm:grid-cols-2 sm:px-7 lg:grid-cols-3">
+                <div>
+                    <p class="text-sm font-semibold text-[#6A7784]">Who is coming</p>
+                    <p class="mt-1 text-lg font-semibold text-[#17313F]">{{ $plan->caregiver?->name }}</p>
+                    <p class="text-lg text-[#526474]">For {{ $plan->recipientName() }}</p>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-[#6A7784]">Where</p>
+                    <p class="mt-1 text-lg font-semibold text-[#17313F]">{{ data_get($address, 'address_line1') }}</p>
+                    <p class="text-lg text-[#526474]">{{ data_get($address, 'city') }}, {{ data_get($address, 'state') }} {{ data_get($address, 'zip') }}</p>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-[#6A7784]">Payment</p>
+                    @if ($paymentNeedsAction)
+                        <p class="mt-1 text-lg font-semibold text-amber-800">Payment needs attention</p>
+                        <a href="{{ route('family.requests.show', $next->care_request_id) }}" wire:navigate class="mt-2 inline-flex min-h-12 items-center rounded-md bg-amber-600 px-4 text-lg font-semibold text-white">Confirm payment</a>
+                    @elseif ($paymentProtected)
+                        <p class="mt-1 text-lg font-semibold text-emerald-700">Payment confirmed</p>
+                        <p class="text-lg text-[#526474]">No action needed.</p>
+                    @else
+                        <p class="mt-1 text-lg font-semibold text-[#17313F]">Card saved</p>
+                        <p class="text-lg text-[#526474]">Payment is confirmed closer to the visit.</p>
                     @endif
                 </div>
-            </x-card>
+            </div>
+            <div class="flex flex-col gap-3 border-t border-[#E7E0D8] px-5 py-4 sm:flex-row sm:px-7">
+                <a href="{{ route('family.requests.show', $next->care_request_id) }}" wire:navigate class="hc-primary-button min-h-12 text-lg">View visit details</a>
+                @if (!$isEnded)
+                    <button type="button" wire:click="skipVisit({{ $next->id }})" wire:confirm="{{ $next->scheduled_start_at?->lte(now()->addHours(24)) ? 'This visit is inside the 24-hour cancellation window. Skip it anyway?' : 'Skip this visit? Your other regular visits will continue.' }}" class="hc-secondary-button min-h-12 text-lg">Skip this visit</button>
+                @endif
+            </div>
+        </section>
+    @elseif (!$isEnded)
+        <x-alert color="blue">Your regular schedule is active. The next visit is being prepared.</x-alert>
+    @endif
 
-            @if ($plan->nextBooking)
-                <x-card>
-                    <x-slot:header>
-                        <h2 class="font-display text-lg font-semibold">Next visit</h2>
-                    </x-slot:header>
-                    <div class="space-y-2 text-sm">
-                        <p>Status: <span class="font-semibold text-[#17313F]">{{ strtoupper(str_replace('_', ' ', $plan->nextBooking->status)) }}</span></p>
-                        <p>Payment: <span class="font-semibold text-[#17313F]">{{ strtoupper($plan->nextBooking->payment?->status ?? 'pending') }}</span></p>
-                        <p>{{ optional($plan->nextBooking->scheduled_start_at)->format('M d, Y g:i A') }} to {{ optional($plan->nextBooking->scheduled_end_at)->format('g:i A') }}</p>
+    @if ($plan->pendingScheduleChanges->isNotEmpty())
+        <section class="rounded-lg border border-amber-300 bg-amber-50 p-5">
+            <h2 class="font-display text-xl font-semibold text-amber-950">Waiting for {{ $plan->caregiver?->name }}</h2>
+            <p class="mt-1 text-lg text-amber-900">{{ $plan->pendingScheduleChanges->count() }} change request{{ $plan->pendingScheduleChanges->count() === 1 ? '' : 's' }} waiting for a response. Your current visits remain scheduled.</p>
+        </section>
+    @endif
+
+    <section class="rounded-lg border border-[#D8D0C5] bg-white">
+        <div class="border-b border-[#E7E0D8] px-5 py-4 sm:px-7">
+            <h2 class="font-display text-2xl font-semibold text-[#17313F]">Later visits</h2>
+            <p class="mt-1 text-lg text-[#526474]">After your next visit, these are the visits already on the calendar.</p>
+        </div>
+        <div class="divide-y divide-[#E7E0D8]">
+            @forelse ($laterVisits as $visit)
+                @php
+                    $booking = $visit['booking'];
+                    $payment = $booking?->payment;
+                    $needsPayment = $payment && in_array($payment->status, [
+                        \App\Models\CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
+                        \App\Models\CareBookingPayment::STATUS_REAUTH_REQUIRED,
+                        \App\Models\CareBookingPayment::STATUS_FAILED,
+                    ], true);
+                @endphp
+                <article class="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+                    <div>
+                        <p class="text-lg font-semibold text-[#17313F]">{{ $visit['start']->format('l, F j') }}</p>
+                        <p class="mt-1 text-lg text-[#526474]">{{ $visit['start']->format('g:i A') }} to {{ $visit['end']->format('g:i A') }} with {{ $plan->caregiver?->name }}</p>
+                        <p class="mt-2 text-sm font-semibold {{ $needsPayment ? 'text-amber-800' : 'text-emerald-700' }}">
+                            {{ $needsPayment ? 'Payment needed' : ($payment ? 'Payment confirmed' : 'Payment checked 48 hours before') }}
+                            @if ($booking?->plan_visit_kind === 'extra') - Extra visit @endif
+                        </p>
                     </div>
-                </x-card>
-            @endif
-
-            @if ($plan->isLive())
-                <x-card>
-                    <x-slot:header>
-                        <h2 class="font-display text-lg font-semibold">Weekly care controls</h2>
-                    </x-slot:header>
-                    <p class="text-sm text-[#607080]">Ending weekly care stops future visits. Existing scheduled visits stay in the normal visit workflow.</p>
-                    <x-slot:footer>
-                        <x-button color="red" light wire:click="endPlan">End weekly care</x-button>
-                    </x-slot:footer>
-                </x-card>
-            @endif
-        </aside>
+                    <div class="flex flex-col gap-2 sm:flex-row">
+                        @if ($booking)
+                            <a href="{{ route('family.requests.show', $booking->care_request_id) }}" wire:navigate class="hc-secondary-button min-h-12 text-lg">View details</a>
+                        @endif
+                        @if ($booking && !$isEnded && $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED)
+                            <button type="button" wire:click="skipVisit({{ $booking->id }})" wire:confirm="{{ $booking->scheduled_start_at?->lte(now()->addHours(24)) ? 'This visit is inside the 24-hour cancellation window. Skip it anyway?' : 'Skip this visit? Your regular schedule will continue.' }}" class="min-h-12 rounded-md border border-[#B85C4A] px-4 text-lg font-semibold text-[#9C3E30]">Skip</button>
+                        @endif
+                    </div>
+                </article>
+            @empty
+                <p class="px-5 py-8 text-lg text-[#526474] sm:px-7">No later visits are scheduled yet.</p>
+            @endforelse
+        </div>
     </section>
+
+    @if (!$isEnded)
+        <section class="rounded-lg border border-[#D8D0C5] bg-white">
+            <div class="border-b border-[#E7E0D8] px-5 py-4 sm:px-7">
+                <h2 class="font-display text-2xl font-semibold text-[#17313F]">Manage regular care</h2>
+                <p class="mt-1 text-lg text-[#526474]">Choose one change. We will explain what happens before you confirm.</p>
+            </div>
+            <div class="grid gap-3 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-4">
+                <button type="button" wire:click="openManagePanel('extra')" class="min-h-14 rounded-md border border-[#B9CDC5] px-4 text-left text-lg font-semibold text-[#174C43] hover:bg-[#F1F7F4]">Add an extra visit</button>
+                <button type="button" wire:click="openManagePanel('schedule')" class="min-h-14 rounded-md border border-[#B9CDC5] px-4 text-left text-lg font-semibold text-[#174C43] hover:bg-[#F1F7F4]">Change future schedule</button>
+                @if ($isPaused)
+                    <button type="button" wire:click="resumePlan" class="min-h-14 rounded-md border border-[#B9CDC5] px-4 text-left text-lg font-semibold text-[#174C43] hover:bg-[#F1F7F4]">Resume regular care</button>
+                @else
+                    <button type="button" wire:click="openManagePanel('pause')" class="min-h-14 rounded-md border border-[#B9CDC5] px-4 text-left text-lg font-semibold text-[#174C43] hover:bg-[#F1F7F4]">Pause regular care</button>
+                @endif
+                <button type="button" wire:click="openManagePanel('end')" class="min-h-14 rounded-md border border-[#D9AEA5] px-4 text-left text-lg font-semibold text-[#913E31] hover:bg-rose-50">End regular care</button>
+            </div>
+
+            @if ($managePanel === 'extra')
+                <form wire:submit="requestExtraVisit" class="border-t border-[#E7E0D8] bg-[#F8FAF8] p-5 sm:p-7">
+                    <h3 class="font-display text-xl font-semibold text-[#17313F]">Ask for one extra visit</h3>
+                    <p class="mt-1 text-lg text-[#526474]">{{ $plan->caregiver?->name }} must accept before this becomes a booked visit.</p>
+                    <div class="mt-5 grid gap-4 md:grid-cols-3">
+                        <label class="text-lg font-semibold text-[#263C48]">Day<input type="date" wire:model="extraVisitDate" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg"></label>
+                        <label class="text-lg font-semibold text-[#263C48]">Start time<input type="time" wire:model="extraVisitTime" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg"></label>
+                        <label class="text-lg font-semibold text-[#263C48]">How long<select wire:model="extraVisitDuration" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg">@foreach ([60,90,120,150,180,240,300,360,420,480] as $minutes)<option value="{{ $minutes }}">{{ intdiv($minutes, 60) }}{{ $minutes % 60 ? ' hr 30 min' : ($minutes === 60 ? ' hour' : ' hours') }}</option>@endforeach</select></label>
+                    </div>
+                    <label class="mt-4 block text-lg font-semibold text-[#263C48]">Optional note<textarea wire:model="extraVisitNote" rows="3" class="mt-2 w-full rounded-md border-[#BFC8CE] text-lg"></textarea></label>
+                    <x-input-error :messages="$errors->get('extraVisitDate')" class="mt-2" /><x-input-error :messages="$errors->get('extraVisitTime')" class="mt-2" />
+                    <div class="mt-5 flex flex-col gap-3 sm:flex-row"><x-button color="green" class="min-h-12 text-lg">Send request</x-button><button type="button" wire:click="openManagePanel('')" class="hc-secondary-button min-h-12 text-lg">Cancel</button></div>
+                </form>
+            @elseif ($managePanel === 'schedule')
+                <form wire:submit="requestScheduleChange" class="border-t border-[#E7E0D8] bg-[#F8FAF8] p-5 sm:p-7">
+                    <h3 class="font-display text-xl font-semibold text-[#17313F]">Change future schedule</h3>
+                    <p class="mt-1 text-lg text-[#526474]">Current visits remain unchanged until {{ $plan->caregiver?->name }} accepts.</p>
+                    <fieldset class="mt-5"><legend class="text-lg font-semibold text-[#263C48]">New care days</legend><div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">@foreach ($dayOptions as $value => $label)<label class="flex min-h-12 items-center gap-2 rounded-md border border-[#C9D1D4] bg-white px-3 text-lg"><input type="checkbox" wire:model="scheduleDays" value="{{ $value }}" class="h-5 w-5">{{ substr($label, 0, 3) }}</label>@endforeach</div></fieldset>
+                    <div class="mt-4 grid gap-4 md:grid-cols-3"><label class="text-lg font-semibold text-[#263C48]">Start time<input type="time" wire:model="scheduleStartTime" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg"></label><label class="text-lg font-semibold text-[#263C48]">End time<input type="time" wire:model="scheduleEndTime" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg"></label><label class="text-lg font-semibold text-[#263C48]">Start new schedule on<input type="date" wire:model="scheduleEffectiveOn" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg"></label></div>
+                    <label class="mt-4 block text-lg font-semibold text-[#263C48]">Optional note<textarea wire:model="scheduleNote" rows="3" class="mt-2 w-full rounded-md border-[#BFC8CE] text-lg"></textarea></label>
+                    <x-input-error :messages="$errors->get('scheduleDays')" class="mt-2" /><x-input-error :messages="$errors->get('scheduleEndTime')" class="mt-2" /><x-input-error :messages="$errors->get('scheduleEffectiveOn')" class="mt-2" />
+                    <div class="mt-5 flex flex-col gap-3 sm:flex-row"><x-button color="green" class="min-h-12 text-lg">Send schedule change</x-button><button type="button" wire:click="openManagePanel('')" class="hc-secondary-button min-h-12 text-lg">Cancel</button></div>
+                </form>
+            @elseif ($managePanel === 'pause')
+                <form wire:submit="pausePlan" class="border-t border-[#E7E0D8] bg-[#F8FAF8] p-5 sm:p-7">
+                    <h3 class="font-display text-xl font-semibold text-[#17313F]">Pause regular care</h3><p class="mt-1 text-lg text-[#526474]">Visits during the pause will be cancelled. You can choose a return date or resume later.</p>
+                    <div class="mt-5 grid gap-4 md:grid-cols-2"><label class="text-lg font-semibold text-[#263C48]">Pause starting<input type="date" wire:model="pauseFrom" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg"></label><label class="text-lg font-semibold text-[#263C48]">Return date (optional)<input type="date" wire:model="resumeOn" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg"></label></div>
+                    <x-input-error :messages="$errors->get('pauseFrom')" class="mt-2" /><x-input-error :messages="$errors->get('resumeOn')" class="mt-2" />
+                    <div class="mt-5 flex flex-col gap-3 sm:flex-row"><x-button color="green" class="min-h-12 text-lg">Pause care</x-button><button type="button" wire:click="openManagePanel('')" class="hc-secondary-button min-h-12 text-lg">Cancel</button></div>
+                </form>
+            @elseif ($managePanel === 'end')
+                <div class="border-t border-[#E7E0D8] bg-rose-50 p-5 sm:p-7">
+                    <h3 class="font-display text-xl font-semibold text-[#612A22]">End regular care?</h3><p class="mt-2 text-lg text-[#713C34]">No new visits will be created. By default, your next confirmed visit still happens.</p>
+                    <label class="mt-4 flex min-h-12 items-center gap-3 rounded-md border border-rose-200 bg-white px-4 text-lg text-[#612A22]"><input type="checkbox" wire:model="cancelNextWhenEnding" class="h-5 w-5">Also cancel the next confirmed visit</label>
+                    <div class="mt-5 flex flex-col gap-3 sm:flex-row"><x-button color="red" wire:click="endPlan" wire:confirm="End regular care?" class="min-h-12 text-lg">End regular care</x-button><button type="button" wire:click="openManagePanel('')" class="hc-secondary-button min-h-12 text-lg">Keep regular care</button></div>
+                </div>
+            @endif
+        </section>
+    @endif
+
+    <details class="rounded-lg border border-[#D8D0C5] bg-white p-5 sm:p-7">
+        <summary class="cursor-pointer text-lg font-semibold text-[#17313F]">Care details and instructions</summary>
+        <div class="mt-5 grid gap-6 md:grid-cols-2">
+            <div><h3 class="text-lg font-semibold text-[#17313F]">Care location</h3><p class="mt-1 text-lg text-[#526474]">{{ data_get($address, 'address_line1') }}{{ data_get($address, 'address_line2') ? ', '.data_get($address, 'address_line2') : '' }}<br>{{ data_get($address, 'city') }}, {{ data_get($address, 'state') }} {{ data_get($address, 'zip') }}</p></div>
+            <div><h3 class="text-lg font-semibold text-[#17313F]">Care notes</h3><p class="mt-1 text-lg text-[#526474]">{{ $plan->care_notes ?: 'No extra notes.' }}</p></div>
+            <div class="md:col-span-2"><h3 class="text-lg font-semibold text-[#17313F]">Tasks</h3><ul class="mt-2 grid gap-2 sm:grid-cols-2">@forelse ($tasks as $task)<li class="rounded-md bg-[#F5F2ED] px-4 py-3 text-lg text-[#324457]">{{ $task['name'] ?? 'Care task' }}</li>@empty<li class="text-lg text-[#526474]">No task list added.</li>@endforelse</ul></div>
+        </div>
+    </details>
 </div>

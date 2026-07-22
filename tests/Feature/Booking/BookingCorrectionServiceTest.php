@@ -8,6 +8,7 @@ use App\Models\CareBooking;
 use App\Models\CareBookingCorrection;
 use App\Models\CareBookingPayment;
 use App\Models\CaregiverProfile;
+use App\Models\CarePlan;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\SupportTicket;
@@ -135,6 +136,170 @@ class BookingCorrectionServiceTest extends TestCase
         $this->assertNull($booking->worked_minutes);
         $this->assertNull($booking->family_confirmed_at);
         $this->assertNull($booking->check_in_source);
+    }
+
+    public function test_reopening_a_recurring_visit_reconciles_the_plan_next_booking(): void
+    {
+        [$admin, $caregiver, $booking, $ticket] = $this->scenario();
+        $family = $booking->family;
+
+        $futureRequest = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Future generated recurring visit',
+            'status' => CareRequest::STATUS_FILLED,
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'requested_start_at' => now()->addWeek()->setTime(9, 0),
+            'requested_end_at' => now()->addWeek()->setTime(12, 0),
+            'address_line1' => '123 Test Street',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+        ]);
+        $futureApplication = CareRequestApplication::query()->create([
+            'care_request_id' => $futureRequest->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 30,
+        ]);
+        $futureBooking = CareBooking::query()->create([
+            'care_request_id' => $futureRequest->id,
+            'care_request_application_id' => $futureApplication->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+            'scheduled_start_at' => $futureRequest->requested_start_at,
+            'scheduled_end_at' => $futureRequest->requested_end_at,
+            'expected_minutes' => 180,
+        ]);
+        $plan = CarePlan::query()->create([
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'source_care_request_id' => $booking->care_request_id,
+            'source_care_booking_id' => $booking->id,
+            'next_booking_id' => $futureBooking->id,
+            'status' => CarePlan::STATUS_ACTIVE,
+            'title' => 'Recurring correction test',
+            'schedule_days' => [strtolower(now()->addWeek()->format('l'))],
+            'schedule_start_time' => '09:00:00',
+            'schedule_end_time' => '12:00:00',
+            'starts_on' => now()->subMonth()->toDateString(),
+            'timezone' => config('app.timezone'),
+            'hourly_rate' => 30,
+            'payment_status' => CarePlan::PAYMENT_AUTHORIZED,
+        ]);
+        $booking->careRequest()->update(['care_plan_id' => $plan->id]);
+        $futureRequest->update(['care_plan_id' => $plan->id]);
+        $booking->update([
+            'care_plan_id' => $plan->id,
+            'occurrence_key' => "regular-care:{$plan->id}:regular:past:09:00",
+            'plan_visit_kind' => 'regular',
+            'plan_schedule_version' => 1,
+        ]);
+        $futureBooking->update([
+            'care_plan_id' => $plan->id,
+            'occurrence_key' => "regular-care:{$plan->id}:regular:future:09:00",
+            'plan_visit_kind' => 'regular',
+            'plan_schedule_version' => 1,
+        ]);
+
+        app(BookingPaymentService::class)->authorizeForBooking($booking->fresh());
+        $booking->forceFill([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'started_at' => now()->subDay()->setTime(9, 0),
+            'completed_at' => now()->subDay()->setTime(11, 0),
+            'worked_minutes' => 120,
+            'timesheet_submitted_at' => now(),
+            'family_confirmed_at' => now(),
+        ])->save();
+
+        app(BookingCorrectionService::class)->apply(
+            $ticket,
+            $admin,
+            [
+                'action' => CareBookingCorrection::ACTION_REOPEN,
+                'reason' => 'Operations is reopening this approved recurring visit for correction.',
+                'family_approved' => false,
+            ],
+            (string) Str::uuid(),
+        );
+
+        $this->assertSame(CareBooking::STATUS_SCHEDULED, $booking->fresh()->status);
+        $this->assertSame($booking->id, $plan->fresh()->next_booking_id);
+        $this->assertSame(CarePlan::PAYMENT_AUTHORIZED, $plan->fresh()->payment_status);
+    }
+
+    public function test_complete_and_bill_on_a_recurring_visit_advances_the_plan(): void
+    {
+        [$admin, $caregiver, $booking, $ticket] = $this->scenario();
+        [$plan, $futureBooking] = $this->attachRecurringPlan($booking, $caregiver);
+        app(BookingPaymentService::class)->authorizeForBooking($booking->fresh());
+
+        $correction = $this->applyCorrection($ticket, $admin, 180);
+
+        $this->assertSame(CareBookingCorrection::STATUS_SUCCEEDED, $correction->status);
+        $this->assertSame(CareBooking::STATUS_COMPLETED, $booking->fresh()->status);
+        $this->assertSame($futureBooking->id, $plan->fresh()->next_booking_id);
+        $this->assertContains($booking->fresh()->payment?->status, [
+            CareBookingPayment::STATUS_CAPTURED,
+            CareBookingPayment::STATUS_TRANSFERRED,
+        ]);
+    }
+
+    public function test_recurring_visit_refund_and_additional_charge_remain_scoped_to_that_visit(): void
+    {
+        [$admin, $caregiver, $booking, $ticket] = $this->scenario();
+        [$plan, $futureBooking] = $this->attachRecurringPlan($booking, $caregiver);
+        $this->captureExistingVisit($booking, 180);
+        $futureBooking->refresh();
+        $futurePaymentBefore = $futureBooking->payment?->toArray();
+
+        $refundCorrection = $this->applyCorrection($ticket, $admin, 120);
+
+        $this->assertSame(CareBookingCorrection::STATUS_SUCCEEDED, $refundCorrection->status);
+        $this->assertLessThan(0, $refundCorrection->payment_delta_cents);
+        $this->assertSame($futurePaymentBefore, $futureBooking->fresh()->payment?->toArray());
+        $this->assertSame($futureBooking->id, $plan->fresh()->next_booking_id);
+
+        [$increaseAdmin, $increaseCaregiver, $increaseBooking, $increaseTicket] = $this->scenario();
+        [$increasePlan, $increaseFutureBooking] = $this->attachRecurringPlan($increaseBooking, $increaseCaregiver);
+        $this->captureExistingVisit($increaseBooking, 120);
+        $increaseFuturePaymentBefore = $increaseFutureBooking->fresh()->payment?->toArray();
+
+        $chargeCorrection = $this->applyCorrection($increaseTicket, $increaseAdmin, 180);
+
+        $this->assertSame(CareBookingCorrection::STATUS_SUCCEEDED, $chargeCorrection->status);
+        $this->assertGreaterThan(0, $chargeCorrection->payment_delta_cents);
+        $this->assertSame($increaseFuturePaymentBefore, $increaseFutureBooking->fresh()->payment?->toArray());
+        $this->assertSame($increaseFutureBooking->id, $increasePlan->fresh()->next_booking_id);
+    }
+
+    public function test_failed_recurring_correction_recovery_keeps_plan_health_consistent(): void
+    {
+        [$admin, $caregiver, $booking, $ticket] = $this->scenario();
+        [$plan, $futureBooking] = $this->attachRecurringPlan($booking, $caregiver);
+        $this->captureExistingVisit($booking, 180);
+
+        $reversalAttempts = 0;
+        $stripe = Mockery::mock(StripeClient::class)->makePartial();
+        $stripe->shouldReceive('createTransferReversal')
+            ->twice()
+            ->andReturnUsing(function (string $transferId, int $amountCents) use (&$reversalAttempts): array {
+                if ($reversalAttempts++ === 0) {
+                    throw new \App\Exceptions\Payments\PaymentException('Payout reversal is temporarily unavailable.');
+                }
+
+                return ['id' => 'trr_recurring_retry', 'status' => 'succeeded', 'amount' => $amountCents];
+            });
+        $this->app->instance(StripeClient::class, $stripe);
+
+        $correction = $this->applyCorrection($ticket, $admin, 120);
+        $this->assertSame(CareBookingCorrection::STATUS_REQUIRES_ACTION, $correction->status);
+        $this->assertSame($futureBooking->id, $plan->fresh()->next_booking_id);
+
+        $correction = app(BookingCorrectionService::class)->retry($correction, $admin);
+
+        $this->assertSame(CareBookingCorrection::STATUS_SUCCEEDED, $correction->status);
+        $this->assertSame($futureBooking->id, $plan->fresh()->next_booking_id);
     }
 
     public function test_captured_visit_cannot_be_reopened(): void
@@ -371,6 +536,72 @@ class BookingCorrectionServiceTest extends TestCase
             'family_confirmed_at' => now()->subDay(),
         ])->save();
         app(BookingPaymentService::class)->captureForBooking($booking->fresh());
+    }
+
+    /** @return array{CarePlan,CareBooking} */
+    private function attachRecurringPlan(CareBooking $booking, User $caregiver): array
+    {
+        $family = $booking->family;
+        $futureRequest = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Future generated recurring visit',
+            'status' => CareRequest::STATUS_FILLED,
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'requested_start_at' => now()->addWeek()->setTime(9, 0),
+            'requested_end_at' => now()->addWeek()->setTime(12, 0),
+            'address_line1' => '123 Test Street',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+        ]);
+        $futureApplication = CareRequestApplication::query()->create([
+            'care_request_id' => $futureRequest->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 30,
+        ]);
+        $futureBooking = CareBooking::query()->create([
+            'care_request_id' => $futureRequest->id,
+            'care_request_application_id' => $futureApplication->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+            'scheduled_start_at' => $futureRequest->requested_start_at,
+            'scheduled_end_at' => $futureRequest->requested_end_at,
+            'expected_minutes' => 180,
+        ]);
+        $plan = CarePlan::query()->create([
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'source_care_request_id' => $booking->care_request_id,
+            'source_care_booking_id' => $booking->id,
+            'next_booking_id' => $booking->id,
+            'status' => CarePlan::STATUS_ACTIVE,
+            'title' => 'Recurring correction test',
+            'schedule_days' => [strtolower(now()->addWeek()->format('l'))],
+            'schedule_start_time' => '09:00:00',
+            'schedule_end_time' => '12:00:00',
+            'starts_on' => now()->subMonth()->toDateString(),
+            'timezone' => config('app.timezone'),
+            'hourly_rate' => 30,
+            'payment_status' => CarePlan::PAYMENT_AUTHORIZED,
+        ]);
+        $booking->careRequest()->update(['care_plan_id' => $plan->id]);
+        $futureRequest->update(['care_plan_id' => $plan->id]);
+        $booking->update([
+            'care_plan_id' => $plan->id,
+            'occurrence_key' => "regular-care:{$plan->id}:regular:past:09:00",
+            'plan_visit_kind' => 'regular',
+            'plan_schedule_version' => 1,
+        ]);
+        $futureBooking->update([
+            'care_plan_id' => $plan->id,
+            'occurrence_key' => "regular-care:{$plan->id}:regular:future:09:00",
+            'plan_visit_kind' => 'regular',
+            'plan_schedule_version' => 1,
+        ]);
+
+        return [$plan, $futureBooking->fresh()];
     }
 
     /** @return array{User,User,CareBooking,SupportTicket} */

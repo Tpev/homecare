@@ -327,6 +327,7 @@ class UsageAnalytics extends Component
     private function postedRequests(Carbon $start, Carbon $end): Collection
     {
         return CareRequest::query()
+            ->where('is_system_generated', false)
             ->where('status', '!=', CareRequest::STATUS_DRAFT)
             ->whereBetween('created_at', [$start, $end])
             ->get(['id', 'family_user_id', 'status', 'created_at']);
@@ -338,6 +339,7 @@ class UsageAnalytics extends Component
     private function filledRequests(Carbon $start, Carbon $end): Collection
     {
         return CareRequest::query()
+            ->where('is_system_generated', false)
             ->where('status', CareRequest::STATUS_FILLED)
             ->where(function ($query) use ($start, $end): void {
                 $query->whereBetween('first_hire_at', [$start, $end])
@@ -466,11 +468,13 @@ class UsageAnalytics extends Component
             ->each(fn (User $user) => $push($user->id, $user->created_at));
 
         CareRequest::query()
+            ->where('is_system_generated', false)
             ->whereBetween('created_at', [$start, $end])
             ->get(['family_user_id', 'created_at'])
             ->each(fn (CareRequest $request) => $push($request->family_user_id, $request->created_at));
 
         CareRequestApplication::query()
+            ->whereHas('careRequest', fn ($query) => $query->where('is_system_generated', false))
             ->whereBetween('created_at', [$start, $end])
             ->get(['caregiver_user_id', 'created_at'])
             ->each(fn (CareRequestApplication $application) => $push($application->caregiver_user_id, $application->created_at));

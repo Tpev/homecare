@@ -10,92 +10,145 @@ use App\Support\FamilyQuickRequestDraft;
 use App\Support\FunnelTracker;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Throwable;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Throwable;
 
 #[Layout('layouts.app')]
 class CreateCareRequestWizard extends Component
 {
     public const MODE_FAST_TRACK = 'fast_track';
+
     public const MODE_COMPLETE_SETUP = 'complete_setup';
+
     public const CARE_FOR_SELF = 'self';
+
     public const CARE_FOR_OTHER = 'other';
 
     public int $step = 1;
+
     public int $totalSteps = 4;
+
     public bool $modeChosen = false;
+
     public ?int $lastRequestId = null;
+
     public array $lastRequestSummary = [];
+
     public bool $prefillApplied = false;
+
     public bool $savedProfilesApplied = false;
+
     public bool $hasSavedHouseholdProfile = false;
+
     public bool $hasSavedRecipientProfile = false;
 
     public string $request_mode = self::MODE_FAST_TRACK;
 
     public string $title = '';
+
     public string $additional_info = '';
+
     public string $scope_of_work = '';
+
     public string $time_expectations = '';
+
     public string $home_access_notes = '';
+
     public int $preferred_response_hours = 12;
+
     public string $request_type = CareRequest::TYPE_ONE_TIME;
+
     public string $requested_start_at = '';
+
     public string $requested_end_at = '';
+
     public string $requested_start_date = '';
+
     public string $requested_start_time = '';
+
     public string $requested_duration_minutes = '60';
+
     public array $recurring_days = [];
+
     public string $recurring_start_time = '';
+
     public string $recurring_end_time = '';
+
     public string $recurring_duration_minutes = '60';
+
     public string $recurring_starts_on = '';
+
     public string $recurring_ends_on = '';
+
+    public string $recurring_end_choice = 'ongoing';
+
+    public string $recurring_start_adjustment_message = '';
+
     public string $address_line1 = '';
+
     public string $address_line2 = '';
+
     public string $city = '';
+
     public string $state = '';
+
     public string $zip = '';
+
     public array $selectedTasks = [];
+
     public array $taskNotes = [];
 
     public string $recipient_full_name = '';
+
     public string $recipient_date_of_birth = '';
+
     public string $recipient_gender = '';
+
     public string $recipient_mobility_level = '';
+
     public string $recipient_relationship_to_family = '';
+
     public string $recipient_care_notes = '';
+
     public string $care_for = self::CARE_FOR_OTHER;
 
     public bool $includeThirdPartyContact = false;
+
     public string $third_party_full_name = '';
+
     public string $third_party_relationship_to_recipient = '';
+
     public string $third_party_phone = '';
+
     public string $third_party_email = '';
 
     public array $taskOptions = [];
+
     public array $requestModeOptions = [
         ['label' => 'Fast Track (recommended)', 'value' => self::MODE_FAST_TRACK],
         ['label' => 'Complete Setup', 'value' => self::MODE_COMPLETE_SETUP],
     ];
+
     public array $requestTypeOptions = [
-        ['label' => 'One-time job', 'value' => CareRequest::TYPE_ONE_TIME],
-        ['label' => 'Recurring job', 'value' => CareRequest::TYPE_RECURRING],
+        ['label' => 'One visit', 'value' => CareRequest::TYPE_ONE_TIME],
+        ['label' => 'Regular visits', 'value' => CareRequest::TYPE_RECURRING],
     ];
+
     public array $careForOptions = [
         ['label' => 'Me', 'value' => self::CARE_FOR_SELF],
         ['label' => 'A family member', 'value' => self::CARE_FOR_OTHER],
     ];
+
     public array $dayOptions = [
-        ['label' => 'Sun', 'value' => 0],
-        ['label' => 'Mon', 'value' => 1],
-        ['label' => 'Tue', 'value' => 2],
-        ['label' => 'Wed', 'value' => 3],
-        ['label' => 'Thu', 'value' => 4],
-        ['label' => 'Fri', 'value' => 5],
-        ['label' => 'Sat', 'value' => 6],
+        ['label' => 'Sunday', 'value' => 0],
+        ['label' => 'Monday', 'value' => 1],
+        ['label' => 'Tuesday', 'value' => 2],
+        ['label' => 'Wednesday', 'value' => 3],
+        ['label' => 'Thursday', 'value' => 4],
+        ['label' => 'Friday', 'value' => 5],
+        ['label' => 'Saturday', 'value' => 6],
     ];
 
     public array $durationOptions = [];
@@ -149,6 +202,7 @@ class CreateCareRequestWizard extends Component
 
         $lastRequest = CareRequest::query()
             ->where('family_user_id', $user->id)
+            ->where('is_system_generated', false)
             ->with(['recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family', 'thirdPartyContact:id,care_request_id,full_name'])
             ->latest('id')
             ->first();
@@ -226,12 +280,11 @@ class CreateCareRequestWizard extends Component
             return null;
         }
 
-        $daysCount = count($this->normalizedRecurringDays());
-        if ($daysCount < 1) {
+        if ($this->normalizedRecurringDays() === []) {
             return null;
         }
 
-        return round($hoursPerShift * $daysCount, 2);
+        return round($hoursPerShift, 2);
     }
 
     public function getEstimatedCostProperty(): ?float
@@ -452,6 +505,9 @@ class CreateCareRequestWizard extends Component
                 'recurring_ends_on',
             ]);
             $this->recurring_duration_minutes = '60';
+            $this->recurring_end_choice = 'ongoing';
+            $this->recurring_start_adjustment_message = '';
+
             return;
         }
 
@@ -459,11 +515,29 @@ class CreateCareRequestWizard extends Component
         $this->requested_duration_minutes = '60';
     }
 
+    public function updatedRecurringDays(): void
+    {
+        $this->alignRecurringStartDate();
+    }
+
+    public function updatedRecurringStartsOn(): void
+    {
+        $this->alignRecurringStartDate();
+    }
+
+    public function updatedRecurringEndChoice(string $value): void
+    {
+        if ($value === 'ongoing') {
+            $this->recurring_ends_on = '';
+        }
+    }
+
     public function updatedCareFor(string $value): void
     {
         if ($value === self::CARE_FOR_SELF) {
             $this->recipient_full_name = trim((string) (auth()->user()?->name ?? ''));
             $this->recipient_relationship_to_family = 'Self';
+
             return;
         }
 
@@ -585,6 +659,7 @@ class CreateCareRequestWizard extends Component
             'recurring_duration_minutes.in' => 'Choose a duration from the list.',
             'recurring_starts_on.required' => 'Choose the first day care should start.',
             'recurring_starts_on.after_or_equal' => 'The first day cannot be in the past.',
+            'recurring_ends_on.required' => 'Choose the last day for regular care.',
             'recurring_end_time.after' => 'Choose a shorter duration or an earlier start time.',
             'address_line1.required' => 'Enter the care address.',
             'city.required' => 'Enter the city.',
@@ -653,7 +728,8 @@ class CreateCareRequestWizard extends Component
             $rules['recurring_duration_minutes'] = ['required', 'integer', Rule::in($this->durationMinuteValues())];
             $rules['recurring_end_time'] = ['required', 'date_format:H:i', 'after:recurring_start_time'];
             $rules['recurring_starts_on'] = ['required', 'date', 'after_or_equal:today'];
-            $rules['recurring_ends_on'] = ['nullable', 'date', 'after_or_equal:recurring_starts_on'];
+            $rules['recurring_end_choice'] = ['required', Rule::in(['ongoing', 'date'])];
+            $rules['recurring_ends_on'] = [Rule::requiredIf($this->recurring_end_choice === 'date'), 'nullable', 'date', 'after_or_equal:recurring_starts_on'];
         }
 
         return $rules;
@@ -690,6 +766,12 @@ class CreateCareRequestWizard extends Component
             return;
         }
 
+        $this->alignRecurringStartDate();
+
+        if ($this->recurring_end_choice === 'ongoing') {
+            $this->recurring_ends_on = '';
+        }
+
         if (trim($this->recurring_start_time) !== ''
             && trim($this->recurring_end_time) !== ''
             && (int) $this->recurring_duration_minutes === 60
@@ -710,10 +792,42 @@ class CreateCareRequestWizard extends Component
         $endMinutes = $startMinutes + $duration;
         if ($endMinutes >= (24 * 60)) {
             $this->recurring_end_time = '';
+
             return;
         }
 
         $this->recurring_end_time = $this->minutesToTimeString($endMinutes);
+    }
+
+    private function alignRecurringStartDate(): void
+    {
+        $this->recurring_start_adjustment_message = '';
+        $days = $this->normalizedRecurringDays();
+        if ($days === [] || trim($this->recurring_starts_on) === '') {
+            return;
+        }
+
+        try {
+            $start = Carbon::parse($this->recurring_starts_on)->startOfDay();
+        } catch (Throwable) {
+            return;
+        }
+
+        if (in_array($start->dayOfWeek, $days, true)) {
+            return;
+        }
+
+        for ($offset = 1; $offset <= 7; $offset++) {
+            $candidate = $start->copy()->addDays($offset);
+            if (! in_array($candidate->dayOfWeek, $days, true)) {
+                continue;
+            }
+
+            $this->recurring_starts_on = $candidate->toDateString();
+            $this->recurring_start_adjustment_message = 'Starting day moved to '.$candidate->format('l, F j').' so it matches your selected care days.';
+
+            return;
+        }
     }
 
     /**

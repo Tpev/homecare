@@ -13,6 +13,7 @@ use Livewire\Component;
 class NotificationsCenter extends Component
 {
     public string $scope = 'unread';
+
     public string $eventFilter = 'all';
 
     /**
@@ -31,8 +32,10 @@ class NotificationsCenter extends Component
         MarketplaceEvent::HIRE_CONFIRMED,
         MarketplaceEvent::SHIFT_CANCELLED,
         MarketplaceEvent::SHIFT_STARTING_SOON,
+        MarketplaceEvent::SHIFT_REMINDER_24H,
         MarketplaceEvent::SHIFT_STARTED,
         MarketplaceEvent::SHIFT_COMPLETED,
+        MarketplaceEvent::TIMESHEET_AUTO_APPROVED,
         MarketplaceEvent::MESSAGE_RECEIVED,
         MarketplaceEvent::PAYMENT_AUTHORIZED,
         MarketplaceEvent::PAYMENT_ACTION_REQUIRED,
@@ -43,6 +46,11 @@ class NotificationsCenter extends Component
         MarketplaceEvent::REGULAR_CARE_COUNTERED,
         MarketplaceEvent::REGULAR_CARE_DECLINED,
         MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION,
+        MarketplaceEvent::REGULAR_CARE_SCHEDULE_CHANGE_ACCEPTED,
+        MarketplaceEvent::REGULAR_CARE_SCHEDULE_CHANGE_DECLINED,
+        MarketplaceEvent::REGULAR_CARE_PAUSED,
+        MarketplaceEvent::REGULAR_CARE_RESUMED,
+        MarketplaceEvent::REGULAR_CARE_ENDED,
     ];
 
     public function mount(): void
@@ -215,8 +223,10 @@ class NotificationsCenter extends Component
             MarketplaceEvent::HIRE_CONFIRMED => 'Hire confirmed',
             MarketplaceEvent::SHIFT_CANCELLED => 'Visit cancelled',
             MarketplaceEvent::SHIFT_STARTING_SOON => 'Visit reminder',
+            MarketplaceEvent::SHIFT_REMINDER_24H => 'Visit tomorrow',
             MarketplaceEvent::SHIFT_STARTED => 'Visit started',
             MarketplaceEvent::SHIFT_COMPLETED => 'Visit completed',
+            MarketplaceEvent::TIMESHEET_AUTO_APPROVED => 'Timesheet approved',
             MarketplaceEvent::MESSAGE_RECEIVED => 'Message',
             MarketplaceEvent::PAYMENT_AUTHORIZED => 'Payment authorized',
             MarketplaceEvent::PAYMENT_ACTION_REQUIRED => 'Payment action required',
@@ -227,6 +237,11 @@ class NotificationsCenter extends Component
             MarketplaceEvent::REGULAR_CARE_COUNTERED => 'Regular care countered',
             MarketplaceEvent::REGULAR_CARE_DECLINED => 'Regular care declined',
             MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION => 'Regular care payment',
+            MarketplaceEvent::REGULAR_CARE_SCHEDULE_CHANGE_ACCEPTED => 'Schedule change accepted',
+            MarketplaceEvent::REGULAR_CARE_SCHEDULE_CHANGE_DECLINED => 'Schedule change declined',
+            MarketplaceEvent::REGULAR_CARE_PAUSED => 'Regular care paused',
+            MarketplaceEvent::REGULAR_CARE_RESUMED => 'Regular care resumed',
+            MarketplaceEvent::REGULAR_CARE_ENDED => 'Regular care ended',
             default => 'Update',
         };
     }
@@ -238,9 +253,13 @@ class NotificationsCenter extends Component
             MarketplaceEvent::PAYMENT_AUTHORIZED,
             MarketplaceEvent::PAYMENT_CAPTURED,
             MarketplaceEvent::HIRE_CONFIRMED,
-            MarketplaceEvent::REGULAR_CARE_ACCEPTED => 'success',
+            MarketplaceEvent::REGULAR_CARE_ACCEPTED,
+            MarketplaceEvent::REGULAR_CARE_SCHEDULE_CHANGE_ACCEPTED,
+            MarketplaceEvent::TIMESHEET_AUTO_APPROVED,
+            MarketplaceEvent::REGULAR_CARE_RESUMED => 'success',
             MarketplaceEvent::NEW_APPLICANT,
             MarketplaceEvent::INVITE_ACCEPTED,
+            MarketplaceEvent::SHIFT_REMINDER_24H,
             MarketplaceEvent::SHIFT_STARTED => 'info',
             MarketplaceEvent::INVITE_DECLINED,
             MarketplaceEvent::SHIFT_CANCELLED,
@@ -249,7 +268,10 @@ class NotificationsCenter extends Component
             MarketplaceEvent::PAYMENT_REFUNDED,
             MarketplaceEvent::REGULAR_CARE_COUNTERED,
             MarketplaceEvent::REGULAR_CARE_DECLINED,
-            MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION => 'warning',
+            MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION,
+            MarketplaceEvent::REGULAR_CARE_SCHEDULE_CHANGE_DECLINED,
+            MarketplaceEvent::REGULAR_CARE_PAUSED,
+            MarketplaceEvent::REGULAR_CARE_ENDED => 'warning',
             default => 'neutral',
         };
     }

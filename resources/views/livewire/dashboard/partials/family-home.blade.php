@@ -40,6 +40,17 @@
     $reviewRequest = $readyToReview->first();
     $waitingRequest = $needsApplicants->first();
     $nextBooking = $nextShiftRequest?->booking;
+    $nextPayment = $nextBooking?->payment;
+    $nextPaymentNeedsAction = $nextPayment && in_array($nextPayment->status, [
+        \App\Models\CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
+        \App\Models\CareBookingPayment::STATUS_REAUTH_REQUIRED,
+        \App\Models\CareBookingPayment::STATUS_FAILED,
+    ], true);
+    $nextPaymentProtected = $nextPayment && in_array($nextPayment->status, [
+        \App\Models\CareBookingPayment::STATUS_AUTHORIZED,
+        \App\Models\CareBookingPayment::STATUS_CAPTURED,
+        \App\Models\CareBookingPayment::STATUS_TRANSFERRED,
+    ], true);
     $nextCaregiver = $nextBooking?->caregiver;
     $nextCaregiverName = trim((string) ($nextCaregiver?->name ?? ''));
     $nextCaregiverPhotoUrl = $nextCaregiver?->caregiverProfile?->profile_photo_path
@@ -206,7 +217,9 @@
     if ($nextShiftRequest) {
         $careSummaryTitle = 'You have 1 upcoming visit.';
         $careSummaryBody = ($nextCaregiverName !== '' ? $nextCaregiverName : 'Your caregiver').' is coming '.$nextVisitTimeLabel.'.';
-        $careSummaryMeta = 'No action needed right now.';
+        $careSummaryMeta = $nextPaymentNeedsAction
+            ? 'Payment confirmation is needed for this visit.'
+            : ($nextPaymentProtected ? 'Payment confirmed. No action needed.' : 'Your card will be confirmed closer to the visit.');
     }
 
     if ($liveShiftRequest) {

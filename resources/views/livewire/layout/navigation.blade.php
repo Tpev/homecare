@@ -1,9 +1,6 @@
 <?php
 
 use App\Livewire\Actions\Logout;
-use App\Models\CareRequestConversation;
-use App\Models\CareRequestInvitation;
-use App\Models\SupportTicket;
 use Livewire\Volt\Component;
 
 new class extends Component
@@ -43,7 +40,7 @@ new class extends Component
 
         if (\Illuminate\Support\Facades\Schema::hasTable('care_request_conversations')) {
             if ($isFamily) {
-                $messageUnread = CareRequestConversation::query()
+                $messageUnread = \App\Models\CareRequestConversation::query()
                     ->where('family_user_id', $user->id)
                     ->whereNotNull('last_message_at')
                     ->where('last_message_sender_id', '!=', $user->id)
@@ -53,7 +50,7 @@ new class extends Component
                     })
                     ->count();
             } elseif ($isCaregiver) {
-                $messageUnread = CareRequestConversation::query()
+                $messageUnread = \App\Models\CareRequestConversation::query()
                     ->where('caregiver_user_id', $user->id)
                     ->whereNotNull('last_message_at')
                     ->where('last_message_sender_id', '!=', $user->id)
@@ -64,9 +61,9 @@ new class extends Component
                     ->count();
 
                 if (\Illuminate\Support\Facades\Schema::hasTable('care_request_invitations')) {
-                    $invitationUnread = CareRequestInvitation::query()
+                    $invitationUnread = \App\Models\CareRequestInvitation::query()
                         ->where('caregiver_user_id', $user->id)
-                        ->where('status', CareRequestInvitation::STATUS_PENDING)
+                        ->where('status', \App\Models\CareRequestInvitation::STATUS_PENDING)
                         ->where(function ($query) {
                             $query->whereNull('expires_at')->orWhere('expires_at', '>=', now());
                         })
@@ -91,7 +88,7 @@ new class extends Component
             && \Illuminate\Support\Facades\Schema::hasTable('support_tickets')
             && \Illuminate\Support\Facades\Schema::hasColumn('support_tickets', 'last_public_message_at')
         ) {
-            $supportUnreadQuery = SupportTicket::query()
+            $supportUnreadQuery = \App\Models\SupportTicket::query()
                 ->whereNotNull('last_public_message_at');
 
             if ($isAdmin) {
@@ -154,6 +151,7 @@ new class extends Component
             [
                 'label' => 'Care ops',
                 'active' => request()->routeIs('admin.requests.*')
+                    || request()->routeIs('admin.care-plans.*')
                     || request()->routeIs('admin.caregivers.reviews')
                     || request()->routeIs('admin.support.tickets*'),
                 'items' => [
@@ -161,6 +159,11 @@ new class extends Component
                         'label' => 'Admin Requests',
                         'href' => route('admin.requests.index'),
                         'active' => request()->routeIs('admin.requests.*'),
+                    ],
+                    [
+                        'label' => 'Regular Care',
+                        'href' => route('admin.care-plans.index'),
+                        'active' => request()->routeIs('admin.care-plans.*'),
                     ],
                     [
                         'label' => 'Admin Reviews',
@@ -499,7 +502,7 @@ new class extends Component
                                         </div>
                                         <p class="mt-1 text-xs text-[#6E746F]">
                                             {{ $unreadTicket->opener?->name ?: 'Former user' }}
-                                            ? {{ $unreadTicket->assignedAdmin?->name ? 'Assigned to '.$unreadTicket->assignedAdmin->name : 'Unassigned' }}
+                                            · {{ $unreadTicket->assignedAdmin?->name ? 'Assigned to '.$unreadTicket->assignedAdmin->name : 'Unassigned' }}
                                         </p>
                                         <p class="mt-1 truncate text-xs text-[#547067]">
                                             {{ $unreadTicket->latestPublicMessage?->body ?: $unreadTicket->description }}
@@ -508,7 +511,7 @@ new class extends Component
                                     </a>
                                 @empty
                                     <div class="px-4 py-8 text-center">
-                                        <p class="text-sm font-semibold text-[#23483F]">You?re all caught up</p>
+                                        <p class="text-sm font-semibold text-[#23483F]">You’re all caught up</p>
                                         <p class="mt-1 text-xs text-[#6E746F]">New support replies will appear here.</p>
                                     </div>
                                 @endforelse

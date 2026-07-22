@@ -32,27 +32,41 @@ use Livewire\Component;
 class ManageCareRequest extends Component
 {
     public CareRequest $requestItem;
+
     public string $activeTab = 'overview';
+
     public string $applicationStatus = 'all';
+
     public string $applicationSort = 'latest';
 
     public ?int $reviewRating = null;
+
     public string $reviewComment = '';
 
     public string $changeType = CareBookingChangeRequest::TYPE_CANCEL;
+
     public string $changeReason = '';
+
     public string $proposedStartAt = '';
+
     public string $proposedEndAt = '';
 
     public string $supportSubject = '';
+
     public string $supportDescription = '';
+
     public string $supportCategory = 'general';
 
     public string $confirmationNote = '';
+
     public string $directCancelReason = '';
+
     public string $disputeReason = '';
+
     public string $incidentTitle = '';
+
     public string $incidentDescription = '';
+
     public string $incidentSeverity = 'medium';
 
     public array $applicationStatusOptions = [
@@ -113,6 +127,7 @@ class ManageCareRequest extends Component
 
         if ($tab === 'shift' && ! $this->requestItem->booking) {
             $this->activeTab = CareRequestProgress::familyLifecycleStage($this->requestItem)['primary_tab'];
+
             return;
         }
 
@@ -264,6 +279,36 @@ class ManageCareRequest extends Component
             return;
         }
 
+        if ($this->requestItem->request_type === CareRequest::TYPE_RECURRING) {
+            try {
+                $plan = app(\App\Services\RegularCare\CarePlanService::class)
+                    ->activateFromRecurringRequest($this->requestItem, $application, auth()->user());
+            } catch (PaymentException $e) {
+                $this->refreshRequestItem(preferLifecyclePrimary: true);
+                session()->flash('warning', $e->userMessage);
+
+                return;
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                throw $e;
+            }
+
+            $this->refreshRequestItem(preferLifecyclePrimary: true);
+            $payment = $this->requestItem->booking?->payment;
+            if ($payment?->status === CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED) {
+                $this->dispatchPaymentConfirmation($payment);
+                session()->flash('status', 'Regular care is set up. Confirm your card for the first visit.');
+            } else {
+                session()->flash('status', 'Regular care is confirmed. Your upcoming visits are ready.');
+            }
+
+            FunnelTracker::track('regular_care_marketplace_hired', auth()->user(), $plan, [
+                'care_request_id' => $this->requestItem->id,
+                'caregiver_user_id' => $application->caregiver_user_id,
+            ]);
+
+            return;
+        }
+
         $paymentWarning = null;
         $paymentConfirmationId = null;
 
@@ -346,9 +391,9 @@ class ManageCareRequest extends Component
 
         app(MarketplaceNotificationService::class)->notify(
             recipients: auth()->user(),
-                eventKey: MarketplaceEvent::HIRE_CONFIRMED,
-                title: 'Hire confirmed',
-                body: 'Caregiver hired and visit created for this request.',
+            eventKey: MarketplaceEvent::HIRE_CONFIRMED,
+            title: 'Hire confirmed',
+            body: 'Caregiver hired and visit created for this request.',
             url: route('family.requests.show', $this->requestItem->id),
             payload: ['care_request_id' => $this->requestItem->id],
             subject: $application,
@@ -496,9 +541,11 @@ class ManageCareRequest extends Component
             $this->confirmationNote = '';
             $this->refreshRequestItem(preferLifecyclePrimary: true);
             session()->flash('status', 'Timesheet confirmed.');
+
             return;
         } else {
             session()->flash('status', 'This action is only available after caregiver check-in or timesheet submission.');
+
             return;
         }
 
@@ -612,6 +659,7 @@ class ManageCareRequest extends Component
         $booking = $this->requestItem->booking;
         if (! $booking || $booking->status !== CareBooking::STATUS_SCHEDULED) {
             session()->flash('status', 'Visit changes are only available before caregiver check-in. Use support for active or completed visits.');
+
             return;
         }
 
@@ -712,6 +760,7 @@ class ManageCareRequest extends Component
 
             $this->refreshRequestItem(preferLifecyclePrimary: true);
             session()->flash('status', 'Change request rejected.');
+
             return;
         }
 
@@ -858,6 +907,7 @@ class ManageCareRequest extends Component
 
         if (! $booking->scheduled_start_at || now()->lt($booking->scheduled_start_at->copy()->addMinutes(30))) {
             session()->flash('status', 'No-show can be marked 30 minutes after scheduled start.');
+
             return;
         }
 
@@ -1126,6 +1176,7 @@ class ManageCareRequest extends Component
                 CareRequestApplication::STATUS_HIRED,
             ], true)) {
             session()->flash('status', 'You can chat with active caregivers in this request.');
+
             return;
         }
 
@@ -1145,11 +1196,13 @@ class ManageCareRequest extends Component
         $caregiver = User::query()->select(['id', 'email'])->find($caregiverUserId);
         if (! $caregiver) {
             session()->flash('status', 'Caregiver could not be found.');
+
             return;
         }
 
         if ($this->requestItem->status !== CareRequest::STATUS_OPEN) {
             session()->flash('status', 'Invitations are available only for open requests.');
+
             return;
         }
 
@@ -1158,6 +1211,7 @@ class ManageCareRequest extends Component
 
         if ($existsInFlow) {
             session()->flash('status', 'Caregiver already in this request flow.');
+
             return;
         }
 

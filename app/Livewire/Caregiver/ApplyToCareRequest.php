@@ -26,35 +26,55 @@ use Livewire\Component;
 class ApplyToCareRequest extends Component
 {
     public CareRequest $requestItem;
+
     public string $activeTab = 'overview';
+
     public string $cover_note = '';
+
     public ?CareRequestApplication $existingApplication = null;
 
     public ?int $reviewRating = null;
+
     public string $reviewComment = '';
 
     public string $changeType = CareBookingChangeRequest::TYPE_CANCEL;
+
     public string $changeReason = '';
+
     public string $proposedStartAt = '';
+
     public string $proposedEndAt = '';
 
     public string $supportSubject = '';
+
     public string $supportDescription = '';
+
     public string $supportCategory = 'general';
 
     public string $checkInNote = '';
+
     public string $checkOutNote = '';
+
     public ?float $checkInLat = null;
+
     public ?float $checkInLng = null;
+
     public ?float $checkInAccuracy = null;
+
     public ?float $checkOutLat = null;
+
     public ?float $checkOutLng = null;
+
     public ?float $checkOutAccuracy = null;
+
     public array $shiftRecap = [];
 
     public string $incidentTitle = '';
+
     public string $incidentDescription = '';
+
     public string $incidentSeverity = 'medium';
+
     public string $disputeReason = '';
 
     public function mount(int $careRequest): void
@@ -88,11 +108,13 @@ class ApplyToCareRequest extends Component
 
         if (in_array($tab, ['shift', 'support'], true) && ! $this->existingApplication?->booking) {
             $this->activeTab = 'application';
+
             return;
         }
 
         if ($tab === 'application' && $this->existingApplication?->booking) {
             $this->activeTab = 'shift';
+
             return;
         }
 
@@ -109,6 +131,7 @@ class ApplyToCareRequest extends Component
 
         if (! auth()->user()->caregiverProfile?->isMarketplaceReady()) {
             session()->flash('status', 'Complete your profile before applying to requests.');
+
             return;
         }
 
@@ -197,8 +220,10 @@ class ApplyToCareRequest extends Component
             return;
         }
 
-        if (! $booking->caregiver_terms_accepted_at) {
-            session()->flash('status', 'Accept the visit agreement before check-in.');
+        $checkIn = app(\App\Services\RegularCare\CareBookingCheckInPolicy::class)->evaluate($booking);
+        if (! $checkIn['allowed']) {
+            session()->flash('status', $checkIn['reason']);
+
             return;
         }
 
@@ -317,6 +342,7 @@ class ApplyToCareRequest extends Component
 
         if (! in_array($booking->status, [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED], true)) {
             session()->flash('status', 'Start the visit first before checking out.');
+
             return;
         }
 
@@ -723,6 +749,7 @@ class ApplyToCareRequest extends Component
 
             $this->refreshExistingApplication();
             session()->flash('status', 'Change request rejected.');
+
             return;
         }
 
@@ -831,6 +858,7 @@ class ApplyToCareRequest extends Component
             CareRequestApplication::STATUS_HIRED,
         ], true)) {
             session()->flash('status', 'Chat is available once you are shortlisted or hired.');
+
             return;
         }
 

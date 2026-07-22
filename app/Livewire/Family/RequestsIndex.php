@@ -18,7 +18,9 @@ class RequestsIndex extends Component
     use WithPagination;
 
     public string $status = 'all';
+
     public string $requestType = 'all';
+
     public string $sort = 'latest';
 
     public array $statusOptions = [
@@ -68,6 +70,7 @@ class RequestsIndex extends Component
             ->with(['recipient', 'booking'])
             ->withCount(['applications'])
             ->where('family_user_id', auth()->id())
+            ->where('is_system_generated', false)
             ->when($this->status !== 'all', fn ($q) => $q->where('status', $this->status))
             ->when($this->requestType !== 'all', fn ($q) => $q->where('request_type', $this->requestType));
 
@@ -93,6 +96,7 @@ class RequestsIndex extends Component
 
         $attentionCount = CareRequest::query()
             ->where('family_user_id', auth()->id())
+            ->where('is_system_generated', false)
             ->where(function ($query) {
                 $query->where(function ($requestQuery) {
                     $requestQuery->where('status', CareRequest::STATUS_OPEN)
@@ -120,6 +124,7 @@ class RequestsIndex extends Component
 
         $avgFirstResponseMinutes = CareRequest::query()
             ->where('family_user_id', auth()->id())
+            ->where('is_system_generated', false)
             ->whereNotNull('first_applicant_at')
             ->get(['created_at', 'first_applicant_at'])
             ->map(fn (CareRequest $request) => CareRequestProgress::elapsedMinutes($request->created_at, $request->first_applicant_at))

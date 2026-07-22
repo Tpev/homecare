@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
 use App\Services\Payments\StripeClient;
+use App\Services\RegularCare\CarePlanHealthService;
 use App\Support\MarketplaceEvent;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -29,6 +30,7 @@ class BookingCorrectionService
         private readonly StripeClient $stripe,
         private readonly BookingTrustService $trust,
         private readonly MarketplaceNotificationService $notifications,
+        private readonly CarePlanHealthService $planHealth,
     ) {}
 
     /**
@@ -298,6 +300,15 @@ class BookingCorrectionService
         } catch (Throwable $exception) {
             report($exception);
             $this->markFailed($correction, $admin, 'The correction could not be completed. No automatic retry was made.');
+        } finally {
+            $booking = $correction->booking()->first();
+            if ($booking?->care_plan_id) {
+                try {
+                    $this->planHealth->reconcileForBooking($booking);
+                } catch (Throwable $exception) {
+                    report($exception);
+                }
+            }
         }
 
         return $correction->fresh(['booking.payment']);

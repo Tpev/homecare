@@ -20,6 +20,8 @@ use App\Http\Controllers\TwilioSmsWebhookController;
 use App\Http\Controllers\TwilioVoiceWebhookController;
 use App\Livewire\Admin\CaregiverCoverageMap;
 use App\Livewire\Admin\CaregiverReviewsQueue;
+use App\Livewire\Admin\CarePlanShow;
+use App\Livewire\Admin\CarePlansIndex;
 use App\Livewire\Admin\CareRequestShow as AdminCareRequestShow;
 use App\Livewire\Admin\CareRequestsIndex;
 use App\Livewire\Admin\FunnelAnalytics;
@@ -105,6 +107,8 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/users/{user}', UserShow::class)->name('users.show');
         Route::get('/requests', CareRequestsIndex::class)->name('requests.index');
         Route::get('/requests/{careRequest}', AdminCareRequestShow::class)->name('requests.show');
+        Route::get('/care-plans', CarePlansIndex::class)->name('care-plans.index');
+        Route::get('/care-plans/{carePlan}', CarePlanShow::class)->name('care-plans.show');
     });
 
 Route::get('/', [MarketingPagesController::class, 'landing'])->name('landing');

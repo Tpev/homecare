@@ -3,6 +3,7 @@
 namespace App\Livewire\Caregiver;
 
 use App\Models\CarePlan;
+use App\Models\CarePlanScheduleChange;
 use App\Services\RegularCare\CarePlanService;
 use App\Support\CaregiverPrelaunch;
 use Illuminate\Validation\ValidationException;
@@ -13,10 +14,15 @@ use Livewire\Component;
 class RegularClients extends Component
 {
     public ?int $counterPlanId = null;
+
     public array $counterScheduleDays = [];
+
     public string $counterStartTime = '';
+
     public string $counterEndTime = '';
+
     public string $counterStartsOn = '';
+
     public string $counterNote = '';
 
     public function mount(): void
@@ -48,6 +54,19 @@ class RegularClients extends Component
         $plan = $this->findOwnPlan($planId);
         app(CarePlanService::class)->declineOffer($plan, auth()->user());
         session()->flash('status', 'Regular care offer declined.');
+    }
+
+    public function respondToChange(int $changeId, bool $accept): void
+    {
+        $change = CarePlanScheduleChange::query()
+            ->whereHas('plan', fn ($query) => $query->where('caregiver_user_id', auth()->id()))
+            ->where('status', CarePlanScheduleChange::STATUS_PENDING)
+            ->findOrFail($changeId);
+
+        app(CarePlanService::class)->respondToScheduleChange($change, auth()->user(), $accept);
+        session()->flash('status', $accept
+            ? 'Change accepted. Your visit list has been updated.'
+            : 'Change declined. The family has been notified and the current schedule remains.');
     }
 
     public function openCounter(int $planId): void
@@ -116,8 +135,10 @@ class RegularClients extends Component
         $activePlans = CarePlan::query()
             ->with([
                 'family:id,name,email,city,state',
+                'sourceCareRequest:id,title',
                 'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
                 'nextBooking.payment:id,care_booking_id,status',
+                'pendingScheduleChanges.requestedBy:id,name',
             ])
             ->where('caregiver_user_id', $userId)
             ->whereIn('status', [
@@ -128,9 +149,17 @@ class RegularClients extends Component
             ->latest()
             ->get();
 
+        $pendingChanges = CarePlanScheduleChange::query()
+            ->with(['plan.family:id,name', 'requestedBy:id,name'])
+            ->whereHas('plan', fn ($query) => $query->where('caregiver_user_id', $userId))
+            ->where('status', CarePlanScheduleChange::STATUS_PENDING)
+            ->oldest()
+            ->get();
+
         return view('livewire.caregiver.regular-clients', [
             'offers' => $offers,
             'activePlans' => $activePlans,
+            'pendingChanges' => $pendingChanges,
             'scheduleService' => $plans,
             'prelaunchMode' => CaregiverPrelaunch::enabled(),
         ]);

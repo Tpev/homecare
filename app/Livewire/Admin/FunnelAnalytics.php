@@ -3,10 +3,10 @@
 namespace App\Livewire\Admin;
 
 use App\Models\CareBooking;
+use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareReview;
-use App\Models\CaregiverProfile;
 use App\Models\MarketplaceNotificationDelivery;
 use App\Models\PageViewEvent;
 use App\Models\User;
@@ -20,6 +20,7 @@ use Livewire\Component;
 class FunnelAnalytics extends Component
 {
     public int $days = 30;
+
     public string $trendGranularity = 'day';
 
     protected array $allowedTrendGranularities = ['day', 'week', 'month'];
@@ -244,6 +245,7 @@ class FunnelAnalytics extends Component
             ->all();
 
         $familyPostedRequestIds = CareRequest::query()
+            ->where('is_system_generated', false)
             ->whereIn('family_user_id', $familyRegisteredIds)
             ->where('created_at', '>=', $this->start)
             ->select('family_user_id')
@@ -253,6 +255,7 @@ class FunnelAnalytics extends Component
             ->all();
 
         $familyReceivedApplicantIds = CareRequest::query()
+            ->where('is_system_generated', false)
             ->whereIn('family_user_id', $familyPostedRequestIds)
             ->where(function ($query) {
                 $query->whereNotNull('first_applicant_at')
@@ -265,6 +268,7 @@ class FunnelAnalytics extends Component
             ->all();
 
         $familyHiredIds = CareRequest::query()
+            ->where('is_system_generated', false)
             ->whereIn('family_user_id', $familyReceivedApplicantIds)
             ->where(function ($query) {
                 $query->whereNotNull('first_hire_at')
@@ -451,7 +455,7 @@ class FunnelAnalytics extends Component
     }
 
     /**
-     * @param array<int, array{label: string, ids: array<int, int|string>}> $steps
+     * @param  array<int, array{label: string, ids: array<int, int|string>}>  $steps
      * @return array<int, array{
      *     label: string,
      *     ids: array<int, int|string>,
@@ -542,7 +546,7 @@ class FunnelAnalytics extends Component
     }
 
     /**
-     * @param array<string, array{label_short: string, label_full: string, count: int}> $buckets
+     * @param  array<string, array{label_short: string, label_full: string, count: int}>  $buckets
      */
     private function incrementTrendBucket(array &$buckets, Carbon $at): void
     {
@@ -581,7 +585,7 @@ class FunnelAnalytics extends Component
     }
 
     /**
-     * @param array<string, array{label_short: string, label_full: string, count: int}> $buckets
+     * @param  array<string, array{label_short: string, label_full: string, count: int}>  $buckets
      * @return array<int, array{label_short: string, label_full: string, count: int, show_label: bool}>
      */
     private function buildTrendSeries(array $buckets): array
@@ -599,7 +603,7 @@ class FunnelAnalytics extends Component
     }
 
     /**
-     * @param list<int> $userIds
+     * @param  list<int>  $userIds
      */
     private function countProfileAndKycCompleteUsers(array $userIds): int
     {

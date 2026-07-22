@@ -3,19 +3,19 @@
 namespace Tests\Feature\Family;
 
 use App\Exceptions\Payments\PaymentException;
-use App\Mail\Ops\NewCareRequestOpsAlertMail;
 use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Family\CreateCareRequestWizard;
 use App\Livewire\Family\ManageCareRequest;
+use App\Mail\Ops\NewCareRequestOpsAlertMail;
 use App\Models\CareBooking;
 use App\Models\CareBookingPayment;
+use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
 use App\Models\CareReview;
 use App\Models\CareTask;
-use App\Models\CaregiverProfile;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
@@ -194,8 +194,8 @@ class CareRequestFlowTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertSame(1, substr_count($weeklyCareHtml, 'Set up weekly care with Caroline'), 'Caroline should only appear once on weekly care.');
-        $this->assertSame(1, substr_count($weeklyCareHtml, 'Set up weekly care with Bob'), 'Bob should only appear once on weekly care.');
+        $this->assertSame(1, substr_count($weeklyCareHtml, 'Set up regular care with Caroline'), 'Caroline should only appear once on regular care.');
+        $this->assertSame(1, substr_count($weeklyCareHtml, 'Set up regular care with Bob'), 'Bob should only appear once on regular care.');
     }
 
     public function test_request_detail_lands_on_the_right_lifecycle_screen(): void
@@ -1099,16 +1099,27 @@ class CareRequestFlowTest extends TestCase
             ->call('hire', $application->id);
 
         $request = $request->fresh('booking');
+        $firstScheduledDay = $recurringStartsOn->copy();
+        while (! in_array($firstScheduledDay->dayOfWeek, [1, 3, 5], true)) {
+            $firstScheduledDay->addDay();
+        }
 
         $this->assertNotNull($request->booking);
         $this->assertSame('scheduled', $request->booking->status);
         $this->assertSame(
-            $recurringStartsOn->copy()->setTime(9, 0, 0)->format('Y-m-d H:i:s'),
+            $firstScheduledDay->copy()->setTime(9, 0, 0)->format('Y-m-d H:i:s'),
             $request->booking->scheduled_start_at?->format('Y-m-d H:i:s')
         );
         $this->assertSame(
-            $recurringStartsOn->copy()->setTime(12, 30, 0)->format('Y-m-d H:i:s'),
+            $firstScheduledDay->copy()->setTime(12, 30, 0)->format('Y-m-d H:i:s'),
             $request->booking->scheduled_end_at?->format('Y-m-d H:i:s')
+        );
+        $plan = \App\Models\CarePlan::query()->where('source_care_request_id', $request->id)->firstOrFail();
+        $this->assertSame(\App\Models\CarePlan::STATUS_ACTIVE, $plan->status);
+        $this->assertGreaterThan(1, $plan->generatedBookings()->count());
+        $this->assertSame(
+            $plan->generatedBookings()->count(),
+            $plan->generatedBookings()->distinct('occurrence_key')->count('occurrence_key')
         );
     }
 
@@ -1326,6 +1337,7 @@ class CareRequestFlowTest extends TestCase
             ->set('recurring_start_time', '09:00')
             ->set('recurring_end_time', '12:00')
             ->set('recurring_starts_on', now()->addDay()->toDateString())
+            ->set('recurring_end_choice', 'date')
             ->set('recurring_ends_on', now()->addMonths(2)->toDateString())
             ->set('address_line1', '900 Elm St')
             ->set('city', 'Raleigh')
@@ -1348,8 +1360,31 @@ class CareRequestFlowTest extends TestCase
         $this->assertSame([1, 3, 5], $careRequest->recurring_days);
         $this->assertSame('09:00', $careRequest->recurring_start_time);
         $this->assertSame('12:00', $careRequest->recurring_end_time);
+        $this->assertNotNull($careRequest->recurring_ends_on);
         $this->assertNull($careRequest->requested_start_at);
         $this->assertNull($careRequest->requested_end_at);
+    }
+
+    public function test_recurring_request_moves_first_day_to_selected_weekday_and_estimates_one_visit(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $mismatchedStart = now()->addDays(2)->startOfDay();
+        $selectedDay = ($mismatchedStart->dayOfWeek + 1) % 7;
+        $expectedStart = $mismatchedStart->copy()->addDay();
+
+        $component = Livewire::actingAs($family)
+            ->test(CreateCareRequestWizard::class)
+            ->set('request_type', CareRequest::TYPE_RECURRING)
+            ->set('recurring_days', [$selectedDay])
+            ->set('recurring_starts_on', $mismatchedStart->toDateString())
+            ->set('recurring_start_time', '09:00')
+            ->set('recurring_duration_minutes', '180');
+
+        $component
+            ->assertSet('recurring_starts_on', $expectedStart->toDateString())
+            ->assertSee('Starting day moved to '.$expectedStart->format('l, F j'));
+        $this->assertSame(3.0, $component->get('estimatedHours'));
+        $this->assertSame(90.0, $component->get('estimatedCost'));
     }
 
     public function test_family_can_publish_without_custom_title_and_request_gets_generated_title(): void

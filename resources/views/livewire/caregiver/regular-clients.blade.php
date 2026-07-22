@@ -51,6 +51,45 @@
         </div>
     </section>
 
+    @if ($pendingChanges->isNotEmpty())
+        <section class="rounded-lg border border-amber-300 bg-amber-50">
+            <div class="border-b border-amber-200 px-5 py-4 sm:px-7">
+                <p class="text-sm font-bold uppercase tracking-wide text-amber-800">Needs your response</p>
+                <h2 class="mt-1 font-display text-2xl font-semibold text-amber-950">Regular-care changes</h2>
+                <p class="mt-1 text-base text-amber-900">Review the exact change before accepting. Current visits stay unchanged until you accept.</p>
+            </div>
+            <div class="divide-y divide-amber-200">
+                @foreach ($pendingChanges as $change)
+                    @php
+                        $proposal = $change->proposed_schedule ?? [];
+                        $isExtra = $change->type === \App\Models\CarePlanScheduleChange::TYPE_EXTRA_VISIT;
+                        $proposedStart = $isExtra ? \Illuminate\Support\Carbon::parse((string) data_get($proposal, 'start_at')) : null;
+                        $proposedEnd = $isExtra ? \Illuminate\Support\Carbon::parse((string) data_get($proposal, 'end_at')) : null;
+                        $proposedDays = collect(data_get($proposal, 'days', []))->map(fn ($day) => $dayOptions[(int) $day] ?? null)->filter()->implode(', ');
+                    @endphp
+                    <article class="px-5 py-5 sm:px-7">
+                        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                                <h3 class="font-display text-xl font-semibold text-[#17313F]">{{ $change->plan?->family?->name }} requests {{ $isExtra ? 'an extra visit' : 'a schedule change' }}</h3>
+                                @if ($isExtra)
+                                    <p class="mt-2 text-lg font-semibold text-[#324457]">{{ $proposedStart?->format('l, F j, g:i A') }} to {{ $proposedEnd?->format('g:i A') }}</p>
+                                @else
+                                    <p class="mt-2 text-lg font-semibold text-[#324457]">{{ $proposedDays }}</p>
+                                    <p class="text-base text-[#526474]">{{ \Illuminate\Support\Carbon::parse((string) data_get($proposal, 'start_time'))->format('g:i A') }} to {{ \Illuminate\Support\Carbon::parse((string) data_get($proposal, 'end_time'))->format('g:i A') }}, starting {{ $change->effective_on?->format('F j') }}</p>
+                                @endif
+                                @if ($change->note)<p class="mt-3 rounded-md bg-white px-4 py-3 text-base text-[#526474]">{{ $change->note }}</p>@endif
+                            </div>
+                            <div class="flex flex-col gap-2 sm:flex-row">
+                                <button type="button" wire:click="respondToChange({{ $change->id }}, true)" wire:confirm="Accept this change? Your visit list will update." class="hc-primary-button min-h-12 text-base">Accept</button>
+                                <button type="button" wire:click="respondToChange({{ $change->id }}, false)" wire:confirm="Decline this change? The current schedule will stay." class="hc-secondary-button min-h-12 text-base">Decline</button>
+                            </div>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     <section class="grid grid-cols-1 gap-5 xl:grid-cols-12">
         <div class="space-y-5 xl:col-span-8">
             <x-card>
@@ -192,11 +231,18 @@
                             @endif
                             <p class="mt-2 text-xs text-[#607080]">{{ $scheduleService->scheduleLabel($plan) }}</p>
                             <p class="mt-1 text-xs text-[#4B5B6B]">Next: {{ $upcoming[0]['label'] ?? optional($plan->nextBooking?->scheduled_start_at)->format('M d, g:i A') ?? 'pending' }}</p>
-                            @if ($plan->nextBooking)
-                                <div class="mt-3">
-                                    <a href="{{ route('care-requests.apply', $plan->nextBooking->care_request_id) }}" wire:navigate>
-                                        <x-button color="blue" light sm class="w-full">Open next visit</x-button>
-                                    </a>
+                            @if ($plan->nextBooking || $plan->source_care_request_id)
+                                <div class="mt-3 grid gap-2">
+                                    @if ($plan->nextBooking)
+                                        <a href="{{ route('care-requests.apply', $plan->nextBooking->care_request_id) }}" wire:navigate>
+                                            <x-button color="blue" light sm class="w-full">Open next visit</x-button>
+                                        </a>
+                                    @endif
+                                    @if ($plan->source_care_request_id)
+                                        <a href="{{ route('care-requests.apply', $plan->source_care_request_id) }}" wire:navigate>
+                                            <x-button color="gray" light sm class="w-full">Message family</x-button>
+                                        </a>
+                                    @endif
                                 </div>
                             @endif
                         </div>

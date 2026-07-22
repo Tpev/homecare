@@ -5,7 +5,9 @@ namespace App\Console\Commands;
 use App\Exceptions\Payments\PaymentException;
 use App\Models\CareBooking;
 use App\Services\Booking\BookingTrustService;
+use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
+use App\Support\MarketplaceEvent;
 use Illuminate\Console\Command;
 
 class AutoApproveTimesheets extends Command
@@ -14,7 +16,7 @@ class AutoApproveTimesheets extends Command
 
     protected $description = 'Auto-approve completed caregiver timesheets after 24 hours when the family has not disputed them.';
 
-    public function handle(BookingPaymentService $payments, BookingTrustService $trust): int
+    public function handle(BookingPaymentService $payments, BookingTrustService $trust, MarketplaceNotificationService $notifications): int
     {
         $cutoff = now()->subHours(24);
 
@@ -77,6 +79,25 @@ class AutoApproveTimesheets extends Command
             );
             $freshBooking->refresh();
             $trust->recomputeReliabilityForBooking($freshBooking);
+
+            foreach ([
+                [$freshBooking->family, route('family.requests.show', $freshBooking->care_request_id), 'Your visit timesheet was approved automatically after 24 hours.'],
+                [$freshBooking->caregiver, route('care-requests.apply', $freshBooking->care_request_id), 'Your timesheet was approved automatically after 24 hours.'],
+            ] as [$recipient, $url, $body]) {
+                if (! $recipient) {
+                    continue;
+                }
+                $notifications->notify(
+                    recipients: $recipient,
+                    eventKey: MarketplaceEvent::TIMESHEET_AUTO_APPROVED,
+                    title: 'Timesheet approved',
+                    body: $body,
+                    url: $url,
+                    payload: ['care_booking_id' => $freshBooking->id],
+                    subject: $freshBooking,
+                    dedupeKey: 'timesheet-auto-approved:booking-'.$freshBooking->id.'-user-'.$recipient->id
+                );
+            }
 
             $approved++;
             $this->line('Auto-approved booking #'.$booking->id.'.');

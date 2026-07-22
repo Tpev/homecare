@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Models\CareBooking;
 use App\Models\CareRequest;
+use App\Services\Booking\BookingTrustService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
 use Livewire\Attributes\Layout;
@@ -13,6 +14,8 @@ use Livewire\Component;
 class CareRequestShow extends Component
 {
     public CareRequest $careRequest;
+
+    public string $checkInOverrideReason = '';
 
     public function mount(CareRequest $careRequest): void
     {
@@ -88,6 +91,29 @@ class CareRequestShow extends Component
         $this->redirect(route('admin.requests.index', absolute: false), navigate: true);
     }
 
+    public function allowRegularCareCheckIn(BookingTrustService $trust): void
+    {
+        $this->validate(['checkInOverrideReason' => ['required', 'string', 'min:8', 'max:1000']]);
+        $booking = $this->careRequest->booking;
+        if (! $booking?->care_plan_id) {
+            $this->addError('checkInOverrideReason', 'This is not a regular-care visit.');
+
+            return;
+        }
+
+        $booking->forceFill([
+            'check_in_override_at' => now(),
+            'check_in_override_by_user_id' => auth()->id(),
+            'check_in_override_reason' => trim($this->checkInOverrideReason),
+        ])->save();
+        $trust->recordEvent($booking, auth()->id(), 'admin', 'regular_care_check_in_override', [
+            'reason' => trim($this->checkInOverrideReason),
+        ]);
+        $this->checkInOverrideReason = '';
+        $this->refreshRequest();
+        session()->flash('status', 'Check-in override recorded for this visit.');
+    }
+
     public function render(): View
     {
         return view('livewire.admin.care-request-show');
@@ -124,4 +150,3 @@ class CareRequestShow extends Component
             ->findOrFail($requestId);
     }
 }
-

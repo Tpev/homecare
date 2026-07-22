@@ -3,8 +3,9 @@
 namespace Tests\Feature\Family;
 
 use App\Models\CareBooking;
-use App\Models\CareRequest;
+use App\Models\CareBookingPayment;
 use App\Models\CaregiverProfile;
+use App\Models\CareRequest;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
@@ -100,13 +101,22 @@ class FamilyDashboardTest extends TestCase
             'address_line1' => '1520 Home Creek Drive',
         ]);
 
-        CareBooking::query()->create([
+        $booking = CareBooking::query()->create([
             'care_request_id' => $request->id,
             'family_user_id' => $family->id,
             'caregiver_user_id' => $caregiver->id,
             'status' => CareBooking::STATUS_SCHEDULED,
             'scheduled_start_at' => now()->addDay()->setTime(14, 0),
             'scheduled_end_at' => now()->addDay()->setTime(16, 0),
+        ]);
+        CareBookingPayment::query()->create([
+            'care_booking_id' => $booking->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBookingPayment::STATUS_AUTHORIZED,
+            'currency' => 'usd',
+            'amount_authorized_cents' => 7200,
+            'authorization_expires_at' => now()->addDays(5),
         ]);
 
         $response = $this->actingAs($family)->get('/dashboard');
@@ -116,7 +126,7 @@ class FamilyDashboardTest extends TestCase
         $response->assertSee('Right now');
         $response->assertSee('You have 1 upcoming visit.');
         $response->assertSee('Caroline Petrini-Poli is coming');
-        $response->assertSee('No action needed right now.');
+        $response->assertSee('Payment confirmed. No action needed.');
         $response->assertSee('Coming');
         $response->assertSee('Caroline Petrini-Poli');
         $response->assertDontSee('Needs your attention');
@@ -138,6 +148,53 @@ class FamilyDashboardTest extends TestCase
         $response->assertSee('Top unread updates');
         $response->assertSee('You have a new invitation');
         $response->assertSee('Application submitted');
+    }
+
+    public function test_family_dashboard_uses_the_true_next_booking_with_more_than_twenty_five_visits(): void
+    {
+        $family = User::factory()->create([
+            'role' => 'family',
+            'email_verified_at' => now(),
+            'stripe_customer_id' => 'cus_many_dashboard_visits',
+        ]);
+        $caregiver = User::factory()->create(['role' => 'caregiver', 'name' => 'Earliest Visit Caregiver']);
+        CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active']);
+
+        for ($day = 1; $day <= 30; $day++) {
+            $request = CareRequest::query()->create([
+                'family_user_id' => $family->id,
+                'title' => $day === 1 ? 'True earliest recurring visit' : 'Later recurring visit '.$day,
+                'request_type' => CareRequest::TYPE_ONE_TIME,
+                'status' => CareRequest::STATUS_FILLED,
+                'requested_start_at' => now()->addDays($day)->setTime(9, 0),
+                'requested_end_at' => now()->addDays($day)->setTime(11, 0),
+                'address_line1' => '1 Schedule Lane',
+                'city' => 'Raleigh',
+                'state' => 'NC',
+                'zip' => '27601',
+            ]);
+            CareBooking::query()->create([
+                'care_request_id' => $request->id,
+                'family_user_id' => $family->id,
+                'caregiver_user_id' => $caregiver->id,
+                'status' => CareBooking::STATUS_SCHEDULED,
+                'scheduled_start_at' => $request->requested_start_at,
+                'scheduled_end_at' => $request->requested_end_at,
+            ]);
+        }
+
+        $this->actingAs($family)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('True earliest recurring visit');
+        $this->actingAs($caregiver)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('True earliest recurring visit');
+        $this->actingAs($caregiver)
+            ->get(route('caregiver.shifts.index'))
+            ->assertOk()
+            ->assertSee('True earliest recurring visit');
     }
 
     private function createReadyCaregiver(): User

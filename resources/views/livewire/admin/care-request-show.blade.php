@@ -200,6 +200,19 @@
                     </p>
                 </div>
             </div>
+            @if($careRequest->booking->care_plan_id)
+                <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                    <p class="font-semibold text-amber-950">Regular-care check-in override</p>
+                    @if($careRequest->booking->hasCheckInOverride())
+                        <p class="mt-1 text-sm text-amber-900">Allowed {{ $careRequest->booking->check_in_override_at?->format('M d, Y g:i A') }}. Reason: {{ $careRequest->booking->check_in_override_reason }}</p>
+                    @else
+                        <p class="mt-1 text-sm text-amber-900">Use only when operations has confirmed the caregiver may start despite timing or payment guards.</p>
+                        <textarea wire:model="checkInOverrideReason" rows="2" class="mt-3 w-full rounded-md border-amber-300" placeholder="Required operational reason"></textarea>
+                        <x-input-error :messages="$errors->get('checkInOverrideReason')" class="mt-2" />
+                        <x-button color="amber" class="mt-3" wire:click="allowRegularCareCheckIn" wire:confirm="Allow check-in for this visit?">Allow check-in</x-button>
+                    @endif
+                </div>
+            @endif
         </x-card>
     @endif
 </div>

@@ -16,9 +16,13 @@ class CareRequestsIndex extends Component
     use WithPagination;
 
     public string $q = '';
+
     public string $status = 'all';
+
     public string $requestType = 'all';
+
     public string $sort = 'latest';
+
     public int $perPage = 25;
 
     protected $queryString = [
@@ -124,9 +128,10 @@ class CareRequestsIndex extends Component
 
     public function render(): View
     {
-        $baseQuery = CareRequest::query();
+        $baseQuery = CareRequest::query()->where('is_system_generated', false);
 
         $query = CareRequest::query()
+            ->where('is_system_generated', false)
             ->with([
                 'family:id,name,email',
                 'recipient:id,care_request_id,full_name,relationship_to_family',
@@ -198,4 +203,3 @@ class CareRequestsIndex extends Component
         ]);
     }
 }
-

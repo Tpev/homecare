@@ -145,6 +145,7 @@ class CaregiverWorkInboxBuilder
                 'booking:id,care_request_application_id,status,scheduled_start_at,scheduled_end_at,started_at,completed_at',
             ])
             ->where('caregiver_user_id', $caregiverId)
+            ->whereHas('careRequest', fn ($query) => $query->where('is_system_generated', false))
             ->whereIn('status', [
                 CareRequestApplication::STATUS_APPLIED,
                 CareRequestApplication::STATUS_SHORTLISTED,

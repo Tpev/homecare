@@ -58,9 +58,12 @@ class Home extends Component
         $caregiverData = [];
 
         if ($mode === 'family') {
-            $requestQuery = CareRequest::query()->where('family_user_id', $user->id);
+            $requestQuery = CareRequest::query()
+                ->where('family_user_id', $user->id)
+                ->where('is_system_generated', false);
             $openRequestQuery = CareRequest::query()
                 ->where('family_user_id', $user->id)
+                ->where('is_system_generated', false)
                 ->where('status', CareRequest::STATUS_OPEN);
 
             $readyToReviewCount = (clone $openRequestQuery)
@@ -76,17 +79,24 @@ class Home extends Component
                 ->whereDoesntHave('applications')
                 ->count();
 
-            $activeShiftCount = CareRequest::query()
+            $activeShiftCount = CareBooking::query()
                 ->where('family_user_id', $user->id)
-                ->whereHas('booking', function ($query) {
-                    $query->whereIn('status', [
-                        CareBooking::STATUS_SCHEDULED,
-                        CareBooking::STATUS_IN_PROGRESS,
-                        CareBooking::STATUS_PAUSED,
-                        CareBooking::STATUS_COMPLETED,
-                    ]);
-                })
-                ->count();
+                ->whereNull('care_plan_id')
+                ->whereIn('status', [
+                    CareBooking::STATUS_SCHEDULED,
+                    CareBooking::STATUS_IN_PROGRESS,
+                    CareBooking::STATUS_PAUSED,
+                    CareBooking::STATUS_COMPLETED,
+                ])
+                ->count()
+                + CarePlan::query()
+                    ->where('family_user_id', $user->id)
+                    ->whereIn('status', [
+                        CarePlan::STATUS_ACTIVE,
+                        CarePlan::STATUS_PAYMENT_ATTENTION,
+                        CarePlan::STATUS_PAUSED,
+                    ])
+                    ->count();
 
             $familyData['stats'] = [
                 'open_requests' => (clone $requestQuery)->where('status', CareRequest::STATUS_OPEN)->count(),
@@ -114,26 +124,50 @@ class Home extends Component
                     },
                 ])
                 ->where('family_user_id', $user->id)
+                ->where('is_system_generated', false)
                 ->whereIn('status', [CareRequest::STATUS_OPEN, CareRequest::STATUS_FILLED])
                 ->orderByRaw("CASE WHEN status = '".CareRequest::STATUS_OPEN."' THEN 0 ELSE 1 END")
                 ->orderByDesc('updated_at')
                 ->limit(8)
                 ->get();
 
-            $familyData['active_shifts'] = CareRequest::query()
-                ->with(['recipient', 'booking.caregiver.caregiverProfile:id,user_id,profile_photo_path'])
+            $dashboardBookingRelations = [
+                'careRequest.recipient',
+                'caregiver.caregiverProfile:id,user_id,profile_photo_path',
+                'payment:id,care_booking_id,status,last_error',
+            ];
+            $timesheetBooking = CareBooking::query()
+                ->with($dashboardBookingRelations)
                 ->where('family_user_id', $user->id)
-                ->whereHas('booking', function ($query) {
-                    $query->whereIn('status', [
-                        CareBooking::STATUS_SCHEDULED,
-                        CareBooking::STATUS_IN_PROGRESS,
-                        CareBooking::STATUS_PAUSED,
-                        CareBooking::STATUS_COMPLETED,
-                    ]);
+                ->whereIn('status', [CareBooking::STATUS_COMPLETED, CareBooking::STATUS_REVIEWED])
+                ->whereNull('family_confirmed_at')
+                ->orderBy('completed_at')
+                ->first();
+            $liveBooking = CareBooking::query()
+                ->with($dashboardBookingRelations)
+                ->where('family_user_id', $user->id)
+                ->whereIn('status', [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED])
+                ->orderBy('scheduled_start_at')
+                ->first();
+            $nextScheduledBooking = CareBooking::query()
+                ->with($dashboardBookingRelations)
+                ->where('family_user_id', $user->id)
+                ->where('status', CareBooking::STATUS_SCHEDULED)
+                ->orderBy('scheduled_start_at')
+                ->first();
+            $familyData['active_shifts'] = collect([$timesheetBooking, $liveBooking, $nextScheduledBooking])
+                ->filter()
+                ->unique('id')
+                ->map(function (CareBooking $booking) {
+                    $request = $booking->careRequest;
+                    if ($request) {
+                        $request->setRelation('booking', $booking);
+                    }
+
+                    return $request;
                 })
-                ->orderByDesc('updated_at')
-                ->limit(4)
-                ->get();
+                ->filter()
+                ->values();
 
             $familyData['recent_applicants'] = CareRequestApplication::query()
                 ->with([
@@ -141,7 +175,9 @@ class Home extends Component
                     'caregiver:id,name',
                     'conversation:id,care_request_application_id',
                 ])
-                ->whereHas('careRequest', fn ($q) => $q->where('family_user_id', $user->id))
+                ->whereHas('careRequest', fn ($q) => $q
+                    ->where('family_user_id', $user->id)
+                    ->where('is_system_generated', false))
                 ->latest()
                 ->limit(6)
                 ->get();
@@ -150,6 +186,7 @@ class Home extends Component
                 ->with([
                     'caregiver:id,name',
                     'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
+                    'nextBooking.payment:id,care_booking_id,status,last_error',
                 ])
                 ->where('family_user_id', $user->id)
                 ->latest()
@@ -174,13 +211,18 @@ class Home extends Component
             $caregiverData['prelaunch_message'] = CaregiverPrelaunch::message();
 
             $caregiverData['stats'] = [
-                'applications_total' => CareRequestApplication::query()->where('caregiver_user_id', $user->id)->count(),
+                'applications_total' => CareRequestApplication::query()
+                    ->where('caregiver_user_id', $user->id)
+                    ->whereHas('careRequest', fn ($query) => $query->where('is_system_generated', false))
+                    ->count(),
                 'shortlisted' => CareRequestApplication::query()
                     ->where('caregiver_user_id', $user->id)
+                    ->whereHas('careRequest', fn ($query) => $query->where('is_system_generated', false))
                     ->where('status', CareRequestApplication::STATUS_SHORTLISTED)
                     ->count(),
                 'hired' => CareRequestApplication::query()
                     ->where('caregiver_user_id', $user->id)
+                    ->whereHas('careRequest', fn ($query) => $query->where('is_system_generated', false))
                     ->where('status', CareRequestApplication::STATUS_HIRED)
                     ->count(),
                 'invitations_pending' => CareRequestInvitation::query()
@@ -212,6 +254,7 @@ class Home extends Component
             $caregiverData['recent_applications'] = CareRequestApplication::query()
                 ->with(['careRequest:id,title,status,city,state,requested_start_at'])
                 ->where('caregiver_user_id', $user->id)
+                ->whereHas('careRequest', fn ($query) => $query->where('is_system_generated', false))
                 ->latest()
                 ->limit(8)
                 ->get();
@@ -417,8 +460,10 @@ class Home extends Component
                 MarketplaceEvent::HIRE_CONFIRMED => ['label' => 'Hire confirmed', 'tone' => 'success'],
                 MarketplaceEvent::SHIFT_CANCELLED => ['label' => 'Cancelled', 'tone' => 'warning'],
                 MarketplaceEvent::SHIFT_STARTING_SOON => ['label' => 'Shift soon', 'tone' => 'info'],
+                MarketplaceEvent::SHIFT_REMINDER_24H => ['label' => 'Visit tomorrow', 'tone' => 'info'],
                 MarketplaceEvent::SHIFT_STARTED => ['label' => 'Shift started', 'tone' => 'info'],
                 MarketplaceEvent::SHIFT_COMPLETED => ['label' => 'Shift completed', 'tone' => 'success'],
+                MarketplaceEvent::TIMESHEET_AUTO_APPROVED => ['label' => 'Timesheet approved', 'tone' => 'success'],
                 MarketplaceEvent::MESSAGE_RECEIVED => ['label' => 'Message', 'tone' => 'neutral'],
                 MarketplaceEvent::PAYMENT_ACTION_REQUIRED => ['label' => 'Payment action', 'tone' => 'warning'],
                 MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED => ['label' => 'Payment issue', 'tone' => 'warning'],
@@ -427,6 +472,11 @@ class Home extends Component
                 MarketplaceEvent::REGULAR_CARE_COUNTERED => ['label' => 'Regular care', 'tone' => 'warning'],
                 MarketplaceEvent::REGULAR_CARE_DECLINED => ['label' => 'Regular care', 'tone' => 'warning'],
                 MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION => ['label' => 'Payment issue', 'tone' => 'warning'],
+                MarketplaceEvent::REGULAR_CARE_SCHEDULE_CHANGE_ACCEPTED => ['label' => 'Schedule accepted', 'tone' => 'success'],
+                MarketplaceEvent::REGULAR_CARE_SCHEDULE_CHANGE_DECLINED => ['label' => 'Schedule declined', 'tone' => 'warning'],
+                MarketplaceEvent::REGULAR_CARE_PAUSED => ['label' => 'Regular care paused', 'tone' => 'warning'],
+                MarketplaceEvent::REGULAR_CARE_RESUMED => ['label' => 'Regular care resumed', 'tone' => 'success'],
+                MarketplaceEvent::REGULAR_CARE_ENDED => ['label' => 'Regular care ended', 'tone' => 'warning'],
             ];
         }
 
@@ -437,8 +487,10 @@ class Home extends Component
             MarketplaceEvent::CAREGIVER_HIRED => ['label' => 'Hired', 'tone' => 'success'],
             MarketplaceEvent::SHIFT_CANCELLED => ['label' => 'Cancelled', 'tone' => 'warning'],
             MarketplaceEvent::SHIFT_STARTING_SOON => ['label' => 'Shift soon', 'tone' => 'info'],
+            MarketplaceEvent::SHIFT_REMINDER_24H => ['label' => 'Shift tomorrow', 'tone' => 'info'],
             MarketplaceEvent::SHIFT_STARTED => ['label' => 'Shift started', 'tone' => 'info'],
             MarketplaceEvent::SHIFT_COMPLETED => ['label' => 'Shift completed', 'tone' => 'success'],
+            MarketplaceEvent::TIMESHEET_AUTO_APPROVED => ['label' => 'Timesheet approved', 'tone' => 'success'],
             MarketplaceEvent::MESSAGE_RECEIVED => ['label' => 'Message', 'tone' => 'neutral'],
             MarketplaceEvent::REVIEW_RECEIVED => ['label' => 'Review received', 'tone' => 'warning'],
             MarketplaceEvent::PAYOUT_TRANSFERRED => ['label' => 'Payout sent', 'tone' => 'success'],
@@ -446,6 +498,11 @@ class Home extends Component
             MarketplaceEvent::REGULAR_CARE_OFFERED => ['label' => 'Regular care', 'tone' => 'info'],
             MarketplaceEvent::REGULAR_CARE_ACCEPTED => ['label' => 'Regular care', 'tone' => 'success'],
             MarketplaceEvent::REGULAR_CARE_ENDED => ['label' => 'Regular care', 'tone' => 'warning'],
+            MarketplaceEvent::REGULAR_CARE_SCHEDULE_CHANGE_REQUESTED => ['label' => 'Schedule request', 'tone' => 'info'],
+            MarketplaceEvent::REGULAR_CARE_EXTRA_VISIT_REQUESTED => ['label' => 'Extra visit', 'tone' => 'info'],
+            MarketplaceEvent::REGULAR_CARE_VISIT_SKIPPED => ['label' => 'Visit skipped', 'tone' => 'warning'],
+            MarketplaceEvent::REGULAR_CARE_PAUSED => ['label' => 'Regular care paused', 'tone' => 'warning'],
+            MarketplaceEvent::REGULAR_CARE_RESUMED => ['label' => 'Regular care resumed', 'tone' => 'success'],
         ];
     }
 }

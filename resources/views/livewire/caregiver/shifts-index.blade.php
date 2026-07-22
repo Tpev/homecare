@@ -1,4 +1,4 @@
-﻿<div>
+<div>
     <div class="hc-page py-6 space-y-5">
         @if (session('status'))
             <x-alert color="green">{{ session('status') }}</x-alert>
@@ -28,9 +28,6 @@
         @endphp
 
         <section class="hc-brand-panel">
-            <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#7C5DDC]/20 blur-2xl"></div>
-            <div class="pointer-events-none absolute -left-10 -bottom-12 h-40 w-40 rounded-full bg-[#4F6FAF]/20 blur-2xl"></div>
-
             <div class="relative space-y-4">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -103,6 +100,20 @@
                 @php
                     $request = $booking->careRequest;
                     $bookingStatus = (string) $booking->status;
+                    $isRegular = (bool) $booking->care_plan_id;
+                    $payment = $booking->payment;
+                    $paymentNeedsAction = $payment && in_array($payment->status, [
+                        \App\Models\CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
+                        \App\Models\CareBookingPayment::STATUS_REAUTH_REQUIRED,
+                        \App\Models\CareBookingPayment::STATUS_FAILED,
+                    ], true);
+                    $paymentProtected = $payment && in_array($payment->status, [
+                        \App\Models\CareBookingPayment::STATUS_AUTHORIZED,
+                        \App\Models\CareBookingPayment::STATUS_CAPTURED,
+                        \App\Models\CareBookingPayment::STATUS_TRANSFERRED,
+                    ], true);
+                    $estimatedMinutes = (int) ($booking->expected_minutes ?: optional($booking->scheduled_start_at)->diffInMinutes($booking->scheduled_end_at, false));
+                    $estimatedEarnings = ((float) ($booking->application?->proposed_rate ?? 30)) * max(0, $estimatedMinutes) / 60;
                     $ctaLabel = match ($bookingStatus) {
                         \App\Models\CareBooking::STATUS_SCHEDULED => 'Start visit',
                         \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Continue visit',
@@ -115,29 +126,35 @@
                     };
                 @endphp
 
-                <article class="rounded-2xl border border-[#DED6CA] bg-[rgba(255,253,250,0.98)] p-4 shadow-sm sm:p-5">
+                <article class="rounded-lg border border-[#DED6CA] bg-white p-5 shadow-sm sm:p-6">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                            <p class="font-display text-lg font-semibold text-[#17313F]">{{ $request?->title ?? 'Care request' }}</p>
-                            <p class="mt-1 text-sm text-[#607080]">{{ $request?->city ?? '-' }}, {{ $request?->state ?? '-' }}  -  Family: {{ $booking->family?->name ?? 'Unknown' }}</p>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p class="font-display text-xl font-semibold text-[#17313F]">{{ $request?->title ?? 'Care request' }}</p>
+                                @if ($isRegular)<span class="rounded-full bg-[#E8F4EE] px-3 py-1 text-xs font-semibold text-[#17634F]">Regular care</span>@endif
+                            </div>
+                            <p class="mt-1 text-base text-[#526474]">For {{ $request?->recipient?->full_name ?: $booking->family?->name }} · Family contact: {{ $booking->family?->name ?? 'Unknown' }}</p>
                         </div>
                         <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusTone($bookingStatus) }}">
                             {{ strtoupper($bookingStatus) }}
                         </span>
                     </div>
 
-                    <div class="mt-3 grid grid-cols-1 gap-2 text-xs text-[#607080] sm:grid-cols-3">
-                        <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
-                            Scheduled:
-                            {{ optional($booking->scheduled_start_at)->format('M d, H:i') ?: '-' }}
-                            -
-                            {{ optional($booking->scheduled_end_at)->format('H:i') ?: '-' }}
+                    <div class="mt-4 grid grid-cols-1 gap-3 text-base text-[#526474] md:grid-cols-3">
+                        <div class="rounded-md border border-[#DED6CA] bg-[#F7F5F1] px-4 py-3">
+                            <p class="text-sm font-semibold text-[#6A7784]">When</p>
+                            <p class="mt-1 font-semibold text-[#17313F]">{{ optional($booking->scheduled_start_at)->format('D, M j, g:i A') ?: '-' }}</p>
+                            <p>to {{ optional($booking->scheduled_end_at)->format('g:i A') ?: '-' }}</p>
                         </div>
-                        <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
-                            Started: {{ optional($booking->started_at)->format('M d, H:i') ?: 'Pending' }}
+                        <div class="rounded-md border border-[#DED6CA] bg-[#F7F5F1] px-4 py-3">
+                            <p class="text-sm font-semibold text-[#6A7784]">Care location</p>
+                            <p class="mt-1 font-semibold text-[#17313F]">{{ $request?->address_line1 ?: 'Address available in visit' }}</p>
+                            <p>{{ $request?->city }}, {{ $request?->state }} {{ $request?->zip }}</p>
                         </div>
-                        <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
-                            Completed: {{ optional($booking->completed_at)->format('M d, H:i') ?: 'Pending' }}
+                        <div class="rounded-md border {{ $paymentNeedsAction ? 'border-amber-300 bg-amber-50' : 'border-[#BFD8CB] bg-[#F1F8F4]' }} px-4 py-3">
+                            <p class="text-sm font-semibold text-[#6A7784]">Expected earnings</p>
+                            <p class="mt-1 text-xl font-semibold text-[#17313F]">${{ number_format($estimatedEarnings, 2) }}</p>
+                            <p class="font-semibold {{ $paymentNeedsAction ? 'text-amber-800' : 'text-emerald-700' }}">{{ $paymentNeedsAction ? 'Family action needed' : ($paymentProtected ? 'Payment protected' : 'Payment checked before visit') }}</p>
                         </div>
                     </div>
 

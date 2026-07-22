@@ -5,6 +5,7 @@ namespace App\Livewire\Family;
 use App\Exceptions\Payments\PaymentException;
 use App\Models\CarePlan;
 use App\Services\RegularCare\CarePlanService;
+use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -13,9 +14,36 @@ class RegularCareShow extends Component
 {
     public CarePlan $plan;
 
+    public string $managePanel = '';
+
+    public array $scheduleDays = [];
+
+    public string $scheduleStartTime = '';
+
+    public string $scheduleEndTime = '';
+
+    public string $scheduleEffectiveOn = '';
+
+    public string $scheduleNote = '';
+
+    public string $extraVisitDate = '';
+
+    public string $extraVisitTime = '';
+
+    public int $extraVisitDuration = 120;
+
+    public string $extraVisitNote = '';
+
+    public string $pauseFrom = '';
+
+    public string $resumeOn = '';
+
+    public bool $cancelNextWhenEnding = false;
+
     public function mount(int $carePlan): void
     {
         $this->plan = $this->loadPlan($carePlan);
+        $this->fillManagementDefaults();
     }
 
     public function acceptCounter(): void
@@ -32,17 +60,113 @@ class RegularCareShow extends Component
         session()->flash('status', 'Counter schedule accepted. The next visit is now booked.');
     }
 
+    public function openManagePanel(string $panel): void
+    {
+        $this->managePanel = $this->managePanel === $panel ? '' : $panel;
+        $this->resetValidation();
+    }
+
+    public function requestScheduleChange(): void
+    {
+        $this->validate([
+            'scheduleDays' => ['required', 'array', 'min:1'],
+            'scheduleDays.*' => ['integer', 'between:0,6'],
+            'scheduleStartTime' => ['required', 'date_format:H:i'],
+            'scheduleEndTime' => ['required', 'date_format:H:i', 'after:scheduleStartTime'],
+            'scheduleEffectiveOn' => ['required', 'date', 'after:today'],
+            'scheduleNote' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        app(CarePlanService::class)->requestScheduleChange($this->plan, auth()->user(), [
+            'schedule_days' => $this->scheduleDays,
+            'schedule_start_time' => $this->scheduleStartTime,
+            'schedule_end_time' => $this->scheduleEndTime,
+            'starts_on' => $this->scheduleEffectiveOn,
+            'effective_on' => $this->scheduleEffectiveOn,
+            'ends_on' => $this->plan->ends_on?->toDateString(),
+            'note' => $this->scheduleNote,
+        ]);
+
+        $this->reloadPlan();
+        $this->managePanel = '';
+        session()->flash('status', 'Schedule change sent to '.$this->plan->caregiver?->name.'. Current visits stay unchanged until they accept.');
+    }
+
+    public function requestExtraVisit(): void
+    {
+        $this->validate([
+            'extraVisitDate' => ['required', 'date', 'after_or_equal:today'],
+            'extraVisitTime' => ['required', 'date_format:H:i'],
+            'extraVisitDuration' => ['required', 'integer', 'between:60,480'],
+            'extraVisitNote' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $timezone = $this->plan->timezone ?: config('app.timezone');
+        $start = Carbon::parse($this->extraVisitDate.' '.$this->extraVisitTime, $timezone)
+            ->setTimezone(config('app.timezone'));
+        $end = $start->copy()->addMinutes($this->extraVisitDuration);
+        app(CarePlanService::class)->requestExtraVisit($this->plan, auth()->user(), $start, $end, $this->extraVisitNote);
+
+        $this->reloadPlan();
+        $this->managePanel = '';
+        session()->flash('status', 'Extra visit request sent. It will appear as a visit after the caregiver accepts.');
+    }
+
+    public function skipVisit(int $bookingId): void
+    {
+        $booking = $this->plan->generatedBookings()->whereKey($bookingId)->firstOrFail();
+        $skipped = app(CarePlanService::class)->skipVisit($this->plan, $booking, auth()->user());
+        $this->reloadPlan();
+        session()->flash('status', $skipped->late_cancel_flag
+            ? 'That visit was skipped inside the 24-hour cancellation window. Your regular schedule continues.'
+            : 'That visit was skipped. Your regular schedule continues.');
+    }
+
+    public function pausePlan(): void
+    {
+        $this->validate([
+            'pauseFrom' => ['required', 'date', 'after_or_equal:today'],
+            'resumeOn' => ['nullable', 'date', 'after:pauseFrom'],
+        ]);
+
+        app(CarePlanService::class)->pausePlan(
+            $this->plan,
+            auth()->user(),
+            Carbon::parse($this->pauseFrom)->startOfDay(),
+            $this->resumeOn !== '' ? Carbon::parse($this->resumeOn)->startOfDay() : null
+        );
+        $this->reloadPlan();
+        $this->managePanel = '';
+        session()->flash('status', $this->resumeOn !== '' ? 'Regular care paused until '.$this->plan->resumes_on?->format('F j').'.' : 'Regular care paused.');
+    }
+
+    public function resumePlan(): void
+    {
+        app(CarePlanService::class)->resumePlan($this->plan, auth()->user());
+        $this->reloadPlan();
+        session()->flash('status', 'Regular care resumed. Your upcoming visits are ready.');
+    }
+
     public function endPlan(): void
     {
-        app(CarePlanService::class)->endPlan($this->plan, auth()->user());
-        $this->plan = $this->loadPlan($this->plan->id);
-        session()->flash('status', 'Regular care plan ended.');
+        app(CarePlanService::class)->endPlan($this->plan, auth()->user(), $this->cancelNextWhenEnding);
+        $this->reloadPlan();
+        $this->managePanel = '';
+        session()->flash('status', $this->cancelNextWhenEnding
+            ? 'Regular care ended and the next visit was cancelled.'
+            : 'Regular care ended. The next confirmed visit remains scheduled.');
     }
 
     public function render(CarePlanService $plans)
     {
+        $upcomingVisits = $plans->upcomingVisits($this->plan, 4);
+        $laterVisits = array_values(array_filter(
+            $upcomingVisits,
+            fn (array $visit): bool => (int) ($visit['booking']?->id ?? 0) !== (int) $this->plan->next_booking_id
+        ));
+
         return view('livewire.family.regular-care-show', [
-            'upcomingVisits' => $plans->upcomingVisits($this->plan, 5),
+            'laterVisits' => array_slice($laterVisits, 0, 3),
             'counterVisits' => $this->plan->status === CarePlan::STATUS_COUNTERED
                 ? $plans->upcomingVisits($this->plan, 3, true)
                 : [],
@@ -64,15 +188,33 @@ class RegularCareShow extends Component
                 'sourceCareBooking:id,status,scheduled_start_at,scheduled_end_at',
                 'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
                 'nextBooking.payment:id,care_booking_id,status,amount_authorized_cents,authorization_expires_at,last_error',
+                'pendingScheduleChanges',
                 'generatedBookings' => fn ($query) => $query
-                    ->with('careRequest:id,title')
-                    ->latest()
-                    ->limit(5),
+                    ->with(['careRequest:id,title,address_line1,address_line2,city,state,zip', 'payment:id,care_booking_id,status,amount_authorized_cents,last_error'])
+                    ->where('scheduled_start_at', '>=', now()->subDay())
+                    ->orderBy('scheduled_start_at')
+                    ->limit(12),
             ])
             ->findOrFail($id);
 
         abort_unless((int) $plan->family_user_id === (int) auth()->id(), 403);
 
         return $plan;
+    }
+
+    private function reloadPlan(): void
+    {
+        $this->plan = $this->loadPlan($this->plan->id);
+    }
+
+    private function fillManagementDefaults(): void
+    {
+        $this->scheduleDays = array_map('strval', $this->plan->schedule_days ?? []);
+        $this->scheduleStartTime = substr((string) $this->plan->schedule_start_time, 0, 5);
+        $this->scheduleEndTime = substr((string) $this->plan->schedule_end_time, 0, 5);
+        $this->scheduleEffectiveOn = now()->addDays(2)->toDateString();
+        $this->extraVisitDate = now()->addDays(2)->toDateString();
+        $this->extraVisitTime = $this->scheduleStartTime;
+        $this->pauseFrom = now()->addDay()->toDateString();
     }
 }

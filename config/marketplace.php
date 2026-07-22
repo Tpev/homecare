@@ -34,6 +34,13 @@ return [
         'authorization_buffer_percent' => (float) env('MARKETPLACE_AUTH_BUFFER_PERCENT', 20),
     ],
 
+    'regular_care' => [
+        'authorization_window_hours' => (int) env('REGULAR_CARE_AUTHORIZATION_WINDOW_HOURS', 48),
+        'visit_window_weeks' => (int) env('REGULAR_CARE_VISIT_WINDOW_WEEKS', 6),
+        'check_in_opens_minutes_before' => (int) env('REGULAR_CARE_CHECK_IN_OPENS_MINUTES_BEFORE', 30),
+        'check_in_closes_minutes_after' => (int) env('REGULAR_CARE_CHECK_IN_CLOSES_MINUTES_AFTER', 120),
+    ],
+
     'family_pricing_overrides' => [
         'donrjohn22@yahoo.com' => [
             'hourly_rate' => 15.75,

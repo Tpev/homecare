@@ -27,12 +27,12 @@
     @endphp
 
     <section class="hc-brand-panel">
-        <div class="relative grid grid-cols-1 gap-5 lg:grid-cols-5">
-            <div class="lg:col-span-3">
-                <p class="hc-brand-kicker text-[#E8E0FF]">Weekly care</p>
-                <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Have the same caregiver come again.</h1>
-                <p class="mt-2 max-w-2xl text-sm text-[#F7F1E8]/82">
-                    Turn a good visit into a simple weekly rhythm. LoLo keeps the same caregiver, schedule, request details, and payment protection together.
+        <div class="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <p class="hc-brand-kicker text-[#E8E0FF]">Regular care</p>
+                <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Your regular care</h1>
+                <p class="mt-2 max-w-2xl text-base text-[#F7F1E8]/82">
+                    Keep the same caregiver and see every confirmed visit in one place.
                 </p>
                 <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     <a href="{{ route('family.requests.index') }}" wire:navigate>
@@ -43,21 +43,16 @@
                     </a>
                 </div>
             </div>
-            <div class="grid grid-cols-2 gap-3 lg:col-span-2">
-                <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Active plans</p>
-                    <p class="mt-1 text-2xl font-semibold">{{ $activePlans->count() }}</p>
-                </div>
-                <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Awaiting reply</p>
-                    <p class="mt-1 text-2xl font-semibold">{{ $pendingPlans->count() }}</p>
-                </div>
-                <div class="col-span-2 hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Next visit</p>
-                    <p class="mt-1 text-sm font-semibold">
-                        {{ optional($activePlans->first()?->nextBooking?->scheduled_start_at)->format('M d, g:i A') ?: 'No upcoming regular visit yet' }}
-                    </p>
-                </div>
+            <div class="rounded-lg border border-white/20 bg-white/10 px-5 py-4 lg:min-w-80">
+                <p class="text-sm font-semibold text-[#F0E9E1]/80">Next regular visit</p>
+                <p class="mt-1 text-lg font-semibold text-white">
+                    {{ optional($nextPlan?->nextBooking?->scheduled_start_at)->format('l, F j \a\t g:i A') ?: 'No upcoming visit yet' }}
+                </p>
+                @if($nextPlan?->caregiver)
+                    <p class="mt-1 text-base text-[#F0E9E1]/80">{{ $nextPlan->caregiver->name }} is coming.</p>
+                @elseif($pendingPlans->isNotEmpty())
+                    <p class="mt-1 text-base text-[#F0E9E1]/80">Waiting for a caregiver response.</p>
+                @endif
             </div>
         </div>
     </section>
@@ -68,8 +63,8 @@
                 <x-slot:header>
                     <div class="flex items-center justify-between gap-3">
                         <div>
-                            <h2 class="font-display text-lg font-semibold">Weekly care</h2>
-                            <p class="text-sm text-[#607080]">Repeating visits with caregivers you already know.</p>
+                            <h2 class="font-display text-xl font-semibold">Regular care</h2>
+                            <p class="text-base text-[#607080]">Repeating visits with caregivers you know.</p>
                         </div>
                         <a href="{{ route('family.requests.index') }}" wire:navigate class="hc-link">All care</a>
                     </div>
@@ -112,9 +107,9 @@
                         </a>
                     @empty
                         <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-[#F7F2EA] px-4 py-8 text-center">
-                            <p class="font-display text-lg font-semibold text-[#17313F]">No weekly care yet.</p>
-                            <p class="mx-auto mt-2 max-w-xl text-sm text-[#607080]">
-                                After an approved visit, choose weekly care to make it repeat.
+                            <p class="font-display text-lg font-semibold text-[#17313F]">No regular care yet.</p>
+                            <p class="mx-auto mt-2 max-w-xl text-base text-[#607080]">
+                                After an approved visit, choose regular care to make it repeat.
                             </p>
                         </div>
                     @endforelse
@@ -125,7 +120,7 @@
         <aside class="space-y-5 xl:col-span-4">
             <x-card>
                 <x-slot:header>
-                    <h2 class="font-display text-lg font-semibold">Set up weekly care</h2>
+                    <h2 class="font-display text-lg font-semibold">Start regular care</h2>
                 </x-slot:header>
                 <div class="space-y-3">
                     @forelse ($rebookableRequests as $request)
@@ -144,7 +139,7 @@
                             </p>
                             <div class="mt-3">
                                 <a href="{{ route('family.care.compose', $request->id) }}" wire:navigate>
-                                    <x-button color="blue" light sm class="w-full">Set up weekly care with {{ $caregiverFirstName }}</x-button>
+                                    <x-button color="blue" light sm class="w-full">Set up regular care with {{ $caregiverFirstName }}</x-button>
                                 </a>
                             </div>
                         </div>

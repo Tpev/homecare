@@ -280,17 +280,17 @@
                 <x-card>
                     <x-slot:header>
                         <div>
-                            <h2 class="font-display text-lg font-semibold">When should care happen?</h2>
-                            <p class="text-sm text-[#607080]">Pick the day, start time, and how long the caregiver should stay. We calculate the end time.</p>
+                            <h2 class="font-display text-xl font-semibold">When should care happen?</h2>
+                            <p class="text-base text-[#607080]">Choose one visit or a regular weekly schedule. We calculate the end time for you.</p>
                         </div>
                     </x-slot:header>
 
                     <div class="space-y-5">
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                             @foreach ($requestTypeOptions as $option)
-                                <label class="flex min-h-14 cursor-pointer items-center justify-center rounded-xl border px-4 text-sm font-semibold transition {{ $request_type === $option['value'] ? 'border-[#0F3D3E] bg-[#0F3D3E] text-white' : 'border-[#DED6CA] bg-white text-[#0F3D3E] hover:bg-[#F5F1EB]' }}">
+                                <label class="flex min-h-14 cursor-pointer items-center justify-center rounded-lg border px-4 text-lg font-semibold transition {{ $request_type === $option['value'] ? 'border-[#0F3D3E] bg-[#0F3D3E] text-white' : 'border-[#DED6CA] bg-white text-[#0F3D3E] hover:bg-[#F5F1EB]' }}">
                                     <input type="radio" class="sr-only" value="{{ $option['value'] }}" wire:model.live="request_type">
-                                    {{ $option['label'] === 'Recurring job' ? 'Repeat every week' : 'One visit' }}
+                                    {{ $option['label'] }}
                                 </label>
                             @endforeach
                         </div>
@@ -322,10 +322,10 @@
                         @else
                             <div class="space-y-5">
                                 <div>
-                                    <p class="text-sm font-medium text-[#324457]">Care days</p>
-                                    <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+                                    <p class="text-base font-semibold text-[#324457]">Which days each week?</p>
+                                    <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
                                         @foreach ($dayOptions as $day)
-                                            <label class="flex h-12 cursor-pointer items-center justify-center rounded-xl border text-sm font-semibold transition {{ in_array((int) $day['value'], $selectedDayIds, true) ? 'border-[#0F3D3E] bg-[#0F3D3E] text-white' : 'border-[#DED6CA] bg-white text-[#0F3D3E] hover:bg-[#F5F1EB]' }}">
+                                            <label class="flex min-h-12 cursor-pointer items-center justify-center rounded-lg border px-2 text-base font-semibold transition {{ in_array((int) $day['value'], $selectedDayIds, true) ? 'border-[#0F3D3E] bg-[#0F3D3E] text-white' : 'border-[#DED6CA] bg-white text-[#0F3D3E] hover:bg-[#F5F1EB]' }}">
                                                 <input type="checkbox" class="sr-only" value="{{ $day['value'] }}" wire:model.live="recurring_days">
                                                 {{ $day['label'] }}
                                             </label>
@@ -339,6 +339,9 @@
                                     <div>
                                         <x-input type="date" label="Starting day" min="{{ $this->minimumStartDate }}" wire:model.change="recurring_starts_on" />
                                         @error('recurring_starts_on') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                        @if ($recurring_start_adjustment_message !== '')
+                                            <p class="mt-2 text-sm font-semibold text-[#0F6B5B]">{{ $recurring_start_adjustment_message }}</p>
+                                        @endif
                                     </div>
                                     <div>
                                         <x-input type="time" label="Starting time" wire:model.change="recurring_start_time" />
@@ -353,10 +356,19 @@
                                         @error('recurring_duration_minutes') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                         @error('recurring_end_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                     </div>
-                                    <div>
-                                        <x-input type="date" label="Stop repeating on (optional)" min="{{ $this->minimumStartDate }}" wire:model="recurring_ends_on" />
-                                        @error('recurring_ends_on') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                                    </div>
+                                    <fieldset>
+                                        <legend class="text-base font-semibold text-[#324457]">How long should this repeat?</legend>
+                                        <div class="mt-2 grid gap-2">
+                                            <label class="flex min-h-12 items-center gap-3 rounded-md border border-[#DED6CA] bg-white px-4 text-base"><input type="radio" value="ongoing" wire:model.live="recurring_end_choice" class="h-5 w-5">Until I stop it</label>
+                                            <label class="flex min-h-12 items-center gap-3 rounded-md border border-[#DED6CA] bg-white px-4 text-base"><input type="radio" value="date" wire:model.live="recurring_end_choice" class="h-5 w-5">End on a date</label>
+                                        </div>
+                                    </fieldset>
+                                    @if ($recurring_end_choice === 'date')
+                                        <div class="md:col-start-2">
+                                            <x-input type="date" label="Last day" min="{{ $recurring_starts_on ?: $this->minimumStartDate }}" wire:model="recurring_ends_on" />
+                                            @error('recurring_ends_on') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="rounded-xl border border-[#CFE1D8] bg-[#F2F8F4] px-4 py-3 text-sm text-[#0F3D3E]">
                                     <span class="font-semibold">Schedule:</span> {{ $this->scheduleSummary }}
@@ -434,7 +446,7 @@
                         </div>
                         <div class="rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4 md:col-span-2">
                             <p class="text-xs uppercase tracking-[0.12em] text-[#0F7A55]">
-                                {{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated weekly cost' : 'Estimated one-time cost' }}
+                                {{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated cost for one visit' : 'Estimated one-time cost' }}
                             </p>
                             @if ($this->estimatedCost !== null && $this->estimatedHours !== null)
                                 <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -445,11 +457,11 @@
                                     </p>
                                     <p class="font-display text-3xl font-semibold text-[#0F3D3E]">
                                         ${{ number_format($this->estimatedCost, 2) }}
-                                        @if ($request_type === \App\Models\CareRequest::TYPE_RECURRING)
-                                            <span class="text-base font-sans font-medium">/week</span>
-                                        @endif
                                     </p>
                                 </div>
+                                @if ($request_type === \App\Models\CareRequest::TYPE_RECURRING)
+                                    <p class="mt-3 text-sm text-[#3C4A5B]">You are not paying for every future visit now. LoLo confirms your card before each visit and charges the final amount after that visit.</p>
+                                @endif
                             @else
                                 <p class="mt-2 text-sm text-[#607080]">Add the schedule to see the estimate.</p>
                             @endif

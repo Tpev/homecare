@@ -5,35 +5,82 @@ namespace App\Support;
 class MarketplaceEvent
 {
     public const INVITATION_SENT = 'invitation_sent';
+
     public const NEW_APPLICANT = 'new_applicant';
+
     public const APPLICATION_SUBMITTED = 'application_submitted';
+
     public const CARE_REQUEST_WITHDRAWN = 'care_request_withdrawn';
+
     public const INVITE_ACCEPTED = 'invite_accepted';
+
     public const INVITE_DECLINED = 'invite_declined';
+
     public const MESSAGE_RECEIVED = 'message_received';
+
     public const CAREGIVER_HIRED = 'caregiver_hired';
+
     public const HIRE_CONFIRMED = 'hire_confirmed';
+
     public const SHIFT_CANCELLED = 'shift_cancelled';
+
     public const SHIFT_STARTING_SOON = 'shift_starting_soon';
+
+    public const SHIFT_REMINDER_24H = 'shift_reminder_24h';
+
     public const SHIFT_STARTED = 'shift_started';
+
     public const SHIFT_COMPLETED = 'shift_completed';
+
+    public const TIMESHEET_AUTO_APPROVED = 'timesheet_auto_approved';
+
     public const REVIEW_RECEIVED = 'review_received';
+
     public const MATCHING_REQUEST_REMINDER = 'matching_request_reminder';
+
     public const PAYMENT_AUTHORIZED = 'payment_authorized';
+
     public const PAYMENT_AUTHORIZATION_FAILED = 'payment_authorization_failed';
+
     public const PAYMENT_ACTION_REQUIRED = 'payment_action_required';
+
     public const PAYMENT_CAPTURED = 'payment_captured';
+
     public const PAYMENT_REFUNDED = 'payment_refunded';
+
     public const PAYOUT_TRANSFERRED = 'payout_transferred';
+
     public const PAYOUT_TRANSFER_FAILED = 'payout_transfer_failed';
+
     public const CAREGIVER_WELCOME = 'caregiver_welcome';
+
     public const CAREGIVER_ONBOARDING_REMINDER_24H = 'caregiver_onboarding_reminder_24h';
+
     public const REGULAR_CARE_OFFERED = 'regular_care_offered';
+
     public const REGULAR_CARE_ACCEPTED = 'regular_care_accepted';
+
     public const REGULAR_CARE_COUNTERED = 'regular_care_countered';
+
     public const REGULAR_CARE_DECLINED = 'regular_care_declined';
+
     public const REGULAR_CARE_ENDED = 'regular_care_ended';
+
     public const REGULAR_CARE_PAYMENT_ATTENTION = 'regular_care_payment_attention';
+
+    public const REGULAR_CARE_SCHEDULE_CHANGE_REQUESTED = 'regular_care_schedule_change_requested';
+
+    public const REGULAR_CARE_EXTRA_VISIT_REQUESTED = 'regular_care_extra_visit_requested';
+
+    public const REGULAR_CARE_SCHEDULE_CHANGE_ACCEPTED = 'regular_care_schedule_change_accepted';
+
+    public const REGULAR_CARE_SCHEDULE_CHANGE_DECLINED = 'regular_care_schedule_change_declined';
+
+    public const REGULAR_CARE_VISIT_SKIPPED = 'regular_care_visit_skipped';
+
+    public const REGULAR_CARE_PAUSED = 'regular_care_paused';
+
+    public const REGULAR_CARE_RESUMED = 'regular_care_resumed';
 
     /**
      * @return list<string>
@@ -52,8 +99,10 @@ class MarketplaceEvent
             self::HIRE_CONFIRMED,
             self::SHIFT_CANCELLED,
             self::SHIFT_STARTING_SOON,
+            self::SHIFT_REMINDER_24H,
             self::SHIFT_STARTED,
             self::SHIFT_COMPLETED,
+            self::TIMESHEET_AUTO_APPROVED,
             self::REVIEW_RECEIVED,
             self::MATCHING_REQUEST_REMINDER,
             self::PAYMENT_AUTHORIZED,
@@ -71,6 +120,13 @@ class MarketplaceEvent
             self::REGULAR_CARE_DECLINED,
             self::REGULAR_CARE_ENDED,
             self::REGULAR_CARE_PAYMENT_ATTENTION,
+            self::REGULAR_CARE_SCHEDULE_CHANGE_REQUESTED,
+            self::REGULAR_CARE_EXTRA_VISIT_REQUESTED,
+            self::REGULAR_CARE_SCHEDULE_CHANGE_ACCEPTED,
+            self::REGULAR_CARE_SCHEDULE_CHANGE_DECLINED,
+            self::REGULAR_CARE_VISIT_SKIPPED,
+            self::REGULAR_CARE_PAUSED,
+            self::REGULAR_CARE_RESUMED,
         ];
     }
 }

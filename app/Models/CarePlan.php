@@ -12,18 +12,29 @@ class CarePlan extends Model
     use HasFactory;
 
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_PENDING_CAREGIVER = 'pending_caregiver';
+
     public const STATUS_COUNTERED = 'countered';
+
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_PAYMENT_ATTENTION = 'payment_attention';
+
     public const STATUS_PAUSED = 'paused';
+
     public const STATUS_ENDED = 'ended';
+
     public const STATUS_CANCELLED = 'cancelled';
+
     public const STATUS_DECLINED = 'declined';
+
     public const STATUS_EXPIRED = 'expired';
 
     public const PAYMENT_UNCHECKED = 'unchecked';
+
     public const PAYMENT_AUTHORIZED = 'authorized';
+
     public const PAYMENT_ACTION_REQUIRED = 'action_required';
 
     protected $fillable = [
@@ -44,6 +55,10 @@ class CarePlan extends Model
         'schedule_end_time',
         'starts_on',
         'ends_on',
+        'timezone',
+        'pause_starts_on',
+        'resumes_on',
+        'schedule_version',
         'counter_schedule_days',
         'counter_schedule_start_time',
         'counter_schedule_end_time',
@@ -75,6 +90,9 @@ class CarePlan extends Model
             'schedule_days' => 'array',
             'starts_on' => 'date',
             'ends_on' => 'date',
+            'pause_starts_on' => 'date',
+            'resumes_on' => 'date',
+            'schedule_version' => 'integer',
             'counter_schedule_days' => 'array',
             'counter_starts_on' => 'date',
             'hourly_rate' => 'decimal:2',
@@ -129,6 +147,23 @@ class CarePlan extends Model
     public function generatedBookings(): HasMany
     {
         return $this->hasMany(CareBooking::class, 'care_plan_id');
+    }
+
+    public function scheduleChanges(): HasMany
+    {
+        return $this->hasMany(CarePlanScheduleChange::class)->latest();
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(CarePlanEvent::class)->latest();
+    }
+
+    public function pendingScheduleChanges(): HasMany
+    {
+        return $this->hasMany(CarePlanScheduleChange::class)
+            ->where('status', CarePlanScheduleChange::STATUS_PENDING)
+            ->latest();
     }
 
     public function recipientName(): string

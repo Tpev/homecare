@@ -13,22 +13,34 @@ class CareBooking extends Model
     use HasFactory;
 
     public const STATUS_SCHEDULED = 'scheduled';
+
     public const STATUS_IN_PROGRESS = 'in_progress';
+
     public const STATUS_PAUSED = 'paused';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_DISPUTED = 'disputed';
+
     public const STATUS_REVIEWED = 'reviewed';
+
     public const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
         'care_request_id',
         'care_plan_id',
+        'occurrence_key',
+        'plan_visit_kind',
+        'plan_schedule_version',
         'care_request_application_id',
         'family_user_id',
         'caregiver_user_id',
         'agreement_snapshot',
         'family_terms_accepted_at',
         'caregiver_terms_accepted_at',
+        'check_in_override_at',
+        'check_in_override_by_user_id',
+        'check_in_override_reason',
         'status',
         'scheduled_start_at',
         'scheduled_end_at',
@@ -72,6 +84,8 @@ class CareBooking extends Model
             'agreement_snapshot' => 'array',
             'family_terms_accepted_at' => 'datetime',
             'caregiver_terms_accepted_at' => 'datetime',
+            'check_in_override_at' => 'datetime',
+            'plan_schedule_version' => 'integer',
             'started_at' => 'datetime',
             'check_in_lat' => 'decimal:7',
             'check_in_lng' => 'decimal:7',
@@ -116,6 +130,30 @@ class CareBooking extends Model
     public function caregiver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'caregiver_user_id');
+    }
+
+    public function checkInOverrideBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'check_in_override_by_user_id');
+    }
+
+    public function checkInWindowOpensAt(): ?\Illuminate\Support\Carbon
+    {
+        return $this->scheduled_start_at?->copy()->subMinutes(
+            max(0, (int) config('marketplace.regular_care.check_in_opens_minutes_before', 30))
+        );
+    }
+
+    public function checkInWindowClosesAt(): ?\Illuminate\Support\Carbon
+    {
+        return $this->scheduled_start_at?->copy()->addMinutes(
+            max(0, (int) config('marketplace.regular_care.check_in_closes_minutes_after', 120))
+        );
+    }
+
+    public function hasCheckInOverride(): bool
+    {
+        return $this->check_in_override_at !== null && $this->check_in_override_by_user_id !== null;
     }
 
     public function cancelledBy(): BelongsTo

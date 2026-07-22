@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\CareBooking;
+use App\Models\CareBookingPayment;
 use App\Models\CareRequest;
 use App\Models\MarketplaceNotificationDelivery;
 use App\Models\User;
@@ -27,6 +28,7 @@ class DispatchMarketplaceNotifications extends Command
 
         if (! in_array($type, ['all', 'matching', 'shift-soon', 'onboarding'], true)) {
             $this->error('Invalid --type. Use all, matching, shift-soon, or onboarding.');
+
             return self::FAILURE;
         }
 
@@ -35,6 +37,7 @@ class DispatchMarketplaceNotifications extends Command
         }
 
         if (in_array($type, ['all', 'shift-soon'], true)) {
+            $this->dispatchShiftReminder($notifications, 24 * 60, MarketplaceEvent::SHIFT_REMINDER_24H, 'Visit tomorrow', 'shift-24h');
             $this->dispatchShiftStartingSoon($notifications);
         }
 
@@ -86,44 +89,57 @@ class DispatchMarketplaceNotifications extends Command
 
     private function dispatchShiftStartingSoon(MarketplaceNotificationService $notifications): void
     {
-        $from = now()->addMinutes(55);
-        $to = now()->addMinutes(65);
+        $this->dispatchShiftReminder($notifications, 60, MarketplaceEvent::SHIFT_STARTING_SOON, 'Visit starting soon', 'shift-soon');
+    }
+
+    private function dispatchShiftReminder(
+        MarketplaceNotificationService $notifications,
+        int $minutesAhead,
+        string $eventKey,
+        string $title,
+        string $dedupePrefix
+    ): void {
+        $from = now()->addMinutes($minutesAhead - 5);
+        $to = now()->addMinutes($minutesAhead + 5);
 
         $bookings = CareBooking::query()
-            ->with(['careRequest:id,title', 'family:id,name', 'caregiver:id,name'])
+            ->with(['careRequest:id,title', 'family:id,name', 'caregiver:id,name', 'payment:id,care_booking_id,status'])
             ->where('status', CareBooking::STATUS_SCHEDULED)
             ->whereNotNull('scheduled_start_at')
             ->whereBetween('scheduled_start_at', [$from, $to])
             ->get();
 
         foreach ($bookings as $booking) {
-            $formatted = optional($booking->scheduled_start_at)?->format('M d, H:i');
-            $title = 'Shift starting soon';
-            $body = 'Your shift for "'.$booking->careRequest?->title.'" starts at '.$formatted.'.';
+            $formatted = optional($booking->scheduled_start_at)?->format('l, F j \a\t g:i A');
 
             if ($booking->family) {
                 $notifications->notify(
                     recipients: $booking->family,
-                    eventKey: MarketplaceEvent::SHIFT_STARTING_SOON,
+                    eventKey: $eventKey,
                     title: $title,
-                    body: $body,
+                    body: $booking->caregiver?->name.' is scheduled to arrive '.$formatted.'.',
                     url: route('family.requests.show', $booking->care_request_id),
                     payload: ['care_booking_id' => $booking->id],
                     subject: $booking,
-                    dedupeKey: 'shift-soon:booking-'.$booking->id.'-user-'.$booking->family->id
+                    dedupeKey: $dedupePrefix.':booking-'.$booking->id.'-user-'.$booking->family->id
                 );
             }
 
-            if ($booking->caregiver) {
+            $regularCarePaymentReady = ! $booking->care_plan_id || ($booking->payment && in_array($booking->payment->status, [
+                CareBookingPayment::STATUS_AUTHORIZED,
+                CareBookingPayment::STATUS_CAPTURED,
+                CareBookingPayment::STATUS_TRANSFERRED,
+            ], true));
+            if ($booking->caregiver && $regularCarePaymentReady) {
                 $notifications->notify(
                     recipients: $booking->caregiver,
-                    eventKey: MarketplaceEvent::SHIFT_STARTING_SOON,
+                    eventKey: $eventKey,
                     title: $title,
-                    body: $body,
+                    body: 'Your visit with '.$booking->family?->name.' starts '.$formatted.'.',
                     url: route('care-requests.apply', $booking->care_request_id),
                     payload: ['care_booking_id' => $booking->id],
                     subject: $booking,
-                    dedupeKey: 'shift-soon:booking-'.$booking->id.'-user-'.$booking->caregiver->id
+                    dedupeKey: $dedupePrefix.':booking-'.$booking->id.'-user-'.$booking->caregiver->id
                 );
             }
         }

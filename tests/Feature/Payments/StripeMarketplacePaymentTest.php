@@ -3,16 +3,18 @@
 namespace Tests\Feature\Payments;
 
 use App\Exceptions\Payments\PaymentException;
-use App\Livewire\Family\ManageCareRequest;
 use App\Livewire\Admin\PaymentsQueue;
+use App\Livewire\Family\ManageCareRequest;
 use App\Models\CareBooking;
 use App\Models\CareBookingPayment;
+use App\Models\CaregiverProfile;
+use App\Models\CarePlan;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
-use App\Models\CaregiverProfile;
 use App\Models\User;
 use App\Services\Payments\BookingPaymentService;
 use App\Services\Payments\StripeClient;
+use App\Services\RegularCare\CarePlanHealthService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -140,6 +142,45 @@ class StripeMarketplacePaymentTest extends TestCase
             'amount_authorized_cents' => 10890,
             'last_error' => null,
         ]);
+    }
+
+    public function test_regular_care_plan_recovers_after_client_completes_3ds(): void
+    {
+        config()->set('services.stripe.bypass', false);
+        [$family, $request, $application] = $this->seedScenario();
+        $this->bindDeclinedStripeClient();
+
+        Livewire::actingAs($family)->test(ManageCareRequest::class, ['careRequest' => $request->id])->call('hire', $application->id);
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $plan = CarePlan::query()->create([
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $application->caregiver_user_id,
+            'source_care_request_id' => $request->id,
+            'source_care_booking_id' => $booking->id,
+            'next_booking_id' => $booking->id,
+            'status' => CarePlan::STATUS_PAYMENT_ATTENTION,
+            'title' => 'Regular care payment recovery',
+            'schedule_days' => [$booking->scheduled_start_at->dayOfWeek],
+            'schedule_start_time' => $booking->scheduled_start_at->format('H:i:s'),
+            'schedule_end_time' => $booking->scheduled_end_at->format('H:i:s'),
+            'starts_on' => $booking->scheduled_start_at->toDateString(),
+            'timezone' => config('app.timezone'),
+            'hourly_rate' => 30,
+            'payment_status' => CarePlan::PAYMENT_ACTION_REQUIRED,
+            'last_error' => 'Card authorization needs confirmation.',
+        ]);
+        $booking->forceFill(['care_plan_id' => $plan->id])->save();
+        app(CarePlanHealthService::class)->reconcile($plan);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('finalizeStripeAuthorization', 'pi_client_confirmation');
+
+        $plan->refresh();
+        $this->assertSame(CarePlan::STATUS_ACTIVE, $plan->status);
+        $this->assertSame(CarePlan::PAYMENT_AUTHORIZED, $plan->payment_status);
+        $this->assertNull($plan->last_error);
+        $this->assertSame(CareBookingPayment::STATUS_AUTHORIZED, $booking->fresh()->payment?->status);
     }
 
     public function test_hire_authorizes_payment_in_bypass_mode(): void

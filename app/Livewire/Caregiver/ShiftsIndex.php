@@ -41,7 +41,10 @@ class ShiftsIndex extends Component
 
         $bookingsQuery = CareBooking::query()
             ->with([
-                'careRequest:id,title,city,state,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time',
+                'careRequest:id,title,address_line1,address_line2,city,state,zip,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time',
+                'careRequest.recipient:id,care_request_id,full_name,recipient_is_requester,relationship_to_family',
+                'carePlan:id,title,status',
+                'payment:id,care_booking_id,status,amount_authorized_cents,caregiver_amount_cents,last_error',
                 'family:id,name',
                 'application:id,care_request_id,caregiver_user_id,status,proposed_rate',
                 'application.conversation:id,care_request_application_id',
@@ -87,7 +90,7 @@ class ShiftsIndex extends Component
         ];
 
         $nextShift = CareBooking::query()
-            ->with('careRequest:id,title,city,state')
+            ->with(['careRequest:id,title,address_line1,city,state,zip', 'carePlan:id,title', 'payment:id,care_booking_id,status'])
             ->where('caregiver_user_id', $caregiverId)
             ->where('status', CareBooking::STATUS_SCHEDULED)
             ->whereNotNull('scheduled_start_at')

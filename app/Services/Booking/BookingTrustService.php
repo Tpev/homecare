@@ -5,9 +5,9 @@ namespace App\Services\Booking;
 use App\Models\CareBooking;
 use App\Models\CareBookingEvent;
 use App\Models\CareBookingTaskCheck;
+use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
-use App\Models\CaregiverProfile;
 use App\Models\User;
 use App\Support\MarketplacePricing;
 use Illuminate\Support\Carbon;
@@ -102,7 +102,7 @@ class BookingTrustService
 
         $minutesBefore = now()->diffInMinutes($booking->scheduled_start_at, false);
 
-        return $minutesBefore <= 24 * 60;
+        return $minutesBefore < 24 * 60;
     }
 
     public function recomputeReliabilityForBooking(CareBooking $booking): void

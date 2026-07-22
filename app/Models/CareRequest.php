@@ -14,17 +14,23 @@ class CareRequest extends Model
     use HasFactory;
 
     public const TYPE_ONE_TIME = 'one_time';
+
     public const TYPE_RECURRING = 'recurring';
 
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_OPEN = 'open';
+
     public const STATUS_FILLED = 'filled';
+
     public const STATUS_CANCELLED = 'cancelled';
+
     public const STATUS_EXPIRED = 'expired';
 
     protected $fillable = [
         'family_user_id',
         'care_plan_id',
+        'is_system_generated',
         'title',
         'additional_info',
         'scope_of_work',
@@ -65,6 +71,7 @@ class CareRequest extends Model
             'first_applicant_at' => 'datetime',
             'first_shortlist_at' => 'datetime',
             'first_hire_at' => 'datetime',
+            'is_system_generated' => 'boolean',
             'recurring_days' => 'array',
             'recurring_starts_on' => 'date',
             'recurring_ends_on' => 'date',

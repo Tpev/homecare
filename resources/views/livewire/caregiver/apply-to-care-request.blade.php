@@ -14,9 +14,8 @@
         $baseRatePerHour = (float) ($existingApplication?->proposed_rate ?? auth()->user()->caregiverProfile?->resolvePlatformHourlyRate() ?? 0);
         $ratePerHour = $pricing->hourlyRateForRequest($requestItem, $baseRatePerHour);
         $canEditApplication = $requestItem->status === \App\Models\CareRequest::STATUS_OPEN;
-        $canCheckIn = $booking
-            && $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED
-            && $booking->caregiver_terms_accepted_at !== null;
+        $checkInDecision = app(\App\Services\RegularCare\CareBookingCheckInPolicy::class)->evaluate($booking);
+        $canCheckIn = $checkInDecision['allowed'];
         $canPause = $booking && $booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS;
         $canResume = $booking && $booking->status === \App\Models\CareBooking::STATUS_PAUSED;
         $canCheckOut = $booking && in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true);
@@ -711,6 +710,10 @@
                                 <span x-show="!geoLoading">Start visit</span>
                                 <span x-show="geoLoading">Capturing GPS...</span>
                             </x-button>
+                        @elseif ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED && $booking->caregiver_terms_accepted_at)
+                            <div class="rounded-lg border border-amber-300/50 bg-amber-500/10 px-4 py-3 text-sm leading-6 text-amber-50">
+                                {{ $checkInDecision['reason'] }}
+                            </div>
                         @endif
 
                         @if ($canPause)
