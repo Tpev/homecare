@@ -13,10 +13,15 @@ use Livewire\Component;
 class TicketsCenter extends Component
 {
     public string $subject = '';
+
     public string $description = '';
+
     public string $category = 'general';
+
     public string $priority = 'normal';
+
     public ?int $care_request_id = null;
+
     public ?int $care_booking_id = null;
 
     public function createTicket(): void
@@ -30,7 +35,7 @@ class TicketsCenter extends Component
             'care_booking_id' => ['nullable', 'integer', Rule::exists('care_bookings', 'id')],
         ]);
 
-        SupportTicket::query()->create([
+        $ticket = SupportTicket::query()->create([
             'opener_user_id' => auth()->id(),
             'care_request_id' => $this->care_request_id ?: null,
             'care_booking_id' => $this->care_booking_id ?: null,
@@ -44,15 +49,20 @@ class TicketsCenter extends Component
         $this->category = 'general';
         $this->priority = 'normal';
 
-        session()->flash('status', 'Support ticket created.');
+        session()->flash('status', 'Support ticket created. You can continue the conversation here.');
+        $this->redirect(route('support.tickets.show', $ticket, absolute: false), navigate: true);
     }
 
     public function render()
     {
         $tickets = SupportTicket::query()
+            ->with(['latestPublicMessage.sender:id,name,role'])
             ->where('opener_user_id', auth()->id())
-            ->latest()
-            ->get();
+            ->orderByRaw('COALESCE(last_public_message_at, created_at) DESC')
+            ->get()
+            ->each(function (SupportTicket $ticket): void {
+                $ticket->is_unread_for_opener = $ticket->isUnreadForOpener();
+            });
 
         $requestOptions = CareRequest::query()
             ->where('family_user_id', auth()->id())

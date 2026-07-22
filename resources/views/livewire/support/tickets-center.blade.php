@@ -51,18 +51,33 @@
         </x-slot:header>
         <div class="space-y-3">
             @forelse($tickets as $ticket)
-                <div class="rounded-lg border border-slate-200 p-3">
+                <div class="rounded-lg border p-3 {{ $ticket->is_unread_for_opener ? 'border-blue-300 bg-blue-50/50' : 'border-slate-200' }}">
                     <div class="flex items-center justify-between">
-                        <p class="font-medium text-slate-900">{{ $ticket->subject }}</p>
+                        <div class="flex items-center gap-2">
+                            <p class="font-medium text-slate-900">{{ $ticket->subject }}</p>
+                            @if ($ticket->is_unread_for_opener)
+                                <span class="rounded-full bg-blue-600 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">New reply</span>
+                            @endif
+                        </div>
                         <x-badge :text="strtoupper($ticket->status)" color="blue" />
                     </div>
                     <p class="text-xs text-slate-500 mt-1">{{ strtoupper($ticket->category) }} · {{ strtoupper($ticket->priority) }} · #{{ $ticket->id }}</p>
                     <p class="text-sm text-slate-700 mt-2">{{ $ticket->description }}</p>
                     @if ($ticket->admin_note)
                         <div class="mt-2 rounded bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-600">
-                            Admin note: {{ $ticket->admin_note }}
+                            Previous admin response: {{ $ticket->admin_note }}
                         </div>
                     @endif
+                    @if ($ticket->latestPublicMessage)
+                        <p class="mt-2 truncate text-xs text-slate-500">
+                            Latest: {{ $ticket->latestPublicMessage->sender?->name ?: 'Support' }} — {{ $ticket->latestPublicMessage->body }}
+                        </p>
+                    @endif
+                    <div class="mt-3 flex justify-end">
+                        <a href="{{ route('support.tickets.show', $ticket) }}" wire:navigate class="inline-flex min-h-10 items-center justify-center rounded-xl bg-[#0F6B5B] px-4 text-sm font-semibold text-white hover:bg-[#0B594C]">
+                            Open conversation
+                        </a>
+                    </div>
                 </div>
             @empty
                 <p class="text-sm text-slate-600">No support tickets yet.</p>

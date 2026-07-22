@@ -6,9 +6,13 @@ use App\Contracts\AiCopilotResponder;
 use App\Listeners\SendOpsUserRegisteredAlert;
 use App\Models\CareRequest;
 use App\Models\CareRequestConversation;
+use App\Models\SupportTicket;
+use App\Models\SupportTicketMessage;
 use App\Observers\CareRequestObserver;
 use App\Policies\CareRequestConversationPolicy;
 use App\Policies\CareRequestPolicy;
+use App\Policies\SupportTicketMessagePolicy;
+use App\Policies\SupportTicketPolicy;
 use App\Services\AiCopilot\OpenAiCopilotResponder;
 use App\Services\AiCopilot\RuleBasedCopilotResponder;
 use Illuminate\Auth\Events\Registered;
@@ -43,6 +47,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(CareRequest::class, CareRequestPolicy::class);
         Gate::policy(CareRequestConversation::class, CareRequestConversationPolicy::class);
+        Gate::policy(SupportTicket::class, SupportTicketPolicy::class);
+        Gate::policy(SupportTicketMessage::class, SupportTicketMessagePolicy::class);
         CareRequest::observe(CareRequestObserver::class);
 
         Event::listen(Registered::class, SendOpsUserRegisteredAlert::class);

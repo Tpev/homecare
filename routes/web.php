@@ -28,6 +28,7 @@ use App\Livewire\Admin\PaymentsQueue;
 use App\Livewire\Admin\ProviderOutreachAi;
 use App\Livewire\Admin\SdrOutreachCenter;
 use App\Livewire\Admin\SmsInbox;
+use App\Livewire\Admin\SupportTicketShow;
 use App\Livewire\Admin\SupportTicketsQueue;
 use App\Livewire\Admin\UsageAnalytics;
 use App\Livewire\Admin\UserShow;
@@ -61,6 +62,7 @@ use App\Livewire\Family\RegularCareShow;
 use App\Livewire\Family\RequestsIndex;
 use App\Livewire\Messaging\Inbox;
 use App\Livewire\Sdr\CallingConsole;
+use App\Livewire\Support\TicketConversation;
 use App\Livewire\Support\TicketsCenter;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
@@ -88,6 +90,9 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/caregivers/moderation-logs', \App\Livewire\Admin\CaregiverModerationLogs::class)
             ->name('caregivers.moderation_logs');
         Route::get('/support/tickets', SupportTicketsQueue::class)->name('support.tickets');
+        Route::get('/support/tickets/{ticket}', SupportTicketShow::class)
+            ->whereNumber('ticket')
+            ->name('support.tickets.show');
         Route::get('/sms', SmsInbox::class)->name('sms.index');
         Route::get('/voice-ai', VoiceAiTest::class)->name('voice-ai.index');
         Route::get('/provider-outreach-ai', ProviderOutreachAi::class)->name('provider-outreach-ai.index');
@@ -173,6 +178,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/messages', Inbox::class)->name('messages.index');
     Route::get('/messages/{conversation}', Inbox::class)->whereNumber('conversation')->name('messages.show');
     Route::get('/support', TicketsCenter::class)->name('support.index');
+    Route::get('/support/tickets/{ticket}', TicketConversation::class)
+        ->whereNumber('ticket')
+        ->name('support.tickets.show');
 });
 
 Route::middleware(['auth', 'caregiver.role'])->group(function () {

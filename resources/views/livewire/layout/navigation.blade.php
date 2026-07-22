@@ -3,6 +3,7 @@
 use App\Livewire\Actions\Logout;
 use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
+use App\Models\SupportTicket;
 use Livewire\Volt\Component;
 
 new class extends Component
@@ -37,6 +38,7 @@ new class extends Component
         $messageUnread = 0;
         $invitationUnread = 0;
         $notificationUnread = 0;
+        $supportUnread = 0;
 
         if (\Illuminate\Support\Facades\Schema::hasTable('care_request_conversations')) {
             if ($isFamily) {
@@ -84,6 +86,33 @@ new class extends Component
             }
         }
 
+        if ($user
+            && \Illuminate\Support\Facades\Schema::hasTable('support_tickets')
+            && \Illuminate\Support\Facades\Schema::hasColumn('support_tickets', 'last_public_message_at')
+        ) {
+            $supportUnreadQuery = SupportTicket::query()
+                ->whereNotNull('last_public_message_at');
+
+            if ($isAdmin) {
+                $supportUnread = $supportUnreadQuery
+                    ->whereColumn('last_public_message_sender_id', 'opener_user_id')
+                    ->where(function ($query) {
+                        $query->whereNull('admin_last_read_at')
+                            ->orWhereColumn('last_public_message_at', '>', 'admin_last_read_at');
+                    })
+                    ->count();
+            } elseif ($isFamily || $isCaregiver) {
+                $supportUnread = $supportUnreadQuery
+                    ->where('opener_user_id', $user->id)
+                    ->where('last_public_message_sender_id', '!=', $user->id)
+                    ->where(function ($query) {
+                        $query->whereNull('opener_last_read_at')
+                            ->orWhereColumn('last_public_message_at', '>', 'opener_last_read_at');
+                    })
+                    ->count();
+            }
+        }
+
         $myProfileHref = $isCaregiver ? route('caregiver.profile.edit') : route('profile');
         $myProfileLabel = $isCaregiver ? 'My Caregiver Profile' : ($isFamily ? 'My Family Profile' : 'My Profile');
         $securityHref = route('profile').'#password-security';
@@ -115,7 +144,7 @@ new class extends Component
                 'label' => 'Care ops',
                 'active' => request()->routeIs('admin.requests.*')
                     || request()->routeIs('admin.caregivers.reviews')
-                    || request()->routeIs('admin.support.tickets'),
+                    || request()->routeIs('admin.support.tickets*'),
                 'items' => [
                     [
                         'label' => 'Admin Requests',
@@ -128,9 +157,9 @@ new class extends Component
                         'active' => request()->routeIs('admin.caregivers.reviews'),
                     ],
                     [
-                        'label' => 'Admin Support',
+                        'label' => $supportUnread > 0 ? "Admin Support ($supportUnread)" : 'Admin Support',
                         'href' => route('admin.support.tickets'),
-                        'active' => request()->routeIs('admin.support.tickets'),
+                        'active' => request()->routeIs('admin.support.tickets*'),
                     ],
                 ],
             ],
@@ -264,7 +293,7 @@ new class extends Component
                             || request()->routeIs('caregiver.payouts.connect.*'),
                     ];
                     $primaryLinks[] = [
-                        'label' => 'Support',
+                        'label' => $supportUnread > 0 ? "Support ($supportUnread)" : 'Support',
                         'href' => route('support.index'),
                         'active' => request()->routeIs('support.*'),
                     ];
@@ -444,7 +473,7 @@ new class extends Component
 
                         <a href="{{ route('profile') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Account Settings</a>
                         <a href="{{ $securityHref }}" class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Change Password</a>
-                        <a href="{{ route('support.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Support Center</a>
+                        <a href="{{ route('support.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">{{ $supportUnread > 0 ? 'Support Center ('.$supportUnread.')' : 'Support Center' }}</a>
                         @if (! ($isCaregiver && $caregiverOnboardingMode))
                             <a href="{{ route('messages.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">
                                 {{ $messageUnread > 0 ? 'Messages ('.$messageUnread.')' : 'Messages' }}
@@ -560,7 +589,7 @@ new class extends Component
                         <x-responsive-nav-link :href="$myProfileHref" wire:navigate>{{ __($myProfileLabel) }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('profile')" wire:navigate>{{ __('Account Settings') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="$securityHref">{{ __('Change Password') }}</x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('support.index')" wire:navigate>{{ __('Support Center') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('support.index')" wire:navigate>{{ $supportUnread > 0 ? __('Support Center').' ('.$supportUnread.')' : __('Support Center') }}</x-responsive-nav-link>
                         @if (! ($isCaregiver && $caregiverOnboardingMode))
                             <x-responsive-nav-link :href="route('messages.index')" wire:navigate>
                                 {{ $messageUnread > 0 ? __('Messages').' ('.$messageUnread.')' : __('Messages') }}

@@ -43,9 +43,14 @@
 
         <div class="space-y-3">
             @forelse($tickets as $ticket)
-                <div class="rounded-lg border border-slate-200 p-3">
+                <div class="rounded-lg border p-3 {{ $ticket->is_unread_for_admin ? 'border-emerald-300 bg-emerald-50/60' : 'border-slate-200' }}">
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <p class="font-medium text-slate-900">#{{ $ticket->id }} {{ $ticket->subject }}</p>
+                        <div class="flex items-center gap-2">
+                            <p class="font-medium text-slate-900">#{{ $ticket->id }} {{ $ticket->subject }}</p>
+                            @if ($ticket->is_unread_for_admin)
+                                <span class="rounded-full bg-emerald-700 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">Unread</span>
+                            @endif
+                        </div>
                         <x-badge :text="strtoupper($ticket->status)" color="blue" />
                     </div>
                     <p class="text-xs text-slate-500 mt-1">
@@ -59,8 +64,14 @@
                     @if($ticket->careBooking)
                         <p class="text-xs text-slate-500">Booking: #{{ $ticket->careBooking->id }}</p>
                     @endif
-                    <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(16rem,1fr)_auto_auto_auto] xl:items-center">
-                        <x-input placeholder="Admin note" wire:model="adminNote" />
+                    @if ($ticket->latestPublicMessage)
+                        <p class="mt-2 truncate text-xs text-slate-500">
+                            Latest reply: {{ $ticket->latestPublicMessage->sender?->name ?: 'Former user' }} — {{ $ticket->latestPublicMessage->body }}
+                        </p>
+                    @endif
+                    <p class="mt-2 text-xs text-slate-500">Assigned: {{ $ticket->assignedAdmin?->name ?: 'Unassigned' }}</p>
+                    <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(12rem,1fr)_auto_auto_auto_auto] xl:items-center">
+                        <a href="{{ route('admin.support.tickets.show', $ticket) }}" wire:navigate class="inline-flex min-h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white hover:bg-slate-800">Open conversation</a>
                         <x-button color="blue" light wire:click="updateStatus({{ $ticket->id }}, 'in_progress')" class="justify-center">In progress</x-button>
                         <x-button color="green" light wire:click="updateStatus({{ $ticket->id }}, 'resolved')" class="justify-center">Resolve</x-button>
                         <x-button color="slate" light wire:click="updateStatus({{ $ticket->id }}, 'closed')" class="justify-center">Close</x-button>
