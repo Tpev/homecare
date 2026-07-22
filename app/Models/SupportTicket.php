@@ -112,6 +112,11 @@ class SupportTicket extends Model
             ->latestOfMany();
     }
 
+    public function bookingCorrections(): HasMany
+    {
+        return $this->hasMany(CareBookingCorrection::class)->latest();
+    }
+
     public function isUnreadForOpener(): bool
     {
         return $this->last_public_message_at

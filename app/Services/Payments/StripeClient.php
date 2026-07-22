@@ -2,6 +2,7 @@
 
 namespace App\Services\Payments;
 
+use App\Exceptions\Payments\PaymentActionRequiredException;
 use App\Exceptions\Payments\PaymentException;
 use App\Models\CareBooking;
 use App\Models\CaregiverProfile;
@@ -622,8 +623,7 @@ class StripeClient
         string $currency,
         array $metadata = [],
         ?string $idempotencyKey = null,
-    ): array
-    {
+    ): array {
         if ($amountCents <= 0) {
             throw new PaymentException('Transfer amount must be greater than zero.');
         }
@@ -671,7 +671,7 @@ class StripeClient
 
         if ($this->isBypass()) {
             return [
-                'id' => 'pi_bypass_overage_'.$booking->id,
+                'id' => 'pi_bypass_overage_'.$booking->id.'_'.uniqid(),
                 'status' => PaymentIntent::STATUS_SUCCEEDED,
                 'amount_received' => $amountCents,
             ];
@@ -695,9 +695,13 @@ class StripeClient
             ], $this->requestOptions($idempotencyKey));
         } catch (ApiErrorException $e) {
             if ($this->isAuthenticationRequiredError($e)) {
-                throw new PaymentException(
+                $paymentIntent = $this->extractPaymentIntentFromError($e->getError());
+
+                throw new PaymentActionRequiredException(
                     'An additional authorization is required to complete final charges.',
-                    $e->getMessage()
+                    $e->getMessage(),
+                    paymentIntentId: is_array($paymentIntent) ? (string) ($paymentIntent['id'] ?? '') : null,
+                    clientSecret: is_array($paymentIntent) ? (string) ($paymentIntent['client_secret'] ?? '') : null,
                 );
             }
 
@@ -713,9 +717,11 @@ class StripeClient
         }
 
         if ((string) $intent->status !== PaymentIntent::STATUS_SUCCEEDED) {
-            throw new PaymentException(
+            throw new PaymentActionRequiredException(
                 'Additional charge requires action. Ask the family to re-authorize in Billing.',
-                'Unexpected overage status: '.(string) $intent->status
+                'Unexpected overage status: '.(string) $intent->status,
+                paymentIntentId: (string) $intent->id,
+                clientSecret: (string) ($intent->client_secret ?? ''),
             );
         }
 

@@ -143,6 +143,11 @@ class CareBooking extends Model
         return $this->hasMany(CareBookingEvent::class)->orderByDesc('happened_at');
     }
 
+    public function corrections(): HasMany
+    {
+        return $this->hasMany(CareBookingCorrection::class)->latest();
+    }
+
     public function taskChecks(): HasMany
     {
         return $this->hasMany(CareBookingTaskCheck::class);

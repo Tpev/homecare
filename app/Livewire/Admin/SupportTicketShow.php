@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\CareBookingCorrection;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Models\User;
+use App\Services\Booking\BookingCorrectionService;
 use App\Services\Support\SupportTicketMessagingService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -31,6 +33,22 @@ class SupportTicketShow extends Component
 
     public int $messagesLimit = 50;
 
+    public string $correctionAction = CareBookingCorrection::ACTION_COMPLETE_AND_BILL;
+
+    public string $correctionStartedAt = '';
+
+    public string $correctionCompletedAt = '';
+
+    public string $correctionBreakMinutes = '0';
+
+    public string $correctionReason = '';
+
+    public bool $correctionFamilyApproved = false;
+
+    public bool $correctionImpactConfirmed = false;
+
+    public string $correctionClientRequestId = '';
+
     public function mount(SupportTicket $ticket): void
     {
         $ticket->refresh();
@@ -41,7 +59,9 @@ class SupportTicketShow extends Component
         $this->status = $ticket->status;
         $this->assignedAdminId = $ticket->assigned_admin_id ? (string) $ticket->assigned_admin_id : '';
         $this->clientMessageId = (string) Str::uuid();
+        $this->correctionClientRequestId = (string) Str::uuid();
         $ticket->markReadForAdmin();
+        $this->initializeCorrectionForm($ticket);
     }
 
     public function sendMessage(SupportTicketMessagingService $messaging): void
@@ -144,6 +164,66 @@ class SupportTicketShow extends Component
         $this->ticket->markReadForAdmin();
     }
 
+    public function applyVisitCorrection(
+        BookingCorrectionService $corrections,
+        SupportTicketMessagingService $messaging,
+    ): void {
+        $validated = $this->validate([
+            'correctionAction' => ['required', Rule::in([
+                CareBookingCorrection::ACTION_REOPEN,
+                CareBookingCorrection::ACTION_COMPLETE_AND_BILL,
+            ])],
+            'correctionStartedAt' => ['nullable', 'required_if:correctionAction,'.CareBookingCorrection::ACTION_COMPLETE_AND_BILL, 'date'],
+            'correctionCompletedAt' => ['nullable', 'required_if:correctionAction,'.CareBookingCorrection::ACTION_COMPLETE_AND_BILL, 'date'],
+            'correctionBreakMinutes' => ['required', 'integer', 'min:0', 'max:1440'],
+            'correctionReason' => ['required', 'string', 'min:10', 'max:2000'],
+            'correctionFamilyApproved' => ['boolean'],
+            'correctionImpactConfirmed' => ['accepted'],
+            'correctionClientRequestId' => ['required', 'uuid'],
+        ]);
+
+        if ($validated['correctionAction'] === CareBookingCorrection::ACTION_COMPLETE_AND_BILL
+            && ! $validated['correctionFamilyApproved']) {
+            $this->addError('correctionFamilyApproved', 'Confirm that the family approved this correction.');
+
+            return;
+        }
+
+        $ticket = $this->ticket;
+        $this->authorize('manage', $ticket);
+        $correction = $corrections->apply(
+            $ticket,
+            auth()->user(),
+            [
+                'action' => $validated['correctionAction'],
+                'started_at' => $validated['correctionStartedAt'],
+                'completed_at' => $validated['correctionCompletedAt'],
+                'break_minutes' => (int) $validated['correctionBreakMinutes'],
+                'reason' => $validated['correctionReason'],
+                'family_approved' => (bool) $validated['correctionFamilyApproved'],
+            ],
+            $validated['correctionClientRequestId'],
+        );
+
+        $this->handleCorrectionOutcome($correction, $messaging);
+    }
+
+    public function retryVisitCorrection(
+        int $correctionId,
+        BookingCorrectionService $corrections,
+        SupportTicketMessagingService $messaging,
+    ): void {
+        $ticket = $this->ticket;
+        $this->authorize('manage', $ticket);
+        $correction = CareBookingCorrection::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->where('care_booking_id', $ticket->care_booking_id)
+            ->findOrFail($correctionId);
+
+        $correction = $corrections->retry($correction, auth()->user());
+        $this->handleCorrectionOutcome($correction, $messaging);
+    }
+
     public function getTicketProperty(): SupportTicket
     {
         abort_unless(auth()->user()?->isAdministrator(), 403);
@@ -154,7 +234,13 @@ class SupportTicketShow extends Component
                 'counterparty:id,name,email,phone,role',
                 'assignedAdmin:id,name,email,role',
                 'careRequest:id,title,status',
-                'careBooking:id,care_request_id,status',
+                'careBooking',
+                'careBooking.payment',
+                'careBooking.family:id,name,email',
+                'careBooking.caregiver:id,name,email',
+                'careBooking.caregiver.caregiverProfile:id,user_id,platform_hourly_rate,stripe_connect_account_id,stripe_charges_enabled,stripe_payouts_enabled',
+                'careBooking.application:id,care_request_id,caregiver_user_id,proposed_rate',
+                'careBooking.payoutItem.payout',
             ])
             ->findOrFail($this->ticketId);
 
@@ -183,6 +269,36 @@ class SupportTicketShow extends Component
             ->count() > $this->messagesLimit;
     }
 
+    /** @return array<string, mixed>|null */
+    public function getCorrectionPreviewProperty(): ?array
+    {
+        $booking = $this->ticket->careBooking;
+        if (! $booking) {
+            return null;
+        }
+
+        try {
+            return app(BookingCorrectionService::class)->preview($booking, [
+                'action' => $this->correctionAction,
+                'started_at' => $this->correctionStartedAt,
+                'completed_at' => $this->correctionCompletedAt,
+                'break_minutes' => (int) $this->correctionBreakMinutes,
+            ]);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    public function getBookingCorrectionsProperty(): Collection
+    {
+        return CareBookingCorrection::query()
+            ->with('actorAdmin:id,name')
+            ->where('support_ticket_id', $this->ticketId)
+            ->latest()
+            ->limit(10)
+            ->get();
+    }
+
     /** @return array<int, string> */
     public function getAdminOptionsProperty(): array
     {
@@ -206,5 +322,83 @@ class SupportTicketShow extends Component
         $ticket = SupportTicket::query()->findOrFail($this->ticketId);
         $this->status = $ticket->status;
         $this->assignedAdminId = $ticket->assigned_admin_id ? (string) $ticket->assigned_admin_id : '';
+    }
+
+    private function initializeCorrectionForm(SupportTicket $ticket): void
+    {
+        $booking = $ticket->careBooking;
+        if (! $booking) {
+            return;
+        }
+
+        $this->correctionStartedAt = ($booking->started_at ?: $booking->scheduled_start_at)?->format('Y-m-d\TH:i') ?: '';
+        $this->correctionCompletedAt = ($booking->completed_at ?: $booking->scheduled_end_at)?->format('Y-m-d\TH:i') ?: '';
+        $this->correctionBreakMinutes = (string) max(0, (int) round(((int) $booking->total_paused_seconds) / 60));
+    }
+
+    private function handleCorrectionOutcome(
+        CareBookingCorrection $correction,
+        SupportTicketMessagingService $messaging,
+    ): void {
+        $ticket = $this->ticket;
+        $ticket->forceFill([
+            'assigned_admin_id' => $ticket->assigned_admin_id ?: auth()->id(),
+            'status' => $correction->succeeded()
+                ? SupportTicket::STATUS_RESOLVED
+                : SupportTicket::STATUS_IN_PROGRESS,
+            'resolved_at' => $correction->succeeded() ? ($ticket->resolved_at ?: now()) : null,
+        ])->save();
+
+        if (! $correction->succeeded()) {
+            $this->addError('correctionApply', $correction->last_error ?: 'The correction needs attention before it can finish.');
+            $this->syncControlsFromTicket();
+
+            return;
+        }
+
+        $preview = (array) $correction->preview;
+        $workedMinutes = (int) ($preview['worked_minutes'] ?? 0);
+        $duration = intdiv($workedMinutes, 60).'h '.($workedMinutes % 60).'m';
+        $delta = (int) $correction->payment_delta_cents;
+        $financialSummary = $delta > 0
+            ? 'Additional family charge: $'.number_format($delta / 100, 2).'.'
+            : ($delta < 0
+                ? 'Family refund: $'.number_format(abs($delta) / 100, 2).'.'
+                : 'No payment difference.');
+
+        $messaging->addInternalNote(
+            $ticket->fresh(),
+            auth()->user(),
+            "Booking correction #{$correction->id} completed by ".auth()->user()->name.".\n"
+                .'Action: '.str_replace('_', ' ', $correction->action).".\n"
+                .'Reason: '.$correction->reason."\n"
+                .'Approved duration: '.$duration.".\n"
+                .$financialSummary,
+            $correction->internal_note_client_id,
+        );
+
+        $publicMessage = $correction->action === CareBookingCorrection::ACTION_REOPEN
+            ? 'We reopened visit #'.$correction->care_booking_id.'. It is ready to be started and completed again.'
+            : 'We corrected visit #'.$correction->care_booking_id.' to '.$duration.'. The visit, payment, and caregiver payout records are now updated.';
+        $messaging->sendAdminReply(
+            $ticket->fresh(),
+            auth()->user(),
+            $publicMessage,
+            $correction->public_reply_client_id,
+        );
+
+        $ticket->fresh()->forceFill([
+            'assigned_admin_id' => $ticket->assigned_admin_id ?: auth()->id(),
+            'status' => SupportTicket::STATUS_RESOLVED,
+            'resolved_at' => $ticket->resolved_at ?: now(),
+        ])->save();
+
+        $this->correctionClientRequestId = (string) Str::uuid();
+        $this->correctionReason = '';
+        $this->correctionFamilyApproved = false;
+        $this->correctionImpactConfirmed = false;
+        $this->resetValidation();
+        $this->syncControlsFromTicket();
+        session()->flash('status', 'Visit correction completed, payment reconciled, user notified, and ticket resolved.');
     }
 }

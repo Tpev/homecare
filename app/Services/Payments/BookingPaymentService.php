@@ -20,7 +20,31 @@ class BookingPaymentService
         private readonly StripeClient $stripe,
         private readonly MarketplaceNotificationService $notifications,
         private readonly MarketplacePricing $pricing,
-    ) {
+    ) {}
+
+    /**
+     * @return array{worked_minutes:int,hourly_rate:float,subtotal_cents:int,platform_fee_percent:float,platform_fee_cents:int,total_charge_cents:int,caregiver_amount_cents:int}
+     */
+    public function quoteForWorkedMinutes(CareBooking $booking, int $workedMinutes): array
+    {
+        $booking->loadMissing(['application', 'family', 'caregiver.caregiverProfile']);
+
+        $workedMinutes = max(1, $workedMinutes);
+        $hourlyRate = $this->effectiveHourlyRate($booking);
+        $subtotalCents = (int) round($this->bookingSubtotal($booking, $workedMinutes) * 100);
+        $platformFeePercent = $this->platformFeePercent($booking);
+        $totalChargeCents = max(100, (int) round($subtotalCents * (1 + ($platformFeePercent / 100))));
+        $platformFeeCents = (int) round($totalChargeCents * ($platformFeePercent / 100));
+
+        return [
+            'worked_minutes' => $workedMinutes,
+            'hourly_rate' => $hourlyRate,
+            'subtotal_cents' => $subtotalCents,
+            'platform_fee_percent' => $platformFeePercent,
+            'platform_fee_cents' => $platformFeeCents,
+            'total_charge_cents' => $totalChargeCents,
+            'caregiver_amount_cents' => max(0, $totalChargeCents - $platformFeeCents),
+        ];
     }
 
     public function authorizeForBooking(CareBooking $booking, bool $forceReauthorize = false): CareBookingPayment
