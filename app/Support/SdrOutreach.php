@@ -14,6 +14,7 @@ class SdrOutreach
     {
         return [
             'resource_requested' => 'Send one-page resource',
+            'material_drop_agreed' => 'Agreed to a material drop-off',
             'meeting_requested' => 'Wants a follow-up conversation',
             'follow_up_later' => 'Interested, follow up later',
             'gatekeeper' => 'Reached gatekeeper / transferred',
@@ -33,7 +34,9 @@ class SdrOutreach
     public static function stageForOutcome(string $outcome): string
     {
         return match ($outcome) {
-            'resource_requested', 'follow_up_later' => 'nurturing',
+            'resource_requested' => 'need_to_email_material',
+            'material_drop_agreed' => 'need_to_drop_material',
+            'follow_up_later' => 'nurturing',
             'meeting_requested' => 'meeting_scheduled',
             'wrong_number', 'not_interested' => 'not_fit',
             'do_not_call' => 'closed',
@@ -54,6 +57,7 @@ class SdrOutreach
     public static function defaultFollowUpForOutcome(string $outcome): ?\DateTimeInterface
     {
         return match ($outcome) {
+            'material_drop_agreed' => now()->addDay(),
             'resource_requested', 'follow_up_later' => now()->addDays(3),
             'gatekeeper' => now()->addDays(2),
             'left_voicemail', 'no_answer' => now()->addDay(),

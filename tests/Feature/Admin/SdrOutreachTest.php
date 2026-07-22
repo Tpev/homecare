@@ -135,7 +135,7 @@ class SdrOutreachTest extends TestCase
         $lead->refresh();
 
         $this->assertSame($sdr->id, $lead->assigned_admin_id);
-        $this->assertSame('nurturing', $lead->status);
+        $this->assertSame('need_to_email_material', $lead->status);
         $this->assertNotNull($lead->last_contacted_at);
         $this->assertNotNull($lead->next_follow_up_at);
         $this->assertSame('resource_requested', data_get($lead->data, 'sdr.last_outcome'));
@@ -159,6 +159,119 @@ class SdrOutreachTest extends TestCase
             ->assertOk()
             ->assertSee('Triangle Primary Care')
             ->assertSee('SDR Caller');
+    }
+
+    public function test_sdr_can_log_an_agreed_material_drop_off(): void
+    {
+        $sdr = User::factory()->create([
+            'email' => 'caller@example.com',
+            'role' => 'sdr',
+            'name' => 'SDR Caller',
+        ]);
+
+        $lead = Lead::query()->create([
+            'lead_type' => Lead::TYPE_REFERRAL,
+            'name' => 'Dr. Rivera',
+            'company' => 'Oak Medical Practice',
+            'phone' => '+19195550102',
+            'status' => 'new',
+            'priority' => Lead::PRIORITY_NORMAL,
+            'source' => SdrOutreach::SOURCE,
+        ]);
+
+        Livewire::actingAs($sdr)
+            ->test(CallingConsole::class)
+            ->call('claimNextLead')
+            ->assertSee('Agreed to a material drop-off')
+            ->set('outcome', 'material_drop_agreed')
+            ->set('note', 'The doctor approved a brief drop-off at the front desk.')
+            ->call('logOutcome')
+            ->assertHasNoErrors();
+
+        $lead->refresh();
+
+        $this->assertSame('need_to_drop_material', $lead->status);
+        $this->assertSame('material_drop_agreed', data_get($lead->data, 'sdr.last_outcome'));
+        $this->assertNotNull($lead->next_follow_up_at);
+        $this->assertDatabaseHas('lead_activities', [
+            'lead_id' => $lead->id,
+            'type' => LeadActivity::TYPE_CALL,
+            'summary' => 'SDR call: Agreed to a material drop-off',
+        ]);
+    }
+
+    public function test_admin_can_filter_recent_call_outcomes_and_load_more(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'test@test.com',
+            'role' => 'admin',
+            'name' => 'Ops Admin',
+        ]);
+        $sdr = User::factory()->create([
+            'email' => 'caller@example.com',
+            'role' => 'sdr',
+            'name' => 'SDR Caller',
+        ]);
+
+        foreach (range(1, 13) as $index) {
+            $lead = Lead::query()->create([
+                'lead_type' => Lead::TYPE_REFERRAL,
+                'name' => 'No Answer Practice '.$index,
+                'company' => 'No Answer Practice '.$index,
+                'phone' => '+1919555'.str_pad((string) $index, 4, '0', STR_PAD_LEFT),
+                'status' => 'outreach',
+                'priority' => Lead::PRIORITY_NORMAL,
+                'source' => SdrOutreach::SOURCE,
+            ]);
+
+            $lead->activities()->create([
+                'actor_user_id' => $sdr->id,
+                'type' => LeadActivity::TYPE_CALL,
+                'summary' => 'SDR call: No answer',
+                'occurred_at' => now()->subMinutes($index),
+                'metadata' => [
+                    'sdr_outcome' => 'no_answer',
+                    'sdr_outcome_label' => 'No answer',
+                ],
+            ]);
+        }
+
+        $emailLead = Lead::query()->create([
+            'lead_type' => Lead::TYPE_REFERRAL,
+            'name' => 'Email Material Practice',
+            'company' => 'Email Material Practice',
+            'phone' => '+19195559999',
+            'status' => 'need_to_email_material',
+            'priority' => Lead::PRIORITY_NORMAL,
+            'source' => SdrOutreach::SOURCE,
+        ]);
+        $emailLead->activities()->create([
+            'actor_user_id' => $sdr->id,
+            'type' => LeadActivity::TYPE_CALL,
+            'summary' => 'SDR call: Send one-page resource',
+            'occurred_at' => now(),
+            'metadata' => [
+                'sdr_outcome' => 'resource_requested',
+                'sdr_outcome_label' => 'Send one-page resource',
+            ],
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(SdrOutreachCenter::class)
+            ->assertSee('All outcomes')
+            ->set('outcomeFilter', 'no_answer')
+            ->assertSet('recentCallsLimit', 12)
+            ->assertSee('No Answer Practice 12')
+            ->assertDontSee('No Answer Practice 13')
+            ->assertSee('Load more')
+            ->call('loadMoreRecentCalls')
+            ->assertSet('recentCallsLimit', 24)
+            ->assertSee('No Answer Practice 13')
+            ->set('outcomeFilter', 'resource_requested')
+            ->assertSet('recentCallsLimit', 12)
+            ->assertSee('Email Material Practice')
+            ->assertDontSee('No Answer Practice 1')
+            ->assertDontSee('Load more');
     }
 
     public function test_refresh_resumes_uncalled_claim_instead_of_future_follow_up(): void

@@ -29,8 +29,27 @@ class SdrOutreachCenter extends Component
 
     public string $metricsWindow = '7';
 
+    public string $outcomeFilter = '';
+
+    public int $recentCallsLimit = 12;
+
     /** @var array<string, mixed> */
     public array $importResult = [];
+
+    public function updatedOutcomeFilter(): void
+    {
+        $this->recentCallsLimit = 12;
+    }
+
+    public function updatedMetricsWindow(): void
+    {
+        $this->recentCallsLimit = 12;
+    }
+
+    public function loadMoreRecentCalls(): void
+    {
+        $this->recentCallsLimit += 12;
+    }
 
     public function importLeads(): void
     {
@@ -137,6 +156,14 @@ class SdrOutreachCenter extends Component
         $days = max(1, min(30, (int) $this->metricsWindow));
         $start = now()->subDays($days - 1)->startOfDay();
         $activities = $this->sdrCallActivities($start);
+        $recentCallActivities = $activities
+            ->when(
+                filled($this->outcomeFilter),
+                fn ($calls) => $calls->filter(
+                    fn (LeadActivity $activity): bool => data_get($activity->metadata, 'sdr_outcome') === $this->outcomeFilter
+                )
+            )
+            ->values();
 
         return view('livewire.admin.sdr-outreach-center', [
             'dailyStats' => $this->dailyStats($activities),
@@ -144,7 +171,8 @@ class SdrOutreachCenter extends Component
             'outcomeOptions' => SdrOutreach::outcomeOptions(),
             'poolStats' => $this->poolStats($activities),
             'priorityOptions' => $this->priorityOptions(),
-            'recentCalls' => $activities->take(12),
+            'hasMoreRecentCalls' => $recentCallActivities->count() > $this->recentCallsLimit,
+            'recentCalls' => $recentCallActivities->take($this->recentCallsLimit),
             'stageOptions' => Lead::REFERRAL_STAGES,
         ]);
     }

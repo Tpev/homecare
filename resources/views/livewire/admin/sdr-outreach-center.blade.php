@@ -186,16 +186,25 @@
         </section>
 
         <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                     <h2 class="text-lg font-bold text-slate-950">Recent SDR call outcomes</h2>
                     <p class="text-sm text-slate-500">These notes are also visible on each referral lead timeline.</p>
                 </div>
+                <label class="block sm:min-w-64">
+                    <span class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Filter by outcome</span>
+                    <select wire:model.live="outcomeFilter" class="mt-1 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+                        <option value="">All outcomes</option>
+                        @foreach ($outcomeOptions as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </label>
             </div>
 
             <div class="mt-4 grid gap-3 lg:grid-cols-2">
                 @forelse ($recentCalls as $activity)
-                    <article class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <article wire:key="recent-sdr-call-{{ $activity->id }}" class="rounded-xl border border-slate-200 bg-slate-50 p-4">
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <p class="font-semibold text-slate-950">{{ $activity->lead?->company ?: $activity->lead?->name ?: 'Unknown source' }}</p>
@@ -215,6 +224,21 @@
                     </div>
                 @endforelse
             </div>
+
+            @if ($hasMoreRecentCalls)
+                <div class="mt-4 flex justify-center">
+                    <button
+                        type="button"
+                        wire:click="loadMoreRecentCalls"
+                        wire:loading.attr="disabled"
+                        wire:target="loadMoreRecentCalls"
+                        class="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60"
+                    >
+                        <span wire:loading.remove wire:target="loadMoreRecentCalls">Load more</span>
+                        <span wire:loading wire:target="loadMoreRecentCalls">Loading...</span>
+                    </button>
+                </div>
+            @endif
         </section>
     </div>
 </div>

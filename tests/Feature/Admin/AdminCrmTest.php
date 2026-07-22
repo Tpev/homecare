@@ -249,6 +249,20 @@ class AdminCrmTest extends TestCase
         ]);
     }
 
+    public function test_referral_recruiting_has_material_stages_after_qualified(): void
+    {
+        $stages = array_keys(Lead::REFERRAL_STAGES);
+        $qualifiedIndex = array_search('qualified', $stages, true);
+
+        $this->assertIsInt($qualifiedIndex);
+        $this->assertSame([
+            'qualified',
+            'need_to_drop_material',
+            'need_to_email_material',
+            'material_dropped_sent',
+        ], array_slice($stages, $qualifiedIndex, 4));
+    }
+
     public function test_admin_can_drag_move_lead_across_board_stages(): void
     {
         $admin = User::factory()->create([
