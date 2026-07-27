@@ -149,6 +149,23 @@
             </div>
 
             <div class="hub-hero-visual">
+                <div class="hub-video-card">
+                    <div class="hub-video-copy">
+                        <strong>See how LoLo works</strong>
+                        <span>Watch the explainer</span>
+                    </div>
+                    <div class="hub-video-frame">
+                        <iframe
+                            src="https://www.youtube-nocookie.com/embed/_nve3ZnFsGM?rel=0"
+                            title="Worried About Your Parents Living Alone? Here's the Answer"
+                            loading="lazy"
+                            referrerpolicy="strict-origin-when-cross-origin"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen
+                        ></iframe>
+                    </div>
+                </div>
+
                 <div class="hub-quick-wrap">
                     <livewire:family.homepage-quick-request />
                 </div>

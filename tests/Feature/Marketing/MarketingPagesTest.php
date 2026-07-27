@@ -31,6 +31,8 @@ class MarketingPagesTest extends TestCase
         $response->assertSee('Request a callback');
         $response->assertSee('Tell us what you need');
         $response->assertSee('$30/hr');
+        $response->assertSee('https://www.youtube-nocookie.com/embed/_nve3ZnFsGM?rel=0', false);
+        $response->assertSee('See how LoLo works');
     }
 
     public function test_caregiver_landing_uses_lolo_positioning(): void

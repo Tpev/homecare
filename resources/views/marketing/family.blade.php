@@ -435,6 +435,54 @@
             justify-content: center;
         }
 
+        .hub-home .hub-video-card {
+            width: 100%;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.58);
+            border-radius: 1.75rem;
+            background: rgba(255, 247, 234, 0.94);
+            box-shadow: 0 30px 80px -28px rgba(35, 72, 63, 0.34);
+            backdrop-filter: blur(18px);
+        }
+
+        .hub-home .hub-video-copy {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.85rem 1rem 0.8rem;
+        }
+
+        .hub-home .hub-video-copy strong {
+            color: var(--hub-deep);
+            font-family: 'Source Serif 4', ui-serif, Georgia, serif;
+            font-size: 1.05rem;
+            letter-spacing: -0.025em;
+        }
+
+        .hub-home .hub-video-copy span {
+            color: var(--hub-coral);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .hub-home .hub-video-frame {
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            background: var(--hub-deep-2);
+        }
+
+        .hub-home .hub-video-frame iframe {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
         .hub-home .hub-quick-wrap {
             position: relative;
             max-width: 22rem;
