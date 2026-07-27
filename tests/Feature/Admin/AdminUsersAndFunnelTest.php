@@ -343,7 +343,10 @@ class AdminUsersAndFunnelTest extends TestCase
             'role' => 'admin',
         ]);
         $family = User::factory()->create(['role' => 'family', 'name' => 'Ops Family']);
-        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        $caregiver = User::factory()->create([
+            'role' => 'caregiver',
+            'name' => 'Booked Caregiver',
+        ]);
 
         $request = CareRequest::query()->create([
             'family_user_id' => $family->id,
@@ -363,7 +366,7 @@ class AdminUsersAndFunnelTest extends TestCase
             'proposed_rate' => 30.00,
         ]);
 
-        CareBooking::query()->create([
+        $booking = CareBooking::query()->create([
             'care_request_id' => $request->id,
             'care_request_application_id' => $application->id,
             'family_user_id' => $family->id,
@@ -377,6 +380,9 @@ class AdminUsersAndFunnelTest extends TestCase
         $indexResponse->assertOk();
         $indexResponse->assertSee('Request Operations');
         $indexResponse->assertSee('Admin full access request');
+        $indexResponse->assertSee('BOOKING #'.$booking->id.' SCHEDULED');
+        $indexResponse->assertSee('Caregiver:');
+        $indexResponse->assertSee('Booked Caregiver');
         $indexResponse->assertSee(route('admin.requests.show', $request), false);
 
         $showResponse = $this->actingAs($admin)->get(route('admin.requests.show', $request));

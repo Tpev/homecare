@@ -135,7 +135,8 @@ class CareRequestsIndex extends Component
             ->with([
                 'family:id,name,email',
                 'recipient:id,care_request_id,full_name,relationship_to_family',
-                'booking:id,care_request_id,status,scheduled_start_at,scheduled_end_at,completed_at',
+                'booking:id,care_request_id,caregiver_user_id,status,scheduled_start_at,scheduled_end_at,completed_at',
+                'booking.caregiver:id,name',
             ])
             ->withCount(['applications', 'invitations', 'conversations', 'tasks']);
 

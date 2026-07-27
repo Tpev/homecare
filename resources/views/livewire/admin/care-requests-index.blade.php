@@ -101,12 +101,18 @@
 
                     <div class="mt-3 flex flex-wrap gap-2">
                         @if($request->booking)
-                            <x-badge :text="'BOOKING '.strtoupper((string) $request->booking->status)" :color="$bookingTone" />
+                            <x-badge :text="'BOOKING #'.$request->booking->id.' '.strtoupper((string) $request->booking->status)" :color="$bookingTone" />
                         @endif
                         <span class="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
                             {{ $request->applications_count }} app · {{ $request->invitations_count }} inv · {{ $request->conversations_count }} chat
                         </span>
                     </div>
+
+                    @if($request->booking)
+                        <p class="mt-2 text-sm text-slate-600">
+                            Caregiver: <span class="font-semibold text-slate-900">{{ $request->booking->caregiver?->name ?: 'Unknown' }}</span>
+                        </p>
+                    @endif
 
                     <div class="mt-4 grid grid-cols-2 gap-2">
                         <button type="button" wire:click="forceRequestStatus({{ $request->id }}, 'open')" class="rounded-xl border border-sky-200 px-3 py-2 text-xs font-semibold text-sky-700 hover:bg-sky-50">Open</button>
@@ -180,9 +186,14 @@
                                 <div class="flex flex-wrap items-center gap-2">
                                     <x-badge :text="strtoupper((string) $request->status)" :color="$requestTone" />
                                     @if($request->booking)
-                                        <x-badge :text="'BOOKING '.strtoupper((string) $request->booking->status)" :color="$bookingTone" />
+                                        <x-badge :text="'BOOKING #'.$request->booking->id.' '.strtoupper((string) $request->booking->status)" :color="$bookingTone" />
                                     @endif
                                 </div>
+                                @if($request->booking)
+                                    <p class="mt-2 text-xs text-slate-600">
+                                        Caregiver: <span class="font-semibold text-slate-900">{{ $request->booking->caregiver?->name ?: 'Unknown' }}</span>
+                                    </p>
+                                @endif
                                 <p class="mt-2 text-xs text-slate-600">
                                     {{ $request->applications_count }} app ·
                                     {{ $request->invitations_count }} inv ·
