@@ -183,10 +183,14 @@ class SdrOutreachTest extends TestCase
             ->test(CallingConsole::class)
             ->call('claimNextLead')
             ->assertSee('Agreed to a material drop-off')
-            ->set('outcome', 'material_drop_agreed')
+            ->assertSee('Click the outcome to save')
+            ->assertSee("logOutcome('material_drop_agreed')", false)
             ->set('note', 'The doctor approved a brief drop-off at the front desk.')
-            ->call('logOutcome')
-            ->assertHasNoErrors();
+            ->call('logOutcome', 'material_drop_agreed')
+            ->assertHasNoErrors()
+            ->assertSet('activeLeadId', null)
+            ->assertViewHas('callStats', fn (array $stats): bool => $stats['material_drop_agreed'] === 1)
+            ->assertSee('Material drop-offs');
 
         $lead->refresh();
 
@@ -256,9 +260,34 @@ class SdrOutreachTest extends TestCase
             ],
         ]);
 
+        $dropOffLead = Lead::query()->create([
+            'lead_type' => Lead::TYPE_REFERRAL,
+            'name' => 'Material Drop Practice',
+            'company' => 'Material Drop Practice',
+            'phone' => '+19195558888',
+            'status' => 'need_to_drop_material',
+            'priority' => Lead::PRIORITY_NORMAL,
+            'source' => SdrOutreach::SOURCE,
+        ]);
+        $dropOffLead->activities()->create([
+            'actor_user_id' => $sdr->id,
+            'type' => LeadActivity::TYPE_CALL,
+            'summary' => 'SDR call: Agreed to a material drop-off',
+            'occurred_at' => now(),
+            'metadata' => [
+                'sdr_outcome' => 'material_drop_agreed',
+                'sdr_outcome_label' => 'Agreed to a material drop-off',
+            ],
+        ]);
+
         Livewire::actingAs($admin)
             ->test(SdrOutreachCenter::class)
             ->assertSee('All outcomes')
+            ->assertSee('Material drop-offs')
+            ->assertViewHas('poolStats', fn (array $stats): bool => $stats['material_drop_agreed'] === 1)
+            ->assertViewHas('dailyStats', fn ($rows): bool => $rows->contains(
+                fn (array $row): bool => $row['sdr'] === 'SDR Caller' && $row['material_drop_agreed'] === 1
+            ))
             ->set('outcomeFilter', 'no_answer')
             ->assertSet('recentCallsLimit', 12)
             ->assertSee('No Answer Practice 12')
@@ -271,7 +300,10 @@ class SdrOutreachTest extends TestCase
             ->assertSet('recentCallsLimit', 12)
             ->assertSee('Email Material Practice')
             ->assertDontSee('No Answer Practice 1')
-            ->assertDontSee('Load more');
+            ->assertDontSee('Load more')
+            ->set('outcomeFilter', 'material_drop_agreed')
+            ->assertSee('Material Drop Practice')
+            ->assertDontSee('Email Material Practice');
     }
 
     public function test_refresh_resumes_uncalled_claim_instead_of_future_follow_up(): void

@@ -374,6 +374,7 @@ class SdrOutreachCenter extends Component
                     'sdr' => $first->actor?->name ?: 'Unknown',
                     'total' => $items->count(),
                     'resource_requested' => (int) $outcomes->get('resource_requested', 0),
+                    'material_drop_agreed' => (int) $outcomes->get('material_drop_agreed', 0),
                     'meeting_requested' => (int) $outcomes->get('meeting_requested', 0),
                     'follow_up_later' => (int) $outcomes->get('follow_up_later', 0),
                     'no_answer' => (int) $outcomes->get('no_answer', 0) + (int) $outcomes->get('left_voicemail', 0),
@@ -402,6 +403,9 @@ class SdrOutreachCenter extends Component
             'calls' => $activities->count(),
             'resource_requested' => $activities
                 ->filter(fn (LeadActivity $activity): bool => data_get($activity->metadata, 'sdr_outcome') === 'resource_requested')
+                ->count(),
+            'material_drop_agreed' => $activities
+                ->filter(fn (LeadActivity $activity): bool => data_get($activity->metadata, 'sdr_outcome') === 'material_drop_agreed')
                 ->count(),
         ];
     }

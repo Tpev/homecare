@@ -116,8 +116,12 @@ class CallingConsole extends Component
         $this->resetOutcomeForm();
     }
 
-    public function logOutcome(): void
+    public function logOutcome(?string $selectedOutcome = null): void
     {
+        if ($selectedOutcome !== null) {
+            $this->outcome = $selectedOutcome;
+        }
+
         $lead = $this->activeLead();
         if (! $lead) {
             return;
@@ -260,6 +264,7 @@ class CallingConsole extends Component
         return [
             'today' => $calls->count(),
             'resource_requested' => $calls->filter(fn (LeadActivity $activity): bool => data_get($activity->metadata, 'sdr_outcome') === 'resource_requested')->count(),
+            'material_drop_agreed' => $calls->filter(fn (LeadActivity $activity): bool => data_get($activity->metadata, 'sdr_outcome') === 'material_drop_agreed')->count(),
             'meeting_requested' => $calls->filter(fn (LeadActivity $activity): bool => data_get($activity->metadata, 'sdr_outcome') === 'meeting_requested')->count(),
         ];
     }

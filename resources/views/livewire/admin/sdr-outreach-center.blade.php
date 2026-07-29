@@ -27,7 +27,7 @@
             </div>
         </header>
 
-        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
             <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Imported</p>
                 <p class="mt-2 text-3xl font-bold text-slate-950">{{ $poolStats['total'] }}</p>
@@ -51,6 +51,10 @@
             <div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm">
                 <p class="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">Resources requested</p>
                 <p class="mt-2 text-3xl font-bold text-emerald-800">{{ $poolStats['resource_requested'] }}</p>
+            </div>
+            <div class="rounded-2xl border border-amber-100 bg-amber-50 p-4 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">Material drop-offs</p>
+                <p class="mt-2 text-3xl font-bold text-amber-800">{{ $poolStats['material_drop_agreed'] }}</p>
             </div>
         </section>
 
@@ -160,6 +164,7 @@
                                 <th class="py-3 text-left">SDR</th>
                                 <th class="py-3 text-right">Calls</th>
                                 <th class="py-3 text-right">Resource</th>
+                                <th class="py-3 text-right">Drop-off</th>
                                 <th class="py-3 text-right">Meeting</th>
                                 <th class="py-3 text-right">No answer</th>
                             </tr>
@@ -171,12 +176,13 @@
                                     <td class="py-3 font-semibold text-slate-950">{{ $row['sdr'] }}</td>
                                     <td class="py-3 text-right font-semibold text-slate-950">{{ $row['total'] }}</td>
                                     <td class="py-3 text-right text-emerald-700">{{ $row['resource_requested'] }}</td>
+                                    <td class="py-3 text-right text-amber-700">{{ $row['material_drop_agreed'] }}</td>
                                     <td class="py-3 text-right text-sky-700">{{ $row['meeting_requested'] }}</td>
                                     <td class="py-3 text-right text-slate-600">{{ $row['no_answer'] }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="py-10 text-center text-sm text-slate-500">No SDR calls logged in this window.</td>
+                                    <td colspan="7" class="py-10 text-center text-sm text-slate-500">No SDR calls logged in this window.</td>
                                 </tr>
                             @endforelse
                         </tbody>

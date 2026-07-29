@@ -18,7 +18,7 @@
             </button>
         </header>
 
-        <section class="grid gap-3 sm:grid-cols-4">
+        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <div class="rounded-2xl border border-[#E3D6C5] bg-white p-4 shadow-sm">
                 <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Available</p>
                 <p class="mt-2 text-3xl font-bold text-slate-950">{{ $availableCount }}</p>
@@ -30,6 +30,10 @@
             <div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm">
                 <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">Resources requested</p>
                 <p class="mt-2 text-3xl font-bold text-emerald-800">{{ $callStats['resource_requested'] }}</p>
+            </div>
+            <div class="rounded-2xl border border-amber-100 bg-amber-50 p-4 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Material drop-offs</p>
+                <p class="mt-2 text-3xl font-bold text-amber-800">{{ $callStats['material_drop_agreed'] }}</p>
             </div>
             <div class="rounded-2xl border border-sky-100 bg-sky-50 p-4 shadow-sm">
                 <p class="text-xs font-semibold uppercase tracking-[0.14em] text-sky-700">Follow-up talks</p>
@@ -109,30 +113,18 @@
                         </div>
                     </section>
 
-                    <form wire:submit.prevent="logOutcome" class="rounded-3xl border border-[#E3D6C5] bg-white p-5 shadow-sm sm:p-6">
+                    <section class="rounded-3xl border border-[#E3D6C5] bg-white p-5 shadow-sm sm:p-6">
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">After the call</p>
                             <h2 class="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">What happened?</h2>
-                            <p class="mt-2 text-sm text-slate-600">Pick one outcome. Notes are optional, but helpful if someone follows up later.</p>
+                            <p class="mt-2 text-sm text-slate-600">Add any optional details first, then click an outcome to save it immediately to your dashboard and the CRM.</p>
                         </div>
-
-                        <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                            @foreach ($outcomeOptions as $value => $label)
-                                <label class="block">
-                                    <input type="radio" wire:model.live="outcome" value="{{ $value }}" class="peer sr-only">
-                                    <span class="flex min-h-16 cursor-pointer items-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition peer-checked:border-emerald-600 peer-checked:bg-emerald-50 peer-checked:text-emerald-800">
-                                        {{ $label }}
-                                    </span>
-                                </label>
-                            @endforeach
-                        </div>
-                        @error('outcome') <span class="mt-2 block text-sm text-rose-600">{{ $message }}</span> @enderror
 
                         <div class="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
                             <label class="block">
                                 <span class="text-sm font-medium text-slate-700">Optional note</span>
                                 <textarea
-                                    wire:model.blur="note"
+                                    wire:model="note"
                                     rows="4"
                                     placeholder="Example: Steve asked us to send the resource to steve@example.com. Follow up next week."
                                     class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100"
@@ -150,12 +142,24 @@
                             </label>
                         </div>
 
-                        <div class="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-                            <button type="submit" class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#23483F] px-6 py-3 text-base font-bold text-white shadow-sm hover:bg-[#1B3D35]">
-                                Save outcome
-                            </button>
+                        <div class="mt-5">
+                            <p class="text-sm font-bold text-slate-950">Click the outcome to save</p>
+                            <div class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                                @foreach ($outcomeOptions as $value => $label)
+                                    <button
+                                        type="button"
+                                        wire:click="logOutcome('{{ $value }}')"
+                                        wire:loading.attr="disabled"
+                                        wire:target="logOutcome"
+                                        class="flex min-h-16 items-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:border-emerald-600 hover:bg-emerald-50 hover:text-emerald-800 disabled:cursor-wait disabled:opacity-60"
+                                    >
+                                        {{ $label }}
+                                    </button>
+                                @endforeach
+                            </div>
                         </div>
-                    </form>
+                        @error('outcome') <span class="mt-2 block text-sm text-rose-600">{{ $message }}</span> @enderror
+                    </section>
                 @else
                     <section class="rounded-3xl border border-[#E3D6C5] bg-white px-5 py-16 text-center shadow-sm">
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Ready</p>
