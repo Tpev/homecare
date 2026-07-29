@@ -25,7 +25,7 @@ class VoiceAgentController extends Controller
     {
         $payload = $request->validate([
             'lead_type' => ['required', 'string', Rule::in(['family', 'caregiver', 'agency', 'general', 'referral'])],
-            'intent' => ['required', 'string', Rule::in(['information', 'callback_request', 'signup_link', 'general', 'provider_outreach'])],
+            'intent' => ['required', 'string', Rule::in(['information', 'callback_request', 'signup_link', 'caregiver_application', 'general', 'provider_outreach'])],
             'name' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
@@ -48,13 +48,14 @@ class VoiceAgentController extends Controller
         ], 201);
     }
 
-    public function requestCallback(Request $request, VoiceAgentIntakeService $intake): JsonResponse
+    public function requestCallback(Request $request, VoiceAgentIntakeService $intake, OpsAlertService $opsAlerts): JsonResponse
     {
         $payload = $request->validate([
             'lead_type' => ['nullable', 'string', Rule::in(['family', 'caregiver', 'agency', 'general'])],
             'name' => ['nullable', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:30'],
             'callback_time' => ['nullable', 'string', 'max:255'],
+            'requested_contact' => ['nullable', 'string', Rule::in(['LoLo Care team', 'Charles'])],
             'reason' => ['nullable', 'string', 'max:2000'],
             'call_sid' => ['nullable', 'string', 'max:64'],
             'transcript_excerpt' => ['nullable', 'string', 'max:4000'],
@@ -62,6 +63,7 @@ class VoiceAgentController extends Controller
         ]);
 
         $lead = $intake->createCallbackRequest($payload, $request);
+        $opsAlerts->notifyCallbackRequestCreated($lead);
 
         return response()->json([
             'lead_id' => $lead->id,
@@ -115,7 +117,7 @@ class VoiceAgentController extends Controller
             'zip' => ['nullable', 'string', 'max:20'],
             'callback_time' => ['nullable', 'string', 'max:255'],
             'lead_type' => ['nullable', 'string', Rule::in(['family', 'caregiver', 'agency', 'general', 'referral'])],
-            'intent' => ['nullable', 'string', Rule::in(['information', 'callback_request', 'signup_link', 'general', 'provider_outreach', 'unknown'])],
+            'intent' => ['nullable', 'string', Rule::in(['information', 'callback_request', 'signup_link', 'caregiver_application', 'general', 'provider_outreach', 'unknown'])],
             'outcome' => ['required', 'string', 'max:100'],
             'call_status' => ['required', 'string', 'max:100'],
             'duration_seconds' => ['nullable', 'integer', 'min:0'],

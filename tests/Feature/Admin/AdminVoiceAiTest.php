@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Livewire\Admin\VoiceAiTest;
 use App\Livewire\Admin\ProviderOutreachAi;
+use App\Livewire\Admin\VoiceAiTest;
 use App\Models\Lead;
 use App\Models\User;
 use App\Models\VoiceAiCall;
@@ -256,12 +256,12 @@ class AdminVoiceAiTest extends TestCase
         ])
             ->assertOk()
             ->assertSee('<Gather', false)
-            ->assertSee('LoLo test voice assistant');
+            ->assertSee('LoLo Care test voice assistant');
 
         $call->refresh();
         $this->assertSame('CA123', $call->twilio_call_sid);
         $this->assertSame(VoiceAiCall::STATUS_IN_PROGRESS, $call->status);
-        $this->assertStringContainsString('Assistant: Hi, this is the LoLo test voice assistant.', (string) $call->transcript_text);
+        $this->assertStringContainsString('Assistant: Hi, this is the LoLo Care test voice assistant.', (string) $call->transcript_text);
 
         $gatherPayload = [
             'AccountSid' => 'AC123',

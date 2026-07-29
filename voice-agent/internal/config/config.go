@@ -55,9 +55,9 @@ func Load() (Config, error) {
 		DeepgramSTTModel:           env("DEEPGRAM_STT_MODEL", "flux-general-en"),
 		DeepgramLLMModel:           env("DEEPGRAM_LLM_MODEL", "gpt-4o-mini"),
 		DeepgramTTSModel:           env("DEEPGRAM_TTS_MODEL", "aura-2-thalia-en"),
-		DeepgramGreeting:           env("DEEPGRAM_GREETING", "Thanks for calling Homecare. How can I help you today?"),
-		DeepgramCallbackGreeting:   env("DEEPGRAM_CALLBACK_GREETING", "Hi, this is LoLo calling about your care request. Did I catch you at an okay time?"),
-		DeepgramProviderGreeting:   env("DEEPGRAM_PROVIDER_OUTREACH_GREETING", "Hi, this is Julie calling from LoLo Care. Did I catch you at an okay time for a quick question?"),
+		DeepgramGreeting:           brandedEnv("DEEPGRAM_GREETING", "Thanks for calling LoLo Care. This is Julie. How can I help you today?"),
+		DeepgramCallbackGreeting:   brandedEnv("DEEPGRAM_CALLBACK_GREETING", "Hi, this is Julie from LoLo Care calling about your care request. Did I catch you at an okay time?"),
+		DeepgramProviderGreeting:   brandedEnv("DEEPGRAM_PROVIDER_OUTREACH_GREETING", "Hi, this is Julie calling from LoLo Care. Did I catch you at an okay time for a quick question?"),
 		LaravelBaseURL:             strings.TrimRight(env("LARAVEL_BASE_URL", "http://localhost"), "/"),
 		LaravelInternalAPIToken:    env("LARAVEL_INTERNAL_API_TOKEN", ""),
 		PromptFile:                 env("PROMPT_FILE", "prompts/system.md"),
@@ -102,6 +102,16 @@ func env(key, fallback string) string {
 	}
 
 	return fallback
+}
+
+func brandedEnv(key, fallback string) string {
+	value := env(key, fallback)
+	normalized := strings.ToLower(value)
+	if !strings.Contains(normalized, "lolo care") || strings.Contains(normalized, "homecare") || strings.Contains(normalized, "laravel") {
+		return fallback
+	}
+
+	return value
 }
 
 func boolEnv(key string, fallback bool) bool {

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\VoiceAgent;
 
+use App\Mail\Ops\CallbackRequestOpsAlertMail;
 use App\Mail\Ops\VoiceCallReportOpsAlertMail;
 use App\Models\Lead;
 use App\Models\LeadActivity;
@@ -23,12 +24,17 @@ class InternalVoiceAgentApiTest extends TestCase
 
     public function test_knowledge_endpoint_requires_valid_token(): void
     {
+        config()->set('voice_agent.service_summary', 'Homecare helps families arrange support.');
+        config()->set('voice_agent.service_details', ['The HomeCare website explains next steps.', 'Laravel is the configured app label.', 'LoLo helps callers.']);
+
         $this->getJson('/api/internal/voice/knowledge')
             ->assertUnauthorized();
 
-        $this->withToken('voice-secret')
+        $response = $this->withToken('voice-secret')
             ->getJson('/api/internal/voice/knowledge')
             ->assertOk()
+            ->assertJsonPath('brand_name', 'LoLo Care')
+            ->assertJsonPath('signup_links.caregiver', route('caregiver.register'))
             ->assertJsonStructure([
                 'brand_name',
                 'service_summary',
@@ -39,6 +45,14 @@ class InternalVoiceAgentApiTest extends TestCase
                 'signup_links',
                 'faqs',
             ]);
+
+        $this->assertContains('caregiver_application', $response->json('intents'));
+        $this->assertContains('Charles', $response->json('human_handoff.requested_contacts'));
+        $this->assertStringContainsString('as soon as possible', $response->json('human_handoff.follow_up_expectation'));
+        $this->assertStringNotContainsString('Homecare', json_encode($response->json(), JSON_THROW_ON_ERROR));
+        $this->assertStringNotContainsString('HomeCare', json_encode($response->json(), JSON_THROW_ON_ERROR));
+        $this->assertStringNotContainsString('Laravel', json_encode($response->json(), JSON_THROW_ON_ERROR));
+        $this->assertDoesNotMatchRegularExpression('/\bLoLo\b(?!\s+Care\b)/', json_encode($response->json(), JSON_THROW_ON_ERROR));
     }
 
     public function test_voice_lead_endpoint_creates_lead_record(): void
@@ -68,12 +82,16 @@ class InternalVoiceAgentApiTest extends TestCase
 
     public function test_callback_endpoint_records_callback_request(): void
     {
+        Mail::fake();
+        config()->set('marketplace.ops_alert_recipients', ['ops@example.com']);
+
         $this->withToken('voice-secret')
             ->postJson('/api/internal/voice/callbacks', [
                 'lead_type' => 'family',
                 'name' => 'Jane Caller',
                 'phone' => '+15551234567',
                 'callback_time' => 'Tomorrow afternoon',
+                'requested_contact' => 'Charles',
                 'reason' => 'Wants to confirm how onboarding works.',
             ])
             ->assertCreated()
@@ -83,6 +101,31 @@ class InternalVoiceAgentApiTest extends TestCase
 
         $this->assertSame('callback_request', $lead->data['intent']);
         $this->assertSame('Tomorrow afternoon', $lead->data['callback_time']);
+        $this->assertSame('Charles', $lead->data['requested_contact']);
+
+        Mail::assertSent(CallbackRequestOpsAlertMail::class, function (CallbackRequestOpsAlertMail $mail) use ($lead): bool {
+            return $mail->lead->is($lead)
+                && $mail->envelope()->subject === '[LoLo Care] Charles callback request: Jane Caller (Tomorrow afternoon)';
+        });
+    }
+
+    public function test_caregiver_application_intent_creates_caregiver_lead(): void
+    {
+        $this->withToken('voice-secret')
+            ->postJson('/api/internal/voice/leads', [
+                'lead_type' => 'caregiver',
+                'intent' => 'caregiver_application',
+                'name' => 'Jamie Applicant',
+                'phone' => '+15559876543',
+                'notes' => 'Directed to create a caregiver account on the LoLo Care website.',
+            ])
+            ->assertCreated();
+
+        $lead = Lead::query()->sole();
+
+        $this->assertSame('caregiver', $lead->lead_type);
+        $this->assertSame('caregiver_application', $lead->data['intent']);
+        $this->assertStringContainsString('caregiver account', $lead->data['notes']);
     }
 
     public function test_signup_link_endpoint_returns_route_backed_link(): void
@@ -171,7 +214,7 @@ class InternalVoiceAgentApiTest extends TestCase
                 'call_status' => 'completed',
                 'duration_seconds' => 121,
                 'summary' => 'Discovery call completed and family wants follow-up.',
-                'transcript' => "assistant: Hi, this is LoLo.\nuser: My mom needs help this week.",
+                'transcript' => "assistant: Hi, this is LoLo Care.\nuser: My mom needs help this week.",
                 'callback_requested' => true,
                 'signup_link_sent' => false,
                 'metadata' => [

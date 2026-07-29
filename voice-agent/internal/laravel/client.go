@@ -53,6 +53,7 @@ type CallbackPayload struct {
 	Name              string         `json:"name,omitempty"`
 	Phone             string         `json:"phone"`
 	CallbackTime      string         `json:"callback_time,omitempty"`
+	RequestedContact  string         `json:"requested_contact,omitempty"`
 	Reason            string         `json:"reason,omitempty"`
 	CallSID           string         `json:"call_sid,omitempty"`
 	TranscriptExcerpt string         `json:"transcript_excerpt,omitempty"`

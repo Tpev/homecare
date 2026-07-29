@@ -14,17 +14,16 @@ class CallbackRequestOpsAlertMail extends Mailable
     use Queueable;
     use SerializesModels;
 
-    public function __construct(public Lead $lead)
-    {
-    }
+    public function __construct(public Lead $lead) {}
 
     public function envelope(): Envelope
     {
-        $callbackTime = (string) data_get($this->lead->data, 'callback_time_label', 'callback requested');
-        $name = $this->lead->name ?: 'New family lead';
+        $callbackTime = (string) data_get($this->lead->data, 'callback_time_label', data_get($this->lead->data, 'callback_time', 'callback requested'));
+        $name = $this->lead->name ?: 'New caller';
+        $requestedContact = (string) data_get($this->lead->data, 'requested_contact', 'LoLo Care team');
 
         return new Envelope(
-            subject: sprintf('[LoLo] Callback request: %s (%s)', $name, $callbackTime),
+            subject: sprintf('[LoLo Care] %s callback request: %s (%s)', $requestedContact, $name, $callbackTime),
         );
     }
 

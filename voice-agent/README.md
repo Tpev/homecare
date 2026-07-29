@@ -10,7 +10,8 @@ This Go service answers Twilio phone calls, bridges live audio to the Deepgram V
 - `GET /ws/twilio` accepts the Twilio Media Streams WebSocket.
 - Opens a Deepgram Voice Agent WebSocket at `wss://agent.deepgram.com/v1/agent/converse`.
 - Uses Deepgram STT plus TTS and OpenAI `gpt-4o-mini` through Deepgram's `think` provider.
-- Executes client-side tools for approved service lookup, human callback requests, and signup link creation.
+- Always identifies the service as LoLo Care, even when stale deployment greeting or knowledge labels are present.
+- Executes client-side tools for approved service lookup, LoLo Care team/Charles callback requests, family signup-link creation, and caregiver application routing.
 - For callback/admin-profile calls, saves a local WAV recording and reports its URL back to Laravel.
 
 ## Setup
@@ -31,7 +32,8 @@ go run ./cmd/server
 
 - Twilio webhook validation uses `X-Twilio-Signature`.
 - The WebSocket bridge is protected by a custom stream token embedded in the TwiML `<Parameter>` block.
-- If no callback or signup action is taken, the service records the call as an informational lead at the end of the session.
+- If no callback, signup, or caregiver-application action is taken, the service records the call as an informational lead at the end of the session.
+- Caregiver job inquiries are classified as `caregiver_application` and directed to the LoLo Care caregiver account creation page instead of family signup.
 - Inbound call guidance lives in `prompts/system.md`; outbound callback/discovery guidance lives in `prompts/callback-discovery.md`; provider-relations outreach lives in `prompts/provider-outreach.md`.
 - Provider outreach calls use `prompt_profile=provider_outreach`, identify the assistant as Julie, inject target organization/person context into the prompt, and report outcomes back to Laravel referral leads.
 - Local callback recordings default to `../storage/app/public/voice-agent-recordings` with public URLs under `/storage/voice-agent-recordings`. In production, prefer an absolute `VOICE_AGENT_RECORDINGS_DIR`.

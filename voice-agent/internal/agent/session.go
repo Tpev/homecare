@@ -52,6 +52,7 @@ type Session struct {
 	city                      string
 	zip                       string
 	callbackTime              string
+	requestedContact          string
 	leadCreated               bool
 	leadType                  string
 	intent                    string
@@ -405,22 +406,23 @@ func (s *Session) deepgramFunctions() []map[string]any {
 		},
 		{
 			"name":        "request_human_callback",
-			"description": "Create a callback request for a human team member.",
+			"description": "Create a prompt callback request for the LoLo Care team or for Charles when the caller specifically asks for him.",
 			"parameters": map[string]any{
 				"type": "object",
 				"properties": map[string]any{
-					"lead_type":      map[string]any{"type": "string", "description": "family, caregiver, agency, or general"},
-					"name":           map[string]any{"type": "string", "description": "Caller name"},
-					"phone":          map[string]any{"type": "string", "description": "Best callback number"},
-					"relationship":   map[string]any{"type": "string", "description": "Relationship to the person needing care"},
-					"care_recipient": map[string]any{"type": "string", "description": "Who needs care"},
-					"care_needs":     map[string]any{"type": "string", "description": "Type of help or support needed"},
-					"urgency":        map[string]any{"type": "string", "description": "How urgent the situation is"},
-					"address":        map[string]any{"type": "string", "description": "Street address if shared"},
-					"city":           map[string]any{"type": "string", "description": "City if shared"},
-					"zip":            map[string]any{"type": "string", "description": "Zip code if shared"},
-					"callback_time":  map[string]any{"type": "string", "description": "Best callback time or window"},
-					"reason":         map[string]any{"type": "string"},
+					"lead_type":         map[string]any{"type": "string", "description": "family, caregiver, agency, or general"},
+					"name":              map[string]any{"type": "string", "description": "Caller name"},
+					"phone":             map[string]any{"type": "string", "description": "Best callback number"},
+					"relationship":      map[string]any{"type": "string", "description": "Relationship to the person needing care"},
+					"care_recipient":    map[string]any{"type": "string", "description": "Who needs care"},
+					"care_needs":        map[string]any{"type": "string", "description": "Type of help or support needed"},
+					"urgency":           map[string]any{"type": "string", "description": "How urgent the situation is"},
+					"address":           map[string]any{"type": "string", "description": "Street address if shared"},
+					"city":              map[string]any{"type": "string", "description": "City if shared"},
+					"zip":               map[string]any{"type": "string", "description": "Zip code if shared"},
+					"callback_time":     map[string]any{"type": "string", "description": "Best callback time or window"},
+					"requested_contact": map[string]any{"type": "string", "enum": []string{"LoLo Care team", "Charles"}, "description": "Charles when specifically requested; otherwise LoLo Care team"},
+					"reason":            map[string]any{"type": "string"},
 				},
 				"required": []string{"phone"},
 			},
@@ -446,28 +448,39 @@ func (s *Session) deepgramFunctions() []map[string]any {
 				"required": []string{"lead_type", "phone", "consent_received"},
 			},
 		},
+		{
+			"name":        "provide_caregiver_application_info",
+			"description": "Retrieve the LoLo Care caregiver account creation page and classify the call as a caregiver job or employment inquiry.",
+			"parameters": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"name":  map[string]any{"type": "string", "description": "Caller name if shared"},
+					"phone": map[string]any{"type": "string", "description": "Caller phone if shared"},
+				},
+			},
+		},
 	}
 
 	if !s.isProviderOutreach() {
 		return functions
 	}
 
-	return append(functions, map[string]any{
+	return []map[string]any{functions[0], {
 		"name":        "record_provider_outreach_result",
-		"description": "Record the outcome of Julie's provider-relations outreach call into the LoLo referral-source CRM.",
+		"description": "Record the outcome of Julie's provider-relations outreach call into the LoLo Care referral-source CRM.",
 		"parameters": map[string]any{
 			"type": "object",
 			"properties": map[string]any{
 				"outcome":            map[string]any{"type": "string", "description": "completed, resource_requested, follow_up_needed, voicemail, ivr, ai_system, not_interested, not_fit, do_not_call, wrong_number, or incomplete"},
 				"summary":            map[string]any{"type": "string", "description": "Concise one or two sentence outcome summary"},
-				"notes":              map[string]any{"type": "string", "description": "Additional operational notes for the CRM"},
+				"notes":              map[string]any{"type": "string", "description": "Additional operational notes for the CRM, including a request for Charles when applicable"},
 				"contact_name":       map[string]any{"type": "string", "description": "Person reached or best contact identified"},
 				"contact_role":       map[string]any{"type": "string", "description": "Role of the person reached"},
 				"email":              map[string]any{"type": "string", "description": "Email to send the family resource sheet if provided"},
 				"fax":                map[string]any{"type": "string", "description": "Fax number to send the family resource sheet if provided"},
 				"resource_requested": map[string]any{"type": "boolean", "description": "Whether they agreed that a family resource sheet would be useful"},
 				"follow_up_needed":   map[string]any{"type": "boolean", "description": "Whether a human follow-up is useful"},
-				"best_follow_up":     map[string]any{"type": "string", "description": "Best time or method for human follow-up"},
+				"best_follow_up":     map[string]any{"type": "string", "description": "Best time or method for human follow-up; note Charles here when specifically requested"},
 				"do_not_call":        map[string]any{"type": "boolean", "description": "True if they requested no future calls"},
 				"voicemail_detected": map[string]any{"type": "boolean", "description": "True if voicemail was reached"},
 				"ivr_detected":       map[string]any{"type": "boolean", "description": "True if an IVR/phone tree was reached"},
@@ -476,7 +489,7 @@ func (s *Session) deepgramFunctions() []map[string]any {
 			},
 			"required": []string{"outcome", "summary"},
 		},
-	})
+	}}
 }
 
 func (s *Session) waitForDeepgramMessage(conn *websocket.Conn, wantType string) error {
@@ -665,6 +678,7 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 			Name:              firstNonEmpty(stringValue(args["name"]), s.callerName),
 			Phone:             phone,
 			CallbackTime:      firstNonEmpty(stringValue(args["callback_time"]), s.callbackTime),
+			RequestedContact:  firstNonEmpty(stringValue(args["requested_contact"]), s.requestedContact, "LoLo Care team"),
 			Reason:            stringValue(args["reason"]),
 			CallSID:           s.callSID,
 			TranscriptExcerpt: s.transcriptWithLimit(4000),
@@ -687,9 +701,10 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 		s.outcome = "callback_request"
 		s.callbackRequested = true
 		return mustJSON(map[string]any{
-			"status":  "ok",
-			"message": "Callback request captured.",
-			"phone":   phone,
+			"status":            "ok",
+			"message":           "Callback request captured for prompt follow-up.",
+			"phone":             phone,
+			"requested_contact": payload.RequestedContact,
 		}), nil
 	case "send_signup_link":
 		s.absorbCallerDetails(args)
@@ -734,6 +749,23 @@ func (s *Session) executeFunction(ctx context.Context, fn dgFunctionCall) (strin
 			"phone":       phone,
 			"signup_link": signup.SignupLink,
 			"message":     "Signup link sent by SMS.",
+		}), nil
+	case "provide_caregiver_application_info":
+		s.absorbCallerDetails(args)
+		signupLink := strings.TrimSpace(s.knowledge.SignupLinks["caregiver"])
+		if signupLink == "" {
+			return "", fmt.Errorf("caregiver account creation link is not configured")
+		}
+
+		s.leadType = "caregiver"
+		s.intent = "caregiver_application"
+		s.outcome = "caregiver_signup_directed"
+
+		return mustJSON(map[string]any{
+			"status":      "ok",
+			"brand_name":  "LoLo Care",
+			"signup_link": signupLink,
+			"message":     "Direct the caller to this LoLo Care website to create a caregiver account. Do not use the family signup path.",
 		}), nil
 	case "record_provider_outreach_result":
 		if !s.isProviderOutreach() {
@@ -922,21 +954,33 @@ func (s *Session) finalize() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	leadType := firstNonEmpty(s.leadType, "family")
+	intent := firstNonEmpty(s.intent, "information")
+	if intent == "unknown" {
+		intent = "information"
+	}
+	notes := "Captured automatically from an informational LoLo Care voice-agent call."
+	if intent == "caregiver_application" {
+		notes = "Caller asked about caregiver work and was directed to create a caregiver account on the LoLo Care website."
+	}
+
 	err := s.laravel.CreateLead(ctx, laravel.LeadPayload{
-		LeadType:          "family",
-		Intent:            "information",
+		LeadType:          leadType,
+		Intent:            intent,
 		Phone:             s.callerPhone,
 		CallSID:           s.callSID,
 		TranscriptExcerpt: s.transcriptWithLimit(4000),
-		Notes:             "Captured automatically from an informational voice-agent call.",
+		Notes:             notes,
 		Metadata:          s.metadata(nil),
 	})
 
 	if err == nil {
 		s.leadCreated = true
-		s.leadType = "family"
-		s.intent = "information"
-		s.outcome = "information_only"
+		s.leadType = leadType
+		s.intent = intent
+		if s.outcome == "" {
+			s.outcome = "information_only"
+		}
 	}
 
 	return err
@@ -1031,6 +1075,8 @@ func (s *Session) reportCall(runErr error) error {
 			summary = "Family caller received the signup link by SMS."
 		case "information_only":
 			summary = "Family caller received information without a callback or signup link."
+		case "caregiver_signup_directed":
+			summary = "Caregiver job applicant was directed to create a caregiver account on the LoLo Care website."
 		}
 	}
 	if runErr != nil && runErr != context.Canceled {
@@ -1078,6 +1124,7 @@ func (s *Session) absorbCallerDetails(args map[string]any) {
 	s.city = firstNonEmpty(stringValue(args["city"]), s.city)
 	s.zip = firstNonEmpty(stringValue(args["zip"]), s.zip)
 	s.callbackTime = firstNonEmpty(stringValue(args["callback_time"]), s.callbackTime)
+	s.requestedContact = firstNonEmpty(stringValue(args["requested_contact"]), s.requestedContact)
 }
 
 func (s *Session) absorbProviderOutreachDetails(args map[string]any) {
@@ -1202,6 +1249,9 @@ func (s *Session) metadata(extra map[string]any) map[string]any {
 	metadata := map[string]any{
 		"channel":             "voice_agent",
 		"voice_agent_profile": supportedProfile(s.promptProfile),
+	}
+	if s.requestedContact != "" {
+		metadata["requested_contact"] = s.requestedContact
 	}
 
 	if s.isProviderOutreach() {

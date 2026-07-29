@@ -11,6 +11,9 @@ func TestLoadUsesAppURLAsPublicBaseFallback(t *testing.T) {
 	t.Setenv("DEEPGRAM_API_KEY", "deepgram-secret")
 	t.Setenv("LARAVEL_INTERNAL_API_TOKEN", "voice-secret")
 	t.Setenv("DEEPGRAM_LLM_MODEL", "gpt-4o-mini")
+	t.Setenv("DEEPGRAM_GREETING", "Thanks for calling Homecare.")
+	t.Setenv("DEEPGRAM_CALLBACK_GREETING", "Hi, this is LoLo calling.")
+	t.Setenv("DEEPGRAM_PROVIDER_OUTREACH_GREETING", "Hi, this is Homecare powered by LoLo Care.")
 
 	cfg, err := Load()
 	if err != nil {
@@ -33,8 +36,16 @@ func TestLoadUsesAppURLAsPublicBaseFallback(t *testing.T) {
 		t.Fatalf("expected provider outreach prompt default, got %q", cfg.ProviderOutreachPromptFile)
 	}
 
-	if cfg.DeepgramProviderGreeting == "" {
-		t.Fatal("expected provider outreach greeting default")
+	if cfg.DeepgramProviderGreeting != "Hi, this is Julie calling from LoLo Care. Did I catch you at an okay time for a quick question?" {
+		t.Fatalf("unexpected provider outreach greeting default: %q", cfg.DeepgramProviderGreeting)
+	}
+
+	if cfg.DeepgramGreeting != "Thanks for calling LoLo Care. This is Julie. How can I help you today?" {
+		t.Fatalf("unexpected inbound greeting default: %q", cfg.DeepgramGreeting)
+	}
+
+	if cfg.DeepgramCallbackGreeting != "Hi, this is Julie from LoLo Care calling about your care request. Did I catch you at an okay time?" {
+		t.Fatalf("unexpected callback greeting default: %q", cfg.DeepgramCallbackGreeting)
 	}
 
 	if !cfg.RecordingsEnabled {

@@ -2,22 +2,23 @@
 
 return [
     'internal_api_token' => env('VOICE_AGENT_INTERNAL_API_TOKEN'),
-    'brand_name' => env('VOICE_AGENT_BRAND_NAME', env('APP_NAME', 'Homecare')),
+    'brand_name' => 'LoLo Care',
     'service_summary' => env(
         'VOICE_AGENT_SERVICE_SUMMARY',
-        'Homecare helps families understand their options and take the next step toward arranging in-home support for a loved one.'
+        'LoLo Care helps families understand their options and take the next step toward arranging non-medical in-home support for a loved one.'
     ),
     'service_details' => array_values(array_filter(array_map(
         static fn (string $item): string => trim($item),
         explode('|', (string) env(
             'VOICE_AGENT_SERVICE_DETAILS',
-            'Families can call to understand how the service works, what the next step is, and how to get support for a loved one.|If the family is ready to move forward, the voice agent can text the family signup link.|If the situation is complex or the caller prefers a person, the voice agent can collect a callback request for a human follow-up.'
+            'Families can call to understand how LoLo Care works, what the next step is, and how to get support for a loved one.|If the family is ready to move forward, the voice agent can text the family signup link.|If the situation is complex or the caller asks for a person or Charles, the voice agent collects their callback information for a prompt follow-up.|People interested in caregiver work should create a caregiver account on the LoLo Care website.'
         ))
     ))),
     'capabilities' => [
         'Answer approved family questions about the service and next steps.',
         'Offer a human callback when the family needs personal follow-up.',
         'Send the family signup link by SMS after caller consent.',
+        'Direct caregiver job applicants to create a caregiver account on the LoLo Care website.',
     ],
     'ops_hours' => env('VOICE_AGENT_OPS_HOURS', 'Monday to Friday, 9am to 6pm local time'),
     'signup_links' => [
@@ -28,9 +29,9 @@ return [
     ],
     'faqs' => [
         [
-            'question' => 'What does Homecare do?',
-            'answer' => 'Homecare helps families understand their care options and take the next step toward arranging in-home support for a loved one.',
-            'keywords' => ['what do you do', 'service', 'home care', 'support', 'what is homecare'],
+            'question' => 'What does LoLo Care do?',
+            'answer' => 'LoLo Care helps families understand their care options and take the next step toward arranging non-medical in-home support for a loved one.',
+            'keywords' => ['what do you do', 'service', 'home care', 'support', 'what is lolo', 'what is lolo care'],
         ],
         [
             'question' => 'What happens next if I am interested?',
@@ -38,14 +39,19 @@ return [
             'keywords' => ['next step', 'interested', 'what happens next', 'how do i get started', 'get started'],
         ],
         [
-            'question' => 'Can I speak to a human?',
-            'answer' => 'Yes. The voice agent can collect your callback details so a team member can follow up.',
-            'keywords' => ['human', 'person', 'callback', 'call me back', 'talk to someone'],
+            'question' => 'Can I speak to a human or Charles?',
+            'answer' => 'Yes. The voice agent will collect your name, best callback number, and reason for calling. Someone from the LoLo Care team, or Charles if requested, will call back as soon as possible.',
+            'keywords' => ['human', 'person', 'charles', 'callback', 'call me back', 'talk to someone'],
         ],
         [
             'question' => 'Can you text me the signup link?',
             'answer' => 'Yes. If you consent, the voice agent can text you the family signup link during the call.',
             'keywords' => ['text me', 'signup link', 'sms', 'register', 'send me the link'],
+        ],
+        [
+            'question' => 'How do I apply for a caregiver job?',
+            'answer' => 'Visit the LoLo Care website, choose Become a Caregiver, and create a caregiver account to apply for caregiver opportunities.',
+            'keywords' => ['caregiver job', 'apply for a job', 'job application', 'work for lolo care', 'work with lolo care', 'become a caregiver', 'caregiver position', 'employment'],
         ],
         [
             'question' => 'What information should I be ready to share?',

@@ -41,15 +41,44 @@ class VoiceAiCallResponder
             $call->update(['current_step' => 'safety']);
 
             return [
-                'message' => 'If this is a medical emergency, please hang up and call 911 now. LoLo can help with non-medical home care planning after urgent safety is handled.',
+                'message' => 'If this is a medical emergency, please hang up and call 911 now. LoLo Care can help with non-medical home care planning after urgent safety is handled.',
                 'hangup' => false,
             ];
         }
 
-        if ($this->containsAny($normalized, ['human', 'person', 'call me', 'callback', 'call back', 'talk to someone'])) {
+        if ($this->isCaregiverApplicationInquiry($normalized)) {
+            $metadata = is_array($call->metadata) ? $call->metadata : [];
+            $metadata['voice_agent_intent'] = 'caregiver_application';
+
+            $call->update([
+                'signup_link_requested' => true,
+                'current_step' => 'caregiver_application',
+                'metadata' => $metadata,
+            ]);
+
+            return [
+                'message' => 'To apply for caregiver opportunities with LoLo Care, please visit '.route('caregiver.register').' and create a caregiver account.',
+                'hangup' => false,
+            ];
+        }
+
+        if ($call->callback_requested) {
+            return [
+                'message' => $this->callbackQuestion($call),
+                'hangup' => false,
+            ];
+        }
+
+        $askedForCharles = str_contains($normalized, 'charles') && $this->containsAny($normalized, ['speak', 'talk', 'call', 'connect', 'reach', 'need charles', 'charles please']);
+        $requestedContact = $askedForCharles ? 'Charles' : 'LoLo Care team';
+        if ($askedForCharles || $this->containsAny($normalized, ['human', 'person', 'call me', 'callback', 'call back', 'talk to someone', 'someone from the team'])) {
+            $metadata = is_array($call->metadata) ? $call->metadata : [];
+            $metadata['requested_contact'] = $requestedContact;
+
             $call->update([
                 'callback_requested' => true,
                 'current_step' => 'callback',
+                'metadata' => $metadata,
             ]);
 
             return [
@@ -86,20 +115,28 @@ class VoiceAiCallResponder
 
     public function initialPrompt(): string
     {
-        return 'Hi, this is the LoLo test voice assistant. I can answer basic questions and collect care request details for the team. Who needs care, and what kind of help are you looking for?';
+        return 'Hi, this is the LoLo Care test voice assistant. I can answer basic questions, arrange a callback, or direct caregiver applicants to create an account. How can I help?';
     }
 
     private function callbackQuestion(VoiceAiCall $call): string
     {
+        $requestedContact = data_get($call->metadata, 'requested_contact') === 'Charles'
+            ? 'Charles or someone from the LoLo Care team'
+            : 'Someone from the LoLo Care team';
+
         if (! $call->gathered_name) {
-            return 'Absolutely. What name should our team ask for when they call back?';
+            return 'Absolutely. '.$requestedContact.' will call you back as soon as possible. What name should we ask for?';
+        }
+
+        if (! $call->gathered_phone) {
+            return 'What is the best phone number for the callback?';
         }
 
         if (! $call->gathered_callback_time) {
-            return 'What is the best time for a team member to call back?';
+            return 'What is the best time for '.$requestedContact.' to call you back?';
         }
 
-        return 'I saved your callback request. You can also tell me what kind of care support is needed.';
+        return 'I saved your callback request. '.$requestedContact.' will call you back as soon as possible.';
     }
 
     private function nextIntakeQuestion(VoiceAiCall $call): string
@@ -126,6 +163,10 @@ class VoiceAiCallResponder
 
         if ($call->callback_requested && ! $call->gathered_callback_time) {
             return 'What is the best time for a team member to call back?';
+        }
+
+        if ($call->callback_requested) {
+            return $this->callbackQuestion($call);
         }
 
         return 'I have the basics. You can ask another question, add more details, or say goodbye to finish.';
@@ -166,6 +207,10 @@ class VoiceAiCallResponder
             } elseif (preg_match('/(?:in|near|around)\s+([a-z][a-z\s.-]{2,80})(?:\.|,|$)/i', $speech, $matches)) {
                 $updates['gathered_location'] = trim($matches[1]);
             }
+        }
+
+        if (! $call->gathered_phone && preg_match('/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/', $speech, $matches)) {
+            $updates['gathered_phone'] = trim($matches[0]);
         }
 
         if (! $call->gathered_urgency) {
@@ -244,6 +289,32 @@ class VoiceAiCallResponder
         return false;
     }
 
+    private function isCaregiverApplicationInquiry(string $speech): bool
+    {
+        $matchesApplicationPhrase = $this->containsAny($speech, [
+            'apply for a job',
+            'apply for caregiver',
+            'caregiver job',
+            'caregiver position',
+            'caregiver work',
+            'caregiving job',
+            'become a caregiver',
+            'register as a caregiver',
+            'caregiver account',
+            'job application',
+            'looking for a job',
+            'looking for work',
+            'work as a caregiver',
+            'work as caregiver',
+            'work for lolo',
+            'work with lolo',
+            'employment',
+        ]);
+
+        return $matchesApplicationPhrase
+            || (str_contains($speech, 'apply') && $this->containsAny($speech, ['job', 'work', 'caregiver']));
+    }
+
     private function summaryFor(VoiceAiCall $call): string
     {
         $parts = [];
@@ -265,6 +336,9 @@ class VoiceAiCallResponder
         }
         if ($call->callback_requested) {
             $parts[] = 'Callback requested'.($call->gathered_callback_time ? ': '.$call->gathered_callback_time : '');
+            if (data_get($call->metadata, 'requested_contact') === 'Charles') {
+                $parts[] = 'Charles requested';
+            }
         }
         if ($call->signup_link_requested) {
             $parts[] = 'Signup link requested';
