@@ -14,6 +14,7 @@ use App\Models\SupportTicket;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
+use App\Services\RegularCare\CarePlanPaymentWindowService;
 use App\Support\CaregiverPrelaunch;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
@@ -84,6 +85,10 @@ class ApplyToCareRequest extends Component
             ->findOrFail($careRequest);
 
         $this->refreshExistingApplication();
+
+        if ($this->redirectFromExpiredRegularCareVisit()) {
+            return;
+        }
 
         if ($this->requestItem->status === CareRequest::STATUS_OPEN && ! $this->existingApplication) {
             abort_unless(auth()->user()->can('apply', $this->requestItem), 403);
@@ -220,7 +225,14 @@ class ApplyToCareRequest extends Component
             return;
         }
 
-        $checkIn = app(\App\Services\RegularCare\CareBookingCheckInPolicy::class)->evaluate($booking);
+        $checkInPolicy = app(\App\Services\RegularCare\CareBookingCheckInPolicy::class);
+        $checkIn = $checkInPolicy->evaluate($booking);
+        if ($booking->care_plan_id && $checkIn['code'] === 'payment_not_protected') {
+            app(CarePlanPaymentWindowService::class)->prepareBookings(collect([$booking]));
+            $booking = $booking->fresh('payment');
+            $this->existingApplication?->setRelation('booking', $booking);
+            $checkIn = $checkInPolicy->evaluate($booking);
+        }
         if (! $checkIn['allowed']) {
             session()->flash('status', $checkIn['reason']);
 
@@ -878,7 +890,7 @@ class ApplyToCareRequest extends Component
             ->where('caregiver_user_id', auth()->id())
             ->with([
                 'conversation:id,care_request_application_id,care_request_id,caregiver_user_id',
-                'booking:id,care_request_id,care_request_application_id,family_user_id,caregiver_user_id,status,scheduled_start_at,scheduled_end_at,agreement_snapshot,family_terms_accepted_at,caregiver_terms_accepted_at,started_at,check_in_lat,check_in_lng,check_in_accuracy_meters,check_in_source,check_in_note,paused_at,total_paused_seconds,completed_at,check_out_lat,check_out_lng,check_out_accuracy_meters,check_out_source,check_out_note,timesheet_submitted_at,expected_minutes,worked_minutes,family_confirmed_at,dispute_opened_at,dispute_opened_by_user_id,dispute_reason,dispute_status,no_show_flag,late_cancel_flag,reviewed_at,cancelled_at,cancelled_by_user_id,cancellation_reason',
+                'booking:id,care_request_id,care_plan_id,care_request_application_id,family_user_id,caregiver_user_id,status,scheduled_start_at,scheduled_end_at,agreement_snapshot,family_terms_accepted_at,caregiver_terms_accepted_at,check_in_override_at,check_in_override_by_user_id,check_in_override_reason,started_at,check_in_lat,check_in_lng,check_in_accuracy_meters,check_in_source,check_in_note,paused_at,total_paused_seconds,completed_at,check_out_lat,check_out_lng,check_out_accuracy_meters,check_out_source,check_out_note,timesheet_submitted_at,expected_minutes,worked_minutes,family_confirmed_at,dispute_opened_at,dispute_opened_by_user_id,dispute_reason,dispute_status,no_show_flag,late_cancel_flag,reviewed_at,cancelled_at,cancelled_by_user_id,cancellation_reason',
                 'booking.changeRequests',
                 'booking.reviews',
                 'booking.taskChecks',
@@ -886,6 +898,31 @@ class ApplyToCareRequest extends Component
                 'booking.incidents.reporter:id,name',
             ])
             ->first();
+    }
+
+    private function redirectFromExpiredRegularCareVisit(): bool
+    {
+        $booking = $this->existingApplication?->booking;
+        if (! $booking || $booking->status !== CareBooking::STATUS_SCHEDULED || ! $booking->checkInWindowHasClosed()) {
+            return false;
+        }
+
+        $currentBooking = CareBooking::query()
+            ->where('care_plan_id', $booking->care_plan_id)
+            ->where('caregiver_user_id', auth()->id())
+            ->where('status', CareBooking::STATUS_SCHEDULED)
+            ->whereKeyNot($booking->id)
+            ->whereScheduledCheckInNotExpired()
+            ->orderBy('scheduled_start_at')
+            ->first(['id', 'care_request_id']);
+
+        if (! $currentBooking) {
+            return false;
+        }
+
+        $this->redirect(route('care-requests.apply', $currentBooking->care_request_id, absolute: false), navigate: true);
+
+        return true;
     }
 
     private function calculateShiftEarnings(int $workedMinutes, float $ratePerHour): float

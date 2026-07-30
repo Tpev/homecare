@@ -22,11 +22,14 @@ class CarePlanHealthService
     public function reconcile(CarePlan $plan): CarePlan
     {
         $nextBooking = $plan->generatedBookings()
-            ->whereIn('status', [
-                CareBooking::STATUS_SCHEDULED,
-                CareBooking::STATUS_IN_PROGRESS,
-                CareBooking::STATUS_PAUSED,
-            ])
+            ->where(function ($query): void {
+                $query->whereIn('status', [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED])
+                    ->orWhere(function ($scheduledQuery): void {
+                        $scheduledQuery
+                            ->where('status', CareBooking::STATUS_SCHEDULED)
+                            ->whereScheduledCheckInNotExpired();
+                    });
+            })
             ->orderByRaw("CASE WHEN status IN ('in_progress', 'paused') THEN 0 ELSE 1 END")
             ->orderBy('scheduled_start_at')
             ->first();

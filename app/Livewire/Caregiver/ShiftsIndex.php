@@ -28,6 +28,7 @@ class ShiftsIndex extends Component
     public function render()
     {
         $caregiverId = (int) auth()->id();
+        $expiredRegularCareCutoff = now()->subMinutes(CareBooking::regularCareCheckInGraceMinutes());
 
         $statusOrderSql = "CASE status
             WHEN 'in_progress' THEN 0
@@ -56,6 +57,10 @@ class ShiftsIndex extends Component
         }
 
         $bookings = $bookingsQuery
+            ->orderByRaw(
+                "CASE WHEN status = 'scheduled' AND care_plan_id IS NOT NULL AND scheduled_start_at < ? AND (check_in_override_at IS NULL OR check_in_override_by_user_id IS NULL) THEN 1 ELSE 0 END",
+                [$expiredRegularCareCutoff]
+            )
             ->orderByRaw($statusOrderSql)
             ->orderBy('scheduled_start_at')
             ->orderByDesc('updated_at')
@@ -78,6 +83,7 @@ class ShiftsIndex extends Component
             'scheduled' => CareBooking::query()
                 ->where('caregiver_user_id', $caregiverId)
                 ->where('status', CareBooking::STATUS_SCHEDULED)
+                ->whereScheduledCheckInNotExpired()
                 ->count(),
             'completed' => CareBooking::query()
                 ->where('caregiver_user_id', $caregiverId)
@@ -93,6 +99,7 @@ class ShiftsIndex extends Component
             ->with(['careRequest:id,title,address_line1,city,state,zip', 'carePlan:id,title', 'payment:id,care_booking_id,status'])
             ->where('caregiver_user_id', $caregiverId)
             ->where('status', CareBooking::STATUS_SCHEDULED)
+            ->whereScheduledCheckInNotExpired()
             ->whereNotNull('scheduled_start_at')
             ->orderBy('scheduled_start_at')
             ->first();

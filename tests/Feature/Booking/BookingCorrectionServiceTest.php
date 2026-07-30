@@ -224,6 +224,8 @@ class BookingCorrectionServiceTest extends TestCase
         );
 
         $this->assertSame(CareBooking::STATUS_SCHEDULED, $booking->fresh()->status);
+        $this->assertSame($admin->id, $booking->fresh()->check_in_override_by_user_id);
+        $this->assertNotNull($booking->fresh()->check_in_override_at);
         $this->assertSame($booking->id, $plan->fresh()->next_booking_id);
         $this->assertSame(CarePlan::PAYMENT_AUTHORIZED, $plan->fresh()->payment_status);
     }

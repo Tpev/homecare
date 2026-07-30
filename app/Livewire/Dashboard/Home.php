@@ -153,6 +153,7 @@ class Home extends Component
                 ->with($dashboardBookingRelations)
                 ->where('family_user_id', $user->id)
                 ->where('status', CareBooking::STATUS_SCHEDULED)
+                ->whereScheduledCheckInNotExpired()
                 ->orderBy('scheduled_start_at')
                 ->first();
             $familyData['active_shifts'] = collect([$timesheetBooking, $liveBooking, $nextScheduledBooking])
@@ -277,6 +278,7 @@ class Home extends Component
                 ->with(['careRequest:id,title,city,state,request_type,requested_start_at,requested_end_at'])
                 ->where('caregiver_user_id', $user->id)
                 ->where('status', CareBooking::STATUS_SCHEDULED)
+                ->whereScheduledCheckInNotExpired()
                 ->orderBy('scheduled_start_at')
                 ->first();
 
@@ -289,6 +291,14 @@ class Home extends Component
                     CareBooking::STATUS_SCHEDULED,
                     CareBooking::STATUS_COMPLETED,
                 ])
+                ->where(function ($query): void {
+                    $query->where('status', '!=', CareBooking::STATUS_SCHEDULED)
+                        ->orWhere(function ($scheduledQuery): void {
+                            $scheduledQuery
+                                ->where('status', CareBooking::STATUS_SCHEDULED)
+                                ->whereScheduledCheckInNotExpired();
+                        });
+                })
                 ->orderByRaw("CASE status
                     WHEN 'in_progress' THEN 0
                     WHEN 'paused' THEN 1

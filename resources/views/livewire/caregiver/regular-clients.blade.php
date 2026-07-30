@@ -214,6 +214,7 @@
                                 ? 'FAMILY PAYMENT NEEDED'
                                 : strtoupper(str_replace('_', ' ', $plan->status));
                             $upcoming = $scheduleService->upcomingVisits($plan, 1);
+                            $nextVisitBooking = data_get($upcoming, '0.booking');
                         @endphp
                         <div class="rounded-2xl border border-[#E4DDD3] bg-white p-3">
                             <div class="flex items-start justify-between gap-2">
@@ -230,11 +231,11 @@
                                 </p>
                             @endif
                             <p class="mt-2 text-xs text-[#607080]">{{ $scheduleService->scheduleLabel($plan) }}</p>
-                            <p class="mt-1 text-xs text-[#4B5B6B]">Next: {{ $upcoming[0]['label'] ?? optional($plan->nextBooking?->scheduled_start_at)->format('M d, g:i A') ?? 'pending' }}</p>
-                            @if ($plan->nextBooking || $plan->source_care_request_id)
+                            <p class="mt-1 text-xs text-[#4B5B6B]">Next: {{ $upcoming[0]['label'] ?? 'pending' }}</p>
+                            @if ($nextVisitBooking || $plan->source_care_request_id)
                                 <div class="mt-3 grid gap-2">
-                                    @if ($plan->nextBooking)
-                                        <a href="{{ route('care-requests.apply', $plan->nextBooking->care_request_id) }}" wire:navigate>
+                                    @if ($nextVisitBooking)
+                                        <a href="{{ route('care-requests.apply', $nextVisitBooking->care_request_id) }}" wire:navigate>
                                             <x-button color="blue" light sm class="w-full">Open next visit</x-button>
                                         </a>
                                     @endif

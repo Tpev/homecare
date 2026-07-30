@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
 class CareBooking extends Model
 {
@@ -147,8 +149,39 @@ class CareBooking extends Model
     public function checkInWindowClosesAt(): ?\Illuminate\Support\Carbon
     {
         return $this->scheduled_start_at?->copy()->addMinutes(
-            max(0, (int) config('marketplace.regular_care.check_in_closes_minutes_after', 120))
+            self::regularCareCheckInGraceMinutes()
         );
+    }
+
+    public static function regularCareCheckInGraceMinutes(): int
+    {
+        return max(0, (int) config('marketplace.regular_care.check_in_closes_minutes_after', 120));
+    }
+
+    public function checkInWindowHasClosed(?Carbon $at = null): bool
+    {
+        if (! $this->care_plan_id || $this->hasCheckInOverride() || ! $this->checkInWindowClosesAt()) {
+            return false;
+        }
+
+        return ($at ?? now())->gt($this->checkInWindowClosesAt());
+    }
+
+    public function scopeWhereScheduledCheckInNotExpired(Builder $query, ?Carbon $at = null): Builder
+    {
+        $cutoff = ($at ?? now())->copy()->subMinutes(self::regularCareCheckInGraceMinutes());
+
+        return $query->where(function (Builder $bookingQuery) use ($cutoff): void {
+            $bookingQuery
+                ->whereNull('care_plan_id')
+                ->orWhereNull('scheduled_start_at')
+                ->orWhere('scheduled_start_at', '>=', $cutoff)
+                ->orWhere(function (Builder $overrideQuery): void {
+                    $overrideQuery
+                        ->whereNotNull('check_in_override_at')
+                        ->whereNotNull('check_in_override_by_user_id');
+                });
+        });
     }
 
     public function hasCheckInOverride(): bool

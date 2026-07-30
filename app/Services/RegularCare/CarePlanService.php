@@ -1010,12 +1010,14 @@ class CarePlanService
     {
         if (! $useCounter && $plan->isLive()) {
             return $plan->generatedBookings()
-                ->whereIn('status', [
-                    CareBooking::STATUS_SCHEDULED,
-                    CareBooking::STATUS_IN_PROGRESS,
-                    CareBooking::STATUS_PAUSED,
-                ])
-                ->where('scheduled_start_at', '>=', now()->subHours(2))
+                ->where(function ($query): void {
+                    $query->whereIn('status', [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED])
+                        ->orWhere(function ($scheduledQuery): void {
+                            $scheduledQuery
+                                ->where('status', CareBooking::STATUS_SCHEDULED)
+                                ->whereScheduledCheckInNotExpired();
+                        });
+                })
                 ->with('payment')
                 ->orderBy('scheduled_start_at')
                 ->limit($limit)

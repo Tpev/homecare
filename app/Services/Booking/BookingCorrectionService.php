@@ -316,7 +316,7 @@ class BookingCorrectionService
 
     private function executeReopen(CareBookingCorrection $correction, User $admin): void
     {
-        DB::transaction(function () use ($correction): void {
+        DB::transaction(function () use ($admin, $correction): void {
             $booking = CareBooking::query()->lockForUpdate()->findOrFail($correction->care_booking_id);
             $preview = $this->preview($booking, ['action' => CareBookingCorrection::ACTION_REOPEN]);
             if (! ($preview['can_apply'] ?? false)) {
@@ -337,6 +337,9 @@ class BookingCorrectionService
                 'check_in_accuracy_meters' => null,
                 'check_in_source' => null,
                 'check_in_note' => null,
+                'check_in_override_at' => now(),
+                'check_in_override_by_user_id' => $admin->id,
+                'check_in_override_reason' => $correction->reason,
                 'check_out_lat' => null,
                 'check_out_lng' => null,
                 'check_out_accuracy_meters' => null,
