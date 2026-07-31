@@ -218,6 +218,12 @@ class CareHistoryTest extends TestCase
         $this->assertSame('Paid — payout processing', $items[$transferFailed->id]['payment']['label']);
         $this->assertStringNotContainsString('failed', strtolower($items[$transferFailed->id]['payment']['label']));
         $this->assertStringNotContainsString('caregiver', strtolower($items[$transferFailed->id]['payment']['help']));
+
+        Livewire::actingAs($family)
+            ->test(CareHistory::class)
+            ->assertSee('Net billed')
+            ->assertSee('Captured minus refunds')
+            ->assertDontSee('Returned from captured payments');
     }
 
     public function test_all_history_filters_search_and_reset_are_applied_to_the_authorized_query(): void

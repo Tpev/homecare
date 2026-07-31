@@ -49,7 +49,7 @@
             @endif
         </div>
 
-        <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
             <article class="rounded-2xl border border-[#D8E1D7] bg-[#F6FBF8] p-4 shadow-sm">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">Care provided</p>
                 <p class="mt-2 text-2xl font-semibold text-[#17313F]">{{ (int) $summary['care_provided'] }}</p>
@@ -60,7 +60,7 @@
                 <p class="mt-2 text-2xl font-semibold text-[#17313F]">{{ $workedSummary }}</p>
                 <p class="mt-1 text-xs text-[#607080]">Submitted worked time only</p>
             </article>
-            <article class="rounded-2xl border border-[#D7CCE9] bg-[#FAF8FD] p-4 shadow-sm">
+            <article class="col-span-2 rounded-2xl border border-[#D7CCE9] bg-[#FAF8FD] p-4 shadow-sm lg:col-span-1">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6A4E9A]">Net billed</p>
                 <div class="mt-2 space-y-1">
                     @foreach ($summary['money'] as $money)
@@ -69,16 +69,6 @@
                     @endforeach
                 </div>
                 <p class="mt-1 text-xs text-[#607080]">Captured minus refunds</p>
-            </article>
-            <article class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C96B55]">Refunded</p>
-                <div class="mt-2 space-y-1">
-                    @foreach ($summary['money'] as $money)
-                        <p class="text-2xl font-semibold text-[#17313F]">{{ $money['refunded_label'] }}</p>
-                        @if ($multipleCurrencies)<p class="text-xs text-[#607080]">{{ $money['currency'] }}</p>@endif
-                    @endforeach
-                </div>
-                <p class="mt-1 text-xs text-[#607080]">Returned from captured payments</p>
             </article>
         </div>
     </section>
