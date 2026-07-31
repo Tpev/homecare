@@ -16,6 +16,9 @@
         $canEditApplication = $requestItem->status === \App\Models\CareRequest::STATUS_OPEN;
         $checkInDecision = app(\App\Services\RegularCare\CareBookingCheckInPolicy::class)->evaluate($booking);
         $canCheckIn = $checkInDecision['allowed'];
+        $isExpiredRegularVisit = $booking
+            && $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED
+            && $booking->checkInWindowHasClosed();
         $canPause = $booking && $booking->status === \App\Models\CareBooking::STATUS_IN_PROGRESS;
         $canResume = $booking && $booking->status === \App\Models\CareBooking::STATUS_PAUSED;
         $canCheckOut = $booking && in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true);
@@ -593,7 +596,9 @@
                     .' - '.
                     (optional($booking->scheduled_end_at)->format('g:i A') ?: 'end time pending')
                 );
-                $commandStatusToneClass = match ($shiftStatus) {
+                $commandStatusToneClass = $isExpiredRegularVisit
+                    ? 'border-amber-300/40 bg-amber-500/10 text-amber-100'
+                    : match ($shiftStatus) {
                     \App\Models\CareBooking::STATUS_SCHEDULED => 'border-[#C8D9F5]/60 bg-[#4F6FAF]/10 text-[#DCE8FF]',
                     \App\Models\CareBooking::STATUS_IN_PROGRESS => 'border-emerald-300/40 bg-emerald-500/10 text-emerald-100',
                     \App\Models\CareBooking::STATUS_PAUSED,
@@ -601,7 +606,9 @@
                     \App\Models\CareBooking::STATUS_REVIEWED => 'border-emerald-300/40 bg-emerald-500/10 text-emerald-100',
                     default => 'border-white/20 bg-white/10 text-[#D7DEE6]',
                 };
-                $commandStatusTitle = match ($shiftStatus) {
+                $commandStatusTitle = $isExpiredRegularVisit
+                    ? 'This past visit is still accessible.'
+                    : match ($shiftStatus) {
                     \App\Models\CareBooking::STATUS_SCHEDULED => 'Check in when you arrive.',
                     \App\Models\CareBooking::STATUS_IN_PROGRESS => 'You are checked in.',
                     \App\Models\CareBooking::STATUS_PAUSED => 'The visit is paused.',
@@ -609,7 +616,9 @@
                     \App\Models\CareBooking::STATUS_REVIEWED => 'This visit is closed.',
                     default => 'Visit tools are ready.',
                 };
-                $commandStatusBody = match ($shiftStatus) {
+                $commandStatusBody = $isExpiredRegularVisit
+                    ? 'Its check-in window is closed, but the visit record, notes, timeline, and support options remain available.'
+                    : match ($shiftStatus) {
                     \App\Models\CareBooking::STATUS_SCHEDULED => 'Next visit for '.$careRecipientName.' is '.$scheduledWindowLabel.'.',
                     \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Stay focused on '.$careRecipientName.'. Pause only for breaks, or end when care is done.',
                     \App\Models\CareBooking::STATUS_PAUSED => 'Resume when you are back with '.$careRecipientName.', or end the visit if care is finished.',
@@ -617,7 +626,9 @@
                     \App\Models\CareBooking::STATUS_REVIEWED => 'Family review is complete. Your visit record is saved here.',
                     default => 'Use the visit tools for this booking.',
                 };
-                $visitStageEyebrow = match ($shiftStatus) {
+                $visitStageEyebrow = $isExpiredRegularVisit
+                    ? 'Past visit record'
+                    : match ($shiftStatus) {
                     \App\Models\CareBooking::STATUS_SCHEDULED => 'Upcoming visit',
                     \App\Models\CareBooking::STATUS_IN_PROGRESS,
                     \App\Models\CareBooking::STATUS_PAUSED => 'Live visit',
@@ -625,7 +636,9 @@
                     \App\Models\CareBooking::STATUS_REVIEWED => 'Completed visit',
                     default => 'Visit',
                 };
-                $visitStageTitle = match ($shiftStatus) {
+                $visitStageTitle = $isExpiredRegularVisit
+                    ? 'Visit record for '.$careRecipientName
+                    : match ($shiftStatus) {
                     \App\Models\CareBooking::STATUS_SCHEDULED => 'Get ready for '.$careRecipientName,
                     \App\Models\CareBooking::STATUS_IN_PROGRESS => 'You are with '.$careRecipientName,
                     \App\Models\CareBooking::STATUS_PAUSED => 'Visit paused for '.$careRecipientName,
@@ -633,6 +646,9 @@
                     \App\Models\CareBooking::STATUS_REVIEWED => 'Visit is fully closed',
                     default => $requestItem->title,
                 };
+                $statusBadgeLabel = $isExpiredRegularVisit
+                    ? 'PAST VISIT'
+                    : strtoupper(str_replace('_', ' ', $shiftStatus));
             @endphp
             <section class="rounded-[1.9rem] border border-[#0F3D3E]/80 bg-[#0F3D3E] p-5 shadow-xl">
                 <div>
@@ -648,7 +664,7 @@
                                 </p>
                             </div>
                             <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusBadgeClass }}">
-                                {{ strtoupper(str_replace('_', ' ', $shiftStatus)) }}
+                                {{ $statusBadgeLabel }}
                             </span>
                         </div>
                     </div>
@@ -669,7 +685,7 @@
                     x-init="init()"
                 >
                     <div x-show="panel === 'live'" x-transition class="space-y-2">
-                        @if ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED && ! $booking->caregiver_terms_accepted_at)
+                        @if ($booking->status === \App\Models\CareBooking::STATUS_SCHEDULED && ! $booking->caregiver_terms_accepted_at && ! $isExpiredRegularVisit)
                             <div class="rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-3 text-sm text-amber-100">
                                 Accept the agreement first, then check in when you arrive.
                             </div>
@@ -700,7 +716,19 @@
                             </div>
                         @endif
 
-                        @if ($canCheckIn)
+                        @if ($isExpiredRegularVisit)
+                            <div class="rounded-xl border border-amber-300/50 bg-amber-500/10 px-4 py-3 text-sm leading-6 text-amber-50">
+                                <p>The check-in window has closed. If care was provided but the hours were not entered, report it from this visit so support receives the correct booking record.</p>
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    <x-button color="white" light sm wire:click="openHistoricalVisitSupport">Report work or get help</x-button>
+                                    @if ($currentRegularCareBooking)
+                                        <a href="{{ route('care-requests.apply', $currentRegularCareBooking->care_request_id) }}" wire:navigate>
+                                            <x-button color="blue" sm>Open current visit</x-button>
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        @elseif ($canCheckIn)
                             <x-button
                                 color="blue"
                                 class="w-full"
@@ -820,7 +848,7 @@
                             - Caregiver accepted:
                             {{ $booking->caregiver_terms_accepted_at ? $booking->caregiver_terms_accepted_at->format('M d, H:i') : 'pending' }}
                         </p>
-                        @if (! $booking->caregiver_terms_accepted_at)
+                        @if (! $booking->caregiver_terms_accepted_at && ! $isExpiredRegularVisit)
                             <div class="mt-2">
                                 <x-button color="blue" sm wire:click="acceptBookingAgreement">Accept agreement</x-button>
                             </div>
@@ -1115,7 +1143,7 @@
                         </details>
                     @endif
 
-                    <details class="rounded border border-[#E4DDD3] p-3">
+                    <details class="rounded border border-[#E4DDD3] p-3" {{ $isExpiredRegularVisit ? 'open' : '' }}>
                         <summary class="cursor-pointer font-medium">Support ticket</summary>
                         <div class="mt-3 space-y-4">
                             <x-input label="Subject" wire:model="supportSubject" />

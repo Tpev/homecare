@@ -86,10 +86,6 @@ class ApplyToCareRequest extends Component
 
         $this->refreshExistingApplication();
 
-        if ($this->redirectFromExpiredRegularCareVisit()) {
-            return;
-        }
-
         if ($this->requestItem->status === CareRequest::STATUS_OPEN && ! $this->existingApplication) {
             abort_unless(auth()->user()->can('apply', $this->requestItem), 403);
         } elseif (! $this->existingApplication) {
@@ -124,6 +120,18 @@ class ApplyToCareRequest extends Component
         }
 
         $this->activeTab = $tab;
+    }
+
+    public function openHistoricalVisitSupport(): void
+    {
+        $booking = $this->getManagedBooking();
+        if (! $booking || $booking->status !== CareBooking::STATUS_SCHEDULED || ! $booking->checkInWindowHasClosed()) {
+            return;
+        }
+
+        $this->supportCategory = 'dispute';
+        $this->supportSubject = 'Missed check-in for visit #'.$booking->id;
+        $this->activeTab = 'support';
     }
 
     public function submit(): void
@@ -900,29 +908,21 @@ class ApplyToCareRequest extends Component
             ->first();
     }
 
-    private function redirectFromExpiredRegularCareVisit(): bool
+    private function currentRegularCareBooking(): ?CareBooking
     {
         $booking = $this->existingApplication?->booking;
         if (! $booking || $booking->status !== CareBooking::STATUS_SCHEDULED || ! $booking->checkInWindowHasClosed()) {
-            return false;
+            return null;
         }
 
-        $currentBooking = CareBooking::query()
+        return CareBooking::query()
             ->where('care_plan_id', $booking->care_plan_id)
             ->where('caregiver_user_id', auth()->id())
             ->where('status', CareBooking::STATUS_SCHEDULED)
             ->whereKeyNot($booking->id)
             ->whereScheduledCheckInNotExpired()
             ->orderBy('scheduled_start_at')
-            ->first(['id', 'care_request_id']);
-
-        if (! $currentBooking) {
-            return false;
-        }
-
-        $this->redirect(route('care-requests.apply', $currentBooking->care_request_id, absolute: false), navigate: true);
-
-        return true;
+            ->first(['id', 'care_request_id', 'scheduled_start_at', 'scheduled_end_at']);
     }
 
     private function calculateShiftEarnings(int $workedMinutes, float $ratePerHour): float
@@ -1035,6 +1035,8 @@ class ApplyToCareRequest extends Component
 
     public function render()
     {
-        return view('livewire.caregiver.apply-to-care-request');
+        return view('livewire.caregiver.apply-to-care-request', [
+            'currentRegularCareBooking' => $this->currentRegularCareBooking(),
+        ]);
     }
 }

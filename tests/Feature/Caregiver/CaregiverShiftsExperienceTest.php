@@ -193,7 +193,15 @@ class CaregiverShiftsExperienceTest extends TestCase
 
         Livewire::actingAs($caregiver)
             ->test(ApplyToCareRequest::class, ['careRequest' => $expiredRequest->id])
-            ->assertRedirect(route('care-requests.apply', $currentRequest->id, absolute: false));
+            ->assertNoRedirect()
+            ->assertSee('Past visit record')
+            ->assertSee('This past visit is still accessible.')
+            ->assertSee('Report work or get help')
+            ->assertSee(route('care-requests.apply', $currentRequest->id, absolute: false), false)
+            ->call('openHistoricalVisitSupport')
+            ->assertSet('activeTab', 'support')
+            ->assertSet('supportCategory', 'dispute')
+            ->assertSet('supportSubject', 'Missed check-in for visit #'.$expiredBooking->id);
     }
 
     public function test_regular_visit_check_in_prepares_missing_payment_on_demand(): void
