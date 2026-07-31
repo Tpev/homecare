@@ -60,8 +60,8 @@
                 <p class="mt-2 text-xs text-[#7B8794]">{{ implode(' - ', array_slice($suggestion['reasons'], 0, 2)) }}</p>
 
                 <div class="mt-3">
-                    <x-button color="blue" light wire:click="inviteSuggestedCaregiver({{ $suggestion['user_id'] }})">
-                        Invite caregiver
+                    <x-button color="blue" light wire:click="beginCaregiverInvitation({{ $suggestion['user_id'] }})" class="w-full">
+                        Invite {{ \Illuminate\Support\Str::of($suggestion['name'])->before(' ') }}
                     </x-button>
                 </div>
             </div>

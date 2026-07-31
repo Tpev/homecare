@@ -11,6 +11,19 @@
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
 
+    @if ($contextRequestSummary)
+        <div class="rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
+            <div class="min-w-0">
+                <p class="text-sm font-semibold text-[#17313F]">You are choosing a caregiver for</p>
+                <p class="mt-1 break-words font-display text-lg font-semibold text-[#17313F]">{{ $contextRequestSummary['title'] }}</p>
+                <p class="mt-1 text-sm text-[#607080]">{{ $contextRequestSummary['schedule'] }} · {{ $contextRequestSummary['location'] }}</p>
+            </div>
+            <a href="{{ $contextRequestSummary['back_url'] }}" wire:navigate class="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-[#B7ADA0] bg-white px-4 py-2 text-sm font-semibold text-[#0F3D3E] hover:bg-[#F5F1EB] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF] sm:mt-0 sm:w-auto">
+                Back to request
+            </a>
+        </div>
+    @endif
+
     <x-card>
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div class="lg:col-span-4">
@@ -55,7 +68,24 @@
 
                         @if (auth()->user()?->role === 'family')
                             <div class="mt-4 w-full flex flex-col gap-2">
-                                <x-button color="blue" wire:click="openInviteModal" class="w-full">Invite to request</x-button>
+                                @if ($contextRequestSummary && $contextRelationship)
+                                    @if ($contextRelationship['can_invite'])
+                                        <x-button color="blue" wire:click="openInviteModal" class="w-full">Invite {{ $contextRelationship['first_name'] }} to this request</x-button>
+                                    @elseif ($contextRelationship['can_reinvite'])
+                                        <x-button color="blue" wire:click="openInviteModal" class="w-full">Invite {{ $contextRelationship['first_name'] }} again</x-button>
+                                    @elseif ($contextRelationship['reply_url'])
+                                        <a href="{{ $contextRelationship['reply_url'] }}" wire:navigate class="block">
+                                            <x-button color="blue" class="w-full">View reply</x-button>
+                                        </a>
+                                    @else
+                                        <div class="rounded-xl border border-blue-200 bg-blue-50 px-3 py-3 text-sm text-blue-900">
+                                            <p class="font-semibold">{{ $contextRelationship['status_label'] }}</p>
+                                            <p class="mt-1 text-xs leading-5">{{ $contextRelationship['status_detail'] }}</p>
+                                        </div>
+                                    @endif
+                                @else
+                                    <x-button color="blue" wire:click="openInviteModal" class="w-full">Invite to request</x-button>
+                                @endif
                                 <x-button :color="$isFavorite ? 'amber' : 'slate'" light wire:click="toggleFavorite" class="w-full">
                                     {{ $isFavorite ? 'Saved caregiver' : 'Save caregiver' }}
                                 </x-button>
@@ -127,9 +157,23 @@
             </x-slot:header>
 
             <div class="space-y-4">
-                @if (count($familyRequestOptions) === 0)
+                @if ($contextRequestSummary)
+                    <div class="rounded-xl border border-[#CFE1D8] bg-[#F2F8F4] px-4 py-3">
+                        <p class="font-semibold text-[#17313F]">{{ $contextRequestSummary['title'] }}</p>
+                        <p class="mt-1 text-sm text-[#607080]">{{ $contextRequestSummary['schedule'] }} · {{ $contextRequestSummary['location'] }}</p>
+                        <p class="mt-2 text-sm font-medium text-[#17313F]">This request is already selected.</p>
+                    </div>
+                    @error('selectedCareRequestId') <p class="text-sm text-red-600" role="alert">{{ $message }}</p> @enderror
+
+                    <x-textarea
+                        label="Invitation message (optional)"
+                        wire:model="inviteMessage"
+                        hint="You can change this note before sending."
+                    />
+                    @error('inviteMessage') <p class="text-sm text-red-600" role="alert">{{ $message }}</p> @enderror
+                @elseif (count($familyRequestOptions) === 0)
                     <x-alert color="yellow">
-                        You need an open or draft request first.
+                        You need an open request first.
                         <a href="{{ route('family.requests.create') }}" wire:navigate class="underline">Create one now</a>.
                     </x-alert>
                 @else
@@ -152,7 +196,10 @@
             <x-slot:footer>
                 <div class="flex items-center justify-between">
                     <x-button color="slate" light wire:click="$set('showInviteModal', false)">Cancel</x-button>
-                    <x-button color="blue" wire:click="sendInvite" :disabled="count($familyRequestOptions)===0">Send invitation</x-button>
+                    <x-button color="blue" wire:click="sendInvite" wire:loading.attr="disabled" wire:target="sendInvite" :disabled="!$contextRequestSummary && count($familyRequestOptions)===0">
+                        <span wire:loading.remove wire:target="sendInvite">Send invitation</span>
+                        <span wire:loading wire:target="sendInvite">Sending…</span>
+                    </x-button>
                 </div>
             </x-slot:footer>
         </x-card>

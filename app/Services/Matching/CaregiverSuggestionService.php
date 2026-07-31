@@ -2,8 +2,8 @@
 
 namespace App\Services\Matching;
 
-use App\Models\CareRequest;
 use App\Models\CaregiverProfile;
+use App\Models\CareRequest;
 use App\Support\CaregiverPrelaunch;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -26,10 +26,25 @@ class CaregiverSuggestionService
             ->values();
 
         $profiles = CaregiverProfile::query()
-            ->with(['user:id,name,city,state', 'availabilities'])
+            ->with(['user:id,name,city,state', 'availabilities', 'skills:id,name', 'languages:id,name'])
             ->where('status', 'active')
             ->where('is_accepting_new_clients', true)
+            ->whereNotNull('bio')
+            ->whereNotNull('years_experience')
+            ->whereNotNull('service_area_zip')
+            ->whereNotNull('service_radius_miles')
+            ->where(function ($query): void {
+                $query->whereNotNull('identity_verified_at')
+                    ->orWhere('identity_verification_status', 'approved');
+            })
+            ->whereHas('skills')
+            ->whereHas('languages')
+            ->whereHas('availabilities')
+            ->whereHas('user', fn ($query) => $query->where('role', 'caregiver'))
             ->whereNotIn('user_id', $excluded)
+            ->orderByDesc('top_caregiver')
+            ->orderByDesc('average_rating')
+            ->limit(max(24, $limit * 8))
             ->get();
 
         return $profiles

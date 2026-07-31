@@ -15,6 +15,8 @@ use App\Models\CareReview;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\Booking\BookingTrustService;
+use App\Services\Marketplace\CaregiverInvitationDiscoveryService;
+use App\Services\Marketplace\CareRequestInvitationService;
 use App\Services\Matching\CaregiverSuggestionService;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
@@ -60,6 +62,18 @@ class ManageCareRequest extends Component
     public string $supportCategory = 'general';
 
     public string $confirmationNote = '';
+
+    public bool $showCaregiverInvitePanel = false;
+
+    public string $caregiverSearch = '';
+
+    public ?int $confirmingCaregiverId = null;
+
+    public bool $confirmingReinvite = false;
+
+    public string $caregiverInviteMessage = '';
+
+    public ?array $caregiverInviteFeedback = null;
 
     public string $directCancelReason = '';
 
@@ -1202,71 +1216,143 @@ class ManageCareRequest extends Component
 
     public function inviteSuggestedCaregiver(int $caregiverUserId): void
     {
-        $caregiver = User::query()->select(['id', 'email'])->find($caregiverUserId);
+        $caregiver = User::query()->with('caregiverProfile')->find($caregiverUserId);
         if (! $caregiver) {
             session()->flash('status', 'Caregiver could not be found.');
 
             return;
         }
 
+        $result = app(CareRequestInvitationService::class)->send(
+            family: auth()->user(),
+            careRequest: $this->requestItem,
+            caregiver: $caregiver,
+            message: 'We think your profile could be a strong fit for this request.',
+            source: 'request_suggestion',
+        );
+
+        $this->refreshRequestItem();
+        session()->flash('status', $result->message);
+    }
+
+    public function openCaregiverInvitePanel(): void
+    {
         if ($this->requestItem->status !== CareRequest::STATUS_OPEN) {
             session()->flash('status', 'Invitations are available only for open requests.');
 
             return;
         }
 
-        $existsInFlow = $this->requestItem->applications()->where('caregiver_user_id', $caregiverUserId)->exists()
-            || $this->requestItem->invitations()->where('caregiver_user_id', $caregiverUserId)->exists();
+        $this->activeTab = 'applicants';
+        $this->showCaregiverInvitePanel = true;
+        $this->confirmingCaregiverId = null;
+        $this->confirmingReinvite = false;
+        $this->caregiverInviteFeedback = null;
+        $this->resetValidation('caregiverInviteMessage');
+        $this->dispatch('caregiver-invite-panel-opened');
+    }
 
-        if ($existsInFlow) {
-            session()->flash('status', 'Caregiver already in this request flow.');
+    public function closeCaregiverInvitePanel(): void
+    {
+        $this->showCaregiverInvitePanel = false;
+        $this->confirmingCaregiverId = null;
+        $this->confirmingReinvite = false;
+        $this->caregiverInviteMessage = '';
+        $this->caregiverInviteFeedback = null;
+        $this->resetValidation('caregiverInviteMessage');
+        $this->dispatch('caregiver-invite-panel-closed');
+    }
+
+    public function clearCaregiverSearch(): void
+    {
+        $this->caregiverSearch = '';
+        $this->caregiverInviteFeedback = null;
+    }
+
+    public function beginCaregiverInvitation(int $caregiverUserId, bool $reinvite = false): void
+    {
+        $family = auth()->user();
+        abort_unless($family, 403);
+
+        $card = app(CaregiverInvitationDiscoveryService::class)
+            ->caregiver($this->requestItem, $family, $caregiverUserId);
+
+        if (! $card) {
+            $this->caregiverInviteFeedback = [
+                'type' => 'error',
+                'message' => 'This caregiver is not currently available to invite.',
+            ];
 
             return;
         }
 
-        $invitation = CareRequestInvitation::query()->create([
-            'care_request_id' => $this->requestItem->id,
-            'family_user_id' => auth()->id(),
-            'caregiver_user_id' => $caregiverUserId,
-            'status' => CareRequestInvitation::STATUS_PENDING,
-            'message' => 'We think your profile could be a strong fit for this request.',
-            'expires_at' => now()->addHours(72),
-        ]);
+        $allowed = $reinvite ? $card['can_reinvite'] : $card['can_invite'];
+        if (! $allowed) {
+            $this->caregiverInviteFeedback = [
+                'type' => 'info',
+                'message' => $card['status_detail'],
+            ];
 
-        $caregiver = $invitation->caregiver;
-        if ($caregiver) {
-            app(MarketplaceNotificationService::class)->notify(
-                recipients: $caregiver,
-                eventKey: MarketplaceEvent::MATCHING_REQUEST_REMINDER,
-                title: 'You have a new invitation',
-                body: 'A family invited you to review their care request.',
-                url: route('caregiver.invitations.index'),
-                payload: ['care_request_id' => $this->requestItem->id],
-                subject: $invitation
-            );
+            return;
         }
 
-        app(MarketplaceNotificationService::class)->notify(
-            recipients: auth()->user(),
-            eventKey: MarketplaceEvent::INVITATION_SENT,
-            title: 'Invitation sent',
-            body: 'Your invitation was sent to the caregiver.',
-            url: route('family.requests.show', $this->requestItem->id),
-            payload: [
-                'care_request_id' => $this->requestItem->id,
-                'caregiver_user_id' => $caregiverUserId,
-            ],
-            subject: $invitation,
-            dedupeKey: 'invite-sent:invitation-'.$invitation->id.'-user-'.auth()->id()
-        );
+        $this->confirmingCaregiverId = $caregiverUserId;
+        $this->confirmingReinvite = $reinvite;
+        $this->caregiverInviteMessage = 'Hi '.$card['first_name'].', we would like to invite you to review “'.$this->requestItem->title.'”.';
+        $this->caregiverInviteFeedback = null;
+        $this->resetValidation('caregiverInviteMessage');
+        $this->dispatch('caregiver-invite-content-top');
+    }
 
-        FunnelTracker::track('care_request_invitation_sent', auth()->user(), $invitation, [
-            'care_request_id' => $this->requestItem->id,
-            'caregiver_user_id' => $caregiverUserId,
+    public function cancelCaregiverInvitation(): void
+    {
+        $this->confirmingCaregiverId = null;
+        $this->confirmingReinvite = false;
+        $this->caregiverInviteMessage = '';
+        $this->resetValidation('caregiverInviteMessage');
+        $this->dispatch('caregiver-invite-content-top');
+    }
+
+    public function sendCaregiverInvitation(): void
+    {
+        $this->validate([
+            'caregiverInviteMessage' => ['nullable', 'string', 'max:1200'],
+            'confirmingCaregiverId' => ['required', 'integer'],
+        ], [
+            'confirmingCaregiverId.required' => 'Choose a caregiver before sending an invitation.',
         ]);
 
+        $caregiver = User::query()
+            ->with('caregiverProfile')
+            ->find($this->confirmingCaregiverId);
+
+        if (! $caregiver) {
+            $this->caregiverInviteFeedback = [
+                'type' => 'error',
+                'message' => 'This caregiver could not be found. Try searching again.',
+            ];
+
+            return;
+        }
+
+        $result = app(CareRequestInvitationService::class)->send(
+            family: auth()->user(),
+            careRequest: $this->requestItem,
+            caregiver: $caregiver,
+            message: $this->caregiverInviteMessage,
+            reinvite: $this->confirmingReinvite,
+            source: 'request_search',
+        );
+
+        $this->caregiverInviteFeedback = [
+            'type' => $result->sentNow ? 'success' : 'info',
+            'message' => $result->message,
+        ];
+        $this->confirmingCaregiverId = null;
+        $this->confirmingReinvite = false;
+        $this->caregiverInviteMessage = '';
         $this->refreshRequestItem();
-        session()->flash('status', 'Invitation sent to caregiver.');
+        $this->dispatch('caregiver-invite-content-top');
     }
 
     private function deriveScheduledStartAt(): ?Carbon
@@ -1496,9 +1582,35 @@ class ManageCareRequest extends Component
             $this->activeTab = $lifecycleStage['primary_tab'];
         }
 
+        $caregiverSearchResults = collect();
+        $caregiverInitialSections = [];
+        $confirmingCaregiver = null;
+        if ($this->showCaregiverInvitePanel) {
+            $family = auth()->user();
+            $discovery = app(CaregiverInvitationDiscoveryService::class);
+            $search = trim($this->caregiverSearch);
+
+            if ($search === '') {
+                $caregiverInitialSections = $discovery->initialSections($this->requestItem, $family);
+            } elseif (mb_strlen($search) >= 2) {
+                $caregiverSearchResults = $discovery->search($this->requestItem, $family, $search);
+            }
+
+            if ($this->confirmingCaregiverId) {
+                $confirmingCaregiver = $discovery->caregiver(
+                    $this->requestItem,
+                    $family,
+                    $this->confirmingCaregiverId,
+                );
+            }
+        }
+
         return view('livewire.family.manage-care-request', [
             'suggestedCaregivers' => $suggestedCaregivers,
             'lifecycleStage' => $lifecycleStage,
+            'caregiverSearchResults' => $caregiverSearchResults,
+            'caregiverInitialSections' => $caregiverInitialSections,
+            'confirmingCaregiver' => $confirmingCaregiver,
         ]);
     }
 }

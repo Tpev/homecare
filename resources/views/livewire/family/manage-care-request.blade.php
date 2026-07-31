@@ -1,4 +1,8 @@
-<div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
+<div
+    x-data
+    x-on:caregiver-invite-panel-closed.window="$nextTick(() => $refs.inviteCaregiverTrigger?.focus())"
+    class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8"
+>
     @if (session('warning'))
         <x-alert color="amber">{{ session('warning') }}</x-alert>
     @endif
@@ -279,7 +283,7 @@
         $showApplicationList = ! $showFeaturedCaregiverDecision;
         $featuredCaregiverProfile = $featuredCaregiverApplication?->caregiver?->caregiverProfile;
         $featuredCaregiverProfileHref = $featuredCaregiverProfile?->slug
-            ? route('caregivers.show', $featuredCaregiverProfile->slug)
+            ? route('caregivers.show', ['slug' => $featuredCaregiverProfile->slug, 'careRequest' => $requestItem->id])
             : null;
         $featuredCaregiverFirstName = $featuredCaregiverApplication
             ? \Illuminate\Support\Str::of($featuredCaregiverApplication->caregiver->name)->before(' ')->trim()
@@ -357,9 +361,7 @@
                     @endif
                     @if ($isWaitingForCaregivers)
                         <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                            <a href="{{ route('caregivers.search') }}" wire:navigate class="block">
-                                <x-button color="blue" light class="w-full sm:w-auto">Find matching caregivers</x-button>
-                            </a>
+                            <x-button color="blue" light wire:click="openCaregiverInvitePanel" class="w-full sm:w-auto">Find matching caregivers</x-button>
                         </div>
                     @elseif ($isScheduledVisit)
                         <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -417,9 +419,9 @@
                             <p class="text-sm font-semibold text-[#17313F]">
                                 {{ $visibleApplicationCount }} caregiver{{ $visibleApplicationCount === 1 ? '' : 's' }} replied. Review each card below, then hire the person you trust.
                             </p>
-                            <a href="{{ route('caregivers.search') }}" wire:navigate class="inline-flex min-h-11 items-center justify-center rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] px-4 text-sm font-semibold text-[#0F3D3E] transition hover:bg-[#F5F1EB]">
-                                Invite more
-                            </a>
+                            <button type="button" wire:click="openCaregiverInvitePanel" class="inline-flex min-h-11 items-center justify-center rounded-[1rem] border border-[#DED6CA] bg-[#FFFCF8] px-4 text-sm font-semibold text-[#0F3D3E] transition hover:bg-[#F5F1EB] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF]">
+                                Invite someone else
+                            </button>
                         </div>
                     @elseif ($showFeaturedCaregiverDecision)
                         <div class="mt-4 rounded-2xl border border-[#CFE1D8] bg-white p-4">
@@ -457,11 +459,11 @@
                                     </a>
                                 @endif
                             </div>
-                            <div class="mt-3 rounded-xl border border-dashed border-[#CFE1D8] bg-[#F6FBF8] px-3 py-2 text-sm text-[#4B5B6B]">
-                                Need more choices?
-                                <a href="{{ route('caregivers.search') }}" wire:navigate class="font-semibold text-[#0F3D3E] underline underline-offset-2">
-                                    Invite more caregivers
-                                </a>
+                            <div class="mt-3 flex flex-col gap-3 rounded-xl border border-[#CFE1D8] bg-[#F6FBF8] px-3 py-3 text-sm text-[#4B5B6B] sm:flex-row sm:items-center sm:justify-between">
+                                <p>Need more choices? Invite more caregivers by searching for a specific person without leaving this request.</p>
+                                <button type="button" wire:click="openCaregiverInvitePanel" class="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-xl bg-[#0F3D3E] px-4 py-2 font-semibold text-white hover:bg-[#17313F] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF] sm:w-auto">
+                                    Invite someone you know
+                                </button>
                             </div>
                         </div>
                     @endif
@@ -586,7 +588,7 @@
                 @php
                     $selectedCaregiverProfile = $hiredApplication->caregiver->caregiverProfile;
                     $selectedCaregiverProfileHref = $selectedCaregiverProfile?->slug
-                        ? route('caregivers.show', $selectedCaregiverProfile->slug)
+                        ? route('caregivers.show', ['slug' => $selectedCaregiverProfile->slug, 'careRequest' => $requestItem->id])
                         : null;
                     $selectedCaregiverRate = $pricing->hourlyRateForFamily(
                         $requestItem->family,
@@ -678,8 +680,101 @@
                 </div>
             </x-slot:header>
 
+            @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN)
+                <section class="mb-5 rounded-2xl border border-[#8FB7AB] bg-[#F2F8F4] p-4 sm:p-5" aria-labelledby="invite-known-caregiver-heading">
+                    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div class="min-w-0">
+                            <p class="hc-brand-kicker">Looking for a specific person?</p>
+                            <h3 id="invite-known-caregiver-heading" class="mt-1 font-display text-xl font-semibold text-[#17313F]">Invite someone you know</h3>
+                            <p class="mt-1 max-w-2xl text-sm leading-6 text-[#4B5B6B]">Search by name and invite them without leaving this request or choosing the request again.</p>
+                        </div>
+                        <button
+                            x-ref="inviteCaregiverTrigger"
+                            id="invite-known-caregiver-button"
+                            type="button"
+                            wire:click="openCaregiverInvitePanel"
+                            class="inline-flex min-h-12 w-full shrink-0 items-center justify-center rounded-xl bg-[#0F3D3E] px-5 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-[#17313F] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF] focus:ring-offset-2 md:w-auto"
+                        >
+                            Search and invite
+                        </button>
+                    </div>
+                </section>
+            @endif
+
+            @php
+                $currentInvitations = $requestItem->invitations
+                    ->filter(fn ($invitation) => in_array($invitation->status, [
+                        \App\Models\CareRequestInvitation::STATUS_PENDING,
+                        \App\Models\CareRequestInvitation::STATUS_ACCEPTED,
+                    ], true) && ! $invitation->isExpired())
+                    ->sortByDesc('created_at');
+                $historicalInvitations = $requestItem->invitations
+                    ->reject(fn ($invitation) => $currentInvitations->contains('id', $invitation->id))
+                    ->sortByDesc('created_at');
+            @endphp
+
+            <section class="mb-5" aria-labelledby="people-invited-heading">
+                <div class="flex flex-wrap items-end justify-between gap-2">
+                    <div>
+                        <h3 id="people-invited-heading" class="font-display text-lg font-semibold text-[#17313F]">People you invited</h3>
+                        <p class="mt-1 text-sm text-[#607080]">Invitations are separate from caregivers who replied.</p>
+                    </div>
+                    <span class="text-sm text-[#607080]">{{ $requestItem->invitations->count() }} total</span>
+                </div>
+
+                @if ($currentInvitations->isNotEmpty())
+                    <ul class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2" role="list">
+                        @foreach ($currentInvitations as $invitation)
+                            @php
+                                $invitationLabel = $invitation->status === \App\Models\CareRequestInvitation::STATUS_ACCEPTED
+                                    ? 'Accepted invitation'
+                                    : 'Invitation sent';
+                            @endphp
+                            <li class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+                                <div class="flex flex-wrap items-start justify-between gap-2">
+                                    <p class="break-words font-semibold text-[#17313F]">{{ $invitation->caregiver?->name ?: 'Caregiver' }}</p>
+                                    <span class="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-blue-800">{{ $invitationLabel }}</span>
+                                </div>
+                                <p class="mt-1 text-sm text-[#4B5B6B]">
+                                    {{ $invitation->status === \App\Models\CareRequestInvitation::STATUS_PENDING ? 'Sent '.$invitation->created_at?->diffForHumans() : 'Replied '.$invitation->responded_at?->diffForHumans() }}
+                                </p>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <div class="mt-3 rounded-xl border border-dashed border-[#D6CCBE] bg-[#FFFCF8] px-4 py-4 text-sm text-[#607080]">
+                        No active invitations yet.
+                    </div>
+                @endif
+
+                @if ($historicalInvitations->isNotEmpty())
+                    <details class="mt-3 rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3">
+                        <summary class="min-h-11 cursor-pointer list-none py-2 text-sm font-semibold text-[#17313F] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF] [&::-webkit-details-marker]:hidden">
+                            Past invitations ({{ $historicalInvitations->count() }})
+                        </summary>
+                        <ul class="space-y-2 border-t border-[#E4DDD3] pt-3" role="list">
+                            @foreach ($historicalInvitations as $invitation)
+                                @php
+                                    $historicalStatus = $invitation->isExpired()
+                                        ? \App\Models\CareRequestInvitation::STATUS_EXPIRED
+                                        : $invitation->status;
+                                @endphp
+                                <li class="flex flex-col gap-1 rounded-lg bg-white px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
+                                    <span class="break-words font-medium text-[#17313F]">{{ $invitation->caregiver?->name ?: 'Caregiver' }}</span>
+                                    <span class="text-[#607080]">{{ ucfirst($historicalStatus) }} · {{ $invitation->updated_at?->format('M j, Y') }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </details>
+                @endif
+            </section>
+
             @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $isWaitingForCaregivers)
+                <section aria-labelledby="recommended-caregivers-heading">
+                    <h3 id="recommended-caregivers-heading" class="font-display text-lg font-semibold text-[#17313F]">Recommended caregivers</h3>
+                    <p class="mb-3 mt-1 text-sm text-[#607080]">Suggestions based on this request’s schedule and location.</p>
                 @include('livewire.family.partials.caregiver-suggestions', ['suggestedCaregivers' => $suggestedCaregivers])
+                </section>
                 <div class="mt-4 rounded-2xl border border-dashed border-[#D6CCBE] bg-[#FFFCF8] px-4 py-3 text-sm text-[#4B5B6B]">
                     After a caregiver replies, this screen changes to compare, chat, and hire.
                 </div>
@@ -713,6 +808,10 @@
             @endif
 
             @if ((! $isWaitingForCaregivers || $requestItem->applications->count() > 0) && $showApplicationList)
+            <div class="mb-3">
+                <h3 class="font-display text-lg font-semibold text-[#17313F]">Caregivers who replied</h3>
+                <p class="mt-1 text-sm text-[#607080]">Review their reply, profile, or start a conversation.</p>
+            </div>
             <div id="caregiver-comparison-list" class="space-y-3 scroll-mt-28">
                 @forelse ($visibleApplications as $application)
                     @php
@@ -722,7 +821,7 @@
                             : null;
                         $averageRating = $caregiverProfile?->average_rating ? (float) $caregiverProfile->average_rating : null;
                         $reviewsCount = (int) ($caregiverProfile?->reviews_count ?? 0);
-                        $profileHref = $caregiverProfile?->slug ? route('caregivers.show', $caregiverProfile->slug) : null;
+                        $profileHref = $caregiverProfile?->slug ? route('caregivers.show', ['slug' => $caregiverProfile->slug, 'careRequest' => $requestItem->id]) : null;
                         $yearsExperience = (int) ($caregiverProfile?->years_experience ?? 0);
                         $skills = $caregiverProfile?->skills ?? collect();
                         $languages = $caregiverProfile?->languages ?? collect();
@@ -879,15 +978,13 @@
             @endif
 
             @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && ! $isWaitingForCaregivers)
-                <details class="mt-4 rounded-2xl border border-[#BDD4F7] bg-[#EEF5FF] px-4 py-3">
-                    <summary class="cursor-pointer list-none font-display text-base font-semibold text-[#17313F] [&::-webkit-details-marker]:hidden">
-                        Need more choices? Invite more caregivers
-                    </summary>
-                    <p class="mt-2 text-sm text-[#607080]">Keep reviewing replies above, or invite another matching caregiver if no one feels right yet.</p>
+                <section class="mt-5 rounded-2xl border border-[#BDD4F7] bg-[#EEF5FF] px-4 py-4" aria-labelledby="more-recommended-caregivers-heading">
+                    <h3 id="more-recommended-caregivers-heading" class="font-display text-lg font-semibold text-[#17313F]">Recommended caregivers</h3>
+                    <p class="mt-1 text-sm text-[#607080]">Keep reviewing replies above, or invite another matching caregiver if no one feels right yet.</p>
                     <div class="mt-4">
                         @include('livewire.family.partials.caregiver-suggestions', ['suggestedCaregivers' => $suggestedCaregivers])
                     </div>
-                </details>
+                </section>
             @endif
         </x-card>
     @endif
@@ -1538,6 +1635,10 @@
                 </x-button>
             </div>
         </details>
+    @endif
+
+    @if ($showCaregiverInvitePanel)
+        @include('livewire.family.partials.caregiver-invite-panel')
     @endif
 </div>
 

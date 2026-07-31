@@ -16,7 +16,9 @@ class CaregiverProfile extends Model
     use HasFactory;
 
     public const INSURANCE_NOT_PROVIDED = 'not_provided';
+
     public const INSURANCE_NO = 'no_insurance';
+
     public const INSURANCE_YES = 'insured';
 
     protected $fillable = [
@@ -97,7 +99,7 @@ class CaregiverProfile extends Model
     {
         static::saving(function (self $profile): void {
             if (! $profile->slug && $profile->relationLoaded('user')) {
-                $profile->slug = Str::slug($profile->user->name . '-' . $profile->user_id);
+                $profile->slug = Str::slug($profile->user->name.'-'.$profile->user_id);
             }
 
             $pricing = app(MarketplacePricing::class);
@@ -187,9 +189,9 @@ class CaregiverProfile extends Model
             'years_experience' => ! is_null($this->years_experience),
             'service_area_zip' => filled($this->service_area_zip),
             'service_radius_miles' => ! is_null($this->service_radius_miles),
-            'tasks' => $this->skills()->exists(),
-            'languages' => $this->languages()->exists(),
-            'availability' => $this->availabilities()->exists(),
+            'tasks' => $this->relationLoaded('skills') ? $this->skills->isNotEmpty() : $this->skills()->exists(),
+            'languages' => $this->relationLoaded('languages') ? $this->languages->isNotEmpty() : $this->languages()->exists(),
+            'availability' => $this->relationLoaded('availabilities') ? $this->availabilities->isNotEmpty() : $this->availabilities()->exists(),
             'identity_verification' => $this->hasIdentityVerifiedBadge(),
         ];
     }

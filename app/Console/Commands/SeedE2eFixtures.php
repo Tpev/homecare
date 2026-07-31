@@ -125,6 +125,7 @@ class SeedE2eFixtures extends Command
             fn (int $id) => [$id => ['task_note' => null]]
         )->all());
 
+        $this->seedInvitationVisualRequest($family, $taskIds);
         $this->seedRegularCare($family, $readyCaregiver, $taskIds);
 
         $this->line('E2E fixtures ready');
@@ -138,6 +139,62 @@ class SeedE2eFixtures extends Command
         $this->line('Primary request ID: '.$request->id);
 
         return self::SUCCESS;
+    }
+
+    /** @param list<int> $taskIds */
+    private function seedInvitationVisualRequest(User $family, array $taskIds): void
+    {
+        $this->makeVisualCaregiver('Visual Available Caregiver', 'visual-available-caregiver', 201);
+        $notAcceptingCaregiver = $this->makeVisualCaregiver('Visual Paused Caregiver', 'visual-paused-caregiver', 202);
+        $notAcceptingCaregiver->caregiverProfile->update(['is_accepting_new_clients' => false]);
+        $repliedCaregiver = $this->makeVisualCaregiver('Visual Replied Caregiver', 'visual-replied-caregiver', 203);
+
+        $visualRequest = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'E2E Invitation Visual States',
+            'scope_of_work' => 'Companionship and meal preparation.',
+            'status' => CareRequest::STATUS_OPEN,
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'requested_start_at' => now()->addDays(3)->setTime(10, 0),
+            'requested_end_at' => now()->addDays(3)->setTime(13, 0),
+            'address_line1' => '456 Visual State Lane',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+        ]);
+        $visualRequest->recipient()->create([
+            'full_name' => 'E2E Visual Recipient',
+            'relationship_to_family' => 'Father',
+        ]);
+        $visualRequest->tasks()->sync(collect($taskIds)->mapWithKeys(
+            fn (int $id) => [$id => ['task_note' => null]]
+        )->all());
+        CareRequestApplication::query()->create([
+            'care_request_id' => $visualRequest->id,
+            'caregiver_user_id' => $repliedCaregiver->id,
+            'status' => CareRequestApplication::STATUS_APPLIED,
+            'proposed_rate' => 30,
+            'cover_note' => 'I am interested in helping with this request.',
+        ]);
+    }
+
+    private function makeVisualCaregiver(string $name, string $slug, int $emailSuffix): User
+    {
+        $caregiver = User::query()->create([
+            'name' => $name,
+            'email' => 'caregiver.visual.'.$emailSuffix.'@example.com',
+            'role' => 'caregiver',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'date_of_birth' => now()->subYears(35)->toDateString(),
+            'onboarding_completed_at' => now(),
+            'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+        ]);
+        $profile = $this->makeMarketplaceReadyProfile($caregiver, $slug);
+        $this->attachCatalogToProfile($profile);
+
+        return $caregiver->fresh('caregiverProfile');
     }
 
     /** @param list<int> $taskIds */
