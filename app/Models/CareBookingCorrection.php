@@ -30,6 +30,10 @@ class CareBookingCorrection extends Model
         'care_booking_id',
         'support_ticket_id',
         'actor_admin_user_id',
+        'source',
+        'time_correction_request_id',
+        'requester_user_id',
+        'approved_by_user_id',
         'action',
         'status',
         'attempt_count',
@@ -80,6 +84,10 @@ class CareBookingCorrection extends Model
                 'care_booking_id',
                 'support_ticket_id',
                 'actor_admin_user_id',
+                'source',
+                'time_correction_request_id',
+                'requester_user_id',
+                'approved_by_user_id',
                 'action',
                 'previous_charge_cents',
                 'target_charge_cents',
@@ -113,6 +121,21 @@ class CareBookingCorrection extends Model
     public function actorAdmin(): BelongsTo
     {
         return $this->belongsTo(User::class, 'actor_admin_user_id');
+    }
+
+    public function timeCorrectionRequest(): BelongsTo
+    {
+        return $this->belongsTo(CareBookingTimeCorrection::class, 'time_correction_request_id');
+    }
+
+    public function requester(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'requester_user_id');
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by_user_id');
     }
 
     public function succeeded(): bool

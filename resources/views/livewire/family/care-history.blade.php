@@ -89,7 +89,7 @@
         <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <div>
                 <label for="care-history-search" class="block text-sm font-medium text-[#324457]">Search</label>
-                <input id="care-history-search" type="search" wire:model.live.debounce.350ms="search" placeholder="Booking #, person, or title" class="mt-1 h-11 w-full rounded-xl border border-[#DED6CA] bg-white px-3 text-sm text-[#17313F] shadow-sm outline-none transition placeholder:text-[#8A96A3] focus:border-[#4F6FAF] focus:ring-2 focus:ring-[#4F6FAF]/20">
+                <input id="care-history-search" type="search" wire:model.change="search" placeholder="Booking #, person, or title" class="mt-1 h-11 w-full rounded-xl border border-[#DED6CA] bg-white px-3 text-sm text-[#17313F] shadow-sm outline-none transition placeholder:text-[#8A96A3] focus:border-[#4F6FAF] focus:ring-2 focus:ring-[#4F6FAF]/20">
             </div>
             <x-native-select-field label="Date range" wire:model.live="range" :options="$rangeOptions" id="care-history-range" />
             <x-native-select-field label="Care type" wire:model.live="careType" :options="$careTypeOptions" id="care-history-type" />
@@ -104,11 +104,11 @@
             <div class="mt-3 grid gap-3 rounded-2xl border border-[#E4DDD3] bg-white p-3 sm:grid-cols-2">
                 <div>
                     <label for="care-history-from" class="block text-sm font-medium text-[#324457]">From</label>
-                    <input id="care-history-from" type="date" wire:model.live="from" class="mt-1 h-11 w-full rounded-xl border border-[#DED6CA] bg-white px-3 text-sm text-[#17313F] focus:border-[#4F6FAF] focus:ring-2 focus:ring-[#4F6FAF]/20">
+                    <input id="care-history-from" type="date" wire:model.change="from" class="mt-1 h-11 w-full rounded-xl border border-[#DED6CA] bg-white px-3 text-sm text-[#17313F] focus:border-[#4F6FAF] focus:ring-2 focus:ring-[#4F6FAF]/20">
                 </div>
                 <div>
                     <label for="care-history-to" class="block text-sm font-medium text-[#324457]">To</label>
-                    <input id="care-history-to" type="date" wire:model.live="to" class="mt-1 h-11 w-full rounded-xl border border-[#DED6CA] bg-white px-3 text-sm text-[#17313F] focus:border-[#4F6FAF] focus:ring-2 focus:ring-[#4F6FAF]/20">
+                    <input id="care-history-to" type="date" wire:model.change="to" class="mt-1 h-11 w-full rounded-xl border border-[#DED6CA] bg-white px-3 text-sm text-[#17313F] focus:border-[#4F6FAF] focus:ring-2 focus:ring-[#4F6FAF]/20">
                 </div>
             </div>
         @endif
@@ -141,6 +141,9 @@
                                     <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $visitClass }}">{{ $item['visit_status_label'] }}</span>
                                     @if ($item['adjusted'])
                                         <span class="rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-semibold text-indigo-800">Adjusted</span>
+                                    @endif
+                                    @if ($item['time_correction'])
+                                        <span class="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-900">{{ $item['time_correction']['status_label'] }}</span>
                                     @endif
                                 </div>
 
@@ -185,6 +188,19 @@
                             </summary>
                             <div class="space-y-4 border-t border-[#E4DDD3] p-4">
                                 <p class="rounded-xl border border-[#D8E1D7] bg-[#F6FBF8] px-3 py-2 text-sm text-[#2F6B55]">{{ $item['visit_status_help'] }}</p>
+
+                                @if ($item['time_correction'])
+                                    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                            <div>
+                                                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-amber-800">Time correction · Version {{ $item['time_correction']['version'] }}</p>
+                                                <p class="mt-1 font-semibold text-[#17313F]">{{ $item['time_correction']['status_label'] }}</p>
+                                                <p class="mt-1 text-sm text-[#526474]">{{ $item['time_correction']['reason_label'] }} · {{ $item['time_correction']['duration_label'] }}</p>
+                                            </div>
+                                            <p class="text-sm font-semibold text-[#17313F]">{{ $item['time_correction']['family_amount_label'] }}</p>
+                                        </div>
+                                    </div>
+                                @endif
 
                                 <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                                     <div>

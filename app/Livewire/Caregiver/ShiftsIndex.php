@@ -49,10 +49,14 @@ class ShiftsIndex extends Component
                 'family:id,name',
                 'application:id,care_request_id,caregiver_user_id,status,proposed_rate',
                 'application.conversation:id,care_request_application_id',
+                'timeCorrections' => fn ($query) => $query->orderByDesc('version'),
             ])
             ->where('caregiver_user_id', $caregiverId);
 
-        if ($this->status !== 'all') {
+        if ($this->status === 'time_correction') {
+            $bookingsQuery->whereHas('timeCorrections', fn ($query) => $query
+                ->where('status', \App\Models\CareBookingTimeCorrection::STATUS_CHANGES_REQUESTED));
+        } elseif ($this->status !== 'all') {
             $bookingsQuery->where('status', $this->status);
         }
 
@@ -92,6 +96,11 @@ class ShiftsIndex extends Component
             'issues' => CareBooking::query()
                 ->where('caregiver_user_id', $caregiverId)
                 ->whereIn('status', [CareBooking::STATUS_DISPUTED, CareBooking::STATUS_CANCELLED])
+                ->count(),
+            'time_correction_actions' => CareBooking::query()
+                ->where('caregiver_user_id', $caregiverId)
+                ->whereHas('timeCorrections', fn ($query) => $query
+                    ->where('status', \App\Models\CareBookingTimeCorrection::STATUS_CHANGES_REQUESTED))
                 ->count(),
         ];
 

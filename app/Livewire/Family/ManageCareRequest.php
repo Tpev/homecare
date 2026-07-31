@@ -7,6 +7,7 @@ use App\Models\CareBooking;
 use App\Models\CareBookingChangeRequest;
 use App\Models\CareBookingIncident;
 use App\Models\CareBookingPayment;
+use App\Models\CareBookingTimeCorrection;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
@@ -15,6 +16,7 @@ use App\Models\CareReview;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\Booking\BookingTrustService;
+use App\Services\Booking\CareBookingTimeCorrectionService;
 use App\Services\Marketplace\CaregiverInvitationDiscoveryService;
 use App\Services\Marketplace\CareRequestInvitationService;
 use App\Services\Matching\CaregiverSuggestionService;
@@ -85,6 +87,10 @@ class ManageCareRequest extends Component
 
     public string $incidentSeverity = 'medium';
 
+    public string $timeCorrectionResponseNote = '';
+
+    public ?int $confirmingTimeCorrectionId = null;
+
     public array $applicationStatusOptions = [
         ['label' => 'All caregivers', 'value' => 'all'],
         ['label' => 'Interested', 'value' => CareRequestApplication::STATUS_APPLIED],
@@ -105,6 +111,10 @@ class ManageCareRequest extends Component
                 'tasks',
                 'booking',
                 'booking.payment',
+                'booking.carePlan:id,timezone',
+                'booking.timeCorrections' => fn ($query) => $query
+                    ->with(['requester:id,name', 'approvedBy:id,name', 'supportTicket:id,status'])
+                    ->orderByDesc('version'),
                 'booking.taskChecks',
                 'booking.events.actor:id,name',
                 'booking.incidents.reporter:id,name',
@@ -491,6 +501,17 @@ class ManageCareRequest extends Component
         $this->refreshRequestItem();
 
         if ($payment->status === CareBookingPayment::STATUS_AUTHORIZED) {
+            $correction = app(CareBookingTimeCorrectionService::class)->activeForBooking($booking);
+            if ($correction?->status === CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED) {
+                $correction = app(CareBookingTimeCorrectionService::class)->resumeApproved($correction, auth()->user());
+                $this->refreshRequestItem();
+                session()->flash('status', $correction->status === CareBookingTimeCorrection::STATUS_APPLIED
+                    ? 'Visit time updated and payment completed.'
+                    : 'Hours remain approved. Payment still needs attention.');
+
+                return;
+            }
+
             session()->flash('status', 'Card pre-authorization complete. This visit is now payment protected.');
 
             return;
@@ -516,6 +537,96 @@ class ManageCareRequest extends Component
 
         $this->refreshRequestItem();
         session()->flash('status', $payment?->last_error ?: ($message !== '' ? $message : 'Card authorization failed.'));
+    }
+
+    public function beginTimeCorrectionApproval(int $correctionId): void
+    {
+        $correction = $this->ownedTimeCorrection($correctionId);
+        if ($correction->status !== CareBookingTimeCorrection::STATUS_PENDING_FAMILY) {
+            session()->flash('status', 'A newer time correction is available.');
+
+            return;
+        }
+
+        $this->confirmingTimeCorrectionId = $correction->id;
+        $this->resetValidation();
+        $this->dispatch('time-correction-approval-opened');
+    }
+
+    public function cancelTimeCorrectionApproval(): void
+    {
+        $this->confirmingTimeCorrectionId = null;
+        $this->dispatch('time-correction-approval-closed');
+    }
+
+    public function approveTimeCorrection(int $correctionId): void
+    {
+        abort_unless((int) $this->confirmingTimeCorrectionId === $correctionId, 403);
+        $correction = app(CareBookingTimeCorrectionService::class)->approve(
+            $this->ownedTimeCorrection($correctionId),
+            auth()->user(),
+        );
+        $this->confirmingTimeCorrectionId = null;
+        $this->refreshRequestItem();
+
+        if ($correction->status === CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED) {
+            $payment = $this->requestItem->booking?->payment;
+            if ($payment) {
+                $this->dispatchPaymentConfirmation($payment);
+            }
+            session()->flash('status', 'Hours approved — payment confirmation needed.');
+
+            return;
+        }
+
+        session()->flash('status', $correction->status === CareBookingTimeCorrection::STATUS_APPROVED_ADMIN_REQUIRED
+            ? 'Hours approved. LoLo will review the existing payment before updating the visit.'
+            : 'Visit time approved and updated.');
+    }
+
+    public function requestTimeCorrectionChanges(int $correctionId): void
+    {
+        app(CareBookingTimeCorrectionService::class)->requestChanges(
+            $this->ownedTimeCorrection($correctionId),
+            auth()->user(),
+            $this->timeCorrectionResponseNote,
+        );
+        $this->timeCorrectionResponseNote = '';
+        $this->confirmingTimeCorrectionId = null;
+        $this->refreshRequestItem();
+        session()->flash('status', 'Your note was sent to the caregiver.');
+    }
+
+    public function continueTimeCorrectionPayment(int $correctionId): void
+    {
+        $correction = app(CareBookingTimeCorrectionService::class)->resumeApproved(
+            $this->ownedTimeCorrection($correctionId),
+            auth()->user(),
+        );
+        $this->refreshRequestItem();
+
+        if ($correction->status === CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED) {
+            $payment = $this->requestItem->booking?->payment;
+            if ($payment) {
+                $this->dispatchPaymentConfirmation($payment);
+            }
+            session()->flash('status', 'Confirm billing in the secure Stripe window.');
+
+            return;
+        }
+
+        session()->flash('status', 'Visit time updated and payment completed.');
+    }
+
+    public function escalateTimeCorrection(int $correctionId): void
+    {
+        app(CareBookingTimeCorrectionService::class)->escalate(
+            $this->ownedTimeCorrection($correctionId),
+            auth()->user(),
+            'The family asked LoLo to help resolve the visit time.',
+        );
+        $this->refreshRequestItem();
+        session()->flash('status', 'LoLo support will review this visit.');
     }
 
     public function completeBooking(): void
@@ -850,7 +961,7 @@ class ManageCareRequest extends Component
         $this->validate([
             'supportSubject' => ['required', 'string', 'min:8', 'max:160'],
             'supportDescription' => ['required', 'string', 'min:12', 'max:4000'],
-            'supportCategory' => ['required', Rule::in(['general', 'dispute', 'incident', 'cancellation', 'billing'])],
+            'supportCategory' => ['required', Rule::in(['general', 'dispute', 'incident', 'cancellation', 'billing', 'time_correction'])],
         ]);
 
         SupportTicket::query()->create([
@@ -1428,6 +1539,10 @@ class ManageCareRequest extends Component
             'tasks',
             'booking',
             'booking.payment',
+            'booking.carePlan:id,timezone',
+            'booking.timeCorrections' => fn ($query) => $query
+                ->with(['requester:id,name', 'approvedBy:id,name', 'supportTicket:id,status'])
+                ->orderByDesc('version'),
             'booking.taskChecks',
             'booking.events.actor:id,name',
             'booking.incidents.reporter:id,name',
@@ -1452,6 +1567,10 @@ class ManageCareRequest extends Component
                 'tasks',
                 'booking',
                 'booking.payment',
+                'booking.carePlan:id,timezone',
+                'booking.timeCorrections' => fn ($query) => $query
+                    ->with(['requester:id,name', 'approvedBy:id,name', 'supportTicket:id,status'])
+                    ->orderByDesc('version'),
                 'booking.taskChecks',
                 'booking.events.actor:id,name',
                 'booking.incidents.reporter:id,name',
@@ -1550,6 +1669,14 @@ class ManageCareRequest extends Component
             paymentIntentId: (string) $payment->stripe_payment_intent_id,
             bookingId: (int) $payment->care_booking_id,
         );
+    }
+
+    private function ownedTimeCorrection(int $correctionId): CareBookingTimeCorrection
+    {
+        return CareBookingTimeCorrection::query()
+            ->where('family_user_id', auth()->id())
+            ->where('care_booking_id', $this->requestItem->booking?->id)
+            ->findOrFail($correctionId);
     }
 
     public function getVisibleApplicationsProperty()

@@ -219,6 +219,16 @@ class CareBooking extends Model
         return $this->hasMany(CareBookingCorrection::class)->latest();
     }
 
+    public function timeCorrections(): HasMany
+    {
+        return $this->hasMany(CareBookingTimeCorrection::class)->latest('version');
+    }
+
+    public function latestTimeCorrection(): HasOne
+    {
+        return $this->hasOne(CareBookingTimeCorrection::class)->latestOfMany('version');
+    }
+
     public function taskChecks(): HasMany
     {
         return $this->hasMany(CareBookingTaskCheck::class);

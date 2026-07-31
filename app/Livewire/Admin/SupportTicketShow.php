@@ -3,10 +3,12 @@
 namespace App\Livewire\Admin;
 
 use App\Models\CareBookingCorrection;
+use App\Models\CareBookingTimeCorrection;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Models\User;
 use App\Services\Booking\BookingCorrectionService;
+use App\Services\Booking\CareBookingTimeCorrectionService;
 use App\Services\Support\SupportTicketMessagingService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -241,6 +243,11 @@ class SupportTicketShow extends Component
                 'careBooking.caregiver.caregiverProfile:id,user_id,platform_hourly_rate,stripe_connect_account_id,stripe_charges_enabled,stripe_payouts_enabled',
                 'careBooking.application:id,care_request_id,caregiver_user_id,proposed_rate',
                 'careBooking.payoutItem.payout',
+                'timeCorrection.requester:id,name,email',
+                'timeCorrection.approvedBy:id,name,email',
+                'timeCorrection.booking.timeCorrections' => fn ($query) => $query
+                    ->with(['requester:id,name', 'approvedBy:id,name'])
+                    ->orderBy('version'),
             ])
             ->findOrFail($this->ticketId);
 
@@ -331,9 +338,14 @@ class SupportTicketShow extends Component
             return;
         }
 
-        $this->correctionStartedAt = ($booking->started_at ?: $booking->scheduled_start_at)?->format('Y-m-d\TH:i') ?: '';
-        $this->correctionCompletedAt = ($booking->completed_at ?: $booking->scheduled_end_at)?->format('Y-m-d\TH:i') ?: '';
-        $this->correctionBreakMinutes = (string) max(0, (int) round(((int) $booking->total_paused_seconds) / 60));
+        $timeCorrection = $ticket->timeCorrection()->first();
+        $this->correctionStartedAt = ($timeCorrection?->proposed_started_at ?: $booking->started_at ?: $booking->scheduled_start_at)?->format('Y-m-d\TH:i') ?: '';
+        $this->correctionCompletedAt = ($timeCorrection?->proposed_completed_at ?: $booking->completed_at ?: $booking->scheduled_end_at)?->format('Y-m-d\TH:i') ?: '';
+        $this->correctionBreakMinutes = (string) ($timeCorrection?->proposed_break_minutes ?? max(0, (int) round(((int) $booking->total_paused_seconds) / 60)));
+        if ($timeCorrection) {
+            $this->correctionReason = 'Time correction #'.$timeCorrection->id.' (version '.$timeCorrection->version.'): '.$timeCorrection->explanation;
+            $this->correctionFamilyApproved = (bool) $timeCorrection->approved_at;
+        }
     }
 
     private function handleCorrectionOutcome(
@@ -354,6 +366,15 @@ class SupportTicketShow extends Component
             $this->syncControlsFromTicket();
 
             return;
+        }
+
+        if ($correction->time_correction_request_id) {
+            $timeCorrection = CareBookingTimeCorrection::query()->findOrFail($correction->time_correction_request_id);
+            app(CareBookingTimeCorrectionService::class)->completeAdminApplication(
+                $timeCorrection,
+                $correction,
+                auth()->user(),
+            );
         }
 
         $preview = (array) $correction->preview;

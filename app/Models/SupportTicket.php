@@ -117,6 +117,11 @@ class SupportTicket extends Model
         return $this->hasMany(CareBookingCorrection::class)->latest();
     }
 
+    public function timeCorrection(): HasOne
+    {
+        return $this->hasOne(CareBookingTimeCorrection::class);
+    }
+
     public function isUnreadForOpener(): bool
     {
         return $this->last_public_message_at

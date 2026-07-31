@@ -50,10 +50,18 @@ test.describe('Support + Admin Ticket Flow', () => {
 
         await loginAs(page, 'admin');
         await page.goto('/admin/support/tickets');
-        const ticketCard = page.locator('div').filter({ hasText: ticketSubject }).first();
+        const ticketCard = page.locator('div.rounded-lg.border.p-3').filter({ hasText: ticketSubject });
         await expect(ticketCard).toBeVisible();
-        await ticketCard.getByPlaceholder('Admin note').fill('E2E reviewed and acknowledged.');
-        await ticketCard.getByRole('button', { name: 'Resolve' }).click();
-        await expect(page.getByText('Ticket updated.')).toBeVisible();
+        await ticketCard.getByRole('link', { name: 'Open conversation' }).click();
+        await expect(page.getByRole('heading', { name: ticketSubject })).toBeVisible();
+
+        await page.getByText('Internal note', { exact: true }).click();
+        await page.getByPlaceholder('Add a private note for admins...').fill('E2E reviewed and acknowledged.');
+        await page.getByRole('button', { name: 'Add note' }).click();
+        await expect(page.getByText('E2E reviewed and acknowledged.')).toBeVisible();
+
+        await page.getByLabel('Status').selectOption('resolved');
+        await page.getByRole('button', { name: 'Update status' }).click();
+        await expect(page.getByText('Ticket status updated.')).toBeVisible();
     });
 });

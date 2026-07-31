@@ -14,7 +14,7 @@
                         Start date
                         <input
                             type="date"
-                            wire:model.live.debounce.500ms="startDate"
+                            wire:model.change="startDate"
                             class="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                         >
                     </label>
@@ -23,7 +23,7 @@
                         End date
                         <input
                             type="date"
-                            wire:model.live.debounce.500ms="endDate"
+                            wire:model.change="endDate"
                             class="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                         >
                     </label>

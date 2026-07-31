@@ -3,18 +3,22 @@
 namespace App\Console\Commands;
 
 use App\Models\CareBooking;
+use App\Models\CareBookingTimeCorrection;
 use App\Models\CaregiverProfile;
+use App\Models\CarePlan;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareTask;
 use App\Models\Language;
 use App\Models\Skill;
+use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\Booking\BookingTrustService;
 use App\Services\RegularCare\CarePlanHealthService;
 use App\Services\RegularCare\CarePlanService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class SeedE2eFixtures extends Command
 {
@@ -126,6 +130,10 @@ class SeedE2eFixtures extends Command
         )->all());
 
         $this->seedInvitationVisualRequest($family, $taskIds);
+        $this->seedMissedRegularVisit($family, $readyCaregiver, $taskIds);
+        $this->seedTimeCorrectionState($family, $readyCaregiver, $taskIds, CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED, 'E2E Time Correction - Payment Action');
+        $this->seedTimeCorrectionState($family, $readyCaregiver, $taskIds, CareBookingTimeCorrection::STATUS_APPROVED_ADMIN_REQUIRED, 'E2E Time Correction - Admin Required');
+        $this->seedTimeCorrectionState($family, $readyCaregiver, $taskIds, CareBookingTimeCorrection::STATUS_ESCALATED, 'E2E Time Correction - Escalated');
         $this->seedRegularCare($family, $readyCaregiver, $taskIds);
 
         $this->line('E2E fixtures ready');
@@ -195,6 +203,189 @@ class SeedE2eFixtures extends Command
         $this->attachCatalogToProfile($profile);
 
         return $caregiver->fresh('caregiverProfile');
+    }
+
+    /** @param list<int> $taskIds */
+    private function seedMissedRegularVisit(User $family, User $caregiver, array $taskIds): void
+    {
+        $start = now()->subDay()->setTime(7, 30);
+        $end = $start->copy()->addHours(2);
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'E2E Missed Regular Visit - Time Correction',
+            'additional_info' => 'Past regular-care occurrence for time-correction browser coverage.',
+            'scope_of_work' => 'Companionship and morning routine support.',
+            'status' => CareRequest::STATUS_FILLED,
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'requested_start_at' => $start,
+            'requested_end_at' => $end,
+            'address_line1' => '789 Correction Way',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+            'first_hire_at' => now()->subWeek(),
+        ]);
+        $request->recipient()->create([
+            'full_name' => 'E2E Time Recipient',
+            'relationship_to_family' => 'Father',
+        ]);
+        $request->tasks()->sync(collect($taskIds)->mapWithKeys(fn (int $id) => [$id => ['task_note' => null]])->all());
+        $application = CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 30,
+            'cover_note' => 'Assigned regular-care caregiver.',
+        ]);
+        $booking = CareBooking::query()->create([
+            'care_request_id' => $request->id,
+            'care_request_application_id' => $application->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+            'scheduled_start_at' => $start,
+            'scheduled_end_at' => $end,
+            'expected_minutes' => 120,
+            'family_terms_accepted_at' => now()->subWeek(),
+            'caregiver_terms_accepted_at' => now()->subWeek(),
+        ]);
+        $plan = CarePlan::query()->create([
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'source_care_request_id' => $request->id,
+            'source_care_booking_id' => $booking->id,
+            'status' => CarePlan::STATUS_ACTIVE,
+            'title' => 'E2E time correction regular care',
+            'schedule_days' => [strtolower($start->format('l'))],
+            'schedule_start_time' => '07:30:00',
+            'schedule_end_time' => '09:30:00',
+            'starts_on' => now()->subMonth()->toDateString(),
+            'timezone' => config('app.timezone'),
+            'hourly_rate' => 30,
+            'payment_status' => CarePlan::PAYMENT_AUTHORIZED,
+        ]);
+        $request->forceFill(['care_plan_id' => $plan->id])->save();
+        $booking->forceFill([
+            'care_plan_id' => $plan->id,
+            'occurrence_key' => 'regular-care:'.$plan->id.':regular:e2e-missed:07:30',
+            'plan_visit_kind' => 'regular',
+            'plan_schedule_version' => 1,
+            'agreement_snapshot' => app(BookingTrustService::class)->buildAgreementSnapshot($request->fresh(['recipient', 'tasks']), $application),
+        ])->save();
+    }
+
+    /** @param list<int> $taskIds */
+    private function seedTimeCorrectionState(User $family, User $caregiver, array $taskIds, string $status, string $title): void
+    {
+        $start = now()->subDays(2)->setTime(13, 0);
+        $end = $start->copy()->addHours(2);
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => $title,
+            'additional_info' => 'Deterministic time-correction status fixture.',
+            'scope_of_work' => 'Companionship and household routine support.',
+            'status' => CareRequest::STATUS_FILLED,
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'requested_start_at' => $start,
+            'requested_end_at' => $end,
+            'address_line1' => '900 Workflow State Road',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+            'first_hire_at' => now()->subWeek(),
+        ]);
+        $request->recipient()->create([
+            'full_name' => 'E2E Workflow Recipient',
+            'relationship_to_family' => 'Mother',
+        ]);
+        $request->tasks()->sync(collect($taskIds)->mapWithKeys(fn (int $id) => [$id => ['task_note' => null]])->all());
+        $application = CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 30,
+            'cover_note' => 'Assigned workflow fixture caregiver.',
+        ]);
+        $booking = CareBooking::query()->create([
+            'care_request_id' => $request->id,
+            'care_request_application_id' => $application->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_COMPLETED,
+            'scheduled_start_at' => $start,
+            'scheduled_end_at' => $end,
+            'started_at' => $start,
+            'completed_at' => $end,
+            'worked_minutes' => 120,
+            'timesheet_submitted_at' => $end,
+            'family_confirmed_at' => now()->subDay(),
+            'family_terms_accepted_at' => now()->subWeek(),
+            'caregiver_terms_accepted_at' => now()->subWeek(),
+        ]);
+
+        $needsTicket = in_array($status, [
+            CareBookingTimeCorrection::STATUS_APPROVED_ADMIN_REQUIRED,
+            CareBookingTimeCorrection::STATUS_ESCALATED,
+        ], true);
+        $ticket = $needsTicket ? SupportTicket::query()->create([
+            'opener_user_id' => $caregiver->id,
+            'counterparty_user_id' => $family->id,
+            'care_request_id' => $request->id,
+            'care_booking_id' => $booking->id,
+            'category' => 'time_correction',
+            'priority' => 'normal',
+            'subject' => 'Time correction for visit #'.$booking->id,
+            'description' => 'E2E workflow state awaiting LoLo review.',
+        ]) : null;
+
+        CareBookingTimeCorrection::query()->create([
+            'client_request_id' => (string) Str::uuid(),
+            'care_booking_id' => $booking->id,
+            'requester_user_id' => $caregiver->id,
+            'family_user_id' => $family->id,
+            'version' => 1,
+            'status' => $status,
+            'reason_code' => CareBookingTimeCorrection::REASON_FORGOT_END,
+            'explanation' => 'The caregiver forgot to end the visit and the family confirmed the actual time.',
+            'proposed_started_at' => $start,
+            'proposed_completed_at' => $end,
+            'proposed_break_minutes' => 0,
+            'proposed_worked_minutes' => 120,
+            'original_snapshot' => [
+                'booking' => [
+                    'status' => CareBooking::STATUS_COMPLETED,
+                    'scheduled_start_at' => $start->toIso8601String(),
+                    'scheduled_end_at' => $end->toIso8601String(),
+                    'started_at' => $start->toIso8601String(),
+                    'completed_at' => $end->toIso8601String(),
+                    'worked_minutes' => 120,
+                    'check_in_lat' => 35.7796,
+                    'check_in_lng' => -78.6382,
+                    'check_out_lat' => null,
+                    'check_out_lng' => null,
+                ],
+                'payment' => null,
+            ],
+            'financial_preview' => [
+                'timezone' => config('app.timezone'),
+                'worked_minutes' => 120,
+                'target_charge_cents' => 6600,
+                'caregiver_amount_cents' => 5940,
+                'hourly_rate' => 30,
+                'platform_fee_percent' => 10,
+            ],
+            'approved_by_user_id' => $family->id,
+            'support_ticket_id' => $ticket?->id,
+            'last_error' => match ($status) {
+                CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED => 'Confirm the saved card to finish the approved correction.',
+                CareBookingTimeCorrection::STATUS_ESCALATED => 'The response window expired before the correction was finalized.',
+                default => null,
+            },
+            'submitted_at' => now()->subDay(),
+            'approved_at' => now()->subHours(20),
+            'payment_action_required_at' => $status === CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED ? now()->subHours(19) : null,
+            'escalated_at' => $status === CareBookingTimeCorrection::STATUS_ESCALATED ? now()->subHours(2) : null,
+        ]);
     }
 
     /** @param list<int> $taskIds */

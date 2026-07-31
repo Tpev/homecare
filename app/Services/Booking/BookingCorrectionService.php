@@ -174,6 +174,7 @@ class BookingCorrectionService
         }
 
         $booking = $this->bookingForTicket($ticket);
+        $timeCorrection = $ticket->timeCorrection()->first();
         $preview = $this->preview($booking, $changes);
         if (! ($preview['can_apply'] ?? false)) {
             throw ValidationException::withMessages([
@@ -188,7 +189,7 @@ class BookingCorrectionService
             ]);
         }
 
-        $correction = DB::transaction(function () use ($booking, $ticket, $admin, $changes, $clientRequestId, $reason, $preview): CareBookingCorrection {
+        $correction = DB::transaction(function () use ($booking, $ticket, $timeCorrection, $admin, $changes, $clientRequestId, $reason, $preview): CareBookingCorrection {
             $lockedBooking = CareBooking::query()->lockForUpdate()->findOrFail($booking->id);
             $alreadyProcessing = CareBookingCorrection::query()
                 ->where('care_booking_id', $lockedBooking->id)
@@ -209,6 +210,10 @@ class BookingCorrectionService
                 'care_booking_id' => $lockedBooking->id,
                 'support_ticket_id' => $ticket->id,
                 'actor_admin_user_id' => $admin->id,
+                'source' => $timeCorrection ? 'admin_time_correction' : 'admin',
+                'time_correction_request_id' => $timeCorrection?->id,
+                'requester_user_id' => $timeCorrection?->requester_user_id,
+                'approved_by_user_id' => $timeCorrection?->approved_by_user_id,
                 'action' => $preview['action'],
                 'status' => CareBookingCorrection::STATUS_PENDING,
                 'previous_charge_cents' => (int) $preview['current_charge_cents'],

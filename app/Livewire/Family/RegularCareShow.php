@@ -3,6 +3,7 @@
 namespace App\Livewire\Family;
 
 use App\Exceptions\Payments\PaymentException;
+use App\Models\CareBookingTimeCorrection;
 use App\Models\CarePlan;
 use App\Services\RegularCare\CarePlanService;
 use Illuminate\Support\Carbon;
@@ -166,6 +167,16 @@ class RegularCareShow extends Component
         ));
 
         return view('livewire.family.regular-care-show', [
+            'pendingTimeCorrections' => CareBookingTimeCorrection::query()
+                ->with(['booking:id,care_request_id,care_plan_id,scheduled_start_at', 'requester:id,name'])
+                ->where('family_user_id', auth()->id())
+                ->whereHas('booking', fn ($query) => $query->where('care_plan_id', $this->plan->id))
+                ->whereIn('status', [
+                    CareBookingTimeCorrection::STATUS_PENDING_FAMILY,
+                    CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED,
+                ])
+                ->orderBy('submitted_at')
+                ->get(),
             'laterVisits' => array_slice($laterVisits, 0, 3),
             'counterVisits' => $this->plan->status === CarePlan::STATUS_COUNTERED
                 ? $plans->upcomingVisits($this->plan, 3, true)

@@ -36,6 +36,20 @@
         ], true);
         $showPayoutSetupAlert = ! $payoutReady && ! $careIsLiveNow;
         $isShiftWorkspace = $activeTab === 'shift';
+        $timeCorrectionsEnabled = (bool) config('marketplace.time_corrections.enabled', false);
+        $latestTimeCorrection = $booking?->timeCorrections?->first();
+        $activeTimeCorrection = $booking?->timeCorrections?->first(fn ($correction) => in_array($correction->status, \App\Models\CareBookingTimeCorrection::activeStatuses(), true));
+        $timeCorrectionCanStart = $timeCorrectionsEnabled
+            && $booking
+            && ! $activeTimeCorrection
+            && in_array($booking->status, [
+                \App\Models\CareBooking::STATUS_SCHEDULED,
+                \App\Models\CareBooking::STATUS_IN_PROGRESS,
+                \App\Models\CareBooking::STATUS_PAUSED,
+                \App\Models\CareBooking::STATUS_COMPLETED,
+                \App\Models\CareBooking::STATUS_REVIEWED,
+            ], true)
+            && (! $booking->scheduled_start_at || now()->gte($booking->scheduled_start_at));
         $applicationStatus = (string) ($existingApplication?->status ?? '');
         $isNewApplicationDecision = ! $existingApplication && $requestItem->status === \App\Models\CareRequest::STATUS_OPEN;
         $isWaitingForFamilyDecision = $existingApplication
@@ -718,12 +732,21 @@
 
                         @if ($isExpiredRegularVisit)
                             <div class="rounded-xl border border-amber-300/50 bg-amber-500/10 px-4 py-3 text-sm leading-6 text-amber-50">
-                                <p>The check-in window has closed. If care was provided but the hours were not entered, report it from this visit so support receives the correct booking record.</p>
-                                <div class="mt-3 flex flex-wrap gap-2">
-                                    <x-button color="white" light sm wire:click="openHistoricalVisitSupport">Report work or get help</x-button>
+                                <p>{{ $timeCorrectionsEnabled
+                                    ? 'The check-in window has closed. This visit stays available if you provided care and need to add the hours.'
+                                    : 'The check-in window has closed. If care was provided but the hours were not entered, report it from this visit so support receives the correct booking record.' }}</p>
+                                <div class="mt-3 grid gap-2 sm:flex sm:flex-wrap">
+                                    @if ($timeCorrectionsEnabled)
+                                        @if ($timeCorrectionCanStart)
+                                            <x-button id="time-correction-trigger" color="white" light class="min-h-12 w-full sm:w-auto" wire:click="openTimeCorrection">Add missed hours</x-button>
+                                        @endif
+                                        <x-button color="white" light class="min-h-12 w-full sm:w-auto" wire:click="openHistoricalVisitSupport">Get LoLo help</x-button>
+                                    @else
+                                        <x-button color="white" light class="min-h-12 w-full sm:w-auto" wire:click="openHistoricalVisitSupport">Report work or get help</x-button>
+                                    @endif
                                     @if ($currentRegularCareBooking)
                                         <a href="{{ route('care-requests.apply', $currentRegularCareBooking->care_request_id) }}" wire:navigate>
-                                            <x-button color="blue" sm>Open current visit</x-button>
+                                            <x-button color="blue" class="min-h-12 w-full sm:w-auto">Open current visit</x-button>
                                         </a>
                                     @endif
                                 </div>
@@ -762,6 +785,12 @@
                                 <span x-show="!geoLoading">End visit</span>
                                 <span x-show="geoLoading">Capturing GPS...</span>
                             </x-button>
+                        @endif
+
+                        @if ($timeCorrectionCanStart && ! $isExpiredRegularVisit)
+                            <button id="time-correction-trigger" type="button" wire:click="openTimeCorrection" class="min-h-12 w-full rounded-xl border border-white/35 px-4 py-3 text-left text-base font-semibold text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white">
+                                {{ $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED ? 'I provided care — add my hours' : 'Fix visit time' }}
+                            </button>
                         @endif
 
                         <p class="text-xs text-[#D7DEE6]" x-show="geoMessage" x-text="geoMessage"></p>
@@ -1010,6 +1039,12 @@
                 </div>
             </section>
 
+            @include('livewire.caregiver.partials.time-correction', [
+                'booking' => $booking,
+                'latestTimeCorrection' => $latestTimeCorrection,
+                'timeCorrectionsEnabled' => $timeCorrectionsEnabled,
+            ])
+
             @if (in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true))
                 <x-card>
                     <x-slot:header>
@@ -1156,6 +1191,7 @@
                                     ['label' => 'Incident', 'value' => 'incident'],
                                     ['label' => 'Cancellation', 'value' => 'cancellation'],
                                     ['label' => 'Billing', 'value' => 'billing'],
+                                    ['label' => 'Time correction', 'value' => 'time_correction'],
                                 ]"
                             />
                             <x-textarea label="Describe issue" wire:model="supportDescription" />

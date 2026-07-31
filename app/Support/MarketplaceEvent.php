@@ -34,6 +34,22 @@ class MarketplaceEvent
 
     public const TIMESHEET_AUTO_APPROVED = 'timesheet_auto_approved';
 
+    public const TIME_CORRECTION_REQUESTED = 'time_correction_requested';
+
+    public const TIME_CORRECTION_CHANGES_REQUESTED = 'time_correction_changes_requested';
+
+    public const TIME_CORRECTION_RESUBMITTED = 'time_correction_resubmitted';
+
+    public const TIME_CORRECTION_APPROVED = 'time_correction_approved';
+
+    public const TIME_CORRECTION_PAYMENT_ACTION_REQUIRED = 'time_correction_payment_action_required';
+
+    public const TIME_CORRECTION_APPLIED = 'time_correction_applied';
+
+    public const TIME_CORRECTION_ESCALATED = 'time_correction_escalated';
+
+    public const TIME_CORRECTION_WITHDRAWN = 'time_correction_withdrawn';
+
     public const REVIEW_RECEIVED = 'review_received';
 
     public const MATCHING_REQUEST_REMINDER = 'matching_request_reminder';
@@ -103,6 +119,14 @@ class MarketplaceEvent
             self::SHIFT_STARTED,
             self::SHIFT_COMPLETED,
             self::TIMESHEET_AUTO_APPROVED,
+            self::TIME_CORRECTION_REQUESTED,
+            self::TIME_CORRECTION_CHANGES_REQUESTED,
+            self::TIME_CORRECTION_RESUBMITTED,
+            self::TIME_CORRECTION_APPROVED,
+            self::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED,
+            self::TIME_CORRECTION_APPLIED,
+            self::TIME_CORRECTION_ESCALATED,
+            self::TIME_CORRECTION_WITHDRAWN,
             self::REVIEW_RECEIVED,
             self::MATCHING_REQUEST_REMINDER,
             self::PAYMENT_AUTHORIZED,

@@ -29,7 +29,7 @@ class TicketsCenter extends Component
         $this->validate([
             'subject' => ['required', 'string', 'min:8', 'max:160'],
             'description' => ['required', 'string', 'min:12', 'max:4000'],
-            'category' => ['required', Rule::in(['general', 'dispute', 'incident', 'cancellation', 'billing'])],
+            'category' => ['required', Rule::in(['general', 'dispute', 'incident', 'cancellation', 'billing', 'time_correction'])],
             'priority' => ['required', Rule::in(['low', 'normal', 'high', 'urgent'])],
             'care_request_id' => ['nullable', 'integer', Rule::exists('care_requests', 'id')],
             'care_booking_id' => ['nullable', 'integer', Rule::exists('care_bookings', 'id')],

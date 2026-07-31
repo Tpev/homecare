@@ -14,6 +14,7 @@ const laravelEnv = {
     MAIL_MAILER: 'array',
     DIDIT_BYPASS: 'true',
     STRIPE_BYPASS: 'true',
+    MARKETPLACE_TIME_CORRECTIONS_ENABLED: 'true',
 };
 
 export default defineConfig({

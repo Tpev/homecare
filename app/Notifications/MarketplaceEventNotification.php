@@ -13,8 +13,8 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
     use Queueable;
 
     /**
-     * @param list<string> $channels
-     * @param array<string, mixed> $payload
+     * @param  list<string>  $channels
+     * @param  array<string, mixed>  $payload
      */
     public function __construct(
         private readonly string $eventKey,
@@ -23,8 +23,7 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
         private readonly ?string $url,
         private readonly array $channels,
         private readonly array $payload = [],
-    ) {
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -108,6 +107,14 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
             'payment_refunded' => 'Payment refunded',
             'payout_transferred' => 'Payout transferred',
             'payout_transfer_failed' => 'Payout transfer delayed',
+            MarketplaceEvent::TIME_CORRECTION_REQUESTED => 'Time correction requested',
+            MarketplaceEvent::TIME_CORRECTION_CHANGES_REQUESTED => 'Time correction needs changes',
+            MarketplaceEvent::TIME_CORRECTION_RESUBMITTED => 'Updated visit time',
+            MarketplaceEvent::TIME_CORRECTION_APPROVED => 'Time correction approved',
+            MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED => 'Payment confirmation needed',
+            MarketplaceEvent::TIME_CORRECTION_APPLIED => 'Visit time updated',
+            MarketplaceEvent::TIME_CORRECTION_ESCALATED => 'LoLo is reviewing visit time',
+            MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => 'Time correction withdrawn',
             MarketplaceEvent::CAREGIVER_WELCOME => 'Welcome to HomeCare',
             MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H => 'Setup reminder',
             default => 'Marketplace update',
@@ -139,6 +146,14 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
             'payment_refunded' => 'View request',
             'payout_transferred' => 'View shift',
             'payout_transfer_failed' => 'View request',
+            MarketplaceEvent::TIME_CORRECTION_REQUESTED => 'Review visit time',
+            MarketplaceEvent::TIME_CORRECTION_CHANGES_REQUESTED => 'Update visit time',
+            MarketplaceEvent::TIME_CORRECTION_RESUBMITTED => 'Review updated time',
+            MarketplaceEvent::TIME_CORRECTION_APPROVED => 'View visit',
+            MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED => 'Confirm payment',
+            MarketplaceEvent::TIME_CORRECTION_APPLIED => 'View visit',
+            MarketplaceEvent::TIME_CORRECTION_ESCALATED => 'View LoLo review',
+            MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => 'View visit',
             MarketplaceEvent::CAREGIVER_WELCOME => 'Complete my profile',
             MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H => 'Finish setup now',
             default => 'Open HomeCare',

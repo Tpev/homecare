@@ -6,12 +6,14 @@ use App\Models\CareBooking;
 use App\Models\CareBookingChangeRequest;
 use App\Models\CareBookingIncident;
 use App\Models\CareBookingTaskCheck;
+use App\Models\CareBookingTimeCorrection;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\CareReview;
 use App\Models\SupportTicket;
 use App\Services\Booking\BookingTrustService;
+use App\Services\Booking\CareBookingTimeCorrectionService;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
 use App\Services\RegularCare\CarePlanPaymentWindowService;
@@ -19,6 +21,7 @@ use App\Support\CaregiverPrelaunch;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
 use App\Support\MarketplacePricing;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -78,6 +81,28 @@ class ApplyToCareRequest extends Component
 
     public string $disputeReason = '';
 
+    public bool $showTimeCorrectionPanel = false;
+
+    public bool $reviewingTimeCorrection = false;
+
+    public string $timeCorrectionReason = CareBookingTimeCorrection::REASON_FORGOT_BOTH;
+
+    public string $timeCorrectionStartedAt = '';
+
+    public string $timeCorrectionCompletedAt = '';
+
+    public int $timeCorrectionBreakMinutes = 0;
+
+    public string $timeCorrectionExplanation = '';
+
+    public bool $timeCorrectionConfirmed = false;
+
+    public string $timeCorrectionClientRequestId = '';
+
+    public ?int $timeCorrectionSupersedesId = null;
+
+    public array $timeCorrectionPreview = [];
+
     public function mount(int $careRequest): void
     {
         $this->requestItem = CareRequest::query()
@@ -132,6 +157,121 @@ class ApplyToCareRequest extends Component
         $this->supportCategory = 'dispute';
         $this->supportSubject = 'Missed check-in for visit #'.$booking->id;
         $this->activeTab = 'support';
+    }
+
+    public function openTimeCorrection(): void
+    {
+        $booking = $this->getManagedBooking();
+        $service = app(CareBookingTimeCorrectionService::class);
+        if (! $booking || ! $service->enabled()) {
+            session()->flash('status', 'Time corrections are not available yet. Get help from LoLo if this visit needs an update.');
+
+            return;
+        }
+
+        $active = $service->activeForBooking($booking);
+        if ($active && $active->status !== CareBookingTimeCorrection::STATUS_CHANGES_REQUESTED) {
+            session()->flash('status', 'This visit already has a time correction in progress.');
+
+            return;
+        }
+
+        $timezone = $service->timezoneFor($booking);
+        $start = $active?->proposed_started_at ?: $booking->started_at ?: $booking->scheduled_start_at;
+        $end = $active?->proposed_completed_at ?: $booking->completed_at ?: $booking->scheduled_end_at;
+
+        $this->timeCorrectionReason = $active?->reason_code ?: CareBookingTimeCorrection::REASON_FORGOT_BOTH;
+        $this->timeCorrectionStartedAt = $start?->copy()->setTimezone($timezone)->format('Y-m-d\TH:i') ?: '';
+        $this->timeCorrectionCompletedAt = $end?->copy()->setTimezone($timezone)->format('Y-m-d\TH:i') ?: '';
+        $this->timeCorrectionBreakMinutes = (int) ($active?->proposed_break_minutes ?? 0);
+        $this->timeCorrectionExplanation = (string) ($active?->explanation ?? '');
+        $this->timeCorrectionConfirmed = false;
+        $this->timeCorrectionClientRequestId = (string) Str::uuid();
+        $this->timeCorrectionSupersedesId = $active?->status === CareBookingTimeCorrection::STATUS_CHANGES_REQUESTED ? $active->id : null;
+        $this->timeCorrectionPreview = [];
+        $this->reviewingTimeCorrection = false;
+        $this->showTimeCorrectionPanel = true;
+        $this->resetValidation();
+        $this->dispatch('time-correction-opened');
+    }
+
+    public function closeTimeCorrection(): void
+    {
+        $this->showTimeCorrectionPanel = false;
+        $this->reviewingTimeCorrection = false;
+        $this->timeCorrectionPreview = [];
+        $this->resetValidation();
+        $this->dispatch('time-correction-closed');
+    }
+
+    public function reviewTimeCorrection(): void
+    {
+        $booking = $this->getManagedBooking();
+        abort_unless($booking, 404);
+
+        $this->timeCorrectionPreview = app(CareBookingTimeCorrectionService::class)->preview($booking, [
+            'started_at' => $this->timeCorrectionStartedAt,
+            'completed_at' => $this->timeCorrectionCompletedAt,
+            'break_minutes' => $this->timeCorrectionBreakMinutes,
+        ]);
+        $this->validate([
+            'timeCorrectionReason' => ['required', Rule::in(CareBookingTimeCorrection::reasonCodes())],
+            'timeCorrectionExplanation' => ['required', 'string', 'min:8', 'max:2000'],
+            'timeCorrectionConfirmed' => ['accepted'],
+        ]);
+        $this->reviewingTimeCorrection = true;
+    }
+
+    public function editTimeCorrection(): void
+    {
+        $this->reviewingTimeCorrection = false;
+    }
+
+    public function submitTimeCorrection(): void
+    {
+        $booking = $this->getManagedBooking();
+        abort_unless($booking, 404);
+
+        if (! $this->reviewingTimeCorrection) {
+            $this->reviewTimeCorrection();
+
+            return;
+        }
+
+        app(CareBookingTimeCorrectionService::class)->submit(
+            $booking,
+            auth()->user(),
+            [
+                'reason_code' => $this->timeCorrectionReason,
+                'started_at' => $this->timeCorrectionStartedAt,
+                'completed_at' => $this->timeCorrectionCompletedAt,
+                'break_minutes' => $this->timeCorrectionBreakMinutes,
+                'explanation' => $this->timeCorrectionExplanation,
+                'confirmed' => $this->timeCorrectionConfirmed,
+            ],
+            $this->timeCorrectionClientRequestId,
+            $this->timeCorrectionSupersedesId,
+        );
+
+        $this->closeTimeCorrection();
+        $this->refreshExistingApplication();
+        session()->flash('status', 'Time correction sent to the family for review.');
+    }
+
+    public function withdrawTimeCorrection(int $correctionId): void
+    {
+        $correction = CareBookingTimeCorrection::query()->findOrFail($correctionId);
+        app(CareBookingTimeCorrectionService::class)->withdraw($correction, auth()->user());
+        $this->refreshExistingApplication();
+        session()->flash('status', 'Time correction withdrawn.');
+    }
+
+    public function escalateTimeCorrection(int $correctionId): void
+    {
+        $correction = CareBookingTimeCorrection::query()->findOrFail($correctionId);
+        app(CareBookingTimeCorrectionService::class)->escalate($correction, auth()->user(), 'The caregiver asked LoLo to help resolve the visit time.');
+        $this->refreshExistingApplication();
+        session()->flash('status', 'LoLo support will review this visit.');
     }
 
     public function submit(): void
@@ -838,7 +978,7 @@ class ApplyToCareRequest extends Component
         $this->validate([
             'supportSubject' => ['required', 'string', 'min:8', 'max:160'],
             'supportDescription' => ['required', 'string', 'min:12', 'max:4000'],
-            'supportCategory' => ['required', Rule::in(['general', 'dispute', 'incident', 'cancellation', 'billing'])],
+            'supportCategory' => ['required', Rule::in(['general', 'dispute', 'incident', 'cancellation', 'billing', 'time_correction'])],
         ]);
 
         SupportTicket::query()->create([
@@ -900,6 +1040,11 @@ class ApplyToCareRequest extends Component
                 'conversation:id,care_request_application_id,care_request_id,caregiver_user_id',
                 'booking:id,care_request_id,care_plan_id,care_request_application_id,family_user_id,caregiver_user_id,status,scheduled_start_at,scheduled_end_at,agreement_snapshot,family_terms_accepted_at,caregiver_terms_accepted_at,check_in_override_at,check_in_override_by_user_id,check_in_override_reason,started_at,check_in_lat,check_in_lng,check_in_accuracy_meters,check_in_source,check_in_note,paused_at,total_paused_seconds,completed_at,check_out_lat,check_out_lng,check_out_accuracy_meters,check_out_source,check_out_note,timesheet_submitted_at,expected_minutes,worked_minutes,family_confirmed_at,dispute_opened_at,dispute_opened_by_user_id,dispute_reason,dispute_status,no_show_flag,late_cancel_flag,reviewed_at,cancelled_at,cancelled_by_user_id,cancellation_reason',
                 'booking.changeRequests',
+                'booking.payment',
+                'booking.carePlan:id,timezone',
+                'booking.timeCorrections' => fn ($query) => $query
+                    ->with(['approvedBy:id,name', 'supportTicket:id,status'])
+                    ->orderByDesc('version'),
                 'booking.reviews',
                 'booking.taskChecks',
                 'booking.events.actor:id,name',

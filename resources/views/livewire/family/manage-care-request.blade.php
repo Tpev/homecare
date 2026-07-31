@@ -47,9 +47,13 @@
             : null;
         $familyReview = $booking?->reviews?->firstWhere('reviewer_user_id', (int) auth()->id());
         $caregiverReview = $booking?->reviews?->firstWhere('reviewer_user_id', (int) ($booking?->caregiver_user_id ?? 0));
+        $latestTimeCorrection = $booking?->timeCorrections?->first();
+        $hasActiveTimeCorrection = $latestTimeCorrection
+            && in_array($latestTimeCorrection->status, \App\Models\CareBookingTimeCorrection::activeStatuses(), true);
         $timesheetNeedsReview = $booking
             && in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true)
-            && ! $booking->family_confirmed_at;
+            && ! $booking->family_confirmed_at
+            && ! $hasActiveTimeCorrection;
         $canLeaveFamilyReview = $booking
             && in_array($booking->status, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true)
             && $booking->family_confirmed_at
@@ -1019,6 +1023,12 @@
                     </div>
                 @endif
 
+                @include('livewire.family.partials.time-correction-review', [
+                    'booking' => $booking,
+                    'correction' => $latestTimeCorrection,
+                    'caregiverFirstName' => (string) $hiredCaregiverFirstName,
+                ])
+
                 @if ($isScheduledVisit || $isLiveVisit)
                     <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.45fr)]">
                         <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
@@ -1578,6 +1588,7 @@
                                     ['label' => 'I am worried about safety', 'value' => 'incident'],
                                     ['label' => 'I need to cancel or reschedule', 'value' => 'cancellation'],
                                     ['label' => 'Payment question', 'value' => 'billing'],
+                                    ['label' => 'Time correction', 'value' => 'time_correction'],
                                 ]"
                             />
                             <x-textarea label="Describe issue" wire:model="supportDescription" />

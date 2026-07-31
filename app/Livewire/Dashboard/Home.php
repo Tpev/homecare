@@ -487,6 +487,14 @@ class Home extends Component
                 MarketplaceEvent::REGULAR_CARE_PAUSED => ['label' => 'Regular care paused', 'tone' => 'warning'],
                 MarketplaceEvent::REGULAR_CARE_RESUMED => ['label' => 'Regular care resumed', 'tone' => 'success'],
                 MarketplaceEvent::REGULAR_CARE_ENDED => ['label' => 'Regular care ended', 'tone' => 'warning'],
+                MarketplaceEvent::TIME_CORRECTION_REQUESTED => ['label' => 'Time review', 'tone' => 'info'],
+                MarketplaceEvent::TIME_CORRECTION_CHANGES_REQUESTED => ['label' => 'Time changes', 'tone' => 'warning'],
+                MarketplaceEvent::TIME_CORRECTION_RESUBMITTED => ['label' => 'Updated time', 'tone' => 'info'],
+                MarketplaceEvent::TIME_CORRECTION_APPROVED => ['label' => 'Time approved', 'tone' => 'success'],
+                MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED => ['label' => 'Payment action', 'tone' => 'warning'],
+                MarketplaceEvent::TIME_CORRECTION_APPLIED => ['label' => 'Time updated', 'tone' => 'success'],
+                MarketplaceEvent::TIME_CORRECTION_ESCALATED => ['label' => 'LoLo review', 'tone' => 'warning'],
+                MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => ['label' => 'Time withdrawn', 'tone' => 'neutral'],
             ];
         }
 
@@ -513,6 +521,14 @@ class Home extends Component
             MarketplaceEvent::REGULAR_CARE_VISIT_SKIPPED => ['label' => 'Visit skipped', 'tone' => 'warning'],
             MarketplaceEvent::REGULAR_CARE_PAUSED => ['label' => 'Regular care paused', 'tone' => 'warning'],
             MarketplaceEvent::REGULAR_CARE_RESUMED => ['label' => 'Regular care resumed', 'tone' => 'success'],
+            MarketplaceEvent::TIME_CORRECTION_REQUESTED => ['label' => 'Time requested', 'tone' => 'info'],
+            MarketplaceEvent::TIME_CORRECTION_CHANGES_REQUESTED => ['label' => 'Time changes', 'tone' => 'warning'],
+            MarketplaceEvent::TIME_CORRECTION_RESUBMITTED => ['label' => 'Time updated', 'tone' => 'info'],
+            MarketplaceEvent::TIME_CORRECTION_APPROVED => ['label' => 'Time approved', 'tone' => 'success'],
+            MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED => ['label' => 'Payment action', 'tone' => 'warning'],
+            MarketplaceEvent::TIME_CORRECTION_APPLIED => ['label' => 'Time finalized', 'tone' => 'success'],
+            MarketplaceEvent::TIME_CORRECTION_ESCALATED => ['label' => 'LoLo review', 'tone' => 'warning'],
+            MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => ['label' => 'Time withdrawn', 'tone' => 'neutral'],
         ];
     }
 }

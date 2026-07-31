@@ -51,6 +51,14 @@ class NotificationsCenter extends Component
         MarketplaceEvent::REGULAR_CARE_PAUSED,
         MarketplaceEvent::REGULAR_CARE_RESUMED,
         MarketplaceEvent::REGULAR_CARE_ENDED,
+        MarketplaceEvent::TIME_CORRECTION_REQUESTED,
+        MarketplaceEvent::TIME_CORRECTION_CHANGES_REQUESTED,
+        MarketplaceEvent::TIME_CORRECTION_RESUBMITTED,
+        MarketplaceEvent::TIME_CORRECTION_APPROVED,
+        MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED,
+        MarketplaceEvent::TIME_CORRECTION_APPLIED,
+        MarketplaceEvent::TIME_CORRECTION_ESCALATED,
+        MarketplaceEvent::TIME_CORRECTION_WITHDRAWN,
     ];
 
     public function mount(): void
@@ -242,6 +250,14 @@ class NotificationsCenter extends Component
             MarketplaceEvent::REGULAR_CARE_PAUSED => 'Regular care paused',
             MarketplaceEvent::REGULAR_CARE_RESUMED => 'Regular care resumed',
             MarketplaceEvent::REGULAR_CARE_ENDED => 'Regular care ended',
+            MarketplaceEvent::TIME_CORRECTION_REQUESTED => 'Time correction requested',
+            MarketplaceEvent::TIME_CORRECTION_CHANGES_REQUESTED => 'Changes requested',
+            MarketplaceEvent::TIME_CORRECTION_RESUBMITTED => 'Updated time ready',
+            MarketplaceEvent::TIME_CORRECTION_APPROVED => 'Time correction approved',
+            MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED => 'Correction payment needed',
+            MarketplaceEvent::TIME_CORRECTION_APPLIED => 'Visit time updated',
+            MarketplaceEvent::TIME_CORRECTION_ESCALATED => 'LoLo review',
+            MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => 'Time correction withdrawn',
             default => 'Update',
         };
     }
@@ -257,10 +273,14 @@ class NotificationsCenter extends Component
             MarketplaceEvent::REGULAR_CARE_SCHEDULE_CHANGE_ACCEPTED,
             MarketplaceEvent::TIMESHEET_AUTO_APPROVED,
             MarketplaceEvent::REGULAR_CARE_RESUMED => 'success',
+            MarketplaceEvent::TIME_CORRECTION_APPROVED,
+            MarketplaceEvent::TIME_CORRECTION_APPLIED => 'success',
             MarketplaceEvent::NEW_APPLICANT,
             MarketplaceEvent::INVITE_ACCEPTED,
             MarketplaceEvent::SHIFT_REMINDER_24H,
             MarketplaceEvent::SHIFT_STARTED => 'info',
+            MarketplaceEvent::TIME_CORRECTION_REQUESTED,
+            MarketplaceEvent::TIME_CORRECTION_RESUBMITTED => 'info',
             MarketplaceEvent::INVITE_DECLINED,
             MarketplaceEvent::SHIFT_CANCELLED,
             MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED,
@@ -272,6 +292,10 @@ class NotificationsCenter extends Component
             MarketplaceEvent::REGULAR_CARE_SCHEDULE_CHANGE_DECLINED,
             MarketplaceEvent::REGULAR_CARE_PAUSED,
             MarketplaceEvent::REGULAR_CARE_ENDED => 'warning',
+            MarketplaceEvent::TIME_CORRECTION_CHANGES_REQUESTED,
+            MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED,
+            MarketplaceEvent::TIME_CORRECTION_ESCALATED => 'warning',
+            MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => 'neutral',
             default => 'neutral',
         };
     }

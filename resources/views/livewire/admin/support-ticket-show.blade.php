@@ -23,6 +23,7 @@
         $booking = $ticket->careBooking;
         $correctionPreview = $booking ? $this->correctionPreview : null;
         $bookingCorrections = $booking ? $this->bookingCorrections : collect();
+        $timeCorrection = $ticket->timeCorrection;
     @endphp
 
     <div class="mx-auto max-w-7xl space-y-5">
@@ -62,6 +63,58 @@
                         </div>
                     </div>
                 </div>
+
+                @if ($timeCorrection)
+                    @php
+                        $originalBooking = (array) data_get($timeCorrection->original_snapshot, 'booking', []);
+                        $versions = $timeCorrection->booking?->timeCorrections ?? collect([$timeCorrection]);
+                    @endphp
+                    <div class="border-b border-indigo-100 bg-[#FBFAFF] p-5">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <p class="text-xs font-bold uppercase tracking-[0.14em] text-indigo-700">Caregiver + family collaboration</p>
+                                <h3 class="mt-1 text-lg font-bold text-slate-950">Time correction #{{ $timeCorrection->id }} · {{ $timeCorrection->statusLabel() }}</h3>
+                                <p class="mt-1 text-sm text-slate-600">Requested by {{ $timeCorrection->requester?->name }}. {{ $timeCorrection->approvedBy ? 'Approved by '.$timeCorrection->approvedBy->name.' on '.$timeCorrection->approved_at?->format('M j, Y g:i A').'.' : 'Family approval was not recorded.' }}</p>
+                            </div>
+                            <span class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold uppercase text-indigo-800">{{ str_replace('_', ' ', $timeCorrection->status) }}</span>
+                        </div>
+
+                        <div class="mt-4 grid gap-3 lg:grid-cols-3">
+                            <div class="rounded-xl border border-slate-200 bg-white p-3 text-sm">
+                                <p class="text-xs font-bold uppercase text-slate-500">Scheduled</p>
+                                <p class="mt-1 font-semibold text-slate-900">{{ $booking->scheduled_start_at?->format('M j, g:i A') ?: 'Not set' }} – {{ $booking->scheduled_end_at?->format('g:i A') ?: 'Not set' }}</p>
+                            </div>
+                            <div class="rounded-xl border border-slate-200 bg-white p-3 text-sm">
+                                <p class="text-xs font-bold uppercase text-slate-500">Original app record</p>
+                                <p class="mt-1 font-semibold text-slate-900">{{ data_get($originalBooking, 'started_at') ? \Illuminate\Support\Carbon::parse(data_get($originalBooking, 'started_at'))->format('M j, g:i A') : 'No check-in' }} – {{ data_get($originalBooking, 'completed_at') ? \Illuminate\Support\Carbon::parse(data_get($originalBooking, 'completed_at'))->format('g:i A') : 'No end time' }}</p>
+                            </div>
+                            <div class="rounded-xl border border-indigo-300 bg-indigo-50 p-3 text-sm">
+                                <p class="text-xs font-bold uppercase text-indigo-700">Latest requested</p>
+                                <p class="mt-1 font-semibold text-slate-900">{{ $timeCorrection->proposed_started_at?->format('M j, g:i A') }} – {{ $timeCorrection->proposed_completed_at?->format('g:i A') }}</p>
+                                <p class="mt-1 text-xs text-slate-600">{{ $timeCorrection->durationLabel() }} · {{ $timeCorrection->proposed_break_minutes }} min break · {{ $timeCorrection->familyAmountLabel() }}</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 grid gap-3 lg:grid-cols-2">
+                            <div class="rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700">
+                                <p class="font-bold text-slate-900">Original location evidence</p>
+                                <p class="mt-1">Check-in: {{ data_get($originalBooking, 'check_in_lat') && data_get($originalBooking, 'check_in_lng') ? data_get($originalBooking, 'check_in_lat').', '.data_get($originalBooking, 'check_in_lng').' ('.(data_get($originalBooking, 'check_in_accuracy_meters') ?: '?').'m)' : 'No GPS captured' }}</p>
+                                <p>Check-out: {{ data_get($originalBooking, 'check_out_lat') && data_get($originalBooking, 'check_out_lng') ? data_get($originalBooking, 'check_out_lat').', '.data_get($originalBooking, 'check_out_lng').' ('.(data_get($originalBooking, 'check_out_accuracy_meters') ?: '?').'m)' : 'No GPS captured' }}</p>
+                                <p class="mt-1">Current payment: <span class="font-semibold">{{ str_replace('_', ' ', $booking->payment?->status ?: 'none') }}</span></p>
+                                @if ($timeCorrection->last_error)<p class="mt-2 font-semibold text-amber-800">Escalation: {{ $timeCorrection->last_error }}</p>@endif
+                            </div>
+                            <div class="space-y-2">
+                                @foreach ($versions as $version)
+                                    <div class="rounded-xl border border-slate-200 bg-white p-3 text-sm">
+                                        <p class="font-bold text-slate-900">Version {{ $version->version }} · {{ $version->statusLabel() }}</p>
+                                        <p class="mt-1 text-slate-700">{{ $version->reasonLabel() }}: {{ $version->explanation }}</p>
+                                        @if ($version->family_response_note)<p class="mt-1 text-amber-800"><span class="font-semibold">Family response:</span> {{ $version->family_response_note }}</p>@endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
                 <div class="grid gap-5 p-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)]">
                     <form wire:submit="applyVisitCorrection" class="space-y-4">

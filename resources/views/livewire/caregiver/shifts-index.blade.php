@@ -24,6 +24,7 @@
                 ['label' => 'Completed', 'value' => \App\Models\CareBooking::STATUS_COMPLETED],
                 ['label' => 'Reviewed', 'value' => \App\Models\CareBooking::STATUS_REVIEWED],
                 ['label' => 'Issues', 'value' => \App\Models\CareBooking::STATUS_DISPUTED],
+                ['label' => 'Time to update', 'value' => 'time_correction'],
             ];
         @endphp
 
@@ -59,8 +60,8 @@
                         <p class="mt-1 text-lg font-semibold">{{ (int) ($counts['completed'] ?? 0) }}</p>
                     </div>
                     <div class="hc-brand-stat">
-                        <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Issues</p>
-                        <p class="mt-1 text-lg font-semibold">{{ (int) ($counts['issues'] ?? 0) }}</p>
+                        <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Needs action</p>
+                        <p class="mt-1 text-lg font-semibold">{{ (int) ($counts['time_correction_actions'] ?? 0) + (int) ($counts['issues'] ?? 0) }}</p>
                     </div>
                 </div>
 
@@ -102,6 +103,7 @@
                     $bookingStatus = (string) $booking->status;
                     $isRegular = (bool) $booking->care_plan_id;
                     $payment = $booking->payment;
+                    $timeCorrection = $booking->timeCorrections->first();
                     $paymentNeedsAction = $payment && in_array($payment->status, [
                         \App\Models\CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
                         \App\Models\CareBookingPayment::STATUS_REAUTH_REQUIRED,
@@ -124,6 +126,11 @@
                         \App\Models\CareBooking::STATUS_CANCELLED => 'View details',
                         default => 'Open visit',
                     };
+                    if ($timeCorrection?->status === \App\Models\CareBookingTimeCorrection::STATUS_CHANGES_REQUESTED) {
+                        $ctaLabel = 'Update requested hours';
+                    } elseif ($timeCorrection?->status === \App\Models\CareBookingTimeCorrection::STATUS_PENDING_FAMILY) {
+                        $ctaLabel = 'View pending correction';
+                    }
                 @endphp
 
                 <article class="rounded-lg border border-[#DED6CA] bg-white p-5 shadow-sm sm:p-6">
@@ -132,6 +139,9 @@
                             <div class="flex flex-wrap items-center gap-2">
                                 <p class="font-display text-xl font-semibold text-[#17313F]">{{ $request?->title ?? 'Care request' }}</p>
                                 @if ($isRegular)<span class="rounded-full bg-[#E8F4EE] px-3 py-1 text-xs font-semibold text-[#17634F]">Regular care</span>@endif
+                                @if ($timeCorrection)
+                                    <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">{{ $timeCorrection->statusLabel() }}</span>
+                                @endif
                             </div>
                             <p class="mt-1 text-base text-[#526474]">For {{ $request?->recipient?->full_name ?: $booking->family?->name }} · Family contact: {{ $booking->family?->name ?? 'Unknown' }}</p>
                         </div>

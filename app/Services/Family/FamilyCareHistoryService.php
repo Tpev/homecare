@@ -5,6 +5,7 @@ namespace App\Services\Family;
 use App\Models\CareBooking;
 use App\Models\CareBookingCorrection;
 use App\Models\CareBookingPayment;
+use App\Models\CareBookingTimeCorrection;
 use App\Models\CarePlan;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,6 +28,9 @@ class FamilyCareHistoryService
                 'carePlan:id,title',
                 'payment:id,care_booking_id,status,currency,amount_authorized_cents,amount_captured_cents,amount_refunded_cents,amount_overage_cents,overage_pending_cents,authorized_at,captured_at',
                 'corrections:id,care_booking_id,status,action,applied_at,created_at',
+                'timeCorrections' => fn ($query) => $query
+                    ->with(['requester:id,name'])
+                    ->orderByDesc('version'),
                 'taskChecks:id,care_booking_id,label,is_completed,notes',
             ])
             ->orderByDesc('care_bookings.scheduled_start_at')
@@ -158,8 +162,12 @@ class FamilyCareHistoryService
             : null;
         $taskTotal = $booking->taskChecks->count();
         $taskCompleted = $booking->taskChecks->where('is_completed', true)->count();
+        $timeCorrection = $booking->timeCorrections->first();
 
         $action = match (true) {
+            $timeCorrection?->status === CareBookingTimeCorrection::STATUS_PENDING_FAMILY => ['label' => 'Review corrected hours', 'tab' => 'shift'],
+            $timeCorrection?->status === CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED => ['label' => 'Confirm correction payment', 'tab' => 'shift'],
+            $timeCorrection !== null => ['label' => 'View time correction', 'tab' => 'shift'],
             $visit['key'] === 'check_in_missing' => ['label' => 'Report completed work', 'tab' => 'support'],
             $visit['key'] === 'awaiting_approval' => ['label' => 'Review hours', 'tab' => 'shift'],
             $visit['key'] === 'disputed' => ['label' => 'Open support review', 'tab' => 'support'],
@@ -199,6 +207,18 @@ class FamilyCareHistoryService
             'task_total' => $taskTotal,
             'task_completed' => $taskCompleted,
             'task_checks' => $booking->taskChecks,
+            'time_correction' => $timeCorrection ? [
+                'id' => $timeCorrection->id,
+                'version' => $timeCorrection->version,
+                'status' => $timeCorrection->status,
+                'status_label' => $timeCorrection->statusLabel(),
+                'reason_label' => $timeCorrection->reasonLabel(),
+                'duration_label' => $timeCorrection->durationLabel(),
+                'family_amount_label' => $timeCorrection->familyAmountLabel(),
+                'requested_start_at' => $timeCorrection->proposed_started_at,
+                'requested_end_at' => $timeCorrection->proposed_completed_at,
+                'requester_name' => $timeCorrection->requester?->name,
+            ] : null,
             'payment' => $payment,
             'action_label' => $action['label'],
             'action_url' => route('family.requests.show', [

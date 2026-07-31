@@ -34,6 +34,16 @@ return [
         'authorization_buffer_percent' => (float) env('MARKETPLACE_AUTH_BUFFER_PERCENT', 20),
     ],
 
+    'time_corrections' => [
+        'enabled' => filter_var(env('MARKETPLACE_TIME_CORRECTIONS_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'self_service_window_hours' => (int) env('MARKETPLACE_TIME_CORRECTION_WINDOW_HOURS', 72),
+        'max_duration_minutes' => (int) env('MARKETPLACE_TIME_CORRECTION_MAX_DURATION_MINUTES', 960),
+        'future_clock_skew_minutes' => (int) env('MARKETPLACE_TIME_CORRECTION_FUTURE_SKEW_MINUTES', 5),
+        'first_reminder_hours' => (int) env('MARKETPLACE_TIME_CORRECTION_FIRST_REMINDER_HOURS', 12),
+        'second_reminder_hours' => (int) env('MARKETPLACE_TIME_CORRECTION_SECOND_REMINDER_HOURS', 24),
+        'escalation_hours' => (int) env('MARKETPLACE_TIME_CORRECTION_ESCALATION_HOURS', 48),
+    ],
+
     'regular_care' => [
         'authorization_window_hours' => (int) env('REGULAR_CARE_AUTHORIZATION_WINDOW_HOURS', 48),
         'visit_window_weeks' => (int) env('REGULAR_CARE_VISIT_WINDOW_WEEKS', 6),

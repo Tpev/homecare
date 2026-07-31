@@ -40,6 +40,21 @@
         </div>
     </header>
 
+    @if ($pendingTimeCorrections->isNotEmpty())
+        <section class="rounded-3xl border-2 border-amber-300 bg-amber-50 p-5" aria-labelledby="regular-time-corrections-heading">
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-amber-800">Your review is needed</p>
+            <h2 id="regular-time-corrections-heading" class="mt-1 font-display text-2xl font-semibold text-[#17313F]">{{ $pendingTimeCorrections->count() }} regular-care visit{{ $pendingTimeCorrections->count() === 1 ? '' : 's' }} need{{ $pendingTimeCorrections->count() === 1 ? 's' : '' }} attention</h2>
+            <div class="mt-4 grid gap-3">
+                @foreach ($pendingTimeCorrections as $correction)
+                    <a href="{{ route('family.requests.show', ['careRequest' => $correction->booking->care_request_id, 'tab' => 'shift']) }}" wire:navigate class="flex min-h-12 flex-col justify-center rounded-2xl border border-amber-200 bg-white px-4 py-3 text-[#17313F] transition hover:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-600 sm:flex-row sm:items-center sm:justify-between">
+                        <span class="font-semibold">Visit #{{ $correction->care_booking_id }} · {{ $correction->booking->scheduled_start_at?->format('M j') }} · {{ $correction->durationLabel() }}</span>
+                        <span class="mt-1 text-sm font-semibold text-[#0F6B62] sm:mt-0">{{ $correction->status === \App\Models\CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED ? 'Confirm payment' : 'Review corrected hours' }} →</span>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     @if ($next)
         <section class="overflow-hidden rounded-lg border border-[#CFC5B8] bg-white shadow-sm">
             <div class="border-b border-[#E7E0D8] bg-[#F3F8F5] px-5 py-4 sm:px-7">

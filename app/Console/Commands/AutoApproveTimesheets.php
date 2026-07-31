@@ -4,11 +4,13 @@ namespace App\Console\Commands;
 
 use App\Exceptions\Payments\PaymentException;
 use App\Models\CareBooking;
+use App\Models\CareBookingTimeCorrection;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
 use App\Support\MarketplaceEvent;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class AutoApproveTimesheets extends Command
 {
@@ -25,6 +27,7 @@ class AutoApproveTimesheets extends Command
             ->whereIn('status', [CareBooking::STATUS_COMPLETED, CareBooking::STATUS_REVIEWED])
             ->whereNull('family_confirmed_at')
             ->whereNull('dispute_opened_at')
+            ->whereDoesntHave('timeCorrections', fn ($query) => $query->whereIn('status', CareBookingTimeCorrection::activeStatuses()))
             ->whereNotNull('timesheet_submitted_at')
             ->where('timesheet_submitted_at', '<=', $cutoff)
             ->orderBy('timesheet_submitted_at')
@@ -43,19 +46,38 @@ class AutoApproveTimesheets extends Command
         $failed = 0;
 
         foreach ($bookings as $booking) {
-            $freshBooking = CareBooking::query()
-                ->with(['family', 'caregiver', 'caregiver.caregiverProfile', 'application', 'payment'])
-                ->whereKey($booking->id)
-                ->whereNull('family_confirmed_at')
-                ->whereNull('dispute_opened_at')
-                ->first();
-
-            if (! $freshBooking) {
-                continue;
-            }
-
             try {
-                $payments->captureForBooking($freshBooking);
+                $freshBooking = DB::transaction(function () use ($booking, $payments, $trust): ?CareBooking {
+                    $lockedBooking = CareBooking::query()
+                        ->with(['family', 'caregiver', 'caregiver.caregiverProfile', 'application', 'payment'])
+                        ->whereKey($booking->id)
+                        ->whereNull('family_confirmed_at')
+                        ->whereNull('dispute_opened_at')
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (! $lockedBooking || CareBookingTimeCorrection::query()
+                        ->where('care_booking_id', $lockedBooking->id)
+                        ->whereIn('status', CareBookingTimeCorrection::activeStatuses())
+                        ->exists()) {
+                        return null;
+                    }
+
+                    $payments->captureForBooking($lockedBooking);
+                    $lockedBooking->forceFill(['family_confirmed_at' => now()])->save();
+                    $trust->recordEvent(
+                        $lockedBooking,
+                        null,
+                        'system',
+                        'timesheet_auto_confirmed_after_24h',
+                        [
+                            'timesheet_submitted_at' => $lockedBooking->timesheet_submitted_at?->toIso8601String(),
+                            'auto_approved_after_hours' => 24,
+                        ]
+                    );
+
+                    return $lockedBooking->fresh();
+                });
             } catch (PaymentException $exception) {
                 $failed++;
                 $this->warn('Booking #'.$booking->id.' was not auto-approved: '.$exception->userMessage);
@@ -63,20 +85,10 @@ class AutoApproveTimesheets extends Command
                 continue;
             }
 
-            $freshBooking->forceFill([
-                'family_confirmed_at' => now(),
-            ])->save();
+            if (! $freshBooking) {
+                continue;
+            }
 
-            $trust->recordEvent(
-                $freshBooking,
-                null,
-                'system',
-                'timesheet_auto_confirmed_after_24h',
-                [
-                    'timesheet_submitted_at' => $freshBooking->timesheet_submitted_at?->toIso8601String(),
-                    'auto_approved_after_hours' => 24,
-                ]
-            );
             $freshBooking->refresh();
             $trust->recomputeReliabilityForBooking($freshBooking);
 

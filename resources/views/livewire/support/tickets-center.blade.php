@@ -21,6 +21,7 @@
                         ['label' => 'Incident', 'value' => 'incident'],
                         ['label' => 'Cancellation', 'value' => 'cancellation'],
                         ['label' => 'Billing', 'value' => 'billing'],
+                        ['label' => 'Time correction', 'value' => 'time_correction'],
                     ]"
                 />
                 <x-native-select-field
