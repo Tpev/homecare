@@ -53,7 +53,7 @@ class CaregiverOnboardingTest extends TestCase
             'user_id' => User::query()->where('email', 'caregiver@example.com')->value('id'),
             'event_key' => MarketplaceEvent::CAREGIVER_WELCOME,
             'channel' => 'email',
-            'status' => 'sent',
+            'status' => 'queued',
         ]);
 
         Mail::assertSent(UserRegisteredOpsAlertMail::class, function (UserRegisteredOpsAlertMail $mail) {

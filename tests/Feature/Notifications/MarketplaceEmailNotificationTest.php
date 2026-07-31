@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Notifications;
 
+use App\Models\User;
 use App\Notifications\MarketplaceEventNotification;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Support\MarketplaceEvent;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -49,7 +49,7 @@ class MarketplaceEmailNotificationTest extends TestCase
             'user_id' => $user->id,
             'event_key' => MarketplaceEvent::MESSAGE_RECEIVED,
             'channel' => 'email',
-            'status' => 'sent',
+            'status' => 'queued',
             'open_count' => 0,
             'click_count' => 0,
         ]);
@@ -82,7 +82,7 @@ class MarketplaceEmailNotificationTest extends TestCase
             dedupeKey: 'shift-soon:booking-12-user-'.$user->id
         );
 
-        Notification::assertSentToTimes($user, MarketplaceEventNotification::class, 1);
+        Notification::assertSentToTimes($user, MarketplaceEventNotification::class, 2);
 
         $this->assertDatabaseCount('marketplace_notification_deliveries', 2);
         $this->assertDatabaseHas('marketplace_notification_deliveries', [

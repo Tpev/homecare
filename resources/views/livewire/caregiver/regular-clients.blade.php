@@ -24,6 +24,7 @@
             'active' => 'bg-emerald-100 text-emerald-700',
             'payment_attention' => 'bg-amber-100 text-amber-800',
             'paused' => 'bg-sky-100 text-sky-700',
+            'ended' => 'bg-slate-100 text-slate-700',
             'pending_caregiver' => 'bg-indigo-100 text-indigo-700',
             'countered' => 'bg-amber-100 text-amber-800',
         ];
@@ -204,7 +205,7 @@
         <aside class="space-y-5 xl:col-span-4">
             <x-card>
                 <x-slot:header>
-                    <h2 class="font-display text-lg font-semibold">Active regular clients</h2>
+                    <h2 class="font-display text-lg font-semibold">Established regular clients</h2>
                 </x-slot:header>
                 <div class="space-y-3">
                     @forelse ($activePlans as $plan)
@@ -232,6 +233,113 @@
                             @endif
                             <p class="mt-2 text-xs text-[#607080]">{{ $scheduleService->scheduleLabel($plan) }}</p>
                             <p class="mt-1 text-xs text-[#4B5B6B]">Next: {{ $upcoming[0]['label'] ?? 'pending' }}</p>
+
+                            @if ($plan->completedExtraVisitRequests->isNotEmpty())
+                                <div class="mt-3 space-y-2" aria-label="Completed extra visit reports">
+                                    @foreach ($plan->completedExtraVisitRequests as $report)
+                                        @php
+                                            $reportStart = $report->proposed_started_at?->copy()->setTimezone($report->timezone);
+                                            $reportTone = match ($report->status) {
+                                                \App\Models\CompletedExtraVisitRequest::STATUS_APPLIED => 'border-emerald-200 bg-emerald-50 text-emerald-950',
+                                                \App\Models\CompletedExtraVisitRequest::STATUS_CHANGES_REQUESTED,
+                                                \App\Models\CompletedExtraVisitRequest::STATUS_PAYMENT_ACTION_REQUIRED => 'border-amber-300 bg-amber-50 text-amber-950',
+                                                \App\Models\CompletedExtraVisitRequest::STATUS_DISPUTED,
+                                                \App\Models\CompletedExtraVisitRequest::STATUS_ESCALATED,
+                                                \App\Models\CompletedExtraVisitRequest::STATUS_FAILED => 'border-rose-200 bg-rose-50 text-rose-950',
+                                                default => 'border-sky-200 bg-sky-50 text-sky-950',
+                                            };
+                                        @endphp
+                                        <div class="rounded-xl border p-3 text-sm {{ $reportTone }}">
+                                            <p class="font-semibold">{{ $reportStart?->format('M j, g:i A') }} · {{ $report->durationLabel() }}</p>
+                                            <p class="mt-1">{{ $report->statusLabel() }}</p>
+                                            @if ($report->family_response_note && $report->status === \App\Models\CompletedExtraVisitRequest::STATUS_CHANGES_REQUESTED)
+                                                <p class="mt-2 rounded-lg bg-white/80 p-2"><strong>Family note:</strong> {{ $report->family_response_note }}</p>
+                                            @endif
+                                            <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                                                @if ($report->status === \App\Models\CompletedExtraVisitRequest::STATUS_CHANGES_REQUESTED)
+                                                    <button type="button" wire:click="openCompletedExtraVisit({{ $plan->id }}, {{ $report->id }})" class="min-h-11 rounded-lg bg-[#0F6B62] px-3 font-semibold text-white">Update report</button>
+                                                @endif
+                                                @if (in_array($report->status, [\App\Models\CompletedExtraVisitRequest::STATUS_PENDING_FAMILY, \App\Models\CompletedExtraVisitRequest::STATUS_CHANGES_REQUESTED], true))
+                                                    <button type="button" wire:click="withdrawCompletedExtraVisit({{ $report->id }})" wire:confirm="Withdraw this report? The family will be notified and no payment will be made." class="min-h-11 rounded-lg border border-[#B85C4A] px-3 font-semibold text-[#913E31]">Withdraw</button>
+                                                @endif
+                                                @if ($report->booking)
+                                                    <a href="{{ route('care-requests.apply', $report->booking->care_request_id) }}" wire:navigate class="inline-flex min-h-11 items-center rounded-lg border border-[#B9CDC5] px-3 font-semibold text-[#174C43]">View visit</a>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            @if ($completedExtraVisitService->canReport($plan, auth()->user()))
+                                <button type="button" wire:click="openCompletedExtraVisit({{ $plan->id }})" class="mt-3 min-h-12 w-full rounded-xl border-2 border-[#0F6B62] px-3 text-left text-sm font-semibold text-[#0F6B62] transition hover:bg-[#F1F8F4] focus:outline-none focus:ring-2 focus:ring-[#0F6B62] focus:ring-offset-2">
+                                    Report a completed extra visit
+                                </button>
+                            @endif
+
+                            @if ($reportPlanId === $plan->id)
+                                <div class="mt-3 rounded-2xl border-2 border-[#0F6B62] bg-[#F8FBF9] p-4" id="completed-extra-visit-form-{{ $plan->id }}">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p class="text-xs font-bold uppercase tracking-[0.14em] text-[#0F6B62]">Completed extra visit</p>
+                                            <h3 class="mt-1 font-display text-xl font-semibold text-[#17313F]">Care already provided for {{ $plan->recipientName() }}</h3>
+                                        </div>
+                                        <button type="button" wire:click="closeCompletedExtraVisit" class="min-h-11 px-2 font-semibold text-[#526474] underline">Close</button>
+                                    </div>
+
+                                    @if (!$reviewingReport)
+                                        <form wire:submit="reviewCompletedExtraVisit" class="mt-4 space-y-4">
+                                            @if ($reportSupersedesId)
+                                                <x-alert color="yellow">The family requested changes. This creates a new version and preserves the original report.</x-alert>
+                                            @endif
+                                            <div class="grid gap-3 sm:grid-cols-2">
+                                                <label class="text-sm font-semibold text-[#263C48]">Visit date<input type="date" wire:model="reportDate" class="mt-1 min-h-12 w-full rounded-lg border-[#BFC8CE] text-base"></label>
+                                                <label class="text-sm font-semibold text-[#263C48]">Unpaid break (minutes)<input type="number" min="0" max="480" step="5" inputmode="numeric" wire:model="reportBreakMinutes" class="mt-1 min-h-12 w-full rounded-lg border-[#BFC8CE] text-base"></label>
+                                                <label class="text-sm font-semibold text-[#263C48]">Start time<input type="time" wire:model="reportStartTime" class="mt-1 min-h-12 w-full rounded-lg border-[#BFC8CE] text-base"></label>
+                                                <label class="text-sm font-semibold text-[#263C48]">End time<input type="time" wire:model="reportEndTime" class="mt-1 min-h-12 w-full rounded-lg border-[#BFC8CE] text-base"><span class="mt-1 block text-xs font-normal text-[#607080]">For an overnight visit, choose an end time earlier than the start time.</span></label>
+                                            </div>
+                                            <label class="block text-sm font-semibold text-[#263C48]">Why was this visit not scheduled?
+                                                <select wire:model="reportReason" class="mt-1 min-h-12 w-full rounded-lg border-[#BFC8CE] text-base">
+                                                    <option value="family_requested">The family requested an additional visit</option>
+                                                    <option value="informal_schedule_change">The schedule changed informally</option>
+                                                    <option value="forgot_to_request">We forgot to request the visit in advance</option>
+                                                    <option value="other">Something else happened</option>
+                                                </select>
+                                            </label>
+                                            <label class="block text-sm font-semibold text-[#263C48]">What happened?<textarea wire:model="reportExplanation" rows="4" class="mt-1 w-full rounded-lg border-[#BFC8CE] text-base" placeholder="Explain why this care was provided outside the regular schedule."></textarea></label>
+                                            <label class="block text-sm font-semibold text-[#263C48]">Optional care notes<textarea wire:model="reportCareNotes" rows="3" class="mt-1 w-full rounded-lg border-[#BFC8CE] text-base" placeholder="Do not include private information that is not needed for the visit record."></textarea></label>
+                                            <label class="flex min-h-12 items-start gap-3 rounded-xl border border-[#BFC8CE] bg-white p-3 text-sm font-semibold text-[#263C48]"><input type="checkbox" wire:model="reportAttested" class="mt-1 h-5 w-5 shrink-0 rounded border-[#80909B]">I confirm that I personally provided this care and that these hours are accurate.</label>
+                                            <div aria-live="polite" class="space-y-1 text-sm text-red-700">
+                                                @foreach (['reportDate','reportStartTime','reportEndTime','reportBreakMinutes','reportReason','reportExplanation','reportCareNotes','reportAttested','reportSubmit'] as $field)
+                                                    @error($field)<p>{{ $message }}</p>@enderror
+                                                @endforeach
+                                            </div>
+                                            <div class="grid gap-2 sm:flex sm:flex-wrap">
+                                                <button type="submit" wire:loading.attr="disabled" class="hc-primary-button min-h-12 w-full sm:w-auto">Review visit and amounts</button>
+                                                <button type="button" wire:click="closeCompletedExtraVisit" class="hc-secondary-button min-h-12 w-full sm:w-auto">Cancel</button>
+                                            </div>
+                                        </form>
+                                    @else
+                                        <div class="mt-4 space-y-4" aria-live="polite">
+                                            <div class="rounded-xl border border-[#C9DCD3] bg-white p-4">
+                                                <p class="font-semibold text-[#17313F]">{{ data_get($reportPreview, 'when') }}</p>
+                                                <p class="mt-1 text-[#526474]">{{ data_get($reportPreview, 'time') }}</p>
+                                                <dl class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                                    <div><dt class="text-xs font-semibold uppercase text-[#6A7784]">Worked time</dt><dd class="mt-1 font-semibold">{{ intdiv((int) data_get($reportPreview, 'worked_minutes'), 60) }}h {{ (int) data_get($reportPreview, 'worked_minutes') % 60 }}m</dd></div>
+                                                    <div><dt class="text-xs font-semibold uppercase text-[#6A7784]">Family estimate</dt><dd class="mt-1 font-semibold">${{ data_get($reportPreview, 'family_charge') }}</dd></div>
+                                                    <div><dt class="text-xs font-semibold uppercase text-[#6A7784]">Your estimated payout</dt><dd class="mt-1 font-semibold">${{ data_get($reportPreview, 'caregiver_payout') }}</dd></div>
+                                                </dl>
+                                            </div>
+                                            <x-alert color="blue">The family must approve this report. No payment or payout happens now, and their recurring schedule will not change. This visit will be marked as manually reported.</x-alert>
+                                            <div class="grid gap-2 sm:flex sm:flex-wrap">
+                                                <button type="button" wire:click="submitCompletedExtraVisit" wire:loading.attr="disabled" class="hc-primary-button min-h-12 w-full sm:w-auto">Send for family approval</button>
+                                                <button type="button" wire:click="editCompletedExtraVisit" class="hc-secondary-button min-h-12 w-full sm:w-auto">Edit details</button>
+                                                <button type="button" wire:click="closeCompletedExtraVisit" class="min-h-12 px-3 font-semibold text-[#526474] underline">Cancel</button>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                             @if ($nextVisitBooking || $plan->source_care_request_id)
                                 <div class="mt-3 grid gap-2">
                                     @if ($nextVisitBooking)

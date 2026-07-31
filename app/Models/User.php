@@ -124,6 +124,16 @@ class User extends Authenticatable
         return $this->hasMany(CareBooking::class, 'caregiver_user_id');
     }
 
+    public function familyCompletedExtraVisitRequests(): HasMany
+    {
+        return $this->hasMany(CompletedExtraVisitRequest::class, 'family_user_id');
+    }
+
+    public function caregiverCompletedExtraVisitRequests(): HasMany
+    {
+        return $this->hasMany(CompletedExtraVisitRequest::class, 'caregiver_user_id');
+    }
+
     public function givenCareReviews(): HasMany
     {
         return $this->hasMany(CareReview::class, 'reviewer_user_id');

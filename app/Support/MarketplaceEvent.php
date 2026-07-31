@@ -98,6 +98,24 @@ class MarketplaceEvent
 
     public const REGULAR_CARE_RESUMED = 'regular_care_resumed';
 
+    public const COMPLETED_EXTRA_VISIT_SUBMITTED = 'completed_extra_visit_submitted';
+
+    public const COMPLETED_EXTRA_VISIT_CHANGES_REQUESTED = 'completed_extra_visit_changes_requested';
+
+    public const COMPLETED_EXTRA_VISIT_RESUBMITTED = 'completed_extra_visit_resubmitted';
+
+    public const COMPLETED_EXTRA_VISIT_APPROVED = 'completed_extra_visit_approved';
+
+    public const COMPLETED_EXTRA_VISIT_DISPUTED = 'completed_extra_visit_disputed';
+
+    public const COMPLETED_EXTRA_VISIT_WITHDRAWN = 'completed_extra_visit_withdrawn';
+
+    public const COMPLETED_EXTRA_VISIT_APPLIED = 'completed_extra_visit_applied';
+
+    public const COMPLETED_EXTRA_VISIT_PAYMENT_ACTION_REQUIRED = 'completed_extra_visit_payment_action_required';
+
+    public const COMPLETED_EXTRA_VISIT_ESCALATED = 'completed_extra_visit_escalated';
+
     /**
      * @return list<string>
      */
@@ -151,6 +169,15 @@ class MarketplaceEvent
             self::REGULAR_CARE_VISIT_SKIPPED,
             self::REGULAR_CARE_PAUSED,
             self::REGULAR_CARE_RESUMED,
+            self::COMPLETED_EXTRA_VISIT_SUBMITTED,
+            self::COMPLETED_EXTRA_VISIT_CHANGES_REQUESTED,
+            self::COMPLETED_EXTRA_VISIT_RESUBMITTED,
+            self::COMPLETED_EXTRA_VISIT_APPROVED,
+            self::COMPLETED_EXTRA_VISIT_DISPUTED,
+            self::COMPLETED_EXTRA_VISIT_WITHDRAWN,
+            self::COMPLETED_EXTRA_VISIT_APPLIED,
+            self::COMPLETED_EXTRA_VISIT_PAYMENT_ACTION_REQUIRED,
+            self::COMPLETED_EXTRA_VISIT_ESCALATED,
         ];
     }
 }

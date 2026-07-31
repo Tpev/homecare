@@ -248,4 +248,9 @@ class CareBooking extends Model
     {
         return $this->hasOne(CareBookingPayment::class, 'care_booking_id');
     }
+
+    public function completedExtraVisitRequest(): HasOne
+    {
+        return $this->hasOne(CompletedExtraVisitRequest::class, 'care_booking_id');
+    }
 }

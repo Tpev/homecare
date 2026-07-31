@@ -210,7 +210,8 @@ class CarePlanOccurrenceService
         $existing = CareBooking::query()->where('occurrence_key', $occurrence['key'])->first();
 
         if ($existing) {
-            if ((int) $existing->care_plan_id !== (int) $plan->id || $existing->plan_visit_kind !== 'extra') {
+            if ((int) $existing->care_plan_id !== (int) $plan->id
+                || ! in_array($existing->plan_visit_kind, ['extra', 'completed_extra'], true)) {
                 throw ValidationException::withMessages([
                     'extraVisitDate' => 'That time is already reserved by another regular-care visit.',
                 ]);
@@ -336,7 +337,7 @@ class CarePlanOccurrenceService
             ->first();
     }
 
-    private function overlapsScheduledRegularOccurrence(CarePlan $plan, Carbon $start, Carbon $end): bool
+    public function overlapsScheduledRegularOccurrence(CarePlan $plan, Carbon $start, Carbon $end): bool
     {
         $timezone = $plan->timezone ?: (string) config('app.timezone', 'America/New_York');
         $localDate = $start->copy()->setTimezone($timezone)->startOfDay();

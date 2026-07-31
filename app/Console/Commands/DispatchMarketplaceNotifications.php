@@ -150,9 +150,14 @@ class DispatchMarketplaceNotifications extends Command
         $eligibleUserIds = MarketplaceNotificationDelivery::query()
             ->where('event_key', MarketplaceEvent::CAREGIVER_WELCOME)
             ->where('channel', 'email')
-            ->where('status', 'sent')
-            ->whereNotNull('sent_at')
-            ->where('sent_at', '<=', now()->subHours(24))
+            ->whereIn('status', ['queued', 'sent', 'delivered'])
+            ->where(function ($query): void {
+                $query->where('sent_at', '<=', now()->subHours(24))
+                    ->orWhere(function ($queued): void {
+                        $queued->where('status', 'queued')
+                            ->where('created_at', '<=', now()->subHours(24));
+                    });
+            })
             ->pluck('user_id')
             ->unique()
             ->values()

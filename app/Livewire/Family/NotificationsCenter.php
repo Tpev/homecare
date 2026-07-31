@@ -59,6 +59,12 @@ class NotificationsCenter extends Component
         MarketplaceEvent::TIME_CORRECTION_APPLIED,
         MarketplaceEvent::TIME_CORRECTION_ESCALATED,
         MarketplaceEvent::TIME_CORRECTION_WITHDRAWN,
+        MarketplaceEvent::COMPLETED_EXTRA_VISIT_SUBMITTED,
+        MarketplaceEvent::COMPLETED_EXTRA_VISIT_RESUBMITTED,
+        MarketplaceEvent::COMPLETED_EXTRA_VISIT_WITHDRAWN,
+        MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED,
+        MarketplaceEvent::COMPLETED_EXTRA_VISIT_PAYMENT_ACTION_REQUIRED,
+        MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED,
     ];
 
     public function mount(): void
@@ -258,6 +264,12 @@ class NotificationsCenter extends Component
             MarketplaceEvent::TIME_CORRECTION_APPLIED => 'Visit time updated',
             MarketplaceEvent::TIME_CORRECTION_ESCALATED => 'LoLo review',
             MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => 'Time correction withdrawn',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_SUBMITTED => 'Extra visit reported',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_RESUBMITTED => 'Updated extra visit',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_WITHDRAWN => 'Extra visit withdrawn',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED => 'Extra visit recorded',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_PAYMENT_ACTION_REQUIRED => 'Extra visit payment needed',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED => 'Extra visit LoLo review',
             default => 'Update',
         };
     }
@@ -274,13 +286,16 @@ class NotificationsCenter extends Component
             MarketplaceEvent::TIMESHEET_AUTO_APPROVED,
             MarketplaceEvent::REGULAR_CARE_RESUMED => 'success',
             MarketplaceEvent::TIME_CORRECTION_APPROVED,
-            MarketplaceEvent::TIME_CORRECTION_APPLIED => 'success',
+            MarketplaceEvent::TIME_CORRECTION_APPLIED,
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED => 'success',
             MarketplaceEvent::NEW_APPLICANT,
             MarketplaceEvent::INVITE_ACCEPTED,
             MarketplaceEvent::SHIFT_REMINDER_24H,
             MarketplaceEvent::SHIFT_STARTED => 'info',
             MarketplaceEvent::TIME_CORRECTION_REQUESTED,
-            MarketplaceEvent::TIME_CORRECTION_RESUBMITTED => 'info',
+            MarketplaceEvent::TIME_CORRECTION_RESUBMITTED,
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_SUBMITTED,
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_RESUBMITTED => 'info',
             MarketplaceEvent::INVITE_DECLINED,
             MarketplaceEvent::SHIFT_CANCELLED,
             MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED,
@@ -294,8 +309,11 @@ class NotificationsCenter extends Component
             MarketplaceEvent::REGULAR_CARE_ENDED => 'warning',
             MarketplaceEvent::TIME_CORRECTION_CHANGES_REQUESTED,
             MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED,
-            MarketplaceEvent::TIME_CORRECTION_ESCALATED => 'warning',
-            MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => 'neutral',
+            MarketplaceEvent::TIME_CORRECTION_ESCALATED,
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_PAYMENT_ACTION_REQUIRED,
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED => 'warning',
+            MarketplaceEvent::TIME_CORRECTION_WITHDRAWN,
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_WITHDRAWN => 'neutral',
             default => 'neutral',
         };
     }

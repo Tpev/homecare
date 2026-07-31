@@ -40,6 +40,8 @@
         </div>
     </header>
 
+    @include('livewire.family.partials.completed-extra-visits')
+
     @if ($pendingTimeCorrections->isNotEmpty())
         <section class="rounded-3xl border-2 border-amber-300 bg-amber-50 p-5" aria-labelledby="regular-time-corrections-heading">
             <p class="text-xs font-semibold uppercase tracking-[0.16em] text-amber-800">Your review is needed</p>

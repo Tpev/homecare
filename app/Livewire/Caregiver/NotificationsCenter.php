@@ -56,6 +56,11 @@ class NotificationsCenter extends Component
         MarketplaceEvent::TIME_CORRECTION_APPLIED,
         MarketplaceEvent::TIME_CORRECTION_ESCALATED,
         MarketplaceEvent::TIME_CORRECTION_WITHDRAWN,
+        MarketplaceEvent::COMPLETED_EXTRA_VISIT_CHANGES_REQUESTED,
+        MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPROVED,
+        MarketplaceEvent::COMPLETED_EXTRA_VISIT_DISPUTED,
+        MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED,
+        MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED,
     ];
 
     public function mount(): void
@@ -252,6 +257,11 @@ class NotificationsCenter extends Component
             MarketplaceEvent::TIME_CORRECTION_APPLIED => 'Visit time updated',
             MarketplaceEvent::TIME_CORRECTION_ESCALATED => 'LoLo review',
             MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => 'Time correction withdrawn',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_CHANGES_REQUESTED => 'Extra visit needs changes',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPROVED => 'Extra visit approved',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_DISPUTED => 'Extra visit disputed',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED => 'Extra visit recorded',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED => 'Extra visit LoLo review',
             default => 'Update',
         };
     }
@@ -266,7 +276,9 @@ class NotificationsCenter extends Component
             MarketplaceEvent::REGULAR_CARE_ACCEPTED,
             MarketplaceEvent::REGULAR_CARE_RESUMED => 'success',
             MarketplaceEvent::TIME_CORRECTION_APPROVED,
-            MarketplaceEvent::TIME_CORRECTION_APPLIED => 'success',
+            MarketplaceEvent::TIME_CORRECTION_APPLIED,
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPROVED,
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED => 'success',
             MarketplaceEvent::SHIFT_STARTING_SOON,
             MarketplaceEvent::SHIFT_REMINDER_24H,
             MarketplaceEvent::REGULAR_CARE_OFFERED,
@@ -279,7 +291,10 @@ class NotificationsCenter extends Component
             MarketplaceEvent::REVIEW_RECEIVED => 'warning',
             MarketplaceEvent::TIME_CORRECTION_CHANGES_REQUESTED,
             MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED,
-            MarketplaceEvent::TIME_CORRECTION_ESCALATED => 'warning',
+            MarketplaceEvent::TIME_CORRECTION_ESCALATED,
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_CHANGES_REQUESTED,
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_DISPUTED,
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED => 'warning',
             MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => 'neutral',
             MarketplaceEvent::MESSAGE_RECEIVED => 'neutral',
             MarketplaceEvent::MATCHING_REQUEST_REMINDER => 'info',

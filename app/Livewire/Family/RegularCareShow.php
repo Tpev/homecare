@@ -5,7 +5,9 @@ namespace App\Livewire\Family;
 use App\Exceptions\Payments\PaymentException;
 use App\Models\CareBookingTimeCorrection;
 use App\Models\CarePlan;
+use App\Models\CompletedExtraVisitRequest;
 use App\Services\RegularCare\CarePlanService;
+use App\Services\RegularCare\CompletedExtraVisitService;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -40,6 +42,9 @@ class RegularCareShow extends Component
     public string $resumeOn = '';
 
     public bool $cancelNextWhenEnding = false;
+
+    /** @var array<int,string> */
+    public array $completedExtraVisitResponseNotes = [];
 
     public function mount(int $carePlan): void
     {
@@ -158,7 +163,70 @@ class RegularCareShow extends Component
             : 'Regular care ended. The next confirmed visit remains scheduled.');
     }
 
-    public function render(CarePlanService $plans)
+    public function approveCompletedExtraVisit(int $requestId): void
+    {
+        $request = $this->ownedCompletedExtraVisit($requestId);
+        $result = app(CompletedExtraVisitService::class)->approve($request, auth()->user());
+        $this->reloadPlan();
+        session()->flash('status', match ($result->status) {
+            CompletedExtraVisitRequest::STATUS_APPLIED => 'Extra visit approved, recorded, and payment processed.',
+            CompletedExtraVisitRequest::STATUS_PAYMENT_ACTION_REQUIRED => 'The visit is approved. Confirm your payment method to finish processing.',
+            default => 'Extra visit approved. Payment is processing safely.',
+        });
+    }
+
+    public function requestCompletedExtraVisitChanges(int $requestId): void
+    {
+        $note = (string) ($this->completedExtraVisitResponseNotes[$requestId] ?? '');
+        app(CompletedExtraVisitService::class)->requestChanges(
+            $this->ownedCompletedExtraVisit($requestId),
+            auth()->user(),
+            $note,
+        );
+        unset($this->completedExtraVisitResponseNotes[$requestId]);
+        $this->reloadPlan();
+        session()->flash('status', 'Your change request was sent. No payment was made.');
+    }
+
+    public function disputeCompletedExtraVisit(int $requestId): void
+    {
+        $note = (string) ($this->completedExtraVisitResponseNotes[$requestId] ?? '');
+        app(CompletedExtraVisitService::class)->dispute(
+            $this->ownedCompletedExtraVisit($requestId),
+            auth()->user(),
+            $note,
+        );
+        unset($this->completedExtraVisitResponseNotes[$requestId]);
+        $this->reloadPlan();
+        session()->flash('status', 'The visit was not approved. LoLo support can review the preserved report.');
+    }
+
+    public function retryCompletedExtraVisitPayment(int $requestId): void
+    {
+        $result = app(CompletedExtraVisitService::class)->resumePayment(
+            $this->ownedCompletedExtraVisit($requestId),
+            auth()->user(),
+        );
+        $this->reloadPlan();
+        session()->flash('status', $result->status === CompletedExtraVisitRequest::STATUS_APPLIED
+            ? 'Payment confirmed. The extra visit is now in care history.'
+            : 'Payment still needs attention. Open Billing & Payments to confirm your card.');
+    }
+
+    public function escalateCompletedExtraVisit(int $requestId): void
+    {
+        $note = (string) ($this->completedExtraVisitResponseNotes[$requestId] ?? '');
+        app(CompletedExtraVisitService::class)->escalate(
+            $this->ownedCompletedExtraVisit($requestId),
+            auth()->user(),
+            $note,
+        );
+        unset($this->completedExtraVisitResponseNotes[$requestId]);
+        $this->reloadPlan();
+        session()->flash('status', 'LoLo support will review this extra visit. No payment was made.');
+    }
+
+    public function render(CarePlanService $plans, CompletedExtraVisitService $completedExtraVisits)
     {
         $upcomingVisits = $plans->upcomingVisits($this->plan, 4);
         $laterVisits = array_values(array_filter(
@@ -167,6 +235,15 @@ class RegularCareShow extends Component
         ));
 
         return view('livewire.family.regular-care-show', [
+            'completedExtraVisits' => CompletedExtraVisitRequest::query()
+                ->with(['caregiver:id,name', 'booking:id,care_request_id,status', 'booking.payment:id,care_booking_id,status,amount_captured_cents,caregiver_amount_cents,currency'])
+                ->where('care_plan_id', $this->plan->id)
+                ->where('family_user_id', auth()->id())
+                ->where('status', '!=', CompletedExtraVisitRequest::STATUS_SUPERSEDED)
+                ->latest('version')
+                ->limit(12)
+                ->get(),
+            'completedExtraVisitService' => $completedExtraVisits,
             'pendingTimeCorrections' => CareBookingTimeCorrection::query()
                 ->with(['booking:id,care_request_id,care_plan_id,scheduled_start_at', 'requester:id,name'])
                 ->where('family_user_id', auth()->id())
@@ -227,5 +304,13 @@ class RegularCareShow extends Component
         $this->extraVisitDate = now()->addDays(2)->toDateString();
         $this->extraVisitTime = $this->scheduleStartTime;
         $this->pauseFrom = now()->addDay()->toDateString();
+    }
+
+    private function ownedCompletedExtraVisit(int $requestId): CompletedExtraVisitRequest
+    {
+        return CompletedExtraVisitRequest::query()
+            ->where('care_plan_id', $this->plan->id)
+            ->where('family_user_id', auth()->id())
+            ->findOrFail($requestId);
     }
 }

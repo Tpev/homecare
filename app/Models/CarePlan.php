@@ -159,6 +159,11 @@ class CarePlan extends Model
         return $this->hasMany(CarePlanEvent::class)->latest();
     }
 
+    public function completedExtraVisitRequests(): HasMany
+    {
+        return $this->hasMany(CompletedExtraVisitRequest::class)->latest('version');
+    }
+
     public function pendingScheduleChanges(): HasMany
     {
         return $this->hasMany(CarePlanScheduleChange::class)

@@ -50,7 +50,7 @@ class BookingPaymentService
         ];
     }
 
-    public function authorizeForBooking(CareBooking $booking, bool $forceReauthorize = false): CareBookingPayment
+    public function authorizeForBooking(CareBooking $booking, bool $forceReauthorize = false, bool $notify = true): CareBookingPayment
     {
         $booking->loadMissing([
             'application',
@@ -143,7 +143,9 @@ class BookingPaymentService
                 attempt: $attempt
             );
 
-            $this->notifyAuthorizationState($booking, $payment, $status);
+            if ($notify) {
+                $this->notifyAuthorizationState($booking, $payment, $status);
+            }
 
             if ($status === CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED) {
                 throw new PaymentException(
@@ -177,7 +179,9 @@ class BookingPaymentService
                 attempt: $attempt
             );
 
-            $this->notifyAuthorizationState($booking, $payment, $status);
+            if ($notify) {
+                $this->notifyAuthorizationState($booking, $payment, $status);
+            }
 
             throw new PaymentException($this->authorizationFailureMessage($authorizationStatus), $message);
         }
@@ -210,7 +214,9 @@ class BookingPaymentService
             ]
         );
 
-        $this->notifyAuthorizationState($booking, $payment, CareBookingPayment::STATUS_AUTHORIZED);
+        if ($notify) {
+            $this->notifyAuthorizationState($booking, $payment, CareBookingPayment::STATUS_AUTHORIZED);
+        }
 
         return $payment;
     }
@@ -422,7 +428,7 @@ class BookingPaymentService
         return $this->reconcilePaymentPlan($payment);
     }
 
-    public function captureForBooking(CareBooking $booking): CareBookingPayment
+    public function captureForBooking(CareBooking $booking, bool $notify = true): CareBookingPayment
     {
         $booking->loadMissing([
             'application',
@@ -459,7 +465,7 @@ class BookingPaymentService
 
         if ($this->isAuthorizationExpired($payment)) {
             try {
-                $payment = $this->authorizeForBooking($booking, forceReauthorize: true);
+                $payment = $this->authorizeForBooking($booking, forceReauthorize: true, notify: $notify);
             } catch (PaymentException $e) {
                 $payment->forceFill([
                     'status' => CareBookingPayment::STATUS_REAUTH_REQUIRED,
@@ -467,7 +473,9 @@ class BookingPaymentService
                     'last_error' => $e->getMessage(),
                 ])->save();
 
-                $this->notifyAuthorizationState($booking, $payment, CareBookingPayment::STATUS_REAUTH_REQUIRED);
+                if ($notify) {
+                    $this->notifyAuthorizationState($booking, $payment, CareBookingPayment::STATUS_REAUTH_REQUIRED);
+                }
 
                 throw new PaymentException(
                     'Previous card authorization expired. Re-open Billing & Payments and retry confirmation.',
@@ -527,20 +535,22 @@ class BookingPaymentService
                     'last_error' => $e->getMessage(),
                 ])->save();
 
-                $this->notify(
-                    recipients: $booking->family,
-                    eventKey: MarketplaceEvent::PAYMENT_ACTION_REQUIRED,
-                    title: 'Additional payment action needed',
-                    body: 'Final shift amount exceeded the original authorization. Open billing to complete it.',
-                    url: route('family.billing.show'),
-                    payload: [
-                        'care_booking_id' => $booking->id,
-                        'care_booking_payment_id' => $payment->id,
-                        'overage_pending_cents' => $overagePendingCents,
-                    ],
-                    subject: $booking,
-                    dedupeKey: 'payment-overage-action:booking-'.$booking->id
-                );
+                if ($notify) {
+                    $this->notify(
+                        recipients: $booking->family,
+                        eventKey: MarketplaceEvent::PAYMENT_ACTION_REQUIRED,
+                        title: 'Additional payment action needed',
+                        body: 'Final shift amount exceeded the original authorization. Open billing to complete it.',
+                        url: route('family.billing.show'),
+                        payload: [
+                            'care_booking_id' => $booking->id,
+                            'care_booking_payment_id' => $payment->id,
+                            'overage_pending_cents' => $overagePendingCents,
+                        ],
+                        subject: $booking,
+                        dedupeKey: 'payment-overage-action:booking-'.$booking->id
+                    );
+                }
             }
         }
 
@@ -588,42 +598,46 @@ class BookingPaymentService
                     'last_error' => $e->getMessage(),
                 ]);
 
-                $this->notify(
-                    recipients: $booking->family,
-                    eventKey: MarketplaceEvent::PAYOUT_TRANSFER_FAILED,
-                    title: 'Payout transfer delayed',
-                    body: 'The shift payment was captured, but caregiver payout transfer is delayed. Admin will retry automatically.',
-                    url: route('family.requests.show', $booking->care_request_id),
-                    payload: [
-                        'care_booking_id' => $booking->id,
-                        'care_booking_payment_id' => $payment->id,
-                    ],
-                    subject: $booking,
-                    dedupeKey: 'payout-transfer-failed:booking-'.$booking->id
-                );
+                if ($notify) {
+                    $this->notify(
+                        recipients: $booking->family,
+                        eventKey: MarketplaceEvent::PAYOUT_TRANSFER_FAILED,
+                        title: 'Payout transfer delayed',
+                        body: 'The shift payment was captured, but caregiver payout transfer is delayed. Admin will retry automatically.',
+                        url: route('family.requests.show', $booking->care_request_id),
+                        payload: [
+                            'care_booking_id' => $booking->id,
+                            'care_booking_payment_id' => $payment->id,
+                        ],
+                        subject: $booking,
+                        dedupeKey: 'payout-transfer-failed:booking-'.$booking->id
+                    );
+                }
             }
         }
 
         $payment->save();
         $this->syncPayoutRecords($booking, $payment, $transferCompleted);
 
-        $this->notify(
-            recipients: $booking->family,
-            eventKey: MarketplaceEvent::PAYMENT_CAPTURED,
-            title: 'Shift payment captured',
-            body: 'Final payment was captured successfully for this completed shift.',
-            url: route('family.requests.show', $booking->care_request_id),
-            payload: [
-                'care_booking_id' => $booking->id,
-                'care_booking_payment_id' => $payment->id,
-                'amount_captured_cents' => $capturedCents,
-                'overage_pending_cents' => $overagePendingCents,
-            ],
-            subject: $booking,
-            dedupeKey: 'payment-captured:booking-'.$booking->id
-        );
+        if ($notify) {
+            $this->notify(
+                recipients: $booking->family,
+                eventKey: MarketplaceEvent::PAYMENT_CAPTURED,
+                title: 'Shift payment captured',
+                body: 'Final payment was captured successfully for this completed shift.',
+                url: route('family.requests.show', $booking->care_request_id),
+                payload: [
+                    'care_booking_id' => $booking->id,
+                    'care_booking_payment_id' => $payment->id,
+                    'amount_captured_cents' => $capturedCents,
+                    'overage_pending_cents' => $overagePendingCents,
+                ],
+                subject: $booking,
+                dedupeKey: 'payment-captured:booking-'.$booking->id
+            );
+        }
 
-        if ($transferCompleted && $booking->caregiver) {
+        if ($notify && $transferCompleted && $booking->caregiver) {
             $this->notify(
                 recipients: $booking->caregiver,
                 eventKey: MarketplaceEvent::PAYOUT_TRANSFERRED,

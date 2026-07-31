@@ -28,10 +28,21 @@
                             <h2 style="margin:0 0 10px 0;font-size:24px;line-height:1.25;color:#0f172a;">{{ $title }}</h2>
                             <p style="margin:0 0 20px 0;font-size:15px;line-height:1.65;color:#334155;">{{ $body }}</p>
 
+                            @if (!empty($emailDetails))
+                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 22px 0;border:1px solid #d7e2ee;border-radius:12px;background:#f8fbff;">
+                                    @foreach ($emailDetails as $detail)
+                                        <tr>
+                                            <td style="padding:10px 14px;{{ !$loop->last ? 'border-bottom:1px solid #dbe7f3;' : '' }}font-size:13px;line-height:1.4;color:#64748b;width:42%;">{{ $detail['label'] }}</td>
+                                            <td style="padding:10px 14px;{{ !$loop->last ? 'border-bottom:1px solid #dbe7f3;' : '' }}font-size:14px;line-height:1.4;color:#0f172a;font-weight:bold;">{{ $detail['value'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </table>
+                            @endif
+
                             <table role="presentation" cellspacing="0" cellpadding="0">
                                 <tr>
                                     <td style="border-radius:10px;background:#0ea5e9;">
-                                        <a href="{{ $url }}" style="display:inline-block;padding:12px 18px;color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;">
+                                        <a href="{{ $url }}" style="display:inline-block;padding:14px 20px;color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;line-height:20px;">
                                             {{ $ctaLabel }}
                                         </a>
                                     </td>

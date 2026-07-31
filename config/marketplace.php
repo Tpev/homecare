@@ -44,6 +44,15 @@ return [
         'escalation_hours' => (int) env('MARKETPLACE_TIME_CORRECTION_ESCALATION_HOURS', 48),
     ],
 
+    'completed_extra_visits' => [
+        'enabled' => filter_var(env('MARKETPLACE_COMPLETED_EXTRA_VISITS_ENABLED', true), FILTER_VALIDATE_BOOL),
+        'history_window_days' => (int) env('MARKETPLACE_COMPLETED_EXTRA_VISIT_HISTORY_DAYS', 30),
+        'ended_plan_grace_days' => (int) env('MARKETPLACE_COMPLETED_EXTRA_VISIT_ENDED_GRACE_DAYS', 30),
+        'minimum_duration_minutes' => (int) env('MARKETPLACE_COMPLETED_EXTRA_VISIT_MIN_MINUTES', 15),
+        'maximum_duration_minutes' => (int) env('MARKETPLACE_COMPLETED_EXTRA_VISIT_MAX_MINUTES', 960),
+        'future_clock_skew_minutes' => (int) env('MARKETPLACE_COMPLETED_EXTRA_VISIT_FUTURE_SKEW_MINUTES', 5),
+    ],
+
     'regular_care' => [
         'authorization_window_hours' => (int) env('REGULAR_CARE_AUTHORIZATION_WINDOW_HOURS', 48),
         'visit_window_weeks' => (int) env('REGULAR_CARE_VISIT_WINDOW_WEEKS', 6),

@@ -85,11 +85,11 @@ class CaregiverOnboardingEmailsTest extends TestCase
         ]);
 
         foreach ([$incompleteCaregiver, $completeCaregiver] as $user) {
-            MarketplaceNotificationDelivery::query()->create([
+            $welcomeDelivery = MarketplaceNotificationDelivery::query()->create([
                 'user_id' => $user->id,
                 'event_key' => MarketplaceEvent::CAREGIVER_WELCOME,
                 'channel' => 'email',
-                'status' => 'sent',
+                'status' => $user->is($incompleteCaregiver) ? 'queued' : 'sent',
                 'dedupe_key' => 'caregiver-onboarding-welcome:user-'.$user->id.':email',
                 'payload' => [
                     'tracking' => [
@@ -97,8 +97,14 @@ class CaregiverOnboardingEmailsTest extends TestCase
                         'target_url' => route('caregiver.onboarding'),
                     ],
                 ],
-                'sent_at' => now()->subHours(25),
+                'sent_at' => $user->is($incompleteCaregiver) ? null : now()->subHours(25),
             ]);
+            if ($user->is($incompleteCaregiver)) {
+                $welcomeDelivery->forceFill([
+                    'created_at' => now()->subHours(25),
+                    'updated_at' => now()->subHours(25),
+                ])->save();
+            }
         }
 
         $this->artisan('homecare:dispatch-notifications --type=onboarding')
@@ -108,7 +114,7 @@ class CaregiverOnboardingEmailsTest extends TestCase
             'user_id' => $incompleteCaregiver->id,
             'event_key' => MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H,
             'channel' => 'email',
-            'status' => 'sent',
+            'status' => 'queued',
         ]);
         $this->assertDatabaseMissing('marketplace_notification_deliveries', [
             'user_id' => $completeCaregiver->id,
@@ -117,4 +123,3 @@ class CaregiverOnboardingEmailsTest extends TestCase
         ]);
     }
 }
-

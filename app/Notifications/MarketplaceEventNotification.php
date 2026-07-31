@@ -65,6 +65,12 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
                 'preheader' => (string) ($this->payload['preheader'] ?? $this->title),
                 'checklist' => array_values(array_filter((array) ($this->payload['checklist'] ?? []), fn ($item) => is_string($item) && trim($item) !== '')),
                 'firstName' => (string) ($this->payload['first_name'] ?? ''),
+                'emailDetails' => collect((array) ($this->payload['email_details'] ?? []))
+                    ->filter(fn ($detail) => is_array($detail) && trim((string) ($detail['label'] ?? '')) !== '' && trim((string) ($detail['value'] ?? '')) !== '')
+                    ->map(fn (array $detail) => [
+                        'label' => trim((string) $detail['label']),
+                        'value' => trim((string) $detail['value']),
+                    ])->values()->all(),
             ]);
     }
 
@@ -117,6 +123,15 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
             MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => 'Time correction withdrawn',
             MarketplaceEvent::CAREGIVER_WELCOME => 'Welcome to HomeCare',
             MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H => 'Setup reminder',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_SUBMITTED => 'Extra visit reported',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_CHANGES_REQUESTED => 'Extra visit needs changes',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_RESUBMITTED => 'Updated extra visit',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPROVED => 'Extra visit approved',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_DISPUTED => 'Extra visit disputed',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_WITHDRAWN => 'Extra visit withdrawn',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED => 'Extra visit recorded',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_PAYMENT_ACTION_REQUIRED => 'Payment confirmation needed',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED => 'LoLo review',
             default => 'Marketplace update',
         };
     }
@@ -156,6 +171,15 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
             MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => 'View visit',
             MarketplaceEvent::CAREGIVER_WELCOME => 'Complete my profile',
             MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H => 'Finish setup now',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_SUBMITTED => 'Review extra visit',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_CHANGES_REQUESTED => 'Update visit report',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_RESUBMITTED => 'Review updated visit',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPROVED => 'View extra visit',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_DISPUTED => 'View LoLo review',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_WITHDRAWN => 'View regular care',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED => 'View care history',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_PAYMENT_ACTION_REQUIRED => 'Confirm payment',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED => 'View LoLo review',
             default => 'Open HomeCare',
         };
     }

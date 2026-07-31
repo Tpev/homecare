@@ -6,7 +6,9 @@ use App\Models\MarketplaceNotificationDelivery;
 use App\Models\User;
 use App\Notifications\MarketplaceEventNotification;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -14,12 +16,11 @@ class MarketplaceNotificationService
 {
     public function __construct(
         private readonly NotificationPreferenceResolver $preferences,
-    ) {
-    }
+    ) {}
 
     /**
-     * @param User|Collection<int, User>|array<int, User> $recipients
-     * @param array<string, mixed> $payload
+     * @param  User|Collection<int, User>|array<int, User>  $recipients
+     * @param  array<string, mixed>  $payload
      */
     public function notify(
         User|Collection|array $recipients,
@@ -44,7 +45,7 @@ class MarketplaceNotificationService
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      */
     private function notifyUser(
         User $user,
@@ -60,39 +61,25 @@ class MarketplaceNotificationService
         $channels = $this->preferences->resolve($user, $eventKey);
         $subjectType = $subject?->getMorphClass();
         $subjectId = $subject?->getKey();
-        $notificationPayload = $payload;
-        $mailDelivery = null;
-
-        $laravelChannels = [];
-        if ($channels[NotificationChannels::IN_APP] ?? false) {
-            $laravelChannels[] = 'database';
-        }
         if ($channels[NotificationChannels::EMAIL] ?? false) {
-            $laravelChannels[] = 'mail';
-        }
+            $trackingToken = Str::random(48);
+            $mailPayload = array_merge($payload, [
+                'tracking' => [
+                    'token' => $trackingToken,
+                    'target_url' => $normalizedUrl,
+                ],
+            ]);
+            $mailDelivery = $this->reserveDelivery(
+                userId: $user->id,
+                eventKey: $eventKey,
+                channel: NotificationChannels::EMAIL,
+                subjectType: $subjectType,
+                subjectId: $subjectId,
+                dedupeKey: $dedupeKey,
+                payload: $mailPayload,
+            );
 
-        if ($laravelChannels !== [] && $this->shouldDispatchForLaravelChannels($user->id, $dedupeKey, $laravelChannels)) {
-            if (in_array('mail', $laravelChannels, true)) {
-                $trackingToken = Str::random(48);
-                $mailPayload = array_merge($payload, [
-                    'tracking' => [
-                        'token' => $trackingToken,
-                        'target_url' => $normalizedUrl,
-                    ],
-                ]);
-
-                $mailDelivery = MarketplaceNotificationDelivery::query()->create([
-                    'user_id' => $user->id,
-                    'event_key' => $eventKey,
-                    'channel' => NotificationChannels::EMAIL,
-                    'status' => 'queued',
-                    'notifiable_type' => $subjectType,
-                    'notifiable_id' => $subjectId,
-                    'dedupe_key' => $dedupeKey ? $dedupeKey.':'.NotificationChannels::EMAIL : null,
-                    'payload' => $mailPayload,
-                    'sent_at' => null,
-                ]);
-
+            if ($mailDelivery) {
                 $notificationPayload = array_merge($mailPayload, [
                     'tracking' => [
                         'token' => $trackingToken,
@@ -100,53 +87,48 @@ class MarketplaceNotificationService
                         'delivery_id' => $mailDelivery->id,
                     ],
                 ]);
-            }
 
-            try {
-                $user->notify(new MarketplaceEventNotification(
-                    eventKey: $eventKey,
-                    title: $title,
-                    body: $body,
-                    url: $normalizedUrl,
-                    channels: $laravelChannels,
-                    payload: $notificationPayload,
-                ));
-            } catch (Throwable $exception) {
-                if ($mailDelivery) {
-                    $mailDelivery->forceFill([
-                        'status' => 'failed',
-                        'payload' => array_merge($mailDelivery->payload ?? [], [
-                            'provider_error' => $exception->getMessage(),
-                        ]),
-                        'sent_at' => now(),
-                    ])->save();
+                try {
+                    Notification::sendNow($user, new MarketplaceEventNotification(
+                        eventKey: $eventKey,
+                        title: $title,
+                        body: $body,
+                        url: $normalizedUrl,
+                        channels: ['mail'],
+                        payload: $notificationPayload,
+                    ));
+                    // Queued means handed to Laravel's queue. Provider delivery is not proven here.
+                } catch (Throwable $exception) {
+                    $this->markFailed($mailDelivery, $exception);
                 }
-
-                report($exception);
-
-                return;
             }
+        }
 
-            foreach ($laravelChannels as $channel) {
-                if ($channel === 'mail' && $mailDelivery) {
-                    $mailDelivery->forceFill([
-                        'status' => 'sent',
-                        'sent_at' => now(),
-                    ])->save();
+        if ($channels[NotificationChannels::IN_APP] ?? false) {
+            $inAppDelivery = $this->reserveDelivery(
+                userId: $user->id,
+                eventKey: $eventKey,
+                channel: NotificationChannels::IN_APP,
+                subjectType: $subjectType,
+                subjectId: $subjectId,
+                dedupeKey: $dedupeKey,
+                payload: $payload,
+            );
 
-                    continue;
+            if ($inAppDelivery) {
+                try {
+                    $user->notify(new MarketplaceEventNotification(
+                        eventKey: $eventKey,
+                        title: $title,
+                        body: $body,
+                        url: $normalizedUrl,
+                        channels: ['database'],
+                        payload: $payload,
+                    ));
+                    $inAppDelivery->forceFill(['status' => 'sent', 'sent_at' => now()])->save();
+                } catch (Throwable $exception) {
+                    $this->markFailed($inAppDelivery, $exception);
                 }
-
-                $this->logDelivery(
-                    userId: $user->id,
-                    eventKey: $eventKey,
-                    channel: NotificationChannels::IN_APP,
-                    status: 'sent',
-                    subjectType: $subjectType,
-                    subjectId: $subjectId,
-                    dedupeKey: $dedupeKey ? $dedupeKey.':'.NotificationChannels::IN_APP : null,
-                    payload: $payload
-                );
             }
         }
 
@@ -174,7 +156,7 @@ class MarketplaceNotificationService
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      */
     private function dispatchPlaceholderChannel(
         int $userId,
@@ -200,26 +182,6 @@ class MarketplaceNotificationService
             dedupeKey: $dedupeKey ? $dedupeKey.':'.$channel : null,
             payload: $payload
         );
-    }
-
-    /**
-     * @param list<string> $laravelChannels
-     */
-    private function shouldDispatchForLaravelChannels(int $userId, ?string $dedupeKey, array $laravelChannels): bool
-    {
-        if (! $dedupeKey) {
-            return true;
-        }
-
-        $channelKeys = collect($laravelChannels)
-            ->map(fn (string $channel) => $dedupeKey.':'.($channel === 'mail' ? NotificationChannels::EMAIL : NotificationChannels::IN_APP))
-            ->values()
-            ->all();
-
-        return ! MarketplaceNotificationDelivery::query()
-            ->where('user_id', $userId)
-            ->whereIn('dedupe_key', $channelKeys)
-            ->exists();
     }
 
     private function shouldDispatch(int $userId, ?string $dedupeKey, string $channel): bool
@@ -253,8 +215,58 @@ class MarketplaceNotificationService
         return $baseUrl.'/'.$url;
     }
 
+    /** @param array<string,mixed> $payload */
+    private function reserveDelivery(
+        int $userId,
+        string $eventKey,
+        string $channel,
+        ?string $subjectType,
+        ?int $subjectId,
+        ?string $dedupeKey,
+        array $payload,
+    ): ?MarketplaceNotificationDelivery {
+        $channelDedupeKey = $dedupeKey ? $dedupeKey.':'.$channel : null;
+        $attributes = [
+            'user_id' => $userId,
+            'event_key' => $eventKey,
+            'channel' => $channel,
+            'status' => 'queued',
+            'notifiable_type' => $subjectType,
+            'notifiable_id' => $subjectId,
+            'dedupe_key' => $channelDedupeKey,
+            'payload' => $payload,
+            'sent_at' => null,
+        ];
+
+        if (! $channelDedupeKey) {
+            return MarketplaceNotificationDelivery::query()->create($attributes);
+        }
+
+        try {
+            $delivery = MarketplaceNotificationDelivery::query()->firstOrCreate(
+                ['user_id' => $userId, 'dedupe_key' => $channelDedupeKey],
+                $attributes,
+            );
+
+            return $delivery->wasRecentlyCreated ? $delivery : null;
+        } catch (QueryException) {
+            // A concurrent request reserved this exact recipient/channel delivery first.
+            return null;
+        }
+    }
+
+    private function markFailed(MarketplaceNotificationDelivery $delivery, Throwable $exception): void
+    {
+        $delivery->forceFill([
+            'status' => 'failed',
+            'payload' => array_merge($delivery->payload ?? [], ['provider_error' => $exception->getMessage()]),
+            'sent_at' => now(),
+        ])->save();
+        report($exception);
+    }
+
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      */
     private function logDelivery(
         int $userId,

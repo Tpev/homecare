@@ -113,6 +113,12 @@ class CarePlanShow extends Component
             'family:id,name,email,phone', 'caregiver:id,name,email,phone', 'sourceCareRequest:id,title',
             'scheduleChanges.requestedBy:id,name', 'scheduleChanges.respondedBy:id,name',
             'events.actor:id,name',
+            'completedExtraVisitRequests' => fn ($query) => $query->with([
+                'caregiver:id,name,email', 'family:id,name,email', 'approvedBy:id,name',
+                'booking:id,care_request_id,status', 'booking.payment:id,care_booking_id,status,amount_captured_cents,caregiver_amount_cents,currency,last_error',
+                'supportTicket:id,status,subject',
+                'notificationDeliveries:id,notifiable_type,notifiable_id,user_id,event_key,channel,status,created_at,sent_at',
+            ])->latest('version'),
         ])->findOrFail($id);
     }
 

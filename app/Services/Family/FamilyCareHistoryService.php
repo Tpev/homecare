@@ -153,6 +153,7 @@ class FamilyCareHistoryService
         $visit = $this->visitDetails($booking);
         $careType = match (true) {
             $booking->care_plan_id === null => ['key' => 'one_time', 'label' => 'One-time'],
+            $booking->plan_visit_kind === 'completed_extra' => ['key' => 'extra', 'label' => 'Family-approved extra visit'],
             $booking->plan_visit_kind === 'extra' => ['key' => 'extra', 'label' => 'Extra visit'],
             default => ['key' => 'regular', 'label' => 'Regular care'],
         };
@@ -300,9 +301,9 @@ class FamilyCareHistoryService
         match ($filters['type'] ?? 'all') {
             'one_time' => $query->whereNull('care_bookings.care_plan_id'),
             'regular' => $query->whereNotNull('care_bookings.care_plan_id')->where(function (Builder $type): void {
-                $type->whereNull('care_bookings.plan_visit_kind')->orWhere('care_bookings.plan_visit_kind', '!=', 'extra');
+                $type->whereNull('care_bookings.plan_visit_kind')->orWhereNotIn('care_bookings.plan_visit_kind', ['extra', 'completed_extra']);
             }),
-            'extra' => $query->where('care_bookings.plan_visit_kind', 'extra'),
+            'extra' => $query->whereIn('care_bookings.plan_visit_kind', ['extra', 'completed_extra']),
             default => null,
         };
 
