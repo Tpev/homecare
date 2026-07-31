@@ -30,6 +30,7 @@
             <p class="mt-2 text-lg text-[#526474]">{{ $scheduleLabel }}</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
+            <a href="{{ route('family.care.history', ['plan' => $plan->id]) }}" wire:navigate><x-button color="white" light>View past visits</x-button></a>
             @if ($plan->source_care_request_id)
                 <a href="{{ route('family.requests.show', $plan->source_care_request_id) }}" wire:navigate><x-button color="blue" light>Message caregiver</x-button></a>
             @endif

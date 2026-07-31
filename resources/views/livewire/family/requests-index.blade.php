@@ -37,6 +37,7 @@
                     </p>
                     <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                         <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button w-full sm:w-auto">Get care</a>
+                        <a href="{{ route('family.care.history') }}" wire:navigate class="hc-secondary-button w-full sm:w-auto">Care history</a>
                         <a href="{{ route('caregivers.search') }}" wire:navigate class="hc-secondary-button w-full sm:w-auto">Find caregivers</a>
                     </div>
                 </div>

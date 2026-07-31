@@ -1,13 +1,18 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between gap-4">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h1 class="font-display text-2xl font-semibold text-slate-900">Billing & Payments</h1>
                 <p class="mt-1 text-sm text-slate-600">Add a card once. We pre-authorize when you hire, then capture after you approve the visit.</p>
             </div>
-            <a href="{{ route('family.requests.index') }}" wire:navigate>
-                <x-button color="blue" light>Back to Care</x-button>
-            </a>
+            <div class="flex flex-col gap-2 sm:flex-row">
+                <a href="{{ route('family.care.history', ['payment' => 'charged']) }}" wire:navigate>
+                    <x-button color="green" light class="w-full sm:w-auto">View payment history</x-button>
+                </a>
+                <a href="{{ route('family.requests.index') }}" wire:navigate>
+                    <x-button color="blue" light class="w-full sm:w-auto">Back to Care</x-button>
+                </a>
+            </div>
         </div>
     </x-slot>
 

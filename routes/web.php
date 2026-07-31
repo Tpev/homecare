@@ -55,6 +55,7 @@ use App\Livewire\Caregiver\WorkInbox;
 use App\Livewire\Dashboard\Home as DashboardHome;
 use App\Livewire\Family\AiRequestCopilot;
 use App\Livewire\Family\BookAgain;
+use App\Livewire\Family\CareHistory;
 use App\Livewire\Family\CreateCareRequestWizard;
 use App\Livewire\Family\ManageCareRequest;
 use App\Livewire\Family\NotificationsCenter as FamilyNotificationsCenter;
@@ -226,6 +227,7 @@ Route::middleware(['auth', 'caregiver.role'])->group(function () {
 
 Route::middleware(['auth', 'family.role'])->prefix('family')->name('family.')->group(function () {
     Route::get('/care', RegularCareIndex::class)->name('care.index');
+    Route::get('/care/history', CareHistory::class)->name('care.history');
     Route::get('/care/{carePlan}', RegularCareShow::class)
         ->whereNumber('carePlan')
         ->name('care.show');

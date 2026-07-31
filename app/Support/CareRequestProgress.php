@@ -336,7 +336,7 @@ class CareRequestProgress
                 'This visit is complete.',
                 'Review the final record, caregiver feedback, and book again when you need the same help.',
                 'shift',
-                ['shift', 'selected_caregiver', 'overview'],
+                ['shift', 'selected_caregiver', 'support', 'overview'],
                 [
                     ['label' => 'Visit', 'value' => 'Complete', 'help' => 'Closed record'],
                     ['label' => 'Caregiver', 'value' => self::caregiverTile($request), 'help' => 'Assigned person'],

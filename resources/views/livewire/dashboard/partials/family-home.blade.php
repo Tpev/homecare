@@ -289,7 +289,10 @@
     <div class="space-y-5">
         <x-card>
             <x-slot:header>
-                <h2 class="font-display text-xl font-semibold">Next visit</h2>
+                <div class="flex items-center justify-between gap-3">
+                    <h2 class="font-display text-xl font-semibold">Next visit</h2>
+                    <a href="{{ route('family.care.history') }}" wire:navigate class="text-sm font-semibold text-[#2F6F62] underline underline-offset-4">Care history</a>
+                </div>
             </x-slot:header>
 
             @if ($nextShiftRequest)

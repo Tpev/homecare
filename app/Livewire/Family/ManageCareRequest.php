@@ -26,6 +26,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
@@ -33,6 +34,7 @@ class ManageCareRequest extends Component
 {
     public CareRequest $requestItem;
 
+    #[Url(as: 'tab')]
     public string $activeTab = 'overview';
 
     public string $applicationStatus = 'all';
@@ -112,7 +114,14 @@ class ManageCareRequest extends Component
             $this->refreshRequestItem(preferLifecyclePrimary: true);
         }
 
-        $this->activeTab = CareRequestProgress::familyLifecycleStage($this->requestItem)['primary_tab'];
+        $lifecycle = CareRequestProgress::familyLifecycleStage($this->requestItem);
+        $visibleTabs = collect($lifecycle['tabs'])->pluck('key')->all();
+        $requestedTab = request()->query->has('tab')
+            ? trim((string) request()->query('tab'))
+            : null;
+        $this->activeTab = $requestedTab !== null && in_array($requestedTab, $visibleTabs, true)
+            ? $requestedTab
+            : $lifecycle['primary_tab'];
     }
 
     public function setActiveTab(string $tab): void
