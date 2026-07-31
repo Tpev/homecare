@@ -534,9 +534,26 @@ class CareBookingTimeCorrectionTest extends TestCase
 
         Livewire::actingAs($caregiver)
             ->test(ApplyToCareRequest::class, ['careRequest' => $request->id])
-            ->assertSee('I provided care — add my hours')
+            ->assertSee('Do these hours need fixing?')
+            ->assertSee('Add missed hours')
+            ->assertSee('Family approval required')
             ->call('openTimeCorrection')
             ->assertSet('showTimeCorrectionPanel', true)
+            ->assertSee('Fix visit time')
+            ->assertSee('Family approval required');
+
+        $booking->forceFill([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'started_at' => $booking->scheduled_start_at,
+            'completed_at' => $booking->scheduled_end_at,
+            'worked_minutes' => 180,
+            'timesheet_submitted_at' => now(),
+        ])->save();
+
+        Livewire::actingAs($caregiver)
+            ->test(ApplyToCareRequest::class, ['careRequest' => $request->id])
+            ->assertSee('Do these hours need fixing?')
+            ->assertSee('Fix your recorded visit time.')
             ->assertSee('Fix visit time')
             ->assertSee('Family approval required');
 

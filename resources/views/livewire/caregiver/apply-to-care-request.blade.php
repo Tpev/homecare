@@ -731,26 +731,50 @@
                         @endif
 
                         @if ($isExpiredRegularVisit)
-                            <div class="rounded-xl border border-amber-300/50 bg-amber-500/10 px-4 py-3 text-sm leading-6 text-amber-50">
-                                <p>{{ $timeCorrectionsEnabled
-                                    ? 'The check-in window has closed. This visit stays available if you provided care and need to add the hours.'
-                                    : 'The check-in window has closed. If care was provided but the hours were not entered, report it from this visit so support receives the correct booking record.' }}</p>
-                                <div class="mt-3 grid gap-2 sm:flex sm:flex-wrap">
-                                    @if ($timeCorrectionsEnabled)
-                                        @if ($timeCorrectionCanStart)
-                                            <x-button id="time-correction-trigger" color="white" light class="min-h-12 w-full sm:w-auto" wire:click="openTimeCorrection">Add missed hours</x-button>
+                            @if ($timeCorrectionsEnabled && $timeCorrectionCanStart)
+                                <section class="rounded-2xl border-2 border-[#F2B84B] bg-[#FFF7E1] p-4 text-[#17313F] shadow-[0_10px_30px_rgba(11,58,58,0.24)] sm:p-5" aria-labelledby="missed-hours-entry-heading">
+                                    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                        <div class="flex min-w-0 items-start gap-3.5">
+                                            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#F2B84B] text-[#17313F] shadow-sm" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24" fill="none" class="h-6 w-6" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m5-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                </svg>
+                                            </span>
+                                            <div>
+                                                <p class="text-xs font-bold uppercase tracking-[0.16em] text-[#9A5A12]">Did you provide care?</p>
+                                                <h3 id="missed-hours-entry-heading" class="mt-1 font-display text-xl font-semibold text-[#17313F] sm:text-2xl">The check-in window closed, but you can still add your hours.</h3>
+                                                <p class="mt-2 max-w-2xl text-sm leading-6 text-[#526474]">Enter the time you actually worked and send it to the family for approval. Nothing is billed from your request alone.</p>
+                                            </div>
+                                        </div>
+                                        <div class="shrink-0 lg:w-64">
+                                            <button id="time-correction-trigger" type="button" wire:click="openTimeCorrection" class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#C85F3E] px-5 py-3 text-base font-bold text-white shadow-[0_6px_16px_rgba(153,61,37,0.28)] transition hover:-translate-y-0.5 hover:bg-[#B95033] focus:outline-none focus:ring-2 focus:ring-[#C85F3E] focus:ring-offset-2 focus:ring-offset-[#FFF7E1]">
+                                                Add missed hours
+                                                <svg viewBox="0 0 20 20" fill="none" class="h-5 w-5" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 10h12m-5-5 5 5-5 5" />
+                                                </svg>
+                                            </button>
+                                            <button type="button" wire:click="openHistoricalVisitSupport" class="mt-2 min-h-11 w-full rounded-xl px-4 text-sm font-semibold text-[#0F6B62] underline decoration-[#0F6B62]/35 underline-offset-4 transition hover:bg-white/60 focus:outline-none focus:ring-2 focus:ring-[#0F6B62]">Get LoLo help</button>
+                                            @if ($currentRegularCareBooking)
+                                                <a href="{{ route('care-requests.apply', $currentRegularCareBooking->care_request_id) }}" wire:navigate class="inline-flex min-h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold text-[#0F6B62] transition hover:bg-white/60 focus:outline-none focus:ring-2 focus:ring-[#0F6B62]">Open current visit</a>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </section>
+                            @else
+                                <div class="rounded-xl border border-amber-300/50 bg-amber-500/10 px-4 py-3 text-sm leading-6 text-amber-50">
+                                    <p>{{ $timeCorrectionsEnabled
+                                        ? 'The check-in window has closed. This visit stays available while its time correction is being reviewed.'
+                                        : 'The check-in window has closed. If care was provided but the hours were not entered, report it from this visit so support receives the correct booking record.' }}</p>
+                                    <div class="mt-3 grid gap-2 sm:flex sm:flex-wrap">
+                                        <x-button color="white" light class="min-h-12 w-full sm:w-auto" wire:click="openHistoricalVisitSupport">{{ $timeCorrectionsEnabled ? 'Get LoLo help' : 'Report work or get help' }}</x-button>
+                                        @if ($currentRegularCareBooking)
+                                            <a href="{{ route('care-requests.apply', $currentRegularCareBooking->care_request_id) }}" wire:navigate>
+                                                <x-button color="blue" class="min-h-12 w-full sm:w-auto">Open current visit</x-button>
+                                            </a>
                                         @endif
-                                        <x-button color="white" light class="min-h-12 w-full sm:w-auto" wire:click="openHistoricalVisitSupport">Get LoLo help</x-button>
-                                    @else
-                                        <x-button color="white" light class="min-h-12 w-full sm:w-auto" wire:click="openHistoricalVisitSupport">Report work or get help</x-button>
-                                    @endif
-                                    @if ($currentRegularCareBooking)
-                                        <a href="{{ route('care-requests.apply', $currentRegularCareBooking->care_request_id) }}" wire:navigate>
-                                            <x-button color="blue" class="min-h-12 w-full sm:w-auto">Open current visit</x-button>
-                                        </a>
-                                    @endif
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
                         @elseif ($canCheckIn)
                             <x-button
                                 color="blue"
@@ -788,9 +812,33 @@
                         @endif
 
                         @if ($timeCorrectionCanStart && ! $isExpiredRegularVisit)
-                            <button id="time-correction-trigger" type="button" wire:click="openTimeCorrection" class="min-h-12 w-full rounded-xl border border-white/35 px-4 py-3 text-left text-base font-semibold text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white">
-                                {{ $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED ? 'I provided care — add my hours' : 'Fix visit time' }}
-                            </button>
+                            <section class="rounded-2xl border-2 border-[#F2B84B] bg-[#FFF7E1] p-4 text-[#17313F] shadow-[0_10px_30px_rgba(11,58,58,0.24)] sm:p-5" aria-labelledby="time-correction-entry-heading">
+                                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                    <div class="flex min-w-0 items-start gap-3.5">
+                                        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#F2B84B] text-[#17313F] shadow-sm" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24" fill="none" class="h-6 w-6" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m5-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                            </svg>
+                                        </span>
+                                        <div>
+                                            <p class="text-xs font-bold uppercase tracking-[0.16em] text-[#9A5A12]">Do these hours need fixing?</p>
+                                            <h3 id="time-correction-entry-heading" class="mt-1 font-display text-xl font-semibold text-[#17313F] sm:text-2xl">
+                                                {{ $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED ? 'Add care hours you forgot to record.' : 'Fix your recorded visit time.' }}
+                                            </h3>
+                                            <p id="time-correction-entry-help" class="mt-2 max-w-2xl text-sm leading-6 text-[#526474]">Forgot to check in, end the visit, or record the right break? Enter the actual hours and send them to the family for approval.</p>
+                                        </div>
+                                    </div>
+                                    <div class="shrink-0 lg:w-64">
+                                        <button id="time-correction-trigger" type="button" wire:click="openTimeCorrection" aria-describedby="time-correction-entry-help" class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#C85F3E] px-5 py-3 text-base font-bold text-white shadow-[0_6px_16px_rgba(153,61,37,0.28)] transition hover:-translate-y-0.5 hover:bg-[#B95033] focus:outline-none focus:ring-2 focus:ring-[#C85F3E] focus:ring-offset-2 focus:ring-offset-[#FFF7E1]">
+                                            {{ $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED ? 'Add missed hours' : 'Fix visit time' }}
+                                            <svg viewBox="0 0 20 20" fill="none" class="h-5 w-5" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 10h12m-5-5 5 5-5 5" />
+                                            </svg>
+                                        </button>
+                                        <p class="mt-2 text-center text-xs font-medium text-[#6B7785]">Family approval required</p>
+                                    </div>
+                                </div>
+                            </section>
                         @endif
 
                         <p class="text-xs text-[#D7DEE6]" x-show="geoMessage" x-text="geoMessage"></p>

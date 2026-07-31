@@ -15,13 +15,23 @@ test.describe('Visit time correction collaboration', () => {
         page.on('console', message => { if (message.type() === 'error') browserErrors.push(message.text()); });
         page.on('pageerror', error => browserErrors.push(error.message));
 
-        await page.setViewportSize({ width: 390, height: 844 });
         await loginAs(page, 'caregiverReady');
+        await page.setViewportSize({ width: 1440, height: 900 });
         await page.goto(`/care-requests/${SEEDED_REQUEST_ID}/apply`);
         await expect(page.getByText(REQUEST_TITLE)).toBeVisible();
         const requestPath = new URL(page.url()).pathname;
 
         await expect(page.getByRole('button', { name: 'Add missed hours' })).toBeVisible();
+        await expect(page.getByText('Did you provide care?')).toBeVisible();
+        await expectNoHorizontalOverflow(page);
+        await page.screenshot({ path: testInfo.outputPath('caregiver-entry-1440.png'), fullPage: true });
+
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.reload();
+        await expect(page.getByRole('button', { name: 'Add missed hours' })).toBeVisible();
+        await expectNoHorizontalOverflow(page);
+        await page.screenshot({ path: testInfo.outputPath('caregiver-entry-390.png'), fullPage: true });
+
         await page.getByRole('button', { name: 'Add missed hours' }).click();
         await expect(page.getByRole('heading', { name: 'Fix visit time' })).toBeVisible();
         await expectNoHorizontalOverflow(page);
