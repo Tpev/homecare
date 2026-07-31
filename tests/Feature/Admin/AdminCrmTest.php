@@ -263,6 +263,46 @@ class AdminCrmTest extends TestCase
         ], array_slice($stages, $qualifiedIndex, 4));
     }
 
+    public function test_referral_board_loads_each_stage_independently_with_accurate_counts_and_load_more(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'test@test.com',
+            'role' => 'admin',
+        ]);
+        $now = now();
+
+        Lead::query()->insert(collect(range(1, 121))->map(fn (int $index): array => [
+            'lead_type' => Lead::TYPE_REFERRAL,
+            'name' => 'Earlier outreach '.$index,
+            'status' => 'outreach',
+            'priority' => Lead::PRIORITY_NORMAL,
+            'next_follow_up_at' => $now->copy()->subDays(2),
+            'created_at' => $now,
+            'updated_at' => $now,
+        ])->all());
+        Lead::query()->insert(collect(range(1, 10))->map(fn (int $index): array => [
+            'lead_type' => Lead::TYPE_REFERRAL,
+            'name' => 'Material drop-off '.$index,
+            'status' => 'need_to_drop_material',
+            'priority' => Lead::PRIORITY_NORMAL,
+            'next_follow_up_at' => $now->copy()->addDay(),
+            'created_at' => $now,
+            'updated_at' => $now->copy()->addSeconds($index),
+        ])->all());
+
+        Livewire::actingAs($admin)
+            ->test(LeadsIndex::class, ['pipeline' => Lead::TYPE_REFERRAL])
+            ->assertViewHas('boardStageCounts', fn (array $counts): bool => ($counts['outreach'] ?? null) === 121
+                && ($counts['need_to_drop_material'] ?? null) === 10)
+            ->assertViewHas('boardLeads', fn ($stages): bool => $stages->get('outreach')->count() === 8
+                && $stages->get('need_to_drop_material')->count() === 8)
+            ->assertSee('Load more · showing 8 of 10')
+            ->call('loadMoreBoardStage', 'need_to_drop_material')
+            ->assertSet('boardStageLimits.need_to_drop_material', 16)
+            ->assertViewHas('boardLeads', fn ($stages): bool => $stages->get('need_to_drop_material')->count() === 10)
+            ->assertDontSee('Load more · showing 8 of 10');
+    }
+
     public function test_admin_can_drag_move_lead_across_board_stages(): void
     {
         $admin = User::factory()->create([

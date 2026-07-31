@@ -19,6 +19,10 @@ class LeadsIndex extends Component
 {
     use WithPagination;
 
+    private const BOARD_STAGE_INITIAL_LIMIT = 8;
+
+    private const BOARD_STAGE_LOAD_MORE_COUNT = 8;
+
     public string $q = '';
 
     public string $pipeline = Lead::TYPE_FAMILY;
@@ -36,6 +40,9 @@ class LeadsIndex extends Component
     public string $dir = 'asc';
 
     public int $perPage = 25;
+
+    /** @var array<string, int> */
+    public array $boardStageLimits = [];
 
     public bool $showCreateForm = false;
 
@@ -72,6 +79,7 @@ class LeadsIndex extends Component
     public function updatingQ(): void
     {
         $this->resetPage();
+        $this->resetBoardStageLimits();
     }
 
     public function updatingStatus(): void
@@ -82,16 +90,19 @@ class LeadsIndex extends Component
     public function updatingAssigned(): void
     {
         $this->resetPage();
+        $this->resetBoardStageLimits();
     }
 
     public function updatingSource(): void
     {
         $this->resetPage();
+        $this->resetBoardStageLimits();
     }
 
     public function updatingPriority(): void
     {
         $this->resetPage();
+        $this->resetBoardStageLimits();
     }
 
     public function updatingPerPage(): void
@@ -108,8 +119,23 @@ class LeadsIndex extends Component
         $this->pipeline = $pipeline;
         $this->status = 'all';
         $this->selectedLeadId = null;
+        $this->resetBoardStageLimits();
         $this->resetLeadForm();
         $this->resetPage();
+    }
+
+    public function loadMoreBoardStage(string $stage): void
+    {
+        if (! array_key_exists($stage, $this->currentStageOptions())) {
+            return;
+        }
+
+        $currentLimit = max(
+            self::BOARD_STAGE_INITIAL_LIMIT,
+            (int) ($this->boardStageLimits[$stage] ?? self::BOARD_STAGE_INITIAL_LIMIT)
+        );
+
+        $this->boardStageLimits[$stage] = $currentLimit + self::BOARD_STAGE_LOAD_MORE_COUNT;
     }
 
     public function setSort(string $field): void
@@ -364,14 +390,33 @@ class LeadsIndex extends Component
 
     public function render(): View
     {
-        $boardLeads = $this->baseQuery(applyStatus: false)
-            ->with('assignedAdmin:id,name,email')
-            ->orderByRaw('next_follow_up_at is null')
-            ->orderBy('next_follow_up_at')
-            ->latest('updated_at')
-            ->limit(120)
-            ->get()
-            ->groupBy('status');
+        $stageOptions = $this->currentStageOptions();
+        $boardQuery = $this->baseQuery(applyStatus: false);
+        $boardStageCounts = (clone $boardQuery)
+            ->selectRaw('status, count(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status')
+            ->map(fn ($count): int => (int) $count)
+            ->all();
+        $boardLeads = collect();
+
+        foreach (array_keys($stageOptions) as $stage) {
+            $limit = max(
+                self::BOARD_STAGE_INITIAL_LIMIT,
+                (int) ($this->boardStageLimits[$stage] ?? self::BOARD_STAGE_INITIAL_LIMIT)
+            );
+            $boardLeads->put(
+                $stage,
+                (clone $boardQuery)
+                    ->where('status', $stage)
+                    ->with('assignedAdmin:id,name,email')
+                    ->orderByRaw('next_follow_up_at is null')
+                    ->orderBy('next_follow_up_at')
+                    ->latest('updated_at')
+                    ->limit($limit)
+                    ->get()
+            );
+        }
 
         $leads = $this->baseQuery()
             ->with('assignedAdmin:id,name,email')
@@ -385,14 +430,20 @@ class LeadsIndex extends Component
             'admins' => $this->adminOptions(),
             'activityTypeOptions' => $this->activityTypeOptions(),
             'boardLeads' => $boardLeads,
+            'boardStageCounts' => $boardStageCounts,
             'leads' => $leads,
             'pipelineOptions' => $this->pipelineOptions(),
             'priorityOptions' => $this->priorityOptions(),
             'selectedLead' => $this->selectedLead,
             'sourceOptions' => $this->sourceOptions(),
-            'stageOptions' => $this->currentStageOptions(),
+            'stageOptions' => $stageOptions,
             'stats' => $this->stats(),
         ]);
+    }
+
+    private function resetBoardStageLimits(): void
+    {
+        $this->boardStageLimits = [];
     }
 
     private function baseQuery(bool $applyStatus = true): Builder
