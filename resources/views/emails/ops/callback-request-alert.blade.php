@@ -1,55 +1,49 @@
 @php
-    $data = $lead->data ?? [];
-    $callbackTime = $data['callback_time_label'] ?? $data['callback_time'] ?? 'n/a';
+    $data = (array) $lead->data;
+    $callbackTime = $data['callback_time_label'] ?? $data['callback_time'] ?? 'Not provided';
     $requestedContact = $data['requested_contact'] ?? 'LoLo Care team';
-    $reason = $data['reason'] ?? null;
-    $notes = $data['notes'] ?? $reason;
+    $reason = $data['callback_reason'] ?? $data['reason'] ?? $data['notes'] ?? '';
 @endphp
+<x-emails.lolo-layout
+    :preheader="($lead->name ?: 'A caller').' requested a callback from '.$requestedContact.'.'"
+    eyebrow="Callback requested"
+    :title="($lead->name ?: 'A caller').' asked for a callback'"
+    intro="Use the contact details and requested time below to follow up."
+    :cta-url="route('admin.crm.index')"
+    :raw-url="route('admin.crm.index')"
+    cta-label="Open CRM"
+    :home-url="route('dashboard')"
+    :logo-url="asset(\App\Support\MarketplaceNotificationPresentation::LOGO_PATH)"
+    :year="now()->year"
+>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #E3D6C5;border-radius:14px;background-color:#FFF7EA;">
+        @foreach ([
+            ['Lead ID', '#'.$lead->id],
+            ['Name', $lead->name ?: 'Not provided'],
+            ['Phone', $lead->phone ?: 'Not provided'],
+            ['Email', $lead->email ?: 'Not provided'],
+            ['Location', $lead->zip ?: $lead->location ?: 'Not provided'],
+            ['Care need', $data['service_type'] ?? 'Not provided'],
+            ['Best time to call', $callbackTime],
+            ['Requested contact', $requestedContact],
+            ['Starting rate shown', $data['starting_rate'] ?? 'Not provided'],
+            ['Status', str($lead->status)->headline()],
+            ['Submitted', optional($lead->created_at)->format('F j, Y · g:i A T')],
+        ] as $detail)
+            <tr><td valign="top" style="width:34%;padding:10px 14px;{{ !$loop->last ? 'border-bottom:1px solid #E3D6C5;' : '' }}color:#6E746F;font-size:13px;">{{ $detail[0] }}</td><td valign="top" style="padding:10px 14px;{{ !$loop->last ? 'border-bottom:1px solid #E3D6C5;' : '' }}color:#23483F;font-size:14px;font-weight:bold;">{{ $detail[1] }}</td></tr>
+        @endforeach
+    </table>
 
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>LoLo Care callback request</title>
-</head>
-<body style="font-family: Arial, sans-serif; color: #24302d; background: #fff7ea; margin: 0; padding: 24px;">
-    <div style="max-width: 680px; margin: 0 auto; background: #fffaf0; border: 1px solid #eadfce; border-radius: 18px; padding: 24px;">
-        <p style="margin: 0 0 8px; color: #c96b55; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;">New callback request</p>
-        <h1 style="margin: 0 0 12px; color: #23483f; font-size: 28px; line-height: 1.15;">A caller asked {{ $requestedContact }} to call them back.</h1>
-        <p style="margin: 0 0 20px; color: #53645d;">This request came from a LoLo Care callback flow. Use the phone number and context below to follow up as soon as possible.</p>
+    @if (trim((string) $reason) !== '')
+        <div style="margin-top:18px;padding:16px;background-color:#F1E5D2;border-left:4px solid #C96B55;border-radius:10px;color:#53645D;font-size:14px;line-height:1.6;">
+            <strong style="color:#23483F;">Family’s note</strong><br>{{ $reason }}
+        </div>
+    @endif
 
-        <table cellpadding="7" cellspacing="0" border="0" style="border-collapse: collapse; width: 100%; background: #fff7ea; border-radius: 12px;">
-            <tr><td style="width: 180px;"><strong>Lead ID</strong></td><td>{{ $lead->id }}</td></tr>
-            <tr><td><strong>Name</strong></td><td>{{ $lead->name ?: 'n/a' }}</td></tr>
-            <tr><td><strong>Phone</strong></td><td><a href="tel:{{ preg_replace('/\D+/', '', (string) $lead->phone) }}" style="color: #23483f;">{{ $lead->phone ?: 'n/a' }}</a></td></tr>
-            <tr><td><strong>Email</strong></td><td>{{ $lead->email ?: 'n/a' }}</td></tr>
-            <tr><td><strong>ZIP</strong></td><td>{{ $lead->zip ?: $lead->location ?: 'n/a' }}</td></tr>
-            <tr><td><strong>Care need</strong></td><td>{{ $data['service_type'] ?? 'n/a' }}</td></tr>
-            <tr><td><strong>Best time to call</strong></td><td>{{ $callbackTime }}</td></tr>
-            <tr><td><strong>Requested contact</strong></td><td>{{ $requestedContact }}</td></tr>
-            <tr><td><strong>Reason</strong></td><td>{{ $reason ?: 'n/a' }}</td></tr>
-            <tr><td><strong>Starting rate shown</strong></td><td>{{ $data['starting_rate'] ?? 'n/a' }}</td></tr>
-            <tr><td><strong>Status</strong></td><td>{{ $lead->status }}</td></tr>
-            <tr><td><strong>Submitted at</strong></td><td>{{ optional($lead->created_at)->toDateTimeString() ?: 'n/a' }}</td></tr>
-        </table>
-
-        @if (filled($notes))
-            <h2 style="margin: 24px 0 8px; color: #23483f; font-size: 18px;">Notes from family</h2>
-            <p style="margin: 0; white-space: pre-line; color: #24302d;">{{ $notes }}</p>
+    <p style="margin:18px 0 0;color:#6E746F;font-size:12px;line-height:1.55;">
+        Source: {{ $data['source'] ?? 'Not provided' }}
+        @if ($lead->source_url)
+            &middot; {{ $lead->source_url }}
         @endif
-
-        <h2 style="margin: 24px 0 8px; color: #23483f; font-size: 18px;">Source details</h2>
-        <table cellpadding="7" cellspacing="0" border="0" style="border-collapse: collapse; width: 100%;">
-            <tr><td style="width: 180px;"><strong>Source</strong></td><td>{{ $data['source'] ?? 'n/a' }}</td></tr>
-            <tr><td><strong>Intent</strong></td><td>{{ $data['intent'] ?? 'n/a' }}</td></tr>
-            <tr><td><strong>Source URL</strong></td><td>{{ $lead->source_url ?: 'n/a' }}</td></tr>
-            <tr><td><strong>Referrer URL</strong></td><td>{{ $lead->referrer_url ?: 'n/a' }}</td></tr>
-            <tr><td><strong>IP</strong></td><td>{{ $lead->ip ?: 'n/a' }}</td></tr>
-            <tr><td><strong>User agent</strong></td><td>{{ $lead->user_agent ?: 'n/a' }}</td></tr>
-        </table>
-
-        <h2 style="margin: 24px 0 8px; color: #23483f; font-size: 18px;">Raw lead data</h2>
-        <pre style="white-space: pre-wrap; background: #24302d; color: #fff7ea; border-radius: 12px; padding: 14px; font-size: 12px;">{{ json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
-    </div>
-</body>
-</html>
+    </p>
+</x-emails.lolo-layout>

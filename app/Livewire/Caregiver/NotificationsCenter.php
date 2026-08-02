@@ -5,6 +5,7 @@ namespace App\Livewire\Caregiver;
 use App\Models\UserNotificationPreference;
 use App\Services\Notifications\NotificationChannels;
 use App\Support\MarketplaceEvent;
+use App\Support\MarketplaceNotificationPresentation;
 use Illuminate\Notifications\DatabaseNotification;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -25,6 +26,9 @@ class NotificationsCenter extends Component
      * @var list<string>
      */
     public array $eventKeys = [
+        MarketplaceEvent::CAREGIVER_WELCOME,
+        MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H,
+        MarketplaceEvent::INVITATION_RECEIVED,
         MarketplaceEvent::MATCHING_REQUEST_REMINDER,
         MarketplaceEvent::APPLICATION_SUBMITTED,
         MarketplaceEvent::CARE_REQUEST_WITHDRAWN,
@@ -37,6 +41,9 @@ class NotificationsCenter extends Component
         MarketplaceEvent::TIMESHEET_AUTO_APPROVED,
         MarketplaceEvent::REVIEW_RECEIVED,
         MarketplaceEvent::MESSAGE_RECEIVED,
+        MarketplaceEvent::BOOKING_CHANGE_REQUESTED,
+        MarketplaceEvent::BOOKING_CHANGE_ACCEPTED,
+        MarketplaceEvent::BOOKING_CHANGE_DECLINED,
         MarketplaceEvent::PAYOUT_TRANSFERRED,
         MarketplaceEvent::PAYOUT_TRANSFER_FAILED,
         MarketplaceEvent::PAYMENT_REFUNDED,
@@ -61,11 +68,13 @@ class NotificationsCenter extends Component
         MarketplaceEvent::COMPLETED_EXTRA_VISIT_DISPUTED,
         MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED,
         MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED,
+        MarketplaceEvent::SUPPORT_TICKET_REPLY,
     ];
 
     public function mount(): void
     {
         abort_unless(auth()->user()?->role === 'caregiver', 403);
+        $this->eventKeys = MarketplaceNotificationPresentation::eventsForRole('caregiver');
         $this->loadPreferencesFromStore();
     }
 
@@ -121,8 +130,6 @@ class NotificationsCenter extends Component
             'preferences' => ['array'],
             'preferences.*.in_app' => ['boolean'],
             'preferences.*.email' => ['boolean'],
-            'preferences.*.sms' => ['boolean'],
-            'preferences.*.push' => ['boolean'],
         ]);
 
         $userId = (int) auth()->id();
@@ -138,8 +145,8 @@ class NotificationsCenter extends Component
                 [
                     'in_app_enabled' => (bool) ($row[NotificationChannels::IN_APP] ?? true),
                     'email_enabled' => (bool) ($row[NotificationChannels::EMAIL] ?? true),
-                    'sms_enabled' => (bool) ($row[NotificationChannels::SMS] ?? false),
-                    'push_enabled' => (bool) ($row[NotificationChannels::PUSH] ?? false),
+                    'sms_enabled' => false,
+                    'push_enabled' => false,
                 ]
             );
         }
@@ -203,13 +210,14 @@ class NotificationsCenter extends Component
                 return [
                     'id' => $notification->id,
                     'event_key' => $eventKey,
-                    'event_label' => $this->eventLabel($eventKey),
-                    'title' => (string) data_get($notification->data, 'title', 'Notification'),
+                    'event_label' => MarketplaceNotificationPresentation::label($eventKey),
+                    'title' => (string) data_get($notification->data, 'title', 'LoLo Care update'),
                     'body' => (string) data_get($notification->data, 'body', ''),
+                    'details' => collect((array) data_get($notification->data, 'payload.email_details', []))->take(3)->values()->all(),
                     'url' => (string) data_get($notification->data, 'url', ''),
                     'read_at' => $notification->read_at,
                     'created_at' => $notification->created_at,
-                    'tone' => $this->eventTone($eventKey),
+                    'tone' => MarketplaceNotificationPresentation::tone($eventKey),
                 ];
             });
 
@@ -217,7 +225,7 @@ class NotificationsCenter extends Component
             'notifications' => $notifications,
             'unreadCount' => auth()->user()->unreadNotifications()->count(),
             'eventOptions' => collect($this->eventKeys)->map(fn (string $key) => [
-                'label' => $this->eventLabel($key),
+                'label' => MarketplaceNotificationPresentation::label($key),
                 'value' => $key,
             ])->values()->all(),
         ]);
@@ -227,6 +235,9 @@ class NotificationsCenter extends Component
     {
         return match ($eventKey) {
             MarketplaceEvent::MATCHING_REQUEST_REMINDER => 'Invitation / match',
+            MarketplaceEvent::INVITATION_RECEIVED => 'Care invitation',
+            MarketplaceEvent::CAREGIVER_WELCOME => 'Welcome to LoLo Care',
+            MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H => 'Finish caregiver setup',
             MarketplaceEvent::APPLICATION_SUBMITTED => 'Application submitted',
             MarketplaceEvent::CARE_REQUEST_WITHDRAWN => 'Request withdrawn',
             MarketplaceEvent::CAREGIVER_HIRED => 'Hired',
@@ -238,6 +249,9 @@ class NotificationsCenter extends Component
             MarketplaceEvent::TIMESHEET_AUTO_APPROVED => 'Timesheet approved',
             MarketplaceEvent::REVIEW_RECEIVED => 'Review received',
             MarketplaceEvent::MESSAGE_RECEIVED => 'Message',
+            MarketplaceEvent::BOOKING_CHANGE_REQUESTED => 'Visit change requested',
+            MarketplaceEvent::BOOKING_CHANGE_ACCEPTED => 'Visit change accepted',
+            MarketplaceEvent::BOOKING_CHANGE_DECLINED => 'Visit change declined',
             MarketplaceEvent::PAYOUT_TRANSFERRED => 'Payout sent',
             MarketplaceEvent::PAYOUT_TRANSFER_FAILED => 'Payout issue',
             MarketplaceEvent::PAYMENT_REFUNDED => 'Refund update',
@@ -255,13 +269,14 @@ class NotificationsCenter extends Component
             MarketplaceEvent::TIME_CORRECTION_APPROVED => 'Time correction approved',
             MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED => 'Correction payment needed',
             MarketplaceEvent::TIME_CORRECTION_APPLIED => 'Visit time updated',
-            MarketplaceEvent::TIME_CORRECTION_ESCALATED => 'LoLo review',
+            MarketplaceEvent::TIME_CORRECTION_ESCALATED => 'LoLo Care review',
             MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => 'Time correction withdrawn',
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_CHANGES_REQUESTED => 'Extra visit needs changes',
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPROVED => 'Extra visit approved',
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_DISPUTED => 'Extra visit disputed',
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED => 'Extra visit recorded',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED => 'Extra visit LoLo review',
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED => 'Extra visit LoLo Care review',
+            MarketplaceEvent::SUPPORT_TICKET_REPLY => 'Support reply',
             default => 'Update',
         };
     }
@@ -270,6 +285,7 @@ class NotificationsCenter extends Component
     {
         return match ($eventKey) {
             MarketplaceEvent::APPLICATION_SUBMITTED,
+            MarketplaceEvent::CAREGIVER_WELCOME,
             MarketplaceEvent::CAREGIVER_HIRED,
             MarketplaceEvent::SHIFT_STARTED,
             MarketplaceEvent::TIMESHEET_AUTO_APPROVED,
@@ -284,11 +300,15 @@ class NotificationsCenter extends Component
             MarketplaceEvent::REGULAR_CARE_OFFERED,
             MarketplaceEvent::REGULAR_CARE_SCHEDULE_CHANGE_REQUESTED,
             MarketplaceEvent::REGULAR_CARE_EXTRA_VISIT_REQUESTED => 'info',
+            MarketplaceEvent::INVITATION_RECEIVED,
+            MarketplaceEvent::BOOKING_CHANGE_REQUESTED,
+            MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H => 'info',
             MarketplaceEvent::TIME_CORRECTION_REQUESTED,
             MarketplaceEvent::TIME_CORRECTION_RESUBMITTED => 'info',
             MarketplaceEvent::CARE_REQUEST_WITHDRAWN,
             MarketplaceEvent::SHIFT_CANCELLED,
             MarketplaceEvent::REVIEW_RECEIVED => 'warning',
+            MarketplaceEvent::BOOKING_CHANGE_DECLINED => 'warning',
             MarketplaceEvent::TIME_CORRECTION_CHANGES_REQUESTED,
             MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED,
             MarketplaceEvent::TIME_CORRECTION_ESCALATED,

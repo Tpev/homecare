@@ -325,7 +325,7 @@ class CompletedExtraVisitService
             $updated,
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_DISPUTED,
             'Extra visit disputed',
-            $family->name.' said the reported visit did not happen. LoLo will review it.',
+            $family->name.' said the reported visit did not happen. LoLo Care will review it.',
             'disputed'
         );
 
@@ -365,7 +365,7 @@ class CompletedExtraVisitService
             (int) $actor->id === (int) $request->family_user_id || (int) $actor->id === (int) $request->caregiver_user_id,
             403
         );
-        $reason = $this->validatedResponseNote($reason, 'Explain why you need LoLo help in at least 8 characters.');
+        $reason = $this->validatedResponseNote($reason, 'Explain why you need LoLo Care help in at least 8 characters.');
 
         $updated = DB::transaction(function () use ($request, $actor, $reason): CompletedExtraVisitRequest {
             $locked = CompletedExtraVisitRequest::query()->with('plan')->lockForUpdate()->findOrFail($request->id);
@@ -418,7 +418,7 @@ class CompletedExtraVisitService
             if ($updated->status === CompletedExtraVisitRequest::STATUS_APPROVED_PROCESSING) {
                 $updated->forceFill([
                     'status' => CompletedExtraVisitRequest::STATUS_FAILED,
-                    'last_error' => 'Automatic processing paused safely. LoLo will retry or review this report.',
+                    'last_error' => 'Automatic processing paused safely. LoLo Care will retry or review this report.',
                 ])->save();
             }
 
@@ -565,7 +565,7 @@ class CompletedExtraVisitService
         }
         $historyDays = max(1, (int) config('marketplace.completed_extra_visits.history_window_days', 30));
         if ($startLocal->lt(now($timezone)->subDays($historyDays))) {
-            throw ValidationException::withMessages(['reportDate' => 'This visit is outside the '.$historyDays.'-day reporting window. Contact LoLo support for help.']);
+            throw ValidationException::withMessages(['reportDate' => 'This visit is outside the '.$historyDays.'-day reporting window. Contact LoLo Care support for help.']);
         }
         if ($plan->activated_at && $startLocal->lt($plan->activated_at->copy()->setTimezone($timezone)->startOfDay())) {
             throw ValidationException::withMessages(['reportDate' => 'The visit predates this established regular-care relationship.']);
@@ -774,8 +774,8 @@ class CompletedExtraVisitService
 
     private function notifyEscalated(CompletedExtraVisitRequest $request): void
     {
-        $this->notifyFamily($request, MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED, 'LoLo is reviewing the extra visit', 'The visit report was sent to LoLo support. No new payment will be made while it is reviewed.', 'escalated-family');
-        $this->notifyCaregiver($request, MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED, 'LoLo is reviewing the extra visit', 'The visit report was sent to LoLo support for review.', 'escalated-caregiver');
+        $this->notifyFamily($request, MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED, 'LoLo Care is reviewing the extra visit', 'The visit report was sent to LoLo Care support. No new payment will be made while it is reviewed.', 'escalated-family');
+        $this->notifyCaregiver($request, MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED, 'LoLo Care is reviewing the extra visit', 'The visit report was sent to LoLo Care support for review.', 'escalated-caregiver');
     }
 
     private function notifyFamily(CompletedExtraVisitRequest $request, string $event, string $title, string $body, string $key): void

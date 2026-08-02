@@ -198,7 +198,7 @@ class RegularCareShow extends Component
         );
         unset($this->completedExtraVisitResponseNotes[$requestId]);
         $this->reloadPlan();
-        session()->flash('status', 'The visit was not approved. LoLo support can review the preserved report.');
+        session()->flash('status', 'The visit was not approved. LoLo Care support can review the preserved report.');
     }
 
     public function retryCompletedExtraVisitPayment(int $requestId): void
@@ -223,7 +223,7 @@ class RegularCareShow extends Component
         );
         unset($this->completedExtraVisitResponseNotes[$requestId]);
         $this->reloadPlan();
-        session()->flash('status', 'LoLo support will review this extra visit. No payment was made.');
+        session()->flash('status', 'LoLo Care support will review this extra visit. No payment was made.');
     }
 
     public function render(CarePlanService $plans, CompletedExtraVisitService $completedExtraVisits)

@@ -52,7 +52,7 @@ class CarePlanOperationsService
         if (! $changed) {
             return $this->health->reconcile($plan->fresh());
         }
-        $this->notifyBoth($plan, MarketplaceEvent::REGULAR_CARE_PAUSED, 'Regular care paused by LoLo', 'LoLo operations paused this regular-care schedule.');
+        $this->notifyBoth($plan, MarketplaceEvent::REGULAR_CARE_PAUSED, 'Regular care paused by LoLo Care', 'LoLo Care operations paused this regular-care schedule.');
 
         return $this->health->reconcile($plan->fresh());
     }
@@ -97,7 +97,7 @@ class CarePlanOperationsService
         }
         $this->occurrences->materialize($plan->fresh());
         $this->paymentWindow->preparePlan($plan->fresh());
-        $this->notifyBoth($plan, MarketplaceEvent::REGULAR_CARE_RESUMED, 'Regular care resumed by LoLo', 'LoLo operations resumed this regular-care schedule.');
+        $this->notifyBoth($plan, MarketplaceEvent::REGULAR_CARE_RESUMED, 'Regular care resumed by LoLo Care', 'LoLo Care operations resumed this regular-care schedule.');
 
         return $this->health->reconcile($plan->fresh());
     }
@@ -128,7 +128,7 @@ class CarePlanOperationsService
         if (! $changed) {
             return $this->health->reconcile($plan->fresh());
         }
-        $this->notifyBoth($plan, MarketplaceEvent::REGULAR_CARE_ENDED, 'Regular care ended by LoLo', 'LoLo operations ended this regular-care schedule.');
+        $this->notifyBoth($plan, MarketplaceEvent::REGULAR_CARE_ENDED, 'Regular care ended by LoLo Care', 'LoLo Care operations ended this regular-care schedule.');
 
         return $this->health->reconcile($plan->fresh());
     }

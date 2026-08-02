@@ -1,20 +1,25 @@
-{{ $appName }}
+LoLo Care
 {{ $eventLabel }}
 
-{{ $firstName !== '' ? 'Hi '.$firstName.',' : 'Hi,' }}
+{{ ($firstName ?? '') !== '' ? 'Hi '.$firstName.',' : 'Hi,' }}
+
 {{ $title }}
 
 {{ $body }}
 
-@if(!empty($checklist))
-Checklist:
-@foreach($checklist as $item)
+@if (!empty($checklist))
+YOUR CAREGIVER SETUP
+@foreach ($checklist as $item)
 - {{ $item }}
 @endforeach
 
 @endif
-{{ $ctaLabel }}: {{ $url }}
+Completing these details helps families understand your experience, availability, and the care you are comfortable providing.
 
-Need help? {{ $supportUrl }}
-Home: {{ $homeUrl }}
+{{ $ctaLabel }}: {{ $rawUrl ?? $url }}
 
+Need help? Contact LoLo Care support: {{ $supportUrl }}
+@if (!empty($preferencesUrl))
+Manage notification preferences: {{ $preferencesUrl }}
+@endif
+LoLo Care: {{ $homeUrl }}

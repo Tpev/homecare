@@ -9,6 +9,7 @@ use App\Models\CareRequestConversation;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Observers\CareRequestObserver;
+use App\Observers\SupportTicketObserver;
 use App\Policies\CareRequestConversationPolicy;
 use App\Policies\CareRequestPolicy;
 use App\Policies\SupportTicketMessagePolicy;
@@ -50,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(SupportTicket::class, SupportTicketPolicy::class);
         Gate::policy(SupportTicketMessage::class, SupportTicketMessagePolicy::class);
         CareRequest::observe(CareRequestObserver::class);
+        SupportTicket::observe(SupportTicketObserver::class);
 
         Event::listen(Registered::class, SendOpsUserRegisteredAlert::class);
     }

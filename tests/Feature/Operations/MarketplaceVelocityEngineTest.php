@@ -5,9 +5,9 @@ namespace Tests\Feature\Operations;
 use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Family\ManageCareRequest;
 use App\Models\CareBooking;
+use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
-use App\Models\CaregiverProfile;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
@@ -116,7 +116,7 @@ class MarketplaceVelocityEngineTest extends TestCase
 
         $this->assertDatabaseHas('marketplace_notification_deliveries', [
             'user_id' => $caregiver->id,
-            'event_key' => MarketplaceEvent::MATCHING_REQUEST_REMINDER,
+            'event_key' => MarketplaceEvent::INVITATION_RECEIVED,
         ]);
     }
 

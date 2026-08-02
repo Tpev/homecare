@@ -31,8 +31,9 @@ class NotificationPreferenceResolver
         return [
             NotificationChannels::IN_APP => (bool) $preference->in_app_enabled,
             NotificationChannels::EMAIL => (bool) $preference->email_enabled,
-            NotificationChannels::SMS => (bool) $preference->sms_enabled,
-            NotificationChannels::PUSH => (bool) $preference->push_enabled,
+            // Provider delivery is not implemented. Never present placeholder channels as live.
+            NotificationChannels::SMS => false,
+            NotificationChannels::PUSH => false,
         ];
     }
 }

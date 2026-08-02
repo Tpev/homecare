@@ -72,7 +72,6 @@ class CaregiverNotificationCenterTest extends TestCase
             ->test(NotificationsCenter::class)
             ->set('preferences.'.MarketplaceEvent::REVIEW_RECEIVED.'.'.NotificationChannels::EMAIL, false)
             ->set('preferences.'.MarketplaceEvent::REVIEW_RECEIVED.'.'.NotificationChannels::IN_APP, true)
-            ->set('preferences.'.MarketplaceEvent::REVIEW_RECEIVED.'.'.NotificationChannels::SMS, true)
             ->call('savePreferences')
             ->assertHasNoErrors();
 
@@ -81,7 +80,7 @@ class CaregiverNotificationCenterTest extends TestCase
             'event_key' => MarketplaceEvent::REVIEW_RECEIVED,
             'in_app_enabled' => 1,
             'email_enabled' => 0,
-            'sms_enabled' => 1,
+            'sms_enabled' => 0,
             'push_enabled' => 0,
         ]);
 

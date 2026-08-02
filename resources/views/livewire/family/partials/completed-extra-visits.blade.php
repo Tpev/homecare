@@ -58,13 +58,13 @@
                     @endif
 
                     @if ($report->status === \App\Models\CompletedExtraVisitRequest::STATUS_PENDING_FAMILY)
-                        <label class="mt-4 block text-base font-semibold text-[#263C48]">Note for changes, a dispute, or LoLo support
+                        <label class="mt-4 block text-base font-semibold text-[#263C48]">Note for changes, a dispute, or LoLo Care support
                             <textarea wire:model="completedExtraVisitResponseNotes.{{ $report->id }}" rows="3" class="mt-2 w-full rounded-xl border-[#BFC8CE] text-base" placeholder="Required if you request changes, dispute the visit, or ask LoLo for help."></textarea>
                         </label>
                         <div class="mt-4 grid gap-3 sm:flex sm:flex-wrap">
                             <button type="button" wire:click="approveCompletedExtraVisit({{ $report->id }})" wire:confirm="Approve {{ $report->durationLabel() }} and authorize the estimated ${{ number_format($familyCharge / 100, 2) }} charge? This will not change your regular schedule." wire:loading.attr="disabled" class="hc-primary-button min-h-12 w-full text-base sm:w-auto">Approve visit and payment</button>
                             <button type="button" wire:click="requestCompletedExtraVisitChanges({{ $report->id }})" wire:loading.attr="disabled" class="hc-secondary-button min-h-12 w-full text-base sm:w-auto">Request changes</button>
-                            <button type="button" wire:click="disputeCompletedExtraVisit({{ $report->id }})" wire:confirm="Report that this visit did not happen? The report will be preserved for LoLo review and no payment will be made." wire:loading.attr="disabled" class="min-h-12 w-full rounded-xl border-2 border-rose-500 px-4 text-left text-base font-semibold text-rose-800 focus:outline-none focus:ring-2 focus:ring-rose-600 sm:w-auto">This visit did not happen</button>
+                            <button type="button" wire:click="disputeCompletedExtraVisit({{ $report->id }})" wire:confirm="Report that this visit did not happen? The report will be preserved for LoLo Care review and no payment will be made." wire:loading.attr="disabled" class="min-h-12 w-full rounded-xl border-2 border-rose-500 px-4 text-left text-base font-semibold text-rose-800 focus:outline-none focus:ring-2 focus:ring-rose-600 sm:w-auto">This visit did not happen</button>
                             <button type="button" wire:click="escalateCompletedExtraVisit({{ $report->id }})" class="min-h-12 w-full px-3 text-left text-base font-semibold text-[#526474] underline underline-offset-4 sm:w-auto">Ask LoLo for help</button>
                         </div>
                     @elseif ($report->status === \App\Models\CompletedExtraVisitRequest::STATUS_PAYMENT_ACTION_REQUIRED)
@@ -84,7 +84,7 @@
                             @if ($report->booking)<a href="{{ route('family.requests.show', $report->booking->care_request_id) }}" wire:navigate class="hc-secondary-button min-h-12">Open full visit record</a>@endif
                         </div>
                     @elseif (in_array($report->status, [\App\Models\CompletedExtraVisitRequest::STATUS_DISPUTED, \App\Models\CompletedExtraVisitRequest::STATUS_ESCALATED, \App\Models\CompletedExtraVisitRequest::STATUS_FAILED], true))
-                        <p class="mt-4 rounded-xl border border-rose-200 bg-white p-4 font-semibold text-rose-950">No new payment will be made while LoLo reviews this report.</p>
+                        <p class="mt-4 rounded-xl border border-rose-200 bg-white p-4 font-semibold text-rose-950">No new payment will be made while LoLo Care reviews this report.</p>
                     @endif
                 </article>
             @endforeach

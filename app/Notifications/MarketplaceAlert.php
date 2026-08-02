@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Support\MarketplaceNotificationPresentation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -15,8 +16,7 @@ class MarketplaceAlert extends Notification
         private readonly string $body,
         private readonly ?string $url = null,
         private readonly string $kind = 'general',
-    ) {
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -26,11 +26,12 @@ class MarketplaceAlert extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $mail = (new MailMessage)
+            ->from((string) config('mail.from.address'), MarketplaceNotificationPresentation::BRAND_NAME)
             ->subject($this->title)
             ->line($this->body);
 
         if ($this->url) {
-            $mail->action('Open HomeCare', $this->url);
+            $mail->action('Open LoLo Care', $this->url);
         }
 
         return $mail;

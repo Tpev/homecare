@@ -6,6 +6,8 @@ class MarketplaceEvent
 {
     public const INVITATION_SENT = 'invitation_sent';
 
+    public const INVITATION_RECEIVED = 'invitation_received';
+
     public const NEW_APPLICANT = 'new_applicant';
 
     public const APPLICATION_SUBMITTED = 'application_submitted';
@@ -17,6 +19,12 @@ class MarketplaceEvent
     public const INVITE_DECLINED = 'invite_declined';
 
     public const MESSAGE_RECEIVED = 'message_received';
+
+    public const BOOKING_CHANGE_REQUESTED = 'booking_change_requested';
+
+    public const BOOKING_CHANGE_ACCEPTED = 'booking_change_accepted';
+
+    public const BOOKING_CHANGE_DECLINED = 'booking_change_declined';
 
     public const CAREGIVER_HIRED = 'caregiver_hired';
 
@@ -70,7 +78,13 @@ class MarketplaceEvent
 
     public const CAREGIVER_WELCOME = 'caregiver_welcome';
 
+    public const FAMILY_WELCOME = 'family_welcome';
+
     public const CAREGIVER_ONBOARDING_REMINDER_24H = 'caregiver_onboarding_reminder_24h';
+
+    public const SUPPORT_TICKET_CREATED = 'support_ticket_created';
+
+    public const SUPPORT_TICKET_REPLY = 'support_ticket_reply';
 
     public const REGULAR_CARE_OFFERED = 'regular_care_offered';
 
@@ -123,12 +137,16 @@ class MarketplaceEvent
     {
         return [
             self::INVITATION_SENT,
+            self::INVITATION_RECEIVED,
             self::NEW_APPLICANT,
             self::APPLICATION_SUBMITTED,
             self::CARE_REQUEST_WITHDRAWN,
             self::INVITE_ACCEPTED,
             self::INVITE_DECLINED,
             self::MESSAGE_RECEIVED,
+            self::BOOKING_CHANGE_REQUESTED,
+            self::BOOKING_CHANGE_ACCEPTED,
+            self::BOOKING_CHANGE_DECLINED,
             self::CAREGIVER_HIRED,
             self::HIRE_CONFIRMED,
             self::SHIFT_CANCELLED,
@@ -155,7 +173,10 @@ class MarketplaceEvent
             self::PAYOUT_TRANSFERRED,
             self::PAYOUT_TRANSFER_FAILED,
             self::CAREGIVER_WELCOME,
+            self::FAMILY_WELCOME,
             self::CAREGIVER_ONBOARDING_REMINDER_24H,
+            self::SUPPORT_TICKET_CREATED,
+            self::SUPPORT_TICKET_REPLY,
             self::REGULAR_CARE_OFFERED,
             self::REGULAR_CARE_ACCEPTED,
             self::REGULAR_CARE_COUNTERED,

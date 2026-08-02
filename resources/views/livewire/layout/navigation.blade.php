@@ -79,7 +79,7 @@ new class extends Component
 
             }
 
-            if (($isCaregiver || $isFamily) && \Illuminate\Support\Facades\Schema::hasTable('notifications')) {
+            if (($isCaregiver || $isFamily || $isAdmin) && \Illuminate\Support\Facades\Schema::hasTable('notifications')) {
                 $notificationUnread = $user->unreadNotifications()->count();
             }
         }
@@ -153,7 +153,8 @@ new class extends Component
                 'active' => request()->routeIs('admin.requests.*')
                     || request()->routeIs('admin.care-plans.*')
                     || request()->routeIs('admin.caregivers.reviews')
-                    || request()->routeIs('admin.support.tickets*'),
+                    || request()->routeIs('admin.support.tickets*')
+                    || request()->routeIs('admin.notifications.*'),
                 'items' => [
                     [
                         'label' => 'Admin Requests',
@@ -174,6 +175,11 @@ new class extends Component
                         'label' => $supportUnread > 0 ? "Admin Support ($supportUnread)" : 'Admin Support',
                         'href' => route('admin.support.tickets'),
                         'active' => request()->routeIs('admin.support.tickets*'),
+                    ],
+                    [
+                        'label' => $notificationUnread > 0 ? "Notifications ($notificationUnread)" : 'Notifications',
+                        'href' => route('admin.notifications.index'),
+                        'active' => request()->routeIs('admin.notifications.*'),
                     ],
                 ],
             ],

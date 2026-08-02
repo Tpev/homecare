@@ -4,10 +4,10 @@ namespace Tests\Feature\Notifications;
 
 use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Family\ManageCareRequest;
+use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareTask;
-use App\Models\CaregiverProfile;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
@@ -37,16 +37,25 @@ class MarketplaceLifecycleNotificationTest extends TestCase
         Notification::assertSentTo(
             $caregiver,
             MarketplaceEventNotification::class,
-            fn (MarketplaceEventNotification $notification, array $channels): bool =>
-                in_array('database', $channels, true)
-                && $this->eventKeyFor($notification, $caregiver) === MarketplaceEvent::MATCHING_REQUEST_REMINDER
+            function (MarketplaceEventNotification $notification, array $channels) use ($caregiver): bool {
+                $data = $notification->toArray($caregiver);
+                $details = collect((array) data_get($data, 'payload.email_details', []));
+                $renderedDetails = $details->pluck('value', 'label');
+
+                return in_array('database', $channels, true)
+                    && $this->eventKeyFor($notification, $caregiver) === MarketplaceEvent::INVITATION_RECEIVED
+                    && $renderedDetails->get('Location') === 'Raleigh, NC 27601'
+                    && $renderedDetails->has('When')
+                    && $renderedDetails->has('Expected duration')
+                    && $renderedDetails->has('Care requested')
+                    && ! str_contains($details->toJson(), '100 Main St');
+            }
         );
 
         Notification::assertSentTo(
             $family,
             MarketplaceEventNotification::class,
-            fn (MarketplaceEventNotification $notification, array $channels): bool =>
-                in_array('database', $channels, true)
+            fn (MarketplaceEventNotification $notification, array $channels): bool => in_array('database', $channels, true)
                 && $this->eventKeyFor($notification, $family) === MarketplaceEvent::INVITATION_SENT
         );
     }
@@ -67,16 +76,14 @@ class MarketplaceLifecycleNotificationTest extends TestCase
         Notification::assertSentTo(
             $family,
             MarketplaceEventNotification::class,
-            fn (MarketplaceEventNotification $notification, array $channels): bool =>
-                in_array('database', $channels, true)
+            fn (MarketplaceEventNotification $notification, array $channels): bool => in_array('database', $channels, true)
                 && $this->eventKeyFor($notification, $family) === MarketplaceEvent::NEW_APPLICANT
         );
 
         Notification::assertSentTo(
             $caregiver,
             MarketplaceEventNotification::class,
-            fn (MarketplaceEventNotification $notification, array $channels): bool =>
-                in_array('database', $channels, true)
+            fn (MarketplaceEventNotification $notification, array $channels): bool => in_array('database', $channels, true)
                 && $this->eventKeyFor($notification, $caregiver) === MarketplaceEvent::APPLICATION_SUBMITTED
         );
     }
@@ -104,16 +111,14 @@ class MarketplaceLifecycleNotificationTest extends TestCase
         Notification::assertSentTo(
             $caregiver,
             MarketplaceEventNotification::class,
-            fn (MarketplaceEventNotification $notification, array $channels): bool =>
-                in_array('database', $channels, true)
+            fn (MarketplaceEventNotification $notification, array $channels): bool => in_array('database', $channels, true)
                 && $this->eventKeyFor($notification, $caregiver) === MarketplaceEvent::CAREGIVER_HIRED
         );
 
         Notification::assertSentTo(
             $family,
             MarketplaceEventNotification::class,
-            fn (MarketplaceEventNotification $notification, array $channels): bool =>
-                in_array('database', $channels, true)
+            fn (MarketplaceEventNotification $notification, array $channels): bool => in_array('database', $channels, true)
                 && $this->eventKeyFor($notification, $family) === MarketplaceEvent::HIRE_CONFIRMED
         );
     }
@@ -180,4 +185,3 @@ class MarketplaceLifecycleNotificationTest extends TestCase
         return (string) ($notification->toArray($user)['event_key'] ?? '');
     }
 }
-

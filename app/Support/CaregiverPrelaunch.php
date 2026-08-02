@@ -14,7 +14,7 @@ class CaregiverPrelaunch
 
     public static function message(): string
     {
-        return 'HomeCare is currently in caregiver pre-launch mode. Complete your setup now and we will notify you as soon as matching opens.';
+        return 'LoLo Care is currently in caregiver pre-launch mode. Complete your setup now and we will notify you as soon as matching opens.';
     }
 
     public static function familyHireMessage(): string
@@ -54,8 +54,7 @@ class CaregiverPrelaunch
         ?string $caregiverEmail,
         ?CareRequest $careRequest = null,
         ?int $caregiverUserId = null,
-    ): bool
-    {
+    ): bool {
         if (! self::enabled()) {
             return true;
         }

@@ -95,6 +95,13 @@
                                 </div>
                                 <p class="mt-2 font-display text-lg font-semibold text-[#0F172A]">{{ $item['title'] }}</p>
                                 <p class="mt-1 text-sm text-[#3C4A5B]">{{ $item['body'] }}</p>
+                                @if (!empty($item['details']))
+                                    <dl class="mt-3 grid grid-cols-1 gap-1 text-xs text-[#53645D] sm:grid-cols-2">
+                                        @foreach ($item['details'] as $detail)
+                                            <div class="flex gap-1"><dt class="font-semibold">{{ $detail['label'] }}:</dt><dd>{{ $detail['value'] }}</dd></div>
+                                        @endforeach
+                                    </dl>
+                                @endif
                                 <p class="mt-2 text-xs text-[#7A8091]">{{ optional($item['created_at'])->diffForHumans() }}</p>
                             </div>
                         </div>
@@ -141,6 +148,7 @@
                     </div>
                 </summary>
                 <div class="mt-4 space-y-3">
+                    <p class="text-sm text-[#5B6472]">Choose in-app updates, email, or both. SMS and push are not offered yet.</p>
                     @foreach ($eventOptions as $eventOption)
                         @php
                             $eventKey = $eventOption['value'];
@@ -155,14 +163,6 @@
                                 <label class="flex items-center gap-2 rounded-lg border border-[#DED6CA] bg-[#FFFCF8] px-2 py-2">
                                     <input type="checkbox" wire:model="preferences.{{ $eventKey }}.email">
                                     <span>Email</span>
-                                </label>
-                                <label class="flex items-center gap-2 rounded-lg border border-[#DED6CA] bg-[#FFFCF8] px-2 py-2">
-                                    <input type="checkbox" wire:model="preferences.{{ $eventKey }}.sms">
-                                    <span>SMS (soon)</span>
-                                </label>
-                                <label class="flex items-center gap-2 rounded-lg border border-[#DED6CA] bg-[#FFFCF8] px-2 py-2">
-                                    <input type="checkbox" wire:model="preferences.{{ $eventKey }}.push">
-                                    <span>Push (soon)</span>
                                 </label>
                             </div>
                         </div>
@@ -181,6 +181,7 @@
                 </x-slot:header>
 
                 <div class="space-y-3">
+                    <p class="text-sm text-[#5B6472]">Choose in-app updates, email, or both. SMS and push are not offered yet.</p>
                     @foreach ($eventOptions as $eventOption)
                         @php
                             $eventKey = $eventOption['value'];
@@ -195,14 +196,6 @@
                                 <label class="flex items-center gap-2 rounded-lg border border-[#DED6CA] bg-[#FFFCF8] px-2 py-2">
                                     <input type="checkbox" wire:model="preferences.{{ $eventKey }}.email">
                                     <span>Email</span>
-                                </label>
-                                <label class="flex items-center gap-2 rounded-lg border border-[#DED6CA] bg-[#FFFCF8] px-2 py-2">
-                                    <input type="checkbox" wire:model="preferences.{{ $eventKey }}.sms">
-                                    <span>SMS (soon)</span>
-                                </label>
-                                <label class="flex items-center gap-2 rounded-lg border border-[#DED6CA] bg-[#FFFCF8] px-2 py-2">
-                                    <input type="checkbox" wire:model="preferences.{{ $eventKey }}.push">
-                                    <span>Push (soon)</span>
                                 </label>
                             </div>
                         </div>

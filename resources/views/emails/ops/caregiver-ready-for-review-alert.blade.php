@@ -1,23 +1,27 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Caregiver ready for review</title>
-</head>
-<body style="font-family: Arial, sans-serif; color: #0f172a;">
-    <h2 style="margin-bottom: 8px;">Caregiver ready for review</h2>
-    <p style="margin-top: 0;">A caregiver submitted onboarding and is now under review.</p>
-
-    <table cellpadding="6" cellspacing="0" border="0" style="border-collapse: collapse;">
-        <tr><td><strong>Profile ID</strong></td><td>{{ $profile->id }}</td></tr>
-        <tr><td><strong>User ID</strong></td><td>{{ $user->id }}</td></tr>
-        <tr><td><strong>Name</strong></td><td>{{ $user->name }}</td></tr>
-        <tr><td><strong>Email</strong></td><td>{{ $user->email }}</td></tr>
-        <tr><td><strong>Status</strong></td><td>{{ $profile->status }}</td></tr>
-        <tr><td><strong>City / State</strong></td><td>{{ trim(($user->city ?: '').' '.($user->state ?: '')) ?: 'n/a' }}</td></tr>
-        <tr><td><strong>Experience</strong></td><td>{{ is_null($profile->years_experience) ? 'n/a' : $profile->years_experience.' years' }}</td></tr>
-        <tr><td><strong>Submitted at</strong></td><td>{{ optional($profile->review_submitted_at)->toDateTimeString() ?: optional($profile->updated_at)->toDateTimeString() }}</td></tr>
+<x-emails.lolo-layout
+    preheader="A caregiver completed setup and is ready for LoLo Care review."
+    eyebrow="Caregiver review"
+    title="Caregiver ready for review"
+    intro="A caregiver completed onboarding and is waiting for the operations team to review the profile."
+    :cta-url="route('admin.users.show', $user)"
+    :raw-url="route('admin.users.show', $user)"
+    cta-label="Review caregiver"
+    :home-url="route('dashboard')"
+    :logo-url="asset(\App\Support\MarketplaceNotificationPresentation::LOGO_PATH)"
+    :year="now()->year"
+>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #E3D6C5;border-radius:14px;background-color:#FFF7EA;">
+        @foreach ([
+            ['Profile ID', '#'.$profile->id],
+            ['User ID', '#'.$user->id],
+            ['Caregiver', $user->name],
+            ['Email', $user->email],
+            ['Status', str($profile->status)->headline()],
+            ['Location', trim(($user->city ?: '').' '.($user->state ?: '')) ?: 'Not provided'],
+            ['Experience', is_null($profile->years_experience) ? 'Not provided' : $profile->years_experience.' years'],
+            ['Submitted', optional($profile->review_submitted_at ?: $profile->updated_at)->format('F j, Y · g:i A T')],
+        ] as $detail)
+            <tr><td valign="top" style="width:34%;padding:10px 14px;{{ !$loop->last ? 'border-bottom:1px solid #E3D6C5;' : '' }}color:#6E746F;font-size:13px;">{{ $detail[0] }}</td><td valign="top" style="padding:10px 14px;{{ !$loop->last ? 'border-bottom:1px solid #E3D6C5;' : '' }}color:#23483F;font-size:14px;font-weight:bold;">{{ $detail[1] }}</td></tr>
+        @endforeach
     </table>
-</body>
-</html>
-
+</x-emails.lolo-layout>

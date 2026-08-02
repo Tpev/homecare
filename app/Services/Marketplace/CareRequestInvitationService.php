@@ -216,9 +216,9 @@ class CareRequestInvitationService
         if ($invitation->caregiver) {
             $this->notifications->notify(
                 recipients: $invitation->caregiver,
-                eventKey: MarketplaceEvent::MATCHING_REQUEST_REMINDER,
-                title: 'You have a new invitation',
-                body: 'A family invited you to review their care request.',
+                eventKey: MarketplaceEvent::INVITATION_RECEIVED,
+                title: $family->name.' invited you to a care request',
+                body: 'Review the schedule, approximate location, requested care, and rate before you respond.',
                 url: route('caregiver.invitations.index'),
                 payload: ['care_request_id' => $careRequest->id],
                 subject: $invitation,

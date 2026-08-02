@@ -991,7 +991,7 @@
                         <h2 class="cg-section-title cg-display">Good care starts with good <em>matches.</em></h2>
                     </div>
                     <p class="cg-section-copy">
-                        Families want someone warm, dependable, and clear. Caregivers want work that is respectful, flexible, and worth their time. LoLo is built around both sides.
+                        Families want someone warm, dependable, and clear. Caregivers want work that is respectful, flexible, and worth their time. LoLo Care is built around both sides.
                     </p>
                 </div>
 
@@ -1085,7 +1085,7 @@
                         <h2 class="cg-section-title cg-display">Care work for people who already care.</h2>
                     </div>
                     <p class="cg-section-copy">
-                        LoLo is not only for traditional agency caregivers. It is also for capable, patient people who want meaningful local work and understand the responsibility of showing up for a family.
+                        LoLo Care is not only for traditional agency caregivers. It is also for capable, patient people who want meaningful local work and understand the responsibility of showing up for a family.
                     </p>
                 </div>
 

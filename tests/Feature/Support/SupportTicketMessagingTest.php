@@ -6,11 +6,13 @@ use App\Livewire\Admin\SupportTicketShow as AdminSupportTicketShow;
 use App\Livewire\Admin\SupportTicketsQueue;
 use App\Livewire\Support\TicketConversation;
 use App\Livewire\Support\TicketsCenter;
+use App\Models\MarketplaceNotificationDelivery;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Models\User;
 use App\Notifications\MarketplaceEventNotification;
 use App\Services\Support\SupportTicketMessagingService;
+use App\Support\MarketplaceEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
@@ -141,6 +143,7 @@ class SupportTicketMessagingTest extends TestCase
         $user = User::factory()->create(['role' => 'family']);
         $admin = User::factory()->create(['role' => 'admin']);
         $ticket = $this->createTicket($user);
+        Notification::fake(); // Ignore the expected new-ticket alert; this assertion is about the note itself.
 
         Livewire::actingAs($admin)
             ->test(AdminSupportTicketShow::class, ['ticket' => $ticket])
@@ -258,7 +261,12 @@ class SupportTicketMessagingTest extends TestCase
 
         $this->assertSame($first->id, $second->id);
         $this->assertDatabaseCount('support_ticket_messages', 1);
-        Notification::assertSentToTimes($user, MarketplaceEventNotification::class, 1);
+        // One logical reply is delivered once per enabled channel (email and in-app).
+        Notification::assertSentToTimes($user, MarketplaceEventNotification::class, 2);
+        $this->assertSame(2, MarketplaceNotificationDelivery::query()
+            ->where('user_id', $user->id)
+            ->where('event_key', MarketplaceEvent::SUPPORT_TICKET_REPLY)
+            ->count());
     }
 
     public function test_user_can_load_older_public_messages(): void

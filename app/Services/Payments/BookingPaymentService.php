@@ -600,17 +600,17 @@ class BookingPaymentService
 
                 if ($notify) {
                     $this->notify(
-                        recipients: $booking->family,
+                        recipients: $booking->caregiver,
                         eventKey: MarketplaceEvent::PAYOUT_TRANSFER_FAILED,
-                        title: 'Payout transfer delayed',
-                        body: 'The shift payment was captured, but caregiver payout transfer is delayed. Admin will retry automatically.',
-                        url: route('family.requests.show', $booking->care_request_id),
+                        title: 'Your payout is delayed',
+                        body: 'The family payment is complete, but the transfer to your payout account did not finish. LoLo Care will retry it automatically.',
+                        url: route('caregiver.earnings.index'),
                         payload: [
                             'care_booking_id' => $booking->id,
                             'care_booking_payment_id' => $payment->id,
                         ],
                         subject: $booking,
-                        dedupeKey: 'payout-transfer-failed:booking-'.$booking->id
+                        dedupeKey: 'payout-transfer-failed:booking-'.$booking->id.'-caregiver-'.$booking->caregiver_user_id
                     );
                 }
             }
@@ -624,7 +624,7 @@ class BookingPaymentService
                 recipients: $booking->family,
                 eventKey: MarketplaceEvent::PAYMENT_CAPTURED,
                 title: 'Shift payment captured',
-                body: 'Final payment was captured successfully for this completed shift.',
+                body: 'Payment for the completed visit was processed successfully. No action is needed.',
                 url: route('family.requests.show', $booking->care_request_id),
                 payload: [
                     'care_booking_id' => $booking->id,
@@ -642,8 +642,8 @@ class BookingPaymentService
                 recipients: $booking->caregiver,
                 eventKey: MarketplaceEvent::PAYOUT_TRANSFERRED,
                 title: 'Payout sent',
-                body: 'Your payout for this shift has been transferred.',
-                url: route('care-requests.apply', $booking->care_request_id),
+                body: 'Your earnings for this visit were sent to your connected payout account.',
+                url: route('caregiver.earnings.index'),
                 payload: [
                     'care_booking_id' => $booking->id,
                     'care_booking_payment_id' => $payment->id,
@@ -799,7 +799,7 @@ class BookingPaymentService
                 body: $fullyRefunded
                     ? 'This shift was refunded and payout was adjusted.'
                     : 'A partial refund was issued and payout was adjusted.',
-                url: route('care-requests.apply', $booking->care_request_id),
+                url: route('caregiver.earnings.index'),
                 payload: [
                     'care_booking_id' => $booking->id,
                     'care_booking_payment_id' => $payment->id,
@@ -877,8 +877,8 @@ class BookingPaymentService
                 recipients: $booking->caregiver,
                 eventKey: MarketplaceEvent::PAYOUT_TRANSFERRED,
                 title: 'Payout sent',
-                body: 'Your payout transfer was completed.',
-                url: route('care-requests.apply', $booking->care_request_id),
+                body: 'Your delayed payout was successfully sent to your connected payout account.',
+                url: route('caregiver.earnings.index'),
                 payload: [
                     'care_booking_id' => $booking->id,
                     'care_booking_payment_id' => $payment->id,

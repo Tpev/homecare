@@ -45,17 +45,19 @@ class CaregiverLaunchEmailCommandTest extends TestCase
         $this->assertFileExists(public_path(CaregiverLaunchEmail::LOGO_PATH));
     }
 
-    public function test_launch_email_copy_is_brand_announcement_with_june_first_followup(): void
+    public function test_launch_email_copy_is_an_evergreen_lolo_care_welcome(): void
     {
         $mail = new CaregiverLaunchEmail;
         $content = $mail->content();
         $html = (string) view($content->html, $content->with)->render();
         $text = (string) view($content->text, $content->with)->render();
 
-        $this->assertStringContainsString('June 1, 2026', $html);
-        $this->assertStringContainsString('early next week', $html);
-        $this->assertStringContainsString('June 1, 2026', $text);
-        $this->assertStringContainsString('early next week', $text);
+        $this->assertStringContainsString('Welcome to LoLo Care', $html);
+        $this->assertStringContainsString('Keep your profile, availability, and care preferences current', $html);
+        $this->assertStringContainsString('Welcome to the LoLo Care caregiver community', $text);
+        $this->assertStringContainsString('Keep your profile, availability, and care preferences current', $text);
+        $this->assertStringNotContainsString('June 1, 2026', $html);
+        $this->assertStringNotContainsString('June 1, 2026', $text);
         $this->assertStringContainsString('https://www.facebook.com/lolo.homecare', $text);
         $this->assertStringContainsString('https://www.instagram.com/get.lolocare/', $text);
         $this->assertStringNotContainsString('Follow us on Facebook', $text);

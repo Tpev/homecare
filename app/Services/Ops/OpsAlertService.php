@@ -2,15 +2,17 @@
 
 namespace App\Services\Ops;
 
-use App\Mail\Ops\CaregiverReadyForReviewOpsAlertMail;
 use App\Mail\Ops\CallbackRequestOpsAlertMail;
+use App\Mail\Ops\CaregiverReadyForReviewOpsAlertMail;
 use App\Mail\Ops\FamilyRegisteredOpsAlertMail;
 use App\Mail\Ops\NewCareRequestOpsAlertMail;
+use App\Mail\Ops\SupportTicketCreatedOpsAlertMail;
 use App\Mail\Ops\UserRegisteredOpsAlertMail;
 use App\Mail\Ops\VoiceCallReportOpsAlertMail;
-use App\Models\CareRequest;
 use App\Models\CaregiverProfile;
+use App\Models\CareRequest;
 use App\Models\Lead;
+use App\Models\SupportTicket;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
@@ -96,6 +98,20 @@ class OpsAlertService
 
         try {
             Mail::to($recipients)->send(new VoiceCallReportOpsAlertMail($report));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+    }
+
+    public function notifySupportTicketCreated(SupportTicket $ticket): void
+    {
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            return;
+        }
+
+        try {
+            Mail::to($recipients)->send(new SupportTicketCreatedOpsAlertMail($ticket));
         } catch (Throwable $exception) {
             report($exception);
         }

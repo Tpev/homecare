@@ -1,25 +1,28 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>New care request</title>
-</head>
-<body style="font-family: Arial, sans-serif; color: #0f172a;">
-    <h2 style="margin-bottom: 8px;">New care request published</h2>
-    <p style="margin-top: 0;">A family just published a new care request.</p>
-
-    <table cellpadding="6" cellspacing="0" border="0" style="border-collapse: collapse;">
-        <tr><td><strong>Request ID</strong></td><td>{{ $careRequest->id }}</td></tr>
-        <tr><td><strong>Family user ID</strong></td><td>{{ $careRequest->family_user_id }}</td></tr>
-        <tr><td><strong>Title</strong></td><td>{{ $careRequest->title }}</td></tr>
-        <tr><td><strong>Type</strong></td><td>{{ $careRequest->request_type ?: 'one_time' }}</td></tr>
-        <tr><td><strong>Status</strong></td><td>{{ $careRequest->status }}</td></tr>
-        <tr><td><strong>Location</strong></td><td>{{ trim(($careRequest->city ?: '').', '.($careRequest->state ?: '')) ?: 'n/a' }}</td></tr>
-        <tr><td><strong>ZIP</strong></td><td>{{ $careRequest->zip ?: 'n/a' }}</td></tr>
-        <tr><td><strong>Start</strong></td><td>{{ optional($careRequest->requested_start_at)->toDateTimeString() ?: 'n/a' }}</td></tr>
-        <tr><td><strong>End</strong></td><td>{{ optional($careRequest->requested_end_at)->toDateTimeString() ?: 'n/a' }}</td></tr>
-        <tr><td><strong>Created at</strong></td><td>{{ optional($careRequest->created_at)->toDateTimeString() }}</td></tr>
+<x-emails.lolo-layout
+    :preheader="'New LoLo Care request #'.$careRequest->id.' was created.'"
+    eyebrow="Care operations"
+    :title="'New care request #'.$careRequest->id"
+    intro="A family created a care request. Review its status, schedule, and coverage needs."
+    :cta-url="route('admin.requests.show', $careRequest)"
+    :raw-url="route('admin.requests.show', $careRequest)"
+    cta-label="Review care request"
+    :home-url="route('dashboard')"
+    :logo-url="asset(\App\Support\MarketplaceNotificationPresentation::LOGO_PATH)"
+    :year="now()->year"
+>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border:1px solid #E3D6C5;border-radius:14px;background-color:#FFF7EA;">
+        @foreach ([
+            ['Request ID', '#'.$careRequest->id],
+            ['Family user', '#'.$careRequest->family_user_id],
+            ['Title', $careRequest->title],
+            ['Type', str($careRequest->request_type ?: 'one_time')->headline()],
+            ['Status', str($careRequest->status)->headline()],
+            ['Location', collect([$careRequest->city, $careRequest->state, $careRequest->zip])->filter()->implode(', ') ?: 'Not provided'],
+            ['Start', optional($careRequest->requested_start_at)->format('F j, Y · g:i A T') ?: 'Not scheduled'],
+            ['End', optional($careRequest->requested_end_at)->format('F j, Y · g:i A T') ?: 'Not scheduled'],
+            ['Created', optional($careRequest->created_at)->format('F j, Y · g:i A T')],
+        ] as $detail)
+            <tr><td valign="top" style="width:34%;padding:10px 14px;{{ !$loop->last ? 'border-bottom:1px solid #E3D6C5;' : '' }}color:#6E746F;font-size:13px;">{{ $detail[0] }}</td><td valign="top" style="padding:10px 14px;{{ !$loop->last ? 'border-bottom:1px solid #E3D6C5;' : '' }}color:#23483F;font-size:14px;font-weight:bold;">{{ $detail[1] }}</td></tr>
+        @endforeach
     </table>
-</body>
-</html>
-
+</x-emails.lolo-layout>

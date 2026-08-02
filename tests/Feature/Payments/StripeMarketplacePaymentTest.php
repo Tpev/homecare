@@ -12,10 +12,13 @@ use App\Models\CarePlan;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\User;
+use App\Notifications\MarketplaceEventNotification;
 use App\Services\Payments\BookingPaymentService;
 use App\Services\Payments\StripeClient;
 use App\Services\RegularCare\CarePlanHealthService;
+use App\Support\MarketplaceEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -239,6 +242,63 @@ class StripeMarketplacePaymentTest extends TestCase
             'status' => 'paid',
         ]);
         $this->assertNotNull($booking->fresh()?->family_confirmed_at);
+    }
+
+    public function test_failed_payout_transfer_notifies_the_caregiver_with_earnings_context_not_the_family(): void
+    {
+        config()->set('services.stripe.bypass', true);
+
+        [$family, $request, $application, $caregiverProfile] = $this->seedScenario(returnProfile: true);
+        $caregiver = $application->caregiver;
+        $caregiverProfile->update([
+            'stripe_connect_account_id' => 'acct_test_transfer_failure',
+            'stripe_charges_enabled' => true,
+            'stripe_payouts_enabled' => true,
+            'stripe_connect_onboarding_completed_at' => now(),
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $booking->update([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'timesheet_submitted_at' => now(),
+            'worked_minutes' => 120,
+        ]);
+
+        app()->instance(StripeClient::class, new class extends StripeClient
+        {
+            public function createTransfer(
+                string $destinationAccountId,
+                int $amountCents,
+                string $currency,
+                array $metadata = [],
+                ?string $idempotencyKey = null,
+            ): array {
+                throw new PaymentException('Unable to transfer caregiver payout right now.');
+            }
+        });
+        Notification::fake();
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('completeBooking');
+
+        Notification::assertSentTo($caregiver, MarketplaceEventNotification::class, function (MarketplaceEventNotification $notification, array $channels) use ($caregiver): bool {
+            $data = $notification->toArray($caregiver);
+
+            return data_get($data, 'event_key') === MarketplaceEvent::PAYOUT_TRANSFER_FAILED
+                && str_contains((string) data_get($data, 'url'), '/caregiver/earnings')
+                && collect((array) data_get($data, 'payload.email_details'))->contains(
+                    fn (array $detail): bool => ($detail['label'] ?? null) === 'Pending payout'
+                );
+        });
+        Notification::assertNotSentTo($family, MarketplaceEventNotification::class, function (MarketplaceEventNotification $notification) use ($family): bool {
+            return data_get($notification->toArray($family), 'event_key') === MarketplaceEvent::PAYOUT_TRANSFER_FAILED;
+        });
     }
 
     public function test_family_pricing_override_controls_authorization_capture_fee_and_transfer(): void

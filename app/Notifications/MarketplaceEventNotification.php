@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Support\MarketplaceEvent;
+use App\Support\MarketplaceNotificationPresentation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -32,7 +33,7 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $appName = (string) config('app.name', 'HomeCare');
+        $appName = MarketplaceNotificationPresentation::BRAND_NAME;
         $homeUrl = route('dashboard');
         $supportUrl = route('support.index');
         $resolvedUrl = $this->url ?: $homeUrl;
@@ -49,7 +50,8 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
             ];
 
         return (new MailMessage)
-            ->subject('['.$appName.'] '.$this->title)
+            ->from((string) config('mail.from.address'), $appName)
+            ->subject('['.MarketplaceNotificationPresentation::BRAND_NAME.'] '.$this->title)
             ->view($view, [
                 'appName' => $appName,
                 'eventLabel' => $this->eventLabel(),
@@ -59,12 +61,15 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
                 'rawUrl' => $resolvedUrl,
                 'ctaLabel' => $this->actionLabel(),
                 'supportUrl' => $supportUrl,
+                'preferencesUrl' => $this->preferencesUrl($notifiable),
                 'homeUrl' => $homeUrl,
                 'year' => now()->year,
+                'logoUrl' => asset(MarketplaceNotificationPresentation::LOGO_PATH),
                 'openTrackingUrl' => $openTrackingUrl,
                 'preheader' => (string) ($this->payload['preheader'] ?? $this->title),
                 'checklist' => array_values(array_filter((array) ($this->payload['checklist'] ?? []), fn ($item) => is_string($item) && trim($item) !== '')),
                 'firstName' => (string) ($this->payload['first_name'] ?? ''),
+                'nextSteps' => array_values(array_filter((array) ($this->payload['email_next_steps'] ?? []), fn ($item) => is_string($item) && trim($item) !== '')),
                 'emailDetails' => collect((array) ($this->payload['email_details'] ?? []))
                     ->filter(fn ($detail) => is_array($detail) && trim((string) ($detail['label'] ?? '')) !== '' && trim((string) ($detail['value'] ?? '')) !== '')
                     ->map(fn (array $detail) => [
@@ -90,98 +95,12 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
 
     private function eventLabel(): string
     {
-        return match ($this->eventKey) {
-            'invitation_sent' => 'Invitation sent',
-            'new_applicant' => 'New applicant',
-            'application_submitted' => 'Application submitted',
-            MarketplaceEvent::CARE_REQUEST_WITHDRAWN => 'Request withdrawn',
-            'invite_accepted' => 'Invitation accepted',
-            'invite_declined' => 'Invitation declined',
-            'message_received' => 'New message',
-            'caregiver_hired' => 'Caregiver hired',
-            'hire_confirmed' => 'Hire confirmed',
-            MarketplaceEvent::SHIFT_CANCELLED => 'Shift cancelled',
-            'shift_starting_soon' => 'Shift reminder',
-            'shift_started' => 'Shift started',
-            'shift_completed' => 'Shift completed',
-            'review_received' => 'New review',
-            'matching_request_reminder' => 'Recommended request',
-            'payment_authorized' => 'Payment authorized',
-            'payment_authorization_failed' => 'Payment authorization failed',
-            'payment_action_required' => 'Payment action required',
-            'payment_captured' => 'Payment captured',
-            'payment_refunded' => 'Payment refunded',
-            'payout_transferred' => 'Payout transferred',
-            'payout_transfer_failed' => 'Payout transfer delayed',
-            MarketplaceEvent::TIME_CORRECTION_REQUESTED => 'Time correction requested',
-            MarketplaceEvent::TIME_CORRECTION_CHANGES_REQUESTED => 'Time correction needs changes',
-            MarketplaceEvent::TIME_CORRECTION_RESUBMITTED => 'Updated visit time',
-            MarketplaceEvent::TIME_CORRECTION_APPROVED => 'Time correction approved',
-            MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED => 'Payment confirmation needed',
-            MarketplaceEvent::TIME_CORRECTION_APPLIED => 'Visit time updated',
-            MarketplaceEvent::TIME_CORRECTION_ESCALATED => 'LoLo is reviewing visit time',
-            MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => 'Time correction withdrawn',
-            MarketplaceEvent::CAREGIVER_WELCOME => 'Welcome to HomeCare',
-            MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H => 'Setup reminder',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_SUBMITTED => 'Extra visit reported',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_CHANGES_REQUESTED => 'Extra visit needs changes',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_RESUBMITTED => 'Updated extra visit',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPROVED => 'Extra visit approved',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_DISPUTED => 'Extra visit disputed',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_WITHDRAWN => 'Extra visit withdrawn',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED => 'Extra visit recorded',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_PAYMENT_ACTION_REQUIRED => 'Payment confirmation needed',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED => 'LoLo review',
-            default => 'Marketplace update',
-        };
+        return MarketplaceNotificationPresentation::label($this->eventKey);
     }
 
     private function actionLabel(): string
     {
-        return match ($this->eventKey) {
-            'invitation_sent' => 'View invitation',
-            'new_applicant' => 'Review caregiver',
-            'application_submitted' => 'Track application',
-            MarketplaceEvent::CARE_REQUEST_WITHDRAWN => 'Open work inbox',
-            'invite_accepted' => 'Open request',
-            'invite_declined' => 'Open request',
-            'message_received' => 'Open conversation',
-            'caregiver_hired' => 'View visit',
-            'hire_confirmed' => 'Open visit details',
-            MarketplaceEvent::SHIFT_CANCELLED => 'View visit',
-            'shift_starting_soon' => 'Open visit plan',
-            'shift_started' => 'Track visit',
-            'shift_completed' => 'Review visit',
-            'review_received' => 'View visit',
-            'matching_request_reminder' => 'Review request',
-            'payment_authorized' => 'View request',
-            'payment_authorization_failed' => 'Open billing',
-            'payment_action_required' => 'Open billing',
-            'payment_captured' => 'View request',
-            'payment_refunded' => 'View request',
-            'payout_transferred' => 'View shift',
-            'payout_transfer_failed' => 'View request',
-            MarketplaceEvent::TIME_CORRECTION_REQUESTED => 'Review visit time',
-            MarketplaceEvent::TIME_CORRECTION_CHANGES_REQUESTED => 'Update visit time',
-            MarketplaceEvent::TIME_CORRECTION_RESUBMITTED => 'Review updated time',
-            MarketplaceEvent::TIME_CORRECTION_APPROVED => 'View visit',
-            MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED => 'Confirm payment',
-            MarketplaceEvent::TIME_CORRECTION_APPLIED => 'View visit',
-            MarketplaceEvent::TIME_CORRECTION_ESCALATED => 'View LoLo review',
-            MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => 'View visit',
-            MarketplaceEvent::CAREGIVER_WELCOME => 'Complete my profile',
-            MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H => 'Finish setup now',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_SUBMITTED => 'Review extra visit',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_CHANGES_REQUESTED => 'Update visit report',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_RESUBMITTED => 'Review updated visit',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPROVED => 'View extra visit',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_DISPUTED => 'View LoLo review',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_WITHDRAWN => 'View regular care',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED => 'View care history',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_PAYMENT_ACTION_REQUIRED => 'Confirm payment',
-            MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED => 'View LoLo review',
-            default => 'Open HomeCare',
-        };
+        return MarketplaceNotificationPresentation::actionLabel($this->eventKey);
     }
 
     private function isCaregiverOnboardingEmail(): bool
@@ -220,5 +139,15 @@ class MarketplaceEventNotification extends Notification implements ShouldQueue
             'delivery' => (int) $deliveryId,
             'token' => $token,
         ]);
+    }
+
+    private function preferencesUrl(object $notifiable): string
+    {
+        return match ((string) ($notifiable->role ?? '')) {
+            '', 'family' => route('family.notifications.index'),
+            'caregiver' => route('caregiver.notifications.index'),
+            'admin' => route('admin.notifications.index'),
+            default => $this->url ?: route('dashboard'),
+        };
     }
 }

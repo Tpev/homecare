@@ -11,8 +11,7 @@ class CaregiverOnboardingEmailService
 {
     public function __construct(
         private readonly MarketplaceNotificationService $notifications,
-    ) {
-    }
+    ) {}
 
     public function sendWelcome(User $user): void
     {
@@ -23,17 +22,17 @@ class CaregiverOnboardingEmailService
         $this->notifications->notify(
             recipients: $user,
             eventKey: MarketplaceEvent::CAREGIVER_WELCOME,
-            title: 'Welcome to HomeCare - let\'s get you caregiver-ready',
-            body: 'You are just a few steps away from receiving your first opportunities.',
+            title: 'Welcome to LoLo Care — let’s finish your caregiver profile',
+            body: 'Complete the steps below so families can understand your experience and invite you to care opportunities.',
             url: route('caregiver.onboarding'),
             payload: [
                 'first_name' => $this->firstName($user->name),
-                'preheader' => 'Complete your caregiver profile and KYC to start receiving matches.',
+                'preheader' => 'Complete your LoLo Care caregiver profile to start receiving relevant care opportunities.',
                 'checklist' => [
                     'Complete your profile basics',
                     'Set your availability',
                     'Choose your task preferences',
-                    'Finish identity verification (KYC)',
+                    'Finish identity verification',
                 ],
             ],
             subject: $user,
@@ -55,8 +54,8 @@ class CaregiverOnboardingEmailService
         $this->notifications->notify(
             recipients: $user,
             eventKey: MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H,
-            title: 'You\'re almost there - finish your caregiver setup',
-            body: 'Complete your profile and KYC so families can find and trust your profile.',
+            title: 'You’re almost ready for LoLo Care opportunities',
+            body: 'Finish the remaining profile steps so families can find your profile and understand whether you are a good fit.',
             url: route('caregiver.onboarding'),
             payload: [
                 'first_name' => $this->firstName($user->name),
@@ -115,7 +114,7 @@ class CaregiverOnboardingEmailService
             $items[] = 'Choose your task comfort preferences';
         }
         if (! ($checks['identity_verification'] ?? false)) {
-            $items[] = 'Finish identity verification (KYC)';
+            $items[] = 'Finish identity verification';
         }
 
         return $items;
@@ -133,4 +132,3 @@ class CaregiverOnboardingEmailService
         return (string) ($parts[0] ?? $value);
     }
 }
-

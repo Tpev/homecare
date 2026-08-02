@@ -26,6 +26,7 @@ use App\Livewire\Admin\CareRequestShow as AdminCareRequestShow;
 use App\Livewire\Admin\CareRequestsIndex;
 use App\Livewire\Admin\FunnelAnalytics;
 use App\Livewire\Admin\LeadsIndex;
+use App\Livewire\Admin\NotificationsCenter as AdminNotificationsCenter;
 use App\Livewire\Admin\PaymentsQueue;
 use App\Livewire\Admin\ProviderOutreachAi;
 use App\Livewire\Admin\SdrOutreachCenter;
@@ -96,6 +97,7 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/support/tickets/{ticket}', SupportTicketShow::class)
             ->whereNumber('ticket')
             ->name('support.tickets.show');
+        Route::get('/notifications', AdminNotificationsCenter::class)->name('notifications.index');
         Route::get('/sms', SmsInbox::class)->name('sms.index');
         Route::get('/voice-ai', VoiceAiTest::class)->name('voice-ai.index');
         Route::get('/provider-outreach-ai', ProviderOutreachAi::class)->name('provider-outreach-ai.index');

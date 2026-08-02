@@ -164,7 +164,7 @@ class ApplyToCareRequest extends Component
         $booking = $this->getManagedBooking();
         $service = app(CareBookingTimeCorrectionService::class);
         if (! $booking || ! $service->enabled()) {
-            session()->flash('status', 'Time corrections are not available yet. Get help from LoLo if this visit needs an update.');
+            session()->flash('status', 'Time corrections are not available yet. Get help from LoLo Care if this visit needs an update.');
 
             return;
         }
@@ -269,9 +269,9 @@ class ApplyToCareRequest extends Component
     public function escalateTimeCorrection(int $correctionId): void
     {
         $correction = CareBookingTimeCorrection::query()->findOrFail($correctionId);
-        app(CareBookingTimeCorrectionService::class)->escalate($correction, auth()->user(), 'The caregiver asked LoLo to help resolve the visit time.');
+        app(CareBookingTimeCorrectionService::class)->escalate($correction, auth()->user(), 'The caregiver asked LoLo Care to help resolve the visit time.');
         $this->refreshExistingApplication();
-        session()->flash('status', 'LoLo support will review this visit.');
+        session()->flash('status', 'LoLo Care support will review this visit.');
     }
 
     public function submit(): void
@@ -784,9 +784,9 @@ class ApplyToCareRequest extends Component
         if ($booking->family) {
             app(MarketplaceNotificationService::class)->notify(
                 recipients: $booking->family,
-                eventKey: MarketplaceEvent::SHIFT_COMPLETED,
-                title: 'New caregiver review',
-                body: auth()->user()->name.' left a review after the visit.',
+                eventKey: MarketplaceEvent::REVIEW_RECEIVED,
+                title: 'You received a new review',
+                body: auth()->user()->name.' left feedback after visit #'.$booking->id.'.',
                 url: route('family.requests.show', $this->requestItem->id),
                 payload: ['care_booking_id' => $booking->id, 'rating' => $this->reviewRating],
                 subject: $booking
@@ -846,7 +846,7 @@ class ApplyToCareRequest extends Component
         if ($booking->family) {
             app(MarketplaceNotificationService::class)->notify(
                 recipients: $booking->family,
-                eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
+                eventKey: MarketplaceEvent::BOOKING_CHANGE_REQUESTED,
                 title: 'Visit change request',
                 body: auth()->user()->name.' requested to '.$this->changeType.' this visit.',
                 url: route('family.requests.show', $this->requestItem->id),
@@ -898,9 +898,9 @@ class ApplyToCareRequest extends Component
             if ($changeRequest->requester) {
                 app(MarketplaceNotificationService::class)->notify(
                     recipients: $changeRequest->requester,
-                    eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
-                    title: 'Change request rejected',
-                    body: 'Your visit change request was rejected.',
+                    eventKey: MarketplaceEvent::BOOKING_CHANGE_DECLINED,
+                    title: 'Visit change declined',
+                    body: 'The other person could not accept your requested visit change. Open the visit to review the current schedule.',
                     url: route('care-requests.apply', $this->requestItem->id),
                     payload: ['care_booking_id' => $booking->id, 'change_request_id' => $changeRequest->id],
                     subject: $changeRequest
@@ -958,9 +958,9 @@ class ApplyToCareRequest extends Component
         if ($changeRequest->requester) {
             app(MarketplaceNotificationService::class)->notify(
                 recipients: $changeRequest->requester,
-                eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
-                title: 'Change request accepted',
-                body: 'Your visit change request was accepted.',
+                eventKey: MarketplaceEvent::BOOKING_CHANGE_ACCEPTED,
+                title: 'Visit change accepted',
+                body: 'The requested visit change was accepted. Open the visit to review the updated details.',
                 url: route('care-requests.apply', $this->requestItem->id),
                 payload: ['care_booking_id' => $booking->id, 'change_request_id' => $changeRequest->id],
                 subject: $changeRequest

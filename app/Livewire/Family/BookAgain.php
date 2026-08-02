@@ -24,8 +24,11 @@ class BookAgain extends Component
     public CareRequest $sourceRequest;
 
     public string $visitDate = '';
+
     public string $startTime = '';
+
     public string $durationMinutes = '120';
+
     public string $message = '';
 
     /**
@@ -193,9 +196,9 @@ class BookAgain extends Component
 
         app(MarketplaceNotificationService::class)->notify(
             recipients: $caregiver,
-            eventKey: MarketplaceEvent::MATCHING_REQUEST_REMINDER,
+            eventKey: MarketplaceEvent::INVITATION_RECEIVED,
             title: auth()->user()->name.' wants to book you again',
-            body: 'Review the visit request and accept if you can make it.',
+            body: 'Review the new date, time, location, and care details before you respond.',
             url: route('caregiver.invitations.index'),
             payload: ['care_request_id' => $newRequest->id],
             subject: $invitation,

@@ -3,6 +3,8 @@
 namespace Tests\Feature\Auth;
 
 use App\Mail\Ops\FamilyRegisteredOpsAlertMail;
+use App\Models\User;
+use App\Support\MarketplaceEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Volt\Volt;
@@ -47,6 +49,19 @@ class RegistrationTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => 'test@example.com',
             'phone' => '(984) 400-4008',
+        ]);
+        $familyId = User::query()->where('email', 'test@example.com')->value('id');
+        $this->assertDatabaseHas('marketplace_notification_deliveries', [
+            'user_id' => $familyId,
+            'event_key' => MarketplaceEvent::FAMILY_WELCOME,
+            'channel' => 'email',
+            'status' => 'queued',
+        ]);
+        $this->assertDatabaseHas('marketplace_notification_deliveries', [
+            'user_id' => $familyId,
+            'event_key' => MarketplaceEvent::FAMILY_WELCOME,
+            'channel' => 'in_app',
+            'status' => 'sent',
         ]);
 
         Mail::assertSent(FamilyRegisteredOpsAlertMail::class, function (FamilyRegisteredOpsAlertMail $mail) {

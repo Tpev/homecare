@@ -69,9 +69,9 @@ class SupportTicketMessagingService
         if ($created && $assignedAdmin) {
             $this->notifications->notify(
                 recipients: $assignedAdmin,
-                eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
+                eventKey: MarketplaceEvent::SUPPORT_TICKET_REPLY,
                 title: 'New support ticket reply',
-                body: $user->name.' replied to ticket #'.$ticket->id.': '.$ticket->subject,
+                body: $user->name.' replied to support request #'.$ticket->id.'. Open the conversation to review the full message.',
                 url: route('admin.support.tickets.show', $ticket->id),
                 payload: ['support_ticket_id' => $ticket->id, 'support_ticket_message_id' => $message->id],
                 subject: $ticket,
@@ -137,9 +137,9 @@ class SupportTicketMessagingService
         if ($created && $opener) {
             $this->notifications->notify(
                 recipients: $opener,
-                eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
-                title: 'Support replied to your ticket',
-                body: 'Our support team replied to ticket #'.$ticket->id.': '.$ticket->subject,
+                eventKey: MarketplaceEvent::SUPPORT_TICKET_REPLY,
+                title: 'LoLo Care replied to your support request',
+                body: 'Our support team replied to request #'.$ticket->id.': '.$ticket->subject.'.',
                 url: route('support.tickets.show', $ticket->id),
                 payload: ['support_ticket_id' => $ticket->id, 'support_ticket_message_id' => $message->id],
                 subject: $ticket,

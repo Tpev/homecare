@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Notifications\MarketplaceEventNotification;
 use App\Services\Marketplace\CaregiverInvitationDiscoveryService;
 use App\Services\Marketplace\CareRequestInvitationService;
+use App\Support\MarketplaceEvent;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -148,8 +149,16 @@ class CaregiverInvitationExperienceTest extends TestCase
         $this->assertSame(CareRequestInvitationService::STATE_PENDING, $second->state);
         $this->assertDatabaseCount('care_request_invitations', 1);
         $this->assertDatabaseHas('care_request_invitations', ['message' => 'First invitation']);
-        Notification::assertSentToTimes($caregiver, MarketplaceEventNotification::class, 1);
-        Notification::assertSentToTimes($family, MarketplaceEventNotification::class, 1);
+        Notification::assertSentToTimes($caregiver, MarketplaceEventNotification::class, 2);
+        Notification::assertSentToTimes($family, MarketplaceEventNotification::class, 2);
+        Notification::assertSentTo($caregiver, MarketplaceEventNotification::class, fn (MarketplaceEventNotification $notification, array $channels): bool => $notification->toArray($caregiver)['event_key'] === MarketplaceEvent::INVITATION_RECEIVED
+            && $channels === ['mail']);
+        Notification::assertSentTo($caregiver, MarketplaceEventNotification::class, fn (MarketplaceEventNotification $notification, array $channels): bool => $notification->toArray($caregiver)['event_key'] === MarketplaceEvent::INVITATION_RECEIVED
+            && $channels === ['database']);
+        Notification::assertSentTo($family, MarketplaceEventNotification::class, fn (MarketplaceEventNotification $notification, array $channels): bool => $notification->toArray($family)['event_key'] === MarketplaceEvent::INVITATION_SENT
+            && $channels === ['mail']);
+        Notification::assertSentTo($family, MarketplaceEventNotification::class, fn (MarketplaceEventNotification $notification, array $channels): bool => $notification->toArray($family)['event_key'] === MarketplaceEvent::INVITATION_SENT
+            && $channels === ['database']);
         $this->assertSame(1, FunnelEvent::query()->where('event', 'care_request_invitation_sent')->count());
     }
 

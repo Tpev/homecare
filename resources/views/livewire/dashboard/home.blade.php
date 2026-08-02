@@ -15,7 +15,7 @@
                 $hasNextShift = !empty($caregiverData['next_shift']);
                 $needsResponseCount = (int) ($caregiverData['stats']['needs_response'] ?? 0);
                 $prelaunchMode = (bool) ($caregiverData['prelaunch_mode'] ?? false);
-                $prelaunchMessage = (string) ($caregiverData['prelaunch_message'] ?? 'LoLo is currently in caregiver pre-launch mode. Complete your setup now and we will notify you as soon as matching opens.');
+                $prelaunchMessage = (string) ($caregiverData['prelaunch_message'] ?? 'LoLo Care is currently in caregiver pre-launch mode. Complete your setup now and we will notify you as soon as matching opens.');
                 $profileIsActive = (string) ($profile?->status ?? '') === 'active';
                 $setupStatusLabel = $profileIsActive ? 'Ready' : $requiredCompleted.'/'.$requiredTotal;
 

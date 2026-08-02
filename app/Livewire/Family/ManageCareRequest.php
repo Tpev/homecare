@@ -580,7 +580,7 @@ class ManageCareRequest extends Component
         }
 
         session()->flash('status', $correction->status === CareBookingTimeCorrection::STATUS_APPROVED_ADMIN_REQUIRED
-            ? 'Hours approved. LoLo will review the existing payment before updating the visit.'
+            ? 'Hours approved. LoLo Care will review the existing payment before updating the visit.'
             : 'Visit time approved and updated.');
     }
 
@@ -623,10 +623,10 @@ class ManageCareRequest extends Component
         app(CareBookingTimeCorrectionService::class)->escalate(
             $this->ownedTimeCorrection($correctionId),
             auth()->user(),
-            'The family asked LoLo to help resolve the visit time.',
+            'The family asked LoLo Care to help resolve the visit time.',
         );
         $this->refreshRequestItem();
-        session()->flash('status', 'LoLo support will review this visit.');
+        session()->flash('status', 'LoLo Care support will review this visit.');
     }
 
     public function completeBooking(): void
@@ -770,8 +770,8 @@ class ManageCareRequest extends Component
             app(MarketplaceNotificationService::class)->notify(
                 recipients: $booking->caregiver,
                 eventKey: MarketplaceEvent::REVIEW_RECEIVED,
-                title: 'New family review',
-                body: auth()->user()->name.' left a review after the visit.',
+                title: 'You received a new review',
+                body: auth()->user()->name.' left feedback after visit #'.$booking->id.'.',
                 url: route('care-requests.apply', $this->requestItem->id),
                 payload: ['care_booking_id' => $booking->id, 'rating' => $this->reviewRating],
                 subject: $booking
@@ -833,7 +833,7 @@ class ManageCareRequest extends Component
         if ($booking->caregiver) {
             app(MarketplaceNotificationService::class)->notify(
                 recipients: $booking->caregiver,
-                eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
+                eventKey: MarketplaceEvent::BOOKING_CHANGE_REQUESTED,
                 title: 'Visit change request',
                 body: auth()->user()->name.' requested to '.$this->changeType.' this visit.',
                 url: route('care-requests.apply', $this->requestItem->id),
@@ -883,9 +883,9 @@ class ManageCareRequest extends Component
             if ($changeRequest->requester) {
                 app(MarketplaceNotificationService::class)->notify(
                     recipients: $changeRequest->requester,
-                    eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
-                    title: 'Change request rejected',
-                    body: 'Your visit change request was rejected.',
+                    eventKey: MarketplaceEvent::BOOKING_CHANGE_DECLINED,
+                    title: 'Visit change declined',
+                    body: 'The other person could not accept your requested visit change. Open the visit to review the current schedule.',
                     url: route('care-requests.apply', $this->requestItem->id),
                     payload: ['care_booking_id' => $booking->id, 'change_request_id' => $changeRequest->id],
                     subject: $changeRequest
@@ -943,9 +943,9 @@ class ManageCareRequest extends Component
         if ($changeRequest->requester) {
             app(MarketplaceNotificationService::class)->notify(
                 recipients: $changeRequest->requester,
-                eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
-                title: 'Change request accepted',
-                body: 'Your visit change request was accepted.',
+                eventKey: MarketplaceEvent::BOOKING_CHANGE_ACCEPTED,
+                title: 'Visit change accepted',
+                body: 'The requested visit change was accepted. Open the visit to review the updated details.',
                 url: route('care-requests.apply', $this->requestItem->id),
                 payload: ['care_booking_id' => $booking->id, 'change_request_id' => $changeRequest->id],
                 subject: $changeRequest

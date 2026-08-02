@@ -300,8 +300,8 @@ class CareBookingTimeCorrectionService
             $this->notifyBoth(
                 $approved,
                 MarketplaceEvent::TIME_CORRECTION_ESCALATED,
-                'Time correction sent to LoLo',
-                'The corrected hours were approved. LoLo will review the existing payment before updating this visit.',
+                'Time correction sent to LoLo Care',
+                'The corrected hours were approved. LoLo Care will review the existing payment before updating this visit.',
                 'time-correction-approved-admin-required'
             );
 
@@ -411,7 +411,7 @@ class CareBookingTimeCorrectionService
             $updated,
             MarketplaceEvent::TIME_CORRECTION_APPLIED,
             'Visit time updated',
-            'LoLo finalized the corrected time for visit #'.$booking->id.'.',
+            'LoLo Care finalized the corrected time for visit #'.$booking->id.'.',
             'time-correction-admin-applied'
         );
 
@@ -463,8 +463,8 @@ class CareBookingTimeCorrectionService
             throw new AuthorizationException;
         }
 
-        $actorLabel = $actor instanceof User ? $actor->name : (is_string($actor) ? $actor : 'LoLo automation');
-        $message = trim((string) $reason) ?: 'The time correction needs LoLo review.';
+        $actorLabel = $actor instanceof User ? $actor->name : (is_string($actor) ? $actor : 'LoLo Care automation');
+        $message = trim((string) $reason) ?: 'The time correction needs LoLo Care review.';
 
         $updated = DB::transaction(function () use ($correction, $message): CareBookingTimeCorrection {
             $locked = CareBookingTimeCorrection::query()->lockForUpdate()->findOrFail($correction->id);
@@ -499,8 +499,8 @@ class CareBookingTimeCorrectionService
             $this->notifyBoth(
                 $updated,
                 MarketplaceEvent::TIME_CORRECTION_ESCALATED,
-                'LoLo is reviewing the visit time',
-                'The time correction for visit #'.$booking->id.' was sent to LoLo support.',
+                'LoLo Care is reviewing the visit time',
+                'The time correction for visit #'.$booking->id.' was sent to LoLo Care support.',
                 'time-correction-escalated'
             );
         }
@@ -637,7 +637,7 @@ class CareBookingTimeCorrectionService
                 ->whereKey($correction->id)
                 ->where('status', CareBookingTimeCorrection::STATUS_APPROVED_PROCESSING)
                 ->update([
-                    'last_error' => 'Automatic finalization paused. LoLo will retry this approved correction safely.',
+                    'last_error' => 'Automatic finalization paused. LoLo Care will retry this approved correction safely.',
                     'updated_at' => now(),
                 ]);
 
@@ -767,7 +767,7 @@ class CareBookingTimeCorrectionService
             throw ValidationException::withMessages(['timeCorrectionBreakMinutes' => 'Break time must be shorter than the visit.']);
         }
         if (($elapsed - $breakMinutes) > max(1, (int) config('marketplace.time_corrections.max_duration_minutes', 960))) {
-            throw ValidationException::withMessages(['timeCorrectionCompletedAt' => 'The requested visit is longer than the allowed correction window. Contact LoLo for help.']);
+            throw ValidationException::withMessages(['timeCorrectionCompletedAt' => 'The requested visit is longer than the allowed correction window. Contact LoLo Care for help.']);
         }
 
         if ($booking->scheduled_start_at && $booking->scheduled_end_at) {
@@ -775,7 +775,7 @@ class CareBookingTimeCorrectionService
             $reasonableEnd = $booking->scheduled_end_at->copy()->addHours(12);
             if ($startedAt->lt($reasonableStart) || $completedAt->gt($reasonableEnd)) {
                 throw ValidationException::withMessages([
-                    'timeCorrectionStartedAt' => 'The requested time is too far from this visit. Contact LoLo if the visit happened on another day.',
+                    'timeCorrectionStartedAt' => 'The requested time is too far from this visit. Contact LoLo Care if the visit happened on another day.',
                 ]);
             }
         }
@@ -805,7 +805,7 @@ class CareBookingTimeCorrectionService
             ->exists();
         if ($overlap) {
             throw ValidationException::withMessages([
-                'timeCorrectionStartedAt' => 'These hours overlap another scheduled visit. Contact LoLo if both records need correction.',
+                'timeCorrectionStartedAt' => 'These hours overlap another scheduled visit. Contact LoLo Care if both records need correction.',
             ]);
         }
     }
@@ -813,7 +813,7 @@ class CareBookingTimeCorrectionService
     private function assertBookingAcceptsProposal(CareBooking $booking): void
     {
         if ($booking->no_show_flag || in_array($booking->status, [CareBooking::STATUS_CANCELLED, CareBooking::STATUS_DISPUTED], true)) {
-            throw ValidationException::withMessages(['timeCorrectionSubmit' => 'This visit needs LoLo support before its hours can be changed.']);
+            throw ValidationException::withMessages(['timeCorrectionSubmit' => 'This visit needs LoLo Care support before its hours can be changed.']);
         }
         if ($booking->status === CareBooking::STATUS_SCHEDULED
             && $booking->scheduled_start_at
@@ -834,7 +834,7 @@ class CareBookingTimeCorrectionService
     private function assertBookingCanBeApproved(CareBooking $booking): void
     {
         if ($booking->no_show_flag || in_array($booking->status, [CareBooking::STATUS_CANCELLED, CareBooking::STATUS_DISPUTED], true)) {
-            throw ValidationException::withMessages(['timeCorrectionResponse' => 'This visit now needs LoLo review.']);
+            throw ValidationException::withMessages(['timeCorrectionResponse' => 'This visit now needs LoLo Care review.']);
         }
     }
 
@@ -874,7 +874,7 @@ class CareBookingTimeCorrectionService
     private function assertEnabled(): void
     {
         if (! $this->enabled()) {
-            throw ValidationException::withMessages(['timeCorrectionSubmit' => 'Time corrections are not available yet. Contact LoLo for help.']);
+            throw ValidationException::withMessages(['timeCorrectionSubmit' => 'Time corrections are not available yet. Contact LoLo Care for help.']);
         }
     }
 

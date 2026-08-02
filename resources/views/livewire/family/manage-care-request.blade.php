@@ -1565,7 +1565,7 @@
                         <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-950">
                             <h3 class="font-display text-lg font-semibold">During the visit</h3>
                             <p class="mt-1 text-sm">
-                                Message the caregiver for ordinary updates. Use an incident report if there is a safety concern or something needs LoLo review.
+                                Message the caregiver for ordinary updates. Use an incident report if there is a safety concern or something needs LoLo Care review.
                             </p>
                             @if ($hiredConversation)
                                 <a href="{{ route('messages.show', $hiredConversation->id) }}" wire:navigate class="mt-3 inline-flex min-h-11 items-center rounded-xl bg-white px-4 text-sm font-semibold text-emerald-950 shadow-sm">

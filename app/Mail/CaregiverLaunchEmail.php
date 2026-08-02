@@ -15,15 +15,13 @@ class CaregiverLaunchEmail extends Mailable
     use Queueable;
     use SerializesModels;
 
-    public const SUBJECT = 'HomeCare Hub is now LoLo Care';
+    public const SUBJECT = 'Welcome to the LoLo Care caregiver community';
 
-    public const PREVIEW_TEXT = "We're launching on June 1, 2026, and we'll share more details early next week.";
+    public const PREVIEW_TEXT = 'Your LoLo Care profile connects you with families looking for dependable local support.';
 
     public const WEBSITE_URL = 'https://carelolo.com/';
 
     public const LOGO_PATH = 'images/marketing/lolo/lolo-lockup-warm-1024.png';
-
-    public const LAUNCH_DATE = 'June 1, 2026';
 
     public const FACEBOOK_URL = 'https://www.facebook.com/lolo.homecare';
 
@@ -50,7 +48,6 @@ class CaregiverLaunchEmail extends Mailable
                 'firstName' => $this->firstName(),
                 'previewText' => self::PREVIEW_TEXT,
                 'logoUrl' => asset(self::LOGO_PATH),
-                'launchDate' => self::LAUNCH_DATE,
                 'websiteUrl' => self::WEBSITE_URL,
                 'facebookUrl' => self::FACEBOOK_URL,
                 'instagramUrl' => self::INSTAGRAM_URL,

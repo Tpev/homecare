@@ -3,6 +3,8 @@
 namespace Tests\Feature\Notifications;
 
 use App\Models\User;
+use App\Notifications\Auth\LoLoCareResetPasswordNotification;
+use App\Notifications\Auth\LoLoCareVerifyEmailNotification;
 use App\Notifications\MarketplaceEventNotification;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Support\MarketplaceEvent;
@@ -42,7 +44,7 @@ class MarketplaceEmailNotificationTest extends TestCase
                 && ($mail->viewData['supportUrl'] ?? null) === route('support.index')
                 && is_string($mail->viewData['openTrackingUrl'] ?? null)
                 && str_contains((string) $mail->viewData['openTrackingUrl'], '/notifications/email/open/')
-                && ($mail->viewData['ctaLabel'] ?? null) === 'Open conversation';
+                && ($mail->viewData['ctaLabel'] ?? null) === 'Read message';
         });
 
         $this->assertDatabaseHas('marketplace_notification_deliveries', [
@@ -97,5 +99,27 @@ class MarketplaceEmailNotificationTest extends TestCase
             'channel' => 'in_app',
             'dedupe_key' => 'shift-soon:booking-12-user-'.$user->id.':in_app',
         ]);
+    }
+
+    public function test_auth_emails_use_the_same_lolo_care_brand_and_accessible_fallback_links(): void
+    {
+        $user = User::factory()->unverified()->create(['name' => 'Barbara Pearl']);
+
+        foreach ([
+            new LoLoCareResetPasswordNotification('secure-test-token'),
+            new LoLoCareVerifyEmailNotification,
+        ] as $notification) {
+            $mail = $notification->toMail($user);
+            $html = view($mail->view['html'], $mail->viewData)->render();
+            $text = view($mail->view['text'], $mail->viewData)->render();
+
+            $this->assertStringStartsWith('[LoLo Care]', (string) $mail->subject);
+            $this->assertSame('LoLo Care', $mail->from[1] ?? null);
+            $this->assertStringContainsString('LoLo Care', $html);
+            $this->assertStringContainsString('lolo-lockup-warm-1024.png', $html);
+            $this->assertStringContainsString('If the button does not open', $html);
+            $this->assertStringContainsString('LoLo Care', $text);
+            $this->assertStringNotContainsString('HomeCare Hub', $html);
+        }
     }
 }

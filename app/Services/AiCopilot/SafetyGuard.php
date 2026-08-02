@@ -38,7 +38,6 @@ class SafetyGuard
 
     public function safetyHint(): string
     {
-        return 'HomeCare supports non-medical care only. For medical procedures, contact licensed clinical providers.';
+        return 'LoLo Care supports non-medical care only. For medical procedures, contact licensed clinical providers.';
     }
 }
-

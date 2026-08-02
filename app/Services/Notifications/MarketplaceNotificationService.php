@@ -16,11 +16,13 @@ class MarketplaceNotificationService
 {
     public function __construct(
         private readonly NotificationPreferenceResolver $preferences,
+        private readonly MarketplaceNotificationContextBuilder $context,
     ) {}
 
     /**
      * @param  User|Collection<int, User>|array<int, User>  $recipients
      * @param  array<string, mixed>  $payload
+     * @param  array<string, bool>  $channelOverrides
      */
     public function notify(
         User|Collection|array $recipients,
@@ -31,6 +33,7 @@ class MarketplaceNotificationService
         array $payload = [],
         ?Model $subject = null,
         ?string $dedupeKey = null,
+        array $channelOverrides = [],
     ): void {
         $users = $recipients instanceof User
             ? collect([$recipients])
@@ -39,13 +42,14 @@ class MarketplaceNotificationService
         $users
             ->filter(fn ($user) => $user instanceof User)
             ->unique('id')
-            ->each(function (User $user) use ($eventKey, $title, $body, $url, $payload, $subject, $dedupeKey): void {
-                $this->notifyUser($user, $eventKey, $title, $body, $url, $payload, $subject, $dedupeKey);
+            ->each(function (User $user) use ($eventKey, $title, $body, $url, $payload, $subject, $dedupeKey, $channelOverrides): void {
+                $this->notifyUser($user, $eventKey, $title, $body, $url, $payload, $subject, $dedupeKey, $channelOverrides);
             });
     }
 
     /**
      * @param  array<string, mixed>  $payload
+     * @param  array<string, bool>  $channelOverrides
      */
     private function notifyUser(
         User $user,
@@ -56,9 +60,11 @@ class MarketplaceNotificationService
         array $payload,
         ?Model $subject,
         ?string $dedupeKey,
+        array $channelOverrides,
     ): void {
         $normalizedUrl = $this->normalizeUrl($url);
-        $channels = $this->preferences->resolve($user, $eventKey);
+        $payload = $this->context->enrich($user, $eventKey, $title, $body, $payload, $subject);
+        $channels = array_replace($this->preferences->resolve($user, $eventKey), $channelOverrides);
         $subjectType = $subject?->getMorphClass();
         $subjectId = $subject?->getKey();
         if ($channels[NotificationChannels::EMAIL] ?? false) {

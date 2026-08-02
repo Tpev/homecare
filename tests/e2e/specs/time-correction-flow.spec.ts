@@ -138,13 +138,13 @@ test.describe('Visit time correction collaboration', () => {
 
         await page.setViewportSize({ width: 1440, height: 900 });
         await page.goto('/family/requests/5?tab=shift');
-        await expect(page.getByRole('heading', { name: 'Approved — LoLo review needed' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Approved — LoLo Care review needed' })).toBeVisible();
         await expect(page.getByText('The approved hours and original visit evidence are saved.')).toBeVisible();
         await expectNoHorizontalOverflow(page);
         await page.screenshot({ path: testInfo.outputPath('family-admin-required-1440.png'), fullPage: true });
 
         await page.goto('/family/requests/6?tab=shift');
-        await expect(page.getByRole('heading', { name: 'LoLo is reviewing' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'LoLo Care is reviewing' })).toBeVisible();
         await expect(page.getByText('The approved hours and original visit evidence are saved.')).toBeVisible();
         await expectNoHorizontalOverflow(page);
         await page.screenshot({ path: testInfo.outputPath('family-escalated-1440.png'), fullPage: true });

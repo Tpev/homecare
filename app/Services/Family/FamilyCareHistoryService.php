@@ -420,7 +420,7 @@ class FamilyCareHistoryService
             return ['key' => 'cancelled', 'label' => 'Cancelled', 'help' => 'This visit was cancelled.', 'adjusted' => $adjusted];
         }
         if ($booking->status === CareBooking::STATUS_DISPUTED) {
-            return ['key' => 'disputed', 'label' => 'Disputed', 'help' => 'LoLo support is reviewing this visit.', 'adjusted' => $adjusted];
+            return ['key' => 'disputed', 'label' => 'Disputed', 'help' => 'LoLo Care support is reviewing this visit.', 'adjusted' => $adjusted];
         }
         if ($booking->status === CareBooking::STATUS_SCHEDULED && $booking->scheduled_start_at?->isPast()) {
             return ['key' => 'check_in_missing', 'label' => 'Check-in missing', 'help' => 'If care was provided, report the completed work from this exact visit.', 'adjusted' => $adjusted];

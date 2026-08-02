@@ -416,7 +416,7 @@ class StripeClient
                 'capture_method' => 'manual',
                 'confirm' => true,
                 'off_session' => true,
-                'description' => 'HomeCare booking #'.$booking->id,
+                'description' => 'LoLo Care booking #'.$booking->id,
                 'metadata' => [
                     'care_booking_id' => (string) $booking->id,
                     'care_request_id' => (string) $booking->care_request_id,
@@ -515,7 +515,7 @@ class StripeClient
                         'request_three_d_secure' => 'automatic',
                     ],
                 ],
-                'description' => 'HomeCare booking #'.$booking->id,
+                'description' => 'LoLo Care booking #'.$booking->id,
                 'metadata' => [
                     'care_booking_id' => (string) $booking->id,
                     'care_request_id' => (string) $booking->care_request_id,
@@ -686,7 +686,7 @@ class StripeClient
                 'capture_method' => 'automatic',
                 'confirm' => true,
                 'off_session' => true,
-                'description' => 'HomeCare overage for booking #'.$booking->id,
+                'description' => 'LoLo Care overage for booking #'.$booking->id,
                 'metadata' => array_merge($metadata, [
                     'care_booking_id' => (string) $booking->id,
                     'care_request_id' => (string) $booking->care_request_id,

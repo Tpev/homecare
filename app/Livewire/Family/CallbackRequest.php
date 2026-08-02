@@ -273,7 +273,7 @@ class CallbackRequest extends Component
                 'field' => 'start_time',
                 'eyebrow' => 'Question 3',
                 'title' => 'When would support ideally start?',
-                'body' => 'LoLo is not an emergency service, but timing helps us prioritize the callback.',
+                'body' => 'LoLo Care is not an emergency service, but timing helps us prioritize the callback.',
                 'options' => [
                     ['value' => 'asap', 'title' => 'As soon as possible', 'body' => 'Help would be useful right away.'],
                     ['value' => 'this_week', 'title' => 'This week', 'body' => 'You are looking for a near-term option.'],

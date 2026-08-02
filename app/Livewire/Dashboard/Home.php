@@ -464,6 +464,7 @@ class Home extends Component
     {
         if ($role === 'family') {
             return [
+                MarketplaceEvent::FAMILY_WELCOME => ['label' => 'Welcome', 'tone' => 'info'],
                 MarketplaceEvent::NEW_APPLICANT => ['label' => 'Applicant', 'tone' => 'info'],
                 MarketplaceEvent::INVITE_ACCEPTED => ['label' => 'Invite accepted', 'tone' => 'success'],
                 MarketplaceEvent::INVITE_DECLINED => ['label' => 'Invite declined', 'tone' => 'warning'],
@@ -474,7 +475,12 @@ class Home extends Component
                 MarketplaceEvent::SHIFT_STARTED => ['label' => 'Shift started', 'tone' => 'info'],
                 MarketplaceEvent::SHIFT_COMPLETED => ['label' => 'Shift completed', 'tone' => 'success'],
                 MarketplaceEvent::TIMESHEET_AUTO_APPROVED => ['label' => 'Timesheet approved', 'tone' => 'success'],
+                MarketplaceEvent::REVIEW_RECEIVED => ['label' => 'Review received', 'tone' => 'info'],
                 MarketplaceEvent::MESSAGE_RECEIVED => ['label' => 'Message', 'tone' => 'neutral'],
+                MarketplaceEvent::BOOKING_CHANGE_REQUESTED => ['label' => 'Visit change', 'tone' => 'info'],
+                MarketplaceEvent::BOOKING_CHANGE_ACCEPTED => ['label' => 'Visit change accepted', 'tone' => 'success'],
+                MarketplaceEvent::BOOKING_CHANGE_DECLINED => ['label' => 'Visit change declined', 'tone' => 'warning'],
+                MarketplaceEvent::SUPPORT_TICKET_REPLY => ['label' => 'Support reply', 'tone' => 'info'],
                 MarketplaceEvent::PAYMENT_ACTION_REQUIRED => ['label' => 'Payment action', 'tone' => 'warning'],
                 MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED => ['label' => 'Payment issue', 'tone' => 'warning'],
                 MarketplaceEvent::PAYMENT_AUTHORIZED => ['label' => 'Payment secured', 'tone' => 'success'],
@@ -493,12 +499,15 @@ class Home extends Component
                 MarketplaceEvent::TIME_CORRECTION_APPROVED => ['label' => 'Time approved', 'tone' => 'success'],
                 MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED => ['label' => 'Payment action', 'tone' => 'warning'],
                 MarketplaceEvent::TIME_CORRECTION_APPLIED => ['label' => 'Time updated', 'tone' => 'success'],
-                MarketplaceEvent::TIME_CORRECTION_ESCALATED => ['label' => 'LoLo review', 'tone' => 'warning'],
+                MarketplaceEvent::TIME_CORRECTION_ESCALATED => ['label' => 'LoLo Care review', 'tone' => 'warning'],
                 MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => ['label' => 'Time withdrawn', 'tone' => 'neutral'],
             ];
         }
 
         return [
+            MarketplaceEvent::CAREGIVER_WELCOME => ['label' => 'Welcome', 'tone' => 'info'],
+            MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H => ['label' => 'Setup reminder', 'tone' => 'info'],
+            MarketplaceEvent::INVITATION_RECEIVED => ['label' => 'Care invitation', 'tone' => 'info'],
             MarketplaceEvent::MATCHING_REQUEST_REMINDER => ['label' => 'New invite', 'tone' => 'info'],
             MarketplaceEvent::APPLICATION_SUBMITTED => ['label' => 'Applied', 'tone' => 'success'],
             MarketplaceEvent::CARE_REQUEST_WITHDRAWN => ['label' => 'Withdrawn', 'tone' => 'warning'],
@@ -510,6 +519,10 @@ class Home extends Component
             MarketplaceEvent::SHIFT_COMPLETED => ['label' => 'Shift completed', 'tone' => 'success'],
             MarketplaceEvent::TIMESHEET_AUTO_APPROVED => ['label' => 'Timesheet approved', 'tone' => 'success'],
             MarketplaceEvent::MESSAGE_RECEIVED => ['label' => 'Message', 'tone' => 'neutral'],
+            MarketplaceEvent::BOOKING_CHANGE_REQUESTED => ['label' => 'Visit change', 'tone' => 'info'],
+            MarketplaceEvent::BOOKING_CHANGE_ACCEPTED => ['label' => 'Visit change accepted', 'tone' => 'success'],
+            MarketplaceEvent::BOOKING_CHANGE_DECLINED => ['label' => 'Visit change declined', 'tone' => 'warning'],
+            MarketplaceEvent::SUPPORT_TICKET_REPLY => ['label' => 'Support reply', 'tone' => 'info'],
             MarketplaceEvent::REVIEW_RECEIVED => ['label' => 'Review received', 'tone' => 'warning'],
             MarketplaceEvent::PAYOUT_TRANSFERRED => ['label' => 'Payout sent', 'tone' => 'success'],
             MarketplaceEvent::PAYOUT_TRANSFER_FAILED => ['label' => 'Payout issue', 'tone' => 'warning'],
@@ -527,7 +540,7 @@ class Home extends Component
             MarketplaceEvent::TIME_CORRECTION_APPROVED => ['label' => 'Time approved', 'tone' => 'success'],
             MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED => ['label' => 'Payment action', 'tone' => 'warning'],
             MarketplaceEvent::TIME_CORRECTION_APPLIED => ['label' => 'Time finalized', 'tone' => 'success'],
-            MarketplaceEvent::TIME_CORRECTION_ESCALATED => ['label' => 'LoLo review', 'tone' => 'warning'],
+            MarketplaceEvent::TIME_CORRECTION_ESCALATED => ['label' => 'LoLo Care review', 'tone' => 'warning'],
             MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => ['label' => 'Time withdrawn', 'tone' => 'neutral'],
         ];
     }

@@ -46,7 +46,6 @@ class FamilyNotificationCenterTest extends TestCase
             ->test(NotificationsCenter::class)
             ->set('preferences.'.MarketplaceEvent::INVITATION_SENT.'.'.NotificationChannels::EMAIL, false)
             ->set('preferences.'.MarketplaceEvent::INVITATION_SENT.'.'.NotificationChannels::IN_APP, true)
-            ->set('preferences.'.MarketplaceEvent::INVITATION_SENT.'.'.NotificationChannels::SMS, true)
             ->call('savePreferences')
             ->assertHasNoErrors();
 
@@ -55,7 +54,7 @@ class FamilyNotificationCenterTest extends TestCase
             'event_key' => MarketplaceEvent::INVITATION_SENT,
             'in_app_enabled' => 1,
             'email_enabled' => 0,
-            'sms_enabled' => 1,
+            'sms_enabled' => 0,
             'push_enabled' => 0,
         ]);
 
@@ -114,4 +113,3 @@ class FamilyNotificationCenterTest extends TestCase
         ]);
     }
 }
-

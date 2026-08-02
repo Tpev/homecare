@@ -181,10 +181,10 @@ class CompletedExtraVisitRequest extends Model
             self::STATUS_APPROVED_PROCESSING => 'Approved — processing payment',
             self::STATUS_PAYMENT_ACTION_REQUIRED => 'Family payment action needed',
             self::STATUS_APPLIED => 'Family-approved extra visit',
-            self::STATUS_DISPUTED => 'Disputed — LoLo review',
+            self::STATUS_DISPUTED => 'Disputed — LoLo Care review',
             self::STATUS_WITHDRAWN => 'Withdrawn',
-            self::STATUS_ESCALATED => 'LoLo is reviewing',
-            self::STATUS_FAILED => 'Processing paused — LoLo review',
+            self::STATUS_ESCALATED => 'LoLo Care is reviewing',
+            self::STATUS_FAILED => 'Processing paused — LoLo Care review',
             self::STATUS_SUPERSEDED => 'Replaced by an updated report',
             default => ucfirst(str_replace('_', ' ', $this->status)),
         };

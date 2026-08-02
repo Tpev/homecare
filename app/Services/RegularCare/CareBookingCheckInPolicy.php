@@ -37,7 +37,7 @@ class CareBookingCheckInPolicy
         if ($booking->checkInWindowClosesAt() && $at->gt($booking->checkInWindowClosesAt())) {
             return [
                 'allowed' => false,
-                'reason' => 'The check-in window has closed. Contact LoLo support for help.',
+                'reason' => 'The check-in window has closed. Contact LoLo Care support for help.',
                 'code' => 'too_late',
             ];
         }

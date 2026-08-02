@@ -1,16 +1,32 @@
-{{ $appName }}
+LoLo Care
 {{ $eventLabel }}
 
+@if (($firstName ?? '') !== '')
+Hi {{ $firstName }},
+
+@endif
 {{ $title }}
+
 {{ $body }}
 
 @if (!empty($emailDetails))
+DETAILS
 @foreach ($emailDetails as $detail)
 {{ $detail['label'] }}: {{ $detail['value'] }}
 @endforeach
+
 @endif
+@if (!empty($nextSteps))
+WHAT TO DO NEXT
+@foreach ($nextSteps as $step)
+{{ $loop->iteration }}. {{ $step }}
+@endforeach
 
-{{ $ctaLabel }}: {{ $url }}
+@endif
+{{ $ctaLabel }}: {{ $rawUrl ?? $url }}
 
-Need help? Support: {{ $supportUrl }}
-Home: {{ $homeUrl }}
+Need help? Contact LoLo Care support: {{ $supportUrl }}
+@if (!empty($preferencesUrl))
+Manage notification preferences: {{ $preferencesUrl }}
+@endif
+LoLo Care: {{ $homeUrl }}
