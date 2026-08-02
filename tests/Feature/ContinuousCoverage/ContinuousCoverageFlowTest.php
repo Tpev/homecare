@@ -26,10 +26,13 @@ use App\Services\ContinuousCoverage\ContinuousCoverageReplacementService;
 use App\Services\ContinuousCoverage\ContinuousCoverageRosterService;
 use App\Services\ContinuousCoverage\ContinuousCoverageScheduleService;
 use App\Services\Payments\BookingPaymentService;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -64,6 +67,52 @@ class ContinuousCoverageFlowTest extends TestCase
         $counts = app(ContinuousCoverageOperationsService::class)->process();
 
         $this->assertSame(['plans' => 0, 'shifts_created' => 0, 'bookings_linked' => 0, 'payments_prepared' => 0, 'failures' => 0], $counts);
+    }
+
+    public function test_initial_migration_recovers_an_empty_interrupted_mysql_install_and_uses_short_constraint_names(): void
+    {
+        $migrationPath = database_path('migrations/2026_08_02_090000_create_continuous_coverage_tables.php');
+        $migration = require $migrationPath;
+        $migration->down();
+
+        Schema::create('continuous_coverage_plans', fn (Blueprint $table) => $table->id());
+        Schema::create('continuous_coverage_roster_members', fn (Blueprint $table) => $table->id());
+
+        $migration->up();
+
+        foreach ([
+            'continuous_coverage_plans',
+            'continuous_coverage_roster_members',
+            'continuous_coverage_shift_templates',
+            'continuous_coverage_shifts',
+            'continuous_coverage_replacement_cases',
+            'continuous_coverage_shift_offers',
+            'continuous_coverage_handoffs',
+            'continuous_coverage_events',
+        ] as $table) {
+            $this->assertTrue(Schema::hasTable($table), $table.' was not restored.');
+        }
+
+        $source = file_get_contents($migrationPath);
+        preg_match_all("/->foreign\\([^,]+, '([^']+)'\\)/", (string) $source, $matches);
+        $this->assertCount(23, $matches[1]);
+        foreach ($matches[1] as $constraintName) {
+            $this->assertLessThanOrEqual(64, strlen($constraintName), $constraintName.' exceeds MySQL\'s identifier limit.');
+        }
+        $this->assertStringNotContainsString('->constrained(', (string) $source);
+    }
+
+    public function test_initial_migration_never_removes_an_interrupted_install_that_contains_data(): void
+    {
+        $migration = require database_path('migrations/2026_08_02_090000_create_continuous_coverage_tables.php');
+        $migration->down();
+        Schema::create('continuous_coverage_plans', fn (Blueprint $table) => $table->id());
+        DB::table('continuous_coverage_plans')->insert(['id' => 1]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('no tables were removed');
+
+        $migration->up();
     }
 
     public function test_pilot_access_does_not_enroll_or_expose_other_users(): void
