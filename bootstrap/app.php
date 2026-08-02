@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'sdr.access' => \App\Http\Middleware\EnsureSdrAccess::class,
             'caregiver.role' => \App\Http\Middleware\EnsureCaregiverRole::class,
             'family.role' => \App\Http\Middleware\EnsureFamilyRole::class,
+            'continuous.coverage' => \App\Http\Middleware\EnsureContinuousCoverageAccess::class,
             'voice.agent' => \App\Http\Middleware\EnsureVoiceAgentToken::class,
         ]);
     })

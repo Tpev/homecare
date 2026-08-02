@@ -22,6 +22,7 @@ new class extends Component
         $isSdr = $user?->role === 'sdr';
         $canAccessCrm = $isAdmin || $isSales;
         $canAccessSdr = $isAdmin || $isSales || $isSdr;
+        $continuousCoverageVisible = app(\App\Services\ContinuousCoverage\ContinuousCoverageAccess::class)->visibleInNavigation($user);
         $caregiverProfile = $isCaregiver ? $user?->caregiverProfile : null;
         $caregiverOnboardingState = $isCaregiver
             ? app(\App\Support\CaregiverOnboardingState::class)->build($user)
@@ -258,6 +259,15 @@ new class extends Component
             ],
         ];
 
+        if ($isAdmin && $continuousCoverageVisible) {
+            $adminNavGroups[0]['active'] = $adminNavGroups[0]['active'] || request()->routeIs('admin.continuous-coverage.*');
+            $adminNavGroups[0]['items'][] = [
+                'label' => 'Continuous Coverage',
+                'href' => route('admin.continuous-coverage.index'),
+                'active' => request()->routeIs('admin.continuous-coverage.*'),
+            ];
+        }
+
         $primaryLinks = [];
 
         if ($canAccessCrm) {
@@ -286,6 +296,13 @@ new class extends Component
                     'href' => route('caregivers.search'),
                     'active' => request()->routeIs('caregivers.search') || request()->routeIs('caregivers.show'),
                 ];
+                if ($continuousCoverageVisible) {
+                    $primaryLinks[] = [
+                        'label' => '24/7 Coverage',
+                        'href' => route('family.continuous-coverage.index'),
+                        'active' => request()->routeIs('family.continuous-coverage.*'),
+                    ];
+                }
                 $primaryLinks[] = [
                     'label' => $messageUnread > 0 ? "Messages ($messageUnread)" : 'Messages',
                     'href' => route('messages.index'),
@@ -328,6 +345,13 @@ new class extends Component
                         'href' => route('caregiver.regular-clients.index'),
                         'active' => request()->routeIs('caregiver.regular-clients.*'),
                     ];
+                    if ($continuousCoverageVisible) {
+                        $primaryLinks[] = [
+                            'label' => 'Coverage',
+                            'href' => route('caregiver.continuous-coverage.index'),
+                            'active' => request()->routeIs('caregiver.continuous-coverage.*'),
+                        ];
+                    }
                     $primaryLinks[] = [
                         'label' => 'My Visits',
                         'href' => route('caregiver.shifts.index'),
@@ -444,7 +468,14 @@ new class extends Component
                         @endif
                     </a>
                 @endif
-                <button @click="open = ! open" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] text-[#23483F] shadow-sm hover:bg-[#F8F0E2]">
+                <button
+                    type="button"
+                    @click="open = ! open"
+                    :aria-expanded="open"
+                    aria-controls="mobile-primary-navigation"
+                    aria-label="Toggle navigation menu"
+                    class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] text-[#23483F] shadow-sm hover:bg-[#F8F0E2]"
+                >
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': !open}" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': !open, 'inline-flex': open}" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -641,10 +672,11 @@ new class extends Component
     </div>
 
     <div
+        id="mobile-primary-navigation"
         x-cloak
         x-show="open"
         x-transition.opacity
-        class="sm:hidden border-t border-[#E3D6C5]/80 bg-[rgba(255,253,250,0.98)] backdrop-blur"
+        class="max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-t border-[#E3D6C5]/80 bg-[rgba(255,253,250,0.98)] backdrop-blur sm:hidden"
     >
         <div class="space-y-1 px-2 pb-3 pt-2">
             @if ($canAccessCrm)

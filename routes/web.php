@@ -24,6 +24,7 @@ use App\Livewire\Admin\CarePlanShow;
 use App\Livewire\Admin\CarePlansIndex;
 use App\Livewire\Admin\CareRequestShow as AdminCareRequestShow;
 use App\Livewire\Admin\CareRequestsIndex;
+use App\Livewire\Admin\ContinuousCoverageIndex as AdminContinuousCoverageIndex;
 use App\Livewire\Admin\FunnelAnalytics;
 use App\Livewire\Admin\LeadsIndex;
 use App\Livewire\Admin\NotificationsCenter as AdminNotificationsCenter;
@@ -40,6 +41,7 @@ use App\Livewire\Admin\VoiceAiTest;
 use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Caregiver\BrowseCaregivers;
 use App\Livewire\Caregiver\BrowseCareRequests;
+use App\Livewire\Caregiver\ContinuousCoverageIndex as CaregiverContinuousCoverageIndex;
 use App\Livewire\Caregiver\EarningsDashboard;
 use App\Livewire\Caregiver\InsuranceSetup;
 use App\Livewire\Caregiver\IntroVideoSetup;
@@ -57,6 +59,9 @@ use App\Livewire\Dashboard\Home as DashboardHome;
 use App\Livewire\Family\AiRequestCopilot;
 use App\Livewire\Family\BookAgain;
 use App\Livewire\Family\CareHistory;
+use App\Livewire\Family\ContinuousCoverageCreate;
+use App\Livewire\Family\ContinuousCoverageIndex as FamilyContinuousCoverageIndex;
+use App\Livewire\Family\ContinuousCoverageShow;
 use App\Livewire\Family\CreateCareRequestWizard;
 use App\Livewire\Family\ManageCareRequest;
 use App\Livewire\Family\NotificationsCenter as FamilyNotificationsCenter;
@@ -112,6 +117,9 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/requests/{careRequest}', AdminCareRequestShow::class)->name('requests.show');
         Route::get('/care-plans', CarePlansIndex::class)->name('care-plans.index');
         Route::get('/care-plans/{carePlan}', CarePlanShow::class)->name('care-plans.show');
+        Route::get('/continuous-coverage', AdminContinuousCoverageIndex::class)
+            ->middleware('continuous.coverage')
+            ->name('continuous-coverage.index');
     });
 
 Route::get('/', [MarketingPagesController::class, 'landing'])->name('landing');
@@ -225,9 +233,17 @@ Route::middleware(['auth', 'caregiver.role'])->group(function () {
     Route::get('/care-requests/{careRequest}/apply', ApplyToCareRequest::class)
         ->whereNumber('careRequest')
         ->name('care-requests.apply');
+    Route::get('/caregiver/continuous-coverage', CaregiverContinuousCoverageIndex::class)
+        ->middleware('continuous.coverage')
+        ->name('caregiver.continuous-coverage.index');
 });
 
 Route::middleware(['auth', 'family.role'])->prefix('family')->name('family.')->group(function () {
+    Route::middleware('continuous.coverage')->prefix('continuous-coverage')->name('continuous-coverage.')->group(function () {
+        Route::get('/', FamilyContinuousCoverageIndex::class)->name('index');
+        Route::get('/create', ContinuousCoverageCreate::class)->name('create');
+        Route::get('/{coveragePlan}', ContinuousCoverageShow::class)->whereNumber('coveragePlan')->name('show');
+    });
     Route::get('/care', RegularCareIndex::class)->name('care.index');
     Route::get('/care/history', CareHistory::class)->name('care.history');
     Route::get('/care/{carePlan}', RegularCareShow::class)

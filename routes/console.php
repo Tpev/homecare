@@ -15,3 +15,4 @@ Schedule::command('homecare:process-completed-extra-visits')->everyFifteenMinute
 Schedule::command('homecare:retry-payout-transfers --limit=100')->hourly();
 Schedule::command('homecare:generate-regular-care-visits')->dailyAt('02:15')->withoutOverlapping();
 Schedule::command('homecare:prepare-regular-care-payments')->hourly()->withoutOverlapping();
+Schedule::command('homecare:process-continuous-coverage')->hourly()->withoutOverlapping();

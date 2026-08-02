@@ -130,6 +130,44 @@ class MarketplaceEvent
 
     public const COMPLETED_EXTRA_VISIT_ESCALATED = 'completed_extra_visit_escalated';
 
+    public const CONTINUOUS_COVERAGE_TEAM_INVITATION = 'continuous_coverage_team_invitation';
+
+    public const CONTINUOUS_COVERAGE_APPLICATION_RECEIVED = 'continuous_coverage_application_received';
+
+    public const CONTINUOUS_COVERAGE_CAREGIVER_APPROVED = 'continuous_coverage_caregiver_approved';
+
+    public const CONTINUOUS_COVERAGE_TEAM_ACCEPTED = 'continuous_coverage_team_accepted';
+
+    public const CONTINUOUS_COVERAGE_LANE_OFFERED = 'continuous_coverage_lane_offered';
+
+    public const CONTINUOUS_COVERAGE_LANE_ACCEPTED = 'continuous_coverage_lane_accepted';
+
+    public const CONTINUOUS_COVERAGE_LANE_DECLINED = 'continuous_coverage_lane_declined';
+
+    public const CONTINUOUS_COVERAGE_SCHEDULE_CHANGED = 'continuous_coverage_schedule_changed';
+
+    public const CONTINUOUS_COVERAGE_SHIFT_CONFIRMED = 'continuous_coverage_shift_confirmed';
+
+    public const CONTINUOUS_COVERAGE_SHIFT_REMINDER = 'continuous_coverage_shift_reminder';
+
+    public const CONTINUOUS_COVERAGE_SHIFT_RELEASED = 'continuous_coverage_shift_released';
+
+    public const CONTINUOUS_COVERAGE_REPLACEMENT_OFFERED = 'continuous_coverage_replacement_offered';
+
+    public const CONTINUOUS_COVERAGE_REPLACEMENT_ACCEPTED = 'continuous_coverage_replacement_accepted';
+
+    public const CONTINUOUS_COVERAGE_REPLACEMENT_CONFIRMED = 'continuous_coverage_replacement_confirmed';
+
+    public const CONTINUOUS_COVERAGE_REPLACEMENT_NOT_SELECTED = 'continuous_coverage_replacement_not_selected';
+
+    public const CONTINUOUS_COVERAGE_GAP_UNRESOLVED = 'continuous_coverage_gap_unresolved';
+
+    public const CONTINUOUS_COVERAGE_SHIFT_COMPLETED = 'continuous_coverage_shift_completed';
+
+    public const CONTINUOUS_COVERAGE_PAYMENT_ATTENTION = 'continuous_coverage_payment_attention';
+
+    public const CONTINUOUS_COVERAGE_EARNINGS_FINALIZED = 'continuous_coverage_earnings_finalized';
+
     /**
      * @return list<string>
      */
@@ -199,6 +237,25 @@ class MarketplaceEvent
             self::COMPLETED_EXTRA_VISIT_APPLIED,
             self::COMPLETED_EXTRA_VISIT_PAYMENT_ACTION_REQUIRED,
             self::COMPLETED_EXTRA_VISIT_ESCALATED,
+            self::CONTINUOUS_COVERAGE_TEAM_INVITATION,
+            self::CONTINUOUS_COVERAGE_APPLICATION_RECEIVED,
+            self::CONTINUOUS_COVERAGE_CAREGIVER_APPROVED,
+            self::CONTINUOUS_COVERAGE_TEAM_ACCEPTED,
+            self::CONTINUOUS_COVERAGE_LANE_OFFERED,
+            self::CONTINUOUS_COVERAGE_LANE_ACCEPTED,
+            self::CONTINUOUS_COVERAGE_LANE_DECLINED,
+            self::CONTINUOUS_COVERAGE_SCHEDULE_CHANGED,
+            self::CONTINUOUS_COVERAGE_SHIFT_CONFIRMED,
+            self::CONTINUOUS_COVERAGE_SHIFT_REMINDER,
+            self::CONTINUOUS_COVERAGE_SHIFT_RELEASED,
+            self::CONTINUOUS_COVERAGE_REPLACEMENT_OFFERED,
+            self::CONTINUOUS_COVERAGE_REPLACEMENT_ACCEPTED,
+            self::CONTINUOUS_COVERAGE_REPLACEMENT_CONFIRMED,
+            self::CONTINUOUS_COVERAGE_REPLACEMENT_NOT_SELECTED,
+            self::CONTINUOUS_COVERAGE_GAP_UNRESOLVED,
+            self::CONTINUOUS_COVERAGE_SHIFT_COMPLETED,
+            self::CONTINUOUS_COVERAGE_PAYMENT_ATTENTION,
+            self::CONTINUOUS_COVERAGE_EARNINGS_FINALIZED,
         ];
     }
 }

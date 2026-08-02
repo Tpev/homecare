@@ -53,6 +53,18 @@ return [
         'future_clock_skew_minutes' => (int) env('MARKETPLACE_COMPLETED_EXTRA_VISIT_FUTURE_SKEW_MINUTES', 5),
     ],
 
+    'continuous_coverage' => [
+        'enabled' => filter_var(env('CONTINUOUS_COVERAGE_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'pilot_emails' => array_values(array_filter(array_map(
+            static fn (string $email): string => strtolower(trim($email)),
+            explode(',', (string) env('CONTINUOUS_COVERAGE_PILOT_EMAILS', ''))
+        ))),
+        'generation_weeks' => max(1, (int) env('CONTINUOUS_COVERAGE_GENERATION_WEEKS', 6)),
+        'booking_horizon_hours' => max(1, (int) env('CONTINUOUS_COVERAGE_BOOKING_HORIZON_HOURS', 48)),
+        'offer_expires_hours' => max(1, (int) env('CONTINUOUS_COVERAGE_OFFER_EXPIRES_HOURS', 12)),
+        'lane_offer_expires_hours' => max(1, (int) env('CONTINUOUS_COVERAGE_LANE_OFFER_EXPIRES_HOURS', 72)),
+    ],
+
     'regular_care' => [
         'authorization_window_hours' => (int) env('REGULAR_CARE_AUTHORIZATION_WINDOW_HOURS', 48),
         'visit_window_weeks' => (int) env('REGULAR_CARE_VISIT_WINDOW_WEEKS', 6),
