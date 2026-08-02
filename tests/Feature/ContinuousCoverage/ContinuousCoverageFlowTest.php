@@ -16,6 +16,8 @@ use App\Models\ContinuousCoverageShift;
 use App\Models\ContinuousCoverageShiftOffer;
 use App\Models\ContinuousCoverageShiftTemplate;
 use App\Models\FamilyCaregiverFavorite;
+use App\Models\Language;
+use App\Models\Skill;
 use App\Models\User;
 use App\Services\ContinuousCoverage\ContinuousCoverageAccess;
 use App\Services\ContinuousCoverage\ContinuousCoverageBookingAdapter;
@@ -362,6 +364,51 @@ class ContinuousCoverageFlowTest extends TestCase
 
         $this->assertSame(1, $plan->rosterMembers()->where('caregiver_user_id', $active->id)->count());
         $this->assertFalse($plan->rosterMembers()->where('caregiver_user_id', $unavailable->id)->exists());
+    }
+
+    public function test_care_team_modal_browses_platform_caregivers_by_service_area_then_quality(): void
+    {
+        $family = $this->family();
+        $nearby = $this->caregiver(['name' => 'Alex Nearby', 'city' => 'Durham', 'state' => 'NC']);
+        $this->makeCaregiverBrowsable($nearby, [
+            'slug' => 'alex-nearby-'.$nearby->id,
+            'service_area_zip' => '27701',
+            'average_rating' => 4.2,
+            'reviews_count' => 3,
+            'completed_bookings_count' => 9,
+            'reliability_score' => 96,
+        ]);
+        $sameState = $this->caregiver(['name' => 'Bailey Same State', 'city' => 'Raleigh', 'state' => 'NC']);
+        $this->makeCaregiverBrowsable($sameState, [
+            'slug' => 'bailey-same-state-'.$sameState->id,
+            'service_area_zip' => '27601',
+            'average_rating' => 5,
+            'reviews_count' => 25,
+        ]);
+        $fartherAway = $this->caregiver(['name' => 'Casey Farther Away', 'city' => 'Austin', 'state' => 'TX']);
+        $this->makeCaregiverBrowsable($fartherAway, [
+            'slug' => 'casey-farther-away-'.$fartherAway->id,
+            'service_area_zip' => '78701',
+            'average_rating' => 5,
+            'reviews_count' => 40,
+        ]);
+        $unavailable = $this->caregiver(['name' => 'Dana Not Accepting', 'city' => 'Durham', 'state' => 'NC']);
+        $this->makeCaregiverBrowsable($unavailable, [
+            'service_area_zip' => '27701',
+            'is_accepting_new_clients' => false,
+        ]);
+        $plan = $this->plan($family);
+
+        Livewire::actingAs($family)
+            ->test(ContinuousCoverageShow::class, ['coveragePlan' => $plan->id])
+            ->set('tab', 'team')
+            ->call('openCaregiverSearchModal')
+            ->assertSee('Caregivers near Durham')
+            ->assertSee('ordered by service-area match, then ratings, reviews, and completed care')
+            ->assertSeeInOrder(['Alex Nearby', 'Bailey Same State', 'Casey Farther Away'])
+            ->assertSee('9 completed care visits')
+            ->assertSee('96% reliability')
+            ->assertDontSee('Dana Not Accepting');
     }
 
     public function test_accepted_lane_assigns_only_the_approved_caregiver_and_creates_no_early_booking(): void
@@ -1716,6 +1763,29 @@ class ContinuousCoverageFlowTest extends TestCase
         ]);
 
         return $caregiver;
+    }
+
+    private function makeCaregiverBrowsable(User $caregiver, array $profileAttributes = []): void
+    {
+        $profile = $caregiver->caregiverProfile;
+        $profile->update(array_merge([
+            'slug' => 'caregiver-'.$caregiver->id,
+            'bio' => 'Experienced non-medical caregiver available for family care.',
+            'platform_hourly_rate' => 30,
+            'years_experience' => 5,
+            'service_area_zip' => '27701',
+            'service_radius_miles' => 20,
+            'is_accepting_new_clients' => true,
+        ], $profileAttributes));
+        $skill = Skill::query()->create(['name' => 'Coverage skill '.$caregiver->id]);
+        $language = Language::query()->create(['name' => 'Coverage language '.$caregiver->id]);
+        $profile->skills()->sync([$skill->id]);
+        $profile->languages()->sync([$language->id]);
+        $profile->availabilities()->create([
+            'day_of_week' => 1,
+            'start_time' => '08:00',
+            'end_time' => '18:00',
+        ]);
     }
 
     private function plan(User $family, array $overrides = []): ContinuousCoveragePlan

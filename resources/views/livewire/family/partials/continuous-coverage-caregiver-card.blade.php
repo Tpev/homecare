@@ -87,6 +87,12 @@
         @else
             <span>No reviews yet</span>
         @endif
+        @if ((int) $caregiver->completed_bookings_count > 0)
+            <span>· {{ $caregiver->completed_bookings_count }} completed care visit{{ (int) $caregiver->completed_bookings_count === 1 ? '' : 's' }}</span>
+        @endif
+        @if (! is_null($caregiver->reliability_score))
+            <span>· {{ number_format((float) $caregiver->reliability_score, 0) }}% reliability</span>
+        @endif
     </div>
 
     @if (filled($caregiver->bio))

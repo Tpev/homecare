@@ -175,7 +175,7 @@
                         @if ($visibleInitialSectionCount === 0)
                             <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-white px-4 py-6 text-center">
                                 <p class="font-semibold text-[#17313F]">Search for someone you know</p>
-                                <p class="mt-1 text-sm text-[#607080]">Enter their first or last name above. We only show caregivers with active profiles.</p>
+                                <p class="mt-1 text-sm text-[#607080]">Enter their first or last name above. We only show caregivers with active profiles who are accepting new clients.</p>
                             </div>
                         @endif
                     @elseif (mb_strlen(str_replace(['%', '_'], '', trim($caregiverSearch))) < 2)

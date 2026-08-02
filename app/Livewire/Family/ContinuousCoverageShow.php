@@ -832,11 +832,14 @@ class ContinuousCoverageShow extends Component
     {
         return CaregiverProfile::query()
             ->select([
-                'id', 'user_id', 'slug', 'profile_photo_path', 'status', 'bio',
-                'years_experience', 'is_accepting_new_clients', 'identity_verified_at',
-                'identity_verification_status', 'background_check_verified_at',
-                'top_caregiver', 'average_rating', 'reviews_count', 'reliability_score',
-                'completed_bookings_count',
+                'caregiver_profiles.id', 'caregiver_profiles.user_id', 'caregiver_profiles.slug',
+                'caregiver_profiles.profile_photo_path', 'caregiver_profiles.status', 'caregiver_profiles.bio',
+                'caregiver_profiles.years_experience', 'caregiver_profiles.service_area_zip',
+                'caregiver_profiles.is_accepting_new_clients', 'caregiver_profiles.identity_verified_at',
+                'caregiver_profiles.identity_verification_status', 'caregiver_profiles.background_check_verified_at',
+                'caregiver_profiles.top_caregiver', 'caregiver_profiles.average_rating',
+                'caregiver_profiles.reviews_count', 'caregiver_profiles.reliability_score',
+                'caregiver_profiles.completed_bookings_count',
             ])
             ->with([
                 'user:id,name,role,city,state',
@@ -866,6 +869,14 @@ class ContinuousCoverageShow extends Component
             ->latest('created_at')
             ->limit(6)
             ->pluck('caregiver_user_id');
+        $representedIds = $previousIds
+            ->merge($favoriteIds)
+            ->merge($this->plan->rosterMembers()->pluck('caregiver_user_id'))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+        $browseCaregivers = $this->browseCaregiverProfiles($representedIds);
+        $serviceCity = trim((string) data_get($this->plan->address_snapshot, 'city'));
 
         return [
             [
@@ -880,7 +891,56 @@ class ContinuousCoverageShow extends Component
                 'description' => 'Caregivers you saved while browsing profiles.',
                 'caregivers' => $this->caregiverProfilesForIds($favoriteIds),
             ],
+            [
+                'key' => 'browse',
+                'title' => $serviceCity !== '' ? 'Caregivers near '.$serviceCity : 'Browse caregivers on LoLo Care',
+                'description' => 'Active caregivers are ordered by service-area match, then ratings, reviews, and completed care.',
+                'caregivers' => $browseCaregivers,
+            ],
         ];
+    }
+
+    /**
+     * @param  Collection<int, int>  $excludedIds
+     */
+    private function browseCaregiverProfiles(Collection $excludedIds): Collection
+    {
+        $zip = trim((string) data_get($this->plan->address_snapshot, 'zip'));
+        $city = mb_strtolower(trim((string) data_get($this->plan->address_snapshot, 'city')));
+        $state = mb_strtolower(trim((string) data_get($this->plan->address_snapshot, 'state')));
+
+        return $this->eligibleCaregiverProfilesQuery()
+            ->join('users as coverage_browse_users', 'coverage_browse_users.id', '=', 'caregiver_profiles.user_id')
+            ->where('caregiver_profiles.is_accepting_new_clients', true)
+            ->whereNotNull('caregiver_profiles.bio')
+            ->where('caregiver_profiles.bio', '!=', '')
+            ->whereNotNull('caregiver_profiles.platform_hourly_rate')
+            ->whereNotNull('caregiver_profiles.years_experience')
+            ->whereNotNull('caregiver_profiles.service_area_zip')
+            ->whereNotNull('caregiver_profiles.service_radius_miles')
+            ->whereHas('skills')
+            ->whereHas('languages')
+            ->whereHas('availabilities')
+            ->when($excludedIds->isNotEmpty(), fn (Builder $query) => $query->whereNotIn('caregiver_profiles.user_id', $excludedIds->all()))
+            ->when($zip !== '', fn (Builder $query) => $query->orderByRaw(
+                'CASE WHEN caregiver_profiles.service_area_zip = ? THEN 0 ELSE 1 END',
+                [$zip],
+            ))
+            ->when($city !== '' && $state !== '', fn (Builder $query) => $query->orderByRaw(
+                "CASE WHEN LOWER(COALESCE(coverage_browse_users.city, '')) = ? AND LOWER(COALESCE(coverage_browse_users.state, '')) = ? THEN 0 ELSE 1 END",
+                [$city, $state],
+            ))
+            ->when($state !== '', fn (Builder $query) => $query->orderByRaw(
+                "CASE WHEN LOWER(COALESCE(coverage_browse_users.state, '')) = ? THEN 0 ELSE 1 END",
+                [$state],
+            ))
+            ->orderByDesc('caregiver_profiles.top_caregiver')
+            ->orderByDesc('caregiver_profiles.average_rating')
+            ->orderByDesc('caregiver_profiles.reviews_count')
+            ->orderByDesc('caregiver_profiles.completed_bookings_count')
+            ->orderBy('coverage_browse_users.name')
+            ->limit(12)
+            ->get();
     }
 
     /**
