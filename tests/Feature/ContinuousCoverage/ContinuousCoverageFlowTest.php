@@ -15,6 +15,7 @@ use App\Models\ContinuousCoverageRosterMember;
 use App\Models\ContinuousCoverageShift;
 use App\Models\ContinuousCoverageShiftOffer;
 use App\Models\ContinuousCoverageShiftTemplate;
+use App\Models\FamilyCaregiverFavorite;
 use App\Models\User;
 use App\Services\ContinuousCoverage\ContinuousCoverageAccess;
 use App\Services\ContinuousCoverage\ContinuousCoverageBookingAdapter;
@@ -270,6 +271,97 @@ class ContinuousCoverageFlowTest extends TestCase
         $this->assertNull($member->caregiver_accepted_at);
         $this->expectException(ValidationException::class);
         $roster->offerLane($template, $member, $family);
+    }
+
+    public function test_family_can_find_review_and_invite_a_caregiver_from_the_care_team_modal(): void
+    {
+        $family = $this->family();
+        $caregiver = $this->caregiver([
+            'name' => 'Charles Helpful',
+            'email' => 'private-charles@example.test',
+            'city' => 'Durham',
+            'state' => 'NC',
+        ]);
+        $caregiver->caregiverProfile->update([
+            'slug' => 'charles-helpful-'.$caregiver->id,
+            'bio' => 'Experienced caregiver focused on companionship and meal support.',
+            'years_experience' => 7,
+            'is_accepting_new_clients' => true,
+            'identity_verified_at' => now(),
+            'background_check_verified_at' => now(),
+            'average_rating' => 4.9,
+            'reviews_count' => 12,
+        ]);
+        FamilyCaregiverFavorite::query()->create([
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+        ]);
+        $plan = $this->plan($family);
+
+        Livewire::actingAs($family)
+            ->test(ContinuousCoverageShow::class, ['coveragePlan' => $plan->id])
+            ->set('tab', 'team')
+            ->assertSee('Find & invite caregiver', false)
+            ->assertDontSee('Search by caregiver name')
+            ->call('openCaregiverSearchModal')
+            ->assertSet('showCaregiverSearchModal', true)
+            ->assertSee('Add a caregiver to this care team')
+            ->assertSee('Saved caregivers')
+            ->assertSee('Charles Helpful')
+            ->set('caregiverSearch', 'Char')
+            ->assertSee('Search results')
+            ->assertSee('7 years of experience')
+            ->assertSee('4.9 stars')
+            ->assertSee('Identity verified')
+            ->assertSee('Background check')
+            ->assertSee('View profile')
+            ->assertDontSee('private-charles@example.test')
+            ->call('selectCaregiverForRoster', $caregiver->id)
+            ->assertSet('selectedCaregiverId', $caregiver->id)
+            ->assertSee('Choose invitation preferences')
+            ->assertSee('They do not assign a shift')
+            ->set('inviteRole', ContinuousCoverageRosterMember::ROLE_PRIMARY)
+            ->set('inviteEligibleDays', [1, 3, 5])
+            ->set('inviteEligibleShiftTypes', ['daytime'])
+            ->call('approveCaregiver', $caregiver->id)
+            ->assertHasNoErrors()
+            ->assertSet('showCaregiverSearchModal', false)
+            ->assertSee('Charles Helpful was approved and invited to join your care team.');
+
+        $this->assertDatabaseHas('continuous_coverage_roster_members', [
+            'continuous_coverage_plan_id' => $plan->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => ContinuousCoverageRosterMember::STATUS_FAMILY_APPROVED,
+            'role' => ContinuousCoverageRosterMember::ROLE_PRIMARY,
+        ]);
+    }
+
+    public function test_care_team_modal_explains_existing_and_unavailable_caregivers_without_duplicate_invites(): void
+    {
+        $family = $this->family();
+        $active = $this->caregiver(['name' => 'Morgan Existing', 'city' => 'Durham']);
+        $active->caregiverProfile->update(['is_accepting_new_clients' => true]);
+        $unavailable = $this->caregiver(['name' => 'Morgan Unavailable', 'city' => 'Durham']);
+        $unavailable->caregiverProfile->update(['is_accepting_new_clients' => false]);
+        $plan = $this->plan($family);
+        app(ContinuousCoverageRosterService::class)->familyApprove($plan, $family, $active);
+
+        Livewire::actingAs($family)
+            ->test(ContinuousCoverageShow::class, ['coveragePlan' => $plan->id])
+            ->set('tab', 'team')
+            ->call('openCaregiverSearchModal')
+            ->set('caregiverSearch', 'Morgan')
+            ->assertSee('Care-team invitation sent')
+            ->assertSee('Not accepting new clients')
+            ->call('selectCaregiverForRoster', $active->id)
+            ->assertSet('selectedCaregiverId', null)
+            ->assertSet('caregiverSearchFeedback', 'This caregiver already has an invitation waiting for their response.')
+            ->call('selectCaregiverForRoster', $unavailable->id)
+            ->assertSet('selectedCaregiverId', null)
+            ->assertSet('caregiverSearchFeedback', 'This caregiver is not accepting new clients right now.');
+
+        $this->assertSame(1, $plan->rosterMembers()->where('caregiver_user_id', $active->id)->count());
+        $this->assertFalse($plan->rosterMembers()->where('caregiver_user_id', $unavailable->id)->exists());
     }
 
     public function test_accepted_lane_assigns_only_the_approved_caregiver_and_creates_no_early_booking(): void

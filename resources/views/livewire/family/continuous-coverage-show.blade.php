@@ -154,7 +154,7 @@
             </div>
         </section>
     @elseif ($tab === 'team')
-        <section class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <section class="grid gap-5">
             <div class="space-y-5">
                 @if($applicants->isNotEmpty())
                     <section class="rounded-3xl border border-violet-200 bg-violet-50 p-5" aria-labelledby="coverage-applicants-title">
@@ -175,8 +175,15 @@
                     </section>
                 @endif
                 <div class="rounded-3xl border border-[#DED6CA] bg-white p-5">
-                    <h2 class="font-display text-2xl font-semibold">Family-approved care team</h2>
-                    <p class="mt-1 text-sm text-[#607080]">Approval lets a caregiver review your coverage invitations. It does not assign them to any shift. These preferences control future offers only.</p>
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <h2 class="font-display text-2xl font-semibold">Family-approved care team</h2>
+                            <p class="mt-1 text-sm text-[#607080]">Approval lets a caregiver review your coverage invitations. It does not assign them to any shift. These preferences control future offers only.</p>
+                        </div>
+                        <button type="button" wire:click="openCaregiverSearchModal" class="min-h-12 shrink-0 rounded-xl bg-[#0F3D3E] px-5 font-semibold text-white hover:bg-[#17313F] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF] focus:ring-offset-2">
+                            Find & invite caregiver
+                        </button>
+                    </div>
                     <div class="mt-5 space-y-4">
                         @forelse($roster as $member)
                             @php
@@ -255,7 +262,7 @@
                                 @endif
                             </article>
                         @empty
-                            <p class="rounded-2xl bg-[#F7F2EA] p-5 text-sm text-[#607080]">No caregivers approved yet. Search and approve the people your family wants on this care team.</p>
+                            <p class="rounded-2xl bg-[#F7F2EA] p-5 text-sm text-[#607080]">No caregivers approved yet. Use “Find & invite caregiver” to add the people your family wants on this care team.</p>
                         @endforelse
                     </div>
                 </div>
@@ -321,65 +328,10 @@
                 </div>
             </div>
 
-            <aside class="space-y-4">
-                <div class="rounded-3xl border border-[#DED6CA] bg-white p-5 xl:sticky xl:top-24">
-                    <h2 class="font-display text-xl font-semibold">Find a caregiver</h2>
-                    <p class="mt-1 text-sm text-[#607080]">Search active profiles, then explicitly approve the caregiver for this plan.</p>
-                    <div class="mt-4 space-y-4 rounded-2xl bg-[#F7F2EA] p-4">
-                        <label class="block">
-                            <span class="text-xs font-semibold text-[#526474]">Initial coverage role</span>
-                            <select wire:model="inviteRole" class="mt-1 min-h-11 w-full rounded-xl border-[#CFC4B5]">
-                                <option value="backup">Backup</option>
-                                <option value="primary">Primary</option>
-                            </select>
-                        </label>
-                        <label class="flex min-h-11 items-center gap-3 text-sm font-semibold text-[#344754]">
-                            <input type="checkbox" wire:model="inviteReplacementOptIn" class="rounded border-[#AFA79B] text-[#2F6F62] focus:ring-[#2F6F62]">
-                            Include in matching backup offers
-                        </label>
-                        <fieldset>
-                            <legend class="text-xs font-semibold text-[#526474]">Eligible days</legend>
-                            <div class="mt-2 grid grid-cols-2 gap-2">
-                                @foreach($dayNames as $dayIndex => $dayName)
-                                    <label class="flex min-h-11 items-center gap-2 rounded-xl border border-[#DED6CA] bg-white px-3 text-sm"><input type="checkbox" value="{{ $dayIndex }}" wire:model="inviteEligibleDays" class="rounded border-[#AFA79B] text-[#2F6F62] focus:ring-[#2F6F62]">{{ substr($dayName, 0, 3) }}</label>
-                                @endforeach
-                            </div>
-                        </fieldset>
-                        <fieldset>
-                            <legend class="text-xs font-semibold text-[#526474]">Eligible shift types</legend>
-                            <div class="mt-2 grid grid-cols-2 gap-2">
-                                @foreach(['daytime'=>'Daytime','overnight'=>'Overnight','6_hour'=>'6 hours','8_hour'=>'8 hours','12_hour'=>'12 hours'] as $type => $label)
-                                    <label class="flex min-h-11 items-center gap-2 rounded-xl border border-[#DED6CA] bg-white px-3 text-sm"><input type="checkbox" value="{{ $type }}" wire:model="inviteEligibleShiftTypes" class="rounded border-[#AFA79B] text-[#2F6F62] focus:ring-[#2F6F62]">{{ $label }}</label>
-                                @endforeach
-                            </div>
-                        </fieldset>
-                        @error('inviteEligibleDays') <p class="text-sm font-semibold text-rose-700">{{ $message }}</p> @enderror
-                    </div>
-                    <form wire:submit="$refresh" class="mt-4 flex flex-col gap-2 sm:flex-row">
-                        <label class="min-w-0 flex-1">
-                            <span class="sr-only">Search caregivers</span>
-                            <input type="search" wire:model="caregiverSearch" class="min-h-12 w-full rounded-xl border-[#CFC4B5]" placeholder="Name, city, or email">
-                        </label>
-                        <button type="submit" class="min-h-12 rounded-xl bg-[#0F3D3E] px-4 font-semibold text-white">Search</button>
-                    </form>
-                    <div class="mt-4 space-y-3">
-                        @forelse($searchResults as $caregiver)
-                            <article class="rounded-2xl border border-[#E4DDD3] p-3">
-                                <p class="font-semibold">{{ $caregiver->name }}</p>
-                                <p class="text-sm text-[#607080]">{{ collect([$caregiver->city, $caregiver->state])->filter()->implode(', ') ?: 'Location on profile' }}</p>
-                                <button wire:click="approveCaregiver({{ $caregiver->id }})" wire:loading.attr="disabled" class="mt-3 min-h-11 w-full rounded-xl border border-[#2F6F62] px-3 font-semibold text-[#2F6F62] disabled:opacity-60">Approve for care team</button>
-                            </article>
-                        @empty
-                            @if(strlen(trim($caregiverSearch)) >= 2)
-                                <p class="text-sm text-[#607080]">No active caregiver profile matched.</p>
-                            @else
-                                <p class="text-sm text-[#607080]">Type at least two characters.</p>
-                            @endif
-                        @endforelse
-                    </div>
-                </div>
-            </aside>
         </section>
+        @if($showCaregiverSearchModal)
+            @include('livewire.family.partials.continuous-coverage-caregiver-modal')
+        @endif
     @elseif ($tab === 'history')
         <section class="rounded-3xl border border-[#DED6CA] bg-white p-5">
             <div><h2 class="font-display text-2xl font-semibold">Coverage history</h2><p class="mt-1 text-sm text-[#607080]">Past, released, replaced, cancelled, missed, disputed, and completed shifts stay accessible.</p></div>

@@ -3,17 +3,20 @@
 namespace App\Livewire\Family;
 
 use App\Models\CareBooking;
+use App\Models\CaregiverProfile;
 use App\Models\ContinuousCoveragePlan;
 use App\Models\ContinuousCoverageReplacementCase;
 use App\Models\ContinuousCoverageRosterMember;
 use App\Models\ContinuousCoverageShift;
 use App\Models\ContinuousCoverageShiftTemplate;
-use App\Models\User;
+use App\Models\FamilyCaregiverFavorite;
 use App\Services\ContinuousCoverage\ContinuousCoveragePricingService;
 use App\Services\ContinuousCoverage\ContinuousCoverageReplacementService;
 use App\Services\ContinuousCoverage\ContinuousCoverageRosterService;
 use App\Services\ContinuousCoverage\ContinuousCoverageScheduleService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -66,6 +69,12 @@ class ContinuousCoverageShow extends Component
     public string $selectedShift = '';
 
     public string $caregiverSearch = '';
+
+    public bool $showCaregiverSearchModal = false;
+
+    public ?int $selectedCaregiverId = null;
+
+    public ?string $caregiverSearchFeedback = null;
 
     public array $laneSelections = [];
 
@@ -136,7 +145,87 @@ class ContinuousCoverageShow extends Component
     {
         abort_unless(in_array($tab, ['overview', 'calendar', 'team', 'history', 'billing', 'settings'], true), 404);
         $this->tab = $tab;
+        if ($tab !== 'team') {
+            $this->closeCaregiverSearchModal();
+        }
         $this->resetPage();
+    }
+
+    public function openCaregiverSearchModal(): void
+    {
+        $this->showCaregiverSearchModal = true;
+        $this->selectedCaregiverId = null;
+        $this->caregiverSearch = '';
+        $this->caregiverSearchFeedback = null;
+        $this->inviteRole = ContinuousCoverageRosterMember::ROLE_BACKUP;
+        $this->inviteReplacementOptIn = true;
+        $this->inviteEligibleDays = range(0, 6);
+        $this->inviteEligibleShiftTypes = ['daytime', 'overnight', '6_hour', '8_hour', '12_hour'];
+        $this->resetValidation();
+        $this->dispatch('coverage-caregiver-modal-opened');
+    }
+
+    public function closeCaregiverSearchModal(): void
+    {
+        $this->showCaregiverSearchModal = false;
+        $this->selectedCaregiverId = null;
+        $this->caregiverSearch = '';
+        $this->caregiverSearchFeedback = null;
+        $this->resetValidation();
+        $this->dispatch('coverage-caregiver-modal-closed');
+    }
+
+    public function clearCaregiverSearch(): void
+    {
+        $this->caregiverSearch = '';
+        $this->caregiverSearchFeedback = null;
+    }
+
+    public function selectCaregiverForRoster(int $caregiverId): void
+    {
+        $profile = $this->eligibleCaregiverProfilesQuery()
+            ->where('user_id', $caregiverId)
+            ->first();
+
+        if (! $profile) {
+            $this->caregiverSearchFeedback = 'This caregiver does not currently have an active profile.';
+
+            return;
+        }
+
+        if (! $profile->is_accepting_new_clients) {
+            $this->caregiverSearchFeedback = 'This caregiver is not accepting new clients right now.';
+
+            return;
+        }
+
+        $existing = $this->plan->rosterMembers()
+            ->where('caregiver_user_id', $caregiverId)
+            ->first();
+        if ($existing && $existing->status !== ContinuousCoverageRosterMember::STATUS_REMOVED) {
+            $this->caregiverSearchFeedback = match ($existing->status) {
+                ContinuousCoverageRosterMember::STATUS_APPLIED => 'This caregiver already applied. Review their application in the care-team page.',
+                ContinuousCoverageRosterMember::STATUS_FAMILY_APPROVED => 'This caregiver already has an invitation waiting for their response.',
+                ContinuousCoverageRosterMember::STATUS_ACTIVE => 'This caregiver is already on this care team.',
+                ContinuousCoverageRosterMember::STATUS_PAUSED => 'This caregiver is already on this care team and is currently paused.',
+                default => 'This caregiver already has a care-team status for this plan.',
+            };
+
+            return;
+        }
+
+        $this->selectedCaregiverId = $caregiverId;
+        $this->caregiverSearchFeedback = null;
+        $this->resetValidation();
+        $this->dispatch('coverage-caregiver-content-top');
+    }
+
+    public function backToCaregiverSearch(): void
+    {
+        $this->selectedCaregiverId = null;
+        $this->caregiverSearchFeedback = null;
+        $this->resetValidation();
+        $this->dispatch('coverage-caregiver-content-top');
     }
 
     public function previousWeek(): void
@@ -331,6 +420,12 @@ class ContinuousCoverageShow extends Component
 
     public function approveCaregiver(int $caregiverId, ContinuousCoverageRosterService $roster): void
     {
+        if (! $this->showCaregiverSearchModal || $this->selectedCaregiverId !== $caregiverId) {
+            $this->addError('caregiver', 'Choose a caregiver from the search results before sending an invitation.');
+
+            return;
+        }
+
         $this->validate([
             'inviteRole' => ['required', \Illuminate\Validation\Rule::in([
                 ContinuousCoverageRosterMember::ROLE_PRIMARY,
@@ -342,7 +437,16 @@ class ContinuousCoverageShow extends Component
             'inviteEligibleShiftTypes' => ['array'],
             'inviteEligibleShiftTypes.*' => [\Illuminate\Validation\Rule::in(['daytime', 'overnight', '6_hour', '8_hour', '12_hour'])],
         ]);
-        $caregiver = User::query()->where('role', 'caregiver')->findOrFail($caregiverId);
+        $profile = $this->eligibleCaregiverProfilesQuery()
+            ->where('user_id', $caregiverId)
+            ->where('is_accepting_new_clients', true)
+            ->first();
+        if (! $profile?->user) {
+            $this->addError('caregiver', 'This caregiver is no longer available to invite. Return to the search results and choose another caregiver.');
+
+            return;
+        }
+        $caregiver = $profile->user;
         $member = $roster->familyApprove(
             $this->plan,
             auth()->user(),
@@ -353,7 +457,7 @@ class ContinuousCoverageShow extends Component
             $this->inviteEligibleShiftTypes,
         );
         $this->syncMemberPreferences($member);
-        $this->caregiverSearch = '';
+        $this->closeCaregiverSearchModal();
         session()->flash('status', $caregiver->name.' was approved and invited to join your care team.');
     }
 
@@ -562,18 +666,36 @@ class ContinuousCoverageShow extends Component
                 ->filter(fn (ContinuousCoverageRosterMember $member): bool => $rosterService->matchesTemplateEligibility($member, $template))
                 ->values(),
         ]);
+        $rosterByCaregiver = $allRoster->keyBy('caregiver_user_id');
         $searchResults = collect();
-        if (mb_strlen(trim($this->caregiverSearch)) >= 2) {
-            $term = '%'.trim($this->caregiverSearch).'%';
-            $existingIds = $allRoster->pluck('caregiver_user_id');
-            $searchResults = User::query()
-                ->where('role', 'caregiver')
-                ->whereNotIn('id', $existingIds)
-                ->whereHas('caregiverProfile', fn ($query) => $query->where('status', 'active'))
-                ->where(fn ($query) => $query->where('name', 'like', $term)->orWhere('city', 'like', $term)->orWhere('email', 'like', $term))
-                ->with('caregiverProfile:id,user_id,profile_photo_path,years_experience,average_rating')
-                ->limit(8)
-                ->get();
+        $caregiverInitialSections = [];
+        $selectedCaregiver = null;
+        if ($this->showCaregiverSearchModal) {
+            $search = trim($this->caregiverSearch);
+            $safeSearch = str_replace(['%', '_'], '', $search);
+
+            if ($search === '') {
+                $caregiverInitialSections = $this->caregiverInitialSections();
+            } elseif (mb_strlen($safeSearch) >= 2) {
+                $searchResults = $this->eligibleCaregiverProfilesQuery()
+                    ->whereHas('user', function (Builder $query) use ($safeSearch): void {
+                        $query->where(function (Builder $userQuery) use ($safeSearch): void {
+                            $userQuery->where('name', 'like', '%'.$safeSearch.'%')
+                                ->orWhere('city', 'like', '%'.$safeSearch.'%');
+                        });
+                    })
+                    ->orderByDesc('top_caregiver')
+                    ->orderByDesc('average_rating')
+                    ->orderByDesc('reviews_count')
+                    ->limit(12)
+                    ->get();
+            }
+
+            if ($this->selectedCaregiverId) {
+                $selectedCaregiver = $this->eligibleCaregiverProfilesQuery()
+                    ->where('user_id', $this->selectedCaregiverId)
+                    ->first();
+            }
         }
 
         $historyFrom = $this->localDate($this->historyFrom);
@@ -679,7 +801,8 @@ class ContinuousCoverageShow extends Component
 
         return view('livewire.family.continuous-coverage-show', compact(
             'days', 'summary', 'nextShift', 'attention', 'roster', 'applicants', 'activeRoster',
-            'templates', 'eligibleRosterByTemplate', 'searchResults', 'history', 'billingShifts', 'netBilledCents',
+            'templates', 'eligibleRosterByTemplate', 'searchResults', 'caregiverInitialSections',
+            'selectedCaregiver', 'rosterByCaregiver', 'history', 'billingShifts', 'netBilledCents',
             'upcomingEstimate', 'weekStartLocal', 'weekEndLocal', 'selectedShiftItem',
             'selectedShiftEvents', 'selectedReleasedBookings', 'selectedDay'
         ));
@@ -703,6 +826,81 @@ class ContinuousCoverageShow extends Component
             'eligible_days' => array_map('intval', (array) ($member->eligible_days ?: range(0, 6))),
             'eligible_shift_types' => array_values((array) $member->eligible_shift_types),
         ];
+    }
+
+    private function eligibleCaregiverProfilesQuery(): Builder
+    {
+        return CaregiverProfile::query()
+            ->select([
+                'id', 'user_id', 'slug', 'profile_photo_path', 'status', 'bio',
+                'years_experience', 'is_accepting_new_clients', 'identity_verified_at',
+                'identity_verification_status', 'background_check_verified_at',
+                'top_caregiver', 'average_rating', 'reviews_count', 'reliability_score',
+                'completed_bookings_count',
+            ])
+            ->with([
+                'user:id,name,role,city,state',
+                'skills:id,name',
+            ])
+            ->where('status', 'active')
+            ->whereHas('user', fn (Builder $query) => $query->where('role', 'caregiver'));
+    }
+
+    /**
+     * @return array<int, array{key:string,title:string,description:string,caregivers:Collection}>
+     */
+    private function caregiverInitialSections(): array
+    {
+        $familyId = (int) auth()->id();
+        $previousIds = CareBooking::query()
+            ->where('family_user_id', $familyId)
+            ->where('status', '!=', CareBooking::STATUS_CANCELLED)
+            ->selectRaw('caregiver_user_id, MAX(id) as latest_booking_id')
+            ->groupBy('caregiver_user_id')
+            ->orderByDesc('latest_booking_id')
+            ->limit(6)
+            ->pluck('caregiver_user_id');
+        $favoriteIds = FamilyCaregiverFavorite::query()
+            ->where('family_user_id', $familyId)
+            ->whereNotIn('caregiver_user_id', $previousIds)
+            ->latest('created_at')
+            ->limit(6)
+            ->pluck('caregiver_user_id');
+
+        return [
+            [
+                'key' => 'previous',
+                'title' => 'Caregivers you hired before',
+                'description' => 'People who have already provided care for your family.',
+                'caregivers' => $this->caregiverProfilesForIds($previousIds),
+            ],
+            [
+                'key' => 'favorites',
+                'title' => 'Saved caregivers',
+                'description' => 'Caregivers you saved while browsing profiles.',
+                'caregivers' => $this->caregiverProfilesForIds($favoriteIds),
+            ],
+        ];
+    }
+
+    /**
+     * @param  Collection<int, int|string>  $ids
+     */
+    private function caregiverProfilesForIds(Collection $ids): Collection
+    {
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        $profiles = $this->eligibleCaregiverProfilesQuery()
+            ->whereIn('user_id', $ids->all())
+            ->get()
+            ->keyBy('user_id');
+
+        return $ids
+            ->map(fn ($id) => $profiles->get((int) $id))
+            ->filter()
+            ->values();
     }
 
     private function localDate(string $value): ?Carbon
