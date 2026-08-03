@@ -16,12 +16,19 @@ class BrowseCaregivers extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $zip = '';
+
     public ?float $rate_min = null;
+
     public ?float $rate_max = null;
+
     public array $skills = [];
+
     public array $languages = [];
+
     public string $trust = 'all';
+
     public string $sort = 'relevance';
 
     public function updatingSearch(): void
@@ -92,7 +99,7 @@ class BrowseCaregivers extends Component
         $prelaunchMode = CaregiverPrelaunch::enabled();
 
         $query = CaregiverProfile::query()
-            ->with(['user','skills','languages'])
+            ->with(['user', 'skills', 'languages', 'careExperiences', 'certifications.type'])
             ->where('status', 'active')
             ->whereNotNull('bio')
             ->whereNotNull('platform_hourly_rate')
@@ -130,11 +137,11 @@ class BrowseCaregivers extends Component
             $query->where('platform_hourly_rate', '<=', $this->rate_max);
         }
 
-        if (!empty($this->skills)) {
+        if (! empty($this->skills)) {
             $query->whereHas('skills', fn ($q) => $q->whereIn('skills.id', $this->skills));
         }
 
-        if (!empty($this->languages)) {
+        if (! empty($this->languages)) {
             $query->whereHas('languages', fn ($q) => $q->whereIn('languages.id', $this->languages));
         }
 
@@ -160,8 +167,8 @@ class BrowseCaregivers extends Component
         return view('livewire.caregiver.browse-caregivers', [
             'prelaunchMode' => $prelaunchMode,
             'caregivers' => $query->paginate(12),
-            'skillOptions' => Skill::query()->orderBy('name')->get(['id','name']),
-            'languageOptions' => Language::query()->orderBy('name')->get(['id','name']),
+            'skillOptions' => Skill::query()->orderBy('name')->get(['id', 'name']),
+            'languageOptions' => Language::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 }

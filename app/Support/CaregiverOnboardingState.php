@@ -8,10 +8,17 @@ use App\Models\User;
 class CaregiverOnboardingState
 {
     public const STEP_PROFILE_BASICS = 'profile_basics';
+
+    public const STEP_CARE_BACKGROUND = 'care_background';
+
     public const STEP_IDENTITY = 'identity_verification';
+
     public const STEP_TASKS = 'task_comfort';
+
     public const STEP_INSURANCE = 'insurance';
+
     public const STEP_VIDEO = 'intro_video';
+
     public const STEP_PAYOUT = 'payout_setup';
 
     /**
@@ -70,6 +77,25 @@ class CaregiverOnboardingState
                 'done' => $basicsComplete,
                 'minutes' => 4,
             ],
+        ];
+
+        $backgroundStep = [
+            'key' => self::STEP_CARE_BACKGROUND,
+            'title' => 'Experience & training',
+            'description' => 'Share general care experience and current credentials with families.',
+            'route' => route('caregiver.onboarding', ['step' => 2]),
+            'cta' => 'Add experience',
+            'required' => $profile->requiresCareBackground(),
+            'done' => $profile->careBackgroundIsAnswered(),
+            'minutes' => 3,
+        ];
+
+        if ($profile->requiresCareBackground()) {
+            $requiredSteps[] = $backgroundStep;
+        }
+
+        $requiredSteps = [
+            ...$requiredSteps,
             [
                 'key' => self::STEP_IDENTITY,
                 'title' => 'Identity verification',
@@ -93,6 +119,7 @@ class CaregiverOnboardingState
         ];
 
         $optionalSteps = [
+            ...(! $profile->requiresCareBackground() ? [$backgroundStep] : []),
             [
                 'key' => self::STEP_INSURANCE,
                 'title' => 'Insurance setup',
@@ -140,7 +167,7 @@ class CaregiverOnboardingState
         $canSubmitForReview = $readyForReview && in_array($status, ['draft', 'suspended'], true);
 
         $nextRequiredRoute = $canSubmitForReview
-            ? route('caregiver.onboarding', ['step' => 4])
+            ? route('caregiver.onboarding', ['step' => 5])
             : ($nextRequiredStep['route'] ?? route('caregiver.setup.index'));
 
         $nextRequiredLabel = $canSubmitForReview
@@ -218,4 +245,3 @@ class CaregiverOnboardingState
         ]);
     }
 }
-

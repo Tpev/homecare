@@ -48,6 +48,16 @@
         @endif
     </div>
 
+    @if (! empty($caregiver['care_background_tags']))
+        <div class="mt-3 flex flex-wrap gap-2" aria-label="Care experience and credentials">
+            @foreach (array_slice($caregiver['care_background_tags'], 0, 3) as $tag)
+                <span class="rounded-full border px-2.5 py-1 text-xs font-medium {{ $tag['verified'] ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-[#D8D0C5] bg-[#F7F2EA] text-[#4B5B6B]' }}">
+                    {{ $tag['label'] }}{{ $tag['verified'] ? ' · Verified' : '' }}
+                </span>
+            @endforeach
+        </div>
+    @endif
+
     <div class="mt-3 rounded-xl border px-3 py-2 text-sm {{ $statusTone }}">
         <p class="font-semibold">{{ $caregiver['status_label'] }}</p>
         <p class="mt-0.5 text-xs leading-5">{{ $caregiver['status_detail'] }}</p>

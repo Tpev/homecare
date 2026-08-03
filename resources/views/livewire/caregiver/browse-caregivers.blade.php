@@ -1,4 +1,4 @@
-﻿<div class="hc-page py-8 space-y-6">
+<div class="hc-page py-8 space-y-6">
     @if (!empty($prelaunchMode))
         <x-alert color="yellow">
             Caregiver marketplace is in pre-launch mode. Profiles are not publicly available yet.
@@ -106,6 +106,7 @@
                         $photoUrl = $c->profile_photo_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($c->profile_photo_path) : null;
                         $nameParts = preg_split('/\s+/', trim((string) $c->user->name));
                         $initials = collect($nameParts)->filter()->map(fn($part) => strtoupper(substr($part, 0, 1)))->take(2)->implode('');
+                        $backgroundTags = $c->publicCareBackgroundTags(3);
                     @endphp
 
                     <article class="rounded-2xl border border-[#E4DDD3] bg-white p-4 shadow-sm">
@@ -154,6 +155,16 @@
                                 <x-badge color="amber" text="Top Caregiver" />
                             @endif
                         </div>
+
+                        @if ($backgroundTags !== [])
+                            <div class="mt-3 flex flex-wrap gap-2" aria-label="Care experience and credentials">
+                                @foreach ($backgroundTags as $tag)
+                                    <span class="inline-flex rounded-full border px-3 py-1 text-xs font-medium {{ $tag['verified'] ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-[#D8D0C5] bg-[#F7F2EA] text-[#4B5B6B]' }}">
+                                        {{ $tag['label'] }}{{ $tag['verified'] ? ' · Verified' : '' }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
 
                         <div class="mt-3 flex flex-wrap gap-2">
                             @foreach ($c->skills->take(3) as $skill)

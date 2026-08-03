@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Admin;
 
-use App\Models\CaregiverProfile;
+use App\Models\CaregiverCertification;
 use App\Models\CaregiverModerationLog;
+use App\Models\CaregiverProfile;
+use App\Services\Caregiver\CaregiverCertificationReviewService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -11,7 +13,10 @@ use Livewire\Component;
 class CaregiverReviewsQueue extends Component
 {
     public ?int $selectedId = null;
+
     public string $rejection_reason = '';
+
+    public array $certificationRejectionReasons = [];
 
     public function selectProfile(int $id): void
     {
@@ -148,17 +153,32 @@ class CaregiverReviewsQueue extends Component
         ]);
     }
 
+    public function verifyCertification(int $id, CaregiverCertificationReviewService $review): void
+    {
+        abort_unless(auth()->user()?->isAdministrator(), 403);
+        $review->verify(auth()->user(), CaregiverCertification::query()->findOrFail($id));
+        session()->flash('status', 'Credential verified.');
+    }
+
+    public function rejectCertification(int $id, CaregiverCertificationReviewService $review): void
+    {
+        abort_unless(auth()->user()?->isAdministrator(), 403);
+        $reason = (string) ($this->certificationRejectionReasons[$id] ?? '');
+        $review->reject(auth()->user(), CaregiverCertification::query()->findOrFail($id), $reason);
+        unset($this->certificationRejectionReasons[$id]);
+        session()->flash('status', 'Credential returned to the caregiver for attention.');
+    }
 
     public function render()
     {
         $profiles = CaregiverProfile::query()
-            ->with(['user', 'latestIdentityVerification'])
+            ->with(['user', 'latestIdentityVerification', 'careExperiences', 'certifications.type', 'certifications.verifier'])
             ->where('status', 'under_review')
             ->latest('review_submitted_at')
             ->get();
 
         $activeProfiles = CaregiverProfile::query()
-            ->with(['user', 'latestIdentityVerification'])
+            ->with(['user', 'latestIdentityVerification', 'careExperiences', 'certifications.type', 'certifications.verifier'])
             ->where('status', 'active')
             ->latest('updated_at')
             ->limit(30)

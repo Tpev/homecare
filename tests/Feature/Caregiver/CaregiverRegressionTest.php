@@ -97,7 +97,7 @@ class CaregiverRegressionTest extends TestCase
 
         Livewire::actingAs($user)
             ->test(OnboardingWizard::class)
-            ->set('step', 3)
+            ->set('step', 4)
             ->set('selectedSkills', [$skill->id])
             ->set('selectedLanguages', [$language->id])
             ->set('availability.1', [

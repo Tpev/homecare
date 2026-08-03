@@ -153,6 +153,8 @@
                     </ul>
                 @endif
             </div>
+
+            @include('livewire.admin.partials.caregiver-background-review', ['profile' => $caregiverProfile])
         </x-card>
     @endif
 

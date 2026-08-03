@@ -26,7 +26,14 @@ class CaregiverSuggestionService
             ->values();
 
         $profiles = CaregiverProfile::query()
-            ->with(['user:id,name,city,state', 'availabilities', 'skills:id,name', 'languages:id,name'])
+            ->with([
+                'user:id,name,city,state',
+                'availabilities',
+                'skills:id,name',
+                'languages:id,name',
+                'careExperiences:id,label,sort_order',
+                'certifications.type:id,slug,label,sort_order',
+            ])
             ->where('status', 'active')
             ->where('is_accepting_new_clients', true)
             ->whereNotNull('bio')
@@ -112,6 +119,7 @@ class CaregiverSuggestionService
             'identity_verified' => $profile->hasIdentityVerifiedBadge(),
             'background_check' => $profile->hasBackgroundCheckBadge(),
             'top_caregiver' => $profile->hasTopCaregiverBadge(),
+            'care_background_tags' => $profile->publicCareBackgroundTags(3),
         ];
     }
 

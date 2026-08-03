@@ -1,4 +1,4 @@
-﻿<div class="hc-page space-y-5 py-5 sm:py-8">
+<div class="hc-page space-y-5 py-5 sm:py-8">
     @php
         $statusLabel = strtoupper(str_replace('_', ' ', (string) $profile->status));
         $statusTone = match ($profile->status) {
@@ -136,6 +136,18 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="border-t border-[#E4DDD3] pt-5">
+                <div class="mb-4">
+                    <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Experience & training</p>
+                    @if (! $profile->careBackgroundIsAnswered() && ! $profile->requiresCareBackground())
+                        <p class="mt-1 text-sm text-[#607080]">Optional for your existing profile. Add this information when you are ready to help families understand your background.</p>
+                    @else
+                        <p class="mt-1 text-sm text-[#607080]">Keep your general care experience and current credentials accurate.</p>
+                    @endif
+                </div>
+                @include('livewire.caregiver.partials.care-background-form', ['fieldIdPrefix' => 'profile-editor'])
             </div>
         </div>
 

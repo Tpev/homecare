@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogCoverController;
+use App\Http\Controllers\CaregiverCertificationDocumentController;
 use App\Http\Controllers\CaregiverIdentityVerificationController;
 use App\Http\Controllers\CaregiverStripeConnectController;
 use App\Http\Controllers\CareRequestInvitationResponseController;
@@ -190,6 +191,9 @@ Route::view('profile', 'profile')
     ->name('profile');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/caregiver/certifications/{certification}/document', CaregiverCertificationDocumentController::class)
+        ->whereNumber('certification')
+        ->name('caregiver.certifications.document');
     Route::get('/messages', Inbox::class)->name('messages.index');
     Route::get('/messages/{conversation}', Inbox::class)->whereNumber('conversation')->name('messages.show');
     Route::get('/support', TicketsCenter::class)->name('support.index');

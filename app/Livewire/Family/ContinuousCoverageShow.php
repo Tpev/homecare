@@ -950,6 +950,8 @@ class ContinuousCoverageShow extends Component
             ->with([
                 'user:id,name,role,city,state',
                 'skills:id,name',
+                'careExperiences:id,label,sort_order',
+                'certifications.type:id,slug,label,sort_order',
             ])
             ->where('status', 'active')
             ->whereHas('user', fn (Builder $query) => $query->where('role', 'caregiver'));

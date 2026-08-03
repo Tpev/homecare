@@ -47,6 +47,7 @@
             : ['Not accepting new clients', 'You can view the profile, but an invitation is unavailable right now.', 'border-slate-200 bg-slate-50 text-slate-700'],
     };
     $showAction = $showAction ?? true;
+    $backgroundTags = $caregiver->publicCareBackgroundTags(3);
 @endphp
 
 <article class="rounded-2xl border border-[#DED6CA] bg-white p-4 shadow-sm" wire:key="coverage-caregiver-card-{{ $caregiver->user_id }}-{{ $member?->status ?: 'available' }}-{{ $showAction ? 'action' : 'summary' }}">
@@ -103,6 +104,16 @@
         <div class="mt-3 flex flex-wrap gap-2" aria-label="Caregiver skills">
             @foreach ($caregiver->skills->take(3) as $skill)
                 <span class="rounded-full border border-[#D8D0C5] bg-[#F7F2EA] px-2.5 py-1 text-xs font-medium text-[#4B5B6B]">{{ $skill->name }}</span>
+            @endforeach
+        </div>
+    @endif
+
+    @if ($backgroundTags !== [])
+        <div class="mt-3 flex flex-wrap gap-2" aria-label="Care experience and credentials">
+            @foreach ($backgroundTags as $tag)
+                <span class="rounded-full border px-2.5 py-1 text-xs font-medium {{ $tag['verified'] ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-[#D8D0C5] bg-[#F7F2EA] text-[#4B5B6B]' }}">
+                    {{ $tag['label'] }}{{ $tag['verified'] ? ' · Verified' : '' }}
+                </span>
             @endforeach
         </div>
     @endif

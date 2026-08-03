@@ -165,6 +165,8 @@ class CaregiverInvitationDiscoveryService
                 'availabilities:id,caregiver_profile_id,day_of_week,start_time,end_time',
                 'skills:id,name',
                 'languages:id,name',
+                'careExperiences:id,label,sort_order',
+                'certifications.type:id,slug,label,sort_order',
             ])
             ->where('status', 'active')
             ->whereNotNull('bio')
@@ -255,6 +257,7 @@ class CaregiverInvitationDiscoveryService
                 'average_rating' => (float) $profile->average_rating,
                 'reviews_count' => (int) $profile->reviews_count,
                 'accepting_new_clients' => (bool) $profile->is_accepting_new_clients,
+                'care_background_tags' => $profile->publicCareBackgroundTags(3),
                 ...$relationship,
             ];
         })->values();

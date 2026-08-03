@@ -28,6 +28,22 @@ class CaregiverReadyForReviewOpsAlertMail extends Mailable
 
     public function content(): Content
     {
+        $this->profile->loadMissing(['careExperiences', 'certifications.type']);
+        $experience = $this->profile->careExperiences->pluck('label')->implode(', ');
+        if ($experience === '') {
+            $experience = $this->profile->care_experience_answered_at
+                ? 'No specialized care experience selected'
+                : 'Not answered (legacy profile)';
+        }
+        $credentials = $this->profile->certifications
+            ->map(fn ($credential) => $credential->displayName().' ('.str($credential->verification_status)->headline().')')
+            ->implode(', ');
+        if ($credentials === '') {
+            $credentials = $this->profile->certifications_answered_at
+                ? 'No current certifications selected'
+                : 'Not answered (legacy profile)';
+        }
+
         return new Content(
             view: 'emails.ops.caregiver-ready-for-review-alert',
             text: 'emails.ops.alert-text',
@@ -39,6 +55,8 @@ class CaregiverReadyForReviewOpsAlertMail extends Mailable
                     ['label' => 'Email', 'value' => $this->user->email],
                     ['label' => 'Profile ID', 'value' => '#'.$this->profile->id],
                     ['label' => 'Status', 'value' => ucfirst((string) $this->profile->status)],
+                    ['label' => 'Care experience', 'value' => $experience],
+                    ['label' => 'Credentials', 'value' => $credentials],
                 ],
                 'actionUrl' => route('admin.users.show', $this->user),
             ],

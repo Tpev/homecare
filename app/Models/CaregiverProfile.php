@@ -32,6 +32,10 @@ class CaregiverProfile extends Model
         'pricing_tier',
         'platform_hourly_rate',
         'years_experience',
+        'care_background_schema_version',
+        'care_experience_notes',
+        'care_experience_answered_at',
+        'certifications_answered_at',
         'service_area_zip',
         'service_radius_miles',
         'is_accepting_new_clients',
@@ -71,6 +75,9 @@ class CaregiverProfile extends Model
         return [
             'hourly_rate' => 'decimal:2',
             'platform_hourly_rate' => 'decimal:2',
+            'care_background_schema_version' => 'integer',
+            'care_experience_answered_at' => 'datetime',
+            'certifications_answered_at' => 'datetime',
             'is_accepting_new_clients' => 'boolean',
             'intro_video_uploaded_at' => 'datetime',
             'insurance_verified_at' => 'datetime',
@@ -133,6 +140,19 @@ class CaregiverProfile extends Model
     public function availabilities(): HasMany
     {
         return $this->hasMany(CaregiverAvailability::class);
+    }
+
+    public function careExperiences(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            CaregiverExperienceType::class,
+            'caregiver_profile_experience'
+        )->withTimestamps();
+    }
+
+    public function certifications(): HasMany
+    {
+        return $this->hasMany(CaregiverCertification::class);
     }
 
     public function versions(): HasMany
@@ -241,5 +261,63 @@ class CaregiverProfile extends Model
     public function platformRateLabel(): string
     {
         return app(MarketplacePricing::class)->labelForTier($this->pricing_tier);
+    }
+
+    public function requiresCareBackground(): bool
+    {
+        return (int) $this->care_background_schema_version >= 1;
+    }
+
+    public function careBackgroundIsAnswered(): bool
+    {
+        return (bool) $this->care_experience_answered_at
+            && (bool) $this->certifications_answered_at;
+    }
+
+    /**
+     * @return array<int, array{label:string, verified:bool, kind:string}>
+     */
+    public function publicCareBackgroundTags(int $limit = 3): array
+    {
+        $experiences = $this->relationLoaded('careExperiences')
+            ? $this->careExperiences
+            : $this->careExperiences()->where('active', true)->orderBy('sort_order')->get();
+        $certifications = $this->relationLoaded('certifications')
+            ? $this->certifications
+            : $this->certifications()->with('type')->get();
+
+        $verifiedCredentials = $certifications
+            ->filter(fn (CaregiverCertification $certification) => $certification->isCurrentlyVerified())
+            ->map(fn (CaregiverCertification $certification): array => [
+                'label' => $certification->displayName(),
+                'verified' => true,
+                'kind' => 'certification',
+            ]);
+
+        $experienceTags = $experiences
+            ->sortBy('sort_order')
+            ->map(fn (CaregiverExperienceType $experience): array => [
+                'label' => $experience->label,
+                'verified' => false,
+                'kind' => 'experience',
+            ]);
+
+        $reportedCredentials = $certifications
+            ->reject(fn (CaregiverCertification $certification) => $certification->isCurrentlyVerified())
+            ->reject(fn (CaregiverCertification $certification) => $certification->isExpired())
+            ->map(fn (CaregiverCertification $certification): array => [
+                'label' => $certification->displayName(),
+                'verified' => false,
+                'kind' => 'certification',
+            ]);
+
+        return $verifiedCredentials
+            ->concat($experienceTags)
+            ->concat($reportedCredentials)
+            ->filter(fn (array $tag) => filled($tag['label']))
+            ->unique(fn (array $tag) => mb_strtolower($tag['label']))
+            ->take(max(0, $limit))
+            ->values()
+            ->all();
     }
 }

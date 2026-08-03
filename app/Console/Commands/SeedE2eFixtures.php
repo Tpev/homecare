@@ -4,6 +4,9 @@ namespace App\Console\Commands;
 
 use App\Models\CareBooking;
 use App\Models\CareBookingTimeCorrection;
+use App\Models\CaregiverCertification;
+use App\Models\CaregiverCertificationType;
+use App\Models\CaregiverExperienceType;
 use App\Models\CaregiverProfile;
 use App\Models\CarePlan;
 use App\Models\CareRequest;
@@ -14,6 +17,7 @@ use App\Models\Skill;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\Booking\BookingTrustService;
+use App\Services\Caregiver\CaregiverBackgroundService;
 use App\Services\RegularCare\CarePlanHealthService;
 use App\Services\RegularCare\CarePlanService;
 use Illuminate\Console\Command;
@@ -95,6 +99,8 @@ class SeedE2eFixtures extends Command
         $this->attachCatalogToProfile($readyProfile);
         $this->attachCatalogToProfile($newProfile);
         $this->attachCatalogToProfile($underReviewProfile);
+        $this->seedCareBackground($readyProfile, includeExpiredCredential: true);
+        $this->seedCareBackground($underReviewProfile);
 
         $request = CareRequest::query()->create([
             'family_user_id' => $family->id,
@@ -152,7 +158,8 @@ class SeedE2eFixtures extends Command
     /** @param list<int> $taskIds */
     private function seedInvitationVisualRequest(User $family, array $taskIds): void
     {
-        $this->makeVisualCaregiver('Visual Available Caregiver', 'visual-available-caregiver', 201);
+        $availableCaregiver = $this->makeVisualCaregiver('Visual Available Caregiver', 'visual-available-caregiver', 201);
+        $this->seedCareBackground($availableCaregiver->caregiverProfile);
         $notAcceptingCaregiver = $this->makeVisualCaregiver('Visual Paused Caregiver', 'visual-paused-caregiver', 202);
         $notAcceptingCaregiver->caregiverProfile->update(['is_accepting_new_clients' => false]);
         $repliedCaregiver = $this->makeVisualCaregiver('Visual Replied Caregiver', 'visual-replied-caregiver', 203);
@@ -203,6 +210,41 @@ class SeedE2eFixtures extends Command
         $this->attachCatalogToProfile($profile);
 
         return $caregiver->fresh('caregiverProfile');
+    }
+
+    private function seedCareBackground(CaregiverProfile $profile, bool $includeExpiredCredential = false): void
+    {
+        $experiences = CaregiverExperienceType::query()
+            ->whereIn('slug', ['memory-care', 'mobility-fall-risk'])
+            ->pluck('id');
+        $cpr = CaregiverCertificationType::query()->where('slug', 'cpr')->firstOrFail();
+
+        $profile->forceFill([
+            'care_experience_notes' => 'Experienced with calm companionship, familiar routines, and non-medical mobility support.',
+            'care_experience_answered_at' => now(),
+            'certifications_answered_at' => now(),
+        ])->save();
+        $profile->careExperiences()->sync($experiences);
+        $profile->certifications()->updateOrCreate(
+            ['caregiver_certification_type_id' => $cpr->id],
+            [
+                'issuer' => 'American Red Cross',
+                'expires_at' => now()->addYear()->toDateString(),
+                'verification_status' => CaregiverCertification::STATUS_SELF_REPORTED,
+            ],
+        );
+
+        if ($includeExpiredCredential) {
+            $firstAid = CaregiverCertificationType::query()->where('slug', 'first-aid')->firstOrFail();
+            $profile->certifications()->updateOrCreate(
+                ['caregiver_certification_type_id' => $firstAid->id],
+                [
+                    'issuer' => 'E2E Training Center',
+                    'expires_at' => now()->subDay()->toDateString(),
+                    'verification_status' => CaregiverCertification::STATUS_SELF_REPORTED,
+                ],
+            );
+        }
     }
 
     /** @param list<int> $taskIds */
@@ -537,6 +579,7 @@ class SeedE2eFixtures extends Command
             'bio' => str_repeat('Compassionate caregiver with practical non-medical home support experience. ', 2),
             'hourly_rate' => 27.00,
             'years_experience' => 3,
+            'care_background_schema_version' => CaregiverBackgroundService::SCHEMA_VERSION,
             'service_area_zip' => '27601',
             'service_radius_miles' => 10,
             'is_accepting_new_clients' => true,

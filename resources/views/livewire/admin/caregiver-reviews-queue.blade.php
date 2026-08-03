@@ -1,4 +1,7 @@
 <div class="hc-page py-8 space-y-6">
+    @if (session('status'))
+        <x-alert color="green">{{ session('status') }}</x-alert>
+    @endif
     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 class="text-xl font-semibold">Caregiver Review Queue</h1>
@@ -24,6 +27,8 @@
                 Identity status:
                 <span class="font-semibold uppercase">{{ str_replace('_', ' ', $profile->identity_verification_status ?? 'not_started') }}</span>
             </p>
+
+            @include('livewire.admin.partials.caregiver-background-review', ['profile' => $profile])
 
             @error('approval_'.$profile->id)
                 <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
@@ -91,6 +96,7 @@
                             </x-button>
                         </div>
                     </div>
+                    @include('livewire.admin.partials.caregiver-background-review', ['profile' => $profile])
                 </div>
             @empty
                 <p class="text-sm text-slate-600">No active caregivers yet.</p>

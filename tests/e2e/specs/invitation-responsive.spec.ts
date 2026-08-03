@@ -16,6 +16,7 @@ test.describe('Invitation responsive UI', () => {
 
         await dialog.getByLabel('Search by caregiver name').fill('Visual');
         await expect(dialog.getByRole('heading', { name: 'Visual Available Caregiver' })).toBeVisible();
+        await expect(dialog.getByText("Memory loss, dementia, or Alzheimer's support", { exact: true }).first()).toBeVisible();
         await expect(dialog.getByText('Not accepting new clients', { exact: true }).first()).toBeVisible();
         await expect(dialog.getByText('Already replied', { exact: true }).first()).toBeVisible();
         await page.screenshot({ path: testInfo.outputPath('invitation-desktop-results.png'), fullPage: false });

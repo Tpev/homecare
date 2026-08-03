@@ -6,6 +6,7 @@ use App\Livewire\Auth\CaregiverRegister;
 use App\Mail\Ops\UserRegisteredOpsAlertMail;
 use App\Models\Skill;
 use App\Models\User;
+use App\Services\Caregiver\CaregiverBackgroundService;
 use App\Support\MarketplaceEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -48,6 +49,10 @@ class CaregiverOnboardingTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => 'caregiver@example.com',
             'role' => 'caregiver',
+        ]);
+        $this->assertDatabaseHas('caregiver_profiles', [
+            'user_id' => User::query()->where('email', 'caregiver@example.com')->value('id'),
+            'care_background_schema_version' => CaregiverBackgroundService::SCHEMA_VERSION,
         ]);
         $this->assertDatabaseHas('marketplace_notification_deliveries', [
             'user_id' => User::query()->where('email', 'caregiver@example.com')->value('id'),

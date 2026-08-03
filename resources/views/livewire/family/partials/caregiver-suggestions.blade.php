@@ -57,6 +57,16 @@
                     @endif
                 </div>
 
+                @if (! empty($suggestion['care_background_tags']))
+                    <div class="mt-2 flex flex-wrap gap-1" aria-label="Care experience and credentials">
+                        @foreach (array_slice($suggestion['care_background_tags'], 0, 3) as $tag)
+                            <span class="inline-flex rounded-full border px-2 py-1 text-[11px] font-medium {{ $tag['verified'] ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-[#D8D0C5] bg-[#F7F2EA] text-[#4B5B6B]' }}">
+                                {{ $tag['label'] }}{{ $tag['verified'] ? ' · Verified' : '' }}
+                            </span>
+                        @endforeach
+                    </div>
+                @endif
+
                 <p class="mt-2 text-xs text-[#7B8794]">{{ implode(' - ', array_slice($suggestion['reasons'], 0, 2)) }}</p>
 
                 <div class="mt-3">

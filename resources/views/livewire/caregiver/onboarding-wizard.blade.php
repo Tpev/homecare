@@ -1,4 +1,4 @@
-﻿<div class="max-w-5xl mx-auto py-8 space-y-6">
+<div class="max-w-5xl mx-auto py-8 space-y-6">
     <div class="rounded-xl border border-[#E4DDD3] bg-white px-4 py-3">
         <div class="flex items-center justify-between gap-3">
             <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Go-live progress</p>
@@ -18,12 +18,14 @@
                     <span class="text-sm text-[#7B8794] whitespace-nowrap">Step {{ $step }} of {{ $totalSteps }}</span>
                 </div>
 
-                <div class="grid grid-cols-4 gap-2">
-                    @foreach ([1 => 'Profile', 2 => 'Service area', 3 => 'Availability', 4 => 'Review'] as $index => $label)
-                        <div class="rounded-md px-3 py-2 text-xs md:text-sm border {{ $step >= $index ? 'bg-blue-600 text-white border-blue-600' : 'bg-[#F7F2EA] text-[#7B8794] border-[#E4DDD3]' }}">
+                <div class="-mx-1 overflow-x-auto px-1 pb-1" aria-label="Onboarding progress">
+                    <div class="flex min-w-max gap-2 sm:grid sm:min-w-0 sm:grid-cols-5">
+                    @foreach ([1 => 'Profile', 2 => 'Experience & training', 3 => 'Service area', 4 => 'Availability', 5 => 'Review'] as $index => $label)
+                        <div class="min-w-28 rounded-md border px-3 py-2 text-xs sm:min-w-0 md:text-sm {{ $step >= $index ? 'border-[#4F6FAF] bg-[#4F6FAF] text-white' : 'border-[#E4DDD3] bg-[#F7F2EA] text-[#7B8794]' }}" @if ($step === $index) aria-current="step" @endif>
                             {{ $label }}
                         </div>
                     @endforeach
+                    </div>
                 </div>
             </div>
         </x-slot:header>
@@ -72,13 +74,15 @@
                 </div>
             </div>
         @elseif ($step === 2)
+            @include('livewire.caregiver.partials.care-background-form', ['fieldIdPrefix' => 'onboarding'])
+        @elseif ($step === 3)
             <div class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <x-input label="ZIP" wire:model="service_area_zip" />
                     <x-input type="number" min="1" max="60" label="Radius (miles)" wire:model="service_radius_miles" />
                 </div>
             </div>
-        @elseif ($step === 3)
+        @elseif ($step === 4)
             <div class="space-y-4">
                 @foreach ($days as $dayIndex => $dayName)
                     <div class="rounded-lg border p-3 space-y-3">

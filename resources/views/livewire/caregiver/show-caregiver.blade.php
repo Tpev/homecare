@@ -1,4 +1,4 @@
-﻿<div class="hc-page py-8 space-y-6">
+<div class="hc-page py-8 space-y-6">
     @php
         $photoUrl = $caregiver->profile_photo_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($caregiver->profile_photo_path) : null;
         $nameParts = preg_split('/\s+/', trim((string) $caregiver->user->name));
@@ -100,6 +100,65 @@
                     <h2 class="font-display font-semibold text-[#17313F]">About</h2>
                     <p class="mt-2 text-[#4B5B6B] whitespace-pre-line">{{ $caregiver->bio }}</p>
                 </div>
+
+                @if ($caregiver->care_experience_answered_at || $caregiver->careExperiences->isNotEmpty())
+                    <section class="rounded-2xl border border-[#D8E7DF] bg-[#F4FAF6] p-4" aria-labelledby="care-experience-heading">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h2 id="care-experience-heading" class="font-display font-semibold text-[#17313F]">Care experience</h2>
+                            <span class="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-[#607080]">Self-reported by caregiver</span>
+                        </div>
+
+                        @if ($caregiver->careExperiences->isNotEmpty())
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                @foreach ($caregiver->careExperiences->sortBy('sort_order') as $experience)
+                                    <span class="inline-flex rounded-full border border-[#CFE1D8] bg-white px-3 py-1 text-xs font-medium text-[#325448]">{{ $experience->label }}</span>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="mt-3 text-sm text-[#607080]">No specialized care experience reported yet.</p>
+                        @endif
+
+                        @if (filled($caregiver->care_experience_notes))
+                            <p class="mt-3 whitespace-pre-line text-sm leading-6 text-[#4B5B6B]">{{ $caregiver->care_experience_notes }}</p>
+                        @endif
+                    </section>
+                @endif
+
+                @if ($caregiver->certifications_answered_at || $caregiver->certifications->isNotEmpty())
+                    <section class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4" aria-labelledby="credentials-heading">
+                        <h2 id="credentials-heading" class="font-display font-semibold text-[#17313F]">Credentials & training</h2>
+
+                        @if ($caregiver->certifications->isEmpty())
+                            <p class="mt-3 text-sm text-[#607080]">No current certifications reported.</p>
+                        @else
+                            <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                @foreach ($caregiver->certifications->sortBy(fn ($credential) => $credential->type?->sort_order ?? 999) as $credential)
+                                    @php
+                                        $verified = $credential->isCurrentlyVerified();
+                                        $expired = $credential->isExpired();
+                                        $tone = $verified
+                                            ? 'border-emerald-200 bg-emerald-50'
+                                            : ($expired ? 'border-amber-200 bg-amber-50' : 'border-[#DED6CA] bg-white');
+                                    @endphp
+                                    <div class="rounded-xl border p-3 {{ $tone }}">
+                                        <p class="font-medium text-[#17313F]">{{ $credential->displayName() }}</p>
+                                        @if ($credential->issuer)
+                                            <p class="mt-1 text-xs text-[#607080]">Issued by {{ $credential->issuer }}{{ $credential->issuing_state ? ' · '.$credential->issuing_state : '' }}</p>
+                                        @endif
+                                        @if ($credential->expires_at)
+                                            <p class="mt-1 text-xs text-[#607080]">{{ $expired ? 'Expired' : 'Expires' }} {{ $credential->expires_at->format('M j, Y') }}</p>
+                                        @endif
+                                        <span class="mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $verified ? 'bg-emerald-100 text-emerald-800' : ($expired ? 'bg-amber-100 text-amber-900' : 'bg-[#F0E9E1] text-[#4B5B6B]') }}">
+                                            {{ $credential->publicStatusLabel() }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <p class="mt-3 text-xs leading-5 text-[#7B8794]">Certifications do not expand the non-medical services offered through LoLo Care.</p>
+                    </section>
+                @endif
 
                 <div>
                     <h2 class="font-display font-semibold text-[#17313F]">Skills</h2>

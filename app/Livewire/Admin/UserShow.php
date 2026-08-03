@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\CaregiverCertification;
 use App\Models\CaregiverIdentityVerification;
 use App\Models\CaregiverModerationLog;
 use App\Models\User;
+use App\Services\Caregiver\CaregiverCertificationReviewService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -15,6 +17,8 @@ use Livewire\Component;
 class UserShow extends Component
 {
     public User $user;
+
+    public array $certificationRejectionReasons = [];
 
     public function mount(User $user): void
     {
@@ -105,6 +109,25 @@ class UserShow extends Component
         session()->flash('status', 'Identity verification approved by admin.');
     }
 
+    public function verifyCertification(int $id, CaregiverCertificationReviewService $review): void
+    {
+        abort_unless(auth()->user()?->isAdministrator(), 403);
+        $certification = $this->ownedCertification($id);
+        $review->verify(auth()->user(), $certification);
+        $this->user = $this->loadUser($this->user->id);
+        session()->flash('status', 'Credential verified.');
+    }
+
+    public function rejectCertification(int $id, CaregiverCertificationReviewService $review): void
+    {
+        abort_unless(auth()->user()?->isAdministrator(), 403);
+        $certification = $this->ownedCertification($id);
+        $review->reject(auth()->user(), $certification, (string) ($this->certificationRejectionReasons[$id] ?? ''));
+        unset($this->certificationRejectionReasons[$id]);
+        $this->user = $this->loadUser($this->user->id);
+        session()->flash('status', 'Credential returned to the caregiver for attention.');
+    }
+
     public function render(): View
     {
         $caregiverProfile = $this->user->caregiverProfile;
@@ -136,8 +159,21 @@ class UserShow extends Component
                 'caregiverProfile.skills',
                 'caregiverProfile.languages',
                 'caregiverProfile.availabilities',
+                'caregiverProfile.careExperiences',
+                'caregiverProfile.certifications.type',
+                'caregiverProfile.certifications.verifier',
                 'caregiverProfile.latestIdentityVerification',
             ])
             ->findOrFail($userId);
+    }
+
+    private function ownedCertification(int $id): CaregiverCertification
+    {
+        $profileId = $this->user->caregiverProfile?->id;
+        abort_unless($profileId, 404);
+
+        return CaregiverCertification::query()
+            ->where('caregiver_profile_id', $profileId)
+            ->findOrFail($id);
     }
 }

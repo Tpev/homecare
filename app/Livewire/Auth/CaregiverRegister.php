@@ -4,6 +4,7 @@ namespace App\Livewire\Auth;
 
 use App\Models\CaregiverProfile;
 use App\Models\User;
+use App\Services\Caregiver\CaregiverBackgroundService;
 use App\Services\Caregiver\CaregiverOnboardingEmailService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
@@ -17,14 +18,23 @@ use Livewire\Component;
 class CaregiverRegister extends Component
 {
     public string $name = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public string $city = '';
+
     public string $state = '';
+
     public string $password = '';
+
     public string $password_confirmation = '';
+
     public bool $accept_terms = false;
+
     public bool $accept_independent_contractor = false;
+
     public array $usStates = [
         'AL' => 'Alabama', 'AZ' => 'Arizona', 'AR' => 'Arkansas', 'CA' => 'California', 'CO' => 'Colorado',
         'CT' => 'Connecticut', 'DE' => 'Delaware', 'FL' => 'Florida', 'GA' => 'Georgia', 'ID' => 'Idaho',
@@ -62,7 +72,10 @@ class CaregiverRegister extends Component
 
         CaregiverProfile::firstOrCreate(
             ['user_id' => $user->id],
-            ['status' => 'draft']
+            [
+                'status' => 'draft',
+                'care_background_schema_version' => CaregiverBackgroundService::SCHEMA_VERSION,
+            ]
         );
         app(CaregiverOnboardingEmailService::class)->sendWelcome($user);
 

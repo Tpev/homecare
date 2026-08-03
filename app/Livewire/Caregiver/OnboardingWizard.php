@@ -2,11 +2,13 @@
 
 namespace App\Livewire\Caregiver;
 
+use App\Livewire\Concerns\ManagesCaregiverBackground;
 use App\Models\CaregiverModerationLog;
 use App\Models\CaregiverProfile;
 use App\Models\CaregiverProfileVersion;
 use App\Models\Language;
 use App\Models\Skill;
+use App\Services\Caregiver\CaregiverBackgroundService;
 use App\Services\Images\CaregiverProfilePhotoProcessor;
 use App\Services\Ops\OpsAlertService;
 use App\Support\CaregiverOnboardingState;
@@ -24,11 +26,12 @@ use Throwable;
 #[Layout('layouts.app')]
 class OnboardingWizard extends Component
 {
+    use ManagesCaregiverBackground;
     use WithFileUploads;
 
     public int $step = 1;
 
-    public int $totalSteps = 4;
+    public int $totalSteps = 5;
 
     public ?string $profile_photo_path = null;
 
@@ -86,6 +89,7 @@ class OnboardingWizard extends Component
             ['user_id' => $user->id],
             ['status' => 'draft']
         );
+        $this->initializeCaregiverBackground($this->profile);
 
         $this->skillOptions = Skill::query()->orderBy('name')->get(['id', 'name'])->toArray();
         $this->languageOptions = Language::query()->orderBy('name')->get(['id', 'name'])->toArray();
@@ -138,24 +142,28 @@ class OnboardingWizard extends Component
         $user = auth()->user();
         abort_unless($user && $user->role === 'caregiver', 403);
 
+        $completedStep = $this->step;
+
         try {
             $this->validateStep();
         } catch (ValidationException $exception) {
             app(CaregiverOnboardingState::class)->trackStepError(
                 $user,
-                CaregiverOnboardingState::STEP_PROFILE_BASICS,
+                $this->onboardingStepKey($completedStep),
                 $exception->errors()
             );
 
             throw $exception;
         }
 
-        $this->saveDraft(false);
+        $saveBackground = $completedStep === 2
+            && ($this->profile->requiresCareBackground() || $this->caregiverBackgroundWasStarted());
+        $this->saveDraft(false, $saveBackground);
         $this->step = min($this->step + 1, $this->totalSteps);
 
         FunnelTracker::track('caregiver_onboarding_step_completed', $user, $this->profile, [
-            'step_number' => $this->step - 1,
-            'flow' => 'profile_basics',
+            'step_number' => $completedStep,
+            'flow' => $this->onboardingStepKey($completedStep),
         ]);
     }
 
@@ -200,7 +208,10 @@ class OnboardingWizard extends Component
             return;
         }
 
-        $this->saveDraft(true);
+        $saveBackground = $this->profile->requiresCareBackground()
+            || $this->profile->careBackgroundIsAnswered()
+            || $this->caregiverBackgroundWasStarted();
+        $this->saveDraft(true, $saveBackground);
         app(OpsAlertService::class)->notifyCaregiverReadyForReview($user, $this->profile->fresh());
         FunnelTracker::track('caregiver_onboarding_submitted_for_review', $user, $this->profile->fresh());
 
@@ -221,11 +232,12 @@ class OnboardingWizard extends Component
                 'selectedLanguages' => ['required', 'array', 'min:1'],
                 'selectedLanguages.*' => ['integer', Rule::exists('languages', 'id')],
             ],
-            2 => [
+            2 => [],
+            3 => [
                 'service_area_zip' => ['required', 'string', 'max:15'],
                 'service_radius_miles' => ['required', 'integer', 'min:1', 'max:60'],
             ],
-            3 => [
+            4 => [
                 'availability' => ['required', 'array'],
             ],
             default => [
@@ -233,9 +245,15 @@ class OnboardingWizard extends Component
             ],
         };
 
-        $this->validate($rules, $this->validationMessages());
+        if ($rules !== []) {
+            $this->validate($rules, $this->validationMessages());
+        }
 
-        if ($this->step === 3) {
+        if ($this->step === 2) {
+            $this->validateCaregiverBackground($this->profile->requiresCareBackground());
+        }
+
+        if ($this->step === 4) {
             $this->validateAvailabilityRanges();
         }
     }
@@ -308,18 +326,41 @@ class OnboardingWizard extends Component
         }
     }
 
-    private function saveDraft(bool $submitForReview): void
+    private function saveDraft(bool $submitForReview, bool $saveBackground): void
     {
         $photoProcessor = app(CaregiverProfilePhotoProcessor::class);
+        $backgroundService = app(CaregiverBackgroundService::class);
         $newProfilePhotoPath = null;
         $previousProfilePhotoPath = $this->profile_photo_path;
+        $backgroundUploads = [];
+        $obsoleteBackgroundPaths = [];
 
-        if ($this->profile_photo) {
-            $newProfilePhotoPath = $photoProcessor->store($this->profile_photo);
+        try {
+            if ($this->profile_photo) {
+                $newProfilePhotoPath = $photoProcessor->store($this->profile_photo);
+            }
+            if ($saveBackground) {
+                $backgroundUploads = $backgroundService->storeUploads(
+                    $this->certificationDocuments,
+                    $this->selectedCertificationTypeIds(),
+                );
+            }
+        } catch (Throwable $exception) {
+            $photoProcessor->deleteIfManaged($newProfilePhotoPath);
+            $backgroundService->discardUploads($backgroundUploads);
+
+            throw $exception;
         }
 
         try {
-            DB::transaction(function () use ($submitForReview, $newProfilePhotoPath) {
+            DB::transaction(function () use (
+                $submitForReview,
+                $saveBackground,
+                $newProfilePhotoPath,
+                $backgroundUploads,
+                $backgroundService,
+                &$obsoleteBackgroundPaths,
+            ) {
                 $user = auth()->user();
 
                 if ($newProfilePhotoPath) {
@@ -364,6 +405,19 @@ class OnboardingWizard extends Component
                 $this->profile->skills()->sync($this->selectedSkills);
                 $this->profile->languages()->sync($this->selectedLanguages);
 
+                if ($saveBackground) {
+                    $backgroundResult = $backgroundService->syncWithinTransaction(
+                        $this->profile,
+                        $this->selectedExperienceTypes,
+                        $this->care_experience_notes,
+                        $this->selectedCertificationTypes,
+                        $this->certificationDetails,
+                        $backgroundUploads,
+                        $this->certificationDocumentsToRemove,
+                    );
+                    $obsoleteBackgroundPaths = $backgroundResult['obsolete_paths'];
+                }
+
                 $this->profile->availabilities()->delete();
                 foreach ($this->availability as $day => $dayRanges) {
                     foreach ($dayRanges as $range) {
@@ -384,6 +438,9 @@ class OnboardingWizard extends Component
                         'skills' => $this->profile->skills()->pluck('skills.id')->all(),
                         'languages' => $this->profile->languages()->pluck('languages.id')->all(),
                         'availability' => $this->availability,
+                        'care_background' => $backgroundService->snapshot(
+                            $this->profile->fresh(['careExperiences', 'certifications.type'])
+                        ),
                     ],
                 ]);
 
@@ -393,12 +450,16 @@ class OnboardingWizard extends Component
                         'actor_user_id' => $user->id,
                         'action' => 'submitted',
                         'note' => 'Profile submitted for review',
-                        'meta' => ['status' => 'under_review'],
+                        'meta' => [
+                            'status' => 'under_review',
+                            'care_background_answered' => $this->profile->fresh()->careBackgroundIsAnswered(),
+                        ],
                     ]);
                 }
             });
         } catch (Throwable $exception) {
             $photoProcessor->deleteIfManaged($newProfilePhotoPath);
+            $backgroundService->discardUploads($backgroundUploads);
 
             throw $exception;
         }
@@ -406,6 +467,14 @@ class OnboardingWizard extends Component
         if ($newProfilePhotoPath) {
             $photoProcessor->deleteIfManaged($previousProfilePhotoPath);
             $this->profile_photo = null;
+        }
+
+        $backgroundService->deletePaths($obsoleteBackgroundPaths);
+        if ($saveBackground) {
+            $this->profile->refresh();
+            $this->initializeCaregiverBackground($this->profile);
+            $this->certificationDocuments = [];
+            $this->certificationDocumentsToRemove = [];
         }
     }
 
@@ -449,6 +518,16 @@ class OnboardingWizard extends Component
         ], $this->validationMessages());
 
         $this->validateAvailabilityRanges();
+        $this->validateCaregiverBackground(
+            $this->profile->requiresCareBackground() || $this->caregiverBackgroundWasStarted()
+        );
+    }
+
+    private function onboardingStepKey(int $step): string
+    {
+        return $step === 2
+            ? CaregiverOnboardingState::STEP_CARE_BACKGROUND
+            : CaregiverOnboardingState::STEP_PROFILE_BASICS;
     }
 
     public function updatedProfilePhoto(): void

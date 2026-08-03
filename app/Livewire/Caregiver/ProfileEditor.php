@@ -2,10 +2,13 @@
 
 namespace App\Livewire\Caregiver;
 
+use App\Livewire\Concerns\ManagesCaregiverBackground;
+use App\Models\CaregiverModerationLog;
 use App\Models\CaregiverProfile;
 use App\Models\CaregiverProfileVersion;
 use App\Models\Language;
 use App\Models\Skill;
+use App\Services\Caregiver\CaregiverBackgroundService;
 use App\Services\Images\CaregiverProfilePhotoProcessor;
 use App\Support\MarketplacePricing;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +20,7 @@ use Throwable;
 #[Layout('layouts.app')]
 class ProfileEditor extends Component
 {
+    use ManagesCaregiverBackground;
     use WithFileUploads;
 
     public CaregiverProfile $profile;
@@ -55,6 +59,7 @@ class ProfileEditor extends Component
         abort_unless($user && $user->role === 'caregiver', 403);
 
         $this->profile = CaregiverProfile::firstOrCreate(['user_id' => $user->id], ['status' => 'draft']);
+        $this->initializeCaregiverBackground($this->profile);
 
         $this->skillOptions = Skill::query()->orderBy('name')->get(['id', 'name'])->toArray();
         $this->languageOptions = Language::query()->orderBy('name')->get(['id', 'name'])->toArray();
@@ -74,28 +79,57 @@ class ProfileEditor extends Component
 
     public function save(): void
     {
+        $saveBackground = $this->profile->requiresCareBackground()
+            || $this->profile->careBackgroundIsAnswered()
+            || $this->caregiverBackgroundWasStarted();
+        $this->validateCaregiverBackground($saveBackground);
+
         $this->validate([
             'profile_photo' => $this->profilePhotoRules(),
-            'bio' => ['required', 'string', 'min:40'],
-            'years_experience' => ['required', 'integer', 'min:0'],
-            'city' => ['required', 'string'],
+            'bio' => ['required', 'string', 'min:40', 'max:2000'],
+            'years_experience' => ['required', 'integer', 'min:0', 'max:60'],
+            'city' => ['required', 'string', 'max:120'],
             'state' => ['required', 'string', 'size:2'],
-            'service_area_zip' => ['required', 'string'],
-            'service_radius_miles' => ['required', 'integer', 'min:1'],
+            'service_area_zip' => ['required', 'string', 'max:15'],
+            'service_radius_miles' => ['required', 'integer', 'min:1', 'max:60'],
             'selectedSkills' => ['required', 'array', 'min:1'],
             'selectedLanguages' => ['required', 'array', 'min:1'],
         ], $this->validationMessages());
 
         $photoProcessor = app(CaregiverProfilePhotoProcessor::class);
+        $backgroundService = app(CaregiverBackgroundService::class);
         $newProfilePhotoPath = null;
         $previousProfilePhotoPath = $this->profile_photo_path;
+        $backgroundUploads = [];
+        $obsoleteBackgroundPaths = [];
+        $backgroundChanged = false;
 
-        if ($this->profile_photo) {
-            $newProfilePhotoPath = $photoProcessor->store($this->profile_photo);
+        try {
+            if ($this->profile_photo) {
+                $newProfilePhotoPath = $photoProcessor->store($this->profile_photo);
+            }
+            if ($saveBackground) {
+                $backgroundUploads = $backgroundService->storeUploads(
+                    $this->certificationDocuments,
+                    $this->selectedCertificationTypeIds(),
+                );
+            }
+        } catch (Throwable $exception) {
+            $photoProcessor->deleteIfManaged($newProfilePhotoPath);
+            $backgroundService->discardUploads($backgroundUploads);
+
+            throw $exception;
         }
 
         try {
-            DB::transaction(function () use ($newProfilePhotoPath) {
+            DB::transaction(function () use (
+                $newProfilePhotoPath,
+                $saveBackground,
+                $backgroundService,
+                $backgroundUploads,
+                &$obsoleteBackgroundPaths,
+                &$backgroundChanged,
+            ) {
                 $user = auth()->user();
 
                 if ($newProfilePhotoPath) {
@@ -120,6 +154,20 @@ class ProfileEditor extends Component
                 $this->profile->skills()->sync($this->selectedSkills);
                 $this->profile->languages()->sync($this->selectedLanguages);
 
+                if ($saveBackground) {
+                    $backgroundResult = $backgroundService->syncWithinTransaction(
+                        $this->profile,
+                        $this->selectedExperienceTypes,
+                        $this->care_experience_notes,
+                        $this->selectedCertificationTypes,
+                        $this->certificationDetails,
+                        $backgroundUploads,
+                        $this->certificationDocumentsToRemove,
+                    );
+                    $backgroundChanged = $backgroundResult['changed'];
+                    $obsoleteBackgroundPaths = $backgroundResult['obsolete_paths'];
+                }
+
                 CaregiverProfileVersion::create([
                     'caregiver_profile_id' => $this->profile->id,
                     'user_id' => $user->id,
@@ -128,11 +176,28 @@ class ProfileEditor extends Component
                         'profile' => $this->profile->fresh()->toArray(),
                         'skills' => $this->selectedSkills,
                         'languages' => $this->selectedLanguages,
+                        'care_background' => $backgroundService->snapshot(
+                            $this->profile->fresh(['careExperiences', 'certifications.type'])
+                        ),
                     ],
                 ]);
+
+                if ($backgroundChanged) {
+                    CaregiverModerationLog::query()->create([
+                        'caregiver_profile_id' => $this->profile->id,
+                        'actor_user_id' => $user->id,
+                        'action' => 'care_background_updated',
+                        'note' => 'Caregiver updated care experience or credential information.',
+                        'meta' => [
+                            'experience_count' => count($this->selectedExperienceTypes),
+                            'certification_count' => count($this->selectedCertificationTypeIds()),
+                        ],
+                    ]);
+                }
             });
         } catch (Throwable $exception) {
             $photoProcessor->deleteIfManaged($newProfilePhotoPath);
+            $backgroundService->discardUploads($backgroundUploads);
 
             throw $exception;
         }
@@ -140,6 +205,14 @@ class ProfileEditor extends Component
         if ($newProfilePhotoPath) {
             $photoProcessor->deleteIfManaged($previousProfilePhotoPath);
             $this->profile_photo = null;
+        }
+
+        $backgroundService->deletePaths($obsoleteBackgroundPaths);
+        if ($saveBackground) {
+            $this->profile->refresh();
+            $this->initializeCaregiverBackground($this->profile);
+            $this->certificationDocuments = [];
+            $this->certificationDocumentsToRemove = [];
         }
 
         session()->flash('status', 'Profile updated successfully.');
