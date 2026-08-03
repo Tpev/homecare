@@ -119,7 +119,12 @@ class ContinuousCoverageIndex extends Component
 
     public function requestOpenLanes(int $planId, ContinuousCoverageLaneRequestService $requests): void
     {
-        $selected = array_values((array) ($this->laneRequestSelections[$planId] ?? []));
+        $selected = collect((array) ($this->laneRequestSelections[$planId] ?? []))
+            ->filter(fn ($checked): bool => filter_var($checked, FILTER_VALIDATE_BOOLEAN))
+            ->keys()
+            ->map(fn ($laneId): int => (int) $laneId)
+            ->values()
+            ->all();
         $plan = ContinuousCoveragePlan::query()
             ->where('status', ContinuousCoveragePlan::STATUS_ACTIVE)
             ->whereHas('rosterMembers', fn ($query) => $query

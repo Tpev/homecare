@@ -89,7 +89,7 @@
                                     <legend class="sr-only">Choose recurring lanes for {{ $lanePlan->title }}</legend>
                                     @foreach($planLanes as $lane)
                                         <label class="flex min-h-14 cursor-pointer items-start gap-3 rounded-xl border border-[#DED6CA] p-3 hover:border-emerald-500 hover:bg-emerald-50/50" wire:key="requestable-lane-{{ $lane->id }}">
-                                            <input type="checkbox" value="{{ $lane->id }}" wire:model="laneRequestSelections.{{ $planId }}" class="mt-1 h-5 w-5 rounded border-[#AFA394] text-[#0F3D3E] focus:ring-[#2F6F62]">
+                                            <input type="checkbox" wire:model="laneRequestSelections.{{ $planId }}.{{ $lane->id }}" class="mt-1 h-5 w-5 rounded border-[#AFA394] text-[#0F3D3E] focus:ring-[#2F6F62]">
                                             <span class="min-w-0 flex-1">
                                                 <span class="block font-semibold">{{ ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][$lane->day_of_week] }} · {{ \Illuminate\Support\Carbon::parse($lane->starts_at)->format('g:i A') }}–{{ \Illuminate\Support\Carbon::parse($lane->ends_at)->format('g:i A') }}</span>
                                                 <span class="mt-1 block text-sm text-[#607080]">{{ number_format($lane->duration_minutes / 60, 1) }} hours weekly · estimated caregiver earnings {{ $requestableLaneEarningEstimates->get($lane->id) }}</span>

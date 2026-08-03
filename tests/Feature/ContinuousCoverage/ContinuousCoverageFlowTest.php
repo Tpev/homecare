@@ -1655,7 +1655,9 @@ class ContinuousCoverageFlowTest extends TestCase
             ->set('tab', 'offers')
             ->assertSee('Open recurring lanes')
             ->assertSee('The family reviews your request before any future visits are assigned.')
-            ->set('laneRequestSelections.'.$plan->id, $lanes->pluck('id')->all())
+            ->assertSeeHtml('wire:model="laneRequestSelections.'.$plan->id.'.'.$lanes->first()->id.'"')
+            ->assertSeeHtml('wire:model="laneRequestSelections.'.$plan->id.'.'.$lanes->last()->id.'"')
+            ->set('laneRequestSelections.'.$plan->id, $lanes->mapWithKeys(fn ($lane): array => [$lane->id => true])->all())
             ->call('requestOpenLanes', $plan->id)
             ->assertHasNoErrors()
             ->assertSee('Your recurring lane requests')
@@ -1772,19 +1774,25 @@ class ContinuousCoverageFlowTest extends TestCase
             $caregiver,
         );
         $lane = $plan->templates()->where('day_of_week', 2)->firstOrFail();
+        $otherLane = $plan->templates()->where('id', '!=', $lane->id)->firstOrFail();
 
         Livewire::actingAs($caregiver)
             ->test(CaregiverCoverageIndex::class)
             ->set('tab', 'offers')
             ->assertSee('This is outside your saved profile availability.')
-            ->set('laneRequestSelections.'.$plan->id, [$lane->id])
+            ->set('laneRequestSelections.'.$plan->id.'.'.$lane->id, true)
             ->call('requestOpenLanes', $plan->id)
             ->assertHasNoErrors();
 
+        $this->assertDatabaseCount('continuous_coverage_lane_requests', 1);
         $this->assertDatabaseHas('continuous_coverage_lane_requests', [
             'shift_template_id' => $lane->id,
             'caregiver_user_id' => $caregiver->id,
             'status' => ContinuousCoverageLaneRequest::STATUS_PENDING,
+        ]);
+        $this->assertDatabaseMissing('continuous_coverage_lane_requests', [
+            'shift_template_id' => $otherLane->id,
+            'caregiver_user_id' => $caregiver->id,
         ]);
     }
 
