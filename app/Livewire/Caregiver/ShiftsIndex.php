@@ -4,7 +4,12 @@ namespace App\Livewire\Caregiver;
 
 use App\Models\CareBooking;
 use App\Models\CareRequestApplication;
+use App\Models\ContinuousCoveragePlan;
+use App\Models\ContinuousCoverageShift;
+use App\Services\ContinuousCoverage\ContinuousCoverageAccess;
+use App\Services\ContinuousCoverage\ContinuousCoveragePricingService;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -14,6 +19,9 @@ class ShiftsIndex extends Component
     use WithPagination;
 
     public string $status = 'all';
+
+    #[Url]
+    public string $coverageShift = '';
 
     public function mount(): void
     {
@@ -25,10 +33,52 @@ class ShiftsIndex extends Component
         $this->resetPage();
     }
 
-    public function render()
-    {
+    public function render(
+        ContinuousCoverageAccess $coverageAccess,
+        ContinuousCoveragePricingService $coveragePricing,
+    ) {
         $caregiverId = (int) auth()->id();
+        $caregiver = auth()->user()->loadMissing('caregiverProfile');
         $expiredRegularCareCutoff = now()->subMinutes(CareBooking::regularCareCheckInGraceMinutes());
+
+        $futureCoverageBase = ContinuousCoverageShift::query()
+            ->with(['plan.family:id,name'])
+            ->whereHas('plan', fn ($query) => $query->where('status', ContinuousCoveragePlan::STATUS_ACTIVE))
+            ->where('assigned_caregiver_user_id', $caregiverId)
+            ->whereNull('care_booking_id')
+            ->where('scheduled_start_at', '>=', now())
+            ->whereIn('status', [
+                ContinuousCoverageShift::STATUS_CONFIRMED,
+                ContinuousCoverageShift::STATUS_PAYMENT_ATTENTION,
+            ]);
+        $coverageIsVisible = $coverageAccess->allows($caregiver);
+        $coverageScheduledCount = $coverageIsVisible
+            ? (clone $futureCoverageBase)->where('status', ContinuousCoverageShift::STATUS_CONFIRMED)->count()
+            : 0;
+        $coverageAttentionCount = $coverageIsVisible
+            ? (clone $futureCoverageBase)->where('status', ContinuousCoverageShift::STATUS_PAYMENT_ATTENTION)->count()
+            : 0;
+        $futureCoverageShifts = collect();
+        if ($coverageIsVisible && in_array($this->status, ['all', CareBooking::STATUS_SCHEDULED, CareBooking::STATUS_DISPUTED], true)) {
+            $futureCoverageQuery = clone $futureCoverageBase;
+            if ($this->status === CareBooking::STATUS_SCHEDULED) {
+                $futureCoverageQuery->where('status', ContinuousCoverageShift::STATUS_CONFIRMED);
+            } elseif ($this->status === CareBooking::STATUS_DISPUTED) {
+                $futureCoverageQuery->where('status', ContinuousCoverageShift::STATUS_PAYMENT_ATTENTION);
+            }
+            if (ctype_digit($this->coverageShift)) {
+                $futureCoverageQuery->orderByRaw('CASE WHEN id = ? THEN 0 ELSE 1 END', [(int) $this->coverageShift]);
+            }
+            $futureCoverageShifts = $futureCoverageQuery
+                ->orderBy('scheduled_start_at')
+                ->limit(60)
+                ->get();
+        }
+        $futureCoverageEarningEstimates = $futureCoverageShifts->mapWithKeys(
+            fn (ContinuousCoverageShift $shift): array => [
+                $shift->id => $coveragePricing->caregiverEarningsLabel($shift->plan, $caregiver, $shift->scheduled_minutes),
+            ],
+        );
 
         $statusOrderSql = "CASE status
             WHEN 'in_progress' THEN 0
@@ -103,6 +153,8 @@ class ShiftsIndex extends Component
                     ->where('status', \App\Models\CareBookingTimeCorrection::STATUS_CHANGES_REQUESTED))
                 ->count(),
         ];
+        $counts['scheduled'] += $coverageScheduledCount;
+        $counts['issues'] += $coverageAttentionCount;
 
         $nextShift = CareBooking::query()
             ->with(['careRequest:id,title,address_line1,city,state,zip', 'carePlan:id,title', 'payment:id,care_booking_id,status'])
@@ -118,6 +170,9 @@ class ShiftsIndex extends Component
             'hiredWithoutBooking' => $hiredWithoutBooking,
             'counts' => $counts,
             'nextShift' => $nextShift,
+            'futureCoverageShifts' => $futureCoverageShifts,
+            'futureCoverageEarningEstimates' => $futureCoverageEarningEstimates,
+            'coveragePreparationHours' => (int) config('marketplace.continuous_coverage.booking_horizon_hours', 48),
         ]);
     }
 }

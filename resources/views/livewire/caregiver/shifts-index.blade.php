@@ -96,6 +96,73 @@
             </div>
         </div>
 
+        @if ($futureCoverageShifts->isNotEmpty())
+            <section class="space-y-3" aria-labelledby="future-coverage-visits-heading">
+                <div class="rounded-2xl border border-[#BFD8CB] bg-[#F1F8F4] p-4 sm:p-5">
+                    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[#17634F]">Continuous Coverage</p>
+                    <h2 id="future-coverage-visits-heading" class="mt-1 font-display text-2xl font-semibold text-[#17313F]">Confirmed coverage visits</h2>
+                    <p class="mt-1 text-sm text-[#526474]">These shifts are confirmed now. Check-in and payment setup appear automatically within {{ $coveragePreparationHours }} hours of each visit.</p>
+                </div>
+
+                @foreach ($futureCoverageShifts as $coverageVisit)
+                    @php
+                        $coverageStart = $coverageVisit->scheduled_start_at->copy()->setTimezone($coverageVisit->plan->timezone);
+                        $coverageEnd = $coverageVisit->scheduled_end_at->copy()->setTimezone($coverageVisit->plan->timezone);
+                        $coverageAddress = (array) $coverageVisit->plan->address_snapshot;
+                        $coverageLocation = collect([
+                            data_get($coverageAddress, 'address_line1'),
+                            data_get($coverageAddress, 'city'),
+                            data_get($coverageAddress, 'state'),
+                            data_get($coverageAddress, 'zip'),
+                        ])->filter()->implode(', ');
+                        $coverageNeedsAttention = $coverageVisit->status === \App\Models\ContinuousCoverageShift::STATUS_PAYMENT_ATTENTION;
+                        $insidePreparationWindow = $coverageVisit->scheduled_start_at->lte(now()->addHours($coveragePreparationHours));
+                    @endphp
+                    <article id="coverage-commitment-{{ $coverageVisit->id }}" class="scroll-mt-32 rounded-lg border {{ $coverageNeedsAttention ? 'border-amber-300 bg-amber-50' : 'border-[#BFD8CB] bg-white' }} p-5 shadow-sm sm:p-6" wire:key="future-coverage-visit-{{ $coverageVisit->id }}">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="font-display text-xl font-semibold text-[#17313F]">{{ $coverageVisit->plan->title }}</h3>
+                                    <span class="rounded-full bg-[#E8F4EE] px-3 py-1 text-xs font-semibold text-[#17634F]">Continuous Coverage</span>
+                                </div>
+                                <p class="mt-1 text-base text-[#526474]">For {{ $coverageVisit->plan->recipientName() }} · Family contact: {{ $coverageVisit->plan->family?->name }}</p>
+                            </div>
+                            <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $coverageNeedsAttention ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-800' }}">{{ $coverageNeedsAttention ? 'SETUP NEEDS ATTENTION' : 'CONFIRMED' }}</span>
+                        </div>
+
+                        <div class="mt-4 grid grid-cols-1 gap-3 text-base text-[#526474] md:grid-cols-3">
+                            <div class="rounded-md border border-[#DED6CA] bg-[#F7F5F1] px-4 py-3">
+                                <p class="text-sm font-semibold text-[#6A7784]">When</p>
+                                <p class="mt-1 font-semibold text-[#17313F]">{{ $coverageStart->format('D, M j, g:i A') }}</p>
+                                <p>to {{ $coverageEnd->format('g:i A T') }}</p>
+                            </div>
+                            <div class="rounded-md border border-[#DED6CA] bg-[#F7F5F1] px-4 py-3">
+                                <p class="text-sm font-semibold text-[#6A7784]">Care location</p>
+                                <p class="mt-1 font-semibold text-[#17313F]">{{ $coverageLocation ?: 'Address available in Coverage' }}</p>
+                            </div>
+                            <div class="rounded-md border {{ $coverageNeedsAttention ? 'border-amber-300 bg-amber-50' : 'border-[#BFD8CB] bg-[#F1F8F4]' }} px-4 py-3">
+                                <p class="text-sm font-semibold text-[#6A7784]">Expected earnings</p>
+                                <p class="mt-1 font-semibold text-[#17313F]">{{ $futureCoverageEarningEstimates->get($coverageVisit->id) }}</p>
+                                <p class="font-semibold {{ $coverageNeedsAttention ? 'text-amber-800' : 'text-emerald-700' }}">{{ $coverageNeedsAttention ? 'LoLo Care is reviewing visit setup' : 'Confirmed commitment' }}</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 rounded-xl {{ $coverageNeedsAttention ? 'bg-amber-100 text-amber-950' : 'bg-[#F7F2EA] text-[#526474]' }} p-3 text-sm">
+                            @if($coverageNeedsAttention)
+                                This visit remains confirmed, but its booking or payment setup needs attention. You do not need to create another visit.
+                            @elseif($insidePreparationWindow)
+                                Visit controls are being prepared. They will appear here automatically; no duplicate booking is needed.
+                            @else
+                                Visit controls, including check-in, will appear here closer to the shift. No payment is processed this early.
+                            @endif
+                        </div>
+
+                        <a href="{{ route('caregiver.continuous-coverage.index', ['tab' => 'schedule']).'#coverage-shift-'.$coverageVisit->id }}" wire:navigate class="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-[#2F6F62] px-4 font-semibold text-[#2F6F62] sm:w-auto">Manage in Coverage</a>
+                    </article>
+                @endforeach
+            </section>
+        @endif
+
         <section class="space-y-3">
             @forelse ($bookings as $booking)
                 @php
@@ -196,7 +263,11 @@
                 </article>
             @empty
                 <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-[rgba(255,253,250,0.98)] px-4 py-8 text-center text-sm text-[#607080]">
-                    No visits yet. Once a family hires you, your visit actions appear here.
+                    @if($futureCoverageShifts->isNotEmpty())
+                        No other prepared visits match this filter. Your confirmed coverage visits are shown above.
+                    @else
+                        No visits yet. Once a family hires you, your visit actions appear here.
+                    @endif
                 </div>
             @endforelse
         </section>

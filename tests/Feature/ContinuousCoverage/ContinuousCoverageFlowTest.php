@@ -3,6 +3,7 @@
 namespace Tests\Feature\ContinuousCoverage;
 
 use App\Livewire\Caregiver\ContinuousCoverageIndex as CaregiverCoverageIndex;
+use App\Livewire\Caregiver\ShiftsIndex as CaregiverShiftsIndex;
 use App\Livewire\Family\ContinuousCoverageCreate;
 use App\Livewire\Family\ContinuousCoverageShow;
 use App\Models\CareBooking;
@@ -1702,6 +1703,56 @@ class ContinuousCoverageFlowTest extends TestCase
         $this->assertSame(0, $lane->shifts()->whereNotNull('care_booking_id')->count());
         $this->assertDatabaseCount('care_bookings', 0);
         $this->assertGreaterThan(0, $caregiver->notificationDeliveries()->where('event_key', 'continuous_coverage_lane_request_approved')->count());
+    }
+
+    public function test_confirmed_future_coverage_is_visible_in_my_visits_before_booking_preparation(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-03 12:00:00', 'America/New_York'));
+        $family = $this->family();
+        $caregiver = $this->caregiver();
+        $plan = $this->plan($family, ['title' => 'Dad\'s care', 'starts_on' => '2026-08-07']);
+        $roster = app(ContinuousCoverageRosterService::class);
+        $member = $roster->caregiverAccept(
+            $roster->familyApprove($plan, $family, $caregiver, ContinuousCoverageRosterMember::ROLE_PRIMARY, true),
+            $caregiver,
+        );
+        $lane = $plan->templates()->where('day_of_week', 5)->orderBy('starts_at')->firstOrFail();
+        $roster->offerLane($lane, $member, $family);
+        $roster->acceptLane($lane->fresh(), $caregiver);
+        $shift = $lane->shifts()->where('scheduled_start_at', '>=', now())->orderBy('scheduled_start_at')->firstOrFail();
+        $confirmedShiftCount = $lane->shifts()
+            ->where('scheduled_start_at', '>=', now())
+            ->where('status', ContinuousCoverageShift::STATUS_CONFIRMED)
+            ->count();
+
+        $this->assertTrue($shift->scheduled_start_at->gt(now()->addHours(48)));
+        $this->assertNull($shift->care_booking_id);
+        $this->assertDatabaseCount('care_bookings', 0);
+
+        Livewire::actingAs($caregiver)
+            ->test(CaregiverShiftsIndex::class)
+            ->set('coverageShift', (string) $shift->id)
+            ->assertViewHas('futureCoverageShifts', fn ($shifts): bool => $shifts->first()?->id === $shift->id)
+            ->assertViewHas('counts', fn (array $counts): bool => $counts['scheduled'] === $confirmedShiftCount)
+            ->assertSee('Confirmed coverage visits')
+            ->assertSee('Dad\'s care')
+            ->assertSee('No payment is processed this early.')
+            ->assertSeeHtml('id="coverage-commitment-'.$shift->id.'"');
+
+        Livewire::actingAs($caregiver)
+            ->test(CaregiverShiftsIndex::class)
+            ->set('status', CareBooking::STATUS_COMPLETED)
+            ->assertViewHas('futureCoverageShifts', fn ($shifts): bool => $shifts->isEmpty())
+            ->assertDontSee('Confirmed coverage visits');
+
+        $booking = app(ContinuousCoverageBookingAdapter::class)->linkConfirmedShift($shift);
+        Livewire::actingAs($caregiver)
+            ->test(CaregiverShiftsIndex::class)
+            ->assertViewHas('futureCoverageShifts', fn ($shifts): bool => $shifts->count() === $confirmedShiftCount - 1
+                && ! $shifts->contains('id', $shift->id))
+            ->assertViewHas('bookings', fn ($bookings): bool => $bookings->contains('id', $booking->id))
+            ->assertSee('Continuous coverage:')
+            ->assertSee('Start visit');
     }
 
     public function test_approving_one_caregiver_request_does_not_allow_a_competing_request_to_overwrite_it(): void
