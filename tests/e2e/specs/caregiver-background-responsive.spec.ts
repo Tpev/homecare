@@ -24,12 +24,20 @@ test.describe('Caregiver experience and training', () => {
         await page.screenshot({ path: testInfo.outputPath('care-background-tablet.png'), fullPage: true });
 
         await page.setViewportSize({ width: 1440, height: 1000 });
+        await page.getByLabel("Memory loss, dementia, or Alzheimer's support").check();
+        await page.getByLabel('Limited mobility or fall-risk support').check();
+        await expect(page.getByLabel("Memory loss, dementia, or Alzheimer's support")).toBeChecked();
+        await expect(page.getByLabel('Limited mobility or fall-risk support')).toBeChecked();
+
         await expect(page.getByLabel('CPR')).toBeVisible();
         expect(await page.evaluate(() => typeof (window as typeof window & { Livewire?: unknown }).Livewire)).toBe('object');
         expect(await page.getByLabel('CPR').getAttribute('wire:model.live')).toBe('selectedCertificationTypes');
         await page.getByLabel('CPR').check();
+        await page.getByLabel('First Aid').check();
+        await expect(page.getByLabel('CPR')).toBeChecked();
+        await expect(page.getByLabel('First Aid')).toBeChecked();
         expect(pageErrors, pageErrors.join('\n')).toEqual([]);
-        await expect(page.getByLabel('Issuing organization (optional)')).toBeVisible();
+        await expect(page.getByLabel('Issuing organization (optional)')).toHaveCount(2);
 
         const desktopOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
         expect(desktopOverflow).toBe(false);

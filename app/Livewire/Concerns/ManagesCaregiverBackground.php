@@ -62,7 +62,9 @@ trait ManagesCaregiverBackground
 
     public function updatedSelectedExperienceTypes(mixed $value): void
     {
-        $this->selectedExperienceTypes = $this->normalizeExclusiveSelection((array) $value);
+        // For checkbox arrays Livewire passes the changed item to this hook,
+        // while the public property already contains the complete selection.
+        $this->selectedExperienceTypes = $this->normalizeExclusiveSelection($this->selectedExperienceTypes);
     }
 
     public function toggleCertification(string $value): void
@@ -96,7 +98,9 @@ trait ManagesCaregiverBackground
 
     public function updatedSelectedCertificationTypes(mixed $value): void
     {
-        $normalized = $this->normalizeExclusiveSelection((array) $value);
+        // Normalize the complete checkbox array, not only the item that fired
+        // the update hook, so selecting another credential stays additive.
+        $normalized = $this->normalizeExclusiveSelection($this->selectedCertificationTypes);
         $selectedIds = app(CaregiverBackgroundService::class)->numericSelections($normalized);
         foreach (array_keys($this->certificationDocuments) as $typeId) {
             if (! in_array((int) $typeId, $selectedIds, true)) {
