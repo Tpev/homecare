@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Family;
 
-use App\Livewire\Family\CreateCareRequestWizard;
 use App\Livewire\Family\CallbackRequest;
+use App\Livewire\Family\CreateCareRequestWizard;
 use App\Livewire\Family\HomepageQuickRequest;
 use App\Mail\Ops\CallbackRequestOpsAlertMail;
 use App\Models\CareTask;
@@ -53,7 +53,7 @@ class HomepageQuickRequestFlowTest extends TestCase
         config([
             'marketplace.ops_alert_recipients' => [
                 'peverelli.t@gmail.com',
-                'cpetrinipoli@hub.healthcare',
+                'hello@carelolo.com',
             ],
         ]);
         Mail::fake();
@@ -109,7 +109,7 @@ class HomepageQuickRequestFlowTest extends TestCase
         Mail::assertSent(CallbackRequestOpsAlertMail::class, function (CallbackRequestOpsAlertMail $mail) use ($lead) {
             return $mail->lead->is($lead)
                 && $mail->hasTo('peverelli.t@gmail.com')
-                && $mail->hasTo('cpetrinipoli@hub.healthcare')
+                && $mail->hasTo('hello@carelolo.com')
                 && str_contains($mail->render(), 'My mom needs companionship twice a week.');
         });
     }

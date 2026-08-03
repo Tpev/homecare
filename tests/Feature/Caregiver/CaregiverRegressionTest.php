@@ -29,7 +29,7 @@ class CaregiverRegressionTest extends TestCase
         config([
             'marketplace.ops_alert_recipients' => [
                 'peverelli.t@gmail.com',
-                'cpetrinipoli@hub.healthcare',
+                'hello@carelolo.com',
             ],
         ]);
         Mail::fake();
@@ -82,7 +82,7 @@ class CaregiverRegressionTest extends TestCase
 
         Mail::assertSent(CaregiverReadyForReviewOpsAlertMail::class, function (CaregiverReadyForReviewOpsAlertMail $mail) use ($user, $profile) {
             return $mail->hasTo('peverelli.t@gmail.com')
-                && $mail->hasTo('cpetrinipoli@hub.healthcare')
+                && $mail->hasTo('hello@carelolo.com')
                 && $mail->user->is($user)
                 && $mail->profile->id === $profile->id;
         });

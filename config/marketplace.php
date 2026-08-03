@@ -26,8 +26,12 @@ return [
     ],
     'ops_alert_recipients' => array_values(array_filter(array_map(
         static fn (string $email): string => trim($email),
-        explode(',', (string) env('MARKETPLACE_OPS_ALERT_RECIPIENTS', 'peverelli.t@gmail.com,cpetrinipoli@hub.healthcare'))
+        explode(',', (string) env('MARKETPLACE_OPS_ALERT_RECIPIENTS', 'peverelli.t@gmail.com,hello@carelolo.com'))
     ))),
+    // Redirect legacy values that may still exist in a deployed environment's cached configuration.
+    'ops_alert_recipient_replacements' => [
+        'cpetrinipoli@hub.healthcare' => 'hello@carelolo.com',
+    ],
 
     'payments' => [
         'platform_fee_percent' => (float) env('MARKETPLACE_PLATFORM_FEE_PERCENT', 10),

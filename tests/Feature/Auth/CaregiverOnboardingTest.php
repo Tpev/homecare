@@ -26,7 +26,7 @@ class CaregiverOnboardingTest extends TestCase
         config([
             'marketplace.ops_alert_recipients' => [
                 'peverelli.t@gmail.com',
-                'cpetrinipoli@hub.healthcare',
+                'hello@carelolo.com',
             ],
         ]);
         Mail::fake();
@@ -58,7 +58,7 @@ class CaregiverOnboardingTest extends TestCase
 
         Mail::assertSent(UserRegisteredOpsAlertMail::class, function (UserRegisteredOpsAlertMail $mail) {
             return $mail->hasTo('peverelli.t@gmail.com')
-                && $mail->hasTo('cpetrinipoli@hub.healthcare')
+                && $mail->hasTo('hello@carelolo.com')
                 && $mail->user->email === 'caregiver@example.com';
         });
     }

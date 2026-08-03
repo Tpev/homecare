@@ -636,7 +636,7 @@ class CareRequestFlowTest extends TestCase
         Mail::assertSent(NewCareRequestOpsAlertMail::class, function (NewCareRequestOpsAlertMail $mail) use ($careRequest) {
             return $mail->careRequest->is($careRequest)
                 && $mail->hasTo('peverelli.t@gmail.com')
-                && $mail->hasTo('cpetrinipoli@hub.healthcare');
+                && $mail->hasTo('hello@carelolo.com');
         });
     }
 

@@ -120,11 +120,16 @@ class OpsAlertService
     private function recipients(): array
     {
         $configured = (array) config('marketplace.ops_alert_recipients', []);
+        $replacements = collect((array) config('marketplace.ops_alert_recipient_replacements', []))
+            ->mapWithKeys(static fn ($replacement, $legacy): array => [
+                strtolower(trim((string) $legacy)) => trim((string) $replacement),
+            ]);
 
         return collect($configured)
             ->map(static fn ($email) => trim((string) $email))
+            ->map(static fn (string $email): string => (string) ($replacements->get(strtolower($email)) ?? $email))
             ->filter(static fn (string $email) => filter_var($email, FILTER_VALIDATE_EMAIL) !== false)
-            ->unique()
+            ->unique(static fn (string $email): string => strtolower($email))
             ->values()
             ->all();
     }

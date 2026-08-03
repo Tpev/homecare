@@ -66,7 +66,8 @@ class RegistrationTest extends TestCase
 
         Mail::assertSent(FamilyRegisteredOpsAlertMail::class, function (FamilyRegisteredOpsAlertMail $mail) {
             return $mail->hasTo('peverelli.t@gmail.com')
-                && $mail->hasTo('cpetrinipoli@hub.healthcare')
+                && $mail->hasTo('hello@carelolo.com')
+                && ! $mail->hasTo('cpetrinipoli@hub.healthcare')
                 && $mail->user->email === 'test@example.com';
         });
     }
