@@ -226,6 +226,37 @@ class ContinuousCoverageNotificationService
         );
     }
 
+    /** @param Collection<int, User> $caregivers */
+    public function planEnded(ContinuousCoveragePlan $plan, Collection $caregivers, bool $deleted = false): void
+    {
+        $plan->loadMissing('family');
+        if (! $this->access->enabled() || ! $this->access->allows($plan->family)) {
+            return;
+        }
+
+        foreach ($caregivers->unique('id') as $caregiver) {
+            $this->notifications->notify(
+                recipients: $caregiver,
+                eventKey: MarketplaceEvent::CONTINUOUS_COVERAGE_PLAN_ENDED,
+                title: $deleted ? 'A Continuous Coverage plan was removed' : 'A Continuous Coverage plan ended',
+                body: $deleted
+                    ? $plan->family->name.' removed this unbilled coverage plan. You are no longer expected to cover its future shifts.'
+                    : $plan->family->name.' ended this coverage plan. No new shifts will be created, and existing care or earnings history remains available.',
+                url: route('dashboard'),
+                payload: [
+                    'email_details' => [
+                        ['label' => 'Coverage plan', 'value' => $plan->title],
+                        ['label' => 'Family', 'value' => $plan->family->name],
+                        ['label' => 'Effective', 'value' => now($plan->timezone)->format('F j, Y · g:i A T')],
+                    ],
+                    'email_next_steps' => ['No action is needed. You are not expected to attend future shifts from this plan.'],
+                ],
+                subject: $plan,
+                dedupeKey: 'coverage-plan-ended:'.$plan->id.':'.$caregiver->id.':'.($deleted ? 'deleted' : 'ended'),
+            );
+        }
+    }
+
     public function shiftConfirmed(ContinuousCoverageShift $shift): void
     {
         $shift->loadMissing('plan.family', 'assignedCaregiver');

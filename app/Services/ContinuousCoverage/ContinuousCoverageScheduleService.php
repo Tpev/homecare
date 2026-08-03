@@ -209,6 +209,9 @@ class ContinuousCoverageScheduleService
             || (int) $plan->family_user_id !== (int) $family->id) {
             abort(403);
         }
+        if ($plan->status !== ContinuousCoveragePlan::STATUS_ACTIVE) {
+            throw ValidationException::withMessages(['scheduleEffectiveOn' => 'This coverage plan has ended and can no longer be changed.']);
+        }
 
         try {
             $effective = Carbon::createFromFormat('Y-m-d', $effectiveOn, $plan->timezone)->startOfDay();
@@ -244,6 +247,9 @@ class ContinuousCoverageScheduleService
             &$unavailableRequestIds,
         ): ContinuousCoveragePlan {
             $lockedPlan = ContinuousCoveragePlan::query()->lockForUpdate()->findOrFail($plan->id);
+            if ($lockedPlan->status !== ContinuousCoveragePlan::STATUS_ACTIVE) {
+                throw ValidationException::withMessages(['scheduleEffectiveOn' => 'This coverage plan has ended and can no longer be changed.']);
+            }
             if ($lockedPlan->shifts()
                 ->where('scheduled_start_at', '>=', $effectiveUtc)
                 ->whereNotNull('care_booking_id')

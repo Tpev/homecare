@@ -1941,6 +1941,116 @@ class ContinuousCoverageFlowTest extends TestCase
                 && (int) $history->first()->id === $disputedShift->id);
     }
 
+    public function test_family_can_permanently_delete_an_unbilled_test_plan_after_a_caregiver_joined(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-03 10:00:00', 'UTC'));
+        $family = $this->family();
+        $caregiver = $this->caregiver();
+        $plan = $this->plan($family, ['title' => 'Disposable test coverage']);
+        $roster = app(ContinuousCoverageRosterService::class);
+        $member = $roster->caregiverAccept(
+            $roster->familyApprove($plan, $family, $caregiver, ContinuousCoverageRosterMember::ROLE_PRIMARY, true),
+            $caregiver,
+        );
+        $template = $plan->templates()->firstOrFail();
+        $roster->offerLane($template, $member, $family);
+        $roster->acceptLane($template->fresh(), $caregiver);
+        $shiftIds = $plan->shifts()->pluck('id');
+
+        $this->assertGreaterThan(0, $shiftIds->count());
+        $this->assertDatabaseCount('care_bookings', 0);
+
+        Livewire::actingAs($family)
+            ->test(ContinuousCoverageShow::class, ['coveragePlan' => $plan->id])
+            ->set('tab', 'settings')
+            ->assertSee('Permanently delete this unbilled test plan')
+            ->call('deletePlan')
+            ->assertHasErrors('deleteConfirmation')
+            ->set('deleteConfirmation', 'DELETE')
+            ->call('deletePlan')
+            ->assertRedirect(route('family.continuous-coverage.index'));
+
+        $this->assertDatabaseMissing('continuous_coverage_plans', ['id' => $plan->id]);
+        foreach ($shiftIds as $shiftId) {
+            $this->assertDatabaseMissing('continuous_coverage_shifts', ['id' => $shiftId]);
+        }
+        $this->assertDatabaseMissing('continuous_coverage_roster_members', ['id' => $member->id]);
+        $this->assertDatabaseCount('care_bookings', 0);
+        $this->assertDatabaseCount('care_booking_payments', 0);
+        $this->assertDatabaseHas('marketplace_notification_deliveries', [
+            'user_id' => $caregiver->id,
+            'event_key' => 'continuous_coverage_plan_ended',
+        ]);
+    }
+
+    public function test_family_must_end_a_plan_with_a_prepared_visit_and_history_is_preserved(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-03 10:00:00', 'UTC'));
+        $family = $this->family();
+        $caregiver = $this->caregiver();
+        $shift = $this->confirmedShift($family, $caregiver);
+        $plan = $shift->plan;
+        $booking = app(ContinuousCoverageBookingAdapter::class)->linkConfirmedShift($shift);
+
+        Livewire::actingAs($family)
+            ->test(ContinuousCoverageShow::class, ['coveragePlan' => $plan->id])
+            ->set('tab', 'settings')
+            ->assertSee('Permanent deletion is unavailable')
+            ->set('deleteConfirmation', 'DELETE')
+            ->call('deletePlan')
+            ->assertHasErrors('planLifecycle')
+            ->call('endPlan')
+            ->assertHasErrors('planLifecycle');
+
+        $booking->forceFill([
+            'status' => CareBooking::STATUS_CANCELLED,
+            'cancelled_at' => now(),
+        ])->save();
+
+        Livewire::actingAs($family)
+            ->test(ContinuousCoverageShow::class, ['coveragePlan' => $plan->id])
+            ->set('tab', 'settings')
+            ->call('endPlan')
+            ->assertRedirect(route('family.continuous-coverage.index'));
+
+        $plan->refresh();
+        $shift->refresh();
+        $this->assertSame(ContinuousCoveragePlan::STATUS_ENDED, $plan->status);
+        $this->assertFalse($plan->marketplace_applications_enabled);
+        $this->assertNotNull(data_get($plan->metadata, 'ended_at'));
+        $this->assertSame(ContinuousCoverageShift::STATUS_CANCELLED, $shift->status);
+        $this->assertDatabaseHas('care_bookings', [
+            'id' => $booking->id,
+            'status' => CareBooking::STATUS_CANCELLED,
+        ]);
+        $this->assertDatabaseHas('continuous_coverage_events', [
+            'continuous_coverage_plan_id' => $plan->id,
+            'event_type' => 'plan_ended',
+        ]);
+        $this->assertDatabaseMissing('continuous_coverage_shifts', [
+            'continuous_coverage_plan_id' => $plan->id,
+            'care_booking_id' => null,
+        ]);
+        $this->assertDatabaseMissing('continuous_coverage_roster_members', [
+            'continuous_coverage_plan_id' => $plan->id,
+            'status' => ContinuousCoverageRosterMember::STATUS_ACTIVE,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(\App\Livewire\Family\ContinuousCoverageIndex::class)
+            ->assertViewHas('activePlans', fn ($plans): bool => ! $plans->contains('id', $plan->id))
+            ->assertViewHas('pastPlans', fn ($plans): bool => $plans->contains('id', $plan->id))
+            ->assertSee('Past coverage');
+
+        Livewire::actingAs($family)
+            ->test(ContinuousCoverageShow::class, ['coveragePlan' => $plan->id])
+            ->set('tab', 'team')
+            ->assertSet('tab', 'overview')
+            ->set('tab', 'settings')
+            ->assertSee('This coverage has ended')
+            ->assertDontSee('Change the coverage schedule');
+    }
+
     public function test_disabled_feature_blocks_new_handoffs_releases_and_notifications(): void
     {
         $family = $this->family();

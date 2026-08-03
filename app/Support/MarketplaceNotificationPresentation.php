@@ -66,6 +66,7 @@ final class MarketplaceNotificationPresentation
                 MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUESTED,
                 MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUEST_WITHDRAWN,
                 MarketplaceEvent::CONTINUOUS_COVERAGE_SCHEDULE_CHANGED,
+                MarketplaceEvent::CONTINUOUS_COVERAGE_PLAN_ENDED,
                 MarketplaceEvent::CONTINUOUS_COVERAGE_SHIFT_CONFIRMED,
                 MarketplaceEvent::CONTINUOUS_COVERAGE_SHIFT_RELEASED,
                 MarketplaceEvent::CONTINUOUS_COVERAGE_REPLACEMENT_ACCEPTED,
@@ -223,6 +224,7 @@ final class MarketplaceNotificationPresentation
             MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUEST_UNAVAILABLE => 'Recurring lane no longer available',
             MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUEST_WITHDRAWN => 'Recurring coverage request withdrawn',
             MarketplaceEvent::CONTINUOUS_COVERAGE_SCHEDULE_CHANGED => 'Coverage schedule changed',
+            MarketplaceEvent::CONTINUOUS_COVERAGE_PLAN_ENDED => 'Coverage plan ended',
             MarketplaceEvent::CONTINUOUS_COVERAGE_SHIFT_CONFIRMED => 'Coverage shift confirmed',
             MarketplaceEvent::CONTINUOUS_COVERAGE_SHIFT_REMINDER => 'Coverage shift reminder',
             MarketplaceEvent::CONTINUOUS_COVERAGE_SHIFT_RELEASED => 'Coverage shift needs a replacement',
@@ -312,6 +314,7 @@ final class MarketplaceNotificationPresentation
             MarketplaceEvent::CONTINUOUS_COVERAGE_APPLICATION_RECEIVED => 'Review coverage applicant',
             MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUESTED => 'Review lane request',
             MarketplaceEvent::CONTINUOUS_COVERAGE_REPLACEMENT_NOT_SELECTED => 'Open Continuous Coverage',
+            MarketplaceEvent::CONTINUOUS_COVERAGE_PLAN_ENDED => 'Open dashboard',
             MarketplaceEvent::CONTINUOUS_COVERAGE_PAYMENT_ATTENTION => 'Review coverage billing',
             MarketplaceEvent::CONTINUOUS_COVERAGE_EARNINGS_FINALIZED => 'View coverage earnings',
             MarketplaceEvent::CONTINUOUS_COVERAGE_TEAM_ACCEPTED,
@@ -389,7 +392,8 @@ final class MarketplaceNotificationPresentation
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED,
             MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUEST_DECLINED,
             MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUEST_NOT_SELECTED,
-            MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUEST_UNAVAILABLE => 'warning',
+            MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUEST_UNAVAILABLE,
+            MarketplaceEvent::CONTINUOUS_COVERAGE_PLAN_ENDED => 'warning',
             default => 'neutral',
         };
     }

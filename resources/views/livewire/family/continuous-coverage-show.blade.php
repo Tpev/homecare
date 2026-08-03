@@ -19,6 +19,9 @@
             'disputed' => ['Disputed', 'bg-amber-100 text-amber-800 border-amber-200', '!'],
         ];
         $dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        $planTabs = $plan->status === \App\Models\ContinuousCoveragePlan::STATUS_ENDED
+            ? ['overview'=>'Overview','history'=>'History','billing'=>'Billing','settings'=>'Plan settings']
+            : ['overview'=>'Overview','calendar'=>'Calendar','team'=>'Care team','history'=>'History','billing'=>'Billing','settings'=>'Plan settings'];
     @endphp
 
     <section class="hc-brand-panel">
@@ -37,9 +40,16 @@
         </div>
     </section>
 
+    @if($plan->status === \App\Models\ContinuousCoveragePlan::STATUS_ENDED)
+        <section class="rounded-2xl border border-slate-300 bg-slate-50 p-4 text-slate-800">
+            <p class="font-semibold">This coverage plan ended {{ $plan->ends_on?->format('F j, Y') }}.</p>
+            <p class="mt-1 text-sm">No new shifts will be generated. Previous care, billing, and activity history remain available.</p>
+        </section>
+    @endif
+
     <nav class="overflow-x-auto rounded-2xl border border-[#DED6CA] bg-white p-1" aria-label="Coverage plan sections">
         <div class="flex min-w-max gap-1">
-            @foreach(['overview'=>'Overview','calendar'=>'Calendar','team'=>'Care team','history'=>'History','billing'=>'Billing','settings'=>'Plan settings'] as $key => $label)
+            @foreach($planTabs as $key => $label)
                 <button type="button" wire:click="setTab('{{ $key }}')" class="min-h-11 rounded-xl px-4 text-sm font-semibold transition {{ $tab === $key ? 'bg-[#0F3D3E] text-white' : 'text-[#526474] hover:bg-[#F7F2EA]' }}" @if($tab === $key) aria-current="page" @endif>
                     {{ $label }}
                     @if($key === 'team' && ($applicants->count() + $pendingLaneRequests->count()) > 0)
@@ -443,34 +453,78 @@
                 <div class="rounded-3xl border border-[#DED6CA] bg-white p-5"><h2 class="font-display text-2xl font-semibold">Replacement choice</h2><p class="mt-3 text-[#607080]">{{ $plan->replacementRequiresFamilyConfirmation() ? 'You confirm an approved backup after they accept.' : 'A caregiver from your approved backup team is confirmed after voluntarily accepting.' }}</p><p class="mt-4 rounded-2xl bg-[#F7F2EA] p-4 text-sm text-[#526474]">Only active caregivers who your family approved, who accepted team membership, and who opted into matching backup coverage can receive replacement offers.</p></div>
             </div>
 
-            <form wire:submit="saveMarketplaceApplications" class="rounded-3xl border border-[#DED6CA] bg-white p-5 sm:p-6">
-                <p class="text-sm font-semibold uppercase tracking-wide text-[#2F6F62]">Optional applications</p>
-                <h2 class="mt-1 font-display text-2xl font-semibold">Let caregivers apply to this plan</h2>
-                <p class="mt-2 max-w-3xl text-sm text-[#607080]">When enabled, eligible caregivers can see the service area, schedule, activities, and rate—not the recipient’s identity or exact address. Your family must approve every applicant before they may join or accept coverage.</p>
-                <label class="mt-4 flex min-h-12 items-center gap-3 rounded-2xl bg-[#F7F2EA] p-4 font-semibold text-[#17313F]"><input type="checkbox" wire:model="marketplaceApplicationsEnabled" class="rounded border-[#AFA79B] text-[#2F6F62] focus:ring-[#2F6F62]">Accept new caregiver applications</label>
-                <button type="submit" wire:loading.attr="disabled" class="mt-4 min-h-12 rounded-xl bg-[#0F3D3E] px-5 font-semibold text-white disabled:opacity-60">Save application setting</button>
-            </form>
+            @if($plan->status !== \App\Models\ContinuousCoveragePlan::STATUS_ENDED)
+                <form wire:submit="saveMarketplaceApplications" class="rounded-3xl border border-[#DED6CA] bg-white p-5 sm:p-6">
+                    <p class="text-sm font-semibold uppercase tracking-wide text-[#2F6F62]">Optional applications</p>
+                    <h2 class="mt-1 font-display text-2xl font-semibold">Let caregivers apply to this plan</h2>
+                    <p class="mt-2 max-w-3xl text-sm text-[#607080]">When enabled, eligible caregivers can see the service area, schedule, activities, and rate—not the recipient’s identity or exact address. Your family must approve every applicant before they may join or accept coverage.</p>
+                    <label class="mt-4 flex min-h-12 items-center gap-3 rounded-2xl bg-[#F7F2EA] p-4 font-semibold text-[#17313F]"><input type="checkbox" wire:model="marketplaceApplicationsEnabled" class="rounded border-[#AFA79B] text-[#2F6F62] focus:ring-[#2F6F62]">Accept new caregiver applications</label>
+                    <button type="submit" wire:loading.attr="disabled" class="mt-4 min-h-12 rounded-xl bg-[#0F3D3E] px-5 font-semibold text-white disabled:opacity-60">Save application setting</button>
+                </form>
 
-            <form wire:submit="saveFutureSchedule" class="rounded-3xl border border-[#DED6CA] bg-white p-5 sm:p-6">
-                <p class="text-sm font-semibold uppercase tracking-wide text-[#2F6F62]">Future changes only</p>
-                <h2 class="mt-1 font-display text-2xl font-semibold">Change the coverage schedule</h2>
-                <p class="mt-2 max-w-3xl text-sm text-[#607080]">Choose an effective date. Past shifts, released assignments, completed visits, and billing history remain unchanged. If a future visit is already prepared, change that visit through its existing workflow first.</p>
-                <div class="mt-5 grid gap-4 sm:grid-cols-2">
-                    <label><span class="text-sm font-semibold text-[#324457]">Effective date</span><input type="date" wire:model="scheduleEffectiveOn" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]">@error('scheduleEffectiveOn')<span class="mt-1 block text-sm text-rose-700">{{ $message }}</span>@enderror</label>
-                    <label><span class="text-sm font-semibold text-[#324457]">Coverage pattern</span><select wire:model.live="scheduleCoveragePattern" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]"><option value="24_7">24/7</option><option value="overnight">Overnight</option><option value="custom">Custom weekly windows</option></select></label>
-                </div>
-                @if($scheduleCoveragePattern === '24_7')
-                    <div class="mt-4 grid gap-4 sm:grid-cols-2"><label><span class="text-sm font-semibold text-[#324457]">Shift length</span><select wire:model.live="scheduleShiftLengthChoice" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]"><option value="720">12 hours · 2 shifts/day</option><option value="480">8 hours · 3 shifts/day</option><option value="360">6 hours · 4 shifts/day</option><option value="custom">Custom shift length</option></select>@error('scheduleShiftLengthChoice')<span class="mt-1 block text-sm text-rose-700">{{ $message }}</span>@enderror</label><label><span class="text-sm font-semibold text-[#324457]">Daily handoff anchor</span><input type="time" wire:model="scheduleStartTime" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]"></label></div>
-                    @if($scheduleShiftLengthChoice === 'custom')
-                        <label class="mt-4 block max-w-md"><span class="text-sm font-semibold text-[#324457]">Custom shift length in hours</span><input type="number" min="1" max="12" step="any" inputmode="decimal" wire:model="scheduleCustomShiftLengthHours" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]"><span class="mt-1 block text-xs text-[#607080]">Use a length that divides 24 hours evenly, such as 4, 3, 2, or 1.5 hours.</span>@error('scheduleCustomShiftLengthHours')<span class="mt-1 block text-sm text-rose-700">{{ $message }}</span>@enderror</label>
+                <form wire:submit="saveFutureSchedule" class="rounded-3xl border border-[#DED6CA] bg-white p-5 sm:p-6">
+                    <p class="text-sm font-semibold uppercase tracking-wide text-[#2F6F62]">Future changes only</p>
+                    <h2 class="mt-1 font-display text-2xl font-semibold">Change the coverage schedule</h2>
+                    <p class="mt-2 max-w-3xl text-sm text-[#607080]">Choose an effective date. Past shifts, released assignments, completed visits, and billing history remain unchanged. If a future visit is already prepared, change that visit through its existing workflow first.</p>
+                    <div class="mt-5 grid gap-4 sm:grid-cols-2">
+                        <label><span class="text-sm font-semibold text-[#324457]">Effective date</span><input type="date" wire:model="scheduleEffectiveOn" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]">@error('scheduleEffectiveOn')<span class="mt-1 block text-sm text-rose-700">{{ $message }}</span>@enderror</label>
+                        <label><span class="text-sm font-semibold text-[#324457]">Coverage pattern</span><select wire:model.live="scheduleCoveragePattern" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]"><option value="24_7">24/7</option><option value="overnight">Overnight</option><option value="custom">Custom weekly windows</option></select></label>
+                    </div>
+                    @if($scheduleCoveragePattern === '24_7')
+                        <div class="mt-4 grid gap-4 sm:grid-cols-2"><label><span class="text-sm font-semibold text-[#324457]">Shift length</span><select wire:model.live="scheduleShiftLengthChoice" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]"><option value="720">12 hours · 2 shifts/day</option><option value="480">8 hours · 3 shifts/day</option><option value="360">6 hours · 4 shifts/day</option><option value="custom">Custom shift length</option></select>@error('scheduleShiftLengthChoice')<span class="mt-1 block text-sm text-rose-700">{{ $message }}</span>@enderror</label><label><span class="text-sm font-semibold text-[#324457]">Daily handoff anchor</span><input type="time" wire:model="scheduleStartTime" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]"></label></div>
+                        @if($scheduleShiftLengthChoice === 'custom')
+                            <label class="mt-4 block max-w-md"><span class="text-sm font-semibold text-[#324457]">Custom shift length in hours</span><input type="number" min="1" max="12" step="any" inputmode="decimal" wire:model="scheduleCustomShiftLengthHours" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]"><span class="mt-1 block text-xs text-[#607080]">Use a length that divides 24 hours evenly, such as 4, 3, 2, or 1.5 hours.</span>@error('scheduleCustomShiftLengthHours')<span class="mt-1 block text-sm text-rose-700">{{ $message }}</span>@enderror</label>
+                        @endif
+                    @elseif($scheduleCoveragePattern === 'overnight')
+                        <div class="mt-4 grid gap-4 sm:grid-cols-2"><label><span class="text-sm font-semibold text-[#324457]">Starts nightly</span><input type="time" wire:model="scheduleStartTime" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]"></label><label><span class="text-sm font-semibold text-[#324457]">Ends next morning</span><input type="time" wire:model="scheduleEndTime" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]"></label></div>
+                    @else
+                        <div class="mt-4 space-y-3">@foreach($scheduleWindows as $index => $window)<div wire:key="future-schedule-window-{{ $index }}" class="grid gap-3 rounded-2xl bg-[#F7F2EA] p-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end"><label><span class="text-xs font-semibold text-[#526474]">Day</span><select wire:model="scheduleWindows.{{ $index }}.day" class="mt-1 min-h-11 w-full rounded-xl border-[#CFC4B5]">@foreach($dayNames as $dayIndex => $dayName)<option value="{{ $dayIndex }}">{{ $dayName }}</option>@endforeach</select></label><label><span class="text-xs font-semibold text-[#526474]">Start</span><input type="time" wire:model="scheduleWindows.{{ $index }}.start" class="mt-1 min-h-11 w-full rounded-xl border-[#CFC4B5]"></label><label><span class="text-xs font-semibold text-[#526474]">End</span><input type="time" wire:model="scheduleWindows.{{ $index }}.end" class="mt-1 min-h-11 w-full rounded-xl border-[#CFC4B5]"></label><button type="button" wire:click="removeScheduleWindow({{ $index }})" class="min-h-11 rounded-xl border border-rose-200 px-3 text-sm font-semibold text-rose-700">Remove</button></div>@endforeach @error('scheduleWindows')<p class="text-sm text-rose-700">{{ $message }}</p>@enderror<button type="button" wire:click="addScheduleWindow" class="min-h-11 rounded-xl border border-[#2F6F62] px-4 font-semibold text-[#2F6F62]">Add coverage window</button></div>
                     @endif
-                @elseif($scheduleCoveragePattern === 'overnight')
-                    <div class="mt-4 grid gap-4 sm:grid-cols-2"><label><span class="text-sm font-semibold text-[#324457]">Starts nightly</span><input type="time" wire:model="scheduleStartTime" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]"></label><label><span class="text-sm font-semibold text-[#324457]">Ends next morning</span><input type="time" wire:model="scheduleEndTime" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]"></label></div>
-                @else
-                    <div class="mt-4 space-y-3">@foreach($scheduleWindows as $index => $window)<div wire:key="future-schedule-window-{{ $index }}" class="grid gap-3 rounded-2xl bg-[#F7F2EA] p-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end"><label><span class="text-xs font-semibold text-[#526474]">Day</span><select wire:model="scheduleWindows.{{ $index }}.day" class="mt-1 min-h-11 w-full rounded-xl border-[#CFC4B5]">@foreach($dayNames as $dayIndex => $dayName)<option value="{{ $dayIndex }}">{{ $dayName }}</option>@endforeach</select></label><label><span class="text-xs font-semibold text-[#526474]">Start</span><input type="time" wire:model="scheduleWindows.{{ $index }}.start" class="mt-1 min-h-11 w-full rounded-xl border-[#CFC4B5]"></label><label><span class="text-xs font-semibold text-[#526474]">End</span><input type="time" wire:model="scheduleWindows.{{ $index }}.end" class="mt-1 min-h-11 w-full rounded-xl border-[#CFC4B5]"></label><button type="button" wire:click="removeScheduleWindow({{ $index }})" class="min-h-11 rounded-xl border border-rose-200 px-3 text-sm font-semibold text-rose-700">Remove</button></div>@endforeach @error('scheduleWindows')<p class="text-sm text-rose-700">{{ $message }}</p>@enderror<button type="button" wire:click="addScheduleWindow" class="min-h-11 rounded-xl border border-[#2F6F62] px-4 font-semibold text-[#2F6F62]">Add coverage window</button></div>
+                    <button type="submit" wire:loading.attr="disabled" wire:confirm="Apply this schedule only to unprepared future shifts from the effective date? Existing history stays unchanged." class="mt-5 min-h-12 rounded-xl bg-[#0F3D3E] px-5 font-semibold text-white disabled:opacity-60">Save future schedule</button>
+                </form>
+            @else
+                <div class="rounded-3xl border border-[#DED6CA] bg-[#F7F2EA] p-5 sm:p-6">
+                    <p class="text-sm font-semibold uppercase tracking-wide text-[#607080]">Read-only plan</p>
+                    <h2 class="mt-1 font-display text-2xl font-semibold">This coverage has ended</h2>
+                    <p class="mt-2 max-w-3xl text-sm text-[#526474]">Schedule and care-team changes are closed. Previous visits, caregiver activity, receipts, and billing remain available under History and Billing.</p>
+                </div>
+            @endif
+
+            <section class="rounded-3xl border border-rose-200 bg-white p-5 sm:p-6" aria-labelledby="coverage-lifecycle-heading">
+                <p class="text-sm font-semibold uppercase tracking-wide text-rose-700">Plan lifecycle</p>
+                <h2 id="coverage-lifecycle-heading" class="mt-1 font-display text-2xl font-semibold">{{ $plan->status === \App\Models\ContinuousCoveragePlan::STATUS_ENDED ? 'Past coverage controls' : 'End or remove this plan' }}</h2>
+                <x-input-error :messages="$errors->get('planLifecycle')" class="mt-4" />
+
+                @if($plan->status !== \App\Models\ContinuousCoveragePlan::STATUS_ENDED)
+                    <div class="mt-5 grid gap-4 rounded-2xl border border-[#E4DDD3] p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+                        <div>
+                            <h3 class="font-semibold text-[#17313F]">End coverage</h3>
+                            <p class="mt-1 text-sm text-[#607080]">Stops this plan and removes future visits that were never prepared. Previous care and billing remain in Past coverage.</p>
+                        </div>
+                        <button type="button" wire:click="endPlan" wire:loading.attr="disabled" wire:confirm="End this Continuous Coverage plan? Future unprepared shifts will be removed, while care and billing history stays available." class="min-h-12 w-full rounded-xl border border-rose-300 px-5 font-semibold text-rose-800 disabled:opacity-60 sm:w-auto">End coverage</button>
+                    </div>
                 @endif
-                <button type="submit" wire:loading.attr="disabled" wire:confirm="Apply this schedule only to unprepared future shifts from the effective date? Existing history stays unchanged." class="mt-5 min-h-12 rounded-xl bg-[#0F3D3E] px-5 font-semibold text-white disabled:opacity-60">Save future schedule</button>
-            </form>
+
+                @if($deletionBlocker === null)
+                    <form wire:submit="deletePlan" class="mt-4 rounded-2xl border border-rose-300 bg-rose-50 p-4">
+                        <h3 class="font-semibold text-rose-950">Permanently delete this unbilled test plan</h3>
+                        <p class="mt-1 text-sm text-rose-800">This plan has no prepared visits, billing, or care history. Deleting it also removes its future generated shifts, care team, invitations, and offers. This cannot be undone.</p>
+                        <div class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,20rem)_auto] sm:items-end">
+                            <label>
+                                <span class="text-sm font-semibold text-rose-950">Type DELETE to confirm</span>
+                                <input type="text" wire:model="deleteConfirmation" autocomplete="off" class="mt-1 min-h-12 w-full rounded-xl border-rose-300 bg-white" placeholder="DELETE">
+                                <x-input-error :messages="$errors->get('deleteConfirmation')" class="mt-1" />
+                            </label>
+                            <button type="submit" wire:loading.attr="disabled" wire:confirm="Permanently delete this unbilled Continuous Coverage plan? This cannot be undone." class="min-h-12 w-full rounded-xl bg-rose-700 px-5 font-semibold text-white disabled:opacity-60 sm:w-auto">Delete test plan</button>
+                        </div>
+                    </form>
+                @else
+                    <div class="mt-4 rounded-2xl bg-[#F7F2EA] p-4">
+                        <h3 class="font-semibold text-[#17313F]">Permanent deletion is unavailable</h3>
+                        <p class="mt-1 text-sm text-[#526474]">{{ $deletionBlocker }}</p>
+                    </div>
+                @endif
+            </section>
         </section>
     @endif
 

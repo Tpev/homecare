@@ -560,6 +560,9 @@ class ContinuousCoverageRosterService
     private function assertFamilyOwns(ContinuousCoveragePlan $plan, User $family): void
     {
         abort_unless($family->role === 'family' && (int) $plan->family_user_id === (int) $family->id, 403);
+        if ($plan->status !== ContinuousCoveragePlan::STATUS_ACTIVE) {
+            throw ValidationException::withMessages(['coverage' => 'This Continuous Coverage plan has ended and can no longer be changed.']);
+        }
     }
 
     /**

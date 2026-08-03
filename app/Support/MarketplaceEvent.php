@@ -158,6 +158,8 @@ class MarketplaceEvent
 
     public const CONTINUOUS_COVERAGE_SCHEDULE_CHANGED = 'continuous_coverage_schedule_changed';
 
+    public const CONTINUOUS_COVERAGE_PLAN_ENDED = 'continuous_coverage_plan_ended';
+
     public const CONTINUOUS_COVERAGE_SHIFT_CONFIRMED = 'continuous_coverage_shift_confirmed';
 
     public const CONTINUOUS_COVERAGE_SHIFT_REMINDER = 'continuous_coverage_shift_reminder';
@@ -263,6 +265,7 @@ class MarketplaceEvent
             self::CONTINUOUS_COVERAGE_LANE_REQUEST_UNAVAILABLE,
             self::CONTINUOUS_COVERAGE_LANE_REQUEST_WITHDRAWN,
             self::CONTINUOUS_COVERAGE_SCHEDULE_CHANGED,
+            self::CONTINUOUS_COVERAGE_PLAN_ENDED,
             self::CONTINUOUS_COVERAGE_SHIFT_CONFIRMED,
             self::CONTINUOUS_COVERAGE_SHIFT_REMINDER,
             self::CONTINUOUS_COVERAGE_SHIFT_RELEASED,

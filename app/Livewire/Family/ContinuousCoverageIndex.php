@@ -39,6 +39,9 @@ class ContinuousCoverageIndex extends Component
                 return $plan;
             });
 
-        return view('livewire.family.continuous-coverage-index', ['plans' => $plans]);
+        return view('livewire.family.continuous-coverage-index', [
+            'activePlans' => $plans->where('status', '!=', ContinuousCoveragePlan::STATUS_ENDED)->values(),
+            'pastPlans' => $plans->where('status', ContinuousCoveragePlan::STATUS_ENDED)->values(),
+        ]);
     }
 }

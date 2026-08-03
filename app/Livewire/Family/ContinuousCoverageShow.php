@@ -12,6 +12,7 @@ use App\Models\ContinuousCoverageShift;
 use App\Models\ContinuousCoverageShiftTemplate;
 use App\Models\FamilyCaregiverFavorite;
 use App\Services\ContinuousCoverage\ContinuousCoverageLaneRequestService;
+use App\Services\ContinuousCoverage\ContinuousCoveragePlanLifecycleService;
 use App\Services\ContinuousCoverage\ContinuousCoveragePricingService;
 use App\Services\ContinuousCoverage\ContinuousCoverageReplacementService;
 use App\Services\ContinuousCoverage\ContinuousCoverageRosterService;
@@ -108,6 +109,8 @@ class ContinuousCoverageShow extends Component
 
     public array $scheduleWindows = [['day' => 1, 'start' => '07:00', 'end' => '19:00']];
 
+    public string $deleteConfirmation = '';
+
     public function mount(int $coveragePlan): void
     {
         abort_unless(auth()->user()?->role === 'family', 403);
@@ -146,6 +149,9 @@ class ContinuousCoverageShow extends Component
     public function setTab(string $tab): void
     {
         abort_unless(in_array($tab, ['overview', 'calendar', 'team', 'history', 'billing', 'settings'], true), 404);
+        if ($this->plan->status === ContinuousCoveragePlan::STATUS_ENDED && in_array($tab, ['calendar', 'team'], true)) {
+            $tab = 'overview';
+        }
         $this->tab = $tab;
         if ($tab !== 'team') {
             $this->closeCaregiverSearchModal();
@@ -333,6 +339,7 @@ class ContinuousCoverageShow extends Component
 
     public function saveFutureSchedule(ContinuousCoverageScheduleService $schedule): void
     {
+        $this->assertPlanActive();
         $rules = [
             'scheduleEffectiveOn' => ['required', 'date', 'after:today'],
             'scheduleCoveragePattern' => ['required', \Illuminate\Validation\Rule::in([
@@ -363,6 +370,26 @@ class ContinuousCoverageShow extends Component
             'custom_windows' => $this->scheduleCoveragePattern === ContinuousCoveragePlan::PATTERN_CUSTOM ? $this->scheduleWindows : [],
         ]);
         session()->flash('status', 'The new schedule starts '.$this->scheduleEffectiveOn.'. Existing visits and history were preserved.');
+    }
+
+    public function endPlan(ContinuousCoveragePlanLifecycleService $lifecycle): void
+    {
+        $lifecycle->endPlan($this->plan, auth()->user());
+        session()->flash('status', 'Continuous Coverage ended. Future unprepared shifts were removed and care and billing history was preserved.');
+        $this->redirectRoute('family.continuous-coverage.index', navigate: true);
+    }
+
+    public function deletePlan(ContinuousCoveragePlanLifecycleService $lifecycle): void
+    {
+        $this->validate([
+            'deleteConfirmation' => ['required', 'in:DELETE'],
+        ], [
+            'deleteConfirmation.in' => 'Type DELETE exactly to permanently remove this test plan.',
+        ]);
+
+        $lifecycle->deleteUnbilledPlan($this->plan, auth()->user());
+        session()->flash('status', 'The unbilled Continuous Coverage test plan was permanently deleted.');
+        $this->redirectRoute('family.continuous-coverage.index', navigate: true);
     }
 
     private function futureShiftStructureRules(): array
@@ -422,6 +449,7 @@ class ContinuousCoverageShow extends Component
 
     public function approveCaregiver(int $caregiverId, ContinuousCoverageRosterService $roster): void
     {
+        $this->assertPlanActive();
         if (! $this->showCaregiverSearchModal || $this->selectedCaregiverId !== $caregiverId) {
             $this->addError('caregiver', 'Choose a caregiver from the search results before sending an invitation.');
 
@@ -465,6 +493,7 @@ class ContinuousCoverageShow extends Component
 
     public function approveApplicant(int $memberId, ContinuousCoverageRosterService $roster): void
     {
+        $this->assertPlanActive();
         $member = $this->plan->rosterMembers()
             ->where('status', ContinuousCoverageRosterMember::STATUS_APPLIED)
             ->with('caregiver')
@@ -484,6 +513,7 @@ class ContinuousCoverageShow extends Component
 
     public function declineApplicant(int $memberId, ContinuousCoverageRosterService $roster): void
     {
+        $this->assertPlanActive();
         $member = $this->plan->rosterMembers()
             ->where('status', ContinuousCoverageRosterMember::STATUS_APPLIED)
             ->findOrFail($memberId);
@@ -493,6 +523,7 @@ class ContinuousCoverageShow extends Component
 
     public function saveMarketplaceApplications(ContinuousCoverageRosterService $roster): void
     {
+        $this->assertPlanActive();
         $this->validate(['marketplaceApplicationsEnabled' => ['boolean']]);
         $this->plan = $roster->setMarketplaceApplications(
             $this->plan,
@@ -506,6 +537,7 @@ class ContinuousCoverageShow extends Component
 
     public function saveMemberPreferences(int $memberId, ContinuousCoverageRosterService $roster): void
     {
+        $this->assertPlanActive();
         $member = $this->ownedRosterMember($memberId);
         $path = 'memberPreferences.'.$memberId;
         $this->validate([
@@ -534,6 +566,7 @@ class ContinuousCoverageShow extends Component
 
     public function offerLane(int $templateId, ContinuousCoverageRosterService $roster): void
     {
+        $this->assertPlanActive();
         $template = $this->ownedTemplate($templateId);
         $memberId = (int) ($this->laneSelections[$templateId] ?? 0);
         $member = $this->plan->rosterMembers()->where('status', ContinuousCoverageRosterMember::STATUS_ACTIVE)->findOrFail($memberId);
@@ -543,6 +576,7 @@ class ContinuousCoverageShow extends Component
 
     public function approveLaneRequest(int $requestId, ContinuousCoverageLaneRequestService $requests): void
     {
+        $this->assertPlanActive();
         $request = $this->ownedLaneRequest($requestId);
         $approved = $requests->approve($request, auth()->user());
         session()->flash('status', $approved
@@ -552,6 +586,7 @@ class ContinuousCoverageShow extends Component
 
     public function approveLaneRequestsForMember(int $memberId, ContinuousCoverageLaneRequestService $requests): void
     {
+        $this->assertPlanActive();
         $member = $this->ownedRosterMember($memberId);
         $pending = $this->plan->laneRequests()
             ->where('roster_member_id', $member->id)
@@ -569,6 +604,7 @@ class ContinuousCoverageShow extends Component
 
     public function declineLaneRequest(int $requestId, ContinuousCoverageLaneRequestService $requests): void
     {
+        $this->assertPlanActive();
         $request = $this->ownedLaneRequest($requestId);
         $requests->decline($request, auth()->user());
         session()->flash('status', 'Lane request declined. The caregiver was not assigned to it.');
@@ -576,6 +612,7 @@ class ContinuousCoverageShow extends Component
 
     public function pauseMember(int $memberId, ContinuousCoverageRosterService $roster): void
     {
+        $this->assertPlanActive();
         $member = $this->ownedRosterMember($memberId);
         $roster->pause($member, auth()->user());
         session()->flash('status', 'This care-team member is paused. Existing confirmed shifts remain visible.');
@@ -583,6 +620,7 @@ class ContinuousCoverageShow extends Component
 
     public function resumeMember(int $memberId, ContinuousCoverageRosterService $roster): void
     {
+        $this->assertPlanActive();
         $member = $this->ownedRosterMember($memberId);
         $roster->resume($member, auth()->user());
         session()->flash('status', 'This care-team member can receive eligible future offers again.');
@@ -590,6 +628,7 @@ class ContinuousCoverageShow extends Component
 
     public function removeMember(int $memberId, ContinuousCoverageRosterService $roster): void
     {
+        $this->assertPlanActive();
         $member = $this->ownedRosterMember($memberId);
         $roster->remove($member, auth()->user());
         session()->flash('status', 'This caregiver was removed from future care-team offers. Existing history was preserved.');
@@ -597,6 +636,7 @@ class ContinuousCoverageShow extends Component
 
     public function confirmReplacement(int $caseId, ContinuousCoverageReplacementService $replacements): void
     {
+        $this->assertPlanActive();
         $case = ContinuousCoverageReplacementCase::query()
             ->whereHas('shift', fn ($query) => $query->where('continuous_coverage_plan_id', $this->plan->id))
             ->findOrFail($caseId);
@@ -606,6 +646,7 @@ class ContinuousCoverageShow extends Component
 
     public function declineReplacement(int $caseId, ContinuousCoverageReplacementService $replacements): void
     {
+        $this->assertPlanActive();
         $case = ContinuousCoverageReplacementCase::query()
             ->whereHas('shift', fn ($query) => $query->where('continuous_coverage_plan_id', $this->plan->id))
             ->findOrFail($caseId);
@@ -615,6 +656,7 @@ class ContinuousCoverageShow extends Component
 
     public function retryReplacement(int $caseId, ContinuousCoverageReplacementService $replacements): void
     {
+        $this->assertPlanActive();
         $case = ContinuousCoverageReplacementCase::query()
             ->whereHas('shift', fn ($query) => $query->where('continuous_coverage_plan_id', $this->plan->id))
             ->findOrFail($caseId);
@@ -628,7 +670,12 @@ class ContinuousCoverageShow extends Component
         ContinuousCoverageScheduleService $schedule,
         ContinuousCoverageRosterService $rosterService,
         ContinuousCoveragePricingService $pricing,
+        ContinuousCoveragePlanLifecycleService $lifecycle,
     ) {
+        if ($this->plan->status === ContinuousCoveragePlan::STATUS_ENDED && in_array($this->tab, ['calendar', 'team'], true)) {
+            $this->tab = 'overview';
+        }
+
         $weekStartLocal = Carbon::parse($this->week, $this->plan->timezone)->startOfWeek();
         $weekEndLocal = $weekStartLocal->copy()->addWeek();
         $from = $weekStartLocal->copy()->setTimezone(config('app.timezone'));
@@ -839,6 +886,7 @@ class ContinuousCoverageShow extends Component
         }
 
         $selectedDay = $days->first(fn (array $item) => $item['date']->toDateString() === $this->day) ?: $days->first();
+        $deletionBlocker = $lifecycle->deletionBlocker($this->plan);
 
         return view('livewire.family.continuous-coverage-show', compact(
             'days', 'summary', 'nextShift', 'attention', 'roster', 'applicants', 'activeRoster',
@@ -846,13 +894,22 @@ class ContinuousCoverageShow extends Component
             'selectedCaregiver', 'rosterByCaregiver', 'history', 'billingShifts', 'netBilledCents',
             'upcomingEstimate', 'weekStartLocal', 'weekEndLocal', 'selectedShiftItem',
             'selectedShiftEvents', 'selectedReleasedBookings', 'selectedDay', 'pendingLaneRequests',
-            'pendingLaneRequestsByTemplate'
+            'pendingLaneRequestsByTemplate', 'deletionBlocker'
         ));
     }
 
     private function ownedTemplate(int $id): ContinuousCoverageShiftTemplate
     {
         return $this->plan->templates()->findOrFail($id);
+    }
+
+    private function assertPlanActive(): void
+    {
+        if ($this->plan->status !== ContinuousCoveragePlan::STATUS_ACTIVE) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'planLifecycle' => 'This coverage plan has ended and can no longer be changed.',
+            ]);
+        }
     }
 
     private function ownedRosterMember(int $id): ContinuousCoverageRosterMember
