@@ -72,6 +72,11 @@ class ContinuousCoverageRosterMember extends Model
         return $this->hasMany(ContinuousCoverageShiftOffer::class, 'roster_member_id');
     }
 
+    public function laneRequests(): HasMany
+    {
+        return $this->hasMany(ContinuousCoverageLaneRequest::class, 'roster_member_id');
+    }
+
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE

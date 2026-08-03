@@ -40,7 +40,12 @@
     <nav class="overflow-x-auto rounded-2xl border border-[#DED6CA] bg-white p-1" aria-label="Coverage plan sections">
         <div class="flex min-w-max gap-1">
             @foreach(['overview'=>'Overview','calendar'=>'Calendar','team'=>'Care team','history'=>'History','billing'=>'Billing','settings'=>'Plan settings'] as $key => $label)
-                <button type="button" wire:click="setTab('{{ $key }}')" class="min-h-11 rounded-xl px-4 text-sm font-semibold transition {{ $tab === $key ? 'bg-[#0F3D3E] text-white' : 'text-[#526474] hover:bg-[#F7F2EA]' }}" @if($tab === $key) aria-current="page" @endif>{{ $label }}</button>
+                <button type="button" wire:click="setTab('{{ $key }}')" class="min-h-11 rounded-xl px-4 text-sm font-semibold transition {{ $tab === $key ? 'bg-[#0F3D3E] text-white' : 'text-[#526474] hover:bg-[#F7F2EA]' }}" @if($tab === $key) aria-current="page" @endif>
+                    {{ $label }}
+                    @if($key === 'team' && ($applicants->count() + $pendingLaneRequests->count()) > 0)
+                        <span class="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-900">{{ $applicants->count() + $pendingLaneRequests->count() }}</span>
+                    @endif
+                </button>
             @endforeach
         </div>
     </nav>
@@ -156,6 +161,46 @@
     @elseif ($tab === 'team')
         <section class="grid gap-5">
             <div class="space-y-5">
+                @if($pendingLaneRequests->isNotEmpty())
+                    <section id="coverage-lane-requests" class="scroll-mt-24 rounded-3xl border border-sky-200 bg-sky-50 p-5" aria-labelledby="coverage-lane-requests-title">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wide text-sky-800">Caregiver requests</p>
+                                <h2 id="coverage-lane-requests-title" class="mt-1 font-display text-2xl font-semibold">Recurring lanes awaiting your approval</h2>
+                                <p class="mt-1 text-sm text-[#526474]">These caregivers are already on your approved care team and volunteered for these lanes. Nothing is assigned until you approve it.</p>
+                            </div>
+                            <span class="w-fit rounded-full bg-sky-900 px-3 py-1 text-sm font-semibold text-white">{{ $pendingLaneRequests->count() }}</span>
+                        </div>
+                        <div class="mt-4 space-y-4">
+                            @foreach($pendingLaneRequests->groupBy('roster_member_id') as $memberId => $memberRequests)
+                                @php $requestingCaregiver = $memberRequests->first()->caregiver; @endphp
+                                <article class="rounded-2xl border border-sky-200 bg-white p-4" wire:key="coverage-lane-request-member-{{ $memberId }}">
+                                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                        <div>
+                                            <h3 class="font-display text-xl font-semibold">{{ $requestingCaregiver?->name }}</h3>
+                                            <p class="mt-1 text-sm text-[#607080]">Requested {{ $memberRequests->count() }} recurring lane{{ $memberRequests->count() === 1 ? '' : 's' }}. Approval confirms both the caregiver’s request and your family’s decision.</p>
+                                        </div>
+                                        @if($memberRequests->count() > 1)
+                                            <button type="button" wire:click="approveLaneRequestsForMember({{ $memberId }})" wire:confirm="Approve every still-available lane requested by {{ $requestingCaregiver?->name }}?" wire:loading.attr="disabled" class="min-h-11 shrink-0 rounded-xl bg-sky-900 px-4 text-sm font-semibold text-white disabled:opacity-60">Approve all available</button>
+                                        @endif
+                                    </div>
+                                    <div class="mt-4 grid gap-3 md:grid-cols-2">
+                                        @foreach($memberRequests as $laneRequest)
+                                            <div class="rounded-xl border border-[#DED6CA] bg-[#FBF8F3] p-3" wire:key="coverage-lane-request-{{ $laneRequest->id }}">
+                                                <p class="font-semibold text-[#17313F]">{{ $dayNames[(int) $laneRequest->template->day_of_week] }} · {{ \Illuminate\Support\Carbon::parse($laneRequest->template->starts_at)->format('g:i A') }}–{{ \Illuminate\Support\Carbon::parse($laneRequest->template->ends_at)->format('g:i A') }}</p>
+                                                <p class="mt-1 text-sm text-[#607080]">{{ number_format($laneRequest->template->duration_minutes / 60, 1) }} hours weekly · requested {{ $laneRequest->requested_at->diffForHumans() }}</p>
+                                                <div class="mt-3 grid grid-cols-2 gap-2">
+                                                    <button type="button" wire:click="approveLaneRequest({{ $laneRequest->id }})" wire:loading.attr="disabled" class="min-h-11 rounded-xl bg-[#0F3D3E] px-3 text-sm font-semibold text-white disabled:opacity-60">Approve lane</button>
+                                                    <button type="button" wire:click="declineLaneRequest({{ $laneRequest->id }})" wire:confirm="Decline this recurring lane request? The caregiver will not be assigned." wire:loading.attr="disabled" class="min-h-11 rounded-xl border border-rose-200 px-3 text-sm font-semibold text-rose-700 disabled:opacity-60">Decline</button>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </article>
+                            @endforeach
+                        </div>
+                    </section>
+                @endif
                 @if($applicants->isNotEmpty())
                     <section class="rounded-3xl border border-violet-200 bg-violet-50 p-5" aria-labelledby="coverage-applicants-title">
                         <div class="flex items-start justify-between gap-3">
@@ -289,12 +334,15 @@
                                 </summary>
                                 <div class="grid gap-3 border-t border-[#E4DDD3] p-3 md:grid-cols-2">
                                     @foreach($dayTemplates as $template)
-                                        @php $eligibleMembers = $eligibleRosterByTemplate->get($template->id, collect()); @endphp
+                                        @php $eligibleMembers = $eligibleRosterByTemplate->get($template->id, collect()); $laneRequests = $pendingLaneRequestsByTemplate->get($template->id, collect()); @endphp
                                         <article class="rounded-2xl border border-[#E4DDD3] bg-white p-4" wire:key="coverage-lane-{{ $template->id }}">
                                             <p class="text-lg font-semibold">{{ \Illuminate\Support\Carbon::parse($template->starts_at)->format('g:i A') }} – {{ \Illuminate\Support\Carbon::parse($template->ends_at)->format('g:i A') }}</p>
                                             <p class="mt-1 text-sm text-[#607080]">{{ number_format($template->duration_minutes / 60, 1) }} hours · {{ ucfirst($template->status) }}</p>
                                             @if($template->rosterMember)
                                                 <p class="mt-2 font-semibold">{{ $template->rosterMember->caregiver?->name }}</p>
+                                            @endif
+                                            @if($laneRequests->isNotEmpty())
+                                                <p class="mt-2 rounded-xl bg-sky-50 p-2 text-sm font-semibold text-sky-900">{{ $laneRequests->pluck('caregiver.name')->filter()->implode(', ') }} requested this lane.</p>
                                             @endif
                                             @if(in_array($template->status, ['uncovered','declined','expired']))
                                                 <div class="mt-3 space-y-2">

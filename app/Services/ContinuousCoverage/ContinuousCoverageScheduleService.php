@@ -2,6 +2,7 @@
 
 namespace App\Services\ContinuousCoverage;
 
+use App\Models\ContinuousCoverageLaneRequest;
 use App\Models\ContinuousCoveragePlan;
 use App\Models\ContinuousCoverageShift;
 use App\Models\ContinuousCoverageShiftTemplate;
@@ -230,6 +231,7 @@ class ContinuousCoverageScheduleService
             'weekly_schedule' => $plan->weekly_schedule,
         ];
 
+        $unavailableRequestIds = [];
         $updated = DB::transaction(function () use (
             $plan,
             $family,
@@ -239,6 +241,7 @@ class ContinuousCoverageScheduleService
             $data,
             $nextVersion,
             $oldSchedule,
+            &$unavailableRequestIds,
         ): ContinuousCoveragePlan {
             $lockedPlan = ContinuousCoveragePlan::query()->lockForUpdate()->findOrFail($plan->id);
             if ($lockedPlan->shifts()
@@ -247,6 +250,24 @@ class ContinuousCoverageScheduleService
                 ->exists()) {
                 throw ValidationException::withMessages([
                     'scheduleEffectiveOn' => 'A visit is already prepared on or after this date. Change or cancel that visit through its existing visit workflow first.',
+                ]);
+            }
+
+            $affectedTemplateIds = $lockedPlan->templates()
+                ->where('schedule_version', '<', $nextVersion)
+                ->where(fn ($query) => $query->whereNull('effective_until')->orWhere('effective_until', '>=', $effective->toDateString()))
+                ->pluck('id');
+            $unavailableRequestIds = ContinuousCoverageLaneRequest::query()
+                ->whereIn('shift_template_id', $affectedTemplateIds)
+                ->where('status', ContinuousCoverageLaneRequest::STATUS_PENDING)
+                ->pluck('id')
+                ->all();
+            if ($unavailableRequestIds !== []) {
+                ContinuousCoverageLaneRequest::query()->whereKey($unavailableRequestIds)->update([
+                    'status' => ContinuousCoverageLaneRequest::STATUS_UNAVAILABLE,
+                    'responded_at' => now(),
+                    'responded_by_user_id' => $family->id,
+                    'updated_at' => now(),
                 ]);
             }
 
@@ -311,6 +332,8 @@ class ContinuousCoverageScheduleService
 
         $through = now($updated->timezone)->addWeeks((int) config('marketplace.continuous_coverage.generation_weeks', 6));
         $this->generate($updated, $through);
+        ContinuousCoverageLaneRequest::query()->whereIn('id', $unavailableRequestIds)->get()
+            ->each(fn (ContinuousCoverageLaneRequest $request) => $this->notifications->laneRequestUnavailable($request));
         $this->notifications->scheduleChanged($updated, $effective->toDateString());
 
         return $updated->fresh(['templates']);

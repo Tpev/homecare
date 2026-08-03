@@ -4,6 +4,7 @@ namespace App\Livewire\Caregiver;
 
 use App\Models\CareBooking;
 use App\Models\CareBookingPayment;
+use App\Models\ContinuousCoverageLaneRequest;
 use App\Models\ContinuousCoveragePlan;
 use App\Models\ContinuousCoverageRosterMember;
 use App\Models\ContinuousCoverageShift;
@@ -11,6 +12,7 @@ use App\Models\ContinuousCoverageShiftOffer;
 use App\Models\ContinuousCoverageShiftTemplate;
 use App\Services\ContinuousCoverage\ContinuousCoverageAccess;
 use App\Services\ContinuousCoverage\ContinuousCoverageHandoffService;
+use App\Services\ContinuousCoverage\ContinuousCoverageLaneRequestService;
 use App\Services\ContinuousCoverage\ContinuousCoveragePricingService;
 use App\Services\ContinuousCoverage\ContinuousCoverageReplacementService;
 use App\Services\ContinuousCoverage\ContinuousCoverageRosterService;
@@ -30,6 +32,8 @@ class ContinuousCoverageIndex extends Component
     public array $releaseReasons = [];
 
     public array $handoffNotes = [];
+
+    public array $laneRequestSelections = [];
 
     #[Url]
     public string $historyStatus = '';
@@ -113,6 +117,32 @@ class ContinuousCoverageIndex extends Component
         session()->flash('status', 'Recurring coverage declined. The family can offer this lane to another approved caregiver.');
     }
 
+    public function requestOpenLanes(int $planId, ContinuousCoverageLaneRequestService $requests): void
+    {
+        $selected = array_values((array) ($this->laneRequestSelections[$planId] ?? []));
+        $plan = ContinuousCoveragePlan::query()
+            ->where('status', ContinuousCoveragePlan::STATUS_ACTIVE)
+            ->whereHas('rosterMembers', fn ($query) => $query
+                ->where('caregiver_user_id', auth()->id())
+                ->where('status', ContinuousCoverageRosterMember::STATUS_ACTIVE))
+            ->findOrFail($planId);
+        $created = $requests->request($plan, auth()->user(), $selected);
+        unset($this->laneRequestSelections[$planId]);
+        session()->flash('status', $created->count() === 1
+            ? 'Lane requested. The family will review it before anything is added to your schedule.'
+            : $created->count().' lanes requested. The family will review them before anything is added to your schedule.');
+    }
+
+    public function withdrawLaneRequest(int $requestId, ContinuousCoverageLaneRequestService $requests): void
+    {
+        $request = ContinuousCoverageLaneRequest::query()
+            ->where('caregiver_user_id', auth()->id())
+            ->where('status', ContinuousCoverageLaneRequest::STATUS_PENDING)
+            ->findOrFail($requestId);
+        $requests->withdraw($request, auth()->user());
+        session()->flash('status', 'Lane request withdrawn. No schedule assignment was changed.');
+    }
+
     public function acceptReplacement(int $offerId, ContinuousCoverageReplacementService $replacements): void
     {
         $offer = $this->ownedOffer($offerId);
@@ -161,6 +191,8 @@ class ContinuousCoverageIndex extends Component
     public function render(
         ContinuousCoverageAccess $access,
         ContinuousCoveragePricingService $pricing,
+        ContinuousCoverageLaneRequestService $laneRequestService,
+        ContinuousCoverageRosterService $rosterService,
     ) {
         $caregiverId = (int) auth()->id();
         $caregiver = auth()->user()->loadMissing('caregiverProfile');
@@ -177,10 +209,50 @@ class ContinuousCoverageIndex extends Component
             ->latest()
             ->get();
         $memberships = ContinuousCoverageRosterMember::query()
-            ->with('plan.family:id,name')
+            ->with(['plan.family:id,name', 'caregiver.caregiverProfile.availabilities'])
             ->where('caregiver_user_id', $caregiverId)
             ->whereIn('status', [ContinuousCoverageRosterMember::STATUS_ACTIVE, ContinuousCoverageRosterMember::STATUS_PAUSED])
             ->latest()
+            ->get();
+        $membershipsByPlan = $memberships->where('status', ContinuousCoverageRosterMember::STATUS_ACTIVE)
+            ->keyBy('continuous_coverage_plan_id');
+        $requestableLanes = ContinuousCoverageShiftTemplate::query()
+            ->with([
+                'plan.family:id,name',
+                'laneRequests' => fn ($query) => $query->where('caregiver_user_id', $caregiverId),
+            ])
+            ->whereHas('plan', fn ($query) => $query->where('status', ContinuousCoveragePlan::STATUS_ACTIVE))
+            ->whereIn('continuous_coverage_plan_id', $membershipsByPlan->keys())
+            ->whereIn('status', [
+                ContinuousCoverageShiftTemplate::STATUS_UNCOVERED,
+                ContinuousCoverageShiftTemplate::STATUS_DECLINED,
+                ContinuousCoverageShiftTemplate::STATUS_EXPIRED,
+            ])
+            ->where(fn ($query) => $query->whereNull('effective_until')->orWhere('effective_until', '>=', now()->toDateString()))
+            ->orderBy('day_of_week')
+            ->orderBy('starts_at')
+            ->get()
+            ->filter(function (ContinuousCoverageShiftTemplate $template) use ($membershipsByPlan, $rosterService): bool {
+                $alreadyPending = $template->laneRequests->contains(
+                    fn (ContinuousCoverageLaneRequest $request): bool => $request->status === ContinuousCoverageLaneRequest::STATUS_PENDING,
+                );
+
+                return ! $alreadyPending && $rosterService->matchesTemplateEligibility(
+                    $membershipsByPlan->get($template->continuous_coverage_plan_id),
+                    $template,
+                );
+            })
+            ->values();
+        $requestableLaneAvailability = $requestableLanes->mapWithKeys(function (ContinuousCoverageShiftTemplate $template) use ($membershipsByPlan, $laneRequestService): array {
+            $member = $membershipsByPlan->get($template->continuous_coverage_plan_id);
+
+            return [$template->id => $laneRequestService->profileAvailabilityMatchesTemplate($member, $template)];
+        });
+        $pendingLaneRequests = ContinuousCoverageLaneRequest::query()
+            ->with(['plan.family:id,name', 'template'])
+            ->where('caregiver_user_id', $caregiverId)
+            ->where('status', ContinuousCoverageLaneRequest::STATUS_PENDING)
+            ->latest('requested_at')
             ->get();
         $opportunities = ContinuousCoveragePlan::query()
             ->with('family:id,name')
@@ -326,10 +398,14 @@ class ContinuousCoverageIndex extends Component
         $offerEarningEstimates = $offers->mapWithKeys(fn (ContinuousCoverageShiftOffer $offer): array => [
             $offer->id => $pricing->caregiverEarningsLabel($offer->shift->plan, $caregiver, $offer->shift->scheduled_minutes),
         ]);
+        $requestableLaneEarningEstimates = $requestableLanes->mapWithKeys(fn (ContinuousCoverageShiftTemplate $lane): array => [
+            $lane->id => $pricing->caregiverEarningsLabel($lane->plan, $caregiver, $lane->duration_minutes),
+        ]);
 
         return view('livewire.caregiver.continuous-coverage-index', compact(
             'invitations', 'applications', 'memberships', 'opportunities', 'lanes', 'offers', 'upcoming', 'history',
-            'earningsCents', 'historyBookings', 'planEarningEstimates', 'laneEarningEstimates', 'offerEarningEstimates'
+            'earningsCents', 'historyBookings', 'planEarningEstimates', 'laneEarningEstimates', 'offerEarningEstimates',
+            'requestableLanes', 'requestableLaneAvailability', 'pendingLaneRequests', 'requestableLaneEarningEstimates'
         ));
     }
 

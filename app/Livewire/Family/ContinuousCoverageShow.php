@@ -4,12 +4,14 @@ namespace App\Livewire\Family;
 
 use App\Models\CareBooking;
 use App\Models\CaregiverProfile;
+use App\Models\ContinuousCoverageLaneRequest;
 use App\Models\ContinuousCoveragePlan;
 use App\Models\ContinuousCoverageReplacementCase;
 use App\Models\ContinuousCoverageRosterMember;
 use App\Models\ContinuousCoverageShift;
 use App\Models\ContinuousCoverageShiftTemplate;
 use App\Models\FamilyCaregiverFavorite;
+use App\Services\ContinuousCoverage\ContinuousCoverageLaneRequestService;
 use App\Services\ContinuousCoverage\ContinuousCoveragePricingService;
 use App\Services\ContinuousCoverage\ContinuousCoverageReplacementService;
 use App\Services\ContinuousCoverage\ContinuousCoverageRosterService;
@@ -539,6 +541,39 @@ class ContinuousCoverageShow extends Component
         session()->flash('status', 'Recurring coverage offered to '.$member->caregiver()->value('name').'.');
     }
 
+    public function approveLaneRequest(int $requestId, ContinuousCoverageLaneRequestService $requests): void
+    {
+        $request = $this->ownedLaneRequest($requestId);
+        $approved = $requests->approve($request, auth()->user());
+        session()->flash('status', $approved
+            ? 'Recurring lane approved. Future visits are now confirmed with this caregiver.'
+            : 'That lane was no longer available, so no assignment was changed.');
+    }
+
+    public function approveLaneRequestsForMember(int $memberId, ContinuousCoverageLaneRequestService $requests): void
+    {
+        $member = $this->ownedRosterMember($memberId);
+        $pending = $this->plan->laneRequests()
+            ->where('roster_member_id', $member->id)
+            ->where('status', ContinuousCoverageLaneRequest::STATUS_PENDING)
+            ->orderBy('requested_at')
+            ->get();
+        $approved = 0;
+        foreach ($pending as $request) {
+            $approved += $requests->approve($request, auth()->user()) ? 1 : 0;
+        }
+        session()->flash('status', $approved > 0
+            ? $approved.' recurring lane'.($approved === 1 ? ' was' : 's were').' approved and added to the confirmed schedule.'
+            : 'None of those requested lanes were still available. No assignment was changed.');
+    }
+
+    public function declineLaneRequest(int $requestId, ContinuousCoverageLaneRequestService $requests): void
+    {
+        $request = $this->ownedLaneRequest($requestId);
+        $requests->decline($request, auth()->user());
+        session()->flash('status', 'Lane request declined. The caregiver was not assigned to it.');
+    }
+
     public function pauseMember(int $memberId, ContinuousCoverageRosterService $roster): void
     {
         $member = $this->ownedRosterMember($memberId);
@@ -661,6 +696,12 @@ class ContinuousCoverageShow extends Component
             ->orderBy('day_of_week')
             ->orderBy('starts_at')
             ->get();
+        $pendingLaneRequests = $this->plan->laneRequests()
+            ->with(['caregiver:id,name', 'template'])
+            ->where('status', ContinuousCoverageLaneRequest::STATUS_PENDING)
+            ->oldest('requested_at')
+            ->get();
+        $pendingLaneRequestsByTemplate = $pendingLaneRequests->groupBy('shift_template_id');
         $eligibleRosterByTemplate = $templates->mapWithKeys(fn (ContinuousCoverageShiftTemplate $template): array => [
             $template->id => $activeRoster
                 ->filter(fn (ContinuousCoverageRosterMember $member): bool => $rosterService->matchesTemplateEligibility($member, $template))
@@ -804,7 +845,8 @@ class ContinuousCoverageShow extends Component
             'templates', 'eligibleRosterByTemplate', 'searchResults', 'caregiverInitialSections',
             'selectedCaregiver', 'rosterByCaregiver', 'history', 'billingShifts', 'netBilledCents',
             'upcomingEstimate', 'weekStartLocal', 'weekEndLocal', 'selectedShiftItem',
-            'selectedShiftEvents', 'selectedReleasedBookings', 'selectedDay'
+            'selectedShiftEvents', 'selectedReleasedBookings', 'selectedDay', 'pendingLaneRequests',
+            'pendingLaneRequestsByTemplate'
         ));
     }
 
@@ -816,6 +858,13 @@ class ContinuousCoverageShow extends Component
     private function ownedRosterMember(int $id): ContinuousCoverageRosterMember
     {
         return $this->plan->rosterMembers()->findOrFail($id);
+    }
+
+    private function ownedLaneRequest(int $id): ContinuousCoverageLaneRequest
+    {
+        return $this->plan->laneRequests()
+            ->where('status', ContinuousCoverageLaneRequest::STATUS_PENDING)
+            ->findOrFail($id);
     }
 
     private function syncMemberPreferences(ContinuousCoverageRosterMember $member): void

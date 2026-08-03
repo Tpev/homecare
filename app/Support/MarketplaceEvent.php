@@ -144,6 +144,18 @@ class MarketplaceEvent
 
     public const CONTINUOUS_COVERAGE_LANE_DECLINED = 'continuous_coverage_lane_declined';
 
+    public const CONTINUOUS_COVERAGE_LANE_REQUESTED = 'continuous_coverage_lane_requested';
+
+    public const CONTINUOUS_COVERAGE_LANE_REQUEST_APPROVED = 'continuous_coverage_lane_request_approved';
+
+    public const CONTINUOUS_COVERAGE_LANE_REQUEST_DECLINED = 'continuous_coverage_lane_request_declined';
+
+    public const CONTINUOUS_COVERAGE_LANE_REQUEST_NOT_SELECTED = 'continuous_coverage_lane_request_not_selected';
+
+    public const CONTINUOUS_COVERAGE_LANE_REQUEST_UNAVAILABLE = 'continuous_coverage_lane_request_unavailable';
+
+    public const CONTINUOUS_COVERAGE_LANE_REQUEST_WITHDRAWN = 'continuous_coverage_lane_request_withdrawn';
+
     public const CONTINUOUS_COVERAGE_SCHEDULE_CHANGED = 'continuous_coverage_schedule_changed';
 
     public const CONTINUOUS_COVERAGE_SHIFT_CONFIRMED = 'continuous_coverage_shift_confirmed';
@@ -244,6 +256,12 @@ class MarketplaceEvent
             self::CONTINUOUS_COVERAGE_LANE_OFFERED,
             self::CONTINUOUS_COVERAGE_LANE_ACCEPTED,
             self::CONTINUOUS_COVERAGE_LANE_DECLINED,
+            self::CONTINUOUS_COVERAGE_LANE_REQUESTED,
+            self::CONTINUOUS_COVERAGE_LANE_REQUEST_APPROVED,
+            self::CONTINUOUS_COVERAGE_LANE_REQUEST_DECLINED,
+            self::CONTINUOUS_COVERAGE_LANE_REQUEST_NOT_SELECTED,
+            self::CONTINUOUS_COVERAGE_LANE_REQUEST_UNAVAILABLE,
+            self::CONTINUOUS_COVERAGE_LANE_REQUEST_WITHDRAWN,
             self::CONTINUOUS_COVERAGE_SCHEDULE_CHANGED,
             self::CONTINUOUS_COVERAGE_SHIFT_CONFIRMED,
             self::CONTINUOUS_COVERAGE_SHIFT_REMINDER,

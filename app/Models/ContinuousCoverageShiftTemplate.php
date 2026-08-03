@@ -62,4 +62,9 @@ class ContinuousCoverageShiftTemplate extends Model
     {
         return $this->hasMany(ContinuousCoverageShift::class, 'shift_template_id');
     }
+
+    public function laneRequests(): HasMany
+    {
+        return $this->hasMany(ContinuousCoverageLaneRequest::class, 'shift_template_id');
+    }
 }

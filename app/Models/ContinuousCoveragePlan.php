@@ -78,6 +78,11 @@ class ContinuousCoveragePlan extends Model
         return $this->hasMany(ContinuousCoverageRosterMember::class);
     }
 
+    public function laneRequests(): HasMany
+    {
+        return $this->hasMany(ContinuousCoverageLaneRequest::class);
+    }
+
     public function events(): HasMany
     {
         return $this->hasMany(ContinuousCoverageEvent::class)->latest('happened_at');

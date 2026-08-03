@@ -2,6 +2,7 @@
 
 namespace App\Services\ContinuousCoverage;
 
+use App\Models\ContinuousCoverageLaneRequest;
 use App\Models\ContinuousCoveragePlan;
 use App\Models\ContinuousCoverageRosterMember;
 use App\Models\ContinuousCoverageShift;
@@ -363,7 +364,9 @@ class ContinuousCoverageRosterService
     public function acceptLane(ContinuousCoverageShiftTemplate $template, User $caregiver): ContinuousCoverageShiftTemplate
     {
         $this->assertEnabledFor($caregiver);
-        $accepted = DB::transaction(function () use ($template, $caregiver): ContinuousCoverageShiftTemplate {
+        $approvedRequestId = null;
+        $notSelectedRequestIds = [];
+        $accepted = DB::transaction(function () use ($template, $caregiver, &$approvedRequestId, &$notSelectedRequestIds): ContinuousCoverageShiftTemplate {
             $locked = ContinuousCoverageShiftTemplate::query()->lockForUpdate()->with('rosterMember')->findOrFail($template->id);
             if ($locked->status !== ContinuousCoverageShiftTemplate::STATUS_OFFERED
                 || ($locked->offer_expires_at && $locked->offer_expires_at->isPast())
@@ -379,6 +382,34 @@ class ContinuousCoverageRosterService
                 'offer_expires_at' => null,
                 'declined_at' => null,
             ])->save();
+
+            $respondedAt = now();
+            $approvedRequestId = ContinuousCoverageLaneRequest::query()
+                ->where('shift_template_id', $locked->id)
+                ->where('caregiver_user_id', $caregiver->id)
+                ->where('status', ContinuousCoverageLaneRequest::STATUS_PENDING)
+                ->value('id');
+            if ($approvedRequestId) {
+                ContinuousCoverageLaneRequest::query()->whereKey($approvedRequestId)->update([
+                    'status' => ContinuousCoverageLaneRequest::STATUS_APPROVED,
+                    'responded_at' => $respondedAt,
+                    'responded_by_user_id' => $locked->plan->family_user_id,
+                    'updated_at' => $respondedAt,
+                ]);
+            }
+            $notSelectedRequestIds = ContinuousCoverageLaneRequest::query()
+                ->where('shift_template_id', $locked->id)
+                ->where('status', ContinuousCoverageLaneRequest::STATUS_PENDING)
+                ->pluck('id')
+                ->all();
+            if ($notSelectedRequestIds !== []) {
+                ContinuousCoverageLaneRequest::query()->whereKey($notSelectedRequestIds)->update([
+                    'status' => ContinuousCoverageLaneRequest::STATUS_NOT_SELECTED,
+                    'responded_at' => $respondedAt,
+                    'responded_by_user_id' => $locked->plan->family_user_id,
+                    'updated_at' => $respondedAt,
+                ]);
+            }
             $this->schedule->activateTemplate($locked);
             $this->events->record($locked->plan, 'recurring_lane_accepted', $caregiver, payload: ['shift_template_id' => $locked->id]);
 
@@ -386,6 +417,11 @@ class ContinuousCoverageRosterService
         });
 
         $this->notifications->laneResponded($accepted, true);
+        if ($approvedRequestId) {
+            $this->notifications->laneRequestApproved(ContinuousCoverageLaneRequest::query()->findOrFail($approvedRequestId));
+        }
+        ContinuousCoverageLaneRequest::query()->whereIn('id', $notSelectedRequestIds)->get()
+            ->each(fn (ContinuousCoverageLaneRequest $request) => $this->notifications->laneRequestNotSelected($request));
 
         return $accepted;
     }
@@ -425,7 +461,7 @@ class ContinuousCoverageRosterService
     public function pause(ContinuousCoverageRosterMember $member, User $family): void
     {
         $this->assertEnabledFor($family);
-        DB::transaction(function () use ($member, $family): void {
+        $unavailableRequestIds = DB::transaction(function () use ($member, $family): array {
             $locked = ContinuousCoverageRosterMember::query()
                 ->lockForUpdate()
                 ->with('plan')
@@ -441,7 +477,10 @@ class ContinuousCoverageRosterService
             $this->events->record($locked->plan, 'caregiver_paused', $family, payload: [
                 'roster_member_id' => $locked->id,
             ]);
+
+            return $this->markPendingRequestsUnavailable($locked->id, $family->id);
         });
+        $this->notifyUnavailableRequests($unavailableRequestIds);
     }
 
     public function resume(ContinuousCoverageRosterMember $member, User $family): void
@@ -469,7 +508,7 @@ class ContinuousCoverageRosterService
     public function remove(ContinuousCoverageRosterMember $member, User $family): void
     {
         $this->assertEnabledFor($family);
-        DB::transaction(function () use ($member, $family): void {
+        $unavailableRequestIds = DB::transaction(function () use ($member, $family): array {
             $locked = ContinuousCoverageRosterMember::query()
                 ->lockForUpdate()
                 ->with('plan')
@@ -485,7 +524,37 @@ class ContinuousCoverageRosterService
             $this->events->record($locked->plan, 'caregiver_removed', $family, payload: [
                 'roster_member_id' => $locked->id,
             ]);
+
+            return $this->markPendingRequestsUnavailable($locked->id, $family->id);
         });
+        $this->notifyUnavailableRequests($unavailableRequestIds);
+    }
+
+    /** @return list<int> */
+    private function markPendingRequestsUnavailable(int $memberId, int $responderId): array
+    {
+        $ids = ContinuousCoverageLaneRequest::query()
+            ->where('roster_member_id', $memberId)
+            ->where('status', ContinuousCoverageLaneRequest::STATUS_PENDING)
+            ->pluck('id')
+            ->all();
+        if ($ids !== []) {
+            ContinuousCoverageLaneRequest::query()->whereKey($ids)->update([
+                'status' => ContinuousCoverageLaneRequest::STATUS_UNAVAILABLE,
+                'responded_at' => now(),
+                'responded_by_user_id' => $responderId,
+                'updated_at' => now(),
+            ]);
+        }
+
+        return $ids;
+    }
+
+    /** @param list<int> $requestIds */
+    private function notifyUnavailableRequests(array $requestIds): void
+    {
+        ContinuousCoverageLaneRequest::query()->whereIn('id', $requestIds)->get()
+            ->each(fn (ContinuousCoverageLaneRequest $request) => $this->notifications->laneRequestUnavailable($request));
     }
 
     private function assertFamilyOwns(ContinuousCoveragePlan $plan, User $family): void

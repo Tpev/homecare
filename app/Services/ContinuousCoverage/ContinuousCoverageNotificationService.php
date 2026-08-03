@@ -2,6 +2,7 @@
 
 namespace App\Services\ContinuousCoverage;
 
+use App\Models\ContinuousCoverageLaneRequest;
 use App\Models\ContinuousCoveragePlan;
 use App\Models\ContinuousCoverageRosterMember;
 use App\Models\ContinuousCoverageShift;
@@ -12,6 +13,7 @@ use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Notifications\NotificationChannels;
 use App\Support\MarketplaceEvent;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class ContinuousCoverageNotificationService
 {
@@ -114,6 +116,113 @@ class ContinuousCoverageNotificationService
             $template,
             'coverage-lane-response:'.$template->id.':'.($accepted ? 'accepted' : 'declined'),
             array_merge([['label' => 'Caregiver', 'value' => $template->rosterMember->caregiver->name]], $this->templateDetails($template)),
+        );
+    }
+
+    /** @param Collection<int, ContinuousCoverageLaneRequest> $requests */
+    public function laneRequested(Collection $requests): void
+    {
+        if ($requests->isEmpty()) {
+            return;
+        }
+        $requests->loadMissing('plan.family', 'caregiver', 'template', 'rosterMember.caregiver');
+        $first = $requests->first();
+        $caregiver = $first->caregiver;
+        $details = collect([
+            ['label' => 'Caregiver', 'value' => $caregiver->name],
+            ['label' => 'Coverage plan', 'value' => $first->plan->title],
+            ['label' => 'Requested lanes', 'value' => (string) $requests->count()],
+        ])->concat($requests->take(6)->map(fn (ContinuousCoverageLaneRequest $request): array => [
+            'label' => $this->laneLabel($request->template),
+            'value' => $this->duration($request->template->duration_minutes).' each week',
+        ]))->values()->all();
+
+        $this->send(
+            $first->plan->family,
+            MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUESTED,
+            $caregiver->name.' requested recurring coverage',
+            $requests->count() === 1
+                ? 'Review the requested lane. Nothing is assigned until your family approves it.'
+                : 'Review the '.$requests->count().' requested lanes. Nothing is assigned until your family approves them.',
+            $this->familyPlanUrl($first->plan, 'team', 'coverage-lane-requests'),
+            $first,
+            'coverage-lane-requested:'.$first->batch_uuid.':family:'.$first->plan->family_user_id,
+            $details,
+        );
+    }
+
+    public function laneRequestApproved(ContinuousCoverageLaneRequest $request): void
+    {
+        $request->loadMissing('plan.family', 'caregiver', 'template');
+        $this->send(
+            $request->caregiver,
+            MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUEST_APPROVED,
+            'Your recurring coverage request was approved',
+            'The family approved this lane. Its future visits are now included in your confirmed Continuous Coverage schedule.',
+            $this->caregiverCoverageUrl('schedule'),
+            $request,
+            'coverage-lane-request-approved:'.$request->id.':'.$request->responded_at?->timestamp,
+            array_merge($this->planDetails($request->plan, approximate: true), $this->laneRequestDetails($request)),
+        );
+    }
+
+    public function laneRequestDeclined(ContinuousCoverageLaneRequest $request): void
+    {
+        $request->loadMissing('plan', 'caregiver', 'template');
+        $this->send(
+            $request->caregiver,
+            MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUEST_DECLINED,
+            'The family did not approve this recurring lane',
+            'You are not assigned to this lane. Your other care-team membership and confirmed commitments are unchanged.',
+            $this->caregiverCoverageUrl('offers'),
+            $request,
+            'coverage-lane-request-declined:'.$request->id.':'.$request->responded_at?->timestamp,
+            array_merge($this->planDetails($request->plan, approximate: true), $this->laneRequestDetails($request)),
+        );
+    }
+
+    public function laneRequestNotSelected(ContinuousCoverageLaneRequest $request): void
+    {
+        $request->loadMissing('plan', 'caregiver', 'template');
+        $this->send(
+            $request->caregiver,
+            MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUEST_NOT_SELECTED,
+            'This recurring lane was assigned to another caregiver',
+            'You are not assigned to this lane. You can review other open lanes available to your approved care team.',
+            $this->caregiverCoverageUrl('offers'),
+            $request,
+            'coverage-lane-request-not-selected:'.$request->id.':'.$request->responded_at?->timestamp,
+            array_merge($this->planDetails($request->plan, approximate: true), $this->laneRequestDetails($request)),
+        );
+    }
+
+    public function laneRequestUnavailable(ContinuousCoverageLaneRequest $request): void
+    {
+        $request->loadMissing('plan', 'caregiver', 'template');
+        $this->send(
+            $request->caregiver,
+            MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUEST_UNAVAILABLE,
+            'This recurring lane is no longer available',
+            'The request could not be confirmed, so nothing was added to your schedule. Your care-team membership and other commitments are unchanged.',
+            $this->caregiverCoverageUrl('offers'),
+            $request,
+            'coverage-lane-request-unavailable:'.$request->id.':'.$request->responded_at?->timestamp,
+            array_merge($this->planDetails($request->plan, approximate: true), $this->laneRequestDetails($request)),
+        );
+    }
+
+    public function laneRequestWithdrawn(ContinuousCoverageLaneRequest $request): void
+    {
+        $request->loadMissing('plan.family', 'caregiver', 'template');
+        $this->send(
+            $request->plan->family,
+            MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUEST_WITHDRAWN,
+            $request->caregiver->name.' withdrew a recurring lane request',
+            'The lane remains open and no schedule assignment was created.',
+            $this->familyPlanUrl($request->plan, 'team', 'coverage-lane-requests'),
+            $request,
+            'coverage-lane-request-withdrawn:'.$request->id.':'.$request->responded_at?->timestamp,
+            array_merge([['label' => 'Caregiver', 'value' => $request->caregiver->name]], $this->laneRequestDetails($request)),
         );
     }
 
@@ -371,6 +480,7 @@ class ContinuousCoverageNotificationService
     {
         return match (true) {
             $subject instanceof ContinuousCoveragePlan => $subject,
+            $subject instanceof ContinuousCoverageLaneRequest => $subject->plan,
             $subject instanceof ContinuousCoverageRosterMember => $subject->plan,
             $subject instanceof ContinuousCoverageShiftTemplate => $subject->plan,
             $subject instanceof ContinuousCoverageShift => $subject->plan,
@@ -461,6 +571,30 @@ class ContinuousCoverageNotificationService
         }
 
         return $details;
+    }
+
+    /** @return list<array{label:string,value:string}> */
+    private function laneRequestDetails(ContinuousCoverageLaneRequest $request): array
+    {
+        return [
+            ['label' => 'Recurring lane', 'value' => $this->laneLabel($request->template)],
+            ['label' => 'Expected duration', 'value' => $this->duration($request->template->duration_minutes)],
+            [
+                'label' => 'Estimated caregiver earnings',
+                'value' => $this->pricing->caregiverEarningsLabel(
+                    $request->plan,
+                    $request->caregiver,
+                    $request->template->duration_minutes,
+                ),
+            ],
+        ];
+    }
+
+    private function laneLabel(ContinuousCoverageShiftTemplate $template): string
+    {
+        $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        return ($days[$template->day_of_week] ?? 'Weekly').' · '.substr($template->starts_at, 0, 5).'–'.substr($template->ends_at, 0, 5).' '.$template->plan->timezone;
     }
 
     /** @return list<array{label:string,value:string}> */

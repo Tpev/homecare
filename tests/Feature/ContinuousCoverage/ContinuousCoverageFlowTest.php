@@ -9,6 +9,7 @@ use App\Models\CareBooking;
 use App\Models\CareBookingPayment;
 use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
+use App\Models\ContinuousCoverageLaneRequest;
 use App\Models\ContinuousCoveragePlan;
 use App\Models\ContinuousCoverageReplacementCase;
 use App\Models\ContinuousCoverageRosterMember;
@@ -22,6 +23,7 @@ use App\Models\User;
 use App\Services\ContinuousCoverage\ContinuousCoverageAccess;
 use App\Services\ContinuousCoverage\ContinuousCoverageBookingAdapter;
 use App\Services\ContinuousCoverage\ContinuousCoverageHandoffService;
+use App\Services\ContinuousCoverage\ContinuousCoverageLaneRequestService;
 use App\Services\ContinuousCoverage\ContinuousCoverageNotificationService;
 use App\Services\ContinuousCoverage\ContinuousCoverageOperationsService;
 use App\Services\ContinuousCoverage\ContinuousCoveragePricingService;
@@ -76,6 +78,7 @@ class ContinuousCoverageFlowTest extends TestCase
     {
         $migrationPath = database_path('migrations/2026_08_02_090000_create_continuous_coverage_tables.php');
         $migration = require $migrationPath;
+        Schema::dropIfExists('continuous_coverage_lane_requests');
         $migration->down();
 
         Schema::create('continuous_coverage_plans', fn (Blueprint $table) => $table->id());
@@ -108,6 +111,7 @@ class ContinuousCoverageFlowTest extends TestCase
     public function test_initial_migration_never_removes_an_interrupted_install_that_contains_data(): void
     {
         $migration = require database_path('migrations/2026_08_02_090000_create_continuous_coverage_tables.php');
+        Schema::dropIfExists('continuous_coverage_lane_requests');
         $migration->down();
         Schema::create('continuous_coverage_plans', fn (Blueprint $table) => $table->id());
         DB::table('continuous_coverage_plans')->insert(['id' => 1]);
@@ -116,6 +120,32 @@ class ContinuousCoverageFlowTest extends TestCase
         $this->expectExceptionMessage('no tables were removed');
 
         $migration->up();
+    }
+
+    public function test_lane_request_migration_is_additive_and_uses_mysql_safe_constraint_names(): void
+    {
+        $migrationPath = database_path('migrations/2026_08_03_090000_create_continuous_coverage_lane_requests_table.php');
+        $source = file_get_contents($migrationPath);
+
+        $this->assertTrue(Schema::hasTable('continuous_coverage_lane_requests'));
+        $this->assertTrue(Schema::hasColumns('continuous_coverage_lane_requests', [
+            'continuous_coverage_plan_id',
+            'shift_template_id',
+            'roster_member_id',
+            'caregiver_user_id',
+            'responded_by_user_id',
+            'batch_uuid',
+            'status',
+            'requested_at',
+            'responded_at',
+        ]));
+        preg_match_all("/->foreign\\([^,]+, '([^']+)'\\)/", (string) $source, $matches);
+        $this->assertCount(5, $matches[1]);
+        foreach ($matches[1] as $constraintName) {
+            $this->assertLessThanOrEqual(64, strlen($constraintName), $constraintName.' exceeds MySQL\'s identifier limit.');
+        }
+        $this->assertStringNotContainsString('->constrained(', (string) $source);
+        $this->assertStringNotContainsString('dropIfExists(\'continuous_coverage_plans\')', (string) $source);
     }
 
     public function test_pilot_access_does_not_enroll_or_expose_other_users(): void
@@ -1605,6 +1635,157 @@ class ContinuousCoverageFlowTest extends TestCase
         $this->assertStringContainsString('coverage-shift-'.$shift->id, $caregiverPayload);
         $this->assertStringContainsString('selectedShift='.$shift->id, $familyPayload);
         $this->assertStringContainsString('tab=calendar', $familyPayload);
+    }
+
+    public function test_active_care_team_member_can_request_multiple_open_lanes_without_being_assigned(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-03 12:00:00', 'America/New_York'));
+        $family = $this->family();
+        $caregiver = $this->caregiver();
+        $plan = $this->plan($family);
+        $roster = app(ContinuousCoverageRosterService::class);
+        $member = $roster->caregiverAccept(
+            $roster->familyApprove($plan, $family, $caregiver, ContinuousCoverageRosterMember::ROLE_PRIMARY, true),
+            $caregiver,
+        );
+        $lanes = $plan->templates()->orderBy('day_of_week')->orderBy('starts_at')->limit(2)->get();
+
+        Livewire::actingAs($caregiver)
+            ->test(CaregiverCoverageIndex::class)
+            ->set('tab', 'offers')
+            ->assertSee('Open recurring lanes')
+            ->assertSee('The family reviews your request before any future visits are assigned.')
+            ->set('laneRequestSelections.'.$plan->id, $lanes->pluck('id')->all())
+            ->call('requestOpenLanes', $plan->id)
+            ->assertHasNoErrors()
+            ->assertSee('Your recurring lane requests')
+            ->assertSee('Nothing is added to your schedule unless the family approves it.');
+
+        $this->assertSame(2, ContinuousCoverageLaneRequest::query()
+            ->where('roster_member_id', $member->id)
+            ->where('status', ContinuousCoverageLaneRequest::STATUS_PENDING)
+            ->count());
+        $this->assertSame(2, $plan->templates()->whereKey($lanes->modelKeys())->where('status', ContinuousCoverageShiftTemplate::STATUS_UNCOVERED)->count());
+        $this->assertSame(0, $plan->shifts()->whereIn('shift_template_id', $lanes->modelKeys())->whereNotNull('assigned_caregiver_user_id')->count());
+        $this->assertGreaterThan(0, $family->notificationDeliveries()->where('event_key', 'continuous_coverage_lane_requested')->count());
+    }
+
+    public function test_family_approval_of_a_lane_request_confirms_future_shifts_and_keeps_bookings_deferred(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-03 12:00:00', 'America/New_York'));
+        $family = $this->family();
+        $caregiver = $this->caregiver();
+        $plan = $this->plan($family);
+        $roster = app(ContinuousCoverageRosterService::class);
+        $member = $roster->caregiverAccept(
+            $roster->familyApprove($plan, $family, $caregiver, ContinuousCoverageRosterMember::ROLE_PRIMARY, true),
+            $caregiver,
+        );
+        $lane = $plan->templates()->orderBy('day_of_week')->orderBy('starts_at')->firstOrFail();
+        $request = app(ContinuousCoverageLaneRequestService::class)->request($plan, $caregiver, [$lane->id])->firstOrFail();
+
+        Livewire::actingAs($family)
+            ->test(ContinuousCoverageShow::class, ['coveragePlan' => $plan->id])
+            ->set('tab', 'team')
+            ->assertSee('Recurring lanes awaiting your approval')
+            ->assertSee($caregiver->name)
+            ->call('approveLaneRequest', $request->id)
+            ->assertHasNoErrors()
+            ->assertSee('Future visits are now confirmed with this caregiver.');
+
+        $this->assertSame(ContinuousCoverageLaneRequest::STATUS_APPROVED, $request->fresh()->status);
+        $this->assertSame(ContinuousCoverageShiftTemplate::STATUS_ACTIVE, $lane->fresh()->status);
+        $this->assertSame($member->id, $lane->fresh()->roster_member_id);
+        $this->assertGreaterThan(0, $lane->shifts()->where('status', ContinuousCoverageShift::STATUS_CONFIRMED)->count());
+        $this->assertSame(0, $lane->shifts()->whereNotNull('care_booking_id')->count());
+        $this->assertDatabaseCount('care_bookings', 0);
+        $this->assertGreaterThan(0, $caregiver->notificationDeliveries()->where('event_key', 'continuous_coverage_lane_request_approved')->count());
+    }
+
+    public function test_approving_one_caregiver_request_does_not_allow_a_competing_request_to_overwrite_it(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-03 12:00:00', 'America/New_York'));
+        $family = $this->family();
+        $firstCaregiver = $this->caregiver(['email' => 'first-lane@example.com']);
+        $secondCaregiver = $this->caregiver(['email' => 'second-lane@example.com']);
+        $plan = $this->plan($family);
+        $roster = app(ContinuousCoverageRosterService::class);
+        foreach ([$firstCaregiver, $secondCaregiver] as $caregiver) {
+            $roster->caregiverAccept(
+                $roster->familyApprove($plan, $family, $caregiver, ContinuousCoverageRosterMember::ROLE_PRIMARY, true),
+                $caregiver,
+            );
+        }
+        $lane = $plan->templates()->firstOrFail();
+        $requests = app(ContinuousCoverageLaneRequestService::class);
+        $firstRequest = $requests->request($plan, $firstCaregiver, [$lane->id])->firstOrFail();
+        $secondRequest = $requests->request($plan, $secondCaregiver, [$lane->id])->firstOrFail();
+
+        $this->assertTrue($requests->approve($firstRequest, $family));
+        $this->assertFalse($requests->approve($secondRequest, $family));
+
+        $this->assertSame(ContinuousCoverageLaneRequest::STATUS_APPROVED, $firstRequest->fresh()->status);
+        $this->assertSame(ContinuousCoverageLaneRequest::STATUS_NOT_SELECTED, $secondRequest->fresh()->status);
+        $this->assertSame($firstCaregiver->id, $lane->fresh()->rosterMember->caregiver_user_id);
+        $this->assertGreaterThan(0, $secondCaregiver->notificationDeliveries()->where('event_key', 'continuous_coverage_lane_request_not_selected')->count());
+    }
+
+    public function test_caregiver_can_withdraw_and_family_can_decline_lane_requests_without_schedule_changes(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-03 12:00:00', 'America/New_York'));
+        $family = $this->family();
+        $caregiver = $this->caregiver();
+        $plan = $this->plan($family);
+        $roster = app(ContinuousCoverageRosterService::class);
+        $roster->caregiverAccept(
+            $roster->familyApprove($plan, $family, $caregiver, ContinuousCoverageRosterMember::ROLE_PRIMARY, true),
+            $caregiver,
+        );
+        [$withdrawnLane, $declinedLane] = $plan->templates()->orderBy('id')->limit(2)->get()->all();
+        $service = app(ContinuousCoverageLaneRequestService::class);
+        $requests = $service->request($plan, $caregiver, [$withdrawnLane->id, $declinedLane->id]);
+
+        $service->withdraw($requests->firstWhere('shift_template_id', $withdrawnLane->id), $caregiver);
+        $service->decline($requests->firstWhere('shift_template_id', $declinedLane->id), $family);
+
+        $this->assertSame(ContinuousCoverageLaneRequest::STATUS_WITHDRAWN, $requests->firstWhere('shift_template_id', $withdrawnLane->id)->fresh()->status);
+        $this->assertSame(ContinuousCoverageLaneRequest::STATUS_DECLINED, $requests->firstWhere('shift_template_id', $declinedLane->id)->fresh()->status);
+        $this->assertSame(ContinuousCoverageShiftTemplate::STATUS_UNCOVERED, $withdrawnLane->fresh()->status);
+        $this->assertSame(ContinuousCoverageShiftTemplate::STATUS_UNCOVERED, $declinedLane->fresh()->status);
+        $this->assertSame(0, $plan->shifts()->whereNotNull('assigned_caregiver_user_id')->count());
+    }
+
+    public function test_saved_profile_availability_is_advisory_for_open_lane_requests(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-03 12:00:00', 'America/New_York'));
+        $family = $this->family();
+        $caregiver = $this->caregiver();
+        $caregiver->caregiverProfile->availabilities()->create([
+            'day_of_week' => 1,
+            'start_time' => '08:00',
+            'end_time' => '09:00',
+        ]);
+        $plan = $this->plan($family);
+        $roster = app(ContinuousCoverageRosterService::class);
+        $roster->caregiverAccept(
+            $roster->familyApprove($plan, $family, $caregiver, ContinuousCoverageRosterMember::ROLE_PRIMARY, true),
+            $caregiver,
+        );
+        $lane = $plan->templates()->where('day_of_week', 2)->firstOrFail();
+
+        Livewire::actingAs($caregiver)
+            ->test(CaregiverCoverageIndex::class)
+            ->set('tab', 'offers')
+            ->assertSee('This is outside your saved profile availability.')
+            ->set('laneRequestSelections.'.$plan->id, [$lane->id])
+            ->call('requestOpenLanes', $plan->id)
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('continuous_coverage_lane_requests', [
+            'shift_template_id' => $lane->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => ContinuousCoverageLaneRequest::STATUS_PENDING,
+        ]);
     }
 
     public function test_family_history_filters_disputed_missed_and_replaced_coverage_visits(): void
