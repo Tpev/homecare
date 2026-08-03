@@ -12,7 +12,8 @@
                 $readyForReview = (bool) ($caregiverData['ready_for_review'] ?? false);
                 $canSubmitForReview = (bool) ($caregiverData['can_submit_for_review'] ?? false);
                 $hasActiveShift = !empty($caregiverData['active_shift']);
-                $hasNextShift = !empty($caregiverData['next_shift']);
+                $nextVisit = $caregiverData['next_visit'] ?? null;
+                $hasNextVisit = !empty($nextVisit);
                 $needsResponseCount = (int) ($caregiverData['stats']['needs_response'] ?? 0);
                 $prelaunchMode = (bool) ($caregiverData['prelaunch_mode'] ?? false);
                 $prelaunchMessage = (string) ($caregiverData['prelaunch_message'] ?? 'LoLo Care is currently in caregiver pre-launch mode. Complete your setup now and we will notify you as soon as matching opens.');
@@ -37,10 +38,14 @@
                 } elseif ($needsResponseCount > 0) {
                     $nextActionTitle = 'Answer new opportunities';
                     $nextActionDescription = $needsResponseCount.' item(s) need a response in Work Inbox.';
-                } elseif ($hasNextShift && $caregiverData['next_shift']->careRequest) {
+                } elseif ($hasNextVisit) {
+                    $nextVisitBooking = $nextVisit['booking'];
+                    $nextVisitCoverage = $nextVisit['coverage_shift'];
                     $nextActionTitle = 'Prepare next visit';
                     $nextActionDescription = 'Review details before your next scheduled visit.';
-                    $nextActionHref = route('care-requests.apply', $caregiverData['next_shift']->careRequest->id);
+                    $nextActionHref = $nextVisitBooking
+                        ? ($nextVisitBooking->careRequest ? route('care-requests.apply', $nextVisitBooking->careRequest->id) : route('caregiver.shifts.index'))
+                        : route('caregiver.shifts.index').'#coverage-commitment-'.$nextVisitCoverage->id;
                     $nextActionLabel = 'Open next visit';
                 } elseif (! $profileIsActive && count($setupCards) > 0) {
                     $nextActionTitle = 'Complete profile setup';
@@ -213,25 +218,33 @@
                             </a>
                         @endif
                     </div>
-                @elseif (!empty($caregiverData['next_shift']))
+                @elseif (!empty($nextVisit))
+                    @php
+                        $dashboardNextBooking = $nextVisit['booking'];
+                        $dashboardNextCoverage = $nextVisit['coverage_shift'];
+                        $dashboardNextTitle = $dashboardNextBooking?->careRequest?->title ?? $dashboardNextCoverage?->plan?->title ?? 'Upcoming visit';
+                        $dashboardNextStart = $nextVisit['scheduled_start_at'];
+                        $dashboardNextLocation = $dashboardNextBooking
+                            ? collect([$dashboardNextBooking->careRequest?->city, $dashboardNextBooking->careRequest?->state])->filter()->implode(', ')
+                            : collect([data_get($dashboardNextCoverage?->plan?->address_snapshot, 'city'), data_get($dashboardNextCoverage?->plan?->address_snapshot, 'state')])->filter()->implode(', ');
+                        $dashboardNextHref = $dashboardNextBooking
+                            ? ($dashboardNextBooking->careRequest ? route('care-requests.apply', $dashboardNextBooking->careRequest->id) : route('caregiver.shifts.index'))
+                            : route('caregiver.shifts.index').'#coverage-commitment-'.$dashboardNextCoverage->id;
+                    @endphp
                     <div class="rounded-2xl border border-sky-200 bg-sky-50 p-4 flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <p class="text-xs uppercase tracking-[0.14em] text-sky-700 font-semibold">Next visit</p>
-                            <p class="font-semibold text-sky-900">{{ $caregiverData['next_shift']->careRequest?->title ?? 'Upcoming visit' }}</p>
+                            <p class="font-semibold text-sky-900">{{ $dashboardNextTitle }}</p>
                             <p class="text-sm text-sky-800 mt-1">
-                                {{ optional($caregiverData['next_shift']->scheduled_start_at)->format('M d, Y H:i') ?: 'Date pending' }}
-                                · {{ $caregiverData['next_shift']->careRequest?->city }}, {{ $caregiverData['next_shift']->careRequest?->state }}
+                                {{ optional($dashboardNextStart)->format('M d, Y H:i') ?: 'Date pending' }}
+                                @if($dashboardNextLocation) · {{ $dashboardNextLocation }} @endif
                             </p>
                         </div>
-                        @if ($caregiverData['next_shift']->careRequest)
-                            <a href="{{ route('care-requests.apply', $caregiverData['next_shift']->careRequest->id) }}" wire:navigate>
-                                <x-button color="blue">Open visit details</x-button>
-                            </a>
-                        @endif
+                        <a href="{{ $dashboardNextHref }}" wire:navigate><x-button color="blue">Open visit details</x-button></a>
                     </div>
                 @endif
 
-                @if (!empty($caregiverData['quick_shifts']) && $caregiverData['quick_shifts']->count() > 0)
+                @if (!empty($caregiverData['quick_visits']) && $caregiverData['quick_visits']->count() > 0)
                     <x-card>
                         <x-slot:header>
                             <div class="flex items-center justify-between">
@@ -240,35 +253,43 @@
                             </div>
                         </x-slot:header>
                         <div class="space-y-3">
-                            @foreach ($caregiverData['quick_shifts'] as $shift)
+                            @foreach ($caregiverData['quick_visits'] as $quickVisit)
                                 @php
-                                    $shiftStatus = (string) $shift->status;
-                                    $shiftCta = match ($shiftStatus) {
+                                    $quickBooking = $quickVisit['booking'];
+                                    $quickCoverage = $quickVisit['coverage_shift'];
+                                    $quickIsCoverage = $quickVisit['kind'] === 'coverage';
+                                    $quickStatus = (string) ($quickBooking?->status ?? $quickCoverage?->status ?? 'scheduled');
+                                    $quickTitle = $quickBooking?->careRequest?->title ?? $quickCoverage?->plan?->title ?? 'Care visit';
+                                    $quickLocation = $quickBooking
+                                        ? collect([$quickBooking->careRequest?->city, $quickBooking->careRequest?->state])->filter()->implode(', ')
+                                        : collect([data_get($quickCoverage?->plan?->address_snapshot, 'city'), data_get($quickCoverage?->plan?->address_snapshot, 'state')])->filter()->implode(', ');
+                                    $quickHref = $quickBooking
+                                        ? ($quickBooking->careRequest ? route('care-requests.apply', $quickBooking->careRequest->id) : route('caregiver.shifts.index'))
+                                        : route('caregiver.shifts.index').'#coverage-commitment-'.$quickCoverage->id;
+                                    $quickCta = $quickIsCoverage ? 'View commitment' : match ($quickStatus) {
                                         \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Continue visit',
                                         \App\Models\CareBooking::STATUS_PAUSED => 'Resume visit',
                                         \App\Models\CareBooking::STATUS_SCHEDULED => 'Start visit',
                                         \App\Models\CareBooking::STATUS_COMPLETED => 'View recap',
                                         default => 'Open visit',
                                     };
+                                    $quickBadge = $quickIsCoverage ? 'CONTINUOUS COVERAGE' : strtoupper($quickStatus);
+                                    $quickActive = in_array($quickStatus, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true);
                                 @endphp
                                 <div class="rounded-xl border border-slate-200 bg-white p-3">
                                     <div class="flex items-start justify-between gap-3">
                                         <div>
-                                            <p class="font-medium text-slate-900">{{ $shift->careRequest?->title ?? 'Care request' }}</p>
+                                            <p class="font-medium text-slate-900">{{ $quickTitle }}</p>
                                             <p class="text-xs text-slate-500 mt-1">
-                                                {{ optional($shift->scheduled_start_at)->format('M d, H:i') ?: 'Date pending' }}
-                                                · {{ $shift->careRequest?->city }}, {{ $shift->careRequest?->state }}
+                                                {{ optional($quickVisit['scheduled_start_at'])->format('M d, H:i') ?: 'Date pending' }}
+                                                @if($quickLocation) · {{ $quickLocation }} @endif
                                             </p>
                                         </div>
-                                        <x-badge :text="strtoupper($shiftStatus)" color="{{ in_array($shiftStatus, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true) ? 'green' : 'blue' }}" />
+                                        <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $quickIsCoverage ? 'bg-[#E8F4EE] text-[#17634F]' : ($quickActive ? 'bg-emerald-100 text-emerald-700' : 'bg-sky-100 text-sky-700') }}">{{ $quickBadge }}</span>
                                     </div>
-                                    @if ($shift->careRequest)
-                                        <div class="mt-3">
-                                            <a href="{{ route('care-requests.apply', $shift->careRequest->id) }}" wire:navigate>
-                                                <x-button color="{{ in_array($shiftStatus, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true) ? 'green' : 'blue' }}" light sm>{{ $shiftCta }}</x-button>
-                                            </a>
-                                        </div>
-                                    @endif
+                                    <div class="mt-3">
+                                        <a href="{{ $quickHref }}" wire:navigate><x-button color="{{ $quickActive ? 'green' : 'blue' }}" light sm>{{ $quickCta }}</x-button></a>
+                                    </div>
                                 </div>
                             @endforeach
                         </div>

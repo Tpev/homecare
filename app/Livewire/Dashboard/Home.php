@@ -9,6 +9,7 @@ use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
+use App\Services\Caregiver\CaregiverVisitTimelineService;
 use App\Support\CaregiverOnboardingState;
 use App\Support\CaregiverPrelaunch;
 use App\Support\CaregiverWorkInboxBuilder;
@@ -308,6 +309,10 @@ class Home extends Component
                 ->orderBy('scheduled_start_at')
                 ->limit(3)
                 ->get();
+
+            $visitTimeline = app(CaregiverVisitTimelineService::class);
+            $caregiverData['next_visit'] = $visitTimeline->nextScheduled($user);
+            $caregiverData['quick_visits'] = $visitTimeline->quickAccess($user, 3);
 
             $profile = $caregiverData['profile'];
             $identityComplete = $profile->hasIdentityVerifiedBadge();

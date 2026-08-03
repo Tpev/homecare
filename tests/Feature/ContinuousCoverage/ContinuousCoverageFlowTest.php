@@ -4,6 +4,7 @@ namespace Tests\Feature\ContinuousCoverage;
 
 use App\Livewire\Caregiver\ContinuousCoverageIndex as CaregiverCoverageIndex;
 use App\Livewire\Caregiver\ShiftsIndex as CaregiverShiftsIndex;
+use App\Livewire\Dashboard\Home as DashboardHome;
 use App\Livewire\Family\ContinuousCoverageCreate;
 use App\Livewire\Family\ContinuousCoverageShow;
 use App\Models\CareBooking;
@@ -1731,26 +1732,42 @@ class ContinuousCoverageFlowTest extends TestCase
 
         Livewire::actingAs($caregiver)
             ->test(CaregiverShiftsIndex::class)
-            ->set('coverageShift', (string) $shift->id)
-            ->assertViewHas('futureCoverageShifts', fn ($shifts): bool => $shifts->first()?->id === $shift->id)
+            ->assertViewHas('visitTimeline', fn ($timeline): bool => $timeline->first()['coverage_shift']?->id === $shift->id
+                && $timeline->first()['kind'] === 'coverage'
+                && $timeline->total() === $confirmedShiftCount)
+            ->assertViewHas('nextVisit', fn (?array $visit): bool => $visit !== null && $visit['coverage_shift']?->id === $shift->id)
             ->assertViewHas('counts', fn (array $counts): bool => $counts['scheduled'] === $confirmedShiftCount)
-            ->assertSee('Confirmed coverage visits')
+            ->assertSee('Your visits, in one timeline.')
             ->assertSee('Dad\'s care')
             ->assertSee('No payment is processed this early.')
             ->assertSeeHtml('id="coverage-commitment-'.$shift->id.'"');
 
         Livewire::actingAs($caregiver)
+            ->test(DashboardHome::class)
+            ->assertViewHas('caregiverData', fn (array $data): bool => $data['next_visit']['coverage_shift']?->id === $shift->id
+                && $data['quick_visits']->first()['coverage_shift']?->id === $shift->id)
+            ->assertSee('Dad\'s care')
+            ->assertSee('CONTINUOUS COVERAGE');
+        $this->assertDatabaseCount('care_bookings', 0);
+        $this->assertDatabaseCount('care_booking_payments', 0);
+
+        Livewire::actingAs($caregiver)
             ->test(CaregiverShiftsIndex::class)
             ->set('status', CareBooking::STATUS_COMPLETED)
-            ->assertViewHas('futureCoverageShifts', fn ($shifts): bool => $shifts->isEmpty())
-            ->assertDontSee('Confirmed coverage visits');
+            ->assertViewHas('visitTimeline', fn ($timeline): bool => $timeline->isEmpty())
+            ->assertSee('No visits match this filter.');
 
         $booking = app(ContinuousCoverageBookingAdapter::class)->linkConfirmedShift($shift);
         Livewire::actingAs($caregiver)
             ->test(CaregiverShiftsIndex::class)
-            ->assertViewHas('futureCoverageShifts', fn ($shifts): bool => $shifts->count() === $confirmedShiftCount - 1
-                && ! $shifts->contains('id', $shift->id))
-            ->assertViewHas('bookings', fn ($bookings): bool => $bookings->contains('id', $booking->id))
+            ->assertViewHas('visitTimeline', function ($timeline) use ($booking, $shift, $confirmedShiftCount): bool {
+                $items = $timeline->getCollection();
+
+                return $timeline->total() === $confirmedShiftCount
+                    && $items->contains(fn (array $visit): bool => $visit['booking']?->id === $booking->id)
+                    && ! $items->contains(fn (array $visit): bool => $visit['coverage_shift']?->id === $shift->id)
+                    && $items->pluck('scheduled_start_at')->values()->all() === $items->pluck('scheduled_start_at')->sort()->values()->all();
+            })
             ->assertSee('Continuous coverage:')
             ->assertSee('Start visit');
     }
