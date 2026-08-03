@@ -20,17 +20,16 @@ class HomepageQuickRequestFlowTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_homepage_shows_direct_message_and_quick_request_entry(): void
+    public function test_homepage_shows_the_trusted_help_landing_and_request_entry(): void
     {
-        CareTask::query()->create(['name' => 'Companionship']);
-
         $this->get(route('landing'))
             ->assertOk()
-            ->assertSeeText('Care when you')
-            ->assertSeeText('need it most.')
-            ->assertSeeText('Call or text (984) 400-4008')
-            ->assertSeeText('Request a callback')
-            ->assertSee('Tell us what you need');
+            ->assertSeeText('Trusted help at home')
+            ->assertSeeText('without becoming')
+            ->assertSeeText('What kind of help do you need?')
+            ->assertSee('name="service_type"', false)
+            ->assertSee('name="zip"', false)
+            ->assertSee(route('landing.get-care'), false);
     }
 
     public function test_guest_can_continue_homepage_quick_request_to_callback_page(): void

@@ -27,6 +27,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:wght@500;600;700&display=swap" rel="stylesheet">
 
+    @stack('head')
+
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11325109038"></script>
     <script>
@@ -69,18 +71,20 @@
 
     @yield('content')
 
-    <footer class="border-t border-[#DED6CA] bg-[#FFF7EA]/95 backdrop-blur">
-        <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-            <div class="space-y-2 sm:hidden">
-                <p class="text-[11px] text-slate-500">&copy; {{ now()->year }} LoLo Care Inc</p>
-                <x-legal-links class="gap-x-3 gap-y-2 text-[11px]" />
+    @if (! trim($__env->yieldContent('hide_default_footer')))
+        <footer class="border-t border-[#DED6CA] bg-[#FFF7EA]/95 backdrop-blur">
+            <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+                <div class="space-y-2 sm:hidden">
+                    <p class="text-[11px] text-slate-500">&copy; {{ now()->year }} LoLo Care Inc</p>
+                    <x-legal-links class="gap-x-3 gap-y-2 text-[11px]" />
+                </div>
+                <div class="hidden sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <p class="text-xs text-slate-500">&copy; {{ now()->year }} LoLo Care Inc</p>
+                    <x-legal-links />
+                </div>
             </div>
-            <div class="hidden sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                <p class="text-xs text-slate-500">&copy; {{ now()->year }} LoLo Care Inc</p>
-                <x-legal-links />
-            </div>
-        </div>
-    </footer>
+        </footer>
+    @endif
 
     @livewireScripts
 </body>
