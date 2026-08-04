@@ -65,7 +65,11 @@
         .lolo-home img { display: block; max-width: 100%; }
         .lolo-home h1,
         .lolo-home h2,
-        .lolo-home h3 { color: inherit; font-family: 'Fraunces', serif; font-optical-sizing: auto; }
+        .lolo-home h3 { color: var(--green); font-family: 'Fraunces', serif; font-optical-sizing: auto; }
+        .lolo-home .dark-section h2,
+        .lolo-home .dark-section h3,
+        .lolo-home .trust h2,
+        .lolo-home .final-cta h2 { color: var(--cream); }
         .lolo-home h1 {
             margin: 0 0 28px;
             font-size: clamp(3.15rem, 5.15vw, 5.7rem);
@@ -252,9 +256,9 @@
         .lolo-home .section-head > p { max-width: 430px; color: var(--muted); line-height: 1.7; }
         .lolo-home .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
         .lolo-home .caregiver-card { overflow: hidden; border: 1px solid var(--line); border-radius: 24px; background: #fffaf1; }
-        .lolo-home .portrait { position: relative; display: grid; place-items: center; height: 180px; }
+        .lolo-home .portrait { position: relative; display: grid; place-items: center; min-height: 220px; aspect-ratio: 16 / 10; }
         .lolo-home .portrait.has-photo { overflow: hidden; background: #e9dfcf; }
-        .lolo-home .portrait.has-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 28%; }
+        .lolo-home .portrait.has-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 42%; }
         .lolo-home .portrait span { color: var(--green); font: 600 3rem 'Fraunces', serif; }
         .lolo-home .portrait b { position: absolute; top: 12px; right: 12px; border-radius: 999px; background: #fff; color: var(--green); padding: 7px 10px; font-size: .68rem; }
         .lolo-home .card-body { padding: 22px; }

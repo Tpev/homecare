@@ -35,6 +35,13 @@ test.describe('Public LoLo landing page', () => {
         const featuredCaregivers = page.locator('.profile-grid .caregiver-card');
         expect(await featuredCaregivers.count()).toBeGreaterThan(0);
         await expect(featuredCaregivers.first().getByRole('link', { name: 'View profile' })).toHaveAttribute('href', /\/caregivers\//);
+        expect(await page.getByRole('heading', { name: /Trusted help at home/ }).evaluate((element) => getComputedStyle(element).color)).toBe('rgb(23, 63, 53)');
+        expect(await page.getByRole('heading', { name: 'Find someone who fits your family.' }).evaluate((element) => getComputedStyle(element).color)).toBe('rgb(23, 63, 53)');
+        expect(await page.getByRole('heading', { name: 'Care at home, made simple.' }).evaluate((element) => getComputedStyle(element).color)).toBe('rgb(255, 247, 234)');
+        const portraitBox = await featuredCaregivers.first().locator('.portrait').boundingBox();
+        expect(portraitBox).not.toBeNull();
+        expect((portraitBox?.width ?? 0) / (portraitBox?.height ?? 1)).toBeGreaterThan(1.5);
+        expect(portraitBox?.height ?? 0).toBeGreaterThanOrEqual(220);
         await expect(page.getByTitle('How LoLo Care works for families')).toHaveAttribute('src', /youtube-nocookie\.com\/embed\/_nve3ZnFsGM/);
         await expect(page.locator('.nav-shell .brand img')).toHaveAttribute('src', /lolo-wordmark-evergreen\.svg/);
         await expect(page.getByRole('heading', { name: 'Care at home, made simple.' })).toBeVisible();
