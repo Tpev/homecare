@@ -36,27 +36,28 @@ new #[Layout('layouts.guest')] class extends Component
     }
 }; ?>
 
-<div class="space-y-5">
+<div class="space-y-7">
     <div class="space-y-2">
-        <h1 class="text-2xl font-semibold tracking-tight">Reset your password</h1>
-        <div class="text-sm text-slate-600">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
-        </div>
+        <p class="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-[#B95745]">Account recovery</p>
+        <h1 class="font-semibold tracking-tight">Reset your password</h1>
+        <p class="text-sm leading-6 text-[#68756F]">Enter the email associated with your LoLo account. We’ll send you a secure link to choose a new password.</p>
     </div>
 
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <form wire:submit="sendPasswordResetLink" class="space-y-4">
+    <form wire:submit="sendPasswordResetLink" class="space-y-5">
         <div>
-            <x-input wire:model="email" id="email" type="email" name="email" label="Email" required autofocus />
+            <x-input wire:model="email" id="email" type="email" name="email" label="Email" required autofocus autocomplete="email" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <div class="pt-2">
-            <x-button color="blue" class="w-full justify-center sm:w-auto">
-                {{ __('Email Password Reset Link') }}
+        <div class="pt-1">
+            <x-button color="blue" class="auth-primary w-full justify-center">
+                {{ __('Send reset link') }}
             </x-button>
         </div>
     </form>
+
+    <a href="{{ route('login') }}" wire:navigate class="inline-flex text-sm underline">← Back to sign in</a>
 </div>

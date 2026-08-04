@@ -50,7 +50,7 @@ new #[Layout('layouts.guest')] class extends Component
     @endif
 
     <div class="grid grid-cols-1 gap-3 pt-1 sm:flex sm:items-center sm:justify-between">
-        <x-button color="blue" class="w-full justify-center sm:w-auto" wire:click="sendVerification">
+        <x-button color="blue" class="auth-primary w-full justify-center sm:w-auto" wire:click="sendVerification">
             {{ __('Resend Verification Email') }}
         </x-button>
 

@@ -92,7 +92,7 @@ new #[Layout('layouts.guest')] class extends Component
         </div>
 
         <div class="pt-2">
-            <x-button color="blue" class="w-full justify-center sm:w-auto">
+            <x-button color="blue" class="auth-primary w-full justify-center sm:w-auto">
                 {{ __('Reset Password') }}
             </x-button>
         </div>

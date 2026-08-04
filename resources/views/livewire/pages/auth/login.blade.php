@@ -28,10 +28,11 @@ new #[Layout('layouts.guest')] class extends Component
     }
 }; ?>
 
-<div class="space-y-6">
+<div class="space-y-7">
     <div class="space-y-2">
-        <h1 class="text-2xl font-semibold tracking-tight">Welcome back</h1>
-        <p class="text-sm text-slate-600">Sign in to continue to your LoLo dashboard.</p>
+        <p class="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-[#B95745]">Your LoLo account</p>
+        <h1 class="font-semibold tracking-tight">Welcome back</h1>
+        <p class="text-sm leading-6 text-[#68756F]">Sign in with the email and password you used to create your account.</p>
     </div>
 
     <x-auth-session-status class="mb-4" :status="session('status')" />
@@ -42,29 +43,29 @@ new #[Layout('layouts.guest')] class extends Component
         </div>
     @endif
 
-    <form wire:submit="login" class="space-y-4">
-        <div class="grid grid-cols-1 gap-4">
+    <form wire:submit="login" class="space-y-5">
+        <div class="grid grid-cols-1 gap-5">
             <x-input wire:model="form.email" id="email" type="email" name="email" label="Email" required autofocus autocomplete="username" />
             <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
             <x-password wire:model="form.password" id="password" name="password" label="Password" required autocomplete="current-password" />
             <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
         </div>
 
-        <div class="block">
-            <label for="remember" class="inline-flex items-center">
-                <input wire:model="form.remember" id="remember" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <label for="remember" class="inline-flex min-h-10 cursor-pointer items-center">
+                <input wire:model="form.remember" id="remember" type="checkbox" name="remember">
+                <span class="ms-2 text-sm font-medium text-[#586861]">{{ __('Remember me') }}</span>
             </label>
-        </div>
 
-        <div class="grid grid-cols-1 gap-3 pt-2 sm:flex sm:items-center sm:justify-between">
             @if (Route::has('password.request'))
-                <a class="underline text-sm text-slate-600 hover:text-slate-900 rounded-md" href="{{ route('password.request') }}" wire:navigate>
+                <a class="rounded-md text-sm underline" href="{{ route('password.request') }}" wire:navigate>
                     {{ __('Forgot your password?') }}
                 </a>
             @endif
+        </div>
 
-            <x-button type="submit" color="blue" class="w-full justify-center sm:w-auto">{{ __('Log in') }}</x-button>
+        <div class="pt-1">
+            <x-button type="submit" color="blue" class="auth-primary w-full justify-center">{{ __('Log in') }}</x-button>
         </div>
     </form>
 </div>
