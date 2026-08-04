@@ -258,9 +258,9 @@
         .lolo-home .caregiver-card { overflow: hidden; border: 1px solid var(--line); border-radius: 24px; background: #fffaf1; }
         .lolo-home .portrait { position: relative; display: grid; place-items: center; min-height: 220px; aspect-ratio: 16 / 10; }
         .lolo-home .portrait.has-photo { overflow: hidden; background: #e9dfcf; }
-        .lolo-home .portrait.has-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 42%; }
+        .lolo-home .portrait.has-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 42%; }
         .lolo-home .portrait span { color: var(--green); font: 600 3rem 'Fraunces', serif; }
-        .lolo-home .portrait b { position: absolute; top: 12px; right: 12px; border-radius: 999px; background: #fff; color: var(--green); padding: 7px 10px; font-size: .68rem; }
+        .lolo-home .portrait b { position: absolute; z-index: 1; top: 12px; right: 12px; border-radius: 999px; background: #fff; color: var(--green); padding: 7px 10px; font-size: .68rem; }
         .lolo-home .card-body { padding: 22px; }
         .lolo-home .name-line { display: flex; justify-content: space-between; gap: 12px; }
         .lolo-home .verified { color: var(--green); font-size: .88rem; }

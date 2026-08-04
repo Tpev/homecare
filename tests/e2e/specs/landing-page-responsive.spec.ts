@@ -42,6 +42,34 @@ test.describe('Public LoLo landing page', () => {
         expect(portraitBox).not.toBeNull();
         expect((portraitBox?.width ?? 0) / (portraitBox?.height ?? 1)).toBeGreaterThan(1.5);
         expect(portraitBox?.height ?? 0).toBeGreaterThanOrEqual(220);
+        const portraitImage = featuredCaregivers.first().locator('.portrait').evaluate((portrait) => {
+            portrait.classList.add('has-photo');
+            const image = document.createElement('img');
+            image.alt = 'Test caregiver portrait';
+            image.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="1200"/%3E';
+            portrait.prepend(image);
+            const imageStyle = getComputedStyle(image);
+            const imageRect = image.getBoundingClientRect();
+            const portraitRect = portrait.getBoundingClientRect();
+
+            return {
+                imageHeight: imageRect.height,
+                imageWidth: imageRect.width,
+                objectFit: imageStyle.objectFit,
+                objectPosition: imageStyle.objectPosition,
+                portraitHeight: portraitRect.height,
+                portraitWidth: portraitRect.width,
+                position: imageStyle.position,
+            };
+        });
+        expect(await portraitImage).toMatchObject({
+            objectFit: 'cover',
+            objectPosition: '50% 42%',
+            position: 'absolute',
+        });
+        const fittedPortrait = await portraitImage;
+        expect(fittedPortrait.imageWidth).toBeCloseTo(fittedPortrait.portraitWidth, 0);
+        expect(fittedPortrait.imageHeight).toBeCloseTo(fittedPortrait.portraitHeight, 0);
         await expect(page.getByTitle('How LoLo Care works for families')).toHaveAttribute('src', /youtube-nocookie\.com\/embed\/_nve3ZnFsGM/);
         await expect(page.locator('.nav-shell .brand img')).toHaveAttribute('src', /lolo-wordmark-evergreen\.svg/);
         await expect(page.getByRole('heading', { name: 'Care at home, made simple.' })).toBeVisible();
