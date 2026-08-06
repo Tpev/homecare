@@ -568,6 +568,8 @@ new class extends Component
                 <button
                     type="button"
                     @click="accountOpen = !accountOpen; supportOpen = false"
+                    :aria-expanded="accountOpen"
+                    aria-controls="account-navigation-menu"
                     class="inline-flex items-center gap-3 rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] px-3 py-2 text-sm text-[#23483F] shadow-sm transition hover:border-[#23483F]/12 hover:bg-[#F8F0E2]"
                 >
                     @if ($avatarUrl)
@@ -589,10 +591,11 @@ new class extends Component
                 </button>
 
                 <div
+                    id="account-navigation-menu"
                     x-show="accountOpen"
                     x-transition
                     @click.outside="accountOpen = false"
-                    class="absolute right-0 z-50 mt-2 w-72 rounded-[1.4rem] border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] p-2 shadow-xl space-y-1"
+                    class="absolute right-0 top-full z-50 mt-2 max-h-[calc(100dvh-5.5rem)] w-72 space-y-1 overflow-y-auto overscroll-contain rounded-[1.4rem] border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] p-2 shadow-xl"
                     style="display: none;"
                 >
                     @if ($canAccessCrm)

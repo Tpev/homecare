@@ -135,6 +135,9 @@ class CaregiverEarningsDashboardTest extends TestCase
         $response->assertOk();
         $response->assertSee('My Earnings');
         $response->assertSee('/caregiver/earnings', false);
+        $response->assertSee('My Caregiver Profile');
+        $response->assertSee('id="account-navigation-menu"', false);
+        $response->assertSee('top-full', false);
     }
 
     /**
