@@ -10,6 +10,7 @@ use App\Models\CareRequestInvitation;
 use App\Models\FamilyCaregiverFavorite;
 use App\Models\User;
 use App\Services\Matching\CaregiverSuggestionService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use Carbon\CarbonInterface;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -68,7 +69,7 @@ class CaregiverInvitationDiscoveryService
         $this->authorize($request, $family);
 
         $previousIds = CareBooking::query()
-            ->where('family_user_id', $family->id)
+            ->forFamilyAccount(app(FamilyAccountContext::class)->account($family))
             ->where('status', '!=', CareBooking::STATUS_CANCELLED)
             ->selectRaw('caregiver_user_id, MAX(id) as latest_booking_id')
             ->groupBy('caregiver_user_id')
@@ -77,7 +78,7 @@ class CaregiverInvitationDiscoveryService
             ->pluck('caregiver_user_id');
 
         $favoriteIds = FamilyCaregiverFavorite::query()
-            ->where('family_user_id', $family->id)
+            ->forFamilyAccount(app(FamilyAccountContext::class)->account($family))
             ->whereNotIn('caregiver_user_id', $previousIds)
             ->latest('created_at')
             ->limit(self::SECTION_LIMIT)
@@ -133,7 +134,7 @@ class CaregiverInvitationDiscoveryService
 
     private function authorize(CareRequest $request, User $family): void
     {
-        if ($family->role !== 'family' || (int) $request->family_user_id !== (int) $family->id) {
+        if ($family->role !== 'family' || ! app(FamilyAccountContext::class)->canAccessRecord($family, $request)) {
             throw new AuthorizationException('You cannot search caregivers for this request.');
         }
     }

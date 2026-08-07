@@ -5,9 +5,12 @@ namespace App\Policies;
 use App\Models\CareRequest;
 use App\Models\User;
 use App\Support\CaregiverPrelaunch;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 
 class CareRequestPolicy
 {
+    public function __construct(private readonly FamilyAccountContext $familyAccounts) {}
+
     public function viewAny(User $user): bool
     {
         return in_array($user->role, ['family', 'caregiver'], true) || strtolower($user->email) === 'test@test.com';
@@ -15,7 +18,7 @@ class CareRequestPolicy
 
     public function view(User $user, CareRequest $careRequest): bool
     {
-        if ((int) $careRequest->family_user_id === (int) $user->id) {
+        if ($user->role === 'family' && $this->familyAccounts->canAccessRecord($user, $careRequest)) {
             return true;
         }
 
@@ -33,13 +36,13 @@ class CareRequestPolicy
 
     public function update(User $user, CareRequest $careRequest): bool
     {
-        return (int) $careRequest->family_user_id === (int) $user->id
+        return $user->role === 'family' && $this->familyAccounts->canAccessRecord($user, $careRequest)
             && in_array($careRequest->status, [CareRequest::STATUS_DRAFT, CareRequest::STATUS_OPEN], true);
     }
 
     public function delete(User $user, CareRequest $careRequest): bool
     {
-        return (int) $careRequest->family_user_id === (int) $user->id
+        return $user->role === 'family' && $this->familyAccounts->canAccessRecord($user, $careRequest)
             && $careRequest->status === CareRequest::STATUS_DRAFT;
     }
 
@@ -55,7 +58,7 @@ class CareRequestPolicy
 
     public function manageApplicants(User $user, CareRequest $careRequest): bool
     {
-        return (int) $careRequest->family_user_id === (int) $user->id;
+        return $user->role === 'family' && $this->familyAccounts->canAccessRecord($user, $careRequest);
     }
 
     public function apply(User $user, CareRequest $careRequest): bool

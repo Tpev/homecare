@@ -12,6 +12,7 @@ use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Notifications\MarketplaceNotificationService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Payments\BookingPaymentService;
 use App\Support\MarketplaceEvent;
 use App\Support\MarketplacePricing;
@@ -133,6 +134,7 @@ class CompletedExtraVisitService
             $created = CompletedExtraVisitRequest::query()->create([
                 'client_request_id' => $clientRequestId,
                 'care_plan_id' => $lockedPlan->id,
+                'family_account_id' => $lockedPlan->family_account_id,
                 'family_user_id' => $lockedPlan->family_user_id,
                 'caregiver_user_id' => $lockedPlan->caregiver_user_id,
                 'supersedes_id' => $supersedes?->id,
@@ -362,7 +364,8 @@ class CompletedExtraVisitService
     public function escalate(CompletedExtraVisitRequest $request, User $actor, string $reason): CompletedExtraVisitRequest
     {
         abort_unless(
-            (int) $actor->id === (int) $request->family_user_id || (int) $actor->id === (int) $request->caregiver_user_id,
+            ($actor->role === 'family' && app(FamilyAccountContext::class)->canAccessRecord($actor, $request))
+                || (int) $actor->id === (int) $request->caregiver_user_id,
             403
         );
         $reason = $this->validatedResponseNote($reason, 'Explain why you need LoLo Care help in at least 8 characters.');
@@ -620,7 +623,7 @@ class CompletedExtraVisitService
     private function assertNoOverlap(CarePlan $plan, Carbon $start, Carbon $end, ?int $excludeRequestId = null): void
     {
         $bookingExists = CareBooking::query()
-            ->where('family_user_id', $plan->family_user_id)
+            ->forFamilyAccount($plan->family_account_id)
             ->where('caregiver_user_id', $plan->caregiver_user_id)
             ->where('scheduled_start_at', '<', $end)
             ->where('scheduled_end_at', '>', $start)
@@ -672,7 +675,7 @@ class CompletedExtraVisitService
 
     private function assertFamily(CompletedExtraVisitRequest $request, User $family): void
     {
-        abort_unless($family->role === 'family' && (int) $request->family_user_id === (int) $family->id, 403);
+        abort_unless($family->role === 'family' && app(FamilyAccountContext::class)->canAccessRecord($family, $request), 403);
     }
 
     private function assertLatest(CompletedExtraVisitRequest $request): void
@@ -714,8 +717,10 @@ class CompletedExtraVisitService
         $request->loadMissing('plan');
 
         return SupportTicket::query()->create([
+            'family_account_id' => $request->family_account_id,
+            'family_visibility' => 'shared_care',
             'opener_user_id' => $opener->id,
-            'counterparty_user_id' => (int) $opener->id === (int) $request->family_user_id
+            'counterparty_user_id' => $opener->role === 'family'
                 ? $request->caregiver_user_id
                 : $request->family_user_id,
             'care_request_id' => $request->booking?->care_request_id ?: $request->plan?->source_care_request_id,

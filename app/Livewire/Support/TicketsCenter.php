@@ -5,7 +5,9 @@ namespace App\Livewire\Support;
 use App\Models\CareBooking;
 use App\Models\CareRequest;
 use App\Models\SupportTicket;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -26,16 +28,39 @@ class TicketsCenter extends Component
 
     public function createTicket(): void
     {
+        $user = auth()->user();
         $this->validate([
             'subject' => ['required', 'string', 'min:8', 'max:160'],
             'description' => ['required', 'string', 'min:12', 'max:4000'],
             'category' => ['required', Rule::in(['general', 'dispute', 'incident', 'cancellation', 'billing', 'time_correction'])],
             'priority' => ['required', Rule::in(['low', 'normal', 'high', 'urgent'])],
-            'care_request_id' => ['nullable', 'integer', Rule::exists('care_requests', 'id')],
-            'care_booking_id' => ['nullable', 'integer', Rule::exists('care_bookings', 'id')],
+            'care_request_id' => ['nullable', 'integer'],
+            'care_booking_id' => ['nullable', 'integer'],
         ]);
 
+        if ($user->role === 'family' && $this->category === 'billing'
+            && ! app(FamilyAccountContext::class)->isOwner($user)) {
+            throw ValidationException::withMessages(['category' => 'Only the family account owner can open billing requests.']);
+        }
+
+        $request = $this->care_request_id ? CareRequest::query()
+            ->whereKey($this->care_request_id)
+            ->when($user->role === 'caregiver', fn ($query) => $query
+                ->whereHas('applications', fn ($applications) => $applications->where('caregiver_user_id', $user->id)))
+            ->first() : null;
+        $booking = $this->care_booking_id ? CareBooking::query()
+            ->whereKey($this->care_booking_id)
+            ->when($user->role === 'caregiver', fn ($query) => $query->where('caregiver_user_id', $user->id))
+            ->first() : null;
+        if (($this->care_request_id && ! $request) || ($this->care_booking_id && ! $booking)) {
+            throw ValidationException::withMessages(['care_request_id' => 'Choose a care record you can access.']);
+        }
+
+        $account = $user->role === 'family' ? app(FamilyAccountContext::class)->account($user) : null;
+
         $ticket = SupportTicket::query()->create([
+            'family_account_id' => $account?->id,
+            'family_visibility' => $this->category === 'billing' ? 'owner_only' : 'shared_care',
             'opener_user_id' => auth()->id(),
             'care_request_id' => $this->care_request_id ?: null,
             'care_booking_id' => $this->care_booking_id ?: null,
@@ -55,18 +80,37 @@ class TicketsCenter extends Component
 
     public function render()
     {
+        $user = auth()->user();
         $tickets = SupportTicket::query()
-            ->with(['latestPublicMessage.sender:id,name,role'])
-            ->where('opener_user_id', auth()->id())
+            ->with(['latestPublicMessage.sender:id,name,role', 'familyReads' => fn ($query) => $query->where('user_id', $user->id)])
+            ->when($user->role === 'family', function ($query) use ($user): void {
+                $context = app(FamilyAccountContext::class);
+                $account = $context->account($user);
+                $isOwner = $context->isOwner($user);
+                $query->where(function ($tickets) use ($user, $account, $isOwner): void {
+                    $tickets->where(function ($legacy) use ($user): void {
+                        $legacy->whereNull('family_account_id')
+                            ->where('opener_user_id', $user->id);
+                    })->orWhere(function ($accountTickets) use ($account, $isOwner): void {
+                        $accountTickets->where('family_account_id', $account->id)
+                            ->where(function ($visibility) use ($isOwner): void {
+                                $visibility->where('family_visibility', 'shared_care');
+                                if ($isOwner) {
+                                    $visibility->orWhere('family_visibility', 'owner_only');
+                                }
+                            });
+                    });
+                });
+            }, fn ($query) => $query->where('opener_user_id', $user->id))
             ->orderByRaw('COALESCE(last_public_message_at, created_at) DESC')
             ->get()
             ->each(function (SupportTicket $ticket): void {
-                $ticket->is_unread_for_opener = $ticket->isUnreadForOpener();
+                $ticket->is_unread_for_opener = $ticket->isUnreadFor(auth()->user());
             });
 
         $requestOptions = CareRequest::query()
-            ->where('family_user_id', auth()->id())
-            ->orWhereHas('applications', fn ($query) => $query->where('caregiver_user_id', auth()->id()))
+            ->when($user->role === 'caregiver', fn ($query) => $query
+                ->whereHas('applications', fn ($applications) => $applications->where('caregiver_user_id', $user->id)))
             ->latest()
             ->limit(40)
             ->get(['id', 'title'])
@@ -74,8 +118,7 @@ class TicketsCenter extends Component
             ->all();
 
         $bookingOptions = CareBooking::query()
-            ->where('family_user_id', auth()->id())
-            ->orWhere('caregiver_user_id', auth()->id())
+            ->when($user->role === 'caregiver', fn ($query) => $query->where('caregiver_user_id', $user->id))
             ->latest()
             ->limit(40)
             ->get(['id', 'care_request_id'])

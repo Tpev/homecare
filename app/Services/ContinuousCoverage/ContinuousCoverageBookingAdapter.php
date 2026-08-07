@@ -53,6 +53,7 @@ class ContinuousCoverageBookingAdapter
             }
 
             $request = CareRequest::query()->create([
+                'family_account_id' => $plan->family_account_id,
                 'family_user_id' => $plan->family_user_id,
                 'is_system_generated' => true,
                 'title' => 'Continuous coverage: '.$plan->recipientName().' with '.$caregiver->name,
@@ -108,6 +109,7 @@ class ContinuousCoverageBookingAdapter
                 'occurrence_key' => $occurrenceKey,
                 'plan_visit_kind' => 'coverage',
                 'care_request_application_id' => $application->id,
+                'family_account_id' => $plan->family_account_id,
                 'family_user_id' => $plan->family_user_id,
                 'caregiver_user_id' => $caregiver->id,
                 'agreement_snapshot' => $this->trust->buildAgreementSnapshot($request->fresh(['recipient', 'tasks']), $application),

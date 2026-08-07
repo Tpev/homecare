@@ -23,10 +23,18 @@
             </div>
         </section>
 
-        <section id="danger-zone" class="rounded-2xl border border-red-200 bg-white p-5 shadow-sm">
-            <div class="max-w-2xl">
-                <livewire:profile.delete-user-form />
-            </div>
-        </section>
+        @if (auth()->user()?->role === 'family')
+            <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h2 class="text-lg font-medium text-gray-900">Family access</h2>
+                <p class="mt-1 text-sm text-gray-600">See who can help manage care, or leave the family account if you are a member.</p>
+                <a href="{{ route('family.access') }}" wire:navigate class="mt-4 inline-flex min-h-11 items-center rounded-xl bg-[#17313F] px-4 text-sm font-semibold text-white">Manage family access</a>
+            </section>
+        @else
+            <section id="danger-zone" class="rounded-2xl border border-red-200 bg-white p-5 shadow-sm">
+                <div class="max-w-2xl">
+                    <livewire:profile.delete-user-form />
+                </div>
+            </section>
+        @endif
     </div>
 </x-app-layout>

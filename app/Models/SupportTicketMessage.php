@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -50,6 +51,31 @@ class SupportTicketMessage extends Model
 
         return $query
             ->where('kind', self::KIND_PUBLIC)
-            ->whereHas('ticket', fn (Builder $ticketQuery) => $ticketQuery->where('opener_user_id', $user->id));
+            ->whereHas('ticket', function (Builder $ticketQuery) use ($user): void {
+                if ($user->role !== 'family') {
+                    $ticketQuery->where('opener_user_id', $user->id);
+
+                    return;
+                }
+
+                $context = app(FamilyAccountContext::class);
+                $account = $context->account($user);
+                $isOwner = $context->isOwner($user);
+
+                $ticketQuery->where(function (Builder $visible) use ($user, $account, $isOwner): void {
+                    $visible->where(function (Builder $legacy) use ($user): void {
+                        $legacy->whereNull('family_account_id')
+                            ->where('opener_user_id', $user->id);
+                    })->orWhere(function (Builder $accountTicket) use ($account, $isOwner): void {
+                        $accountTicket->where('family_account_id', $account->id)
+                            ->where(function (Builder $visibility) use ($isOwner): void {
+                                $visibility->where('family_visibility', 'shared_care');
+                                if ($isOwner) {
+                                    $visibility->orWhere('family_visibility', 'owner_only');
+                                }
+                            });
+                    });
+                });
+            });
     }
 }

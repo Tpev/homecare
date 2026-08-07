@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +23,8 @@ class SupportTicket extends Model
     public const STATUS_CLOSED = 'closed';
 
     protected $fillable = [
+        'family_account_id',
+        'family_visibility',
         'opener_user_id',
         'counterparty_user_id',
         'care_request_id',
@@ -52,6 +55,31 @@ class SupportTicket extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (SupportTicket $ticket): void {
+            if (! $ticket->family_account_id) {
+                $ticket->family_account_id = $ticket->care_request_id
+                    ? CareRequest::query()->whereKey($ticket->care_request_id)->value('family_account_id')
+                    : null;
+            }
+
+            if (! $ticket->family_account_id && $ticket->care_booking_id) {
+                $ticket->family_account_id = CareBooking::query()
+                    ->whereKey($ticket->care_booking_id)
+                    ->value('family_account_id');
+            }
+
+            if (! $ticket->family_account_id && $ticket->opener_user_id) {
+                $opener = User::query()->find($ticket->opener_user_id);
+                if ($opener?->role === 'family' && ! $opener->isAdministrator()) {
+                    $ticket->family_account_id = app(FamilyAccountContext::class)->account($opener)->id;
+                }
+            }
+
+            $ticket->family_visibility ??= in_array($ticket->category, ['billing', 'account', 'account_access'], true)
+                ? 'owner_only'
+                : 'shared_care';
+        });
+
         static::created(function (SupportTicket $ticket): void {
             if (! Schema::hasColumn('support_tickets', 'last_public_message_at') || $ticket->last_public_message_at) {
                 return;
@@ -68,6 +96,11 @@ class SupportTicket extends Model
     public function opener(): BelongsTo
     {
         return $this->belongsTo(User::class, 'opener_user_id');
+    }
+
+    public function familyAccount(): BelongsTo
+    {
+        return $this->belongsTo(FamilyAccount::class);
     }
 
     public function counterparty(): BelongsTo
@@ -115,6 +148,40 @@ class SupportTicket extends Model
     public function bookingCorrections(): HasMany
     {
         return $this->hasMany(CareBookingCorrection::class)->latest();
+    }
+
+    public function familyReads(): HasMany
+    {
+        return $this->hasMany(FamilySupportTicketRead::class);
+    }
+
+    public function isUnreadFor(User $user): bool
+    {
+        if ($user->role !== 'family' || ! $this->family_account_id) {
+            return $this->isUnreadForOpener();
+        }
+
+        $read = $this->relationLoaded('familyReads')
+            ? $this->familyReads->firstWhere('user_id', $user->id)
+            : $this->familyReads()->where('user_id', $user->id)->first();
+
+        return $this->last_public_message_at
+            && (int) $this->last_public_message_sender_id !== (int) $user->id
+            && (! $read?->last_read_at || $this->last_public_message_at->gt($read->last_read_at));
+    }
+
+    public function markReadFor(User $user): void
+    {
+        if ($user->role === 'family' && $this->family_account_id) {
+            FamilySupportTicketRead::query()->updateOrCreate(
+                ['support_ticket_id' => $this->id, 'user_id' => $user->id],
+                ['last_read_at' => now()],
+            );
+        }
+
+        if ((int) $this->opener_user_id === (int) $user->id) {
+            $this->markReadForOpener();
+        }
     }
 
     public function timeCorrection(): HasOne

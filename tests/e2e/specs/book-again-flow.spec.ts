@@ -17,11 +17,13 @@ use App\Models\User;
 
 $family = User::query()->where('email', 'family.e2e@example.com')->firstOrFail();
 $caregiver = User::query()->where('email', 'caregiver.ready.e2e@example.com')->firstOrFail();
+$familyAccount = App\Models\FamilyAccount::query()->where('owner_user_id', $family->id)->firstOrFail();
 
-$request = CareRequest::withoutEvents(function () use ($family) {
+$request = CareRequest::withoutEvents(function () use ($family, $familyAccount) {
     return CareRequest::query()->updateOrCreate(
         ['family_user_id' => $family->id, 'title' => 'E2E completed visit for book again'],
         [
+            'family_account_id' => $familyAccount->id,
             'status' => CareRequest::STATUS_FILLED,
             'request_type' => CareRequest::TYPE_ONE_TIME,
             'additional_info' => 'Completed visit that can be booked again.',
@@ -65,6 +67,7 @@ CareBooking::query()->updateOrCreate(
     ['care_request_id' => $request->id],
     [
         'care_request_application_id' => $application->id,
+        'family_account_id' => $familyAccount->id,
         'family_user_id' => $family->id,
         'caregiver_user_id' => $caregiver->id,
         'status' => CareBooking::STATUS_REVIEWED,

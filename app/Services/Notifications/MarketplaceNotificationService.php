@@ -3,9 +3,12 @@
 namespace App\Services\Notifications;
 
 use App\Models\MarketplaceNotificationDelivery;
+use App\Models\FamilyAccount;
+use App\Models\SupportTicket;
 use App\Models\User;
 use App\Notifications\MarketplaceEventNotification;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Notification;
@@ -39,12 +42,94 @@ class MarketplaceNotificationService
             ? collect([$recipients])
             : collect($recipients);
 
+        $users = $this->expandFamilyRecipients($users, $subject);
+
         $users
             ->filter(fn ($user) => $user instanceof User)
             ->unique('id')
             ->each(function (User $user) use ($eventKey, $title, $body, $url, $payload, $subject, $dedupeKey, $channelOverrides): void {
                 $this->notifyUser($user, $eventKey, $title, $body, $url, $payload, $subject, $dedupeKey, $channelOverrides);
             });
+    }
+
+    /**
+     * Shared-care events addressed to the legacy family owner fan out to every
+     * active account member. Personal and owner-only events remain private.
+     *
+     * @param  Collection<int, mixed>  $users
+     * @return Collection<int, mixed>
+     */
+    private function expandFamilyRecipients(Collection $users, ?Model $subject): Collection
+    {
+        if (! $subject || ($subject instanceof SupportTicket && $subject->family_visibility !== 'shared_care')) {
+            return $users;
+        }
+
+        $visited = [];
+        $accountId = $this->resolveFamilyAccountId($subject, $visited);
+        if ($accountId < 1) {
+            return $users;
+        }
+
+        $account = FamilyAccount::query()
+            ->with('activeMemberships.user')
+            ->find($accountId);
+
+        if (! $account || ! $users->contains(fn ($user) => $user instanceof User && $user->role === 'family'
+            && ((int) $user->id === (int) $account->owner_user_id
+                || $account->activeMemberships->contains('user_id', $user->id)))) {
+            return $users;
+        }
+
+        return $users
+            ->reject(fn ($user) => $user instanceof User && $user->role === 'family')
+            ->concat($account->activeMemberships->pluck('user'));
+    }
+
+    /**
+     * Notifications are often attached to a child record (an application,
+     * schedule change, shift, or offer) rather than the family-owned root.
+     * Resolve only through known ownership relations and stop after a few hops.
+     *
+     * @param  array<string, true>  $visited
+     */
+    private function resolveFamilyAccountId(Model $subject, array &$visited, int $depth = 0): int
+    {
+        $key = $subject::class.':'.($subject->getKey() ?? spl_object_id($subject));
+        if (isset($visited[$key]) || $depth > 4) {
+            return 0;
+        }
+        $visited[$key] = true;
+
+        if ($subject instanceof FamilyAccount) {
+            return (int) $subject->id;
+        }
+
+        $directId = (int) ($subject->getAttribute('family_account_id') ?? 0);
+        if ($directId > 0) {
+            return $directId;
+        }
+
+        foreach (['careRequest', 'booking', 'carePlan', 'plan', 'sourceCareRequest', 'invitation', 'conversation', 'shift', 'template', 'rosterMember', 'ticket'] as $relationName) {
+            if (! method_exists($subject, $relationName)) {
+                continue;
+            }
+
+            $relation = $subject->{$relationName}();
+            if (! $relation instanceof Relation) {
+                continue;
+            }
+
+            $related = $subject->getRelationValue($relationName);
+            if ($related instanceof Model) {
+                $accountId = $this->resolveFamilyAccountId($related, $visited, $depth + 1);
+                if ($accountId > 0) {
+                    return $accountId;
+                }
+            }
+        }
+
+        return 0;
     }
 
     /**

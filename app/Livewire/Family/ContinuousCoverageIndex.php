@@ -5,6 +5,7 @@ namespace App\Livewire\Family;
 use App\Models\ContinuousCoveragePlan;
 use App\Models\ContinuousCoverageShift;
 use App\Services\ContinuousCoverage\ContinuousCoverageScheduleService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -18,8 +19,9 @@ class ContinuousCoverageIndex extends Component
 
     public function render(ContinuousCoverageScheduleService $schedule)
     {
+        $account = app(FamilyAccountContext::class)->account(auth()->user());
         $plans = ContinuousCoveragePlan::query()
-            ->where('family_user_id', auth()->id())
+            ->forFamilyAccount($account)
             ->with(['shifts' => fn ($query) => $query
                 ->where('scheduled_start_at', '>=', now())
                 ->whereNull('metadata->superseded_by_schedule_version')

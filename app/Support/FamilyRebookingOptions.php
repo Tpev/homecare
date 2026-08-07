@@ -6,6 +6,7 @@ use App\Models\CareBooking;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\User;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Support\Collection;
 
 class FamilyRebookingOptions
@@ -15,6 +16,8 @@ class FamilyRebookingOptions
      */
     public function forUser(User $family, int $limit = 4): Collection
     {
+        $account = app(FamilyAccountContext::class)->account($family);
+
         return CareRequest::query()
             ->with([
                 'recipient',
@@ -23,7 +26,7 @@ class FamilyRebookingOptions
                     ->where('status', CareRequestApplication::STATUS_HIRED)
                     ->with('caregiver:id,name'),
             ])
-            ->where('family_user_id', $family->id)
+            ->forFamilyAccount($account)
             ->whereNull('care_plan_id')
             ->whereHas('applications', function ($query) {
                 $query->where('status', CareRequestApplication::STATUS_HIRED);

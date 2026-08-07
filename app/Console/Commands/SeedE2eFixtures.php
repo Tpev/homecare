@@ -12,12 +12,15 @@ use App\Models\CarePlan;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareTask;
+use App\Models\FamilyAccountInvitation;
+use App\Models\FamilyAccountMember;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Caregiver\CaregiverBackgroundService;
+use App\Services\FamilyAccounts\FamilyAccountProvisioner;
 use App\Services\RegularCare\CarePlanHealthService;
 use App\Services\RegularCare\CarePlanService;
 use Illuminate\Console\Command;
@@ -44,6 +47,63 @@ class SeedE2eFixtures extends Command
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
         ]);
+        $familyAccount = app(FamilyAccountProvisioner::class)->provisionOwner($family, 'e2e_fixture');
+
+        $familyMember = User::query()->create([
+            'name' => 'E2E Family Member',
+            'email' => 'family.member.e2e@example.com',
+            'role' => 'family',
+            'phone' => '+1 919 555 0104',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+        ]);
+        $familyAccount->memberships()->create([
+            'user_id' => $familyMember->id,
+            'access_level' => FamilyAccountMember::ACCESS_MEMBER,
+            'status' => FamilyAccountMember::STATUS_ACTIVE,
+            'joined_at' => now()->subDay(),
+        ]);
+
+        $eligibleFamily = User::query()->create([
+            'name' => 'E2E Eligible Relative',
+            'email' => 'family.eligible.e2e@example.com',
+            'role' => 'family',
+            'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+        ]);
+        app(FamilyAccountProvisioner::class)->provisionOwner($eligibleFamily, 'e2e_empty_existing_account');
+        $removedFamily = User::query()->create([
+            'name' => 'E2E Removed Relative',
+            'email' => 'family.removed.e2e@example.com',
+            'role' => 'family',
+            'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+        ]);
+        $familyAccount->memberships()->create([
+            'user_id' => $removedFamily->id,
+            'access_level' => FamilyAccountMember::ACCESS_MEMBER,
+            'status' => FamilyAccountMember::STATUS_REMOVED,
+            'joined_at' => now()->subWeek(),
+            'ended_at' => now()->subDay(),
+            'ended_by_user_id' => $family->id,
+        ]);
+
+        $newInviteToken = str_repeat('a', 64);
+        $existingInviteToken = str_repeat('b', 64);
+        foreach ([
+            ['email' => 'family.invited.e2e@example.com', 'token' => $newInviteToken],
+            ['email' => $eligibleFamily->email, 'token' => $existingInviteToken],
+        ] as $fixtureInvitation) {
+            FamilyAccountInvitation::query()->create([
+                'family_account_id' => $familyAccount->id,
+                'invited_by_user_id' => $family->id,
+                'email_normalized' => $fixtureInvitation['email'],
+                'token_hash' => hash('sha256', $fixtureInvitation['token']),
+                'expires_at' => now()->addDays(7),
+            ]);
+        }
 
         User::query()->create([
             'name' => 'E2E Admin',
@@ -91,16 +151,45 @@ class SeedE2eFixtures extends Command
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
         ]);
+        $backgroundReviewCaregiver = User::query()->create([
+            'name' => 'E2E Background Review Caregiver',
+            'email' => 'caregiver.background.review.e2e@example.com',
+            'role' => 'caregiver',
+            'phone' => '+1 919 555 0105',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'date_of_birth' => now()->subYears(34)->toDateString(),
+            'onboarding_completed_at' => now(),
+            'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+        ]);
+        $marketplaceCaregiver = User::query()->create([
+            'name' => 'E2E Marketplace Caregiver',
+            'email' => 'caregiver.marketplace.e2e@example.com',
+            'role' => 'caregiver',
+            'phone' => '+1 919 555 0106',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'date_of_birth' => now()->subYears(31)->toDateString(),
+            'onboarding_completed_at' => now(),
+            'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+        ]);
 
         $readyProfile = $this->makeMarketplaceReadyProfile($readyCaregiver, 'e2e-ready-caregiver');
         $newProfile = $this->makeDraftOnboardingProfile($newCaregiver, 'e2e-new-caregiver');
         $underReviewProfile = $this->makeUnderReviewProfile($underReviewCaregiver, 'e2e-under-review-caregiver');
+        $backgroundReviewProfile = $this->makeUnderReviewProfile($backgroundReviewCaregiver, 'e2e-background-review-caregiver');
+        $marketplaceProfile = $this->makeMarketplaceReadyProfile($marketplaceCaregiver, 'e2e-marketplace-caregiver');
 
         $this->attachCatalogToProfile($readyProfile);
         $this->attachCatalogToProfile($newProfile);
         $this->attachCatalogToProfile($underReviewProfile);
+        $this->attachCatalogToProfile($backgroundReviewProfile);
+        $this->attachCatalogToProfile($marketplaceProfile);
         $this->seedCareBackground($readyProfile, includeExpiredCredential: true);
         $this->seedCareBackground($underReviewProfile);
+        $this->seedCareBackground($backgroundReviewProfile);
 
         $request = CareRequest::query()->create([
             'family_user_id' => $family->id,
@@ -141,18 +230,58 @@ class SeedE2eFixtures extends Command
         $this->seedTimeCorrectionState($family, $readyCaregiver, $taskIds, CareBookingTimeCorrection::STATUS_APPROVED_ADMIN_REQUIRED, 'E2E Time Correction - Admin Required');
         $this->seedTimeCorrectionState($family, $readyCaregiver, $taskIds, CareBookingTimeCorrection::STATUS_ESCALATED, 'E2E Time Correction - Escalated');
         $this->seedRegularCare($family, $readyCaregiver, $taskIds);
+        $this->seedMarketplaceCoreRequest($family, $taskIds);
+
+        // email_verified_at is intentionally not mass assignable on User.
+        User::query()
+            ->where(fn ($query) => $query->where('email', 'like', '%.e2e@example.com')->orWhere('email', 'test@test.com'))
+            ->update(['email_verified_at' => now()]);
 
         $this->line('E2E fixtures ready');
         $this->table(['Account', 'Email', 'Password'], [
             ['Family', 'family.e2e@example.com', 'password'],
+            ['Family member', 'family.member.e2e@example.com', 'password'],
+            ['Eligible relative', 'family.eligible.e2e@example.com', 'password'],
+            ['Removed relative', 'family.removed.e2e@example.com', 'password'],
             ['Admin', 'test@test.com', 'password'],
             ['Caregiver (ready)', 'caregiver.ready.e2e@example.com', 'password'],
             ['Caregiver (new)', 'caregiver.new.e2e@example.com', 'password'],
             ['Caregiver (under review)', 'caregiver.review.e2e@example.com', 'password'],
+            ['Caregiver (background review)', 'caregiver.background.review.e2e@example.com', 'password'],
+            ['Caregiver (marketplace)', 'caregiver.marketplace.e2e@example.com', 'password'],
         ]);
         $this->line('Primary request ID: '.$request->id);
+        $this->line('New-user invitation: '.route('family.invitations.show', $newInviteToken));
+        $this->line('Existing-user invitation: '.route('family.invitations.show', $existingInviteToken));
 
         return self::SUCCESS;
+    }
+
+    /** @param list<int> $taskIds */
+    private function seedMarketplaceCoreRequest(User $family, array $taskIds): void
+    {
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'E2E Marketplace Core Request',
+            'additional_info' => 'Isolated request for the complete marketplace browser workflow.',
+            'scope_of_work' => 'Companionship, meal preparation, and safety supervision.',
+            'time_expectations' => 'Please arrive 10 minutes early.',
+            'status' => CareRequest::STATUS_OPEN,
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'requested_start_at' => now()->addDays(5)->setTime(9, 0),
+            'requested_end_at' => now()->addDays(5)->setTime(12, 0),
+            'address_line1' => '321 Marketplace Test Way',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+        ]);
+        $request->recipient()->create([
+            'full_name' => 'E2E Marketplace Recipient',
+            'relationship_to_family' => 'Mother',
+        ]);
+        $request->tasks()->sync(collect($taskIds)->mapWithKeys(
+            fn (int $id) => [$id => ['task_note' => null]]
+        )->all());
     }
 
     /** @param list<int> $taskIds */

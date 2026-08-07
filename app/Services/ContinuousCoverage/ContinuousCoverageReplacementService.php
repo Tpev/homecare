@@ -9,6 +9,7 @@ use App\Models\ContinuousCoverageRosterMember;
 use App\Models\ContinuousCoverageShift;
 use App\Models\ContinuousCoverageShiftOffer;
 use App\Models\User;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Payments\BookingPaymentService;
 use Illuminate\Support\Carbon;
@@ -276,7 +277,7 @@ class ContinuousCoverageReplacementService
         $shift = DB::transaction(function () use ($case, $family): ContinuousCoverageShift {
             $lockedCase = ContinuousCoverageReplacementCase::query()->lockForUpdate()->findOrFail($case->id);
             $shift = ContinuousCoverageShift::query()->lockForUpdate()->with('plan')->findOrFail($lockedCase->continuous_coverage_shift_id);
-            abort_unless($family->role === 'family' && (int) $shift->plan->family_user_id === (int) $family->id, 403);
+            abort_unless($family->role === 'family' && app(FamilyAccountContext::class)->canAccessRecord($family, $shift->plan), 403);
             if ($lockedCase->status !== ContinuousCoverageReplacementCase::STATUS_AWAITING_FAMILY || ! $lockedCase->winning_offer_id) {
                 throw ValidationException::withMessages(['replacement' => 'This replacement is no longer waiting for confirmation.']);
             }
@@ -317,7 +318,7 @@ class ContinuousCoverageReplacementService
         [$shift, $notSelectedOffer, $reopenedOfferIds] = DB::transaction(function () use ($case, $family): array {
             $lockedCase = ContinuousCoverageReplacementCase::query()->lockForUpdate()->findOrFail($case->id);
             $shift = ContinuousCoverageShift::query()->lockForUpdate()->with('plan')->findOrFail($lockedCase->continuous_coverage_shift_id);
-            abort_unless($family->role === 'family' && (int) $shift->plan->family_user_id === (int) $family->id, 403);
+            abort_unless($family->role === 'family' && app(FamilyAccountContext::class)->canAccessRecord($family, $shift->plan), 403);
             if ($lockedCase->status !== ContinuousCoverageReplacementCase::STATUS_AWAITING_FAMILY || ! $lockedCase->winning_offer_id) {
                 throw ValidationException::withMessages(['replacement' => 'This replacement is no longer waiting for a family decision.']);
             }
@@ -401,7 +402,7 @@ class ContinuousCoverageReplacementService
         $offers = DB::transaction(function () use ($case, $family) {
             $lockedCase = ContinuousCoverageReplacementCase::query()->lockForUpdate()->findOrFail($case->id);
             $shift = ContinuousCoverageShift::query()->lockForUpdate()->with('plan')->findOrFail($lockedCase->continuous_coverage_shift_id);
-            abort_unless($family->role === 'family' && (int) $shift->plan->family_user_id === (int) $family->id, 403);
+            abort_unless($family->role === 'family' && app(FamilyAccountContext::class)->canAccessRecord($family, $shift->plan), 403);
             if ($shift->status !== ContinuousCoverageShift::STATUS_REPLACEMENT_NEEDED
                 || ! in_array($lockedCase->status, [
                     ContinuousCoverageReplacementCase::STATUS_OPEN,

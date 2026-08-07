@@ -6,6 +6,7 @@ use App\Exceptions\Payments\PaymentException;
 use App\Models\CareBookingTimeCorrection;
 use App\Models\CarePlan;
 use App\Models\CompletedExtraVisitRequest;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\RegularCare\CarePlanService;
 use App\Services\RegularCare\CompletedExtraVisitService;
 use Illuminate\Support\Carbon;
@@ -238,7 +239,7 @@ class RegularCareShow extends Component
             'completedExtraVisits' => CompletedExtraVisitRequest::query()
                 ->with(['caregiver:id,name', 'booking:id,care_request_id,status', 'booking.payment:id,care_booking_id,status,amount_captured_cents,caregiver_amount_cents,currency'])
                 ->where('care_plan_id', $this->plan->id)
-                ->where('family_user_id', auth()->id())
+                ->forFamilyAccount(app(FamilyAccountContext::class)->account(auth()->user()))
                 ->where('status', '!=', CompletedExtraVisitRequest::STATUS_SUPERSEDED)
                 ->latest('version')
                 ->limit(12)
@@ -246,7 +247,7 @@ class RegularCareShow extends Component
             'completedExtraVisitService' => $completedExtraVisits,
             'pendingTimeCorrections' => CareBookingTimeCorrection::query()
                 ->with(['booking:id,care_request_id,care_plan_id,scheduled_start_at', 'requester:id,name'])
-                ->where('family_user_id', auth()->id())
+                ->forFamilyAccount(app(FamilyAccountContext::class)->account(auth()->user()))
                 ->whereHas('booking', fn ($query) => $query->where('care_plan_id', $this->plan->id))
                 ->whereIn('status', [
                     CareBookingTimeCorrection::STATUS_PENDING_FAMILY,
@@ -285,7 +286,7 @@ class RegularCareShow extends Component
             ])
             ->findOrFail($id);
 
-        abort_unless((int) $plan->family_user_id === (int) auth()->id(), 403);
+        abort_unless(app(FamilyAccountContext::class)->canAccessRecord(auth()->user(), $plan), 403);
 
         return $plan;
     }
@@ -310,7 +311,7 @@ class RegularCareShow extends Component
     {
         return CompletedExtraVisitRequest::query()
             ->where('care_plan_id', $this->plan->id)
-            ->where('family_user_id', auth()->id())
+            ->forFamilyAccount(app(FamilyAccountContext::class)->account(auth()->user()))
             ->findOrFail($requestId);
     }
 }

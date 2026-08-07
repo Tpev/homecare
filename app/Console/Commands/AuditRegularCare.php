@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\CarePlan;
 use App\Models\CareRequest;
 use App\Models\User;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\RegularCare\RegularCareMigrationService;
 use Illuminate\Console\Command;
 
@@ -66,7 +67,15 @@ class AuditRegularCare extends Command
         if ($email = $this->option('email')) {
             $family = User::query()->whereRaw('LOWER(email) = ?', [strtolower(trim((string) $email))])->first();
 
-            return $family ? CareRequest::query()->where('family_user_id', $family->id)->where('request_type', CareRequest::TYPE_RECURRING)->latest()->first() : null;
+            if (! $family || $family->role !== 'family') {
+                return null;
+            }
+
+            $membership = app(FamilyAccountContext::class)->membershipFor($family, false);
+
+            return $membership
+                ? CareRequest::query()->forFamilyAccount($membership->family_account_id)->where('request_type', CareRequest::TYPE_RECURRING)->latest()->first()
+                : null;
         }
 
         return null;

@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToFamilyAccount;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FamilyRecipientProfile extends Model
 {
-    use HasFactory;
+    use BelongsToFamilyAccount, HasFactory;
 
     protected $fillable = [
+        'family_account_id',
         'family_user_id',
         'recipient_is_requester',
         'full_name',

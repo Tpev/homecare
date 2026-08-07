@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToFamilyAccount;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CareRequestInvitation extends Model
 {
-    use HasFactory;
+    use BelongsToFamilyAccount, HasFactory;
 
     public const SLA_HOURS = 12;
 
@@ -20,7 +21,9 @@ class CareRequestInvitation extends Model
 
     protected $fillable = [
         'care_request_id',
+        'family_account_id',
         'family_user_id',
+        'invited_by_user_id',
         'caregiver_user_id',
         'care_request_application_id',
         'status',

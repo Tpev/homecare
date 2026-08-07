@@ -9,6 +9,7 @@ use App\Services\Notifications\MarketplaceNotificationService;
 use App\Support\MarketplaceEvent;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 class SupportTicketMessagingService
@@ -25,7 +26,13 @@ class SupportTicketMessagingService
     ): SupportTicketMessage {
         $body = $this->validatedBody($body);
 
-        if ((int) $ticket->opener_user_id !== (int) $user->id) {
+        if (! Gate::forUser($user)->allows('view', $ticket)) {
+            throw new AuthorizationException;
+        }
+
+        $this->ensureTicketIsOpenForReplies($ticket);
+
+        if (! Gate::forUser($user)->allows('reply', $ticket)) {
             throw new AuthorizationException;
         }
 
@@ -77,6 +84,10 @@ class SupportTicketMessagingService
                 subject: $ticket,
                 dedupeKey: 'support-ticket-'.$ticket->id.'-message-'.$message->id,
             );
+        }
+
+        if ($created) {
+            $ticket->fresh()->markReadFor($user);
         }
 
         return $message;

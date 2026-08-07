@@ -7,6 +7,8 @@ use App\Http\Controllers\CaregiverIdentityVerificationController;
 use App\Http\Controllers\CaregiverStripeConnectController;
 use App\Http\Controllers\CareRequestInvitationResponseController;
 use App\Http\Controllers\DiditWebhookController;
+use App\Http\Controllers\FamilyAccessEndedController;
+use App\Http\Controllers\FamilyAccountInvitationController;
 use App\Http\Controllers\FamilyBillingController;
 use App\Http\Controllers\GoogleSheetsLeadWebhookController;
 use App\Http\Controllers\LegalPageController;
@@ -14,6 +16,7 @@ use App\Http\Controllers\MarketingPagesController;
 use App\Http\Controllers\NotificationEmailTrackingController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SeoPagesController;
+use App\Http\Controllers\SessionLogoutController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TwilioSmsStatusWebhookController;
@@ -39,6 +42,7 @@ use App\Livewire\Admin\UsageAnalytics;
 use App\Livewire\Admin\UserShow;
 use App\Livewire\Admin\UsersIndex;
 use App\Livewire\Admin\VoiceAiTest;
+use App\Livewire\Auth\FamilyInvitationRegister;
 use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Caregiver\BrowseCaregivers;
 use App\Livewire\Caregiver\BrowseCareRequests;
@@ -57,6 +61,7 @@ use App\Livewire\Caregiver\ShowCaregiver;
 use App\Livewire\Caregiver\TaskComfortSetup;
 use App\Livewire\Caregiver\WorkInbox;
 use App\Livewire\Dashboard\Home as DashboardHome;
+use App\Livewire\Family\AcceptFamilyInvitation;
 use App\Livewire\Family\AiRequestCopilot;
 use App\Livewire\Family\BookAgain;
 use App\Livewire\Family\CareHistory;
@@ -64,6 +69,7 @@ use App\Livewire\Family\ContinuousCoverageCreate;
 use App\Livewire\Family\ContinuousCoverageIndex as FamilyContinuousCoverageIndex;
 use App\Livewire\Family\ContinuousCoverageShow;
 use App\Livewire\Family\CreateCareRequestWizard;
+use App\Livewire\Family\FamilyAccess;
 use App\Livewire\Family\ManageCareRequest;
 use App\Livewire\Family\NotificationsCenter as FamilyNotificationsCenter;
 use App\Livewire\Family\RegularCareComposer;
@@ -182,6 +188,24 @@ Route::get('/{seoSlug}', [SeoPagesController::class, 'show'])
 Route::get('/caregivers/search', BrowseCaregivers::class)->name('caregivers.search');
 Route::get('/caregivers/{slug}', ShowCaregiver::class)->name('caregivers.show');
 
+Route::get('/family/invitations/{token}', FamilyAccountInvitationController::class)
+    ->where('token', '[A-Fa-f0-9]{64}')
+    ->name('family.invitations.show');
+Route::get('/family/invitations/{token}/register', FamilyInvitationRegister::class)
+    ->middleware('guest')
+    ->where('token', '[A-Fa-f0-9]{64}')
+    ->name('family.invitations.register');
+Route::get('/family/invitations/{token}/review', AcceptFamilyInvitation::class)
+    ->middleware('auth')
+    ->where('token', '[A-Fa-f0-9]{64}')
+    ->name('family.invitations.review');
+Route::get('/family/access-ended', FamilyAccessEndedController::class)
+    ->middleware('auth')
+    ->name('family.access.ended');
+Route::post('/logout', SessionLogoutController::class)
+    ->middleware('auth')
+    ->name('logout');
+
 Route::get('dashboard', DashboardHome::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -243,6 +267,7 @@ Route::middleware(['auth', 'caregiver.role'])->group(function () {
 });
 
 Route::middleware(['auth', 'family.role'])->prefix('family')->name('family.')->group(function () {
+    Route::get('/access', FamilyAccess::class)->name('access');
     Route::middleware('continuous.coverage')->prefix('continuous-coverage')->name('continuous-coverage.')->group(function () {
         Route::get('/', FamilyContinuousCoverageIndex::class)->name('index');
         Route::get('/create', ContinuousCoverageCreate::class)->name('create');

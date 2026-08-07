@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToFamilyAccount;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ContinuousCoveragePlan extends Model
 {
-    use HasFactory;
+    use BelongsToFamilyAccount, HasFactory;
 
     public const STATUS_ACTIVE = 'active';
 
@@ -28,7 +29,7 @@ class ContinuousCoveragePlan extends Model
     public const CONFIRM_APPROVED_BACKUP = 'approved_backup_auto';
 
     protected $fillable = [
-        'family_user_id', 'created_by_user_id', 'status', 'title', 'timezone',
+        'family_account_id', 'family_user_id', 'created_by_user_id', 'status', 'title', 'timezone',
         'starts_on', 'ends_on', 'coverage_pattern', 'shift_length_minutes',
         'weekly_schedule', 'recipient_snapshot', 'address_snapshot',
         'task_snapshot', 'care_notes', 'hourly_rate',

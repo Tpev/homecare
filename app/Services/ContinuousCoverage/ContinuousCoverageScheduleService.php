@@ -8,6 +8,7 @@ use App\Models\ContinuousCoverageShift;
 use App\Models\ContinuousCoverageShiftTemplate;
 use App\Models\User;
 use App\Support\MarketplacePricing;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -30,7 +31,7 @@ class ContinuousCoverageScheduleService
 
         return DB::transaction(function () use ($family, $data): ContinuousCoveragePlan {
             $plan = ContinuousCoveragePlan::query()->create([
-                'family_user_id' => $family->id,
+                ...app(FamilyAccountContext::class)->ownershipAttributes($family),
                 'created_by_user_id' => $family->id,
                 'status' => ContinuousCoveragePlan::STATUS_ACTIVE,
                 'title' => $data['title'],
@@ -206,7 +207,7 @@ class ContinuousCoverageScheduleService
     ): ContinuousCoveragePlan {
         if (! $this->access->allows($family)
             || $family->role !== 'family'
-            || (int) $plan->family_user_id !== (int) $family->id) {
+            || ! app(FamilyAccountContext::class)->canAccessRecord($family, $plan)) {
             abort(403);
         }
         if ($plan->status !== ContinuousCoveragePlan::STATUS_ACTIVE) {

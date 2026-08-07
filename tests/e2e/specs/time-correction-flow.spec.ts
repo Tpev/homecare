@@ -14,6 +14,9 @@ test.describe('Visit time correction collaboration', () => {
         const browserErrors: string[] = [];
         page.on('console', message => { if (message.type() === 'error') browserErrors.push(message.text()); });
         page.on('pageerror', error => browserErrors.push(error.message));
+        page.on('response', response => {
+            if (response.status() >= 400) browserErrors.push(`HTTP ${response.status()} ${response.request().method()} ${response.url()}`);
+        });
 
         await loginAs(page, 'caregiverReady');
         await page.setViewportSize({ width: 1440, height: 900 });
@@ -127,6 +130,9 @@ test.describe('Visit time correction collaboration', () => {
         const browserErrors: string[] = [];
         page.on('console', message => { if (message.type() === 'error') browserErrors.push(message.text()); });
         page.on('pageerror', error => browserErrors.push(error.message));
+        page.on('response', response => {
+            if (response.status() >= 400) browserErrors.push(`HTTP ${response.status()} ${response.request().method()} ${response.url()}`);
+        });
 
         await loginAs(page, 'family');
         await page.setViewportSize({ width: 390, height: 844 });

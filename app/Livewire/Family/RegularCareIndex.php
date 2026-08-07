@@ -4,6 +4,7 @@ namespace App\Livewire\Family;
 
 use App\Models\CareBooking;
 use App\Models\CarePlan;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\RegularCare\CarePlanService;
 use App\Support\FamilyRebookingOptions;
 use Livewire\Attributes\Layout;
@@ -20,6 +21,7 @@ class RegularCareIndex extends Component
     public function render(CarePlanService $plans)
     {
         $user = auth()->user();
+        $account = app(FamilyAccountContext::class)->account($user);
 
         $carePlans = CarePlan::query()
             ->with([
@@ -29,13 +31,13 @@ class RegularCareIndex extends Component
                 'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
                 'nextBooking.payment:id,care_booking_id,status',
             ])
-            ->where('family_user_id', $user->id)
+            ->forFamilyAccount($account)
             ->latest()
             ->get();
 
         $nextPlan = CarePlan::query()
             ->with(['caregiver:id,name', 'nextBooking.payment'])
-            ->where('family_user_id', $user->id)
+            ->forFamilyAccount($account)
             ->whereIn('status', [CarePlan::STATUS_ACTIVE, CarePlan::STATUS_PAYMENT_ATTENTION, CarePlan::STATUS_PAUSED])
             ->whereHas('nextBooking', fn ($query) => $query->whereIn('status', [
                 CareBooking::STATUS_SCHEDULED,

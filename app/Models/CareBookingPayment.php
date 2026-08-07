@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToFamilyAccount;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CareBookingPayment extends Model
 {
-    use HasFactory;
+    use BelongsToFamilyAccount, HasFactory;
 
     public const STATUS_DRAFT = 'draft';
     public const STATUS_AUTHORIZATION_REQUIRED = 'authorization_required';
@@ -24,7 +25,9 @@ class CareBookingPayment extends Model
 
     protected $fillable = [
         'care_booking_id',
+        'family_account_id',
         'family_user_id',
+        'initiated_by_user_id',
         'caregiver_user_id',
         'status',
         'currency',

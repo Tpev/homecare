@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToFamilyAccount;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CareRequest extends Model
 {
-    use HasFactory;
+    use BelongsToFamilyAccount, HasFactory;
 
     public const TYPE_ONE_TIME = 'one_time';
 
@@ -28,7 +29,9 @@ class CareRequest extends Model
     public const STATUS_EXPIRED = 'expired';
 
     protected $fillable = [
+        'family_account_id',
         'family_user_id',
+        'created_by_user_id',
         'care_plan_id',
         'is_system_generated',
         'title',

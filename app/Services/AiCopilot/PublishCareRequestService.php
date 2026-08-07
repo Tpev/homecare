@@ -33,7 +33,9 @@ class PublishCareRequestService
             $isOneTime = ($draft['request_type'] ?? null) === CareRequest::TYPE_ONE_TIME;
 
             $careRequest = CareRequest::query()->create([
+                'family_account_id' => $session->family_account_id,
                 'family_user_id' => $session->family_user_id,
+                'created_by_user_id' => auth()->id() ?: $session->family_user_id,
                 'title' => (string) $draft['title'],
                 'additional_info' => $draft['additional_info'] ?? null,
                 'scope_of_work' => (string) $draft['scope_of_work'],

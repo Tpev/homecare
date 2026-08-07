@@ -161,6 +161,101 @@
     @if($user->role === 'family')
         <x-card>
             <x-slot:header>
+                <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <h2 class="text-lg font-semibold">Family Account support context</h2>
+                    @if($familyAccount)
+                        <x-badge :text="strtoupper((string) $familyAccount->status)" color="blue" />
+                    @endif
+                </div>
+            </x-slot:header>
+
+            @if(! $familyAccount)
+                <p class="text-sm text-slate-500">No Family Account membership history exists for this user.</p>
+            @else
+                <div class="grid gap-5 lg:grid-cols-2">
+                    <section aria-labelledby="family-members-heading">
+                        <h3 id="family-members-heading" class="font-semibold text-slate-900">Members</h3>
+                        <div class="mt-2 space-y-2">
+                            @foreach($familyAccount->memberships as $member)
+                                <div class="rounded-lg border border-slate-200 p-3 text-sm">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <span class="font-semibold text-slate-900">{{ $member->user?->name ?: 'Deleted user' }}</span>
+                                        <span class="text-xs font-semibold uppercase tracking-wide text-slate-600">{{ $member->access_level }} &middot; {{ $member->status }}</span>
+                                    </div>
+                                    <p class="mt-1 break-all text-slate-600">{{ $member->user?->email }}</p>
+                                    <p class="mt-1 text-xs text-slate-500">Joined {{ optional($member->joined_at)->format('M d, Y H:i') ?: '-' }}@if($member->ended_at) &middot; Ended {{ $member->ended_at->format('M d, Y H:i') }}@endif</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </section>
+
+                    <section aria-labelledby="family-invitations-heading">
+                        <h3 id="family-invitations-heading" class="font-semibold text-slate-900">Invitations</h3>
+                        <div class="mt-2 space-y-2">
+                            @forelse($familyAccount->invitations as $invitation)
+                                <div class="rounded-lg border border-slate-200 p-3 text-sm">
+                                    <p class="break-all font-semibold text-slate-900">{{ $invitation->email_normalized }}</p>
+                                    <p class="mt-1 text-slate-600">
+                                        @if($invitation->accepted_at) Accepted {{ $invitation->accepted_at->format('M d, Y H:i') }}
+                                        @elseif($invitation->canceled_at) Canceled {{ $invitation->canceled_at->format('M d, Y H:i') }}
+                                        @elseif($invitation->expires_at->isPast()) Expired {{ $invitation->expires_at->format('M d, Y H:i') }}
+                                        @else Pending &middot; expires {{ $invitation->expires_at->format('M d, Y H:i') }}
+                                        @endif
+                                    </p>
+                                </div>
+                            @empty
+                                <p class="rounded-lg border border-slate-200 p-3 text-sm text-slate-500">No invitations.</p>
+                            @endforelse
+                        </div>
+                    </section>
+                </div>
+
+                @if($familyAccount->status === \App\Models\FamilyAccount::STATUS_ACTIVE && $familyAccount->activeMemberships->where('access_level', \App\Models\FamilyAccountMember::ACCESS_MEMBER)->isNotEmpty())
+                    <section class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4" aria-labelledby="transfer-owner-heading">
+                        <h3 id="transfer-owner-heading" class="font-semibold text-amber-950">Protected ownership transfer</h3>
+                        <p class="mt-1 text-sm text-amber-900">Use only after verifying both people. This changes billing ownership and is permanently audited.</p>
+                        <form wire:submit="transferFamilyOwnership" class="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] lg:items-end">
+                            <label class="block text-sm font-medium text-slate-800">
+                                New account owner
+                                <select wire:model="transferOwnershipMemberId" class="mt-1 min-h-11 w-full rounded-lg border-slate-300 bg-white text-base">
+                                    <option value="">Choose an active member</option>
+                                    @foreach($familyAccount->activeMemberships->where('access_level', \App\Models\FamilyAccountMember::ACCESS_MEMBER) as $member)
+                                        <option value="{{ $member->id }}">{{ $member->user?->name }} ({{ $member->user?->email }})</option>
+                                    @endforeach
+                                </select>
+                                @error('transferOwnershipMemberId') <span class="mt-1 block text-xs text-red-700">{{ $message }}</span> @enderror
+                            </label>
+                            <label class="block text-sm font-medium text-slate-800">
+                                Verified reason
+                                <input wire:model="transferReason" type="text" class="mt-1 min-h-11 w-full rounded-lg border-slate-300 text-base" placeholder="Both parties verified by support call" />
+                                @error('transferReason') <span class="mt-1 block text-xs text-red-700">{{ $message }}</span> @enderror
+                                @error('transfer') <span class="mt-1 block text-xs text-red-700">{{ $message }}</span> @enderror
+                            </label>
+                            <x-button type="submit" color="red" class="min-h-11 justify-center">Transfer ownership</x-button>
+                        </form>
+                    </section>
+                @endif
+
+                <section class="mt-6" aria-labelledby="family-audit-heading">
+                    <h3 id="family-audit-heading" class="font-semibold text-slate-900">Membership audit history</h3>
+                    <div class="mt-2 overflow-x-auto rounded-lg border border-slate-200">
+                        <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+                            <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600"><tr><th class="px-3 py-2">When</th><th class="px-3 py-2">Action</th><th class="px-3 py-2">Actor</th><th class="px-3 py-2">Subject</th></tr></thead>
+                            <tbody class="divide-y divide-slate-200">
+                                @forelse($familyAccount->activityLogs as $activity)
+                                    <tr><td class="whitespace-nowrap px-3 py-2">{{ $activity->created_at->format('M d, Y H:i') }}</td><td class="px-3 py-2 font-medium">{{ str_replace('_', ' ', $activity->action) }}</td><td class="px-3 py-2">{{ $activity->actor?->email ?: 'System' }}</td><td class="px-3 py-2">{{ $activity->subjectUser?->email ?: '-' }}</td></tr>
+                                @empty
+                                    <tr><td colspan="4" class="px-3 py-3 text-slate-500">No audit entries.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            @endif
+        </x-card>
+
+        <x-card>
+            <x-slot:header>
                 <h2 class="text-lg font-semibold">Recent Family Requests</h2>
             </x-slot:header>
 

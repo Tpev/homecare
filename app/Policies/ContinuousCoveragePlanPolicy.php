@@ -5,13 +5,16 @@ namespace App\Policies;
 use App\Models\ContinuousCoveragePlan;
 use App\Models\ContinuousCoverageRosterMember;
 use App\Models\User;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 
 class ContinuousCoveragePlanPolicy
 {
+    public function __construct(private readonly FamilyAccountContext $familyAccounts) {}
+
     public function view(User $user, ContinuousCoveragePlan $plan): bool
     {
         return $user->isAdministrator()
-            || ($user->role === 'family' && (int) $plan->family_user_id === (int) $user->id)
+            || ($user->role === 'family' && $this->familyAccounts->canAccessRecord($user, $plan))
             || ($user->role === 'caregiver' && $plan->rosterMembers()
                 ->where('caregiver_user_id', $user->id)
                 ->whereIn('status', [
@@ -23,6 +26,6 @@ class ContinuousCoveragePlanPolicy
 
     public function update(User $user, ContinuousCoveragePlan $plan): bool
     {
-        return $user->role === 'family' && (int) $plan->family_user_id === (int) $user->id;
+        return $user->role === 'family' && $this->familyAccounts->canAccessRecord($user, $plan);
     }
 }

@@ -10,6 +10,7 @@ use App\Services\AiCopilot\DraftNormalizer;
 use App\Services\AiCopilot\MissingFieldsResolver;
 use App\Services\AiCopilot\PublishCareRequestService;
 use App\Services\AiCopilot\QualityScorer;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
@@ -53,7 +54,7 @@ class AiRequestCopilot extends Component
             ->toArray();
 
         $session = AiRequestSession::query()->create([
-            'family_user_id' => auth()->id(),
+            ...app(FamilyAccountContext::class)->ownershipAttributes(auth()->user()),
             'status' => AiRequestSession::STATUS_DRAFTING,
             'draft_json' => [
                 'request_type' => CareRequest::TYPE_ONE_TIME,
@@ -144,7 +145,6 @@ class AiRequestCopilot extends Component
     {
         return AiRequestSession::query()
             ->where('id', $this->sessionId)
-            ->where('family_user_id', auth()->id())
             ->firstOrFail();
     }
 
@@ -184,4 +184,3 @@ class AiRequestCopilot extends Component
         return view('livewire.family.ai-request-copilot');
     }
 }
-

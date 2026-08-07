@@ -1,31 +1,38 @@
 import { expect, test, type Page } from '@playwright/test';
 import { loginAs } from '../helpers/auth';
 
-const SEEDED_REQUEST_TITLE = 'E2E Open Request - Raleigh Morning Support';
-const SEEDED_REQUEST_ID = 1;
+const SEEDED_REQUEST_TITLE = 'E2E Marketplace Core Request';
 const FAMILY_MESSAGE = 'Hi, please confirm you can arrive 10 minutes early.';
 const CAREGIVER_MESSAGE = 'Confirmed. I will arrive 10 minutes early.';
 
-async function openSeededRequestAsCaregiver(page: Page): Promise<void> {
-    await page.goto(`/care-requests/${SEEDED_REQUEST_ID}/apply`);
+async function openSeededRequestAsCaregiver(page: Page): Promise<string> {
+    await page.goto('/care-requests');
+    const requestCard = page.locator('article').filter({ hasText: SEEDED_REQUEST_TITLE });
+    await expect(requestCard).toBeVisible();
+    await requestCard.getByRole('button', { name: 'Review and apply' }).click();
+    await expect(page).toHaveURL(/\/care-requests\/\d+\/apply$/);
     await expect(page.getByText(SEEDED_REQUEST_TITLE)).toBeVisible();
+    const requestId = new URL(page.url()).pathname.match(/care-requests\/(\d+)\/apply/)?.[1];
+    expect(requestId).toBeTruthy();
+
+    return requestId!;
 }
 
-async function openSeededRequestAsFamily(page: Page): Promise<void> {
-    await page.goto(`/family/requests/${SEEDED_REQUEST_ID}`);
+async function openSeededRequestAsFamily(page: Page, requestId: string): Promise<void> {
+    await page.goto(`/family/requests/${requestId}`);
     await expect(page.getByText(SEEDED_REQUEST_TITLE)).toBeVisible();
 }
 
 test.describe('Marketplace Core Flow', () => {
     test('apply, hire, chat, run shift, and review', async ({ page }) => {
-        await loginAs(page, 'caregiverReady');
-        await openSeededRequestAsCaregiver(page);
+        await loginAs(page, 'caregiverMarketplace');
+        const requestId = await openSeededRequestAsCaregiver(page);
 
         await page.getByRole('button', { name: 'I can do this visit' }).click();
         await expect(page.getByText('Application sent to family.')).toBeVisible();
 
         await loginAs(page, 'family');
-        await openSeededRequestAsFamily(page);
+        await openSeededRequestAsFamily(page, requestId);
 
         await page.getByRole('button', { name: /Caregivers|Review caregivers/i }).first().click();
         await page.getByRole('button', { name: /^Hire /i }).first().click();
@@ -37,14 +44,14 @@ test.describe('Marketplace Core Flow', () => {
         await page.getByRole('button', { name: 'Send' }).click();
         await expect(page.getByText(FAMILY_MESSAGE)).toBeVisible();
 
-        await loginAs(page, 'caregiverReady');
+        await loginAs(page, 'caregiverMarketplace');
         await page.goto('/messages');
         await expect(page.getByText(FAMILY_MESSAGE)).toBeVisible();
         await page.getByPlaceholder('Type your message...').fill(CAREGIVER_MESSAGE);
         await page.getByRole('button', { name: 'Send' }).click();
         await expect(page.getByText(CAREGIVER_MESSAGE)).toBeVisible();
 
-        await page.goto(`/care-requests/${SEEDED_REQUEST_ID}/apply`);
+        await page.goto(`/care-requests/${requestId}/apply`);
         await expect(page.getByText(SEEDED_REQUEST_TITLE)).toBeVisible();
         await page.context().grantPermissions(['geolocation']);
         await page.context().setGeolocation({ latitude: 35.7796, longitude: -78.6382 });
@@ -56,7 +63,7 @@ test.describe('Marketplace Core Flow', () => {
         await expect(page.getByText('Visit completed. Review your recap below.')).toBeVisible();
 
         await loginAs(page, 'family');
-        await openSeededRequestAsFamily(page);
+        await openSeededRequestAsFamily(page, requestId);
         await page.getByRole('button', { name: 'Visit' }).click();
         await page.getByRole('button', { name: /Approve hours and pay/ }).click();
         await expect(page.getByText('Timesheet confirmed.')).toBeVisible();

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToFamilyAccount;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,13 +10,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CareRelationship extends Model
 {
-    use HasFactory;
+    use BelongsToFamilyAccount, HasFactory;
 
     public const STATUS_ACTIVE = 'active';
     public const STATUS_PAUSED = 'paused';
     public const STATUS_ENDED = 'ended';
 
     protected $fillable = [
+        'family_account_id',
         'family_user_id',
         'caregiver_user_id',
         'source_care_request_id',

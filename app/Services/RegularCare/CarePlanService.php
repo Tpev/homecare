@@ -12,6 +12,7 @@ use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\User;
 use App\Services\Booking\BookingTrustService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
 use App\Services\Payments\FamilyBillingService;
@@ -81,7 +82,7 @@ class CarePlanService
 
     public function sourceIsEligible(CareRequest $source, User $family): bool
     {
-        if ((int) $source->family_user_id !== (int) $family->id) {
+        if (! app(FamilyAccountContext::class)->canAccessRecord($family, $source)) {
             return false;
         }
 
@@ -200,7 +201,7 @@ class CarePlanService
         try {
             [$plan, $created] = DB::transaction(function () use ($source, $family, $caregiver, $payload, $schedule, $hourlyRate): array {
                 $lockedSource = CareRequest::query()->lockForUpdate()->findOrFail($source->id);
-                if ((int) $lockedSource->family_user_id !== (int) $family->id) {
+                if (! app(FamilyAccountContext::class)->canAccessRecord($family, $lockedSource)) {
                     abort(403);
                 }
 
@@ -214,12 +215,13 @@ class CarePlanService
                 }
 
                 $relationship = CareRelationship::query()->firstOrNew([
-                    'family_user_id' => $family->id,
+                    'family_account_id' => $lockedSource->family_account_id,
                     'caregiver_user_id' => $caregiver->id,
                     'recipient_name' => $source->recipient?->full_name,
                 ]);
 
                 $relationship->fill([
+                    'family_user_id' => $lockedSource->family_user_id,
                     'source_care_request_id' => $relationship->source_care_request_id ?: $source->id,
                     'last_care_request_id' => $source->id,
                     'last_care_booking_id' => $source->booking?->id,
@@ -229,7 +231,8 @@ class CarePlanService
 
                 $plan = CarePlan::query()->create([
                     'care_relationship_id' => $relationship->id,
-                    'family_user_id' => $family->id,
+                    'family_account_id' => $lockedSource->family_account_id,
+                    'family_user_id' => $lockedSource->family_user_id,
                     'caregiver_user_id' => $caregiver->id,
                     'source_care_request_id' => $source->id,
                     'source_care_booking_id' => $source->booking?->id,
@@ -300,7 +303,7 @@ class CarePlanService
         CareRequestApplication $application,
         User $family
     ): CarePlan {
-        if ((int) $source->family_user_id !== (int) $family->id || ! $source->isRecurring()) {
+        if (! app(FamilyAccountContext::class)->canAccessRecord($family, $source) || ! $source->isRecurring()) {
             throw ValidationException::withMessages([
                 'request' => 'This regular-care request cannot be activated.',
             ]);
@@ -365,11 +368,12 @@ class CarePlanService
                 ])->save();
 
                 $relationship = CareRelationship::query()->firstOrNew([
-                    'family_user_id' => $family->id,
+                    'family_account_id' => $lockedSource->family_account_id,
                     'caregiver_user_id' => $caregiver->id,
                     'recipient_name' => $source->recipient?->full_name,
                 ]);
                 $relationship->fill([
+                    'family_user_id' => $lockedSource->family_user_id,
                     'source_care_request_id' => $relationship->source_care_request_id ?: $source->id,
                     'last_care_request_id' => $source->id,
                     'status' => CareRelationship::STATUS_ACTIVE,
@@ -377,7 +381,8 @@ class CarePlanService
 
                 $createdPlan = CarePlan::query()->create([
                     'care_relationship_id' => $relationship->id,
-                    'family_user_id' => $family->id,
+                    'family_account_id' => $lockedSource->family_account_id,
+                    'family_user_id' => $lockedSource->family_user_id,
                     'caregiver_user_id' => $caregiver->id,
                     'source_care_request_id' => $source->id,
                     'status' => CarePlan::STATUS_ACTIVE,
@@ -573,7 +578,7 @@ class CarePlanService
 
     public function acceptCounter(CarePlan $plan, User $family): CarePlan
     {
-        if ((int) $plan->family_user_id !== (int) $family->id) {
+        if (! app(FamilyAccountContext::class)->canAccessRecord($family, $plan)) {
             abort(403);
         }
 
@@ -943,7 +948,7 @@ class CarePlanService
 
     public function endPlan(CarePlan $plan, User $family, bool $cancelNextVisit = false): CarePlan
     {
-        if ((int) $plan->family_user_id !== (int) $family->id) {
+        if (! app(FamilyAccountContext::class)->canAccessRecord($family, $plan)) {
             abort(403);
         }
 
@@ -1093,7 +1098,7 @@ class CarePlanService
 
     private function assertFamilyOwnsPlan(CarePlan $plan, User $family): void
     {
-        if ((int) $plan->family_user_id !== (int) $family->id) {
+        if (! app(FamilyAccountContext::class)->canAccessRecord($family, $plan)) {
             abort(403);
         }
     }

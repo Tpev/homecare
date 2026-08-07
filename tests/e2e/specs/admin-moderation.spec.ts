@@ -8,7 +8,9 @@ test.describe('Admin Caregiver Moderation', () => {
         await loginAs(page, 'admin');
         await page.goto('/admin/caregivers/reviews');
 
-        const reviewCard = page.locator('div').filter({ hasText: UNDER_REVIEW_CAREGIVER_LABEL }).first();
+        const reviewCard = page
+            .getByText(UNDER_REVIEW_CAREGIVER_LABEL, { exact: true })
+            .locator('xpath=ancestor::div[contains(@class, "flex w-full flex-col")][1]');
         await expect(reviewCard).toBeVisible();
         await reviewCard.getByRole('button', { name: 'Approve' }).click();
 

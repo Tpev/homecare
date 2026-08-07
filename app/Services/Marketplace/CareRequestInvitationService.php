@@ -7,6 +7,7 @@ use App\Models\CareRequestApplication;
 use App\Models\CareRequestInvitation;
 use App\Models\User;
 use App\Services\Notifications\MarketplaceNotificationService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -52,14 +53,14 @@ class CareRequestInvitationService
         bool $reinvite = false,
         string $source = 'care_request',
     ): CareRequestInvitationResult {
-        if ($family->role !== 'family' || (int) $careRequest->family_user_id !== (int) $family->id) {
+        if ($family->role !== 'family' || ! app(FamilyAccountContext::class)->canAccessRecord($family, $careRequest)) {
             throw new AuthorizationException('You cannot manage invitations for this request.');
         }
 
         $result = DB::transaction(function () use ($family, $careRequest, $caregiver, $message, $reinvite): CareRequestInvitationResult {
             $lockedRequest = CareRequest::query()->lockForUpdate()->findOrFail($careRequest->id);
 
-            if ((int) $lockedRequest->family_user_id !== (int) $family->id) {
+            if (! app(FamilyAccountContext::class)->canAccessRecord($family, $lockedRequest)) {
                 throw new AuthorizationException('You cannot manage invitations for this request.');
             }
 
@@ -160,7 +161,9 @@ class CareRequestInvitationService
             $cleanMessage = trim((string) $message) ?: null;
             if ($invitation) {
                 $invitation->forceFill([
-                    'family_user_id' => $family->id,
+                    'family_account_id' => $lockedRequest->family_account_id,
+                    'family_user_id' => $lockedRequest->family_user_id,
+                    'invited_by_user_id' => $family->id,
                     'care_request_application_id' => null,
                     'status' => CareRequestInvitation::STATUS_PENDING,
                     'message' => $cleanMessage,
@@ -182,7 +185,9 @@ class CareRequestInvitationService
                     'caregiver_user_id' => $caregiver->id,
                 ],
                 [
-                    'family_user_id' => $family->id,
+                    'family_account_id' => $lockedRequest->family_account_id,
+                    'family_user_id' => $lockedRequest->family_user_id,
+                    'invited_by_user_id' => $family->id,
                     'status' => CareRequestInvitation::STATUS_PENDING,
                     'message' => $cleanMessage,
                     'expires_at' => now()->addHours(72),

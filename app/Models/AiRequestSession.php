@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToFamilyAccount;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AiRequestSession extends Model
 {
-    use HasFactory;
+    use BelongsToFamilyAccount, HasFactory;
     use HasUuids;
 
     public const STATUS_DRAFTING = 'drafting';
@@ -22,6 +23,7 @@ class AiRequestSession extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'family_account_id',
         'family_user_id',
         'status',
         'draft_json',
@@ -57,4 +59,3 @@ class AiRequestSession extends Model
         return $this->hasMany(AiRequestMessage::class);
     }
 }
-

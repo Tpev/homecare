@@ -6,7 +6,9 @@ use App\Exceptions\Payments\PaymentActionRequiredException;
 use App\Exceptions\Payments\PaymentException;
 use App\Models\CareBooking;
 use App\Models\CaregiverProfile;
+use App\Models\FamilyAccount;
 use App\Models\User;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use RuntimeException;
 use Stripe\ErrorObject;
 use Stripe\Event;
@@ -32,27 +34,39 @@ class StripeClient
 
     public function ensureFamilyCustomer(User $family): string
     {
+        $account = $this->familyAccount($family);
+        $owner = $account->owner;
+
+        if (! $account->stripe_customer_id && $owner?->stripe_customer_id) {
+            $account->forceFill(['stripe_customer_id' => $owner->stripe_customer_id])->save();
+        }
+
         if ($this->isBypass()) {
-            if (! $family->stripe_customer_id) {
-                $family->forceFill([
-                    'stripe_customer_id' => 'cus_bypass_'.$family->id,
+            if (! $account->stripe_customer_id) {
+                $account->forceFill([
+                    'stripe_customer_id' => 'cus_bypass_account_'.$account->id,
                 ])->save();
             }
 
-            return (string) $family->stripe_customer_id;
+            if ($owner && ! $owner->stripe_customer_id) {
+                $owner->forceFill(['stripe_customer_id' => $account->stripe_customer_id])->save();
+            }
+
+            return (string) $account->stripe_customer_id;
         }
 
-        if ($family->stripe_customer_id) {
-            return (string) $family->stripe_customer_id;
+        if ($account->stripe_customer_id) {
+            return (string) $account->stripe_customer_id;
         }
 
         try {
             $customer = $this->client()->customers->create([
-                'email' => $family->email,
-                'name' => $family->name,
+                'email' => $owner?->email ?? $family->email,
+                'name' => $owner?->name ?? $family->name,
                 'metadata' => [
-                    'user_id' => (string) $family->id,
-                    'role' => (string) $family->role,
+                    'family_account_id' => (string) $account->id,
+                    'owner_user_id' => (string) $account->owner_user_id,
+                    'created_by_user_id' => (string) $family->id,
                 ],
             ]);
         } catch (Throwable $e) {
@@ -62,9 +76,13 @@ class StripeClient
             );
         }
 
-        $family->forceFill([
+        $account->forceFill([
             'stripe_customer_id' => (string) $customer->id,
         ])->save();
+
+        if ($owner && ! $owner->stripe_customer_id) {
+            $owner->forceFill(['stripe_customer_id' => (string) $customer->id])->save();
+        }
 
         return (string) $customer->id;
     }
@@ -124,6 +142,11 @@ class StripeClient
 
     public function createFamilySetupCheckoutSession(User $family, string $successUrl, string $cancelUrl): string
     {
+        $account = $this->familyAccount($family);
+        if (! app(FamilyAccountContext::class)->isOwner($family)) {
+            throw new PaymentException('Only the family account owner can change the payment method.');
+        }
+
         if ($this->isBypass()) {
             return $successUrl;
         }
@@ -138,14 +161,18 @@ class StripeClient
                 'cancel_url' => $cancelUrl,
                 'payment_method_types' => ['card'],
                 'metadata' => [
-                    'family_user_id' => (string) $family->id,
+                    'family_account_id' => (string) $account->id,
+                    'family_user_id' => (string) $account->owner_user_id,
+                    'acting_user_id' => (string) $family->id,
                 ],
                 'setup_intent_data' => [
                     'metadata' => [
-                        'family_user_id' => (string) $family->id,
+                        'family_account_id' => (string) $account->id,
+                        'family_user_id' => (string) $account->owner_user_id,
+                        'acting_user_id' => (string) $family->id,
                     ],
                 ],
-            ], $this->requestOptions('billing-setup:user-'.$family->id.':'.(string) \Illuminate\Support\Str::uuid()));
+            ], $this->requestOptions('billing-setup:account-'.$account->id.':actor-'.$family->id.':'.(string) \Illuminate\Support\Str::uuid()));
         } catch (Throwable $e) {
             throw new PaymentException(
                 'Unable to open card setup right now. Please try again.',
@@ -163,6 +190,11 @@ class StripeClient
 
     public function syncFamilySetupCheckoutSession(User $family, string $sessionId): void
     {
+        $account = $this->familyAccount($family);
+        if (! app(FamilyAccountContext::class)->isOwner($family)) {
+            throw new PaymentException('Only the family account owner can change the payment method.');
+        }
+
         if ($sessionId === '') {
             return;
         }
@@ -189,8 +221,10 @@ class StripeClient
             throw new PaymentException('Card setup is not completed yet.');
         }
 
+        $metadataAccountId = (int) ($session->metadata['family_account_id'] ?? 0);
         $metadataUserId = (int) ($session->metadata['family_user_id'] ?? 0);
-        if ($metadataUserId > 0 && $metadataUserId !== (int) $family->id) {
+        if (($metadataAccountId > 0 && $metadataAccountId !== (int) $account->id)
+            || ($metadataAccountId < 1 && $metadataUserId > 0 && $metadataUserId !== (int) $account->owner_user_id)) {
             throw new PaymentException('This billing session does not belong to your account.');
         }
 
@@ -199,8 +233,11 @@ class StripeClient
             throw new PaymentException('Billing session did not return a customer.');
         }
 
-        if (! $family->stripe_customer_id) {
-            $family->forceFill(['stripe_customer_id' => $customerId])->save();
+        if (! $account->stripe_customer_id) {
+            $account->forceFill(['stripe_customer_id' => $customerId])->save();
+        }
+        if (! $account->owner?->stripe_customer_id) {
+            $account->owner?->forceFill(['stripe_customer_id' => $customerId])->save();
         }
 
         $setupIntent = $session->setup_intent;
@@ -218,10 +255,43 @@ class StripeClient
                 'invoice_settings' => [
                     'default_payment_method' => $paymentMethodId,
                 ],
-            ], $this->requestOptions('billing-default-payment:user-'.$family->id.'-pm-'.$paymentMethodId));
+            ], $this->requestOptions('billing-default-payment:account-'.$account->id.'-actor-'.$family->id.'-pm-'.$paymentMethodId));
         } catch (Throwable $e) {
             throw new PaymentException('Unable to finalize card setup.', $e->getMessage());
         }
+    }
+
+    public function updateFamilyCustomerOwner(FamilyAccount $account, User $owner): void
+    {
+        $customerId = trim((string) $account->stripe_customer_id);
+        if ($customerId === '' || $this->isBypass()) {
+            return;
+        }
+
+        try {
+            $this->client()->customers->update($customerId, [
+                'email' => $owner->email,
+                'name' => $owner->name,
+                'metadata' => [
+                    'family_account_id' => (string) $account->id,
+                    'owner_user_id' => (string) $owner->id,
+                ],
+            ]);
+        } catch (Throwable $exception) {
+            throw new PaymentException(
+                'Unable to transfer billing ownership right now. No account changes were made.',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    private function familyAccount(User $family): FamilyAccount
+    {
+        if ($family->role !== 'family') {
+            throw new PaymentException('A family account is required for billing.');
+        }
+
+        return app(FamilyAccountContext::class)->account($family);
     }
 
     /**
@@ -420,7 +490,9 @@ class StripeClient
                 'metadata' => [
                     'care_booking_id' => (string) $booking->id,
                     'care_request_id' => (string) $booking->care_request_id,
+                    'family_account_id' => (string) $booking->family_account_id,
                     'family_user_id' => (string) $booking->family_user_id,
+                    'acting_user_id' => (string) (auth()->id() ?: $booking->family_user_id),
                     'caregiver_user_id' => (string) $booking->caregiver_user_id,
                 ],
             ], $this->requestOptions($idempotencyKey));
@@ -519,7 +591,9 @@ class StripeClient
                 'metadata' => [
                     'care_booking_id' => (string) $booking->id,
                     'care_request_id' => (string) $booking->care_request_id,
+                    'family_account_id' => (string) $booking->family_account_id,
                     'family_user_id' => (string) $booking->family_user_id,
+                    'acting_user_id' => (string) (auth()->id() ?: $booking->family_user_id),
                     'caregiver_user_id' => (string) $booking->caregiver_user_id,
                 ],
             ], $this->requestOptions($idempotencyKey));

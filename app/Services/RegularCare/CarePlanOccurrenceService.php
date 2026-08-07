@@ -280,6 +280,7 @@ class CarePlanOccurrenceService
                 'plan_visit_kind' => 'regular',
                 'plan_schedule_version' => $plan->schedule_version,
                 'care_request_application_id' => $application->id,
+                'family_account_id' => $plan->family_account_id,
                 'family_user_id' => $plan->family_user_id,
                 'caregiver_user_id' => $plan->caregiver_user_id,
                 'agreement_snapshot' => $this->trust->buildAgreementSnapshot($request->fresh(['recipient', 'tasks']), $application),
@@ -371,6 +372,7 @@ class CarePlanOccurrenceService
                 $hourlyRate = $this->pricing->hourlyRateForFamily($plan->family, (float) $plan->hourly_rate);
 
                 $request = CareRequest::query()->create([
+                    'family_account_id' => $plan->family_account_id,
                     'family_user_id' => $plan->family_user_id,
                     'care_plan_id' => $plan->id,
                     'is_system_generated' => true,
@@ -429,6 +431,7 @@ class CarePlanOccurrenceService
                     'plan_visit_kind' => $kind,
                     'plan_schedule_version' => $plan->schedule_version,
                     'care_request_application_id' => $application->id,
+                    'family_account_id' => $plan->family_account_id,
                     'family_user_id' => $plan->family_user_id,
                     'caregiver_user_id' => $plan->caregiver_user_id,
                     'agreement_snapshot' => $this->trust->buildAgreementSnapshot($request->fresh(['recipient', 'tasks']), $application),

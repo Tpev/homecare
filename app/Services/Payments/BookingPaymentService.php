@@ -189,7 +189,9 @@ class BookingPaymentService
         $payment = CareBookingPayment::query()->updateOrCreate(
             ['care_booking_id' => $booking->id],
             [
+                'family_account_id' => (int) $booking->family_account_id,
                 'family_user_id' => (int) $booking->family_user_id,
+                'initiated_by_user_id' => auth()->id() ?: $booking->family_user_id,
                 'caregiver_user_id' => (int) $booking->caregiver_user_id,
                 'status' => CareBookingPayment::STATUS_AUTHORIZED,
                 'currency' => $currency,
@@ -358,7 +360,9 @@ class BookingPaymentService
         $payment = CareBookingPayment::query()->updateOrCreate(
             ['care_booking_id' => $booking->id],
             [
+                'family_account_id' => (int) $booking->family_account_id,
                 'family_user_id' => (int) $booking->family_user_id,
+                'initiated_by_user_id' => auth()->id() ?: $booking->family_user_id,
                 'caregiver_user_id' => (int) $booking->caregiver_user_id,
                 'status' => $paymentStatus,
                 'currency' => $currency,
@@ -1126,6 +1130,8 @@ class BookingPaymentService
     private function authorizationMetadata(CareBooking $booking, int $amountCents): array
     {
         return [
+            'family_account_id' => (int) $booking->family_account_id,
+            'acting_user_id' => auth()->id() ?: $booking->family_user_id,
             'hourly_rate' => $this->effectiveHourlyRate($booking),
             'estimated_minutes' => $this->estimatedMinutes($booking),
             'platform_fee_percent' => $this->platformFeePercent($booking),
@@ -1194,7 +1200,9 @@ class BookingPaymentService
                 } else {
                     CareBookingPayment::query()->create([
                         'care_booking_id' => $booking->id,
+                        'family_account_id' => (int) $booking->family_account_id,
                         'family_user_id' => (int) $booking->family_user_id,
+                        'initiated_by_user_id' => auth()->id() ?: $booking->family_user_id,
                         'caregiver_user_id' => (int) $booking->caregiver_user_id,
                         'status' => CareBookingPayment::STATUS_DRAFT,
                         'currency' => $currency,
@@ -1538,7 +1546,9 @@ class BookingPaymentService
         return CareBookingPayment::query()->updateOrCreate(
             ['care_booking_id' => $booking->id],
             [
+                'family_account_id' => (int) $booking->family_account_id,
                 'family_user_id' => (int) $booking->family_user_id,
+                'initiated_by_user_id' => auth()->id() ?: $booking->family_user_id,
                 'caregiver_user_id' => (int) $booking->caregiver_user_id,
                 'status' => $status,
                 'currency' => $this->stripe->currency(),

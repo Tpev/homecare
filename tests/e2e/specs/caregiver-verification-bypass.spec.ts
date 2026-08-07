@@ -10,6 +10,7 @@ test.describe('Caregiver Identity Verification (Bypass Mode)', () => {
         await page.getByRole('button', { name: /Start verification|Start new verification/i }).click();
 
         await expect(page.getByText('Verification submitted. We will update your status shortly.')).toBeVisible();
-        await expect(page.getByText('Approved', { exact: true }).first()).toBeVisible();
+        const identityStep = page.getByRole('link', { name: /Identity verification/ });
+        await expect(identityStep).toContainText('DONE');
     });
 });

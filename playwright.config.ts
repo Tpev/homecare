@@ -34,7 +34,7 @@ export default defineConfig({
         video: 'retain-on-failure',
     },
     webServer: {
-        command: 'php -r "if (!is_dir(\'database\')) { mkdir(\'database\', 0777, true); } if (!file_exists(\'database/playwright.sqlite\')) { touch(\'database/playwright.sqlite\'); }" && php artisan migrate:fresh --force && php artisan homecare:e2e-seed && php artisan serve --host=127.0.0.1 --port=8010',
+        command: 'php -r "if (!is_dir(\'database\')) { mkdir(\'database\', 0777, true); } if (!file_exists(\'database/playwright.sqlite\')) { touch(\'database/playwright.sqlite\'); }" && php artisan migrate:fresh --force && php artisan homecare:e2e-seed && php artisan homecare:verify-family-accounts && php artisan serve --host=127.0.0.1 --port=8010',
         url: 'http://127.0.0.1:8010',
         reuseExistingServer: false,
         timeout: 180_000,

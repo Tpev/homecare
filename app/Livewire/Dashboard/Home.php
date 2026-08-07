@@ -10,6 +10,7 @@ use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
 use App\Services\Caregiver\CaregiverVisitTimelineService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Support\CaregiverOnboardingState;
 use App\Support\CaregiverPrelaunch;
 use App\Support\CaregiverWorkInboxBuilder;
@@ -26,6 +27,12 @@ class Home extends Component
     public function mount(CaregiverOnboardingState $onboardingState): void
     {
         $user = auth()->user();
+        if ($user?->isAdministrator()) {
+            $this->redirect(route('admin.crm.index', absolute: false), navigate: true);
+
+            return;
+        }
+
         if ($user && $user->role === 'sales') {
             $this->redirect(route('admin.crm.index', absolute: false), navigate: true);
 
@@ -53,17 +60,26 @@ class Home extends Component
         $user = auth()->user();
         abort_unless($user, 403);
 
+        if ($user->isAdministrator()) {
+            return view('livewire.dashboard.home', [
+                'mode' => 'admin',
+                'familyData' => [],
+                'caregiverData' => [],
+            ]);
+        }
+
         $mode = $user->role;
 
         $familyData = [];
         $caregiverData = [];
 
         if ($mode === 'family') {
+            $familyAccount = app(FamilyAccountContext::class)->account($user);
             $requestQuery = CareRequest::query()
-                ->where('family_user_id', $user->id)
+                ->forFamilyAccount($familyAccount)
                 ->where('is_system_generated', false);
             $openRequestQuery = CareRequest::query()
-                ->where('family_user_id', $user->id)
+                ->forFamilyAccount($familyAccount)
                 ->where('is_system_generated', false)
                 ->where('status', CareRequest::STATUS_OPEN);
 
@@ -81,7 +97,7 @@ class Home extends Component
                 ->count();
 
             $activeShiftCount = CareBooking::query()
-                ->where('family_user_id', $user->id)
+                ->forFamilyAccount($familyAccount)
                 ->whereNull('care_plan_id')
                 ->whereIn('status', [
                     CareBooking::STATUS_SCHEDULED,
@@ -91,7 +107,7 @@ class Home extends Component
                 ])
                 ->count()
                 + CarePlan::query()
-                    ->where('family_user_id', $user->id)
+                    ->forFamilyAccount($familyAccount)
                     ->whereIn('status', [
                         CarePlan::STATUS_ACTIVE,
                         CarePlan::STATUS_PAYMENT_ATTENTION,
@@ -104,9 +120,10 @@ class Home extends Component
                 'ready_to_review' => $readyToReviewCount,
                 'waiting_for_applicants' => $waitingApplicantsCount,
                 'active_shifts' => $activeShiftCount,
-                'unread_messages' => $this->unreadMessagesCount($user->id, 'family'),
+                'unread_messages' => $this->unreadMessagesCount($user, 'family'),
             ];
-            $familyData['billing_ready'] = filled($user->stripe_customer_id);
+            $familyData['billing_ready'] = filled($familyAccount->stripe_customer_id)
+                || filled($familyAccount->owner?->stripe_customer_id);
 
             $familyData['urgent_open_requests'] = (clone $openRequestQuery)
                 ->whereDoesntHave('applications')
@@ -124,7 +141,7 @@ class Home extends Component
                         ]);
                     },
                 ])
-                ->where('family_user_id', $user->id)
+                ->forFamilyAccount($familyAccount)
                 ->where('is_system_generated', false)
                 ->whereIn('status', [CareRequest::STATUS_OPEN, CareRequest::STATUS_FILLED])
                 ->orderByRaw("CASE WHEN status = '".CareRequest::STATUS_OPEN."' THEN 0 ELSE 1 END")
@@ -139,20 +156,20 @@ class Home extends Component
             ];
             $timesheetBooking = CareBooking::query()
                 ->with($dashboardBookingRelations)
-                ->where('family_user_id', $user->id)
+                ->forFamilyAccount($familyAccount)
                 ->whereIn('status', [CareBooking::STATUS_COMPLETED, CareBooking::STATUS_REVIEWED])
                 ->whereNull('family_confirmed_at')
                 ->orderBy('completed_at')
                 ->first();
             $liveBooking = CareBooking::query()
                 ->with($dashboardBookingRelations)
-                ->where('family_user_id', $user->id)
+                ->forFamilyAccount($familyAccount)
                 ->whereIn('status', [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED])
                 ->orderBy('scheduled_start_at')
                 ->first();
             $nextScheduledBooking = CareBooking::query()
                 ->with($dashboardBookingRelations)
-                ->where('family_user_id', $user->id)
+                ->forFamilyAccount($familyAccount)
                 ->where('status', CareBooking::STATUS_SCHEDULED)
                 ->whereScheduledCheckInNotExpired()
                 ->orderBy('scheduled_start_at')
@@ -173,12 +190,12 @@ class Home extends Component
 
             $familyData['recent_applicants'] = CareRequestApplication::query()
                 ->with([
-                    'careRequest:id,title,family_user_id,status',
+                    'careRequest:id,title,family_account_id,family_user_id,status',
                     'caregiver:id,name',
                     'conversation:id,care_request_application_id',
                 ])
                 ->whereHas('careRequest', fn ($q) => $q
-                    ->where('family_user_id', $user->id)
+                    ->forFamilyAccount($familyAccount)
                     ->where('is_system_generated', false))
                 ->latest()
                 ->limit(6)
@@ -190,7 +207,7 @@ class Home extends Component
                     'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
                     'nextBooking.payment:id,care_booking_id,status,last_error',
                 ])
-                ->where('family_user_id', $user->id)
+                ->forFamilyAccount($familyAccount)
                 ->latest()
                 ->limit(4)
                 ->get();
@@ -234,7 +251,7 @@ class Home extends Component
                         $query->whereNull('expires_at')->orWhere('expires_at', '>=', now());
                     })
                     ->count(),
-                'unread_messages' => $this->unreadMessagesCount($user->id, 'caregiver'),
+                'unread_messages' => $this->unreadMessagesCount($user, 'caregiver'),
             ];
 
             $caregiverData['work_inbox_counts'] = $workInboxBuilder->countsForUser($user);
@@ -399,7 +416,7 @@ class Home extends Component
         return view('livewire.dashboard.home', compact('mode', 'familyData', 'caregiverData'));
     }
 
-    private function unreadMessagesCount(int $userId, string $role): int
+    private function unreadMessagesCount($user, string $role): int
     {
         if (! Schema::hasTable('care_request_conversations')) {
             return 0;
@@ -407,20 +424,18 @@ class Home extends Component
 
         if ($role === 'family') {
             return CareRequestConversation::query()
-                ->where('family_user_id', $userId)
                 ->whereNotNull('last_message_at')
-                ->where('last_message_sender_id', '!=', $userId)
-                ->where(function ($query) {
-                    $query->whereNull('family_last_read_at')
-                        ->orWhereColumn('last_message_at', '>', 'family_last_read_at');
-                })
+                ->where('last_message_sender_id', '!=', $user->id)
+                ->whereDoesntHave('familyReads', fn ($query) => $query
+                    ->where('user_id', $user->id)
+                    ->whereColumn('family_conversation_reads.last_read_at', '>=', 'care_request_conversations.last_message_at'))
                 ->count();
         }
 
         return CareRequestConversation::query()
-            ->where('caregiver_user_id', $userId)
+            ->where('caregiver_user_id', $user->id)
             ->whereNotNull('last_message_at')
-            ->where('last_message_sender_id', '!=', $userId)
+            ->where('last_message_sender_id', '!=', $user->id)
             ->where(function ($query) {
                 $query->whereNull('caregiver_last_read_at')
                     ->orWhereColumn('last_message_at', '>', 'caregiver_last_read_at');

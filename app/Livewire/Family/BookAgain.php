@@ -6,6 +6,7 @@ use App\Models\CareBooking;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestInvitation;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Support\CaregiverPrelaunch;
 use App\Support\FunnelTracker;
@@ -49,7 +50,7 @@ class BookAgain extends Component
             ])
             ->findOrFail($careRequest);
 
-        abort_unless((int) $this->sourceRequest->family_user_id === (int) auth()->id(), 403);
+        abort_unless(app(FamilyAccountContext::class)->canAccessRecord(auth()->user(), $this->sourceRequest), 403);
         abort_unless($this->sourceIsEligible(), 404);
 
         $hiredApplication = $this->hiredApplication();
@@ -123,6 +124,7 @@ class BookAgain extends Component
 
         $newRequest = DB::transaction(function () use ($hiredApplication, $start, $end): CareRequest {
             $source = $this->sourceRequest;
+            $ownership = app(FamilyAccountContext::class)->ownershipAttributes(auth()->user());
             $recipientName = trim((string) ($source->recipient?->full_name ?? ''));
             $recipientName = $recipientName !== '' ? $recipientName : 'the care recipient';
             $hourlyRate = app(MarketplacePricing::class)->hourlyRateForFamily(
@@ -131,7 +133,8 @@ class BookAgain extends Component
             );
 
             $newRequest = CareRequest::query()->create([
-                'family_user_id' => auth()->id(),
+                ...$ownership,
+                'created_by_user_id' => auth()->id(),
                 'title' => 'One-time care for '.$recipientName,
                 'additional_info' => $source->additional_info,
                 'scope_of_work' => $source->scope_of_work,
@@ -181,7 +184,8 @@ class BookAgain extends Component
 
             CareRequestInvitation::query()->create([
                 'care_request_id' => $newRequest->id,
-                'family_user_id' => auth()->id(),
+                ...$ownership,
+                'invited_by_user_id' => auth()->id(),
                 'caregiver_user_id' => $hiredApplication->caregiver_user_id,
                 'status' => CareRequestInvitation::STATUS_PENDING,
                 'message' => trim($this->message) ?: 'We would like to book you again for one more visit.',

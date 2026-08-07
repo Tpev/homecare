@@ -4,13 +4,16 @@ namespace App\Policies;
 
 use App\Models\ContinuousCoverageShift;
 use App\Models\User;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 
 class ContinuousCoverageShiftPolicy
 {
+    public function __construct(private readonly FamilyAccountContext $familyAccounts) {}
+
     public function view(User $user, ContinuousCoverageShift $shift): bool
     {
         return $user->isAdministrator()
-            || ($user->role === 'family' && (int) $shift->plan()->value('family_user_id') === (int) $user->id)
+            || ($user->role === 'family' && $this->familyAccounts->canAccessRecord($user, $shift->plan))
             || ($user->role === 'caregiver' && (
                 (int) $shift->assigned_caregiver_user_id === (int) $user->id
                 || (int) $shift->released_by_user_id === (int) $user->id

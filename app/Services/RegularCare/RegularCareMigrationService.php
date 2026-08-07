@@ -100,11 +100,12 @@ class RegularCareMigrationService
                 $caregiver = $report['caregiver'];
                 $application = $report['application'];
                 $relationship = CareRelationship::query()->firstOrNew([
-                    'family_user_id' => $request->family_user_id,
+                    'family_account_id' => $request->family_account_id,
                     'caregiver_user_id' => $caregiver->id,
                     'recipient_name' => $request->recipient?->full_name,
                 ]);
                 $relationship->fill([
+                    'family_user_id' => $request->family_user_id,
                     'source_care_request_id' => $relationship->source_care_request_id ?: $request->id,
                     'last_care_request_id' => $request->id,
                     'last_care_booking_id' => $request->booking?->id,
@@ -217,6 +218,7 @@ class RegularCareMigrationService
         $recipient = $request->recipient;
 
         return new CarePlan([
+            'family_account_id' => $request->family_account_id,
             'family_user_id' => $request->family_user_id,
             'caregiver_user_id' => $caregiverId,
             'source_care_request_id' => $request->id,

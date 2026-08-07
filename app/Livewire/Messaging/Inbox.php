@@ -79,13 +79,12 @@ class Inbox extends Component
                 'last_message_sender_id' => auth()->id(),
             ];
 
-            if (auth()->user()->role === 'family') {
-                $payload['family_last_read_at'] = now();
-            } else {
+            if (auth()->user()->role !== 'family') {
                 $payload['caregiver_last_read_at'] = now();
             }
 
             $conversation->forceFill($payload)->save();
+            $conversation->markRead(auth()->user());
         });
 
         $recipient = auth()->user()->role === 'family'
@@ -133,9 +132,7 @@ class Inbox extends Component
             ->get();
 
         return $conversations->map(function (CareRequestConversation $conversation) use ($user) {
-            $readAt = $user->role === 'family'
-                ? $conversation->family_last_read_at
-                : $conversation->caregiver_last_read_at;
+            $readAt = $conversation->lastReadAtFor($user);
 
             $conversation->is_unread_for_current_user = $conversation->last_message_at
                 && (int) $conversation->last_message_sender_id !== (int) $user->id
@@ -195,13 +192,11 @@ class Inbox extends Component
         $this->authorize('view', $conversation);
 
         if ($currentUser->role === 'family') {
-            if ((int) $conversation->last_message_sender_id === (int) $currentUser->id) {
+            $readAt = $conversation->lastReadAtFor($currentUser);
+            if ($readAt && $conversation->last_message_at && $readAt->gte($conversation->last_message_at)) {
                 return;
             }
-            if ($conversation->family_last_read_at && $conversation->last_message_at && $conversation->family_last_read_at->gte($conversation->last_message_at)) {
-                return;
-            }
-            $conversation->forceFill(['family_last_read_at' => now()])->save();
+            $conversation->markRead($currentUser);
         } elseif ($currentUser->role === 'caregiver') {
             if ((int) $conversation->last_message_sender_id === (int) $currentUser->id) {
                 return;
@@ -222,6 +217,7 @@ class Inbox extends Component
                 'family:id,name',
                 'caregiver:id,name',
                 'application:id,care_request_id,caregiver_user_id,status',
+                'familyReads' => fn ($query) => $query->where('user_id', $user->id),
             ]);
     }
 

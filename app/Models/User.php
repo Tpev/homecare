@@ -225,4 +225,30 @@ class User extends Authenticatable
     {
         return $this->hasOne(FamilyRecipientProfile::class, 'family_user_id');
     }
+
+    public function ownedFamilyAccount(): HasOne
+    {
+        return $this->hasOne(FamilyAccount::class, 'owner_user_id');
+    }
+
+    public function familyAccountMemberships(): HasMany
+    {
+        return $this->hasMany(FamilyAccountMember::class);
+    }
+
+    public function activeFamilyAccountMembership(): HasOne
+    {
+        return $this->hasOne(FamilyAccountMember::class)
+            ->where('status', FamilyAccountMember::STATUS_ACTIVE);
+    }
+
+    public function familyAccountInvitationsSent(): HasMany
+    {
+        return $this->hasMany(FamilyAccountInvitation::class, 'invited_by_user_id');
+    }
+
+    public function familyConversationReads(): HasMany
+    {
+        return $this->hasMany(FamilyConversationRead::class);
+    }
 }

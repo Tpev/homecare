@@ -8,6 +8,7 @@ use App\Models\CareBookingPayment;
 use App\Models\CareBookingTimeCorrection;
 use App\Models\CarePlan;
 use App\Models\User;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -132,7 +133,7 @@ class FamilyCareHistoryService
             ->values();
 
         $plans = CarePlan::query()
-            ->where('family_user_id', $family->id)
+            ->forFamilyAccount(app(FamilyAccountContext::class)->account($family))
             ->whereIn('id', (clone $history)->reorder()->whereNotNull('care_bookings.care_plan_id')->select('care_bookings.care_plan_id'))
             ->orderBy('title')
             ->get(['id', 'title'])
@@ -234,7 +235,7 @@ class FamilyCareHistoryService
         $expiredCheckInCutoff = now()->subMinutes(CareBooking::regularCareCheckInGraceMinutes());
 
         return CareBooking::query()
-            ->where('care_bookings.family_user_id', $family->id)
+            ->forFamilyAccount(app(FamilyAccountContext::class)->account($family))
             ->whereNotIn('care_bookings.status', [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED])
             ->where(function (Builder $history) use ($expiredCheckInCutoff): void {
                 $history

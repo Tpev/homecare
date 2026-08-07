@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToFamilyAccount;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,10 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CareRequestConversation extends Model
 {
-    use HasFactory;
+    use BelongsToFamilyAccount, HasFactory;
 
     protected $fillable = [
         'care_request_id',
+        'family_account_id',
         'family_user_id',
         'caregiver_user_id',
         'care_request_application_id',
@@ -67,10 +69,18 @@ class CareRequestConversation extends Model
         return $this->hasMany(CareRequestMessage::class)->orderBy('created_at');
     }
 
+    public function familyReads(): HasMany
+    {
+        return $this->hasMany(FamilyConversationRead::class);
+    }
+
     public function scopeForUser($query, User $user)
     {
         if ($user->role === 'family') {
-            return $query->where('family_user_id', $user->id);
+            $accountId = app(\App\Services\FamilyAccounts\FamilyAccountContext::class)
+                ->membershipFor($user, false)?->family_account_id;
+
+            return $query->where('family_account_id', $accountId ?? 0);
         }
 
         if ($user->role === 'caregiver') {
@@ -82,8 +92,11 @@ class CareRequestConversation extends Model
 
     public function isParticipant(User $user): bool
     {
-        return (int) $this->family_user_id === (int) $user->id
-            || (int) $this->caregiver_user_id === (int) $user->id;
+        if ($user->role === 'family') {
+            return app(\App\Services\FamilyAccounts\FamilyAccountContext::class)->canAccessRecord($user, $this);
+        }
+
+        return (int) $this->caregiver_user_id === (int) $user->id;
     }
 
     public function canSendMessages(User $user): bool
@@ -110,8 +123,32 @@ class CareRequestConversation extends Model
             return;
         }
 
-        $column = $user->role === 'family' ? 'family_last_read_at' : 'caregiver_last_read_at';
-        $this->forceFill([$column => now()])->save();
+        if ($user->role === 'family') {
+            FamilyConversationRead::query()->updateOrCreate(
+                ['care_request_conversation_id' => $this->id, 'user_id' => $user->id],
+                ['last_read_at' => now()],
+            );
+
+            // Keep this populated for compatibility with old reporting and rollback-free deploys.
+            $this->forceFill(['family_last_read_at' => now()])->save();
+
+            return;
+        }
+
+        $this->forceFill(['caregiver_last_read_at' => now()])->save();
+    }
+
+    public function lastReadAtFor(User $user): mixed
+    {
+        if ($user->role !== 'family') {
+            return $this->caregiver_last_read_at;
+        }
+
+        $read = $this->relationLoaded('familyReads')
+            ? $this->familyReads->firstWhere('user_id', $user->id)
+            : $this->familyReads()->where('user_id', $user->id)->first();
+
+        return $read?->last_read_at;
     }
 
     public static function findOrCreateForApplication(CareRequestApplication $application, int $startedByUserId): self
@@ -122,6 +159,7 @@ class CareRequestConversation extends Model
                 'caregiver_user_id' => $application->caregiver_user_id,
             ],
             [
+                'family_account_id' => $application->careRequest->family_account_id,
                 'family_user_id' => $application->careRequest->family_user_id,
                 'care_request_application_id' => $application->id,
                 'started_by_user_id' => $startedByUserId,

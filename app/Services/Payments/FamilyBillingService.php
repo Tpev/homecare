@@ -2,7 +2,9 @@
 
 namespace App\Services\Payments;
 
+use App\Models\FamilyAccount;
 use App\Models\User;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 
 class FamilyBillingService
 {
@@ -20,9 +22,15 @@ class FamilyBillingService
      */
     public function summaryFor(User $family): array
     {
-        $customerId = $family->stripe_customer_id
-            ? (string) $family->stripe_customer_id
+        $account = app(FamilyAccountContext::class)->account($family);
+        $customerId = $account->stripe_customer_id
+            ? (string) $account->stripe_customer_id
             : null;
+
+        if (! $customerId && $account->owner?->stripe_customer_id) {
+            $customerId = (string) $account->owner->stripe_customer_id;
+            $account->forceFill(['stripe_customer_id' => $customerId])->save();
+        }
 
         $card = null;
         if ($customerId) {
@@ -60,17 +68,16 @@ class FamilyBillingService
             return;
         }
 
+        $accountId = (int) ($payload['metadata']['family_account_id'] ?? 0);
         $familyId = (int) ($payload['metadata']['family_user_id'] ?? 0);
-        $family = $familyId > 0
-            ? User::query()->find($familyId)
-            : null;
+        $account = $accountId > 0 ? FamilyAccount::query()->with('owner')->find($accountId) : null;
+        $family = $account?->owner ?: ($familyId > 0 ? User::query()->find($familyId) : null);
 
         if (! $family) {
             $customerId = (string) ($payload['customer'] ?? '');
             if ($customerId !== '') {
-                $family = User::query()
-                    ->where('stripe_customer_id', $customerId)
-                    ->first();
+                $account = FamilyAccount::query()->with('owner')->where('stripe_customer_id', $customerId)->first();
+                $family = $account?->owner ?: User::query()->where('stripe_customer_id', $customerId)->first();
             }
         }
 

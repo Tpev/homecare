@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToFamilyAccount;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use LogicException;
 
 class CompletedExtraVisitRequest extends Model
 {
-    use HasFactory;
+    use BelongsToFamilyAccount, HasFactory;
 
     public const STATUS_PENDING_FAMILY = 'pending_family';
 
@@ -42,7 +43,7 @@ class CompletedExtraVisitRequest extends Model
     public const REASON_OTHER = 'other';
 
     protected $fillable = [
-        'client_request_id', 'care_plan_id', 'family_user_id', 'caregiver_user_id',
+        'client_request_id', 'care_plan_id', 'family_account_id', 'family_user_id', 'caregiver_user_id',
         'care_booking_id', 'supersedes_id', 'approved_by_user_id', 'support_ticket_id',
         'version', 'status', 'reason_code', 'explanation', 'care_notes', 'timezone',
         'proposed_started_at', 'proposed_completed_at', 'proposed_break_minutes',

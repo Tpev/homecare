@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToFamilyAccount;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use LogicException;
 
 class CareBookingTimeCorrection extends Model
 {
-    use HasFactory;
+    use BelongsToFamilyAccount, HasFactory;
 
     public const STATUS_PENDING_FAMILY = 'pending_family';
 
@@ -47,6 +48,7 @@ class CareBookingTimeCorrection extends Model
         'client_request_id',
         'care_booking_id',
         'requester_user_id',
+        'family_account_id',
         'family_user_id',
         'version',
         'supersedes_id',

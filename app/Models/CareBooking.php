@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToFamilyAccount;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Support\Carbon;
 
 class CareBooking extends Model
 {
-    use HasFactory;
+    use BelongsToFamilyAccount, HasFactory;
 
     public const STATUS_SCHEDULED = 'scheduled';
 
@@ -35,6 +36,7 @@ class CareBooking extends Model
         'plan_visit_kind',
         'plan_schedule_version',
         'care_request_application_id',
+        'family_account_id',
         'family_user_id',
         'caregiver_user_id',
         'agreement_snapshot',
@@ -64,6 +66,7 @@ class CareBooking extends Model
         'expected_minutes',
         'worked_minutes',
         'family_confirmed_at',
+        'family_confirmed_by_user_id',
         'dispute_opened_at',
         'dispute_opened_by_user_id',
         'dispute_reason',

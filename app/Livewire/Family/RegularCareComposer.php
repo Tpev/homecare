@@ -5,6 +5,7 @@ namespace App\Livewire\Family;
 use App\Exceptions\Payments\PaymentException;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\RegularCare\CarePlanService;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
@@ -37,7 +38,7 @@ class RegularCareComposer extends Component
             ])
             ->findOrFail($careRequest);
 
-        abort_unless((int) $this->requestItem->family_user_id === (int) auth()->id(), 403);
+        abort_unless(app(FamilyAccountContext::class)->canAccessRecord(auth()->user(), $this->requestItem), 403);
 
         $service = app(CarePlanService::class);
         abort_unless($service->sourceIsEligible($this->requestItem, auth()->user()), 404);

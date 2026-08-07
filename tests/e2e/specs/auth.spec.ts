@@ -6,7 +6,7 @@ test.describe('Auth and Role Routing', () => {
         await loginAs(page, 'family');
 
         await expect(page).toHaveURL(/\/dashboard$/);
-        await expect(page.getByText('Family Dashboard')).toBeVisible();
+        await expect(page.getByText('Right now', { exact: true })).toBeVisible();
 
         await logoutFromProfileMenu(page, accounts.family.name);
         await expect(page).toHaveURL(/\/$/);
@@ -15,8 +15,8 @@ test.describe('Auth and Role Routing', () => {
     test('new caregiver is redirected to onboarding after login', async ({ page }) => {
         await loginAs(page, 'caregiverNew');
 
-        await expect(page).toHaveURL(/\/caregiver\/onboarding$/);
-        await expect(page.getByRole('heading', { name: 'Caregiver onboarding' })).toBeVisible();
+        await expect(page).toHaveURL(/\/caregiver\/setup$/);
+        await expect(page.getByRole('heading', { name: 'Finish setup to start getting booked.' })).toBeVisible();
     });
 
     test('caregiver account menu opens below its toggle and exposes the profile link', async ({ page }) => {

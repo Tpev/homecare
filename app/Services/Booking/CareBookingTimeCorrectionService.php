@@ -10,6 +10,7 @@ use App\Models\CareBookingTimeCorrection;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\Notifications\MarketplaceNotificationService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Payments\BookingPaymentService;
 use App\Services\RegularCare\CarePlanHealthService;
 use App\Support\MarketplaceEvent;
@@ -172,6 +173,7 @@ class CareBookingTimeCorrectionService
                 'client_request_id' => $clientRequestId,
                 'care_booking_id' => $lockedBooking->id,
                 'requester_user_id' => $caregiver->id,
+                'family_account_id' => $lockedBooking->family_account_id,
                 'family_user_id' => $lockedBooking->family_user_id,
                 'version' => $version,
                 'supersedes_id' => $active?->id,
@@ -457,7 +459,7 @@ class CareBookingTimeCorrectionService
         $this->assertEnabled();
         $booking = $correction->booking()->firstOrFail();
         if ($actor instanceof User
-            && (int) $actor->id !== (int) $booking->family_user_id
+            && ! ($actor->role === 'family' && app(FamilyAccountContext::class)->canAccessRecord($actor, $booking))
             && (int) $actor->id !== (int) $booking->caregiver_user_id
             && ! $actor->isAdministrator()) {
             throw new AuthorizationException;
@@ -887,14 +889,14 @@ class CareBookingTimeCorrectionService
 
     private function assertFamily(CareBookingTimeCorrection $correction, User $family): void
     {
-        if ($family->role !== 'family' || (int) $correction->family_user_id !== (int) $family->id) {
+        if ($family->role !== 'family' || ! app(FamilyAccountContext::class)->canAccessRecord($family, $correction)) {
             throw new AuthorizationException;
         }
     }
 
     private function assertFamilyOwnsBooking(CareBooking $booking, User $family): void
     {
-        if ((int) $booking->family_user_id !== (int) $family->id) {
+        if (! app(FamilyAccountContext::class)->canAccessRecord($family, $booking)) {
             throw new AuthorizationException;
         }
     }
@@ -941,6 +943,8 @@ class CareBookingTimeCorrectionService
             ->implode("\n");
 
         return SupportTicket::query()->create([
+            'family_account_id' => $booking->family_account_id,
+            'family_visibility' => 'shared_care',
             'opener_user_id' => $correction->requester_user_id,
             'counterparty_user_id' => $booking->family_user_id,
             'care_request_id' => $booking->care_request_id,

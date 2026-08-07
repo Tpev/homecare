@@ -6,6 +6,7 @@ use App\Models\CareBooking;
 use App\Models\CarePlan;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Support\CareRequestProgress;
 use App\Support\FamilyRebookingOptions;
 use Livewire\Attributes\Layout;
@@ -66,10 +67,11 @@ class RequestsIndex extends Component
 
     public function render()
     {
+        $account = app(FamilyAccountContext::class)->account(auth()->user());
         $requests = CareRequest::query()
             ->with(['recipient', 'booking'])
             ->withCount(['applications'])
-            ->where('family_user_id', auth()->id())
+            ->forFamilyAccount($account)
             ->where('is_system_generated', false)
             ->when($this->status !== 'all', fn ($q) => $q->where('status', $this->status))
             ->when($this->requestType !== 'all', fn ($q) => $q->where('request_type', $this->requestType));
@@ -87,7 +89,7 @@ class RequestsIndex extends Component
                 'caregiver:id,name,email,city,state',
                 'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
             ])
-            ->where('family_user_id', auth()->id())
+            ->forFamilyAccount($account)
             ->latest()
             ->limit(4)
             ->get();
@@ -95,7 +97,7 @@ class RequestsIndex extends Component
         $rebookableRequests = app(FamilyRebookingOptions::class)->forUser(auth()->user(), 4);
 
         $attentionCount = CareRequest::query()
-            ->where('family_user_id', auth()->id())
+            ->forFamilyAccount($account)
             ->where('is_system_generated', false)
             ->where(function ($query) {
                 $query->where(function ($requestQuery) {
@@ -123,7 +125,7 @@ class RequestsIndex extends Component
             ->count();
 
         $avgFirstResponseMinutes = CareRequest::query()
-            ->where('family_user_id', auth()->id())
+            ->forFamilyAccount($account)
             ->where('is_system_generated', false)
             ->whereNotNull('first_applicant_at')
             ->get(['created_at', 'first_applicant_at'])

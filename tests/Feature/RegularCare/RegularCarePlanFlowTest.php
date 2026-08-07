@@ -635,8 +635,13 @@ class RegularCarePlanFlowTest extends TestCase
         [$unusedFamily, $unusedCaregiver, $secondRequest] = $this->seedCompletedCareRelationship();
         $secondApplication = $secondRequest->applications->firstOrFail();
         $secondApplication->forceFill(['caregiver_user_id' => $caregiver->id])->save();
-        $secondRequest->forceFill(['family_user_id' => $family->id])->save();
+        $familyAccountId = app(\App\Services\FamilyAccounts\FamilyAccountContext::class)->account($family)->id;
+        $secondRequest->forceFill([
+            'family_account_id' => $familyAccountId,
+            'family_user_id' => $family->id,
+        ])->save();
         $secondRequest->booking->forceFill([
+            'family_account_id' => $familyAccountId,
             'family_user_id' => $family->id,
             'caregiver_user_id' => $caregiver->id,
             'family_confirmed_at' => now(),

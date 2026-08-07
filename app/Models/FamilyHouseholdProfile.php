@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToFamilyAccount;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FamilyHouseholdProfile extends Model
 {
-    use HasFactory;
+    use BelongsToFamilyAccount, HasFactory;
 
     protected $fillable = [
+        'family_account_id',
         'family_user_id',
         'address_line1',
         'address_line2',
@@ -27,4 +29,3 @@ class FamilyHouseholdProfile extends Model
         return $this->belongsTo(User::class, 'family_user_id');
     }
 }
-

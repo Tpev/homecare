@@ -48,7 +48,7 @@ test.describe('Caregiver background surfaces', () => {
         await page.goto('/admin/caregivers/reviews');
 
         const reviewCard = page
-            .getByText('E2E Under Review Caregiver (caregiver.review.e2e@example.com)', { exact: true })
+            .getByText('E2E Background Review Caregiver (caregiver.background.review.e2e@example.com)', { exact: true })
             .locator('xpath=ancestor::div[contains(@class, "flex w-full flex-col")][1]');
         await expect(reviewCard).toBeVisible();
         await expect(reviewCard.getByRole('heading', { name: 'Care experience' })).toBeVisible();

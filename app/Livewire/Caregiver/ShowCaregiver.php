@@ -5,6 +5,7 @@ namespace App\Livewire\Caregiver;
 use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\FamilyCaregiverFavorite;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Marketplace\CaregiverInvitationDiscoveryService;
 use App\Services\Marketplace\CareRequestInvitationService;
 use App\Support\CaregiverPrelaunch;
@@ -82,7 +83,7 @@ class ShowCaregiver extends Component
             'selectedCareRequestId' => [
                 'required',
                 Rule::exists('care_requests', 'id')->where(function ($query) use ($user) {
-                    $query->where('family_user_id', $user->id)
+                    $query->where('family_account_id', app(FamilyAccountContext::class)->account($user)->id)
                         ->where('status', CareRequest::STATUS_OPEN);
                 }),
             ],
@@ -122,7 +123,7 @@ class ShowCaregiver extends Component
         abort_unless($user && $user->role === 'family', 403);
 
         $existing = FamilyCaregiverFavorite::query()
-            ->where('family_user_id', $user->id)
+            ->forFamilyAccount(app(FamilyAccountContext::class)->account($user))
             ->where('caregiver_user_id', $this->caregiver->user_id)
             ->first();
 
@@ -135,7 +136,7 @@ class ShowCaregiver extends Component
         }
 
         FamilyCaregiverFavorite::query()->create([
-            'family_user_id' => $user->id,
+            ...app(FamilyAccountContext::class)->ownershipAttributes($user),
             'caregiver_user_id' => $this->caregiver->user_id,
         ]);
 
@@ -153,7 +154,7 @@ class ShowCaregiver extends Component
         }
 
         $this->familyRequestOptions = CareRequest::query()
-            ->where('family_user_id', $user->id)
+            ->forFamilyAccount(app(FamilyAccountContext::class)->account($user))
             ->where('status', CareRequest::STATUS_OPEN)
             ->latest('created_at')
             ->get(['id', 'title'])
@@ -171,7 +172,7 @@ class ShowCaregiver extends Component
 
         $request = CareRequest::query()
             ->whereKey($contextId)
-            ->where('family_user_id', $user->id)
+            ->forFamilyAccount(app(FamilyAccountContext::class)->account($user))
             ->where('status', CareRequest::STATUS_OPEN)
             ->first();
 
@@ -204,7 +205,7 @@ class ShowCaregiver extends Component
 
         $request ??= CareRequest::query()
             ->whereKey($this->contextCareRequestId)
-            ->where('family_user_id', $user->id)
+            ->forFamilyAccount(app(FamilyAccountContext::class)->account($user))
             ->where('status', CareRequest::STATUS_OPEN)
             ->first();
 
@@ -223,7 +224,7 @@ class ShowCaregiver extends Component
         }
 
         $this->isFavorite = FamilyCaregiverFavorite::query()
-            ->where('family_user_id', $user->id)
+            ->forFamilyAccount(app(FamilyAccountContext::class)->account($user))
             ->where('caregiver_user_id', $this->caregiver->user_id)
             ->exists();
     }

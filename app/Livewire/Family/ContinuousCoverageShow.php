@@ -17,6 +17,7 @@ use App\Services\ContinuousCoverage\ContinuousCoveragePricingService;
 use App\Services\ContinuousCoverage\ContinuousCoverageReplacementService;
 use App\Services\ContinuousCoverage\ContinuousCoverageRosterService;
 use App\Services\ContinuousCoverage\ContinuousCoverageScheduleService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -116,7 +117,7 @@ class ContinuousCoverageShow extends Component
         abort_unless(auth()->user()?->role === 'family', 403);
 
         $plan = ContinuousCoveragePlan::query()
-            ->where('family_user_id', auth()->id())
+            ->forFamilyAccount(app(FamilyAccountContext::class)->account(auth()->user()))
             ->find($coveragePlan);
 
         abort_if($plan === null, 404);
@@ -878,7 +879,7 @@ class ContinuousCoverageShow extends Component
                 if ($releasedBookingIds !== []) {
                     $selectedReleasedBookings = CareBooking::query()
                         ->with(['caregiver:id,name', 'payment'])
-                        ->where('family_user_id', $this->plan->family_user_id)
+                        ->forFamilyAccount($this->plan->family_account_id)
                         ->whereKey($releasedBookingIds)
                         ->get();
                 }
@@ -962,9 +963,9 @@ class ContinuousCoverageShow extends Component
      */
     private function caregiverInitialSections(): array
     {
-        $familyId = (int) auth()->id();
+        $account = app(FamilyAccountContext::class)->account(auth()->user());
         $previousIds = CareBooking::query()
-            ->where('family_user_id', $familyId)
+            ->forFamilyAccount($account)
             ->where('status', '!=', CareBooking::STATUS_CANCELLED)
             ->selectRaw('caregiver_user_id, MAX(id) as latest_booking_id')
             ->groupBy('caregiver_user_id')
@@ -972,7 +973,7 @@ class ContinuousCoverageShow extends Component
             ->limit(6)
             ->pluck('caregiver_user_id');
         $favoriteIds = FamilyCaregiverFavorite::query()
-            ->where('family_user_id', $familyId)
+            ->forFamilyAccount($account)
             ->whereNotIn('caregiver_user_id', $previousIds)
             ->latest('created_at')
             ->limit(6)

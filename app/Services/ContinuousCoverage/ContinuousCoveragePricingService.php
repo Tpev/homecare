@@ -35,6 +35,7 @@ class ContinuousCoveragePricingService
             'proposed_rate' => (float) $plan->hourly_rate,
         ]);
         $booking = new CareBooking([
+            'family_account_id' => $plan->family_account_id,
             'family_user_id' => $plan->family_user_id,
             'caregiver_user_id' => $caregiver->id,
             'expected_minutes' => max(1, $workedMinutes),

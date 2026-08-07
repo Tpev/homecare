@@ -5,8 +5,12 @@ namespace App\Livewire\Admin;
 use App\Models\CaregiverCertification;
 use App\Models\CaregiverIdentityVerification;
 use App\Models\CaregiverModerationLog;
+use App\Models\CareRequest;
+use App\Models\FamilyAccount;
+use App\Models\FamilyAccountMember;
 use App\Models\User;
 use App\Services\Caregiver\CaregiverCertificationReviewService;
+use App\Services\FamilyAccounts\FamilyAccountOwnershipService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -19,6 +23,10 @@ class UserShow extends Component
     public User $user;
 
     public array $certificationRejectionReasons = [];
+
+    public ?int $transferOwnershipMemberId = null;
+
+    public string $transferReason = '';
 
     public function mount(User $user): void
     {
@@ -128,12 +136,30 @@ class UserShow extends Component
         session()->flash('status', 'Credential returned to the caregiver for attention.');
     }
 
+    public function transferFamilyOwnership(FamilyAccountOwnershipService $ownership): void
+    {
+        abort_unless(auth()->user()?->isAdministrator(), 403);
+        $validated = $this->validate([
+            'transferOwnershipMemberId' => ['required', 'integer'],
+            'transferReason' => ['required', 'string', 'min:10', 'max:1000'],
+        ]);
+        $account = $this->familyAccountForUser();
+        abort_unless($account, 404);
+        $destination = $account->activeMemberships()->findOrFail((int) $validated['transferOwnershipMemberId']);
+
+        $ownership->transfer(auth()->user(), $account, $destination, $validated['transferReason']);
+        $this->reset(['transferOwnershipMemberId', 'transferReason']);
+        $this->user = $this->loadUser($this->user->id);
+        session()->flash('status', 'Family Account ownership transferred and recorded in the audit history.');
+    }
+
     public function render(): View
     {
         $caregiverProfile = $this->user->caregiverProfile;
 
-        $latestFamilyRequests = $this->user->role === 'family'
-            ? $this->user->careRequests()->latest()->limit(6)->get()
+        $familyAccount = $this->user->role === 'family' ? $this->familyAccountForUser() : null;
+        $latestFamilyRequests = $familyAccount
+            ? CareRequest::query()->forFamilyAccount($familyAccount)->latest()->limit(6)->get()
             : collect();
 
         $latestCaregiverApplications = $this->user->role === 'caregiver'
@@ -149,6 +175,12 @@ class UserShow extends Component
             'latestFamilyRequests' => $latestFamilyRequests,
             'latestCaregiverApplications' => $latestCaregiverApplications,
             'latestCaregiverBookings' => $latestCaregiverBookings,
+            'familyAccount' => $familyAccount?->load([
+                'owner:id,name,email',
+                'memberships' => fn ($query) => $query->with('user:id,name,email,role')->latest('joined_at'),
+                'invitations' => fn ($query) => $query->latest(),
+                'activityLogs' => fn ($query) => $query->with(['actor:id,name,email', 'subjectUser:id,name,email'])->latest('created_at')->limit(30),
+            ]),
         ]);
     }
 
@@ -175,5 +207,14 @@ class UserShow extends Component
         return CaregiverCertification::query()
             ->where('caregiver_profile_id', $profileId)
             ->findOrFail($id);
+    }
+
+    private function familyAccountForUser(): ?FamilyAccount
+    {
+        return FamilyAccountMember::query()
+            ->where('user_id', $this->user->id)
+            ->latest('joined_at')
+            ->first()
+            ?->familyAccount;
     }
 }

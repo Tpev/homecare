@@ -7,6 +7,7 @@ use App\Models\SupportTicketMessage;
 use App\Services\Support\SupportTicketMessagingService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -25,12 +26,11 @@ class TicketConversation extends Component
     public function mount(SupportTicket $ticket): void
     {
         $ticket->refresh();
-        abort_unless((int) $ticket->opener_user_id === (int) auth()->id(), 404);
-        $this->authorize('view', $ticket);
+        abort_unless(Gate::forUser(auth()->user())->allows('view', $ticket), 404);
 
         $this->ticketId = $ticket->id;
         $this->clientMessageId = (string) Str::uuid();
-        $ticket->markReadForOpener();
+        $ticket->markReadFor(auth()->user());
     }
 
     public function sendMessage(SupportTicketMessagingService $messaging): void
@@ -63,7 +63,7 @@ class TicketConversation extends Component
 
     public function refreshThread(): void
     {
-        $this->ticket->markReadForOpener();
+        $this->ticket->markReadFor(auth()->user());
     }
 
     public function getTicketProperty(): SupportTicket
@@ -75,10 +75,9 @@ class TicketConversation extends Component
                 'careRequest:id,title,status',
                 'careBooking:id,care_request_id',
             ])
-            ->where('opener_user_id', auth()->id())
             ->findOrFail($this->ticketId);
 
-        $this->authorize('view', $ticket);
+        abort_unless(Gate::forUser(auth()->user())->allows('view', $ticket), 404);
 
         return $ticket;
     }

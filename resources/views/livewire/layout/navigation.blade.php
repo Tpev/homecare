@@ -375,7 +375,7 @@ new class extends Component
     <div class="hc-page relative">
         <div class="flex h-[4.5rem] items-center justify-between gap-3 py-2">
             <div class="shrink-0 flex items-center">
-                <a href="{{ $user ? route('dashboard') : route('landing') }}" wire:navigate class="inline-flex items-center gap-3">
+                <a href="{{ $user ? ($isAdmin ? route('admin.crm.index') : route('dashboard')) : route('landing') }}" wire:navigate class="inline-flex items-center gap-3">
                     <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#23483F]/10 bg-[rgba(255,253,250,0.96)] shadow-sm">
                         <img src="{{ asset('images/marketing/lolo/lolo-app-icon.svg') }}" alt="LoLo" class="block h-7 w-7 object-contain" />
                     </span>
@@ -630,6 +630,7 @@ new class extends Component
                             </a>
                         @endif
                         @if ($isFamily)
+                            <a href="{{ route('family.access') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Family access</a>
                             <a href="{{ route('family.billing.show') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Billing & Payments</a>
                             <a href="{{ route('family.notifications.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">
                                 {{ $notificationUnread > 0 ? 'Notifications ('.$notificationUnread.')' : 'Notifications' }}
@@ -747,6 +748,7 @@ new class extends Component
                             </x-responsive-nav-link>
                         @endif
                         @if ($isFamily)
+                            <x-responsive-nav-link :href="route('family.access')" wire:navigate>{{ __('Family access') }}</x-responsive-nav-link>
                             <x-responsive-nav-link :href="route('family.billing.show')" wire:navigate>{{ __('Billing & Payments') }}</x-responsive-nav-link>
                             <x-responsive-nav-link :href="route('family.notifications.index')" wire:navigate>
                                 {{ $notificationUnread > 0 ? __('Notifications').' ('.$notificationUnread.')' : __('Notifications') }}

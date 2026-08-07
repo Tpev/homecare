@@ -5,9 +5,12 @@ namespace App\Policies;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\User;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 
 class CareRequestConversationPolicy
 {
+    public function __construct(private readonly FamilyAccountContext $familyAccounts) {}
+
     public function viewAny(User $user): bool
     {
         return in_array($user->role, ['family', 'caregiver'], true);
@@ -58,7 +61,7 @@ class CareRequestConversationPolicy
         }
 
         if ($user->role === 'family') {
-            return (int) $application->careRequest->family_user_id === (int) $user->id;
+            return $this->familyAccounts->canAccessRecord($user, $application->careRequest);
         }
 
         if ($user->role === 'caregiver') {

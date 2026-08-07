@@ -6,6 +6,7 @@ use App\Models\CareRequest;
 use App\Models\CareTask;
 use App\Models\FamilyHouseholdProfile;
 use App\Models\FamilyRecipientProfile;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Support\FamilyQuickRequestDraft;
 use App\Support\FunnelTracker;
 use Carbon\Carbon;
@@ -201,7 +202,7 @@ class CreateCareRequestWizard extends Component
         $this->applyHomepageQuickRequestDraft();
 
         $lastRequest = CareRequest::query()
-            ->where('family_user_id', $user->id)
+            ->forFamilyAccount(app(FamilyAccountContext::class)->account($user))
             ->where('is_system_generated', false)
             ->with(['recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family', 'thirdPartyContact:id,care_request_id,full_name'])
             ->latest('id')
@@ -349,7 +350,6 @@ class CreateCareRequestWizard extends Component
         }
 
         $request = CareRequest::query()
-            ->where('family_user_id', auth()->id())
             ->with(['tasks:id,name', 'recipient', 'thirdPartyContact'])
             ->find($this->lastRequestId);
 
@@ -437,9 +437,8 @@ class CreateCareRequestWizard extends Component
             return;
         }
 
-        $user->load(['familyHouseholdProfile', 'familyRecipientProfile']);
-
-        $household = $user->familyHouseholdProfile;
+        $account = app(FamilyAccountContext::class)->account($user);
+        $household = FamilyHouseholdProfile::query()->forFamilyAccount($account)->first();
         if ($household) {
             $this->address_line1 = (string) ($household->address_line1 ?? '');
             $this->address_line2 = (string) ($household->address_line2 ?? '');
@@ -451,7 +450,7 @@ class CreateCareRequestWizard extends Component
             $this->preferred_response_hours = (int) ($household->preferred_response_hours ?: 12);
         }
 
-        $recipient = $user->familyRecipientProfile;
+        $recipient = FamilyRecipientProfile::query()->forFamilyAccount($account)->first();
         if ($recipient) {
             $this->recipient_full_name = (string) ($recipient->full_name ?? '');
             $this->recipient_date_of_birth = $recipient->date_of_birth?->toDateString() ?? '';
@@ -569,8 +568,10 @@ class CreateCareRequestWizard extends Component
         $this->syncScheduleFields();
 
         $careRequest = DB::transaction(function () {
+            $ownership = app(FamilyAccountContext::class)->ownershipAttributes(auth()->user());
             $careRequest = CareRequest::query()->create([
-                'family_user_id' => auth()->id(),
+                ...$ownership,
+                'created_by_user_id' => auth()->id(),
                 'title' => $this->resolvedTitle,
                 'additional_info' => trim($this->additional_info) ?: null,
                 'scope_of_work' => $this->buildDefaultScope(),
@@ -980,9 +981,9 @@ class CreateCareRequestWizard extends Component
             return;
         }
 
-        $user->load(['familyHouseholdProfile', 'familyRecipientProfile']);
-        $this->hasSavedHouseholdProfile = $user->familyHouseholdProfile !== null;
-        $this->hasSavedRecipientProfile = $user->familyRecipientProfile !== null;
+        $account = app(FamilyAccountContext::class)->account($user);
+        $this->hasSavedHouseholdProfile = FamilyHouseholdProfile::query()->forFamilyAccount($account)->exists();
+        $this->hasSavedRecipientProfile = FamilyRecipientProfile::query()->forFamilyAccount($account)->exists();
     }
 
     private function applyHomepageQuickRequestDraft(): void
@@ -1022,11 +1023,12 @@ class CreateCareRequestWizard extends Component
 
     private function saveFamilyProfiles(): void
     {
-        $familyUserId = (int) auth()->id();
+        $ownership = app(FamilyAccountContext::class)->ownershipAttributes(auth()->user());
 
         FamilyHouseholdProfile::query()->updateOrCreate(
-            ['family_user_id' => $familyUserId],
+            ['family_account_id' => $ownership['family_account_id']],
             [
+                'family_user_id' => $ownership['family_user_id'],
                 'address_line1' => trim($this->address_line1) !== '' ? trim($this->address_line1) : null,
                 'address_line2' => trim($this->address_line2) !== '' ? trim($this->address_line2) : null,
                 'city' => trim($this->city) !== '' ? trim($this->city) : null,
@@ -1039,8 +1041,9 @@ class CreateCareRequestWizard extends Component
         );
 
         FamilyRecipientProfile::query()->updateOrCreate(
-            ['family_user_id' => $familyUserId],
+            ['family_account_id' => $ownership['family_account_id']],
             [
+                'family_user_id' => $ownership['family_user_id'],
                 'recipient_is_requester' => $this->recipientIsRequester,
                 'full_name' => $this->resolvedRecipientName !== 'Care recipient' ? $this->resolvedRecipientName : null,
                 'date_of_birth' => $this->recipient_date_of_birth ?: null,

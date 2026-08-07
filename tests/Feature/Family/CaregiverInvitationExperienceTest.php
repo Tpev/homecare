@@ -301,7 +301,7 @@ class CaregiverInvitationExperienceTest extends TestCase
 
         $this->actingAs($otherFamily)
             ->get(route('family.requests.show', $request->id))
-            ->assertForbidden();
+            ->assertNotFound();
 
         $this->expectException(AuthorizationException::class);
         app(CaregiverInvitationDiscoveryService::class)->search($request, $otherFamily, 'Private');

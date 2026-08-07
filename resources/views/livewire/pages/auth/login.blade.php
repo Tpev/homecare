@@ -2,6 +2,7 @@
 
 use App\Support\FamilyQuickRequestDraft;
 use App\Livewire\Forms\LoginForm;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -18,13 +19,26 @@ new #[Layout('layouts.guest')] class extends Component
 
         Session::regenerate();
 
-        if (FamilyQuickRequestDraft::has() && auth()->user()?->role === 'family') {
+        $user = auth()->user();
+        if ($user?->role === 'family'
+            && ! $user->isAdministrator()
+            && ! app(FamilyAccountContext::class)->membershipFor($user, false)
+            && $user->familyAccountMemberships()->exists()) {
+            $this->redirect(route('family.access.ended', absolute: false), navigate: true);
+
+            return;
+        }
+
+        if (FamilyQuickRequestDraft::has() && $user?->role === 'family') {
             session()->flash('status', 'Your quick request draft is ready. Finish review and publish it now.');
             $this->redirect(route('family.requests.create', absolute: false), navigate: true);
             return;
         }
 
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        $default = auth()->user()?->isAdministrator()
+            ? route('admin.crm.index', absolute: false)
+            : route('dashboard', absolute: false);
+        $this->redirectIntended(default: $default, navigate: true);
     }
 }; ?>
 
@@ -46,9 +60,7 @@ new #[Layout('layouts.guest')] class extends Component
     <form wire:submit="login" class="space-y-5">
         <div class="grid grid-cols-1 gap-5">
             <x-input wire:model="form.email" id="email" type="email" name="email" label="Email" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
             <x-password wire:model="form.password" id="password" name="password" label="Password" required autocomplete="current-password" />
-            <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
         </div>
 
         <div class="flex flex-wrap items-center justify-between gap-3">

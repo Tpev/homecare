@@ -10,6 +10,7 @@ use App\Models\ContinuousCoverageShift;
 use App\Models\ContinuousCoverageShiftOffer;
 use App\Models\ContinuousCoverageShiftTemplate;
 use App\Models\User;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -207,6 +208,6 @@ class ContinuousCoveragePlanLifecycleService
 
     private function assertFamilyOwns(ContinuousCoveragePlan $plan, User $family): void
     {
-        abort_unless($family->role === 'family' && (int) $plan->family_user_id === (int) $family->id, 403);
+        abort_unless($family->role === 'family' && app(FamilyAccountContext::class)->canAccessRecord($family, $plan), 403);
     }
 }

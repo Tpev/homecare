@@ -17,6 +17,7 @@ use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Booking\CareBookingTimeCorrectionService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Marketplace\CaregiverInvitationDiscoveryService;
 use App\Services\Marketplace\CareRequestInvitationService;
 use App\Services\Matching\CaregiverSuggestionService;
@@ -212,7 +213,6 @@ class ManageCareRequest extends Component
 
         $affectedCaregiverIds = DB::transaction(function () {
             $request = CareRequest::query()
-                ->where('family_user_id', auth()->id())
                 ->whereKey($this->requestItem->id)
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -373,8 +373,8 @@ class ManageCareRequest extends Component
                 $booking = CareBooking::query()->updateOrCreate(
                     ['care_request_id' => $this->requestItem->id],
                     [
+                        ...app(FamilyAccountContext::class)->ownershipAttributes(auth()->user()),
                         'care_request_application_id' => $application->id,
-                        'family_user_id' => (int) auth()->id(),
                         'caregiver_user_id' => (int) $application->caregiver_user_id,
                         'agreement_snapshot' => app(BookingTrustService::class)->buildAgreementSnapshot(
                             $this->requestItem->fresh(['recipient', 'tasks']),
@@ -661,6 +661,7 @@ class ManageCareRequest extends Component
 
             $booking->update([
                 'family_confirmed_at' => now(),
+                'family_confirmed_by_user_id' => auth()->id(),
             ]);
 
             app(BookingTrustService::class)->recordEvent(
@@ -756,6 +757,7 @@ class ManageCareRequest extends Component
             'status' => CareBooking::STATUS_REVIEWED,
             'reviewed_at' => now(),
             'family_confirmed_at' => $booking->family_confirmed_at ?: now(),
+            'family_confirmed_by_user_id' => $booking->family_confirmed_by_user_id ?: auth()->id(),
         ]);
 
         app(BookingTrustService::class)->recordEvent(
@@ -965,6 +967,8 @@ class ManageCareRequest extends Component
         ]);
 
         SupportTicket::query()->create([
+            'family_account_id' => $this->requestItem->family_account_id,
+            'family_visibility' => $this->supportCategory === 'billing' ? 'owner_only' : 'shared_care',
             'opener_user_id' => auth()->id(),
             'counterparty_user_id' => $this->requestItem->booking?->caregiver_user_id,
             'care_request_id' => $this->requestItem->id,
@@ -1008,6 +1012,8 @@ class ManageCareRequest extends Component
         ]);
 
         SupportTicket::query()->create([
+            'family_account_id' => $this->requestItem->family_account_id,
+            'family_visibility' => 'shared_care',
             'opener_user_id' => auth()->id(),
             'counterparty_user_id' => $booking->caregiver_user_id,
             'care_request_id' => $this->requestItem->id,
@@ -1169,6 +1175,8 @@ class ManageCareRequest extends Component
         ]);
 
         SupportTicket::query()->create([
+            'family_account_id' => $this->requestItem->family_account_id,
+            'family_visibility' => 'shared_care',
             'opener_user_id' => auth()->id(),
             'counterparty_user_id' => $booking->caregiver_user_id,
             'care_request_id' => $this->requestItem->id,
@@ -1241,7 +1249,11 @@ class ManageCareRequest extends Component
 
             $attributes['title'] = 'Rebook: '.$this->requestItem->title;
             $attributes['status'] = CareRequest::STATUS_OPEN;
-            $attributes['family_user_id'] = auth()->id();
+            $attributes = array_merge(
+                $attributes,
+                app(FamilyAccountContext::class)->ownershipAttributes(auth()->user()),
+                ['created_by_user_id' => auth()->id()],
+            );
 
             if ($this->requestItem->request_type === CareRequest::TYPE_ONE_TIME) {
                 $attributes['requested_start_at'] = optional($this->requestItem->requested_start_at)->copy()?->addWeek();
@@ -1280,7 +1292,8 @@ class ManageCareRequest extends Component
 
             CareRequestInvitation::query()->create([
                 'care_request_id' => $newRequest->id,
-                'family_user_id' => auth()->id(),
+                ...app(FamilyAccountContext::class)->ownershipAttributes(auth()->user()),
+                'invited_by_user_id' => auth()->id(),
                 'caregiver_user_id' => $hiredApplication->caregiver_user_id,
                 'status' => CareRequestInvitation::STATUS_PENDING,
                 'message' => 'Rebooking request based on previous completed care.',
@@ -1303,7 +1316,7 @@ class ManageCareRequest extends Component
         $application = $this->findOwnedApplication($applicationId);
         $application->loadMissing('careRequest');
 
-        if ((int) $application->careRequest->family_user_id !== (int) auth()->id()
+        if (! app(FamilyAccountContext::class)->canAccessRecord(auth()->user(), $application->careRequest)
             || ! in_array($application->status, [
                 CareRequestApplication::STATUS_APPLIED,
                 CareRequestApplication::STATUS_SHORTLISTED,
@@ -1674,7 +1687,6 @@ class ManageCareRequest extends Component
     private function ownedTimeCorrection(int $correctionId): CareBookingTimeCorrection
     {
         return CareBookingTimeCorrection::query()
-            ->where('family_user_id', auth()->id())
             ->where('care_booking_id', $this->requestItem->booking?->id)
             ->findOrFail($correctionId);
     }
