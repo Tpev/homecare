@@ -67,11 +67,23 @@
         $applicationStateBody = $applicationStatus === \App\Models\CareRequestApplication::STATUS_SHORTLISTED
             ? 'No visit is booked yet. The family can hire you now or message you if they need to confirm details.'
             : 'No visit is booked yet. The family is reviewing replies and can hire you or send a message.';
-        $serviceAddress = trim(collect([
-            $requestItem->address_line1,
-            $requestItem->address_line2,
-            trim($requestItem->city.', '.$requestItem->state.' '.$requestItem->zip),
-        ])->filter()->implode(', '));
+        $hasAttachedCareProfile = (bool) $requestItem->recipient?->care_recipient_profile_version_id;
+        $isAssignedProfileView = is_array($careProfileSnapshot)
+            && array_key_exists('full_name', $careProfileSnapshot);
+        $isCandidateProfileView = $hasAttachedCareProfile
+            && is_array($careProfileSnapshot)
+            && ! $isAssignedProfileView;
+        $hidePrivateRequestContext = $hasAttachedCareProfile && ! $isAssignedProfileView;
+        $displayRecipientName = $isCandidateProfileView
+            ? (data_get($careProfileSnapshot, 'preferred_name') ?: 'Care recipient')
+            : ($hidePrivateRequestContext ? 'Care recipient' : ($requestItem->recipient?->full_name ?: 'Care recipient'));
+        $serviceAddress = trim(collect($hidePrivateRequestContext
+            ? [trim($requestItem->city.', '.$requestItem->state.' '.$requestItem->zip)]
+            : [
+                $requestItem->address_line1,
+                $requestItem->address_line2,
+                trim($requestItem->city.', '.$requestItem->state.' '.$requestItem->zip),
+            ])->filter()->implode(', '));
         $serviceMapEmbedUrl = $serviceAddress !== ''
             ? 'https://www.google.com/maps?q='.rawurlencode($serviceAddress).'&output=embed'
             : null;
@@ -187,7 +199,7 @@
                         </div>
                         <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] px-4 py-3">
                             <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Care for</p>
-                            <p class="mt-1 font-semibold text-[#17313F]">{{ $requestItem->recipient?->full_name ?: 'Care recipient' }}</p>
+                            <p class="mt-1 font-semibold text-[#17313F]">{{ $displayRecipientName }}</p>
                             <p class="text-sm text-[#607080]">{{ $requestItem->recipient?->relationship_to_family ?: 'Relationship not listed' }}</p>
                         </div>
                     </div>
@@ -280,7 +292,7 @@
                             </a>
                         @endif
                     </div>
-                    @if (trim((string) $requestItem->home_access_notes) !== '')
+                    @if (! $hidePrivateRequestContext && trim((string) $requestItem->home_access_notes) !== '')
                         <div class="mt-4 rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] px-3 py-2">
                             <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Home access</p>
                             <p class="mt-1 text-sm text-[#4B5B6B]">{{ $requestItem->home_access_notes }}</p>
@@ -288,6 +300,10 @@
                     @endif
                 </div>
             </section>
+
+            @if ($careProfileSnapshot)
+                <x-care-recipient-profile-summary :snapshot="$careProfileSnapshot" />
+            @endif
         @else
         <x-card>
             <x-slot:header>
@@ -322,24 +338,21 @@
                     </div>
                     <div>
                         <p class="text-xs font-semibold tracking-wide text-[#7B8794] uppercase">Home access</p>
-                        <p class="mt-1 text-[#324457]">{{ $requestItem->home_access_notes ?: '-' }}</p>
+                        <p class="mt-1 text-[#324457]">{{ $hidePrivateRequestContext ? 'Shared after care is confirmed.' : ($requestItem->home_access_notes ?: '-') }}</p>
                     </div>
                 </div>
 
                 <div class="space-y-4">
                     <div class="rounded-lg border border-[#E4DDD3] bg-[#F7F2EA] p-3">
                         <p class="text-xs font-semibold tracking-wide text-[#7B8794] uppercase">Recipient</p>
-                        <p class="mt-1 font-medium text-[#17313F]">{{ $requestItem->recipient?->full_name ?: '-' }}</p>
+                        <p class="mt-1 font-medium text-[#17313F]">{{ $displayRecipientName }}</p>
                         <p class="text-[#607080]">{{ $requestItem->recipient?->relationship_to_family ?: '-' }}</p>
                         <x-care-recipient-context :recipient="$requestItem->recipient" :show-description="true" class="mt-2" />
                     </div>
 
                     <div class="rounded-lg border border-[#E4DDD3] bg-[#F7F2EA] p-3">
                         <p class="text-xs font-semibold tracking-wide text-[#7B8794] uppercase">Location</p>
-                        <p class="mt-1 text-[#324457]">
-                            {{ $requestItem->address_line1 }}{{ $requestItem->address_line2 ? ', '.$requestItem->address_line2 : '' }}
-                        </p>
-                        <p class="text-[#607080]">{{ $requestItem->city }}, {{ $requestItem->state }} {{ $requestItem->zip }}</p>
+                        <p class="mt-1 text-[#324457]">{{ $serviceAddress ?: 'Location pending' }}</p>
                         @if ($serviceMapEmbedUrl)
                             <div wire:ignore class="mt-3 overflow-hidden rounded-xl border border-[#E4DDD3] bg-white">
                                 <iframe
@@ -376,6 +389,9 @@
                 @endforelse
             </div>
         </x-card>
+        @if ($careProfileSnapshot)
+            <x-care-recipient-profile-summary :snapshot="$careProfileSnapshot" />
+        @endif
         @endif
     @endif
 
@@ -445,7 +461,7 @@
                             </div>
                             <div>
                                 <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Care recipient</p>
-                                <p class="mt-1 font-semibold text-[#17313F]">{{ $requestItem->recipient?->full_name ?: 'Care recipient' }}</p>
+                                <p class="mt-1 font-semibold text-[#17313F]">{{ $displayRecipientName }}</p>
                                 <p class="text-[#607080]">{{ $requestItem->recipient?->relationship_to_family ?: 'Relationship not listed' }}</p>
                             </div>
                             <div>
@@ -481,7 +497,7 @@
                                         @endif
                                     </div>
                                 @endif
-                                @if (trim((string) $requestItem->time_expectations) !== '' || trim((string) $requestItem->home_access_notes) !== '')
+                                @if (trim((string) $requestItem->time_expectations) !== '' || (! $hidePrivateRequestContext && trim((string) $requestItem->home_access_notes) !== ''))
                                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                         @if (trim((string) $requestItem->time_expectations) !== '')
                                             <div>
@@ -489,7 +505,7 @@
                                                 <p>{{ $requestItem->time_expectations }}</p>
                                             </div>
                                         @endif
-                                        @if (trim((string) $requestItem->home_access_notes) !== '')
+                                        @if (! $hidePrivateRequestContext && trim((string) $requestItem->home_access_notes) !== '')
                                             <div>
                                                 <p class="font-semibold text-[#17313F]">Home access</p>
                                                 <p>{{ $requestItem->home_access_notes }}</p>
@@ -604,7 +620,7 @@
                     \App\Models\CareBooking::STATUS_DISPUTED => 'bg-rose-100 text-rose-800',
                     default => 'bg-[#F0E9E1] text-[#4B5B6B]',
                 };
-                $careRecipientName = trim((string) ($requestItem->recipient?->full_name ?? '')) ?: 'the care recipient';
+                $careRecipientName = $displayRecipientName !== 'Care recipient' ? $displayRecipientName : 'the care recipient';
                 $scheduledWindowLabel = trim(
                     (optional($booking->scheduled_start_at)->format('M d, g:i A') ?: 'the scheduled start')
                     .' - '.
@@ -894,7 +910,7 @@
                                 @if ($serviceMapOpenUrl)
                                     <a href="{{ $serviceMapOpenUrl }}" target="_blank" rel="noopener noreferrer" class="font-semibold text-white underline underline-offset-2">Open map</a>
                                 @endif
-                                <span>{{ $requestItem->recipient?->full_name ?: 'Recipient' }} - {{ $requestItem->recipient?->relationship_to_family ?: 'Care recipient' }}</span>
+                                <span>{{ $displayRecipientName }} - {{ $requestItem->recipient?->relationship_to_family ?: 'Care recipient' }}</span>
                             </div>
                         </div>
                     </div>
@@ -932,7 +948,7 @@
                         @endif
                     </div>
 
-                    @if ($requestItem->home_access_notes || $requestItem->recipient?->care_notes)
+                    @if (! $hidePrivateRequestContext && ($requestItem->home_access_notes || $requestItem->recipient?->care_notes))
                         <div class="rounded-xl border border-white/20 bg-white/10 p-3">
                             <p class="font-medium text-white">Care notes</p>
                             @if ($requestItem->home_access_notes)

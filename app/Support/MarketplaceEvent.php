@@ -80,6 +80,8 @@ class MarketplaceEvent
 
     public const FAMILY_WELCOME = 'family_welcome';
 
+    public const CARE_PROFILE_UPDATED = 'care_profile_updated';
+
     public const CAREGIVER_ONBOARDING_REMINDER_24H = 'caregiver_onboarding_reminder_24h';
 
     public const SUPPORT_TICKET_CREATED = 'support_ticket_created';
@@ -226,6 +228,7 @@ class MarketplaceEvent
             self::PAYOUT_TRANSFER_FAILED,
             self::CAREGIVER_WELCOME,
             self::FAMILY_WELCOME,
+            self::CARE_PROFILE_UPDATED,
             self::CAREGIVER_ONBOARDING_REMINDER_24H,
             self::SUPPORT_TICKET_CREATED,
             self::SUPPORT_TICKET_REPLY,

@@ -25,6 +25,7 @@ trait BelongsToFamilyAccount
         });
 
         static::creating(function ($model): void {
+            $ownerColumn = $model->familyAccountOwnerColumn();
             $account = null;
 
             // An authenticated family actor can never select the security boundary.
@@ -37,16 +38,16 @@ trait BelongsToFamilyAccount
                 $account = FamilyAccount::query()->find($model->family_account_id);
             }
 
-            if (! $account && $model->family_user_id) {
+            if (! $account && $model->getAttribute($ownerColumn)) {
                 $account = FamilyAccount::query()
-                    ->where('owner_user_id', $model->family_user_id)
+                    ->where('owner_user_id', $model->getAttribute($ownerColumn))
                     ->where('status', FamilyAccount::STATUS_ACTIVE)
                     ->first();
 
                 if (! $account) {
                     $membership = FamilyAccountMember::query()
                         ->with('familyAccount')
-                        ->where('user_id', $model->family_user_id)
+                        ->where('user_id', $model->getAttribute($ownerColumn))
                         ->where('status', FamilyAccountMember::STATUS_ACTIVE)
                         ->whereHas('familyAccount', fn (Builder $query) => $query
                             ->where('status', FamilyAccount::STATUS_ACTIVE))
@@ -55,7 +56,7 @@ trait BelongsToFamilyAccount
                 }
 
                 if (! $account) {
-                    $familyUser = User::query()->find($model->family_user_id);
+                    $familyUser = User::query()->find($model->getAttribute($ownerColumn));
                     if ($familyUser?->role === 'family') {
                         $account = app(FamilyAccountContext::class)->account($familyUser);
                     }
@@ -64,9 +65,16 @@ trait BelongsToFamilyAccount
 
             if ($account) {
                 $model->family_account_id = $account->id;
-                $model->family_user_id = $account->owner_user_id;
+                $model->setAttribute($ownerColumn, $account->owner_user_id);
             }
         });
+    }
+
+    protected function familyAccountOwnerColumn(): string
+    {
+        return property_exists($this, 'familyAccountOwnerColumnName')
+            ? $this->familyAccountOwnerColumnName
+            : 'family_user_id';
     }
 
     public function familyAccount(): BelongsTo

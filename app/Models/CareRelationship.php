@@ -24,6 +24,7 @@ class CareRelationship extends Model
         'last_care_request_id',
         'last_care_booking_id',
         'recipient_name',
+        'care_recipient_profile_id',
         'status',
         'last_visit_at',
         'metadata',
@@ -65,5 +66,10 @@ class CareRelationship extends Model
     public function carePlans(): HasMany
     {
         return $this->hasMany(CarePlan::class);
+    }
+
+    public function careRecipientProfile(): BelongsTo
+    {
+        return $this->belongsTo(CareRecipientProfile::class);
     }
 }

@@ -71,6 +71,13 @@
             </div>
         </div>
 
+        @if($careProfileSnapshot)
+            <div class="mt-4">
+                <p class="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Attached care profile snapshot</p>
+                <x-care-recipient-profile-summary :snapshot="$careProfileSnapshot" />
+            </div>
+        @endif
+
         <div class="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
             <div class="rounded-xl border border-slate-200 p-3">
                 <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Admin request status override</p>

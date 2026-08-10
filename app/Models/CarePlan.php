@@ -48,6 +48,8 @@ class CarePlan extends Model
         'next_booking_id',
         'status',
         'title',
+        'care_recipient_profile_id',
+        'care_recipient_profile_version_id',
         'recipient_snapshot',
         'address_snapshot',
         'task_snapshot',
@@ -139,6 +141,16 @@ class CarePlan extends Model
     public function nextBooking(): BelongsTo
     {
         return $this->belongsTo(CareBooking::class, 'next_booking_id');
+    }
+
+    public function careRecipientProfile(): BelongsTo
+    {
+        return $this->belongsTo(CareRecipientProfile::class);
+    }
+
+    public function careRecipientProfileVersion(): BelongsTo
+    {
+        return $this->belongsTo(CareRecipientProfileVersion::class);
     }
 
     public function generatedRequests(): HasMany

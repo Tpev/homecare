@@ -57,12 +57,12 @@
                     @endif
                 </div>
 
-                @if (! empty($suggestion['care_background_tags']))
-                    <div class="mt-2 flex flex-wrap gap-1" aria-label="Care experience and credentials">
-                        @foreach (array_slice($suggestion['care_background_tags'], 0, 3) as $tag)
-                            <span class="inline-flex rounded-full border px-2 py-1 text-[11px] font-medium {{ $tag['verified'] ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-[#D8D0C5] bg-[#F7F2EA] text-[#4B5B6B]' }}">
-                                {{ $tag['label'] }}{{ $tag['verified'] ? ' · Verified' : '' }}
-                            </span>
+                <x-caregiver-certification-tags :summary="$suggestion['certification_summary']" :show-label="false" compact class="mt-2" />
+
+                @if (! empty($suggestion['care_experience_tags']))
+                    <div class="mt-2 flex flex-wrap gap-1" aria-label="Care experience">
+                        @foreach ($suggestion['care_experience_tags'] as $tag)
+                            <span class="inline-flex rounded-full border border-[#D8D0C5] bg-[#F7F2EA] px-2 py-1 text-[11px] font-medium text-[#4B5B6B]">{{ $tag['label'] }}</span>
                         @endforeach
                     </div>
                 @endif
@@ -79,6 +79,10 @@
     </div>
 @else
     <div class="rounded-lg border border-dashed border-[#BDD4F7] bg-white px-3 py-3 text-sm text-[#607080]">
-        No auto-suggestions yet. Caregivers who reply will appear here.
+        @if ($certificationCriteria->hasSelections())
+            No suggested caregivers match {{ $certificationCriteria->description() }} right now. Remove a certification filter to see more suggestions.
+        @else
+            No auto-suggestions yet. Caregivers who reply will appear here.
+        @endif
     </div>
 @endif

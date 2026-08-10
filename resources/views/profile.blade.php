@@ -25,6 +25,11 @@
 
         @if (auth()->user()?->role === 'family')
             <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h2 class="text-lg font-medium text-gray-900">Care profiles</h2>
+                <p class="mt-1 text-sm text-gray-600">Describe the people receiving care and choose what caregivers can see.</p>
+                <a href="{{ route('family.care-profiles.index') }}" wire:navigate class="mt-4 inline-flex min-h-11 items-center rounded-xl bg-[#17313F] px-4 text-sm font-semibold text-white">Manage care profiles</a>
+            </section>
+            <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <h2 class="text-lg font-medium text-gray-900">Family access</h2>
                 <p class="mt-1 text-sm text-gray-600">See who can help manage care, or leave the family account if you are a member.</p>
                 <a href="{{ route('family.access') }}" wire:navigate class="mt-4 inline-flex min-h-11 items-center rounded-xl bg-[#17313F] px-4 text-sm font-semibold text-white">Manage family access</a>

@@ -10,6 +10,7 @@ use App\Models\ContinuousCoverageRosterMember;
 use App\Models\ContinuousCoverageShift;
 use App\Models\ContinuousCoverageShiftOffer;
 use App\Models\ContinuousCoverageShiftTemplate;
+use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use App\Services\ContinuousCoverage\ContinuousCoverageAccess;
 use App\Services\ContinuousCoverage\ContinuousCoverageHandoffService;
 use App\Services\ContinuousCoverage\ContinuousCoverageLaneRequestService;
@@ -407,10 +408,30 @@ class ContinuousCoverageIndex extends Component
             $lane->id => $pricing->caregiverEarningsLabel($lane->plan, $caregiver, $lane->duration_minutes),
         ]);
 
+        $profilePlanIds = collect()
+            ->merge($opportunities->pluck('id'))
+            ->merge($invitations->pluck('continuous_coverage_plan_id'))
+            ->merge($applications->pluck('continuous_coverage_plan_id'))
+            ->merge($memberships->pluck('continuous_coverage_plan_id'))
+            ->merge($requestableLanes->pluck('continuous_coverage_plan_id'))
+            ->merge($lanes->pluck('continuous_coverage_plan_id'))
+            ->merge($offers->pluck('shift.continuous_coverage_plan_id'))
+            ->merge($upcoming->pluck('continuous_coverage_plan_id'))
+            ->filter()->unique()->values();
+        $profilePresenter = app(CareRecipientProfilePresenter::class);
+        $careProfileSnapshots = ContinuousCoveragePlan::query()
+            ->whereKey($profilePlanIds)
+            ->with('careRecipientProfileVersion')
+            ->get()
+            ->mapWithKeys(fn (ContinuousCoveragePlan $plan) => [$plan->id => $profilePresenter->forCoveragePlan($caregiver, $plan)])
+            ->filter(fn ($snapshot) => $snapshot !== null)
+            ->all();
+
         return view('livewire.caregiver.continuous-coverage-index', compact(
             'invitations', 'applications', 'memberships', 'opportunities', 'lanes', 'offers', 'upcoming', 'history',
             'earningsCents', 'historyBookings', 'planEarningEstimates', 'laneEarningEstimates', 'offerEarningEstimates',
-            'requestableLanes', 'requestableLaneAvailability', 'pendingLaneRequests', 'requestableLaneEarningEstimates'
+            'requestableLanes', 'requestableLaneAvailability', 'pendingLaneRequests', 'requestableLaneEarningEstimates',
+            'careProfileSnapshots'
         ));
     }
 

@@ -8,7 +8,7 @@
     <section class="hc-hero">
         <p class="text-xs uppercase tracking-[0.2em] text-[#CFC6F7]">Find Caregivers</p>
         <h1 class="mt-2 text-2xl md:text-3xl font-display font-semibold text-[#FFF8F0]">Find trusted non-medical caregivers</h1>
-        <p class="mt-2 text-sm text-[#CFC6F7]">Filter by trust badges, skills, language, and experience to shortlist faster.</p>
+        <p class="mt-2 text-sm text-[#CFC6F7]">Filter by trust badges, skills, language, certifications, and experience to shortlist faster.</p>
     </section>
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
@@ -62,6 +62,13 @@
                     </div>
                 </div>
 
+                <x-caregiver-certification-filter
+                    :options="$certificationOptions"
+                    :selected="$certificationTypes"
+                    :verification="$certificationVerification"
+                    id-prefix="browse-certifications"
+                />
+
                 <x-native-select-field
                     label="Trust badges"
                     wire:model="trust"
@@ -97,7 +104,7 @@
 
         <section class="space-y-4 min-w-0">
             <div class="flex items-center justify-between">
-                <p class="text-sm text-[#607080]">{{ $caregivers->total() }} caregiver(s) found</p>
+                <p class="text-sm text-[#607080]" role="status" aria-live="polite">{{ $caregivers->total() }} caregiver(s) found</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -106,7 +113,8 @@
                         $photoUrl = $c->profile_photo_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($c->profile_photo_path) : null;
                         $nameParts = preg_split('/\s+/', trim((string) $c->user->name));
                         $initials = collect($nameParts)->filter()->map(fn($part) => strtoupper(substr($part, 0, 1)))->take(2)->implode('');
-                        $backgroundTags = $c->publicCareBackgroundTags(3);
+                        $certificationSummary = $c->publicCertificationSummary($certificationCriteria, 3);
+                        $experienceTags = $c->publicCareExperienceTags(3);
                     @endphp
 
                     <article class="rounded-2xl border border-[#E4DDD3] bg-white p-4 shadow-sm">
@@ -156,13 +164,16 @@
                             @endif
                         </div>
 
-                        @if ($backgroundTags !== [])
-                            <div class="mt-3 flex flex-wrap gap-2" aria-label="Care experience and credentials">
-                                @foreach ($backgroundTags as $tag)
-                                    <span class="inline-flex rounded-full border px-3 py-1 text-xs font-medium {{ $tag['verified'] ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-[#D8D0C5] bg-[#F7F2EA] text-[#4B5B6B]' }}">
-                                        {{ $tag['label'] }}{{ $tag['verified'] ? ' · Verified' : '' }}
-                                    </span>
-                                @endforeach
+                        <x-caregiver-certification-tags :summary="$certificationSummary" class="mt-3" />
+
+                        @if ($experienceTags !== [])
+                            <div class="mt-3">
+                                <p class="text-xs font-semibold text-[#526474]">Care experience</p>
+                                <div class="mt-1.5 flex flex-wrap gap-2" aria-label="Care experience">
+                                    @foreach ($experienceTags as $tag)
+                                        <span class="inline-flex rounded-full border border-[#D8D0C5] bg-[#F7F2EA] px-3 py-1 text-xs font-medium text-[#4B5B6B]">{{ $tag['label'] }}</span>
+                                    @endforeach
+                                </div>
                             </div>
                         @endif
 
@@ -182,9 +193,20 @@
                     </article>
                 @empty
                     <div class="md:col-span-2 rounded-2xl border border-[#E4DDD3] bg-white p-6 shadow-sm">
-                        <p class="text-sm text-[#607080]">
-                            {{ !empty($prelaunchMode) ? 'Caregiver profiles will appear here when launch opens.' : 'No caregiver matches these filters yet.' }}
-                        </p>
+                        @if (!empty($prelaunchMode))
+                            <p class="text-sm text-[#607080]">Caregiver profiles will appear here when launch opens.</p>
+                        @elseif ($certificationCriteria->hasSelections())
+                            <p class="font-semibold text-[#17313F]">No caregivers match {{ $certificationCriteria->description() }} right now.</p>
+                            <p class="mt-1 text-sm text-[#607080]">Remove a certification requirement or clear the filters to see more caregivers.</p>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                @if ($certificationCriteria->requiresVerification())
+                                    <button type="button" wire:click="includeReportedCertifications" class="min-h-11 rounded-xl border border-[#B7ADA0] bg-white px-4 py-2 text-sm font-semibold text-[#0F3D3E] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF]">Include credentials reported by caregivers</button>
+                                @endif
+                                <button type="button" wire:click="clearCertificationFilters" class="min-h-11 rounded-xl bg-[#0F3D3E] px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#4F6FAF]">Clear certifications</button>
+                            </div>
+                        @else
+                            <p class="text-sm text-[#607080]">No caregiver matches these filters yet.</p>
+                        @endif
                     </div>
                 @endforelse
             </div>

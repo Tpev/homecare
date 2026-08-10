@@ -57,6 +57,13 @@
                 <x-textarea label="Message to caregiver" wire:model="message" />
                 @error('message') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
+                @if ($careProfileUpdateAvailable)
+                    <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4">
+                        <input type="checkbox" wire:model="useLatestCareProfile" class="mt-1 rounded border-[#AFA394] text-[#0F3D3E] focus:ring-[#0F3D3E]">
+                        <span><span class="block font-semibold text-[#17313F]">Use the latest care profile for {{ $careProfileName }}</span><span class="mt-1 block text-sm text-[#526474]">Leave this off to reuse exactly what was shared for the last visit.</span></span>
+                    </label>
+                @endif
+
                 <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
                     <p class="font-display text-lg font-semibold text-[#17313F]">Copied from last visit</p>
                     <div class="mt-3 grid gap-3 text-sm text-[#4B5B6B] sm:grid-cols-2">

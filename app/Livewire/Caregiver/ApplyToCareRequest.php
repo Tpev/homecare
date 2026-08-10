@@ -14,6 +14,7 @@ use App\Models\CareReview;
 use App\Models\SupportTicket;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Booking\CareBookingTimeCorrectionService;
+use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
 use App\Services\RegularCare\CarePlanPaymentWindowService;
@@ -1182,6 +1183,8 @@ class ApplyToCareRequest extends Component
     {
         return view('livewire.caregiver.apply-to-care-request', [
             'currentRegularCareBooking' => $this->currentRegularCareBooking(),
+            'careProfileSnapshot' => app(CareRecipientProfilePresenter::class)
+                ->forCareRequest(auth()->user(), $this->requestItem),
         ]);
     }
 }

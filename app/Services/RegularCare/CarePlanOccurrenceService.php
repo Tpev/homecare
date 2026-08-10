@@ -408,6 +408,8 @@ class CarePlanOccurrenceService
                     'mobility_level' => data_get($recipient, 'mobility_level'),
                     'relationship_to_family' => (string) data_get($recipient, 'relationship_to_family', 'Loved one'),
                     'care_notes' => data_get($recipient, 'care_notes') ?: $plan->care_notes,
+                    'care_recipient_profile_id' => $plan->care_recipient_profile_id,
+                    'care_recipient_profile_version_id' => $plan->care_recipient_profile_version_id,
                 ]);
 
                 $taskPayload = collect($plan->task_snapshot ?? [])

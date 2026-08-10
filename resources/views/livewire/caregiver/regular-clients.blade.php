@@ -131,6 +131,9 @@
                                     <p class="font-semibold text-[#17313F]">{{ $offer->recipientName() }}</p>
                                     <x-care-recipient-context :snapshot="$offer->recipient_snapshot" class="mt-2 justify-start md:justify-end" />
                                 </div>
+                                @if (isset($careProfileSnapshots[$offer->id]))
+                                    <div class="mt-4"><x-care-recipient-profile-summary :snapshot="$careProfileSnapshots[$offer->id]" /></div>
+                                @endif
                             </div>
 
                             <div class="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
@@ -226,6 +229,9 @@
                                 </div>
                                 <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $style }}">{{ $planStatusLabel }}</span>
                             </div>
+                            @if (isset($careProfileSnapshots[$plan->id]))
+                                <div class="mt-4"><x-care-recipient-profile-summary :snapshot="$careProfileSnapshots[$plan->id]" /></div>
+                            @endif
                             @if ($plan->status === \App\Models\CarePlan::STATUS_PAYMENT_ATTENTION)
                                 <p class="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                                     The family needs to update payment before the next protected visit can be generated.

@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Models\CareBooking;
 use App\Models\CareRequest;
 use App\Services\Booking\BookingTrustService;
+use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
 use Livewire\Attributes\Layout;
@@ -114,9 +115,11 @@ class CareRequestShow extends Component
         session()->flash('status', 'Check-in override recorded for this visit.');
     }
 
-    public function render(): View
+    public function render(CareRecipientProfilePresenter $profiles): View
     {
-        return view('livewire.admin.care-request-show');
+        return view('livewire.admin.care-request-show', [
+            'careProfileSnapshot' => $profiles->forCareRequest(auth()->user(), $this->careRequest),
+        ]);
     }
 
     private function refreshRequest(): void

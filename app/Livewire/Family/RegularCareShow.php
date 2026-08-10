@@ -6,6 +6,7 @@ use App\Exceptions\Payments\PaymentException;
 use App\Models\CareBookingTimeCorrection;
 use App\Models\CarePlan;
 use App\Models\CompletedExtraVisitRequest;
+use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\RegularCare\CarePlanService;
 use App\Services\RegularCare\CompletedExtraVisitService;
@@ -263,6 +264,8 @@ class RegularCareShow extends Component
             'counterScheduleLabel' => $this->plan->status === CarePlan::STATUS_COUNTERED
                 ? $plans->scheduleLabel($this->plan, true)
                 : null,
+            'careProfileSnapshot' => app(CareRecipientProfilePresenter::class)
+                ->forCarePlan(auth()->user(), $this->plan),
         ]);
     }
 

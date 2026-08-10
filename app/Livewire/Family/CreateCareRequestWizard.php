@@ -2,10 +2,12 @@
 
 namespace App\Livewire\Family;
 
+use App\Models\CareRecipientProfile;
 use App\Models\CareRequest;
 use App\Models\CareTask;
 use App\Models\FamilyHouseholdProfile;
 use App\Models\FamilyRecipientProfile;
+use App\Services\CareRecipientProfiles\CareRecipientProfileService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Support\FamilyQuickRequestDraft;
 use App\Support\FunnelTracker;
@@ -112,6 +114,16 @@ class CreateCareRequestWizard extends Component
     public string $recipient_relationship_to_family = '';
 
     public string $recipient_care_notes = '';
+
+    public ?int $selected_care_recipient_profile_id = null;
+
+    public bool $createQuickCareProfile = false;
+
+    public string $quick_profile_about = '';
+
+    public string $quick_profile_good_visit = '';
+
+    public bool $quick_profile_sharing_acknowledged = false;
 
     public string $care_for = self::CARE_FOR_OTHER;
 
@@ -533,6 +545,8 @@ class CreateCareRequestWizard extends Component
 
     public function updatedCareFor(string $value): void
     {
+        $this->selected_care_recipient_profile_id = null;
+
         if ($value === self::CARE_FOR_SELF) {
             $this->recipient_full_name = trim((string) (auth()->user()?->name ?? ''));
             $this->recipient_relationship_to_family = 'Self';
@@ -547,6 +561,29 @@ class CreateCareRequestWizard extends Component
         if ($this->recipient_full_name === trim((string) (auth()->user()?->name ?? ''))) {
             $this->recipient_full_name = '';
         }
+    }
+
+    public function selectCareRecipientProfile(int $profileId): void
+    {
+        $account = app(FamilyAccountContext::class)->account(auth()->user());
+        $profile = CareRecipientProfile::query()
+            ->forFamilyAccount($account)
+            ->where('status', CareRecipientProfile::STATUS_READY)
+            ->whereNotNull('latest_ready_version_id')
+            ->findOrFail($profileId);
+
+        $this->selected_care_recipient_profile_id = $profile->id;
+        $this->createQuickCareProfile = false;
+        $this->care_for = $profile->recipient_is_requester ? self::CARE_FOR_SELF : self::CARE_FOR_OTHER;
+        $this->recipient_full_name = $profile->full_name ?: $profile->preferred_name;
+        $this->recipient_date_of_birth = $profile->date_of_birth?->toDateString() ?? '';
+        $this->recipient_relationship_to_family = (string) ($profile->relationship_to_family ?? '');
+        $this->recipient_mobility_level = $this->legacyMobilityValue($profile->mobility_level);
+    }
+
+    public function clearCareRecipientProfile(): void
+    {
+        $this->selected_care_recipient_profile_id = null;
     }
 
     public function chooseFastTrack(): void
@@ -569,6 +606,7 @@ class CreateCareRequestWizard extends Component
 
         $careRequest = DB::transaction(function () {
             $ownership = app(FamilyAccountContext::class)->ownershipAttributes(auth()->user());
+            $profile = $this->resolveProfileForPublication();
             $careRequest = CareRequest::query()->create([
                 ...$ownership,
                 'created_by_user_id' => auth()->id(),
@@ -609,6 +647,8 @@ class CreateCareRequestWizard extends Component
                 'mobility_level' => $this->recipient_mobility_level ?: null,
                 'relationship_to_family' => $this->resolvedRecipientRelationship,
                 'care_notes' => trim($this->recipient_care_notes) !== '' ? trim($this->recipient_care_notes) : (trim($this->additional_info) ?: null),
+                'care_recipient_profile_id' => $profile?->id,
+                'care_recipient_profile_version_id' => $profile?->latest_ready_version_id,
             ]);
 
             if ($this->includeThirdPartyContact) {
@@ -916,7 +956,63 @@ class CreateCareRequestWizard extends Component
             'recipient_mobility_level' => ['nullable', Rule::in(array_column($this->mobilityOptions, 'value'))],
             'recipient_relationship_to_family' => ['nullable', 'string', 'max:120'],
             'recipient_care_notes' => ['nullable', 'string', 'max:2000'],
+            'selected_care_recipient_profile_id' => ['nullable', 'integer'],
+            'createQuickCareProfile' => ['boolean'],
+            'quick_profile_about' => [Rule::requiredIf($this->createQuickCareProfile), 'nullable', 'string', 'max:1000'],
+            'quick_profile_good_visit' => [Rule::requiredIf($this->createQuickCareProfile), 'nullable', 'string', 'max:1000'],
+            'quick_profile_sharing_acknowledged' => $this->createQuickCareProfile
+                ? ['required', 'accepted']
+                : ['nullable', 'boolean'],
         ];
+    }
+
+    private function resolveProfileForPublication(): ?CareRecipientProfile
+    {
+        $user = auth()->user();
+        $account = app(FamilyAccountContext::class)->account($user);
+
+        if ($this->selected_care_recipient_profile_id) {
+            return CareRecipientProfile::query()
+                ->forFamilyAccount($account)
+                ->where('status', CareRecipientProfile::STATUS_READY)
+                ->whereNotNull('latest_ready_version_id')
+                ->findOrFail($this->selected_care_recipient_profile_id);
+        }
+
+        if (! $this->createQuickCareProfile) {
+            return null;
+        }
+
+        $service = app(CareRecipientProfileService::class);
+        $draft = $service->saveDraft($user, null, [
+            'recipient_is_requester' => $this->recipientIsRequester,
+            'full_name' => $this->resolvedRecipientName,
+            'preferred_name' => $this->resolvedRecipientName,
+            'relationship_to_family' => $this->resolvedRecipientRelationship,
+            'about_them' => $this->quick_profile_about,
+            'good_visit_notes' => $this->quick_profile_good_visit,
+        ]);
+
+        return $service->makeReady(
+            $user,
+            $draft,
+            $draft->only([
+                'recipient_is_requester', 'full_name', 'preferred_name', 'relationship_to_family',
+                'about_them', 'good_visit_notes',
+            ]),
+            (int) $draft->revision,
+            $this->quick_profile_sharing_acknowledged,
+        );
+    }
+
+    private function legacyMobilityValue(?string $value): string
+    {
+        return match ($value) {
+            'independent' => 'independent',
+            'uses_aid', 'someone_nearby' => 'standby_support',
+            'hands_on', 'transfer_help', 'two_people_or_equipment' => 'transfer_assistance',
+            default => '',
+        };
     }
 
     private function rulesForThirdParty(): array
@@ -1223,6 +1319,17 @@ class CreateCareRequestWizard extends Component
 
     public function render()
     {
-        return view('livewire.family.create-care-request-wizard');
+        $account = app(FamilyAccountContext::class)->account(auth()->user());
+
+        return view('livewire.family.create-care-request-wizard', [
+            'careRecipientProfiles' => CareRecipientProfile::query()
+                ->forFamilyAccount($account)
+                ->where('status', CareRecipientProfile::STATUS_READY)
+                ->whereNotNull('latest_ready_version_id')
+                ->with('latestReadyVersion')
+                ->orderByRaw('CASE WHEN id = ? THEN 0 ELSE 1 END', [$account->default_care_recipient_profile_id ?: 0])
+                ->orderBy('preferred_name')
+                ->get(),
+        ]);
     }
 }

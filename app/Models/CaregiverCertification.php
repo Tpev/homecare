@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,6 +18,31 @@ class CaregiverCertification extends Model
     public const STATUS_VERIFIED = 'verified';
 
     public const STATUS_REJECTED = 'rejected';
+
+    /**
+     * Columns that are safe to hydrate into family-facing Livewire components.
+     *
+     * @var array<int, string>
+     */
+    public const PUBLIC_TAG_COLUMNS = [
+        'id',
+        'caregiver_profile_id',
+        'caregiver_certification_type_id',
+        'custom_name',
+        'expires_at',
+        'verification_status',
+    ];
+
+    /**
+     * Additional public fields used only on the full caregiver profile.
+     *
+     * @var array<int, string>
+     */
+    public const PUBLIC_DETAIL_COLUMNS = [
+        ...self::PUBLIC_TAG_COLUMNS,
+        'issuer',
+        'issuing_state',
+    ];
 
     protected $fillable = [
         'caregiver_profile_id',
@@ -66,12 +92,21 @@ class CaregiverCertification extends Model
 
     public function isExpired(): bool
     {
-        return $this->expires_at?->isBefore(today()) ?? false;
+        return $this->expires_at?->isBefore(today(config('app.timezone'))) ?? false;
+    }
+
+    public function isCurrent(): bool
+    {
+        return in_array($this->verification_status, [
+            self::STATUS_VERIFIED,
+            self::STATUS_SELF_REPORTED,
+            self::STATUS_PENDING,
+        ], true) && ! $this->isExpired();
     }
 
     public function isCurrentlyVerified(): bool
     {
-        return $this->verification_status === self::STATUS_VERIFIED && ! $this->isExpired();
+        return $this->verification_status === self::STATUS_VERIFIED && $this->isCurrent();
     }
 
     public function publicStatusLabel(): string
@@ -81,7 +116,32 @@ class CaregiverCertification extends Model
         }
 
         return $this->isCurrentlyVerified()
-            ? 'Verified credential'
-            : 'Credential reported by caregiver';
+            ? 'LoLo verified'
+            : 'Reported by caregiver';
+    }
+
+    public function scopeCurrent(Builder $query): Builder
+    {
+        return $query
+            ->whereIn('verification_status', [
+                self::STATUS_VERIFIED,
+                self::STATUS_SELF_REPORTED,
+                self::STATUS_PENDING,
+            ])
+            ->where(function (Builder $expiration): void {
+                $expiration
+                    ->whereNull('expires_at')
+                    ->orWhereDate('expires_at', '>=', today(config('app.timezone'))->toDateString());
+            });
+    }
+
+    public function scopeVerified(Builder $query): Builder
+    {
+        return $query->where('verification_status', self::STATUS_VERIFIED);
+    }
+
+    public function scopePubliclyVisible(Builder $query): Builder
+    {
+        return $query->where('verification_status', '!=', self::STATUS_REJECTED);
     }
 }

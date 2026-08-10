@@ -5,6 +5,7 @@ namespace App\Livewire\Caregiver;
 use App\Models\CarePlan;
 use App\Models\CarePlanScheduleChange;
 use App\Models\CompletedExtraVisitRequest;
+use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use App\Services\RegularCare\CarePlanService;
 use App\Services\RegularCare\CompletedExtraVisitService;
 use App\Support\CaregiverPrelaunch;
@@ -287,6 +288,12 @@ class RegularClients extends Component
             ->oldest()
             ->get();
 
+        $presenter = app(CareRecipientProfilePresenter::class);
+        $careProfileSnapshots = $offers->concat($activePlans)
+            ->mapWithKeys(fn (CarePlan $plan) => [$plan->id => $presenter->forCarePlan(auth()->user(), $plan)])
+            ->filter(fn ($snapshot) => $snapshot !== null)
+            ->all();
+
         return view('livewire.caregiver.regular-clients', [
             'offers' => $offers,
             'activePlans' => $activePlans,
@@ -294,6 +301,7 @@ class RegularClients extends Component
             'scheduleService' => $plans,
             'prelaunchMode' => CaregiverPrelaunch::enabled(),
             'completedExtraVisitService' => $completedExtraVisits,
+            'careProfileSnapshots' => $careProfileSnapshots,
         ]);
     }
 

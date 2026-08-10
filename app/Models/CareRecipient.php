@@ -21,6 +21,8 @@ class CareRecipient extends Model
         'mobility_level',
         'relationship_to_family',
         'care_notes',
+        'care_recipient_profile_id',
+        'care_recipient_profile_version_id',
     ];
 
     protected function casts(): array
@@ -33,6 +35,16 @@ class CareRecipient extends Model
     public function careRequest(): BelongsTo
     {
         return $this->belongsTo(CareRequest::class);
+    }
+
+    public function careRecipientProfile(): BelongsTo
+    {
+        return $this->belongsTo(CareRecipientProfile::class);
+    }
+
+    public function careRecipientProfileVersion(): BelongsTo
+    {
+        return $this->belongsTo(CareRecipientProfileVersion::class);
     }
 
     public function recipientContextLabel(): string

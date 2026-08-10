@@ -99,7 +99,12 @@ class RegularCareMigrationService
             if (! $plan) {
                 $caregiver = $report['caregiver'];
                 $application = $report['application'];
-                $relationship = CareRelationship::query()->firstOrNew([
+                $recipientProfileId = $request->recipient?->care_recipient_profile_id;
+                $relationship = CareRelationship::query()->firstOrNew($recipientProfileId ? [
+                    'family_account_id' => $request->family_account_id,
+                    'caregiver_user_id' => $caregiver->id,
+                    'care_recipient_profile_id' => $recipientProfileId,
+                ] : [
                     'family_account_id' => $request->family_account_id,
                     'caregiver_user_id' => $caregiver->id,
                     'recipient_name' => $request->recipient?->full_name,
@@ -109,6 +114,8 @@ class RegularCareMigrationService
                     'source_care_request_id' => $relationship->source_care_request_id ?: $request->id,
                     'last_care_request_id' => $request->id,
                     'last_care_booking_id' => $request->booking?->id,
+                    'recipient_name' => $request->recipient?->full_name,
+                    'care_recipient_profile_id' => $recipientProfileId,
                     'status' => CareRelationship::STATUS_ACTIVE,
                     'last_visit_at' => $request->booking?->completed_at ?: $request->booking?->scheduled_start_at,
                 ])->save();
@@ -234,6 +241,8 @@ class RegularCareMigrationService
                 'relationship_to_family' => $recipient?->relationship_to_family,
                 'care_notes' => $recipient?->care_notes,
             ],
+            'care_recipient_profile_id' => $recipient?->care_recipient_profile_id,
+            'care_recipient_profile_version_id' => $recipient?->care_recipient_profile_version_id,
             'address_snapshot' => [
                 'address_line1' => $request->address_line1, 'address_line2' => $request->address_line2,
                 'city' => $request->city, 'state' => $request->state, 'zip' => $request->zip,

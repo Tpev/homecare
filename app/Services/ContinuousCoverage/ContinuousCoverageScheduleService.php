@@ -7,6 +7,8 @@ use App\Models\ContinuousCoveragePlan;
 use App\Models\ContinuousCoverageShift;
 use App\Models\ContinuousCoverageShiftTemplate;
 use App\Models\User;
+use App\Models\CareRecipientProfile;
+use App\Services\CareRecipientProfiles\CareRecipientProfileAttachmentService;
 use App\Support\MarketplacePricing;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Support\Carbon;
@@ -20,6 +22,7 @@ class ContinuousCoverageScheduleService
         private readonly ContinuousCoverageAccess $access,
         private readonly ContinuousCoverageNotificationService $notifications,
         private readonly MarketplacePricing $pricing,
+        private readonly CareRecipientProfileAttachmentService $careProfiles,
     ) {}
 
     /** @param array<string,mixed> $data */
@@ -54,6 +57,11 @@ class ContinuousCoverageScheduleService
                     'coverage_end_time' => $data['coverage_end_time'] ?? null,
                 ],
             ]);
+
+            $profile = ! empty($data['care_recipient_profile_id'])
+                ? CareRecipientProfile::query()->withoutGlobalScopes()->findOrFail((int) $data['care_recipient_profile_id'])
+                : null;
+            $this->careProfiles->attachToCoveragePlan($plan, $profile, $family);
 
             $definitions = $this->definitions($plan, $data);
             foreach ($definitions as $definition) {

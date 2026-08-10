@@ -226,6 +226,11 @@ class User extends Authenticatable
         return $this->hasOne(FamilyRecipientProfile::class, 'family_user_id');
     }
 
+    public function createdCareRecipientProfiles(): HasMany
+    {
+        return $this->hasMany(CareRecipientProfile::class, 'created_by_user_id');
+    }
+
     public function ownedFamilyAccount(): HasOne
     {
         return $this->hasOne(FamilyAccount::class, 'owner_user_id');

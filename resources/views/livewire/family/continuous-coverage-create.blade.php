@@ -17,6 +17,21 @@
             @if($step === 1)
             <section class="rounded-3xl border border-[#DED6CA] bg-white p-5 sm:p-6">
                 <h2 class="font-display text-2xl font-semibold text-[#17313F]">1. Who and where</h2>
+                @if ($careRecipientProfiles->isNotEmpty())
+                    <div class="mt-5 rounded-2xl border border-[#D6E5DE] bg-[#F2F8F4] p-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div><p class="font-semibold text-[#17313F]">Choose a saved care profile <span class="font-normal text-[#607080]">(optional)</span></p><p class="mt-1 text-sm text-[#607080]">The selected caregiver preview stays consistent across every coverage lane and shift.</p></div>
+                            @if ($selectedCareRecipientProfileId)<button type="button" wire:click="clearCareRecipientProfile" class="text-sm font-semibold text-[#B54436] underline">Change</button>@endif
+                        </div>
+                        <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                            @foreach ($careRecipientProfiles as $profile)
+                                <button type="button" wire:click="selectCareRecipientProfile({{ $profile->id }})" class="rounded-xl border p-3 text-left {{ (int) $selectedCareRecipientProfileId === (int) $profile->id ? 'border-[#0F3D3E] bg-white ring-1 ring-[#0F3D3E]' : 'border-[#CFE1D8] bg-white/70' }}"><span class="block font-semibold text-[#17313F]">{{ $profile->displayName() }}</span><span class="mt-1 block text-xs text-[#607080]">{{ $profile->relationship_to_family ?: 'Care recipient' }}</span></button>
+                            @endforeach
+                        </div>
+                    </div>
+                @else
+                    <p class="mt-5 rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 text-sm text-[#526474]">A care profile is optional. You can <a href="{{ route('family.care-profiles.create') }}" wire:navigate class="font-semibold text-[#0F3D3E] underline">create one first</a>, or continue with the basic recipient details below.</p>
+                @endif
                 <div class="mt-5 grid gap-4 sm:grid-cols-2">
                     <label class="sm:col-span-2"><span class="text-sm font-semibold text-[#324457]">Plan name</span><input wire:model="title" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]" placeholder="Example: Mom’s around-the-clock care">@error('title')<span class="mt-1 block text-sm text-rose-700">{{ $message }}</span>@enderror</label>
                     <label><span class="text-sm font-semibold text-[#324457]">Care recipient</span><input wire:model="recipientName" class="mt-1 min-h-12 w-full rounded-xl border-[#CFC4B5]" autocomplete="name">@error('recipientName')<span class="text-sm text-rose-700">{{ $message }}</span>@enderror</label>

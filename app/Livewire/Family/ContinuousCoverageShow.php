@@ -11,6 +11,7 @@ use App\Models\ContinuousCoverageRosterMember;
 use App\Models\ContinuousCoverageShift;
 use App\Models\ContinuousCoverageShiftTemplate;
 use App\Models\FamilyCaregiverFavorite;
+use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use App\Services\ContinuousCoverage\ContinuousCoverageLaneRequestService;
 use App\Services\ContinuousCoverage\ContinuousCoveragePlanLifecycleService;
 use App\Services\ContinuousCoverage\ContinuousCoveragePricingService;
@@ -18,6 +19,8 @@ use App\Services\ContinuousCoverage\ContinuousCoverageReplacementService;
 use App\Services\ContinuousCoverage\ContinuousCoverageRosterService;
 use App\Services\ContinuousCoverage\ContinuousCoverageScheduleService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
+use App\Services\Marketplace\CaregiverCertificationFilter;
+use App\Support\CaregiverCertificationCriteria;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -73,6 +76,10 @@ class ContinuousCoverageShow extends Component
     public string $selectedShift = '';
 
     public string $caregiverSearch = '';
+
+    public array $certificationTypes = [];
+
+    public string $certificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
 
     public bool $showCaregiverSearchModal = false;
 
@@ -166,6 +173,8 @@ class ContinuousCoverageShow extends Component
         $this->selectedCaregiverId = null;
         $this->caregiverSearch = '';
         $this->caregiverSearchFeedback = null;
+        $this->certificationTypes = [];
+        $this->certificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
         $this->inviteRole = ContinuousCoverageRosterMember::ROLE_BACKUP;
         $this->inviteReplacementOptIn = true;
         $this->inviteEligibleDays = range(0, 6);
@@ -180,6 +189,8 @@ class ContinuousCoverageShow extends Component
         $this->selectedCaregiverId = null;
         $this->caregiverSearch = '';
         $this->caregiverSearchFeedback = null;
+        $this->certificationTypes = [];
+        $this->certificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
         $this->resetValidation();
         $this->dispatch('coverage-caregiver-modal-closed');
     }
@@ -190,9 +201,44 @@ class ContinuousCoverageShow extends Component
         $this->caregiverSearchFeedback = null;
     }
 
+    public function updatedCertificationTypes(): void
+    {
+        $this->normalizeCertificationFilters();
+        $this->clearSelectedCaregiverIfNoLongerMatches();
+    }
+
+    public function updatedCertificationVerification(): void
+    {
+        $this->normalizeCertificationFilters();
+        $this->clearSelectedCaregiverIfNoLongerMatches();
+    }
+
+    public function clearCertificationFilters(): void
+    {
+        $this->certificationTypes = [];
+        $this->certificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
+        $this->clearSelectedCaregiverIfNoLongerMatches();
+    }
+
+    public function removeCertificationFilter(string $slug): void
+    {
+        $this->certificationTypes = collect($this->certificationTypes)
+            ->reject(fn ($selected): bool => (string) $selected === $slug)
+            ->values()
+            ->all();
+        $this->normalizeCertificationFilters();
+        $this->clearSelectedCaregiverIfNoLongerMatches();
+    }
+
+    public function includeReportedCertifications(): void
+    {
+        $this->certificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
+        $this->clearSelectedCaregiverIfNoLongerMatches();
+    }
+
     public function selectCaregiverForRoster(int $caregiverId): void
     {
-        $profile = $this->eligibleCaregiverProfilesQuery()
+        $profile = $this->eligibleCaregiverProfilesQuery($this->certificationCriteria())
             ->where('user_id', $caregiverId)
             ->first();
 
@@ -468,7 +514,7 @@ class ContinuousCoverageShow extends Component
             'inviteEligibleShiftTypes' => ['array'],
             'inviteEligibleShiftTypes.*' => [\Illuminate\Validation\Rule::in(['daytime', 'overnight', '6_hour', '8_hour', '12_hour'])],
         ]);
-        $profile = $this->eligibleCaregiverProfilesQuery()
+        $profile = $this->eligibleCaregiverProfilesQuery($this->certificationCriteria())
             ->where('user_id', $caregiverId)
             ->where('is_accepting_new_clients', true)
             ->first();
@@ -729,9 +775,11 @@ class ContinuousCoverageShow extends Component
             ->where('scheduled_end_at', '>', $from)
             ->count();
 
+        $certificationCriteria = $this->certificationCriteria();
         $allRoster = $this->plan->rosterMembers()->with([
             'caregiver:id,name,email,city,state',
             'caregiver.caregiverProfile:id,user_id,slug,profile_photo_path,years_experience,average_rating',
+            'caregiver.caregiverProfile.publicSearchCertifications',
         ])->orderBy('role')->get();
         $applicants = $allRoster->where('status', ContinuousCoverageRosterMember::STATUS_APPLIED)->values();
         $roster = $allRoster->where('status', '!=', ContinuousCoverageRosterMember::STATUS_APPLIED)->values();
@@ -764,14 +812,16 @@ class ContinuousCoverageShow extends Component
             $safeSearch = str_replace(['%', '_'], '', $search);
 
             if ($search === '') {
-                $caregiverInitialSections = $this->caregiverInitialSections();
+                $caregiverInitialSections = $this->caregiverInitialSections($certificationCriteria);
             } elseif (mb_strlen($safeSearch) >= 2) {
-                $searchResults = $this->eligibleCaregiverProfilesQuery()
-                    ->whereHas('user', function (Builder $query) use ($safeSearch): void {
-                        $query->where(function (Builder $userQuery) use ($safeSearch): void {
+                $searchResults = $this->eligibleCaregiverProfilesQuery($certificationCriteria)
+                    ->where(function (Builder $profileQuery) use ($safeSearch): void {
+                        $profileQuery->whereHas('user', function (Builder $userQuery) use ($safeSearch): void {
                             $userQuery->where('name', 'like', '%'.$safeSearch.'%')
                                 ->orWhere('city', 'like', '%'.$safeSearch.'%');
                         });
+
+                        app(CaregiverCertificationFilter::class)->orWhereTextMatches($profileQuery, $safeSearch);
                     })
                     ->orderByDesc('top_caregiver')
                     ->orderByDesc('average_rating')
@@ -781,7 +831,7 @@ class ContinuousCoverageShow extends Component
             }
 
             if ($this->selectedCaregiverId) {
-                $selectedCaregiver = $this->eligibleCaregiverProfilesQuery()
+                $selectedCaregiver = $this->eligibleCaregiverProfilesQuery($certificationCriteria)
                     ->where('user_id', $this->selectedCaregiverId)
                     ->first();
             }
@@ -888,6 +938,9 @@ class ContinuousCoverageShow extends Component
 
         $selectedDay = $days->first(fn (array $item) => $item['date']->toDateString() === $this->day) ?: $days->first();
         $deletionBlocker = $lifecycle->deletionBlocker($this->plan);
+        $careProfileSnapshot = app(CareRecipientProfilePresenter::class)
+            ->forCoveragePlan(auth()->user(), $this->plan);
+        $certificationOptions = CaregiverCertificationCriteria::activeOptions();
 
         return view('livewire.family.continuous-coverage-show', compact(
             'days', 'summary', 'nextShift', 'attention', 'roster', 'applicants', 'activeRoster',
@@ -895,7 +948,8 @@ class ContinuousCoverageShow extends Component
             'selectedCaregiver', 'rosterByCaregiver', 'history', 'billingShifts', 'netBilledCents',
             'upcomingEstimate', 'weekStartLocal', 'weekEndLocal', 'selectedShiftItem',
             'selectedShiftEvents', 'selectedReleasedBookings', 'selectedDay', 'pendingLaneRequests',
-            'pendingLaneRequestsByTemplate', 'deletionBlocker'
+            'pendingLaneRequestsByTemplate', 'deletionBlocker', 'careProfileSnapshot', 'certificationCriteria',
+            'certificationOptions'
         ));
     }
 
@@ -935,9 +989,10 @@ class ContinuousCoverageShow extends Component
         ];
     }
 
-    private function eligibleCaregiverProfilesQuery(): Builder
+    private function eligibleCaregiverProfilesQuery(?CaregiverCertificationCriteria $criteria = null): Builder
     {
-        return CaregiverProfile::query()
+        $criteria ??= CaregiverCertificationCriteria::empty();
+        $query = CaregiverProfile::query()
             ->select([
                 'caregiver_profiles.id', 'caregiver_profiles.user_id', 'caregiver_profiles.slug',
                 'caregiver_profiles.profile_photo_path', 'caregiver_profiles.status', 'caregiver_profiles.bio',
@@ -951,17 +1006,19 @@ class ContinuousCoverageShow extends Component
             ->with([
                 'user:id,name,role,city,state',
                 'skills:id,name',
-                'careExperiences:id,label,sort_order',
-                'certifications.type:id,slug,label,sort_order',
+                'careExperiences:id,label,sort_order,active',
+                'publicSearchCertifications',
             ])
             ->where('status', 'active')
             ->whereHas('user', fn (Builder $query) => $query->where('role', 'caregiver'));
+
+        return app(CaregiverCertificationFilter::class)->apply($query, $criteria);
     }
 
     /**
      * @return array<int, array{key:string,title:string,description:string,caregivers:Collection}>
      */
-    private function caregiverInitialSections(): array
+    private function caregiverInitialSections(CaregiverCertificationCriteria $criteria): array
     {
         $account = app(FamilyAccountContext::class)->account(auth()->user());
         $previousIds = CareBooking::query()
@@ -970,13 +1027,11 @@ class ContinuousCoverageShow extends Component
             ->selectRaw('caregiver_user_id, MAX(id) as latest_booking_id')
             ->groupBy('caregiver_user_id')
             ->orderByDesc('latest_booking_id')
-            ->limit(6)
             ->pluck('caregiver_user_id');
         $favoriteIds = FamilyCaregiverFavorite::query()
             ->forFamilyAccount($account)
             ->whereNotIn('caregiver_user_id', $previousIds)
             ->latest('created_at')
-            ->limit(6)
             ->pluck('caregiver_user_id');
         $representedIds = $previousIds
             ->merge($favoriteIds)
@@ -984,7 +1039,7 @@ class ContinuousCoverageShow extends Component
             ->map(fn ($id) => (int) $id)
             ->unique()
             ->values();
-        $browseCaregivers = $this->browseCaregiverProfiles($representedIds);
+        $browseCaregivers = $this->browseCaregiverProfiles($representedIds, $criteria);
         $serviceCity = trim((string) data_get($this->plan->address_snapshot, 'city'));
 
         return [
@@ -992,13 +1047,13 @@ class ContinuousCoverageShow extends Component
                 'key' => 'previous',
                 'title' => 'Caregivers you hired before',
                 'description' => 'People who have already provided care for your family.',
-                'caregivers' => $this->caregiverProfilesForIds($previousIds),
+                'caregivers' => $this->caregiverProfilesForIds($previousIds, $criteria)->take(6),
             ],
             [
                 'key' => 'favorites',
                 'title' => 'Saved caregivers',
                 'description' => 'Caregivers you saved while browsing profiles.',
-                'caregivers' => $this->caregiverProfilesForIds($favoriteIds),
+                'caregivers' => $this->caregiverProfilesForIds($favoriteIds, $criteria)->take(6),
             ],
             [
                 'key' => 'browse',
@@ -1012,13 +1067,15 @@ class ContinuousCoverageShow extends Component
     /**
      * @param  Collection<int, int>  $excludedIds
      */
-    private function browseCaregiverProfiles(Collection $excludedIds): Collection
-    {
+    private function browseCaregiverProfiles(
+        Collection $excludedIds,
+        CaregiverCertificationCriteria $criteria,
+    ): Collection {
         $zip = trim((string) data_get($this->plan->address_snapshot, 'zip'));
         $city = mb_strtolower(trim((string) data_get($this->plan->address_snapshot, 'city')));
         $state = mb_strtolower(trim((string) data_get($this->plan->address_snapshot, 'state')));
 
-        return $this->eligibleCaregiverProfilesQuery()
+        return $this->eligibleCaregiverProfilesQuery($criteria)
             ->join('users as coverage_browse_users', 'coverage_browse_users.id', '=', 'caregiver_profiles.user_id')
             ->where('caregiver_profiles.is_accepting_new_clients', true)
             ->whereNotNull('caregiver_profiles.bio')
@@ -1055,13 +1112,15 @@ class ContinuousCoverageShow extends Component
     /**
      * @param  Collection<int, int|string>  $ids
      */
-    private function caregiverProfilesForIds(Collection $ids): Collection
-    {
+    private function caregiverProfilesForIds(
+        Collection $ids,
+        CaregiverCertificationCriteria $criteria,
+    ): Collection {
         if ($ids->isEmpty()) {
             return collect();
         }
 
-        $profiles = $this->eligibleCaregiverProfilesQuery()
+        $profiles = $this->eligibleCaregiverProfilesQuery($criteria)
             ->whereIn('user_id', $ids->all())
             ->get()
             ->keyBy('user_id');
@@ -1070,6 +1129,39 @@ class ContinuousCoverageShow extends Component
             ->map(fn ($id) => $profiles->get((int) $id))
             ->filter()
             ->values();
+    }
+
+    private function certificationCriteria(): CaregiverCertificationCriteria
+    {
+        return CaregiverCertificationCriteria::fromInput(
+            $this->certificationTypes,
+            $this->certificationVerification,
+        );
+    }
+
+    private function normalizeCertificationFilters(): void
+    {
+        $criteria = $this->certificationCriteria();
+        $this->certificationTypes = $criteria->typeSlugs();
+        $this->certificationVerification = $criteria->verification();
+    }
+
+    private function clearSelectedCaregiverIfNoLongerMatches(): void
+    {
+        if (! $this->showCaregiverSearchModal || ! $this->selectedCaregiverId) {
+            return;
+        }
+
+        $stillMatches = $this->eligibleCaregiverProfilesQuery($this->certificationCriteria())
+            ->where('user_id', $this->selectedCaregiverId)
+            ->exists();
+
+        if ($stillMatches) {
+            return;
+        }
+
+        $this->selectedCaregiverId = null;
+        $this->caregiverSearchFeedback = 'Your selected caregiver no longer matches the certification filters. Choose another caregiver.';
     }
 
     private function localDate(string $value): ?Carbon

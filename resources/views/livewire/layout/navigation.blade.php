@@ -630,6 +630,7 @@ new class extends Component
                             </a>
                         @endif
                         @if ($isFamily)
+                            <a href="{{ route('family.care-profiles.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Care profiles</a>
                             <a href="{{ route('family.access') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Family access</a>
                             <a href="{{ route('family.billing.show') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Billing & Payments</a>
                             <a href="{{ route('family.notifications.index') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">
@@ -748,6 +749,7 @@ new class extends Component
                             </x-responsive-nav-link>
                         @endif
                         @if ($isFamily)
+                            <x-responsive-nav-link :href="route('family.care-profiles.index')" wire:navigate>{{ __('Care profiles') }}</x-responsive-nav-link>
                             <x-responsive-nav-link :href="route('family.access')" wire:navigate>{{ __('Family access') }}</x-responsive-nav-link>
                             <x-responsive-nav-link :href="route('family.billing.show')" wire:navigate>{{ __('Billing & Payments') }}</x-responsive-nav-link>
                             <x-responsive-nav-link :href="route('family.notifications.index')" wire:navigate>

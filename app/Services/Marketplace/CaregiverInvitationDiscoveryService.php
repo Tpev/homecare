@@ -9,8 +9,9 @@ use App\Models\CareRequestApplication;
 use App\Models\CareRequestInvitation;
 use App\Models\FamilyCaregiverFavorite;
 use App\Models\User;
-use App\Services\Matching\CaregiverSuggestionService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
+use App\Services\Matching\CaregiverSuggestionService;
+use App\Support\CaregiverCertificationCriteria;
 use Carbon\CarbonInterface;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -30,9 +31,14 @@ class CaregiverInvitationDiscoveryService
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    public function search(CareRequest $request, User $family, string $search): Collection
-    {
+    public function search(
+        CareRequest $request,
+        User $family,
+        string $search,
+        ?CaregiverCertificationCriteria $criteria = null,
+    ): Collection {
         $this->authorize($request, $family);
+        $criteria ??= CaregiverCertificationCriteria::empty();
 
         $term = trim($search);
         if (Str::length($term) < 2) {
@@ -44,13 +50,15 @@ class CaregiverInvitationDiscoveryService
             return collect();
         }
 
-        $profiles = $this->eligibleProfilesQuery()
-            ->whereHas('user', function (Builder $query) use ($safeTerm): void {
-                $query->where('role', 'caregiver')
-                    ->where(function (Builder $userQuery) use ($safeTerm): void {
-                        $userQuery->where('name', 'like', '%'.$safeTerm.'%')
-                            ->orWhere('city', 'like', '%'.$safeTerm.'%');
-                    });
+        $profiles = $this->eligibleProfilesQuery($criteria)
+            ->whereHas('user', fn (Builder $query) => $query->where('role', 'caregiver'))
+            ->where(function (Builder $profileQuery) use ($safeTerm): void {
+                $profileQuery->whereHas('user', function (Builder $userQuery) use ($safeTerm): void {
+                    $userQuery->where('name', 'like', '%'.$safeTerm.'%')
+                        ->orWhere('city', 'like', '%'.$safeTerm.'%');
+                });
+
+                app(CaregiverCertificationFilter::class)->orWhereTextMatches($profileQuery, $safeTerm);
             })
             ->orderByDesc('top_caregiver')
             ->orderByDesc('average_rating')
@@ -58,15 +66,19 @@ class CaregiverInvitationDiscoveryService
             ->limit(self::SEARCH_LIMIT)
             ->get();
 
-        return $this->cards($request, $profiles);
+        return $this->cards($request, $profiles, $criteria);
     }
 
     /**
      * @return array<int, array{key:string,title:string,description:string,caregivers:Collection<int, array<string, mixed>>}>
      */
-    public function initialSections(CareRequest $request, User $family): array
-    {
+    public function initialSections(
+        CareRequest $request,
+        User $family,
+        ?CaregiverCertificationCriteria $criteria = null,
+    ): array {
         $this->authorize($request, $family);
+        $criteria ??= CaregiverCertificationCriteria::empty();
 
         $previousIds = CareBooking::query()
             ->forFamilyAccount(app(FamilyAccountContext::class)->account($family))
@@ -74,18 +86,16 @@ class CaregiverInvitationDiscoveryService
             ->selectRaw('caregiver_user_id, MAX(id) as latest_booking_id')
             ->groupBy('caregiver_user_id')
             ->orderByDesc('latest_booking_id')
-            ->limit(self::SECTION_LIMIT)
             ->pluck('caregiver_user_id');
 
         $favoriteIds = FamilyCaregiverFavorite::query()
             ->forFamilyAccount(app(FamilyAccountContext::class)->account($family))
             ->whereNotIn('caregiver_user_id', $previousIds)
             ->latest('created_at')
-            ->limit(self::SECTION_LIMIT)
             ->pluck('caregiver_user_id');
 
         $recommendedIds = $this->suggestions
-            ->topMatchesForRequest($request, self::SECTION_LIMIT)
+            ->topMatchesForRequest($request, self::SECTION_LIMIT, $criteria)
             ->pluck('user_id')
             ->diff($previousIds)
             ->diff($favoriteIds)
@@ -96,19 +106,19 @@ class CaregiverInvitationDiscoveryService
                 'key' => 'previous',
                 'title' => 'Caregivers you hired before',
                 'description' => 'People who have already provided care for your family.',
-                'caregivers' => $this->cardsForIds($request, $previousIds),
+                'caregivers' => $this->cardsForIds($request, $previousIds, $criteria)->take(self::SECTION_LIMIT),
             ],
             [
                 'key' => 'favorites',
                 'title' => 'Saved caregivers',
                 'description' => 'Caregivers you saved while browsing profiles.',
-                'caregivers' => $this->cardsForIds($request, $favoriteIds),
+                'caregivers' => $this->cardsForIds($request, $favoriteIds, $criteria)->take(self::SECTION_LIMIT),
             ],
             [
                 'key' => 'recommended',
                 'title' => 'Recommended for this request',
                 'description' => 'Available caregivers whose location and schedule look like a good fit.',
-                'caregivers' => $this->cardsForIds($request, $recommendedIds),
+                'caregivers' => $this->cardsForIds($request, $recommendedIds, $criteria)->take(self::SECTION_LIMIT),
             ],
         ];
     }
@@ -116,11 +126,16 @@ class CaregiverInvitationDiscoveryService
     /**
      * @return array<string, mixed>|null
      */
-    public function caregiver(CareRequest $request, User $family, int $caregiverUserId): ?array
-    {
+    public function caregiver(
+        CareRequest $request,
+        User $family,
+        int $caregiverUserId,
+        ?CaregiverCertificationCriteria $criteria = null,
+    ): ?array {
         $this->authorize($request, $family);
+        $criteria ??= CaregiverCertificationCriteria::empty();
 
-        $profile = $this->eligibleProfilesQuery()
+        $profile = $this->eligibleProfilesQuery($criteria)
             ->where('user_id', $caregiverUserId)
             ->whereHas('user', fn (Builder $query) => $query->where('role', 'caregiver'))
             ->first();
@@ -129,7 +144,7 @@ class CaregiverInvitationDiscoveryService
             return null;
         }
 
-        return $this->cards($request, collect([$profile]))->first();
+        return $this->cards($request, collect([$profile]), $criteria)->first();
     }
 
     private function authorize(CareRequest $request, User $family): void
@@ -139,9 +154,10 @@ class CaregiverInvitationDiscoveryService
         }
     }
 
-    private function eligibleProfilesQuery(): Builder
+    private function eligibleProfilesQuery(?CaregiverCertificationCriteria $criteria = null): Builder
     {
-        return CaregiverProfile::query()
+        $criteria ??= CaregiverCertificationCriteria::empty();
+        $query = CaregiverProfile::query()
             ->select([
                 'id',
                 'user_id',
@@ -166,8 +182,8 @@ class CaregiverInvitationDiscoveryService
                 'availabilities:id,caregiver_profile_id,day_of_week,start_time,end_time',
                 'skills:id,name',
                 'languages:id,name',
-                'careExperiences:id,label,sort_order',
-                'certifications.type:id,slug,label,sort_order',
+                'careExperiences:id,label,sort_order,active',
+                'publicSearchCertifications',
             ])
             ->where('status', 'active')
             ->whereNotNull('bio')
@@ -183,19 +199,24 @@ class CaregiverInvitationDiscoveryService
             ->whereHas('skills')
             ->whereHas('languages')
             ->whereHas('availabilities');
+
+        return app(CaregiverCertificationFilter::class)->apply($query, $criteria);
     }
 
     /**
      * @param  Collection<int, int|string>  $caregiverIds
      * @return Collection<int, array<string, mixed>>
      */
-    private function cardsForIds(CareRequest $request, Collection $caregiverIds): Collection
-    {
+    private function cardsForIds(
+        CareRequest $request,
+        Collection $caregiverIds,
+        CaregiverCertificationCriteria $criteria,
+    ): Collection {
         if ($caregiverIds->isEmpty()) {
             return collect();
         }
 
-        $profiles = $this->eligibleProfilesQuery()
+        $profiles = $this->eligibleProfilesQuery($criteria)
             ->whereIn('user_id', $caregiverIds->all())
             ->whereHas('user', fn (Builder $query) => $query->where('role', 'caregiver'))
             ->get()
@@ -206,15 +227,18 @@ class CaregiverInvitationDiscoveryService
             ->filter()
             ->values();
 
-        return $this->cards($request, $ordered);
+        return $this->cards($request, $ordered, $criteria);
     }
 
     /**
      * @param  Collection<int, CaregiverProfile>  $profiles
      * @return Collection<int, array<string, mixed>>
      */
-    private function cards(CareRequest $request, Collection $profiles): Collection
-    {
+    private function cards(
+        CareRequest $request,
+        Collection $profiles,
+        CaregiverCertificationCriteria $criteria,
+    ): Collection {
         $caregiverIds = $profiles->pluck('user_id')->map(fn ($id) => (int) $id)->all();
         if ($caregiverIds === []) {
             return collect();
@@ -230,7 +254,7 @@ class CaregiverInvitationDiscoveryService
             ->get()
             ->keyBy('caregiver_user_id');
 
-        return $profiles->map(function (CaregiverProfile $profile) use ($request, $applications, $invitations): array {
+        return $profiles->map(function (CaregiverProfile $profile) use ($request, $applications, $invitations, $criteria): array {
             $user = $profile->user;
             $application = $applications->get($profile->user_id);
             $invitation = $invitations->get($profile->user_id);
@@ -258,6 +282,8 @@ class CaregiverInvitationDiscoveryService
                 'average_rating' => (float) $profile->average_rating,
                 'reviews_count' => (int) $profile->reviews_count,
                 'accepting_new_clients' => (bool) $profile->is_accepting_new_clients,
+                'certification_summary' => $profile->publicCertificationSummary($criteria, 3),
+                'care_experience_tags' => $profile->publicCareExperienceTags(3),
                 'care_background_tags' => $profile->publicCareBackgroundTags(3),
                 ...$relationship,
             ];

@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Family;
 
+use App\Models\CareRecipientProfile;
 use App\Models\CareTask;
 use App\Models\ContinuousCoveragePlan;
 use App\Services\ContinuousCoverage\ContinuousCoverageScheduleService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Support\MarketplacePricing;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -21,6 +23,8 @@ class ContinuousCoverageCreate extends Component
     public string $recipientName = '';
 
     public string $relationshipToFamily = 'Loved one';
+
+    public ?int $selectedCareRecipientProfileId = null;
 
     public string $startsOn = '';
 
@@ -73,6 +77,28 @@ class ContinuousCoverageCreate extends Component
     public function addWindow(): void
     {
         $this->customWindows[] = ['day' => 1, 'start' => '07:00', 'end' => '19:00'];
+    }
+
+    public function selectCareRecipientProfile(int $profileId): void
+    {
+        $account = app(FamilyAccountContext::class)->account(auth()->user());
+        $profile = CareRecipientProfile::query()
+            ->forFamilyAccount($account)
+            ->where('status', CareRecipientProfile::STATUS_READY)
+            ->whereNotNull('latest_ready_version_id')
+            ->findOrFail($profileId);
+
+        $this->selectedCareRecipientProfileId = $profile->id;
+        $this->recipientName = $profile->full_name ?: $profile->preferred_name;
+        $this->relationshipToFamily = $profile->relationship_to_family ?: 'Loved one';
+        if (trim($this->careNotes) === '') {
+            $this->careNotes = (string) ($profile->about_them ?? '');
+        }
+    }
+
+    public function clearCareRecipientProfile(): void
+    {
+        $this->selectedCareRecipientProfileId = null;
     }
 
     public function removeWindow(int $index): void
@@ -192,6 +218,7 @@ class ContinuousCoverageCreate extends Component
                 ContinuousCoveragePlan::CONFIRM_APPROVED_BACKUP,
             ])],
             'marketplaceApplicationsEnabled' => ['boolean'],
+            'selectedCareRecipientProfileId' => ['nullable', 'integer'],
         ] + $this->shiftStructureRules();
         if ($this->coveragePattern === ContinuousCoveragePlan::PATTERN_CUSTOM) {
             $rules += [
@@ -234,6 +261,7 @@ class ContinuousCoverageCreate extends Component
             'hourly_rate' => $this->hourlyRate,
             'replacement_confirmation_mode' => $this->replacementConfirmationMode,
             'marketplace_applications_enabled' => $this->marketplaceApplicationsEnabled,
+            'care_recipient_profile_id' => $this->selectedCareRecipientProfileId,
         ]);
 
         session()->flash('status', 'Continuous Coverage plan created. Build the family-approved care team next.');
@@ -267,8 +295,17 @@ class ContinuousCoverageCreate extends Component
             ];
         }
 
+        $account = app(FamilyAccountContext::class)->account(auth()->user());
+
         return view('livewire.family.continuous-coverage-create', [
             'taskOptions' => CareTask::query()->orderBy('name')->get(['id', 'name']),
+            'careRecipientProfiles' => CareRecipientProfile::query()
+                ->forFamilyAccount($account)
+                ->where('status', CareRecipientProfile::STATUS_READY)
+                ->whereNotNull('latest_ready_version_id')
+                ->orderByRaw('CASE WHEN id = ? THEN 0 ELSE 1 END', [$account->default_care_recipient_profile_id ?: 0])
+                ->orderBy('preferred_name')
+                ->get(),
             'weeklyHours' => round($analysis['weekly_minutes'] / 60, 1),
             'shiftCount' => $analysis['shift_count'],
             'scheduleAnalysis' => $analysis,

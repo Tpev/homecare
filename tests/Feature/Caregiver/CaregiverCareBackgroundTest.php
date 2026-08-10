@@ -293,7 +293,7 @@ class CaregiverCareBackgroundTest extends TestCase
             ->assertSee('Care experience')
             ->assertSee('Self-reported by caregiver')
             ->assertSee('Memory loss, dementia, or Alzheimer&#039;s support', false)
-            ->assertSee('Verified credential')
+            ->assertSee('LoLo verified')
             ->assertSee('Expired')
             ->assertDontSee('document_path');
     }
@@ -436,10 +436,12 @@ class CaregiverCareBackgroundTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('CPR · Verified', $html);
+        $this->assertStringContainsString('CPR', $html);
+        $this->assertStringContainsString('LoLo verified', $html);
         $this->assertStringContainsString($experiences[0]->label, html_entity_decode($html));
         $this->assertStringContainsString($experiences[1]->label, html_entity_decode($html));
-        $this->assertStringNotContainsString($experiences[2]->label, html_entity_decode($html));
+        $this->assertStringContainsString($experiences[2]->label, html_entity_decode($html));
+        $this->assertStringNotContainsString($experiences[3]->label, html_entity_decode($html));
         $this->assertStringNotContainsString('private-secret.pdf', $html);
     }
 

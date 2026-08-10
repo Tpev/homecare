@@ -6,11 +6,15 @@ use App\Contracts\AiCopilotResponder;
 use App\Listeners\SendOpsUserRegisteredAlert;
 use App\Models\CareRequest;
 use App\Models\CareRequestConversation;
+use App\Models\CareRecipientProfile;
+use App\Models\CareRecipientProfileVersion;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Observers\CareRequestObserver;
 use App\Observers\SupportTicketObserver;
 use App\Policies\CareRequestConversationPolicy;
+use App\Policies\CareRecipientProfilePolicy;
+use App\Policies\CareRecipientProfileVersionPolicy;
 use App\Policies\CareRequestPolicy;
 use App\Policies\SupportTicketMessagePolicy;
 use App\Policies\SupportTicketPolicy;
@@ -47,6 +51,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(CareRequest::class, CareRequestPolicy::class);
+        Gate::policy(CareRecipientProfile::class, CareRecipientProfilePolicy::class);
+        Gate::policy(CareRecipientProfileVersion::class, CareRecipientProfileVersionPolicy::class);
         Gate::policy(CareRequestConversation::class, CareRequestConversationPolicy::class);
         Gate::policy(SupportTicket::class, SupportTicketPolicy::class);
         Gate::policy(SupportTicketMessage::class, SupportTicketMessagePolicy::class);

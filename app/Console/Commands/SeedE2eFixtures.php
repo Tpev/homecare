@@ -190,6 +190,10 @@ class SeedE2eFixtures extends Command
         $this->seedCareBackground($readyProfile, includeExpiredCredential: true);
         $this->seedCareBackground($underReviewProfile);
         $this->seedCareBackground($backgroundReviewProfile);
+        $this->seedCareBackground(
+            $marketplaceProfile,
+            verificationStatus: CaregiverCertification::STATUS_VERIFIED,
+        );
 
         $request = CareRequest::query()->create([
             'family_user_id' => $family->id,
@@ -341,8 +345,11 @@ class SeedE2eFixtures extends Command
         return $caregiver->fresh('caregiverProfile');
     }
 
-    private function seedCareBackground(CaregiverProfile $profile, bool $includeExpiredCredential = false): void
-    {
+    private function seedCareBackground(
+        CaregiverProfile $profile,
+        bool $includeExpiredCredential = false,
+        string $verificationStatus = CaregiverCertification::STATUS_SELF_REPORTED,
+    ): void {
         $experiences = CaregiverExperienceType::query()
             ->whereIn('slug', ['memory-care', 'mobility-fall-risk'])
             ->pluck('id');
@@ -359,7 +366,8 @@ class SeedE2eFixtures extends Command
             [
                 'issuer' => 'American Red Cross',
                 'expires_at' => now()->addYear()->toDateString(),
-                'verification_status' => CaregiverCertification::STATUS_SELF_REPORTED,
+                'verification_status' => $verificationStatus,
+                'verified_at' => $verificationStatus === CaregiverCertification::STATUS_VERIFIED ? now() : null,
             ],
         );
 

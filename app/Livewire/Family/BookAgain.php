@@ -3,6 +3,7 @@
 namespace App\Livewire\Family;
 
 use App\Models\CareBooking;
+use App\Models\CareRecipientProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestInvitation;
@@ -31,6 +32,12 @@ class BookAgain extends Component
     public string $durationMinutes = '120';
 
     public string $message = '';
+
+    public bool $careProfileUpdateAvailable = false;
+
+    public bool $useLatestCareProfile = false;
+
+    public string $careProfileName = '';
 
     /**
      * @var list<array{label:string,value:string}>
@@ -71,6 +78,13 @@ class BookAgain extends Component
         $this->startTime = $start->format('H:i');
         $this->durationMinutes = (string) $this->defaultDurationMinutes();
         $this->message = 'Hi '.$this->firstName($caregiverName).', we would like to book you again for one more visit.';
+
+        $attachedProfile = $this->sourceRequest->recipient?->careRecipientProfile;
+        if ($attachedProfile) {
+            $this->careProfileName = $attachedProfile->displayName();
+            $this->careProfileUpdateAvailable = $attachedProfile->isReady()
+                && (int) $attachedProfile->latest_ready_version_id !== (int) $this->sourceRequest->recipient?->care_recipient_profile_version_id;
+        }
     }
 
     public function sendOneTimeInvite(): void
@@ -80,6 +94,7 @@ class BookAgain extends Component
             'startTime' => ['required', 'date_format:H:i'],
             'durationMinutes' => ['required', 'integer', Rule::in(array_column($this->durationOptions, 'value'))],
             'message' => ['nullable', 'string', 'max:1000'],
+            'useLatestCareProfile' => ['boolean'],
         ]);
 
         $start = $this->parseStart();
@@ -157,7 +172,7 @@ class BookAgain extends Component
             ]);
 
             if ($source->recipient) {
-                $newRequest->recipient()->create($source->recipient->only([
+                $recipientAttributes = $source->recipient->only([
                     'recipient_is_requester',
                     'full_name',
                     'date_of_birth',
@@ -165,7 +180,19 @@ class BookAgain extends Component
                     'mobility_level',
                     'relationship_to_family',
                     'care_notes',
-                ]));
+                    'care_recipient_profile_id',
+                    'care_recipient_profile_version_id',
+                ]);
+                if ($this->useLatestCareProfile && $source->recipient->care_recipient_profile_id) {
+                    $account = app(FamilyAccountContext::class)->account(auth()->user());
+                    $profile = CareRecipientProfile::query()
+                        ->forFamilyAccount($account)
+                        ->where('status', CareRecipientProfile::STATUS_READY)
+                        ->whereNotNull('latest_ready_version_id')
+                        ->findOrFail($source->recipient->care_recipient_profile_id);
+                    $recipientAttributes['care_recipient_profile_version_id'] = $profile->latest_ready_version_id;
+                }
+                $newRequest->recipient()->create($recipientAttributes);
             }
 
             if ($source->thirdPartyContact) {

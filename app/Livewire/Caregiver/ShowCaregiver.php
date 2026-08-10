@@ -41,7 +41,7 @@ class ShowCaregiver extends Component
         abort_if(CaregiverPrelaunch::enabled(), 404);
 
         $this->caregiver = CaregiverProfile::query()
-            ->with(['user', 'skills', 'languages', 'availabilities', 'careExperiences', 'certifications.type'])
+            ->with(['user', 'skills', 'languages', 'availabilities', 'careExperiences', 'publicCertifications'])
             ->where('slug', $slug)
             ->where('status', 'active')
             ->firstOrFail();

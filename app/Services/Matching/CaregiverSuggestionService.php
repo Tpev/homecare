@@ -4,6 +4,8 @@ namespace App\Services\Matching;
 
 use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
+use App\Services\Marketplace\CaregiverCertificationFilter;
+use App\Support\CaregiverCertificationCriteria;
 use App\Support\CaregiverPrelaunch;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -13,26 +15,30 @@ class CaregiverSuggestionService
     /**
      * @return Collection<int, array{user_id:int,name:string,profile_photo_path:?string,score:int,proximity:string,reasons:array<int,string>,hourly_rate:float,average_rating:float,reviews_count:int,identity_verified:bool,background_check:bool,top_caregiver:bool}>
      */
-    public function topMatchesForRequest(CareRequest $request, int $limit = 3): Collection
-    {
+    public function topMatchesForRequest(
+        CareRequest $request,
+        int $limit = 3,
+        ?CaregiverCertificationCriteria $criteria = null,
+    ): Collection {
         if (CaregiverPrelaunch::enabled()) {
             return collect();
         }
 
+        $criteria ??= CaregiverCertificationCriteria::empty();
         $excluded = collect()
             ->merge($request->applications()->pluck('caregiver_user_id'))
             ->merge($request->invitations()->pluck('caregiver_user_id'))
             ->unique()
             ->values();
 
-        $profiles = CaregiverProfile::query()
+        $profileQuery = CaregiverProfile::query()
             ->with([
                 'user:id,name,city,state',
                 'availabilities',
                 'skills:id,name',
                 'languages:id,name',
-                'careExperiences:id,label,sort_order',
-                'certifications.type:id,slug,label,sort_order',
+                'careExperiences:id,label,sort_order,active',
+                'publicSearchCertifications',
             ])
             ->where('status', 'active')
             ->where('is_accepting_new_clients', true)
@@ -48,14 +54,18 @@ class CaregiverSuggestionService
             ->whereHas('languages')
             ->whereHas('availabilities')
             ->whereHas('user', fn ($query) => $query->where('role', 'caregiver'))
-            ->whereNotIn('user_id', $excluded)
+            ->whereNotIn('user_id', $excluded);
+
+        app(CaregiverCertificationFilter::class)->apply($profileQuery, $criteria);
+
+        $profiles = $profileQuery
             ->orderByDesc('top_caregiver')
             ->orderByDesc('average_rating')
             ->limit(max(24, $limit * 8))
             ->get();
 
         return $profiles
-            ->map(fn (CaregiverProfile $profile) => $this->scoreProfile($request, $profile))
+            ->map(fn (CaregiverProfile $profile) => $this->scoreProfile($request, $profile, $criteria))
             ->filter(fn (?array $row) => $row !== null)
             ->sortByDesc('score')
             ->values()
@@ -65,8 +75,11 @@ class CaregiverSuggestionService
     /**
      * @return array{user_id:int,name:string,profile_photo_path:?string,score:int,proximity:string,reasons:array<int,string>,hourly_rate:float,average_rating:float,reviews_count:int,identity_verified:bool,background_check:bool,top_caregiver:bool}|null
      */
-    private function scoreProfile(CareRequest $request, CaregiverProfile $profile): ?array
-    {
+    private function scoreProfile(
+        CareRequest $request,
+        CaregiverProfile $profile,
+        CaregiverCertificationCriteria $criteria,
+    ): ?array {
         $user = $profile->user;
         if (! $user || ! $profile->isMarketplaceReady()) {
             return null;
@@ -119,6 +132,8 @@ class CaregiverSuggestionService
             'identity_verified' => $profile->hasIdentityVerifiedBadge(),
             'background_check' => $profile->hasBackgroundCheckBadge(),
             'top_caregiver' => $profile->hasTopCaregiverBadge(),
+            'certification_summary' => $profile->publicCertificationSummary($criteria, 3),
+            'care_experience_tags' => $profile->publicCareExperienceTags(3),
             'care_background_tags' => $profile->publicCareBackgroundTags(3),
         ];
     }

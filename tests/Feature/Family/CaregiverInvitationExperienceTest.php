@@ -5,6 +5,8 @@ namespace Tests\Feature\Family;
 use App\Livewire\Caregiver\ShowCaregiver;
 use App\Livewire\Family\ManageCareRequest;
 use App\Models\CareBooking;
+use App\Models\CaregiverCertification;
+use App\Models\CaregiverCertificationType;
 use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
@@ -406,6 +408,112 @@ class CaregiverInvitationExperienceTest extends TestCase
             'caregiver_user_id' => $caregiver->id,
             'status' => CareRequestInvitation::STATUS_PENDING,
         ]);
+    }
+
+    public function test_certification_filters_apply_to_request_suggestions_sections_text_results_and_send_revalidation(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $qualified = $this->createReadyCaregiver('Qualified CPR', 'Raleigh');
+        $withoutCredential = $this->createReadyCaregiver('No Credential', 'Raleigh');
+        $request = $this->createOpenRequest($family);
+        $type = CaregiverCertificationType::query()->where('slug', 'cpr')->firstOrFail();
+        $credential = CaregiverCertification::query()->create([
+            'caregiver_profile_id' => $qualified->caregiverProfile->id,
+            'caregiver_certification_type_id' => $type->id,
+            'verification_status' => CaregiverCertification::STATUS_SELF_REPORTED,
+            'document_path' => 'caregiver-certifications/private-request-invite.pdf',
+            'document_original_name' => 'private-request-invite.pdf',
+            'rejection_reason' => 'Private operations note',
+        ]);
+
+        $component = Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('openCaregiverInvitePanel')
+            ->set('certificationTypes', ['cpr'])
+            ->assertSee('Certifications &amp; training', false)
+            ->assertSee($qualified->name)
+            ->assertDontSee($withoutCredential->name)
+            ->assertSee('CPR')
+            ->assertSee('Reported by caregiver')
+            ->assertDontSee('private-request-invite.pdf')
+            ->assertDontSee('Private operations note')
+            ->set('caregiverSearch', 'Qualified')
+            ->assertSee('Search results')
+            ->assertSee($qualified->name)
+            ->call('beginCaregiverInvitation', $qualified->id)
+            ->assertSet('confirmingCaregiverId', $qualified->id)
+            ->assertSee('Reported by caregiver')
+            ->set('certificationTypes', ['cna'])
+            ->assertSet('confirmingCaregiverId', null)
+            ->assertSee('no longer matches the certification filters')
+            ->set('certificationTypes', ['cpr'])
+            ->call('beginCaregiverInvitation', $qualified->id)
+            ->assertSet('confirmingCaregiverId', $qualified->id);
+
+        $credential->update([
+            'verification_status' => CaregiverCertification::STATUS_REJECTED,
+            'rejection_reason' => 'Private changed review note',
+        ]);
+
+        $component
+            ->call('sendCaregiverInvitation')
+            ->assertSet('confirmingCaregiverId', null)
+            ->assertSee('no longer matches your filters')
+            ->assertDontSee('Private changed review note')
+            ->call('closeCaregiverInvitePanel')
+            ->assertSet('certificationTypes', [])
+            ->assertSet('certificationVerification', 'any_current')
+            ->call('openCaregiverInvitePanel')
+            ->assertSet('certificationTypes', []);
+
+        $this->assertDatabaseMissing('care_request_invitations', [
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $qualified->id,
+        ]);
+    }
+
+    public function test_existing_applicant_filter_uses_certifications_and_cards_show_safe_status_tags(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $request = $this->createOpenRequest($family);
+        $qualified = $this->createReadyCaregiver('Applicant CPR', 'Raleigh');
+        $others = collect([
+            $this->createReadyCaregiver('Applicant One', 'Raleigh'),
+            $this->createReadyCaregiver('Applicant Two', 'Raleigh'),
+            $this->createReadyCaregiver('Applicant Three', 'Raleigh'),
+        ]);
+        $type = CaregiverCertificationType::query()->where('slug', 'cpr')->firstOrFail();
+        CaregiverCertification::query()->create([
+            'caregiver_profile_id' => $qualified->caregiverProfile->id,
+            'caregiver_certification_type_id' => $type->id,
+            'verification_status' => CaregiverCertification::STATUS_VERIFIED,
+            'verified_at' => now(),
+            'document_path' => 'caregiver-certifications/private-applicant.pdf',
+        ]);
+
+        collect([$qualified])->merge($others)->each(function (User $caregiver) use ($request): void {
+            CareRequestApplication::query()->create([
+                'care_request_id' => $request->id,
+                'caregiver_user_id' => $caregiver->id,
+                'status' => CareRequestApplication::STATUS_APPLIED,
+                'proposed_rate' => 30,
+            ]);
+        });
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->set('activeTab', 'applicants')
+            ->assertSee('Filter or sort caregivers')
+            ->set('applicationCertificationTypes', ['cpr'])
+            ->assertSee($qualified->name)
+            ->assertDontSee($others[0]->name)
+            ->assertDontSee($others[1]->name)
+            ->assertDontSee($others[2]->name)
+            ->assertSee('CPR')
+            ->assertSee('LoLo verified')
+            ->assertDontSee('private-applicant.pdf')
+            ->call('clearApplicationCertificationFilters')
+            ->assertSee($others[0]->name);
     }
 
     private function createReadyCaregiver(string $name, string $city = 'Raleigh', array $userOverrides = []): User

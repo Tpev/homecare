@@ -214,7 +214,12 @@ class CarePlanService
                     return [$existing, false];
                 }
 
-                $relationship = CareRelationship::query()->firstOrNew([
+                $recipientProfileId = $source->recipient?->care_recipient_profile_id;
+                $relationship = CareRelationship::query()->firstOrNew($recipientProfileId ? [
+                    'family_account_id' => $lockedSource->family_account_id,
+                    'caregiver_user_id' => $caregiver->id,
+                    'care_recipient_profile_id' => $recipientProfileId,
+                ] : [
                     'family_account_id' => $lockedSource->family_account_id,
                     'caregiver_user_id' => $caregiver->id,
                     'recipient_name' => $source->recipient?->full_name,
@@ -225,6 +230,8 @@ class CarePlanService
                     'source_care_request_id' => $relationship->source_care_request_id ?: $source->id,
                     'last_care_request_id' => $source->id,
                     'last_care_booking_id' => $source->booking?->id,
+                    'recipient_name' => $source->recipient?->full_name,
+                    'care_recipient_profile_id' => $recipientProfileId,
                     'status' => CareRelationship::STATUS_ACTIVE,
                     'last_visit_at' => $source->booking?->completed_at ?: $source->booking?->scheduled_start_at,
                 ])->save();
@@ -239,6 +246,8 @@ class CarePlanService
                     'status' => CarePlan::STATUS_PENDING_CAREGIVER,
                     'title' => trim((string) ($payload['title'] ?? '')) ?: 'Regular care with '.$caregiver->name,
                     'recipient_snapshot' => $this->recipientSnapshot($source),
+                    'care_recipient_profile_id' => $recipientProfileId,
+                    'care_recipient_profile_version_id' => $source->recipient?->care_recipient_profile_version_id,
                     'address_snapshot' => $this->addressSnapshot($source),
                     'task_snapshot' => $this->taskSnapshot($source),
                     'care_notes' => trim((string) ($payload['care_notes'] ?? '')) ?: null,
@@ -367,7 +376,12 @@ class CarePlanService
                     'recurring_starts_on' => $schedule['starts_on'],
                 ])->save();
 
-                $relationship = CareRelationship::query()->firstOrNew([
+                $recipientProfileId = $source->recipient?->care_recipient_profile_id;
+                $relationship = CareRelationship::query()->firstOrNew($recipientProfileId ? [
+                    'family_account_id' => $lockedSource->family_account_id,
+                    'caregiver_user_id' => $caregiver->id,
+                    'care_recipient_profile_id' => $recipientProfileId,
+                ] : [
                     'family_account_id' => $lockedSource->family_account_id,
                     'caregiver_user_id' => $caregiver->id,
                     'recipient_name' => $source->recipient?->full_name,
@@ -376,6 +390,8 @@ class CarePlanService
                     'family_user_id' => $lockedSource->family_user_id,
                     'source_care_request_id' => $relationship->source_care_request_id ?: $source->id,
                     'last_care_request_id' => $source->id,
+                    'recipient_name' => $source->recipient?->full_name,
+                    'care_recipient_profile_id' => $recipientProfileId,
                     'status' => CareRelationship::STATUS_ACTIVE,
                 ])->save();
 
@@ -388,6 +404,8 @@ class CarePlanService
                     'status' => CarePlan::STATUS_ACTIVE,
                     'title' => 'Regular care with '.$caregiver->name,
                     'recipient_snapshot' => $this->recipientSnapshot($source),
+                    'care_recipient_profile_id' => $recipientProfileId,
+                    'care_recipient_profile_version_id' => $source->recipient?->care_recipient_profile_version_id,
                     'address_snapshot' => $this->addressSnapshot($source),
                     'task_snapshot' => $this->taskSnapshot($source),
                     'care_notes' => $source->recipient?->care_notes ?: $source->scope_of_work,

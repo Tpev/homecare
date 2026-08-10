@@ -19,6 +19,7 @@ class FamilyAccount extends Model
         'owner_user_id',
         'stripe_customer_id',
         'status',
+        'default_care_recipient_profile_id',
     ];
 
     public function owner(): BelongsTo
@@ -44,5 +45,15 @@ class FamilyAccount extends Model
     public function activityLogs(): HasMany
     {
         return $this->hasMany(FamilyAccountActivityLog::class);
+    }
+
+    public function careRecipientProfiles(): HasMany
+    {
+        return $this->hasMany(CareRecipientProfile::class);
+    }
+
+    public function defaultCareRecipientProfile(): BelongsTo
+    {
+        return $this->belongsTo(CareRecipientProfile::class, 'default_care_recipient_profile_id');
     }
 }

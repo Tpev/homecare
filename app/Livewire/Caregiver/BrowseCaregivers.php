@@ -5,8 +5,11 @@ namespace App\Livewire\Caregiver;
 use App\Models\CaregiverProfile;
 use App\Models\Language;
 use App\Models\Skill;
+use App\Services\Marketplace\CaregiverCertificationFilter;
+use App\Support\CaregiverCertificationCriteria;
 use App\Support\CaregiverPrelaunch;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -27,9 +30,20 @@ class BrowseCaregivers extends Component
 
     public array $languages = [];
 
+    #[Url(as: 'certifications')]
+    public array $certificationTypes = [];
+
+    #[Url(as: 'certification_verification')]
+    public string $certificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
+
     public string $trust = 'all';
 
     public string $sort = 'relevance';
+
+    public function mount(): void
+    {
+        $this->normalizeCertificationFilters();
+    }
 
     public function updatingSearch(): void
     {
@@ -61,6 +75,18 @@ class BrowseCaregivers extends Component
         $this->resetPage();
     }
 
+    public function updatedCertificationTypes(): void
+    {
+        $this->normalizeCertificationFilters();
+        $this->resetPage();
+    }
+
+    public function updatedCertificationVerification(): void
+    {
+        $this->normalizeCertificationFilters();
+        $this->resetPage();
+    }
+
     public function updatingTrust(): void
     {
         $this->resetPage();
@@ -85,21 +111,55 @@ class BrowseCaregivers extends Component
             'rate_max',
             'skills',
             'languages',
+            'certificationTypes',
+            'certificationVerification',
             'trust',
             'sort',
         ]);
 
         $this->trust = 'all';
         $this->sort = 'relevance';
+        $this->certificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
+        $this->resetPage();
+    }
+
+    public function clearCertificationFilters(): void
+    {
+        $this->certificationTypes = [];
+        $this->certificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
+        $this->resetPage();
+    }
+
+    public function removeCertificationFilter(string $slug): void
+    {
+        $this->certificationTypes = collect($this->certificationTypes)
+            ->reject(fn ($selected): bool => (string) $selected === $slug)
+            ->values()
+            ->all();
+        $this->normalizeCertificationFilters();
+        $this->resetPage();
+    }
+
+    public function includeReportedCertifications(): void
+    {
+        $this->certificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
         $this->resetPage();
     }
 
     public function render()
     {
         $prelaunchMode = CaregiverPrelaunch::enabled();
+        $certificationCriteria = $this->certificationCriteria();
+        $certificationFilter = app(CaregiverCertificationFilter::class);
 
         $query = CaregiverProfile::query()
-            ->with(['user', 'skills', 'languages', 'careExperiences', 'certifications.type'])
+            ->with([
+                'user',
+                'skills',
+                'languages',
+                'careExperiences:id,label,sort_order,active',
+                'publicSearchCertifications',
+            ])
             ->where('status', 'active')
             ->whereNotNull('bio')
             ->whereNotNull('platform_hourly_rate')
@@ -122,8 +182,12 @@ class BrowseCaregivers extends Component
                         ->where('name', 'like', '%'.$term.'%')
                         ->orWhere('city', 'like', '%'.$term.'%')
                         ->orWhere('state', 'like', '%'.$term.'%'));
+
+                app(CaregiverCertificationFilter::class)->orWhereTextMatches($inner, $term);
             });
         }
+
+        $certificationFilter->apply($query, $certificationCriteria);
 
         if ($this->zip !== '') {
             $query->where('service_area_zip', $this->zip);
@@ -169,6 +233,23 @@ class BrowseCaregivers extends Component
             'caregivers' => $query->paginate(12),
             'skillOptions' => Skill::query()->orderBy('name')->get(['id', 'name']),
             'languageOptions' => Language::query()->orderBy('name')->get(['id', 'name']),
+            'certificationOptions' => CaregiverCertificationCriteria::activeOptions(),
+            'certificationCriteria' => $certificationCriteria,
         ]);
+    }
+
+    private function certificationCriteria(): CaregiverCertificationCriteria
+    {
+        return CaregiverCertificationCriteria::fromInput(
+            $this->certificationTypes,
+            $this->certificationVerification,
+        );
+    }
+
+    private function normalizeCertificationFilters(): void
+    {
+        $criteria = $this->certificationCriteria();
+        $this->certificationTypes = $criteria->typeSlugs();
+        $this->certificationVerification = $criteria->verification();
     }
 }

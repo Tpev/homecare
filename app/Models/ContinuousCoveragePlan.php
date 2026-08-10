@@ -32,6 +32,7 @@ class ContinuousCoveragePlan extends Model
         'family_account_id', 'family_user_id', 'created_by_user_id', 'status', 'title', 'timezone',
         'starts_on', 'ends_on', 'coverage_pattern', 'shift_length_minutes',
         'weekly_schedule', 'recipient_snapshot', 'address_snapshot',
+        'care_recipient_profile_id', 'care_recipient_profile_version_id',
         'task_snapshot', 'care_notes', 'hourly_rate',
         'replacement_confirmation_mode', 'marketplace_applications_enabled',
         'last_generated_at', 'metadata',
@@ -62,6 +63,16 @@ class ContinuousCoveragePlan extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+
+    public function careRecipientProfile(): BelongsTo
+    {
+        return $this->belongsTo(CareRecipientProfile::class);
+    }
+
+    public function careRecipientProfileVersion(): BelongsTo
+    {
+        return $this->belongsTo(CareRecipientProfileVersion::class);
     }
 
     public function templates(): HasMany

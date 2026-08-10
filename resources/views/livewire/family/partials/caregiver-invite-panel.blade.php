@@ -68,6 +68,8 @@
                             {{ $plainSchedule }} in {{ $requestItem->city }}, {{ $requestItem->state }}. The caregiver can review the request before replying.
                         </p>
 
+                        <x-caregiver-certification-tags :summary="$confirmingCaregiver['certification_summary']" class="mt-4" />
+
                         <div class="mt-5">
                             <label for="caregiver-invite-message" class="block text-base font-semibold text-[#17313F]">Invitation message (optional)</label>
                             <p id="caregiver-invite-message-hint" class="mt-1 text-sm text-[#607080]">You can change this note before sending.</p>
@@ -132,21 +134,31 @@
                         @endif
                     </div>
                     <p id="caregiver-search-status" class="sr-only" role="status" aria-live="polite">
-                        <span wire:loading wire:target="caregiverSearch">Searching caregivers</span>
-                        <span wire:loading.remove wire:target="caregiverSearch">
-                            @if (mb_strlen(trim($caregiverSearch)) >= 2)
+                        <span wire:loading wire:target="caregiverSearch,certificationTypes,certificationVerification">Searching caregivers</span>
+                        <span wire:loading.remove wire:target="caregiverSearch,certificationTypes,certificationVerification">
+                            @if (trim($caregiverSearch) === '')
+                                {{ collect($caregiverInitialSections)->sum(fn ($section) => $section['caregivers']->count()) }} caregivers found
+                            @elseif (mb_strlen(trim($caregiverSearch)) >= 2)
                                 {{ $caregiverSearchResults->count() }} caregivers found
                             @endif
                         </span>
                     </p>
                 </div>
 
-                <div wire:loading.flex wire:target="caregiverSearch" class="mt-6 items-center gap-3 rounded-xl border border-[#BDD4F7] bg-blue-50 px-4 py-4 text-sm font-medium text-blue-900">
+                <x-caregiver-certification-filter
+                    :options="$certificationOptions"
+                    :selected="$certificationTypes"
+                    :verification="$certificationVerification"
+                    id-prefix="request-invite-certifications"
+                    class="mt-4"
+                />
+
+                <div wire:loading.flex wire:target="caregiverSearch,certificationTypes,certificationVerification" class="mt-6 items-center gap-3 rounded-xl border border-[#BDD4F7] bg-blue-50 px-4 py-4 text-sm font-medium text-blue-900">
                     <span class="h-5 w-5 animate-spin rounded-full border-2 border-blue-300 border-t-blue-700" aria-hidden="true"></span>
                     Searching caregivers…
                 </div>
 
-                <div wire:loading.remove wire:target="caregiverSearch" class="mt-6 space-y-6">
+                <div wire:loading.remove wire:target="caregiverSearch,certificationTypes,certificationVerification" class="mt-6 space-y-6">
                     @if (trim($caregiverSearch) === '')
                         @php $visibleInitialSectionCount = collect($caregiverInitialSections)->filter(fn ($section) => $section['caregivers']->isNotEmpty())->count(); @endphp
                         @forelse ($caregiverInitialSections as $section)
@@ -166,8 +178,19 @@
 
                         @if ($visibleInitialSectionCount === 0)
                             <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-white px-4 py-6 text-center">
-                                <p class="font-semibold text-[#17313F]">Search for someone you know</p>
-                                <p class="mt-1 text-sm text-[#607080]">Enter their first or last name above. We will only show active caregiver profiles.</p>
+                                @if ($certificationCriteria->hasSelections())
+                                    <p class="font-semibold text-[#17313F]">No caregivers match {{ $certificationCriteria->description() }} right now.</p>
+                                    <p class="mt-1 text-sm text-[#607080]">Remove a certification requirement or clear the certification filters to see more caregivers.</p>
+                                    <div class="mt-4 flex flex-wrap justify-center gap-2">
+                                        @if ($certificationCriteria->requiresVerification())
+                                            <button type="button" wire:click="includeReportedCertifications" class="min-h-11 rounded-xl border border-[#B7ADA0] bg-white px-4 py-2 text-sm font-semibold text-[#0F3D3E] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF]">Include credentials reported by caregivers</button>
+                                        @endif
+                                        <button type="button" wire:click="clearCertificationFilters" class="min-h-11 rounded-xl bg-[#0F3D3E] px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#4F6FAF]">Clear certifications</button>
+                                    </div>
+                                @else
+                                    <p class="font-semibold text-[#17313F]">Search for someone you know</p>
+                                    <p class="mt-1 text-sm text-[#607080]">Enter their first or last name above. We will only show active caregiver profiles.</p>
+                                @endif
                             </div>
                         @endif
                     @elseif (mb_strlen(trim($caregiverSearch)) < 2)
@@ -176,8 +199,16 @@
                         </div>
                     @elseif ($caregiverSearchResults->isEmpty())
                         <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-white px-4 py-6 text-center" role="status">
-                            <p class="font-semibold text-[#17313F]">No active caregivers found</p>
-                            <p class="mt-1 text-sm text-[#607080]">Check the spelling or try part of the caregiver’s name.</p>
+                            @if ($certificationCriteria->hasSelections())
+                                <p class="font-semibold text-[#17313F]">No caregivers match your search and {{ $certificationCriteria->description() }}.</p>
+                                <p class="mt-1 text-sm text-[#607080]">Try another name or remove a certification requirement.</p>
+                                @if ($certificationCriteria->requiresVerification())
+                                    <button type="button" wire:click="includeReportedCertifications" class="mt-4 min-h-11 rounded-xl border border-[#B7ADA0] bg-white px-4 py-2 text-sm font-semibold text-[#0F3D3E] focus:outline-none focus:ring-2 focus:ring-[#4F6FAF]">Include credentials reported by caregivers</button>
+                                @endif
+                            @else
+                                <p class="font-semibold text-[#17313F]">No active caregivers found</p>
+                                <p class="mt-1 text-sm text-[#607080]">Check the spelling or try part of the caregiver’s name.</p>
+                            @endif
                         </div>
                     @else
                         <section aria-labelledby="caregiver-search-results-heading">

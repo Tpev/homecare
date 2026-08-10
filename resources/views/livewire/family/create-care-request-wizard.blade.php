@@ -165,6 +165,63 @@
                             @error('care_for') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
 
+                        @if ($careRecipientProfiles->isNotEmpty())
+                            <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
+                                <div class="flex flex-wrap items-start justify-between gap-2">
+                                    <div>
+                                        <p class="font-semibold text-[#17313F]">Use a saved care profile <span class="font-normal text-[#607080]">(optional)</span></p>
+                                        <p class="mt-1 text-sm text-[#607080]">Choose the person once and we will share the same caregiver preview with this request.</p>
+                                    </div>
+                                    @if ($selected_care_recipient_profile_id)
+                                        <button type="button" wire:click="clearCareRecipientProfile" class="text-sm font-semibold text-[#B54436] underline">Change</button>
+                                    @endif
+                                </div>
+                                <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                                    @foreach ($careRecipientProfiles as $profile)
+                                        <button
+                                            type="button"
+                                            wire:click="selectCareRecipientProfile({{ $profile->id }})"
+                                            class="rounded-xl border p-3 text-left transition {{ (int) $selected_care_recipient_profile_id === (int) $profile->id ? 'border-[#0F3D3E] bg-[#F2F8F4] ring-1 ring-[#0F3D3E]' : 'border-[#DED6CA] bg-white hover:bg-[#F5F1EB]' }}"
+                                        >
+                                            <span class="block font-semibold text-[#17313F]">{{ $profile->displayName() }}</span>
+                                            <span class="mt-1 block text-xs text-[#607080]">{{ $profile->relationship_to_family ?: 'Care recipient' }} · Reviewed {{ optional($profile->last_reviewed_at)->format('M j, Y') }}</span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @elseif (! $createQuickCareProfile)
+                            <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
+                                <p class="font-semibold text-[#17313F]">Want to tell caregivers a little about this person?</p>
+                                <p class="mt-1 text-sm text-[#607080]">This is optional and takes about a minute.</p>
+                                <button type="button" wire:click="$set('createQuickCareProfile', true)" class="hc-secondary-button mt-3">Add a simple care profile</button>
+                            </div>
+                        @endif
+
+                        @if ($createQuickCareProfile && ! $selected_care_recipient_profile_id)
+                            <div class="space-y-4 rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <p class="font-semibold text-[#17313F]">Simple care profile</p>
+                                        <p class="mt-1 text-sm text-[#607080]">Caregivers who can view this request will see these answers. You can add more later.</p>
+                                    </div>
+                                    <button type="button" wire:click="$set('createQuickCareProfile', false)" class="text-sm font-semibold text-[#B54436] underline">Skip</button>
+                                </div>
+                                <div>
+                                    <x-textarea label="What should a caregiver know?" wire:model="quick_profile_about" placeholder="A few warm, useful details about the person." />
+                                    @error('quick_profile_about') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <x-textarea label="What helps care go well?" wire:model="quick_profile_good_visit" placeholder="Routines, interests, reassurance, or communication tips." />
+                                    @error('quick_profile_good_visit') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                                <label class="flex items-start gap-3 rounded-xl border border-[#CFE1D8] bg-white p-3 text-sm">
+                                    <input type="checkbox" wire:model="quick_profile_sharing_acknowledged" class="mt-1 rounded border-[#B7ADA0] text-[#0F3D3E] focus:ring-[#0F3D3E]">
+                                    <span>I understand that these answers will be shared only with caregivers who can view this care request. Contact details, the exact address, and date of birth are not included.</span>
+                                </label>
+                                @error('quick_profile_sharing_acknowledged') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                        @endif
+
                         @if ($this->recipientIsRequester)
                             <div class="rounded-xl border border-[#CFE1D8] bg-[#F2F8F4] p-4 text-sm text-[#0F3D3E]">
                                 <p class="font-semibold">Care recipient: {{ $this->resolvedRecipientName }}</p>

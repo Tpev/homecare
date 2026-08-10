@@ -17,12 +17,14 @@ use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Booking\CareBookingTimeCorrectionService;
+use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Marketplace\CaregiverInvitationDiscoveryService;
 use App\Services\Marketplace\CareRequestInvitationService;
 use App\Services\Matching\CaregiverSuggestionService;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
+use App\Support\CaregiverCertificationCriteria;
 use App\Support\CaregiverPrelaunch;
 use App\Support\CareRequestProgress;
 use App\Support\FunnelTracker;
@@ -69,6 +71,14 @@ class ManageCareRequest extends Component
     public bool $showCaregiverInvitePanel = false;
 
     public string $caregiverSearch = '';
+
+    public array $certificationTypes = [];
+
+    public string $certificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
+
+    public array $applicationCertificationTypes = [];
+
+    public string $applicationCertificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
 
     public ?int $confirmingCaregiverId = null;
 
@@ -127,6 +137,7 @@ class ManageCareRequest extends Component
                     'caregiver.caregiverProfile:id,user_id,slug,profile_photo_path,bio,years_experience,status,average_rating,reviews_count,platform_hourly_rate,identity_verified_at,identity_verification_status,background_check_verified_at,top_caregiver,invite_response_rate,reliability_score,completed_bookings_count,is_accepting_new_clients',
                     'caregiver.caregiverProfile.skills:id,name',
                     'caregiver.caregiverProfile.languages:id,name',
+                    'caregiver.caregiverProfile.publicSearchCertifications',
                     'conversation:id,care_request_application_id,care_request_id,caregiver_user_id',
                     'booking:id,care_request_id,care_request_application_id,status,scheduled_start_at,scheduled_end_at',
                 ]),
@@ -1383,6 +1394,8 @@ class ManageCareRequest extends Component
         $this->confirmingReinvite = false;
         $this->caregiverInviteMessage = '';
         $this->caregiverInviteFeedback = null;
+        $this->certificationTypes = [];
+        $this->certificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
         $this->resetValidation('caregiverInviteMessage');
         $this->dispatch('caregiver-invite-panel-closed');
     }
@@ -1393,13 +1406,78 @@ class ManageCareRequest extends Component
         $this->caregiverInviteFeedback = null;
     }
 
+    public function updatedCertificationTypes(): void
+    {
+        $this->normalizeCertificationFilters();
+        $this->clearConfirmingCaregiverIfNoLongerMatches();
+    }
+
+    public function updatedCertificationVerification(): void
+    {
+        $this->normalizeCertificationFilters();
+        $this->clearConfirmingCaregiverIfNoLongerMatches();
+    }
+
+    public function clearCertificationFilters(): void
+    {
+        $this->certificationTypes = [];
+        $this->certificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
+        $this->clearConfirmingCaregiverIfNoLongerMatches();
+    }
+
+    public function removeCertificationFilter(string $slug): void
+    {
+        $this->certificationTypes = collect($this->certificationTypes)
+            ->reject(fn ($selected): bool => (string) $selected === $slug)
+            ->values()
+            ->all();
+        $this->normalizeCertificationFilters();
+        $this->clearConfirmingCaregiverIfNoLongerMatches();
+    }
+
+    public function includeReportedCertifications(): void
+    {
+        $this->certificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
+        $this->clearConfirmingCaregiverIfNoLongerMatches();
+    }
+
+    public function updatedApplicationCertificationTypes(): void
+    {
+        $this->normalizeApplicationCertificationFilters();
+    }
+
+    public function updatedApplicationCertificationVerification(): void
+    {
+        $this->normalizeApplicationCertificationFilters();
+    }
+
+    public function clearApplicationCertificationFilters(): void
+    {
+        $this->applicationCertificationTypes = [];
+        $this->applicationCertificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
+    }
+
+    public function removeApplicationCertificationFilter(string $slug): void
+    {
+        $this->applicationCertificationTypes = collect($this->applicationCertificationTypes)
+            ->reject(fn ($selected): bool => (string) $selected === $slug)
+            ->values()
+            ->all();
+        $this->normalizeApplicationCertificationFilters();
+    }
+
+    public function includeReportedApplicationCertifications(): void
+    {
+        $this->applicationCertificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
+    }
+
     public function beginCaregiverInvitation(int $caregiverUserId, bool $reinvite = false): void
     {
         $family = auth()->user();
         abort_unless($family, 403);
 
         $card = app(CaregiverInvitationDiscoveryService::class)
-            ->caregiver($this->requestItem, $family, $caregiverUserId);
+            ->caregiver($this->requestItem, $family, $caregiverUserId, $this->certificationCriteria());
 
         if (! $card) {
             $this->caregiverInviteFeedback = [
@@ -1446,6 +1524,27 @@ class ManageCareRequest extends Component
             'confirmingCaregiverId.required' => 'Choose a caregiver before sending an invitation.',
         ]);
 
+        $family = auth()->user();
+        abort_unless($family, 403);
+
+        $card = app(CaregiverInvitationDiscoveryService::class)->caregiver(
+            $this->requestItem,
+            $family,
+            (int) $this->confirmingCaregiverId,
+            $this->certificationCriteria(),
+        );
+        $allowed = $card && ($this->confirmingReinvite ? $card['can_reinvite'] : $card['can_invite']);
+        if (! $allowed) {
+            $this->confirmingCaregiverId = null;
+            $this->confirmingReinvite = false;
+            $this->caregiverInviteFeedback = [
+                'type' => 'error',
+                'message' => 'This caregiver no longer matches your filters or is no longer available. Return to the results and choose again.',
+            ];
+
+            return;
+        }
+
         $caregiver = User::query()
             ->with('caregiverProfile')
             ->find($this->confirmingCaregiverId);
@@ -1460,7 +1559,7 @@ class ManageCareRequest extends Component
         }
 
         $result = app(CareRequestInvitationService::class)->send(
-            family: auth()->user(),
+            family: $family,
             careRequest: $this->requestItem,
             caregiver: $caregiver,
             message: $this->caregiverInviteMessage,
@@ -1567,6 +1666,7 @@ class ManageCareRequest extends Component
                 'caregiver.caregiverProfile:id,user_id,slug,profile_photo_path,bio,years_experience,status,average_rating,reviews_count,platform_hourly_rate,identity_verified_at,identity_verification_status,background_check_verified_at,top_caregiver,invite_response_rate,reliability_score,completed_bookings_count,is_accepting_new_clients',
                 'caregiver.caregiverProfile.skills:id,name',
                 'caregiver.caregiverProfile.languages:id,name',
+                'caregiver.caregiverProfile.publicSearchCertifications',
                 'conversation:id,care_request_application_id,care_request_id,caregiver_user_id',
                 'booking:id,care_request_id,care_request_application_id,status,scheduled_start_at,scheduled_end_at',
             ]),
@@ -1595,6 +1695,7 @@ class ManageCareRequest extends Component
                     'caregiver.caregiverProfile:id,user_id,slug,profile_photo_path,bio,years_experience,status,average_rating,reviews_count,platform_hourly_rate,identity_verified_at,identity_verification_status,background_check_verified_at,top_caregiver,invite_response_rate,reliability_score,completed_bookings_count,is_accepting_new_clients',
                     'caregiver.caregiverProfile.skills:id,name',
                     'caregiver.caregiverProfile.languages:id,name',
+                    'caregiver.caregiverProfile.publicSearchCertifications',
                     'conversation:id,care_request_application_id,care_request_id,caregiver_user_id',
                     'booking:id,care_request_id,care_request_application_id,status,scheduled_start_at,scheduled_end_at',
                 ]),
@@ -1699,6 +1800,16 @@ class ManageCareRequest extends Component
             $applications = $applications->where('status', $this->applicationStatus);
         }
 
+        $applicationCertificationCriteria = $this->applicationCertificationCriteria();
+        if ($applicationCertificationCriteria->hasSelections()) {
+            $certificationFilter = app(\App\Services\Marketplace\CaregiverCertificationFilter::class);
+            $applications = $applications->filter(function (CareRequestApplication $application) use ($applicationCertificationCriteria, $certificationFilter): bool {
+                $profile = $application->caregiver?->caregiverProfile;
+
+                return $profile && $certificationFilter->matches($profile, $applicationCertificationCriteria);
+            });
+        }
+
         return match ($this->applicationSort) {
             'oldest' => $applications->sortBy('created_at')->values(),
             'rate_high' => $applications->sortByDesc('proposed_rate')->values(),
@@ -1709,10 +1820,12 @@ class ManageCareRequest extends Component
 
     public function render()
     {
+        $certificationCriteria = $this->certificationCriteria();
+        $applicationCertificationCriteria = $this->applicationCertificationCriteria();
         $suggestedCaregivers = collect();
         if ($this->requestItem->status === CareRequest::STATUS_OPEN) {
             $suggestedCaregivers = app(CaregiverSuggestionService::class)
-                ->topMatchesForRequest($this->requestItem, 3);
+                ->topMatchesForRequest($this->requestItem, 3, $certificationCriteria);
         }
 
         $lifecycleStage = CareRequestProgress::familyLifecycleStage($this->requestItem);
@@ -1730,9 +1843,9 @@ class ManageCareRequest extends Component
             $search = trim($this->caregiverSearch);
 
             if ($search === '') {
-                $caregiverInitialSections = $discovery->initialSections($this->requestItem, $family);
+                $caregiverInitialSections = $discovery->initialSections($this->requestItem, $family, $certificationCriteria);
             } elseif (mb_strlen($search) >= 2) {
-                $caregiverSearchResults = $discovery->search($this->requestItem, $family, $search);
+                $caregiverSearchResults = $discovery->search($this->requestItem, $family, $search, $certificationCriteria);
             }
 
             if ($this->confirmingCaregiverId) {
@@ -1740,6 +1853,7 @@ class ManageCareRequest extends Component
                     $this->requestItem,
                     $family,
                     $this->confirmingCaregiverId,
+                    $certificationCriteria,
                 );
             }
         }
@@ -1750,6 +1864,72 @@ class ManageCareRequest extends Component
             'caregiverSearchResults' => $caregiverSearchResults,
             'caregiverInitialSections' => $caregiverInitialSections,
             'confirmingCaregiver' => $confirmingCaregiver,
+            'certificationOptions' => CaregiverCertificationCriteria::activeOptions(),
+            'certificationCriteria' => $certificationCriteria,
+            'applicationCertificationCriteria' => $applicationCertificationCriteria,
+            'careProfileSnapshot' => app(CareRecipientProfilePresenter::class)
+                ->forCareRequest(auth()->user(), $this->requestItem),
         ]);
+    }
+
+    private function certificationCriteria(): CaregiverCertificationCriteria
+    {
+        return CaregiverCertificationCriteria::fromInput(
+            $this->certificationTypes,
+            $this->certificationVerification,
+        );
+    }
+
+    private function applicationCertificationCriteria(): CaregiverCertificationCriteria
+    {
+        return CaregiverCertificationCriteria::fromInput(
+            $this->applicationCertificationTypes,
+            $this->applicationCertificationVerification,
+        );
+    }
+
+    private function normalizeCertificationFilters(): void
+    {
+        $criteria = $this->certificationCriteria();
+        $this->certificationTypes = $criteria->typeSlugs();
+        $this->certificationVerification = $criteria->verification();
+    }
+
+    private function normalizeApplicationCertificationFilters(): void
+    {
+        $criteria = $this->applicationCertificationCriteria();
+        $this->applicationCertificationTypes = $criteria->typeSlugs();
+        $this->applicationCertificationVerification = $criteria->verification();
+    }
+
+    private function clearConfirmingCaregiverIfNoLongerMatches(): void
+    {
+        if (! $this->showCaregiverInvitePanel || ! $this->confirmingCaregiverId) {
+            return;
+        }
+
+        $family = auth()->user();
+        if (! $family) {
+            return;
+        }
+
+        $card = app(CaregiverInvitationDiscoveryService::class)->caregiver(
+            $this->requestItem,
+            $family,
+            $this->confirmingCaregiverId,
+            $this->certificationCriteria(),
+        );
+
+        if ($card) {
+            return;
+        }
+
+        $this->confirmingCaregiverId = null;
+        $this->confirmingReinvite = false;
+        $this->caregiverInviteMessage = '';
+        $this->caregiverInviteFeedback = [
+            'type' => 'info',
+            'message' => 'Your selected caregiver no longer matches the certification filters. Choose another caregiver.',
+        ];
     }
 }

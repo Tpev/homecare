@@ -65,6 +65,8 @@ use App\Livewire\Family\AcceptFamilyInvitation;
 use App\Livewire\Family\AiRequestCopilot;
 use App\Livewire\Family\BookAgain;
 use App\Livewire\Family\CareHistory;
+use App\Livewire\Family\CareProfileEditor;
+use App\Livewire\Family\CareProfiles;
 use App\Livewire\Family\ContinuousCoverageCreate;
 use App\Livewire\Family\ContinuousCoverageIndex as FamilyContinuousCoverageIndex;
 use App\Livewire\Family\ContinuousCoverageShow;
@@ -268,6 +270,11 @@ Route::middleware(['auth', 'caregiver.role'])->group(function () {
 
 Route::middleware(['auth', 'family.role'])->prefix('family')->name('family.')->group(function () {
     Route::get('/access', FamilyAccess::class)->name('access');
+    Route::get('/care-profiles', CareProfiles::class)->name('care-profiles.index');
+    Route::get('/care-profiles/create', CareProfileEditor::class)->name('care-profiles.create');
+    Route::get('/care-profiles/{careRecipientProfile}/edit', CareProfileEditor::class)
+        ->whereNumber('careRecipientProfile')
+        ->name('care-profiles.edit');
     Route::middleware('continuous.coverage')->prefix('continuous-coverage')->name('continuous-coverage.')->group(function () {
         Route::get('/', FamilyContinuousCoverageIndex::class)->name('index');
         Route::get('/create', ContinuousCoverageCreate::class)->name('create');

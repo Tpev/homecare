@@ -9,6 +9,8 @@ use App\Livewire\Family\ContinuousCoverageCreate;
 use App\Livewire\Family\ContinuousCoverageShow;
 use App\Models\CareBooking;
 use App\Models\CareBookingPayment;
+use App\Models\CaregiverCertification;
+use App\Models\CaregiverCertificationType;
 use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\ContinuousCoverageLaneRequest;
@@ -441,6 +443,72 @@ class ContinuousCoverageFlowTest extends TestCase
             ->assertSee('9 completed care visits')
             ->assertSee('96% reliability')
             ->assertDontSee('Dana Not Accepting');
+    }
+
+    public function test_care_team_modal_filters_every_section_by_certification_and_revalidates_before_inviting(): void
+    {
+        $family = $this->family();
+        $qualified = $this->caregiver(['name' => 'Coverage CPR', 'city' => 'Durham', 'state' => 'NC']);
+        $withoutCredential = $this->caregiver(['name' => 'Coverage General', 'city' => 'Durham', 'state' => 'NC']);
+        $this->makeCaregiverBrowsable($qualified);
+        $this->makeCaregiverBrowsable($withoutCredential);
+        $type = CaregiverCertificationType::query()->where('slug', 'cpr')->firstOrFail();
+        $credential = CaregiverCertification::query()->create([
+            'caregiver_profile_id' => $qualified->caregiverProfile->id,
+            'caregiver_certification_type_id' => $type->id,
+            'verification_status' => CaregiverCertification::STATUS_SELF_REPORTED,
+            'document_path' => 'caregiver-certifications/private-coverage.pdf',
+            'rejection_reason' => 'Private coverage note',
+        ]);
+        FamilyCaregiverFavorite::query()->create([
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $qualified->id,
+        ]);
+        FamilyCaregiverFavorite::query()->create([
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $withoutCredential->id,
+        ]);
+        $plan = $this->plan($family);
+
+        $component = Livewire::actingAs($family)
+            ->test(ContinuousCoverageShow::class, ['coveragePlan' => $plan->id])
+            ->set('tab', 'team')
+            ->call('openCaregiverSearchModal')
+            ->set('certificationTypes', ['cpr'])
+            ->assertSee($qualified->name)
+            ->assertDontSee($withoutCredential->name)
+            ->assertSee('CPR')
+            ->assertSee('Reported by caregiver')
+            ->assertDontSee('private-coverage.pdf')
+            ->assertDontSee('Private coverage note')
+            ->set('caregiverSearch', 'Coverage')
+            ->assertSee($qualified->name)
+            ->assertDontSee($withoutCredential->name)
+            ->call('selectCaregiverForRoster', $qualified->id)
+            ->assertSet('selectedCaregiverId', $qualified->id)
+            ->set('certificationTypes', ['cna'])
+            ->assertSet('selectedCaregiverId', null)
+            ->assertSee('no longer matches the certification filters')
+            ->set('certificationTypes', ['cpr'])
+            ->call('selectCaregiverForRoster', $qualified->id)
+            ->assertSet('selectedCaregiverId', $qualified->id);
+
+        $credential->update([
+            'verification_status' => CaregiverCertification::STATUS_REJECTED,
+            'rejection_reason' => 'Private changed coverage note',
+        ]);
+
+        $component
+            ->call('approveCaregiver', $qualified->id)
+            ->assertHasErrors('caregiver')
+            ->assertDontSee('Private changed coverage note')
+            ->call('closeCaregiverSearchModal')
+            ->assertSet('certificationTypes', [])
+            ->assertSet('certificationVerification', 'any_current')
+            ->call('openCaregiverSearchModal')
+            ->assertSet('certificationTypes', []);
+
+        $this->assertFalse($plan->rosterMembers()->where('caregiver_user_id', $qualified->id)->exists());
     }
 
     public function test_accepted_lane_assigns_only_the_approved_caregiver_and_creates_no_early_booking(): void

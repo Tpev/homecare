@@ -281,7 +281,7 @@
             ->count();
         $visibleApplications = $this->visibleApplications;
         $visibleApplicationCount = $visibleApplications->count();
-        $showCaregiverFilterControls = $requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $visibleApplicationCount >= 4;
+        $showCaregiverFilterControls = $requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $requestItem->applications->count() >= 4;
         $featuredCaregiverApplication = $isReviewingCaregivers ? $visibleApplications->first() : null;
         $showFeaturedCaregiverDecision = $isReviewingCaregivers && $visibleApplicationCount === 1 && $featuredCaregiverApplication;
         $showApplicationList = ! $showFeaturedCaregiverDecision;
@@ -301,6 +301,10 @@
             default => ucfirst(str_replace('_', ' ', (string) ($featuredCaregiverApplication?->status ?? ''))),
         };
     @endphp
+
+    @if ($careProfileSnapshot)
+        <x-care-recipient-profile-summary :snapshot="$careProfileSnapshot" />
+    @endif
 
     @if ($needsPaymentAuthorization)
         <x-alert color="amber">
@@ -438,10 +442,13 @@
                                         @if ($featuredCaregiverProfile?->years_experience)
                                             <span class="rounded-full border border-[#E4DDD3] bg-[#FFFCF8] px-2.5 py-1">{{ (int) $featuredCaregiverProfile->years_experience }} year{{ (int) $featuredCaregiverProfile->years_experience === 1 ? '' : 's' }} experience</span>
                                         @endif
-                                        @if ($featuredCaregiverProfile?->average_rating && $featuredCaregiverProfile?->reviews_count)
-                                            <span class="rounded-full border border-[#E4DDD3] bg-[#FFFCF8] px-2.5 py-1">{{ number_format((float) $featuredCaregiverProfile->average_rating, 1) }} stars</span>
-                                        @endif
-                                    </div>
+                                    @if ($featuredCaregiverProfile?->average_rating && $featuredCaregiverProfile?->reviews_count)
+                                        <span class="rounded-full border border-[#E4DDD3] bg-[#FFFCF8] px-2.5 py-1">{{ number_format((float) $featuredCaregiverProfile->average_rating, 1) }} stars</span>
+                                    @endif
+                                </div>
+                                @if ($featuredCaregiverProfile)
+                                    <x-caregiver-certification-tags :summary="$featuredCaregiverProfile->publicCertificationSummary($applicationCertificationCriteria, 3)" class="mt-3" />
+                                @endif
                                     @if ($featuredCaregiverApplication->cover_note)
                                         <p class="mt-3 rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] px-3 py-2 text-sm leading-6 text-[#4B5B6B]">
                                             {{ \Illuminate\Support\Str::limit((string) $featuredCaregiverApplication->cover_note, 180) }}
@@ -777,7 +784,15 @@
                 <section aria-labelledby="recommended-caregivers-heading">
                     <h3 id="recommended-caregivers-heading" class="font-display text-lg font-semibold text-[#17313F]">Recommended caregivers</h3>
                     <p class="mb-3 mt-1 text-sm text-[#607080]">Suggestions based on this request’s schedule and location.</p>
-                @include('livewire.family.partials.caregiver-suggestions', ['suggestedCaregivers' => $suggestedCaregivers])
+                    <x-caregiver-certification-filter
+                        :options="$certificationOptions"
+                        :selected="$certificationTypes"
+                        :verification="$certificationVerification"
+                        id-prefix="request-suggestion-certifications"
+                        class="mb-4"
+                    />
+                    <p class="sr-only" role="status" aria-live="polite">{{ $suggestedCaregivers->count() }} suggested caregivers found</p>
+                    @include('livewire.family.partials.caregiver-suggestions', ['suggestedCaregivers' => $suggestedCaregivers])
                 </section>
                 <div class="mt-4 rounded-2xl border border-dashed border-[#D6CCBE] bg-[#FFFCF8] px-4 py-3 text-sm text-[#4B5B6B]">
                     After a caregiver replies, this screen changes to compare, chat, and hire.
@@ -799,8 +814,21 @@
                                 ['label' => 'Rate low-high', 'value' => 'rate_low'],
                             ]"
                         />
+                        <x-caregiver-certification-filter
+                            :options="$certificationOptions"
+                            :selected="$applicationCertificationTypes"
+                            :verification="$applicationCertificationVerification"
+                            types-model="applicationCertificationTypes"
+                            verification-model="applicationCertificationVerification"
+                            clear-method="clearApplicationCertificationFilters"
+                            remove-method="removeApplicationCertificationFilter"
+                            include-reported-method="includeReportedApplicationCertifications"
+                            id-prefix="request-applicant-certifications"
+                            class="md:col-span-2"
+                        />
                     </div>
                 </details>
+                <p class="sr-only" role="status" aria-live="polite">{{ $visibleApplicationCount }} caregivers match the applicant filters</p>
             @elseif ($requestItem->status !== \App\Models\CareRequest::STATUS_OPEN)
                 <div class="mb-4 rounded-md border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-sm text-[#4B5B6B]">
                     @if ($hiredApplication)
@@ -829,6 +857,9 @@
                         $yearsExperience = (int) ($caregiverProfile?->years_experience ?? 0);
                         $skills = $caregiverProfile?->skills ?? collect();
                         $languages = $caregiverProfile?->languages ?? collect();
+                        $applicationCertificationSummary = $caregiverProfile
+                            ? $caregiverProfile->publicCertificationSummary($applicationCertificationCriteria, 3)
+                            : ['tags' => [], 'hidden_count' => 0, 'total' => 0];
                         $applicationStatusLabel = match ((string) $application->status) {
                             \App\Models\CareRequestApplication::STATUS_APPLIED => 'Interested',
                             \App\Models\CareRequestApplication::STATUS_SHORTLISTED => 'Saved',
@@ -886,6 +917,8 @@
                                 </div>
                             </div>
                         </div>
+
+                        <x-caregiver-certification-tags :summary="$applicationCertificationSummary" class="mt-3" />
 
                         @if ($caregiverProfile)
                             <details class="mt-3 rounded-xl border border-[#E4DDD3] bg-[#FFFCF8] px-3 py-2">

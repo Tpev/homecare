@@ -40,6 +40,10 @@
         </div>
     </header>
 
+    @if ($careProfileSnapshot)
+        <x-care-recipient-profile-summary :snapshot="$careProfileSnapshot" />
+    @endif
+
     @include('livewire.family.partials.completed-extra-visits')
 
     @if ($pendingTimeCorrections->isNotEmpty())

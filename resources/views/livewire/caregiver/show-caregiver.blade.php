@@ -124,15 +124,15 @@
                     </section>
                 @endif
 
-                @if ($caregiver->certifications_answered_at || $caregiver->certifications->isNotEmpty())
+                @if ($caregiver->certifications_answered_at || $caregiver->publicCertifications->isNotEmpty())
                     <section class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4" aria-labelledby="credentials-heading">
                         <h2 id="credentials-heading" class="font-display font-semibold text-[#17313F]">Credentials & training</h2>
 
-                        @if ($caregiver->certifications->isEmpty())
+                        @if ($caregiver->publicCertifications->isEmpty())
                             <p class="mt-3 text-sm text-[#607080]">No current certifications reported.</p>
                         @else
                             <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                @foreach ($caregiver->certifications->sortBy(fn ($credential) => $credential->type?->sort_order ?? 999) as $credential)
+                                @foreach ($caregiver->publicCertifications->sortBy(fn ($credential) => $credential->type?->sort_order ?? 999) as $credential)
                                     @php
                                         $verified = $credential->isCurrentlyVerified();
                                         $expired = $credential->isExpired();
@@ -156,7 +156,8 @@
                             </div>
                         @endif
 
-                        <p class="mt-3 text-xs leading-5 text-[#7B8794]">Certifications do not expand the non-medical services offered through LoLo Care.</p>
+                        <p class="mt-3 text-xs leading-5 text-[#7B8794]">LoLo verified means our team reviewed the information submitted by the caregiver. It is not a guarantee of current licensure, suitability, or quality. Confirm any credential required for your care.</p>
+                        <p class="mt-2 text-xs leading-5 text-[#7B8794]">Certifications do not expand the non-medical services offered through LoLo Care.</p>
                     </section>
                 @endif
 

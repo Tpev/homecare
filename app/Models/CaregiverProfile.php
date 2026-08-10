@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\Marketplace\CaregiverCertificationPresenter;
+use App\Support\CaregiverCertificationCriteria;
 use App\Support\MarketplacePricing;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -155,6 +157,22 @@ class CaregiverProfile extends Model
         return $this->hasMany(CaregiverCertification::class);
     }
 
+    public function publicCertifications(): HasMany
+    {
+        return $this->hasMany(CaregiverCertification::class)
+            ->select(CaregiverCertification::PUBLIC_DETAIL_COLUMNS)
+            ->publiclyVisible()
+            ->with('type:id,slug,label,sort_order');
+    }
+
+    public function publicSearchCertifications(): HasMany
+    {
+        return $this->hasMany(CaregiverCertification::class)
+            ->select(CaregiverCertification::PUBLIC_TAG_COLUMNS)
+            ->publiclyVisible()
+            ->with('type:id,slug,label,sort_order');
+    }
+
     public function versions(): HasMany
     {
         return $this->hasMany(CaregiverProfileVersion::class);
@@ -282,15 +300,10 @@ class CaregiverProfile extends Model
         $experiences = $this->relationLoaded('careExperiences')
             ? $this->careExperiences
             : $this->careExperiences()->where('active', true)->orderBy('sort_order')->get();
-        $certifications = $this->relationLoaded('certifications')
-            ? $this->certifications
-            : $this->certifications()->with('type')->get();
-
-        $verifiedCredentials = $certifications
-            ->filter(fn (CaregiverCertification $certification) => $certification->isCurrentlyVerified())
-            ->map(fn (CaregiverCertification $certification): array => [
-                'label' => $certification->displayName(),
-                'verified' => true,
+        $certificationTags = collect($this->publicCertificationSummary(null, $limit)['tags'])
+            ->map(fn (array $tag): array => [
+                'label' => $tag['label'],
+                'verified' => $tag['verified'],
                 'kind' => 'certification',
             ]);
 
@@ -302,22 +315,45 @@ class CaregiverProfile extends Model
                 'kind' => 'experience',
             ]);
 
-        $reportedCredentials = $certifications
-            ->reject(fn (CaregiverCertification $certification) => $certification->isCurrentlyVerified())
-            ->reject(fn (CaregiverCertification $certification) => $certification->isExpired())
-            ->map(fn (CaregiverCertification $certification): array => [
-                'label' => $certification->displayName(),
-                'verified' => false,
-                'kind' => 'certification',
-            ]);
-
-        return $verifiedCredentials
+        return $certificationTags
             ->concat($experienceTags)
-            ->concat($reportedCredentials)
             ->filter(fn (array $tag) => filled($tag['label']))
             ->unique(fn (array $tag) => mb_strtolower($tag['label']))
             ->take(max(0, $limit))
             ->values()
             ->all();
+    }
+
+    /**
+     * @return array<int, array{label:string,verified:bool,kind:string}>
+     */
+    public function publicCareExperienceTags(int $limit = 3): array
+    {
+        $experiences = $this->relationLoaded('careExperiences')
+            ? $this->careExperiences
+            : $this->careExperiences()->where('active', true)->orderBy('sort_order')->get();
+
+        return $experiences
+            ->where('active', true)
+            ->sortBy('sort_order')
+            ->map(fn (CaregiverExperienceType $experience): array => [
+                'label' => $experience->label,
+                'verified' => false,
+                'kind' => 'experience',
+            ])
+            ->filter(fn (array $tag): bool => filled($tag['label']))
+            ->take(max(0, $limit))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array{tags:array<int, array{type_id:int,type_slug:string,label:string,status_label:string,verified:bool,matches_filter:bool,sort_order:int}>,hidden_count:int,total:int}
+     */
+    public function publicCertificationSummary(
+        ?CaregiverCertificationCriteria $criteria = null,
+        int $limit = 3,
+    ): array {
+        return app(CaregiverCertificationPresenter::class)->summary($this, $criteria, $limit);
     }
 }

@@ -40,6 +40,10 @@
         </div>
     </section>
 
+    @if ($careProfileSnapshot)
+        <x-care-recipient-profile-summary :snapshot="$careProfileSnapshot" />
+    @endif
+
     @if($plan->status === \App\Models\ContinuousCoveragePlan::STATUS_ENDED)
         <section class="rounded-2xl border border-slate-300 bg-slate-50 p-4 text-slate-800">
             <p class="font-semibold">This coverage plan ended {{ $plan->ends_on?->format('F j, Y') }}.</p>
@@ -222,6 +226,9 @@
                                 <article id="coverage-applicant-{{ $applicant->id }}" class="scroll-mt-24 rounded-2xl border border-violet-200 bg-white p-4" wire:key="coverage-applicant-{{ $applicant->id }}">
                                     <h3 class="font-semibold text-[#17313F]">{{ $applicant->caregiver?->name }}</h3>
                                     <p class="mt-1 text-sm text-[#607080]">{{ collect([$applicant->caregiver?->city, $applicant->caregiver?->state])->filter()->implode(', ') ?: 'Location on profile' }}@if($applicant->caregiver?->caregiverProfile?->years_experience) · {{ $applicant->caregiver->caregiverProfile->years_experience }} years experience @endif</p>
+                                    @if($applicant->caregiver?->caregiverProfile)
+                                        <x-caregiver-certification-tags :summary="$applicant->caregiver->caregiverProfile->publicCertificationSummary(null, 3)" class="mt-3" />
+                                    @endif
                                     @if($applicant->caregiver?->caregiverProfile?->slug)<a href="{{ route('caregivers.show', $applicant->caregiver->caregiverProfile->slug) }}" class="mt-2 inline-flex min-h-11 items-center font-semibold text-[#2F6F62] underline">Review caregiver profile</a>@endif
                                     <div class="mt-3 grid grid-cols-2 gap-2"><button wire:click="approveApplicant({{ $applicant->id }})" wire:loading.attr="disabled" class="min-h-12 rounded-xl bg-violet-800 px-3 font-semibold text-white disabled:opacity-60">Approve & invite</button><button wire:click="declineApplicant({{ $applicant->id }})" wire:confirm="Decline this application? No care assignment has been created." wire:loading.attr="disabled" class="min-h-12 rounded-xl border border-violet-300 px-3 font-semibold text-violet-900 disabled:opacity-60">Decline</button></div>
                                 </article>

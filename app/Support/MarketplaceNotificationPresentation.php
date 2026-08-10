@@ -118,6 +118,7 @@ final class MarketplaceNotificationPresentation
                 MarketplaceEvent::COMPLETED_EXTRA_VISIT_DISPUTED,
                 MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED,
                 MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED,
+                MarketplaceEvent::CARE_PROFILE_UPDATED,
                 MarketplaceEvent::SUPPORT_TICKET_REPLY,
                 MarketplaceEvent::CONTINUOUS_COVERAGE_TEAM_INVITATION,
                 MarketplaceEvent::CONTINUOUS_COVERAGE_CAREGIVER_APPROVED,
@@ -210,6 +211,7 @@ final class MarketplaceNotificationPresentation
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED => 'Extra visit recorded',
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_PAYMENT_ACTION_REQUIRED => 'Extra visit payment needed',
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED => 'LoLo Care review',
+            MarketplaceEvent::CARE_PROFILE_UPDATED => 'Care profile updated',
             MarketplaceEvent::CONTINUOUS_COVERAGE_TEAM_INVITATION => 'Continuous Coverage invitation',
             MarketplaceEvent::CONTINUOUS_COVERAGE_APPLICATION_RECEIVED => 'Coverage application received',
             MarketplaceEvent::CONTINUOUS_COVERAGE_CAREGIVER_APPROVED => 'Approved for a care team',
@@ -306,6 +308,7 @@ final class MarketplaceNotificationPresentation
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPROVED,
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED,
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_WITHDRAWN => 'View care history',
+            MarketplaceEvent::CARE_PROFILE_UPDATED => 'Review care profile',
             MarketplaceEvent::CONTINUOUS_COVERAGE_TEAM_INVITATION,
             MarketplaceEvent::CONTINUOUS_COVERAGE_CAREGIVER_APPROVED,
             MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_OFFERED,
@@ -366,6 +369,7 @@ final class MarketplaceNotificationPresentation
             MarketplaceEvent::TIME_CORRECTION_RESUBMITTED,
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_SUBMITTED,
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_RESUBMITTED,
+            MarketplaceEvent::CARE_PROFILE_UPDATED,
             MarketplaceEvent::FAMILY_WELCOME,
             MarketplaceEvent::CAREGIVER_WELCOME,
             MarketplaceEvent::CONTINUOUS_COVERAGE_LANE_REQUESTED => 'info',
@@ -445,6 +449,9 @@ final class MarketplaceNotificationPresentation
             ],
             MarketplaceEvent::SUPPORT_TICKET_REPLY => [
                 'Open the support request to read the full reply and respond if anything is still unresolved.',
+            ],
+            MarketplaceEvent::CARE_PROFILE_UPDATED => [
+                'Review the updated care profile before your next visit.',
             ],
             default => [],
         };
