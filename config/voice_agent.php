@@ -24,7 +24,6 @@ return [
     'signup_links' => [
         'family' => env('VOICE_AGENT_SIGNUP_LINK_FAMILY'),
         'caregiver' => env('VOICE_AGENT_SIGNUP_LINK_CAREGIVER'),
-        'agency' => env('VOICE_AGENT_SIGNUP_LINK_AGENCY'),
         'general' => env('VOICE_AGENT_SIGNUP_LINK_GENERAL'),
     ],
     'faqs' => [

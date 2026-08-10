@@ -1,0 +1,37 @@
+# LoLo Care
+
+> LoLo Care is a marketplace that helps families find and coordinate independent caregivers for flexible, non-medical support at home, with a focus on Raleigh, North Carolina.
+
+LoLo Care supports companionship, meal preparation, errands, transportation assistance, light housekeeping, respite, supervision, reminders, and help with daily routines. It is not a medical provider or an emergency service. Families review and choose caregivers through the platform, and caregiver availability varies.
+
+## Start here
+
+- [LoLo Care home](https://carelolo.com/): Overview of the service and how LoLo Care works.
+- [For families](https://carelolo.com/families): Information for families arranging care for someone they love.
+- [Find caregivers](https://carelolo.com/caregivers/search): Browse public caregiver profiles and available qualifications.
+- [For caregivers](https://carelolo.com/caregivers): Information for independent caregivers interested in joining LoLo Care.
+
+## Raleigh care guides
+
+- [Home care in Raleigh](https://carelolo.com/raleigh-home-care): Guide to finding non-medical home support in Raleigh, NC.
+- [Companion care in Raleigh](https://carelolo.com/raleigh-companion-care): Information about companionship and daily-routine support.
+- [Respite care in Raleigh](https://carelolo.com/raleigh-respite-care): Information for families seeking temporary caregiving relief.
+- [Overnight caregivers in Raleigh](https://carelolo.com/raleigh-overnight-caregiver): Guidance for non-medical overnight support.
+- [Home care costs in Raleigh](https://carelolo.com/home-care-cost-raleigh-nc): Factors that influence private-pay home-care costs.
+- [How LoLo Care works](https://carelolo.com/how-homecare-works-raleigh): The family and caregiver workflow from request through completed care.
+- [Caregiver screening](https://carelolo.com/trusted-caregiver-screening): LoLo Care's profile, review, and trust information.
+
+## Policies and safety
+
+- [Legal documents](https://carelolo.com/legal): Index of LoLo Care policies and terms.
+- [Privacy policy](https://carelolo.com/legal/privacy-policy): How personal information is collected, used, and protected.
+- [Platform terms](https://carelolo.com/legal/platform-terms-of-service): Terms governing use of the LoLo Care platform.
+- [Payment and cancellation policy](https://carelolo.com/legal/payment-terms-and-cancellation-policy): Payment, fee, cancellation, and refund terms.
+- [Family terms](https://carelolo.com/legal/client-and-family-terms): Terms for clients and family users.
+- [Caregiver terms](https://carelolo.com/legal/caregiver-terms): Terms for caregivers using the platform.
+- [Safety policy](https://carelolo.com/legal/acceptable-use-and-safety-policy): Safety and acceptable-use expectations.
+
+## Optional
+
+- [Raleigh care blog](https://carelolo.com/blog): Practical articles for families and caregivers.
+- [XML sitemap](https://carelolo.com/sitemap.xml): Complete list of public, indexable pages.

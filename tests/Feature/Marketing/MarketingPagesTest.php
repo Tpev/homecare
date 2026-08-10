@@ -23,7 +23,6 @@ class MarketingPagesTest extends TestCase
         $this->get(route('landing.family.variant', ['variant' => 'd']))->assertOk();
         $this->get(route('landing.family.variant', ['variant' => 'e']))->assertOk();
         $this->get(route('landing.caregiver'))->assertOk();
-        $this->get(route('landing.agency'))->assertOk();
     }
 
     public function test_marketing_layout_includes_google_analytics(): void

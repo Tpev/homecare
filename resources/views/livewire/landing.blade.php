@@ -12,7 +12,6 @@
             <nav class="hidden items-center gap-6 text-sm font-medium text-slate-600 lg:flex">
                 <a href="{{ route('landing.family') }}" class="transition hover:text-slate-900">Families</a>
                 <a href="{{ route('landing.caregiver') }}" class="transition hover:text-slate-900">Caregivers</a>
-                <a href="{{ route('landing.agency') }}" class="transition hover:text-slate-900">Agencies</a>
             </nav>
 
             <div class="flex items-center gap-2">

@@ -26,7 +26,7 @@ class SeoPagesTest extends TestCase
         $response->assertSee('Raleigh home care FAQ');
     }
 
-    public function test_sitemap_and_robots_are_exposed_for_crawlers(): void
+    public function test_sitemap_robots_and_llms_files_are_exposed_for_crawlers(): void
     {
         $this->get(route('sitemap.xml'))
             ->assertOk()
@@ -36,7 +36,16 @@ class SeoPagesTest extends TestCase
 
         $this->get('/robots.txt')
             ->assertOk()
+            ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
             ->assertSee('User-agent: *')
+            ->assertSee('Disallow: /admin/')
             ->assertSee('/sitemap.xml');
+
+        $this->get('/llms.txt')
+            ->assertOk()
+            ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
+            ->assertSee('# LoLo Care')
+            ->assertSee('https://carelolo.com/families')
+            ->assertSee('https://carelolo.com/legal/privacy-policy');
     }
 }

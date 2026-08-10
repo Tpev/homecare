@@ -9,11 +9,15 @@ class LegalPagesTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_root_family_and_agency_routes_are_publicly_accessible(): void
+    public function test_root_and_family_routes_are_publicly_accessible(): void
     {
         $this->get('/')->assertOk();
         $this->get('/families')->assertOk();
-        $this->get('/agencies')->assertOk();
+    }
+
+    public function test_agency_page_is_not_exposed(): void
+    {
+        $this->get('/agencies')->assertNotFound();
     }
 
     public function test_legal_index_and_pages_are_publicly_accessible(): void

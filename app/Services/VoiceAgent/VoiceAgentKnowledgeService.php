@@ -27,7 +27,6 @@ class VoiceAgentKnowledgeService
             'signup_links' => [
                 'family' => $this->signupLinkForAudience('family'),
                 'caregiver' => $this->signupLinkForAudience('caregiver'),
-                'agency' => $this->signupLinkForAudience('agency'),
                 'general' => $this->signupLinkForAudience('general'),
             ],
             'faqs' => array_map(function (array $faq): array {
@@ -48,7 +47,6 @@ class VoiceAgentKnowledgeService
 
         return match ($audience) {
             'caregiver' => route('caregiver.register'),
-            'agency' => route('landing.agency'),
             'general', 'family' => route('register'),
             default => route('register'),
         };

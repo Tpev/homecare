@@ -78,7 +78,6 @@
                 <nav class="hidden items-center gap-5 text-sm font-medium text-slate-600 lg:flex">
                     <a href="{{ route('landing.family') }}" class="transition hover:text-slate-900">Families</a>
                     <a href="{{ route('landing.caregiver') }}" class="transition hover:text-slate-900">Caregivers</a>
-                    <a href="{{ route('landing.agency') }}" class="transition hover:text-slate-900">Agencies</a>
                     <a href="{{ route('seo.page', ['seoSlug' => 'raleigh-home-care']) }}" class="transition hover:text-slate-900">Raleigh Guides</a>
                     <a href="{{ route('blog.index') }}" class="transition hover:text-slate-900">Blog</a>
                 </nav>

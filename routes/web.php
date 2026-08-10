@@ -12,6 +12,7 @@ use App\Http\Controllers\FamilyAccountInvitationController;
 use App\Http\Controllers\FamilyBillingController;
 use App\Http\Controllers\GoogleSheetsLeadWebhookController;
 use App\Http\Controllers\LegalPageController;
+use App\Http\Controllers\LlmsController;
 use App\Http\Controllers\MarketingPagesController;
 use App\Http\Controllers\NotificationEmailTrackingController;
 use App\Http\Controllers\RobotsController;
@@ -138,7 +139,6 @@ Route::get('/families/{variant}', [MarketingPagesController::class, 'familyVaria
     ->whereIn('variant', ['a', 'b', 'c', 'd', 'e'])
     ->name('landing.family.variant');
 Route::get('/caregivers', [MarketingPagesController::class, 'caregiver'])->name('landing.caregiver');
-Route::get('/agencies', [MarketingPagesController::class, 'agency'])->name('landing.agency');
 Route::view('/flyer/family', 'marketing.flyer-family')->name('marketing.flyer.family');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{blogSlug}/cover', BlogCoverController::class)->name('blog.cover');
@@ -156,6 +156,7 @@ Route::get('/legal/{slug}', [LegalPageController::class, 'show'])
     ->name('legal.show');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
 Route::get('/robots.txt', [RobotsController::class, 'index'])->name('robots.txt');
+Route::get('/llms.txt', [LlmsController::class, 'index'])->name('llms.txt');
 Route::post('/webhooks/didit/identity', DiditWebhookController::class)
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('webhooks.didit.identity');

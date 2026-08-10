@@ -13,7 +13,6 @@ class SitemapController extends Controller
             route('landing'),
             route('landing.family'),
             route('landing.caregiver'),
-            route('landing.agency'),
             route('blog.index'),
             route('register'),
             route('caregiver.register'),

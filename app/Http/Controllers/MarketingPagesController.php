@@ -70,11 +70,6 @@ class MarketingPagesController extends Controller
         );
     }
 
-    public function agency(): View
-    {
-        return view('marketing.agency');
-    }
-
     /**
      * @param  array<string, mixed>  $data
      */
