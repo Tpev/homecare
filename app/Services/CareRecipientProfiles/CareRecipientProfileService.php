@@ -262,8 +262,12 @@ class CareRecipientProfileService
         }
 
         $legacy = FamilyRecipientProfile::query()->withoutGlobalScopes()->updateOrCreate(
-            ['family_account_id' => $profile->family_account_id],
+            // The legacy table still guarantees one row per original family owner.
+            // Older rows may not have been account-scoped yet, so looking them up by
+            // family_account_id can miss the row and violate the owner uniqueness key.
+            ['family_user_id' => $profile->legacy_family_user_id],
             [
+                'family_account_id' => $profile->family_account_id,
                 'family_user_id' => $profile->legacy_family_user_id,
                 'recipient_is_requester' => $profile->recipient_is_requester,
                 'full_name' => $profile->full_name ?: $profile->preferred_name,

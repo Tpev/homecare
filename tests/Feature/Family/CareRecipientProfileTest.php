@@ -2,38 +2,37 @@
 
 namespace Tests\Feature\Family;
 
+use App\Livewire\Caregiver\ApplyToCareRequest;
+use App\Livewire\Family\CreateCareRequestWizard;
+use App\Models\CareBooking;
+use App\Models\CaregiverProfile;
 use App\Models\CareRecipientProfile;
 use App\Models\CareRecipientProfileVersion;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
-use App\Models\CareBooking;
-use App\Models\CarePlan;
 use App\Models\CareTask;
-use App\Models\CaregiverProfile;
-use App\Models\FamilyAccountMember;
-use App\Models\FamilyRecipientProfile;
 use App\Models\ContinuousCoveragePlan;
 use App\Models\ContinuousCoverageRosterMember;
+use App\Models\FamilyAccountMember;
+use App\Models\FamilyRecipientProfile;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
+use App\Notifications\MarketplaceEventNotification;
 use App\Services\CareRecipientProfiles\CareRecipientProfileAttachmentService;
 use App\Services\CareRecipientProfiles\CareRecipientProfileBackfill;
 use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use App\Services\CareRecipientProfiles\CareRecipientProfileService;
 use App\Services\CareRecipientProfiles\CareRecipientProfileSnapshotBuilder;
-use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\ContinuousCoverage\ContinuousCoverageScheduleService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\RegularCare\CarePlanService;
-use App\Notifications\MarketplaceEventNotification;
-use App\Livewire\Caregiver\ApplyToCareRequest;
-use App\Livewire\Family\CreateCareRequestWizard;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use LogicException;
 use Livewire\Livewire;
+use LogicException;
 use Tests\TestCase;
 
 class CareRecipientProfileTest extends TestCase
@@ -159,6 +158,48 @@ class CareRecipientProfileTest extends TestCase
         auth()->logout();
         $this->get(route('family.care-profiles.edit', $profile->id))
             ->assertRedirect(route('login'));
+    }
+
+    public function test_member_can_publish_profile_when_owner_has_an_unscoped_legacy_recipient_row(): void
+    {
+        $owner = $this->family('legacy-profile-owner@example.com');
+        $account = app(FamilyAccountContext::class)->account($owner);
+        $member = $this->family('legacy-profile-member@example.com');
+        FamilyAccountMember::query()->where('user_id', $member->id)->delete();
+        FamilyAccountMember::query()->create([
+            'family_account_id' => $account->id,
+            'user_id' => $member->id,
+            'access_level' => FamilyAccountMember::ACCESS_MEMBER,
+            'status' => FamilyAccountMember::STATUS_ACTIVE,
+            'joined_at' => now(),
+        ]);
+        $legacy = FamilyRecipientProfile::query()->withoutGlobalScopes()->create([
+            'family_account_id' => null,
+            'family_user_id' => $owner->id,
+            'full_name' => 'Older recipient details',
+            'relationship_to_family' => 'Spouse',
+        ]);
+
+        $this->actingAs($member);
+        $service = app(CareRecipientProfileService::class);
+        $data = [
+            'full_name' => 'Gary Villano',
+            'preferred_name' => 'Gary',
+            'relationship_to_family' => 'Husband',
+            'about_them' => 'Gary lives at home with his wife and enjoys conversation.',
+        ];
+        $draft = $service->saveDraft($member, null, $data);
+        $ready = $service->makeReady($member, $draft, $data, (int) $draft->revision, true);
+
+        $this->assertSame($legacy->id, $ready->legacy_family_recipient_profile_id);
+        $this->assertDatabaseCount('family_recipient_profiles', 1);
+        $this->assertDatabaseHas('family_recipient_profiles', [
+            'id' => $legacy->id,
+            'family_account_id' => $account->id,
+            'family_user_id' => $owner->id,
+            'full_name' => 'Gary Villano',
+            'relationship_to_family' => 'Husband',
+        ]);
     }
 
     public function test_request_attachment_pins_a_version_and_presenter_uses_candidate_allowlist(): void
