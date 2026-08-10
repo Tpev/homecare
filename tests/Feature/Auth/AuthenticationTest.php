@@ -17,7 +17,9 @@ class AuthenticationTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSeeVolt('pages.auth.login');
+            ->assertSeeVolt('pages.auth.login')
+            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-WJG3HG6EG6', false)
+            ->assertSee("gtag('config', 'G-WJG3HG6EG6');", false);
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void
@@ -64,7 +66,9 @@ class AuthenticationTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSeeVolt('layout.navigation');
+            ->assertSeeVolt('layout.navigation')
+            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-WJG3HG6EG6', false)
+            ->assertSee("gtag('config', 'G-WJG3HG6EG6');", false);
     }
 
     public function test_users_can_logout(): void

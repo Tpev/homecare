@@ -6,6 +6,8 @@
 
     <title>TallStackUI Test</title>
 
+    <x-analytics.google-tag />
+
     {{-- TallStackUI JS/CSS hooks --}}
     <tallstackui:script />
 

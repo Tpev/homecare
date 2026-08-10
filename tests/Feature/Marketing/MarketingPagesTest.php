@@ -26,6 +26,14 @@ class MarketingPagesTest extends TestCase
         $this->get(route('landing.agency'))->assertOk();
     }
 
+    public function test_marketing_layout_includes_google_analytics(): void
+    {
+        $this->get(route('landing'))
+            ->assertOk()
+            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-WJG3HG6EG6', false)
+            ->assertSee("gtag('config', 'G-WJG3HG6EG6');", false);
+    }
+
     public function test_landing_has_registration_ctas(): void
     {
         $response = $this->get(route('landing'));
