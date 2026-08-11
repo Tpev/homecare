@@ -198,6 +198,29 @@ class CareRequestFlowTest extends TestCase
         $this->assertSame(1, substr_count($weeklyCareHtml, 'Set up regular care with Bob'), 'Bob should only appear once on regular care.');
     }
 
+    public function test_assigned_caregiver_identity_is_visible_on_family_request_cards(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = User::factory()->create([
+            'role' => 'caregiver',
+            'name' => 'Charles Petrini-Poli',
+        ]);
+        CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'profile_photo_path' => 'caregiver-photos/charles.jpg',
+            'status' => 'active',
+        ]);
+
+        $this->createCompletedRebookSource($family, $caregiver, 'Visit with assigned caregiver', now()->subDay());
+
+        $this->actingAs($family)
+            ->get(route('family.requests.index'))
+            ->assertOk()
+            ->assertSee('Assigned caregiver')
+            ->assertSee('Charles Petrini-Poli')
+            ->assertSee('/storage/caregiver-photos/charles.jpg', false);
+    }
+
     public function test_request_detail_lands_on_the_right_lifecycle_screen(): void
     {
         $family = User::factory()->create(['role' => 'family']);

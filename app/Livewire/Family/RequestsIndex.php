@@ -69,7 +69,11 @@ class RequestsIndex extends Component
     {
         $account = app(FamilyAccountContext::class)->account(auth()->user());
         $requests = CareRequest::query()
-            ->with(['recipient', 'booking'])
+            ->with([
+                'recipient',
+                'booking.caregiver:id,name',
+                'booking.caregiver.caregiverProfile:id,user_id,profile_photo_path',
+            ])
             ->withCount(['applications'])
             ->forFamilyAccount($account)
             ->where('is_system_generated', false)

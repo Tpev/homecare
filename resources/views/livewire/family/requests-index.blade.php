@@ -103,6 +103,9 @@
                                         <p class="font-display text-lg font-semibold">{{ $actionTitle }}</p>
                                         <p class="mt-1 font-semibold">{{ $request->title }}</p>
                                         <p class="mt-1 text-sm opacity-80">{{ $actionBody }}</p>
+                                        @if ($request->booking?->caregiver)
+                                            <x-caregiver-identity :caregiver="$request->booking->caregiver" class="mt-3" />
+                                        @endif
                                     </div>
                                     <span class="inline-flex min-h-11 items-center justify-center rounded-xl bg-white/85 px-4 text-sm font-semibold text-[#23483F]">{{ $actionLabel }}</span>
                                 </div>
@@ -137,6 +140,9 @@
                                                     to {{ $request->booking->scheduled_end_at->format('g:i A') }}
                                                 @endif
                                             </p>
+                                            @if ($request->booking?->caregiver)
+                                                <x-caregiver-identity :caregiver="$request->booking->caregiver" class="mt-3" />
+                                            @endif
                                         </div>
                                         <span class="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-4 text-sm font-semibold text-[#23483F]">Open visit</span>
                                     </div>
@@ -200,6 +206,9 @@
                                         </div>
                                         <p class="mt-2 text-sm text-[#607080]">{{ $scheduleLabel }} - {{ $request->city }}, {{ $request->state }}</p>
                                         <p class="mt-1 text-sm text-[#607080]">For {{ $request->recipient?->full_name ?? 'care recipient' }}</p>
+                                        @if ($request->booking?->caregiver)
+                                            <x-caregiver-identity :caregiver="$request->booking->caregiver" class="mt-3" />
+                                        @endif
                                         <p class="mt-3 text-sm text-[#324457]">
                                             <span class="font-semibold">{{ $nextAction['title'] }}</span>
                                             <span class="text-[#607080]"> - {{ $nextAction['action'] }}</span>
