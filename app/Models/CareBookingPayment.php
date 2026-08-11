@@ -12,16 +12,32 @@ class CareBookingPayment extends Model
     use BelongsToFamilyAccount, HasFactory;
 
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_AUTHORIZATION_REQUIRED = 'authorization_required';
+
     public const STATUS_REAUTH_REQUIRED = 'reauth_required';
+
     public const STATUS_AUTHORIZED = 'authorized';
+
     public const STATUS_CAPTURED = 'captured';
+
     public const STATUS_TRANSFERRED = 'transferred';
+
     public const STATUS_TRANSFER_FAILED = 'transfer_failed';
+
     public const STATUS_PARTIALLY_REFUNDED = 'partially_refunded';
+
     public const STATUS_REFUNDED = 'refunded';
+
     public const STATUS_CANCELLED = 'cancelled';
+
     public const STATUS_FAILED = 'failed';
+
+    public const FAMILY_ACTION_REQUIRED_STATUSES = [
+        self::STATUS_AUTHORIZATION_REQUIRED,
+        self::STATUS_REAUTH_REQUIRED,
+        self::STATUS_FAILED,
+    ];
 
     protected $fillable = [
         'care_booking_id',
@@ -82,5 +98,10 @@ class CareBookingPayment extends Model
     public function caregiver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'caregiver_user_id');
+    }
+
+    public function requiresFamilyAction(): bool
+    {
+        return in_array($this->status, self::FAMILY_ACTION_REQUIRED_STATUSES, true);
     }
 }

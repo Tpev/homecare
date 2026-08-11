@@ -3,6 +3,7 @@
 namespace App\Livewire\Family;
 
 use App\Models\CareBooking;
+use App\Models\CareBookingPayment;
 use App\Models\CarePlan;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
@@ -68,12 +69,14 @@ class RequestsIndex extends Component
     public function render()
     {
         $account = app(FamilyAccountContext::class)->account(auth()->user());
+        $requestRelations = [
+            'recipient',
+            'booking.caregiver:id,name',
+            'booking.caregiver.caregiverProfile:id,user_id,profile_photo_path',
+            'booking.payment:id,care_booking_id,status,last_error',
+        ];
         $requests = CareRequest::query()
-            ->with([
-                'recipient',
-                'booking.caregiver:id,name',
-                'booking.caregiver.caregiverProfile:id,user_id,profile_photo_path',
-            ])
+            ->with($requestRelations)
             ->withCount(['applications'])
             ->forFamilyAccount($account)
             ->where('is_system_generated', false)
@@ -92,15 +95,29 @@ class RequestsIndex extends Component
             ->with([
                 'caregiver:id,name,email,city,state',
                 'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
+                'nextBooking.payment:id,care_booking_id,status,last_error',
             ])
             ->forFamilyAccount($account)
+            ->orderByRaw("CASE WHEN status = '".CarePlan::STATUS_PAYMENT_ATTENTION."' THEN 0 ELSE 1 END")
             ->latest()
+            ->limit(4)
+            ->get();
+
+        $paymentAttentionPlans = CarePlan::query()
+            ->with([
+                'caregiver:id,name,email,city,state',
+                'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
+                'nextBooking.payment:id,care_booking_id,status,last_error',
+            ])
+            ->forFamilyAccount($account)
+            ->where('status', CarePlan::STATUS_PAYMENT_ATTENTION)
+            ->orderByDesc('updated_at')
             ->limit(4)
             ->get();
 
         $rebookableRequests = app(FamilyRebookingOptions::class)->forUser(auth()->user(), 4);
 
-        $attentionCount = CareRequest::query()
+        $attentionQuery = CareRequest::query()
             ->forFamilyAccount($account)
             ->where('is_system_generated', false)
             ->where(function ($query) {
@@ -122,11 +139,24 @@ class RequestsIndex extends Component
                                 CareBooking::STATUS_COMPLETED,
                                 CareBooking::STATUS_REVIEWED,
                             ])->whereNull('family_confirmed_at');
-                        });
+                        })->orWhereHas('payment', fn ($paymentQuery) => $paymentQuery
+                            ->whereIn('status', CareBookingPayment::FAMILY_ACTION_REQUIRED_STATUSES));
                     });
                 });
-            })
-            ->count();
+            });
+
+        $attentionCount = (clone $attentionQuery)->count()
+            + CarePlan::query()
+                ->forFamilyAccount($account)
+                ->where('status', CarePlan::STATUS_PAYMENT_ATTENTION)
+                ->count();
+
+        $attentionRequests = $attentionQuery
+            ->with($requestRelations)
+            ->withCount('applications')
+            ->orderByDesc('updated_at')
+            ->limit(4)
+            ->get();
 
         $avgFirstResponseMinutes = CareRequest::query()
             ->forFamilyAccount($account)
@@ -140,6 +170,8 @@ class RequestsIndex extends Component
         return view('livewire.family.requests-index', [
             'requests' => $paginated,
             'carePlans' => $carePlans,
+            'paymentAttentionPlans' => $paymentAttentionPlans,
+            'attentionRequests' => $attentionRequests,
             'rebookableRequests' => $rebookableRequests,
             'attentionCount' => $attentionCount,
             'avgFirstResponseLabel' => CareRequestProgress::minutesLabel(

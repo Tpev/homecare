@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Family;
 
+use App\Livewire\Family\RequestsIndex;
 use App\Models\CareBooking;
 use App\Models\CareBookingPayment;
 use App\Models\CaregiverProfile;
@@ -13,6 +14,7 @@ use App\Support\MarketplaceEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Str;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class FamilyDashboardTest extends TestCase
@@ -132,6 +134,71 @@ class FamilyDashboardTest extends TestCase
         $response->assertDontSee('Needs your attention');
         $response->assertDontSee('Also needs attention');
         $response->assertDontSee('What to do now');
+    }
+
+    public function test_failed_visit_payment_is_a_consistent_action_on_home_and_care(): void
+    {
+        $family = User::factory()->create([
+            'role' => 'family',
+            'email_verified_at' => now(),
+            'stripe_customer_id' => 'cus_dashboard_failed_payment',
+        ]);
+        $caregiver = User::factory()->create([
+            'role' => 'caregiver',
+            'name' => 'Charles Petrini-Poli',
+        ]);
+
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Morning support visit',
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'status' => CareRequest::STATUS_FILLED,
+            'requested_start_at' => now()->addDay()->setTime(7, 30),
+            'requested_end_at' => now()->addDay()->setTime(9, 30),
+            'city' => 'Durham',
+            'state' => 'NC',
+            'zip' => '27703',
+            'address_line1' => '100 Main Street',
+        ]);
+
+        $booking = CareBooking::query()->create([
+            'care_request_id' => $request->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+            'scheduled_start_at' => now()->addDay()->setTime(7, 30),
+            'scheduled_end_at' => now()->addDay()->setTime(9, 30),
+        ]);
+        CareBookingPayment::query()->create([
+            'care_booking_id' => $booking->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBookingPayment::STATUS_FAILED,
+            'currency' => 'usd',
+            'last_error' => 'Your card was declined.',
+            'failed_at' => now(),
+        ]);
+
+        $visitUrl = route('family.requests.show', $request->id);
+
+        $this->actingAs($family)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Payment needs attention.')
+            ->assertSee('Your card was declined.')
+            ->assertSee('Fix payment')
+            ->assertSee($visitUrl, false);
+
+        Livewire::actingAs($family)
+            ->test(RequestsIndex::class)
+            ->assertViewHas('attentionCount', 1)
+            ->assertSee('Payment needs attention')
+            ->assertSee('Fix payment')
+            ->assertDontSee('Nothing urgent right now')
+            ->set('status', CareRequest::STATUS_OPEN)
+            ->assertViewHas('attentionCount', 1)
+            ->assertSee('Payment needs attention')
+            ->assertSee('Fix payment');
     }
 
     public function test_caregiver_dashboard_shows_top_unread_updates_digest(): void

@@ -268,7 +268,7 @@ final class MarketplaceNotificationPresentation
             MarketplaceEvent::REVIEW_RECEIVED => 'View visit',
             MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED,
             MarketplaceEvent::PAYMENT_ACTION_REQUIRED,
-            MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION,
+            MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION => 'Fix payment',
             MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED,
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_PAYMENT_ACTION_REQUIRED => 'Review billing',
             MarketplaceEvent::PAYMENT_AUTHORIZED,
@@ -425,7 +425,9 @@ final class MarketplaceNotificationPresentation
                 : ['The family can now review the recorded visit hours.'],
             MarketplaceEvent::PAYMENT_ACTION_REQUIRED,
             MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED,
-            MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION,
+            MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION => [
+                'Open the visit, confirm or replace your card, and retry the authorization.',
+            ],
             MarketplaceEvent::TIME_CORRECTION_PAYMENT_ACTION_REQUIRED,
             MarketplaceEvent::COMPLETED_EXTRA_VISIT_PAYMENT_ACTION_REQUIRED => [
                 'Open Billing & Payments, confirm your payment method, and return to the visit when finished.',

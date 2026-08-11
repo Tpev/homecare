@@ -208,6 +208,7 @@ class Home extends Component
                     'nextBooking.payment:id,care_booking_id,status,last_error',
                 ])
                 ->forFamilyAccount($familyAccount)
+                ->orderByRaw("CASE WHEN status = '".CarePlan::STATUS_PAYMENT_ATTENTION."' THEN 0 ELSE 1 END")
                 ->latest()
                 ->limit(4)
                 ->get();

@@ -513,13 +513,13 @@ class StripeClient
 
             if ($this->isAuthenticationRequiredError($e)) {
                 throw new PaymentException(
-                    'Card authentication is required. Open Billing & Payments and re-authorize your card.',
+                    'Card authentication is required. Confirm or replace your card for this visit, then retry authorization.',
                     $e->getMessage()
                 );
             }
 
             throw new PaymentException(
-                'Card authorization failed. Update your card and try hiring again.',
+                'Card authorization failed. Confirm or replace your card for this visit, then retry authorization.',
                 $e->getMessage()
             );
         }
@@ -527,7 +527,7 @@ class StripeClient
         $status = (string) $intent->status;
         if (! in_array($status, [PaymentIntent::STATUS_REQUIRES_CAPTURE, PaymentIntent::STATUS_REQUIRES_ACTION], true)) {
             throw new PaymentException(
-                'Card authorization needs action. Please update your payment method and retry hiring.',
+                'Card authorization needs action. Confirm or replace your card for this visit, then retry authorization.',
                 'Unexpected PaymentIntent status: '.$status
             );
         }

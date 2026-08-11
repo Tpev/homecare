@@ -1517,14 +1517,14 @@ class BookingPaymentService
     private function authorizationFailureMessage(string $status): string
     {
         if ($this->authorizationStatusRequiresAction($status)) {
-            return 'Card verification is required. Open Billing & Payments, confirm your card, then retry.';
+            return 'Card verification is required. Confirm or replace your card for this visit, then retry authorization.';
         }
 
         if ($status === 'requires_payment_method') {
-            return 'Card was declined. Update your payment method in Billing & Payments, then try hiring again.';
+            return 'Your card was declined. Confirm or replace your card for this visit, then retry authorization.';
         }
 
-        return 'Card authorization failed. Update your payment method in Billing & Payments, then try hiring again.';
+        return 'Card authorization failed. Confirm or replace your card for this visit, then retry authorization.';
     }
 
     private function persistAuthorizationFailure(
@@ -1605,9 +1605,9 @@ class BookingPaymentService
                 eventKey: $isRegularCare
                     ? MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION
                     : MarketplaceEvent::PAYMENT_ACTION_REQUIRED,
-                title: 'Action needed on your payment method',
-                body: 'Please open Billing & Payments to re-authorize your card.',
-                url: route('family.billing.show'),
+                title: 'Payment confirmation needed for your visit',
+                body: 'Open the visit to confirm or replace your card and retry authorization.',
+                url: route('family.requests.show', $booking->care_request_id),
                 payload: [
                     'care_booking_id' => $booking->id,
                     'care_booking_payment_id' => $payment->id,
@@ -1628,8 +1628,8 @@ class BookingPaymentService
                 ? MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION
                 : MarketplaceEvent::PAYMENT_AUTHORIZATION_FAILED,
             title: 'Card authorization failed',
-            body: 'We could not authorize your card for this booking. Update billing and retry.',
-            url: route('family.billing.show'),
+            body: 'Open the visit to confirm or replace your card and retry authorization.',
+            url: route('family.requests.show', $booking->care_request_id),
             payload: [
                 'care_booking_id' => $booking->id,
                 'care_booking_payment_id' => $payment->id,

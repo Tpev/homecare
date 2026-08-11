@@ -71,7 +71,7 @@ class StripeMarketplacePaymentTest extends TestCase
             $this->fail('Expected a declined-card payment exception.');
         } catch (PaymentException $exception) {
             $this->assertSame(
-                'Card was declined. Update your payment method in Billing & Payments, then try hiring again.',
+                'Your card was declined. Confirm or replace your card for this visit, then retry authorization.',
                 $exception->userMessage
             );
         }

@@ -7,11 +7,7 @@
         $dayOptions = [0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'];
         $next = $plan->nextBooking;
         $nextPayment = $next?->payment;
-        $paymentNeedsAction = $nextPayment && in_array($nextPayment->status, [
-            \App\Models\CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
-            \App\Models\CareBookingPayment::STATUS_REAUTH_REQUIRED,
-            \App\Models\CareBookingPayment::STATUS_FAILED,
-        ], true);
+        $paymentNeedsAction = $nextPayment?->requiresFamilyAction() ?? false;
         $paymentProtected = $nextPayment && in_array($nextPayment->status, [
             \App\Models\CareBookingPayment::STATUS_AUTHORIZED,
             \App\Models\CareBookingPayment::STATUS_CAPTURED,
@@ -121,24 +117,20 @@
                 @php
                     $booking = $visit['booking'];
                     $payment = $booking?->payment;
-                    $needsPayment = $payment && in_array($payment->status, [
-                        \App\Models\CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
-                        \App\Models\CareBookingPayment::STATUS_REAUTH_REQUIRED,
-                        \App\Models\CareBookingPayment::STATUS_FAILED,
-                    ], true);
+                    $needsPayment = $payment?->requiresFamilyAction() ?? false;
                 @endphp
                 <article class="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
                     <div>
                         <p class="text-lg font-semibold text-[#17313F]">{{ $visit['start']->format('l, F j') }}</p>
                         <p class="mt-1 text-lg text-[#526474]">{{ $visit['start']->format('g:i A') }} to {{ $visit['end']->format('g:i A') }} with {{ $plan->caregiver?->name }}</p>
                         <p class="mt-2 text-sm font-semibold {{ $needsPayment ? 'text-amber-800' : 'text-emerald-700' }}">
-                            {{ $needsPayment ? 'Payment needed' : ($payment ? 'Payment confirmed' : 'Payment checked 48 hours before') }}
+                            {{ $needsPayment ? 'Payment needs attention' : ($payment ? 'Payment confirmed' : 'Payment checked 48 hours before') }}
                             @if ($booking?->plan_visit_kind === 'extra') - Extra visit @endif
                         </p>
                     </div>
                     <div class="flex flex-col gap-2 sm:flex-row">
                         @if ($booking)
-                            <a href="{{ route('family.requests.show', $booking->care_request_id) }}" wire:navigate class="hc-secondary-button min-h-12 text-lg">View details</a>
+                            <a href="{{ route('family.requests.show', $booking->care_request_id) }}" wire:navigate class="{{ $needsPayment ? 'inline-flex min-h-12 items-center justify-center rounded-md bg-amber-600 px-4 text-lg font-semibold text-white' : 'hc-secondary-button min-h-12 text-lg' }}">{{ $needsPayment ? 'Fix payment' : 'View details' }}</a>
                         @endif
                         @if ($booking && !$isEnded && $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED)
                             <button type="button" wire:click="skipVisit({{ $booking->id }})" wire:confirm="{{ $booking->scheduled_start_at?->lte(now()->addHours(24)) ? 'This visit is inside the 24-hour cancellation window. Skip it anyway?' : 'Skip this visit? Your regular schedule will continue.' }}" class="min-h-12 rounded-md border border-[#B85C4A] px-4 text-lg font-semibold text-[#9C3E30]">Skip</button>

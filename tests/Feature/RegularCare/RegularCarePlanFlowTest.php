@@ -34,6 +34,7 @@ use App\Services\RegularCare\CarePlanPaymentWindowService;
 use App\Services\RegularCare\CarePlanService;
 use App\Services\RegularCare\RegularCareMigrationService;
 use App\Support\MarketplaceEvent;
+use App\Support\MarketplaceNotificationPresentation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
@@ -788,6 +789,31 @@ class RegularCarePlanFlowTest extends TestCase
             ->where('data->event_key', MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION)
             ->where('data->payload->care_booking_id', $booking->id)
             ->count());
+
+        $paymentNotification = $family->notifications()
+            ->where('data->event_key', MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION)
+            ->where('data->payload->care_booking_id', $booking->id)
+            ->firstOrFail();
+        $this->assertSame(
+            route('family.requests.show', $booking->care_request_id),
+            data_get($paymentNotification->data, 'url')
+        );
+        $this->assertSame(
+            'Fix payment',
+            MarketplaceNotificationPresentation::actionLabel(MarketplaceEvent::REGULAR_CARE_PAYMENT_ATTENTION)
+        );
+
+        Livewire::actingAs($family)
+            ->test(RequestsIndex::class)
+            ->assertViewHas('attentionCount', fn (int $count): bool => $count >= 1)
+            ->assertSee('Payment needs attention')
+            ->assertSee('Fix payment')
+            ->assertDontSee('Nothing urgent right now');
+
+        Livewire::actingAs($family)
+            ->test(DashboardHome::class)
+            ->assertSee('Payment needs attention.')
+            ->assertSee('Fix payment');
 
         $stripe->paymentMethodId = 'pm_regular_replacement';
         $stripe->authorizeSuccessfully = true;

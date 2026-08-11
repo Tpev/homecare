@@ -41,11 +41,7 @@
     $waitingRequest = $needsApplicants->first();
     $nextBooking = $nextShiftRequest?->booking;
     $nextPayment = $nextBooking?->payment;
-    $nextPaymentNeedsAction = $nextPayment && in_array($nextPayment->status, [
-        \App\Models\CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
-        \App\Models\CareBookingPayment::STATUS_REAUTH_REQUIRED,
-        \App\Models\CareBookingPayment::STATUS_FAILED,
-    ], true);
+    $nextPaymentNeedsAction = $nextPayment?->requiresFamilyAction() ?? false;
     $nextPaymentProtected = $nextPayment && in_array($nextPayment->status, [
         \App\Models\CareBookingPayment::STATUS_AUTHORIZED,
         \App\Models\CareBookingPayment::STATUS_CAPTURED,
@@ -73,6 +69,29 @@
             $nextVisitTimeLabel = $nextBooking->scheduled_start_at->format('M d').' at '.$nextBooking->scheduled_start_at->format('g:i A');
         }
     }
+
+    $paymentAttentionRequest = $activeShifts->first(
+        fn ($request) => $request->booking?->payment?->requiresFamilyAction() ?? false
+    );
+    $paymentAttentionPlan = $regularPlans->first(function ($plan) {
+        return $plan->status === \App\Models\CarePlan::STATUS_PAYMENT_ATTENTION
+            || ($plan->nextBooking?->payment?->requiresFamilyAction() ?? false);
+    });
+    $paymentAttentionBooking = $paymentAttentionRequest?->booking ?: $paymentAttentionPlan?->nextBooking;
+    $paymentAttentionPayment = $paymentAttentionBooking?->payment;
+    $paymentAttentionHref = $paymentAttentionBooking
+        ? route('family.requests.show', $paymentAttentionBooking->care_request_id)
+        : ($paymentAttentionPlan ? route('family.care.show', $paymentAttentionPlan->id) : null);
+    $paymentAttentionCaregiverName = trim((string) (
+        $paymentAttentionRequest?->booking?->caregiver?->name
+        ?: $paymentAttentionPlan?->caregiver?->name
+        ?: 'Your caregiver'
+    ));
+    $paymentAttentionVisitLabel = $paymentAttentionBooking?->scheduled_start_at
+        ? ($paymentAttentionBooking->scheduled_start_at->isToday()
+            ? 'today at '.$paymentAttentionBooking->scheduled_start_at->format('g:i A')
+            : $paymentAttentionBooking->scheduled_start_at->format('M d').' at '.$paymentAttentionBooking->scheduled_start_at->format('g:i A'))
+        : 'for the next visit';
 
     $nextActionTitle = 'Get care when you are ready';
     $nextActionDescription = 'Post a short request. LoLo will show caregivers the schedule, location, and care needs clearly.';
@@ -136,6 +155,14 @@
         $nextActionTone = 'success';
     }
 
+    if ($paymentAttentionHref) {
+        $nextActionTitle = 'Fix payment for your visit';
+        $nextActionDescription = 'Confirm or replace your card so this visit is payment protected.';
+        $nextActionRoute = $paymentAttentionHref;
+        $nextActionLabel = 'Fix payment';
+        $nextActionTone = 'warning';
+    }
+
     $secondaryActionRoute = route('family.requests.create');
     $secondaryActionLabel = 'Start new care';
 
@@ -145,6 +172,13 @@
     }
 
     $attentionItems = collect([
+        $paymentAttentionHref ? [
+            'title' => 'Payment needs attention',
+            'body' => $paymentAttentionPayment?->last_error ?: 'Confirm or replace your card for the next visit.',
+            'label' => 'Fix payment',
+            'href' => $paymentAttentionHref,
+            'tone' => 'amber',
+        ] : null,
         $timesheetRequest ? [
             'title' => 'Hours need approval',
             'body' => $timesheetRequest->title,
@@ -233,10 +267,18 @@
         $careSummaryBody = 'Check the submitted time, then approve payment if everything looks right.';
         $careSummaryMeta = $timesheetRequest->title;
     }
+
+    if ($paymentAttentionHref) {
+        $careSummaryTitle = 'Payment needs attention.';
+        $careSummaryBody = $paymentAttentionCaregiverName.' is scheduled '.$paymentAttentionVisitLabel.'.';
+        $careSummaryMeta = $paymentAttentionPayment?->last_error ?: 'Confirm or replace your card for this visit.';
+    }
+
+    $heroToneClass = $nextActionTone === 'warning' ? 'bg-amber-800' : 'bg-[#23483F]';
 @endphp
 
 <section class="rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm sm:p-6 lg:p-7">
-    <div class="flex flex-col justify-between gap-5 rounded-3xl bg-[#23483F] p-5 text-white sm:p-6 lg:flex-row lg:items-end">
+    <div class="flex flex-col justify-between gap-5 rounded-3xl p-5 text-white sm:p-6 lg:flex-row lg:items-end {{ $heroToneClass }}">
         <div class="max-w-3xl">
             <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#D8E8D4]">Right now</p>
             <h1 class="mt-2 text-3xl font-display font-semibold leading-tight text-white sm:text-4xl">{{ $careSummaryTitle }}</h1>

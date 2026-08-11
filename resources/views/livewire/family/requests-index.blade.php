@@ -6,23 +6,14 @@
 
         @php
             $carePlans = $carePlans ?? collect();
+            $paymentAttentionPlans = $paymentAttentionPlans ?? collect();
+            $attentionRequests = $attentionRequests ?? collect();
             $rebookableRequests = $rebookableRequests ?? collect();
-            $attentionRequests = $requests->getCollection()->filter(function ($request) {
-                $bookingStatus = (string) ($request->booking?->status ?? '');
-
-                return ($request->status === \App\Models\CareRequest::STATUS_OPEN && (int) $request->applications_count > 0)
-                    || in_array($bookingStatus, [
-                        \App\Models\CareBooking::STATUS_IN_PROGRESS,
-                        \App\Models\CareBooking::STATUS_PAUSED,
-                    ], true)
-                    || (in_array($bookingStatus, [
-                        \App\Models\CareBooking::STATUS_COMPLETED,
-                        \App\Models\CareBooking::STATUS_REVIEWED,
-                    ], true) && ! $request->booking?->family_confirmed_at);
-            })->values();
             $upcomingRequests = $requests->getCollection()->filter(function ($request) {
-                return (string) ($request->booking?->status ?? '') === \App\Models\CareBooking::STATUS_SCHEDULED;
+                return (string) ($request->booking?->status ?? '') === \App\Models\CareBooking::STATUS_SCHEDULED
+                    && ! ($request->booking?->payment?->requiresFamilyAction() ?? false);
             })->sortBy(fn ($request) => optional($request->booking?->scheduled_start_at)->timestamp ?? PHP_INT_MAX)->values();
+            $remainingAttentionRequestSlots = max(0, 4 - $paymentAttentionPlans->count());
         @endphp
 
         <section class="rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm sm:p-6">
@@ -72,9 +63,29 @@
                     </x-slot:header>
 
                     <div class="space-y-3">
-                        @forelse ($attentionRequests->take(4) as $request)
+                        @foreach ($paymentAttentionPlans->take(4) as $plan)
+                            @php
+                                $paymentVisit = $plan->nextBooking;
+                                $paymentHref = $paymentVisit
+                                    ? route('family.requests.show', $paymentVisit->care_request_id)
+                                    : route('family.care.show', $plan->id);
+                            @endphp
+                            <a href="{{ $paymentHref }}" wire:navigate class="block rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-950 transition hover:shadow-sm">
+                                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <p class="font-display text-lg font-semibold">Payment needs attention</p>
+                                        <p class="mt-1 font-semibold">{{ $plan->title }}</p>
+                                        <p class="mt-1 text-sm text-amber-900">{{ $paymentVisit?->payment?->last_error ?: 'Confirm or replace your card for the next visit.' }}</p>
+                                    </div>
+                                    <span class="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-4 text-sm font-semibold text-amber-900">Fix payment</span>
+                                </div>
+                            </a>
+                        @endforeach
+
+                        @foreach ($attentionRequests->take($remainingAttentionRequestSlots) as $request)
                             @php
                                 $bookingStatus = (string) ($request->booking?->status ?? '');
+                                $paymentNeedsAction = $request->booking?->payment?->requiresFamilyAction() ?? false;
                                 $actionTitle = 'Review request';
                                 $actionBody = $request->applications_count.' caregiver'.((int) $request->applications_count === 1 ? '' : 's').' to review.';
                                 $actionLabel = 'Review';
@@ -96,6 +107,13 @@
                                     $actionLabel = 'Review hours';
                                     $tone = 'border-emerald-200 bg-emerald-50 text-emerald-950';
                                 }
+
+                                if ($paymentNeedsAction) {
+                                    $actionTitle = 'Payment needs attention';
+                                    $actionBody = $request->booking?->payment?->last_error ?: 'Confirm or replace your card for this visit.';
+                                    $actionLabel = 'Fix payment';
+                                    $tone = 'border-amber-300 bg-amber-50 text-amber-950';
+                                }
                             @endphp
                             <a href="{{ route('family.requests.show', $request->id) }}" wire:navigate class="block rounded-2xl border p-4 transition hover:shadow-sm {{ $tone }}">
                                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -110,12 +128,14 @@
                                     <span class="inline-flex min-h-11 items-center justify-center rounded-xl bg-white/85 px-4 text-sm font-semibold text-[#23483F]">{{ $actionLabel }}</span>
                                 </div>
                             </a>
-                        @empty
+                        @endforeach
+
+                        @if ($paymentAttentionPlans->isEmpty() && $attentionRequests->isEmpty())
                             <div class="rounded-2xl border border-[#D8E1D7] bg-[#F2F8F4] p-5">
                                 <p class="font-display text-lg font-semibold text-[#17313F]">Nothing urgent right now.</p>
                                 <p class="mt-1 text-sm text-[#607080]">You can start new care, rebook a trusted caregiver, or browse all care below.</p>
                             </div>
-                        @endforelse
+                        @endif
                     </div>
                 </x-card>
 
@@ -172,6 +192,13 @@
                             @php
                                 $nextAction = \App\Support\CareRequestProgress::bestNextAction($request);
                                 $bookingStatus = (string) ($request->booking?->status ?? '');
+                                $paymentNeedsAction = $request->booking?->payment?->requiresFamilyAction() ?? false;
+                                if ($paymentNeedsAction) {
+                                    $nextAction = [
+                                        'title' => 'Payment needs attention',
+                                        'action' => 'Confirm or replace your card for this visit.',
+                                    ];
+                                }
                                 $statusLabel = $request->booking
                                     ? 'Visit '.str_replace('_', ' ', $bookingStatus)
                                     : match ((string) $request->status) {
@@ -183,6 +210,7 @@
                                     ? (optional($request->requested_start_at)->format('M d, g:i A') ?: 'Time not set')
                                     : 'Repeats every week';
                                 $cardActionLabel = match (true) {
+                                    $paymentNeedsAction => 'Fix payment',
                                     $bookingStatus === \App\Models\CareBooking::STATUS_COMPLETED => 'Review hours',
                                     in_array($bookingStatus, [\App\Models\CareBooking::STATUS_SCHEDULED, \App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true) => 'Open visit',
                                     $request->status === \App\Models\CareRequest::STATUS_OPEN && (int) $request->applications_count > 0 => 'Review caregivers',
@@ -203,6 +231,9 @@
                                         <div class="flex flex-wrap items-center gap-2">
                                             <h3 class="font-display text-xl font-semibold text-[#17313F]">{{ $request->title }}</h3>
                                             <span class="rounded-full bg-[#F5F1EB] px-3 py-1 text-xs font-semibold text-[#4B5B6B]">{{ $statusLabel }}</span>
+                                            @if ($paymentNeedsAction)
+                                                <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Payment needs attention</span>
+                                            @endif
                                         </div>
                                         <p class="mt-2 text-sm text-[#607080]">{{ $scheduleLabel }} - {{ $request->city }}, {{ $request->state }}</p>
                                         <p class="mt-1 text-sm text-[#607080]">For {{ $request->recipient?->full_name ?? 'care recipient' }}</p>
@@ -279,13 +310,20 @@
                         @forelse ($carePlans as $plan)
                             @php
                                 $planStatusLabel = $plan->status === \App\Models\CarePlan::STATUS_PAYMENT_ATTENTION
-                                    ? 'Payment needed'
+                                    ? 'Payment needs attention'
                                     : ucfirst(str_replace('_', ' ', (string) $plan->status));
+                                $planNeedsPayment = $plan->status === \App\Models\CarePlan::STATUS_PAYMENT_ATTENTION;
+                                $planHref = $planNeedsPayment && $plan->nextBooking
+                                    ? route('family.requests.show', $plan->nextBooking->care_request_id)
+                                    : route('family.care.show', $plan->id);
                             @endphp
-                            <a href="{{ route('family.care.show', $plan->id) }}" wire:navigate class="block rounded-2xl border border-[#E4DDD3] bg-white p-4 transition hover:bg-[#F7F2EA]">
+                            <a href="{{ $planHref }}" wire:navigate class="block rounded-2xl border p-4 transition {{ $planNeedsPayment ? 'border-amber-300 bg-amber-50 hover:bg-amber-100/70' : 'border-[#E4DDD3] bg-white hover:bg-[#F7F2EA]' }}">
                                 <p class="font-display text-lg font-semibold text-[#17313F]">{{ $plan->title }}</p>
                                 <p class="mt-1 text-sm text-[#607080]">{{ $plan->caregiver?->name ?: 'Caregiver' }}</p>
-                                <p class="mt-2 text-sm font-semibold text-[#4B5B6B]">{{ $planStatusLabel }}</p>
+                                <p class="mt-2 text-sm font-semibold {{ $planNeedsPayment ? 'text-amber-900' : 'text-[#4B5B6B]' }}">{{ $planStatusLabel }}</p>
+                                @if ($planNeedsPayment)
+                                    <p class="mt-2 text-sm font-semibold text-amber-900 underline underline-offset-2">Fix payment</p>
+                                @endif
                             </a>
                         @empty
                             <div class="rounded-2xl border border-dashed border-[#D6CCBE] p-4 text-sm text-[#607080]">
