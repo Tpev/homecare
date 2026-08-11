@@ -33,31 +33,19 @@
                 @endif
 
                 <div class="mt-6 space-y-4 text-slate-700">
-                    @foreach ($lines as $line)
-                        @php
-                            $isNumberedHeading = preg_match('/^\d+(?:\.\d+)*\.?\s+/', $line) === 1;
-                            $headingDepth = 0;
-
-                            if ($isNumberedHeading) {
-                                preg_match('/^(\d+(?:\.\d+)*)\.?\s+/', $line, $matches);
-                                $headingDepth = isset($matches[1]) ? substr_count($matches[1], '.') : 0;
-                            }
-
-                            $isShortHeading = ! $isNumberedHeading && str_ends_with($line, ':') && mb_strlen($line) <= 120;
-                        @endphp
-
-                        @if ($isNumberedHeading)
-                            @if ($headingDepth <= 0)
-                                <h2 class="pt-2 text-xl font-bold text-slate-900">{{ $line }}</h2>
-                            @elseif ($headingDepth === 1)
-                                <h3 class="pt-1 text-lg font-bold text-slate-900">{{ $line }}</h3>
-                            @else
-                                <h4 class="pt-1 text-base font-semibold text-slate-900">{{ $line }}</h4>
-                            @endif
-                        @elseif ($isShortHeading)
-                            <h3 class="pt-1 text-base font-semibold text-slate-900">{{ $line }}</h3>
+                    @foreach ($contentBlocks as $block)
+                        @if ($block['type'] === 'heading-2')
+                            <h2 class="pt-2 text-xl font-bold text-slate-900">{{ $block['text'] }}</h2>
+                        @elseif ($block['type'] === 'heading-3')
+                            <h3 class="pt-1 text-lg font-bold text-slate-900">{{ $block['text'] }}</h3>
+                        @elseif ($block['type'] === 'list')
+                            <ul class="list-disc space-y-2 pl-5 text-sm leading-6 marker:text-cyan-700">
+                                @foreach ($block['items'] as $item)
+                                    <li>{{ $item }}</li>
+                                @endforeach
+                            </ul>
                         @else
-                            <p class="text-sm leading-6">{{ $line }}</p>
+                            <p class="text-sm leading-6">{{ $block['text'] }}</p>
                         @endif
                     @endforeach
                 </div>

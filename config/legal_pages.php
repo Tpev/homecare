@@ -32,11 +32,6 @@ return [
             'description' => 'Safety and behavior standards for all platform users.',
             'file' => 'acceptable-use-and-safety-policy.txt',
         ],
-        'enterprise-and-partner-terms' => [
-            'title' => 'Enterprise and Partner Terms',
-            'description' => 'Terms for agencies, organizations, and enterprise partners.',
-            'file' => 'enterprise-and-partner-terms.txt',
-        ],
         'platform-participation-acknowledgment' => [
             'title' => 'Platform Participation Acknowledgment',
             'description' => 'Acknowledgment of platform role, risk, and user responsibilities.',

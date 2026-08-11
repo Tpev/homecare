@@ -55,13 +55,15 @@ class LegalPageController extends Controller
             $effectiveLine = (string) $lines->shift();
         }
 
+        $contentBlocks = $this->parseContentBlocks($lines->all());
+
         return view('legal.show', [
             'slug' => $slug,
             'page' => $page,
             'documentHeader' => $documentHeader,
             'documentTitle' => $documentTitle ?: Arr::get($page, 'title'),
             'effectiveLine' => $effectiveLine,
-            'lines' => $lines,
+            'contentBlocks' => $contentBlocks,
             'allPages' => collect(config('legal_pages.pages', []))
                 ->map(function (array $item, string $itemSlug): array {
                     return [
@@ -73,6 +75,56 @@ class LegalPageController extends Controller
                 ->values()
                 ->all(),
         ]);
+    }
+
+    /**
+     * @param  array<int, string>  $lines
+     * @return array<int, array{type: string, text?: string, items?: array<int, string>}>
+     */
+    private function parseContentBlocks(array $lines): array
+    {
+        $blocks = [];
+        $listItems = [];
+
+        $flushList = static function () use (&$blocks, &$listItems): void {
+            if ($listItems === []) {
+                return;
+            }
+
+            $blocks[] = [
+                'type' => 'list',
+                'items' => $listItems,
+            ];
+            $listItems = [];
+        };
+
+        foreach ($lines as $line) {
+            if (str_starts_with($line, '- ')) {
+                $listItems[] = trim(substr($line, 2));
+
+                continue;
+            }
+
+            $flushList();
+
+            if (str_starts_with($line, '### ')) {
+                $blocks[] = ['type' => 'heading-3', 'text' => trim(substr($line, 4))];
+
+                continue;
+            }
+
+            if (str_starts_with($line, '## ')) {
+                $blocks[] = ['type' => 'heading-2', 'text' => trim(substr($line, 3))];
+
+                continue;
+            }
+
+            $blocks[] = ['type' => 'paragraph', 'text' => $line];
+        }
+
+        $flushList();
+
+        return $blocks;
     }
 
     private function looksLikeDocumentHeader(string $line): bool

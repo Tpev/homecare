@@ -28,15 +28,24 @@ class LegalPagesTest extends TestCase
 
         foreach (array_keys(config('legal_pages.pages', [])) as $slug) {
             $this->get(route('legal.show', ['slug' => $slug]))
-                ->assertOk();
+                ->assertOk()
+                ->assertSeeText('Effective Date: August 1, 2026')
+                ->assertSeeText('Last Updated: August 1, 2026')
+                ->assertDontSeeText('TO BE REMOVED')
+                ->assertDontSeeText('State-Specific and Operational Placeholders for Counsel Review')
+                ->assertDontSeeText('intended as a business draft for review and customization')
+                ->assertDontSeeText('This does not seem accurate')
+                ->assertDontSeeText('please explain');
         }
+
+        $this->get('/legal/enterprise-and-partner-terms')->assertNotFound();
     }
 
     public function test_public_privacy_policy_uses_lolo_company_and_sms_consent_language(): void
     {
         $this->get(route('legal.show', ['slug' => 'privacy-policy']))
             ->assertOk()
-            ->assertSeeText('LoLo Care Inc')
+            ->assertSeeText('LoLo Care, Inc.')
             ->assertSeeText('Privacy Policy')
             ->assertSeeText('mobile information')
             ->assertSeeText('SMS consent')
@@ -44,6 +53,15 @@ class LegalPagesTest extends TestCase
             ->assertSeeText('marketing or promotional purposes')
             ->assertDontSeeText('HUB Healthcare')
             ->assertDontSeeText('HomeCare');
+    }
+
+    public function test_legal_documents_render_counsel_lists_semantically(): void
+    {
+        $this->get(route('legal.show', ['slug' => 'acceptable-use-and-safety-policy']))
+            ->assertOk()
+            ->assertSee('<h2', false)
+            ->assertSee('<ul', false)
+            ->assertSee('<li>harassment, threats, intimidation, or discrimination</li>', false);
     }
 
     public function test_sms_opt_in_evidence_page_is_publicly_accessible(): void

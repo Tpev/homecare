@@ -1,109 +1,117 @@
-LoLo Care Inc
+LoLo Care, Inc.
 Caregiver / Service Provider Terms
-Effective Date: March 13, 2026 | Last Updated: March 13, 2026
-These Caregiver / Service Provider Terms (“Caregiver Terms”) govern the participation of caregivers, service providers, contractors, and similar individuals (collectively, “Providers”) who use the LoLo Care platform (the “Platform”).
-These Terms supplement the LoLo Platform Terms of Service. By registering as a caregiver or service provider on the Platform, you agree to comply with these Caregiver Terms as well as the Platform Terms of Service.
-1. Independent Contractor Status
+Effective Date: August 1, 2026 | Last Updated: August 1, 2026
+These Caregiver / Service Provider Terms (“Caregiver Terms”) govern the participation of caregivers, service providers, contractors, and similar individuals (collectively, “Providers”) who use the LoLo Care, Inc. (“LoLo”) platform (the “Platform”).
+These Terms supplement the LOLO Platform Terms of Service. By registering as a service provider on the Platform, you agree to comply with these Terms as well as the Platform Terms of Service.
+## 1. Independent Contractor Status
 Providers using the Platform are independent service providers.
 You acknowledge and agree that:
-you are not an employee of LoLo Care Inc;
-LoLo is not a staffing agency, home care agency, or nurse registry;
-LoLo does not control how you perform services;
-LoLo does not supervise, train, or manage Providers;
-you are responsible for how services are performed.
-Nothing in these Terms creates an employment, partnership, joint venture, or agency relationship between you and LoLo.
-2. Provider Responsibilities
+- you are not an employee of LoLo Care, Inc.;
+- LOLO is not a staffing agency, home care agency, or nurse registry;
+- LOLO does not control how you perform services;
+- LOLO does not supervise, train, or manage Providers;
+- you are responsible for how services are performed;
+- you control when to accept requests for service; and
+- you control the locations where you wish to accept service requests.
+Nothing in these Terms creates an employment, partnership, joint venture, or agency relationship between you and LOLO.
+## 2. Provider Responsibilities
 As a Provider using the Platform, you are responsible for:
-determining whether you are qualified to perform any service offered;
-complying with all applicable laws and regulations;
-obtaining any licenses, certifications, or permits required for services you perform;
-maintaining any required insurance;
-accurately representing your qualifications and experience;
-providing services safely and professionally.
+- determining whether you are qualified to perform any service offered;
+- complying with all applicable laws and regulations;
+- obtaining any licenses, certifications, or permits required for services you perform;
+- maintaining any required insurance;
+- accurately representing your qualifications and experience;
+- providing services safely and professionally.
 You are solely responsible for evaluating each request and determining whether you are able to perform the requested service.
-3. Prohibited Medical or Clinical Services
+## 3. Prohibited Medical or Clinical Services
 Unless specifically permitted under applicable law and properly licensed, Providers may not use the Platform to offer or perform medical, clinical, or regulated healthcare services.
 Providers should not:
-diagnose or treat medical conditions;
-administer medications;
-provide clinical procedures;
-represent themselves as medical professionals unless properly licensed.
+- diagnose or treat medical conditions;
+- administer medications;
+- provide clinical procedures;
+- represent themselves as medical professionals unless properly licensed; or
+- attempt to offer medical advice.
 The Platform is intended primarily for non-clinical support services unless otherwise approved.
-4. Accuracy of Profiles and Representations
+## 4. Accuracy of Profiles and Representations
 Providers must maintain accurate and truthful information in their profiles.
 You may not:
-misrepresent your identity;
-misrepresent qualifications or experience;
-claim licenses or certifications you do not possess;
-falsify credentials or background information.
+- misrepresent your identity;
+- misrepresent qualifications or experience;
+- claim licenses or certifications you do not possess;
+- falsify credentials or background information.
 Providing false information may result in removal from the Platform.
-5. Background Checks and Verification
-LoLo may offer or require background checks or identity verification through third-party providers.
+## 5. Background Checks and Verification
+LOLO may offer or require background checks or identity verification through third-party providers.
 Providers acknowledge that:
-checks may be limited in scope;
-checks may not capture all criminal history;
-checks may be periodic rather than continuous.
+- checks may be limited in scope;
+- checks may not capture all criminal history;
+- checks may be periodic rather than continuous;
+- checks are not warranted by LOLO, and LOLO cannot guarantee information supplied by third-party identity-verification or background-check vendors.
 Providers remain responsible for their conduct and compliance with the law.
-6. Safety Expectations
+## 6. Safety Expectations
 Providers must follow reasonable safety practices when interacting with clients or entering homes or facilities.
 Providers should:
-assess environments for safety risks;
-decline unsafe requests;
-report unsafe conditions where appropriate.
-LoLo is not responsible for conditions in client homes or locations where services occur.
-7. Scheduling and Availability
+- assess environments for safety risks;
+- decline unsafe requests;
+- report unsafe conditions where appropriate.
+LOLO is not responsible for conditions in client homes or locations where services occur.
+## 7. Scheduling and Availability
 Providers control their own schedules.
 You may choose whether to:
-accept or decline service requests;
-set availability;
-determine the services you are willing to provide.
+- accept or decline service requests;
+- set availability;
+- determine the services you are willing to provide.
 Repeated cancellations or missed appointments may lead to restrictions on Platform access.
-8. Compensation and Payments
+## 8. Compensation and Payments
 Providers are responsible for understanding compensation terms before accepting a request.
-Payments may be processed through third-party payment processors.
+Payments and disbursements may be facilitated by LOLO and processed through third-party payment processors.
 Providers are responsible for:
-accurate payout information;
-tax reporting;
-complying with all applicable financial obligations.
-9. Taxes
+- accurate payout information;
+- tax reporting;
+- complying with all applicable financial obligations.
+## 9. Taxes
 Providers are responsible for all tax obligations arising from income earned through the Platform.
-LoLo does not withhold taxes unless required by law.
+LOLO does not withhold taxes unless required by law.
 Providers should consult tax professionals regarding their obligations.
-10. Conduct Standards
+## 10. Conduct Standards
 Providers must treat clients respectfully and professionally.
 Providers may not:
-harass or discriminate against clients;
-engage in abusive or unsafe conduct;
-request inappropriate personal information;
-misuse the Platform.
+- harass or discriminate against clients;
+- engage in abusive or unsafe conduct;
+- request inappropriate personal information;
+- misuse the Platform;
+- engage in any illegal activity;
+- engage in any other activity that, in LOLO's sole and absolute discretion, may harm LOLO's reputation.
 Violations may result in account suspension or removal.
-11. Insurance
+## 11. Insurance
 Providers are responsible for maintaining any insurance required for services they provide.
-LoLo does not provide liability, professional, workers compensation, or health insurance coverage for Providers.
-12. Reporting Concerns
+LOLO does not provide liability, professional, workers' compensation, or health insurance coverage for Providers. LOLO may elect to provide insurance-provider contacts on the Platform for Providers who wish to shop for such products, but LOLO is not responsible for the decisions of those insurance providers.
+## 12. Reporting Concerns
 Providers should report safety concerns, misconduct, or illegal activity encountered through the Platform.
-LoLo may review reports and take action where appropriate.
-13. Suspension or Removal
-LoLo may suspend or remove Providers from the Platform if:
-these Terms are violated;
-unsafe conduct is reported;
-false information is discovered;
-fraud or illegal activity is suspected.
-LoLo is not obligated to continue allowing access to the Platform.
-14. Limitation of LoLo Responsibility
-LoLo is a technology platform only.
-LoLo is not responsible for:
-service outcomes;
-provider conduct;
-client conduct;
-disputes between users.
-15. Changes to These Terms
-LoLo may modify these Caregiver Terms at any time.
+LOLO may review reports and take action where appropriate.
+## 13. Suspension or Removal
+LOLO may suspend or remove Providers from the Platform if:
+- these Terms are violated;
+- unsafe conduct is reported;
+- false information is discovered;
+- fraud or illegal activity is suspected.
+LOLO is not obligated to continue allowing access to the Platform.
+## 14. Limitation of LOLO Responsibility
+LOLO is a technology platform only.
+LOLO is not responsible for:
+- service outcomes;
+- provider conduct;
+- client conduct;
+- disputes between users.
+## 15. Changes to These Terms
+LOLO may modify these Caregiver Terms at any time.
 Updated versions will be posted on the Platform with a revised effective date.
 Continued use of the Platform constitutes acceptance of revised Terms.
-16. Contact Information
-LoLo Care Inc
-8801 Fast Park Drive, Raleigh, NC 27617
-admin@carelolo.com
-carelolo.com
-For questions regarding these Caregiver Terms, please contact LoLo using the information above.
+## 16. Contact Information
+LoLo Care, Inc.
+8801 Fast Park Drive
+Suite 301
+Raleigh, NC 27617
+admin@LoLo.healthcare
+www.LoLo.healthcare
+For questions regarding these Caregiver Terms, please contact LOLO using the information above.
