@@ -6,7 +6,8 @@
 
         @php
             $selectedTaskIds = collect($selectedTasks)->map(fn ($id) => (int) $id)->all();
-            $selectedDayIds = collect($recurring_days)->map(fn ($day) => (int) $day)->all();
+            $selectedDayIds = collect($recurring_days)->map(fn ($day) => (int) $day)->unique()->sort()->values()->all();
+            $dayOptionsByValue = collect($dayOptions)->keyBy(fn ($day) => (int) $day['value']);
             $taskLookup = collect($taskOptions)->keyBy(fn ($task) => (int) $task['id']);
             $selectedTaskNames = collect($selectedTaskIds)
                 ->map(fn ($id) => $taskLookup->get($id)['name'] ?? null)
@@ -26,12 +27,16 @@
             $scheduleLine = $this->scheduleSummary;
             $careRecipientReady = $this->recipientIsRequester || trim($recipient_full_name) !== '';
             $helpReady = count($selectedTaskIds) > 0;
-            $scheduleReady = $this->estimatedHours !== null && trim($scheduleLine) !== '';
+            $scheduleStartReady = $request_type !== \App\Models\CareRequest::TYPE_RECURRING || trim($recurring_starts_on) !== '';
+            $scheduleReady = $this->estimatedHours !== null && trim($scheduleLine) !== '' && $scheduleStartReady;
+            $scheduleHelp = ! $scheduleStartReady
+                ? 'Choose when the schedule should begin'
+                : (trim($scheduleLine) !== '' ? $scheduleLine : 'Choose day and time');
             $addressReady = trim($address_line1) !== '' && trim($city) !== '' && trim($state) !== '' && trim($zip) !== '';
             $publishChecklist = [
                 ['label' => 'Person', 'ready' => $careRecipientReady, 'help' => $this->resolvedRecipientName],
                 ['label' => 'Help', 'ready' => $helpReady, 'help' => $selectedTaskNames->implode(', ') ?: 'Choose help'],
-                ['label' => 'Time', 'ready' => $scheduleReady, 'help' => trim($scheduleLine) !== '' ? $scheduleLine : 'Choose day and time'],
+                ['label' => 'Time', 'ready' => $scheduleReady, 'help' => $scheduleHelp],
                 ['label' => 'Address', 'ready' => $addressReady, 'help' => $addressReady ? trim($city.', '.$state.' '.$zip) : 'Add care address'],
             ];
             $readyChecklistCount = collect($publishChecklist)->where('ready', true)->count();
@@ -380,6 +385,7 @@
                             <div class="space-y-5">
                                 <div>
                                     <p class="text-base font-semibold text-[#324457]">Which days each week?</p>
+                                    <p class="mt-1 text-sm text-[#607080]">Choose the days first, then set the time for each day.</p>
                                     <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
                                         @foreach ($dayOptions as $day)
                                             <label class="flex min-h-12 cursor-pointer items-center justify-center rounded-lg border px-2 text-base font-semibold transition {{ in_array((int) $day['value'], $selectedDayIds, true) ? 'border-[#0F3D3E] bg-[#0F3D3E] text-white' : 'border-[#DED6CA] bg-white text-[#0F3D3E] hover:bg-[#F5F1EB]' }}">
@@ -392,26 +398,77 @@
                                     @error('recurring_days.*') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
 
+                                @if ($selectedDayIds !== [])
+                                    <div class="space-y-3" role="region" aria-label="Weekly visit times">
+                                        <div>
+                                            <p class="text-base font-semibold text-[#324457]">What time on each day?</p>
+                                            <p class="mt-1 text-sm text-[#607080]">Each day can have a different start time and visit length.</p>
+                                        </div>
+
+                                        @foreach ($selectedDayIds as $dayId)
+                                            @php
+                                                $dayLabel = $dayOptionsByValue->get($dayId)['label'] ?? 'Selected day';
+                                                $scheduleRow = $recurring_schedule[(string) $dayId] ?? $recurring_schedule[$dayId] ?? [];
+                                                $endTime = \App\Support\WeeklySchedule::normalizeTime($scheduleRow['end_time'] ?? null);
+                                            @endphp
+                                            <div
+                                                wire:key="recurring-day-{{ $dayId }}"
+                                                x-data="{
+                                                    startTime: @js((string) ($scheduleRow['start_time'] ?? '')),
+                                                    durationMinutes: @js((string) ($scheduleRow['duration_minutes'] ?? '60')),
+                                                    syncSlot() {
+                                                        this.$nextTick(() => this.$wire.updateRecurringScheduleSlot(
+                                                            {{ $dayId }},
+                                                            this.startTime,
+                                                            this.durationMinutes
+                                                        ));
+                                                    }
+                                                }"
+                                                class="rounded-xl border border-[#DED6CA] bg-[#FCFAF7] p-4"
+                                            >
+                                                <div class="grid grid-cols-1 gap-4 md:grid-cols-[minmax(8rem,0.7fr)_1fr_1fr] md:items-end">
+                                                    <div>
+                                                        <p class="text-lg font-display font-semibold text-[#17313F]">{{ $dayLabel }}</p>
+                                                        @if ($endTime)
+                                                            <p class="mt-1 text-sm font-semibold text-[#0F6B5B]">Ends at {{ \Carbon\Carbon::createFromFormat('H:i', $endTime)->format('g:i A') }}</p>
+                                                        @else
+                                                            <p class="mt-1 text-sm text-[#7B8794]">Choose a start and length</p>
+                                                        @endif
+                                                    </div>
+                                                    <div>
+                                                        <x-input
+                                                            type="time"
+                                                            id="recurring-start-{{ $dayId }}"
+                                                            label="Starts at"
+                                                            x-model="startTime"
+                                                            x-on:change="syncSlot()"
+                                                        />
+                                                        @error('recurring_schedule.'.$dayId.'.start_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                                    </div>
+                                                    <div>
+                                                        <x-native-select-field
+                                                            id="recurring-duration-{{ $dayId }}"
+                                                            label="Visit length"
+                                                            x-model="durationMinutes"
+                                                            x-on:change="syncSlot()"
+                                                            :options="$durationOptions"
+                                                        />
+                                                        @error('recurring_schedule.'.$dayId.'.duration_minutes') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                                        @error('recurring_schedule.'.$dayId.'.end_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <div>
-                                        <x-input type="date" label="Starting day" min="{{ $this->minimumStartDate }}" wire:model.change="recurring_starts_on" />
+                                        <x-input type="date" label="When should this schedule begin?" min="{{ $this->minimumStartDate }}" wire:model.change="recurring_starts_on" />
                                         @error('recurring_starts_on') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                         @if ($recurring_start_adjustment_message !== '')
                                             <p class="mt-2 text-sm font-semibold text-[#0F6B5B]">{{ $recurring_start_adjustment_message }}</p>
                                         @endif
-                                    </div>
-                                    <div>
-                                        <x-input type="time" label="Starting time" wire:model.change="recurring_start_time" />
-                                        @error('recurring_start_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                                    </div>
-                                    <div>
-                                        <x-native-select-field
-                                            label="Duration (HH:MM)"
-                                            wire:model.live="recurring_duration_minutes"
-                                            :options="$durationOptions"
-                                        />
-                                        @error('recurring_duration_minutes') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                                        @error('recurring_end_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                     </div>
                                     <fieldset>
                                         <legend class="text-base font-semibold text-[#324457]">How long should this repeat?</legend>
@@ -503,7 +560,7 @@
                         </div>
                         <div class="rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4 md:col-span-2">
                             <p class="text-xs uppercase tracking-[0.12em] text-[#0F7A55]">
-                                {{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated cost for one visit' : 'Estimated one-time cost' }}
+                                {{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated weekly care' : 'Estimated one-time cost' }}
                             </p>
                             @if ($this->estimatedCost !== null && $this->estimatedHours !== null)
                                 <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

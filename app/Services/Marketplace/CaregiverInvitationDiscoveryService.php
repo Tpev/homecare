@@ -403,19 +403,19 @@ class CaregiverInvitationDiscoveryService
             return $matches ? 'Matches the requested time' : 'Schedule may not match';
         }
 
-        $days = collect($request->recurring_days ?? [])->map(fn ($day) => (int) $day)->unique();
-        if ($days->isEmpty()) {
+        $slots = collect($request->recurringScheduleSlots());
+        if ($slots->isEmpty()) {
             return 'Recurring schedule not provided';
         }
 
-        $matchedDays = $days->filter(function (int $day) use ($ranges, $request): bool {
-            return $ranges->contains(function ($range) use ($day, $request): bool {
-                return (int) $range->day_of_week === $day
+        $matchedDays = $slots->filter(function (array $slot) use ($ranges): bool {
+            return $ranges->contains(function ($range) use ($slot): bool {
+                return (int) $range->day_of_week === (int) $slot['day']
                     && $this->timesOverlap(
                         $this->timeToMinutes((string) $range->start_time),
                         $this->timeToMinutes((string) $range->end_time),
-                        $this->timeToMinutes((string) $request->recurring_start_time),
-                        $this->timeToMinutes((string) $request->recurring_end_time),
+                        $this->timeToMinutes($slot['start_time']),
+                        $this->timeToMinutes($slot['end_time']),
                     );
             });
         })->count();
@@ -424,9 +424,9 @@ class CaregiverInvitationDiscoveryService
             return 'Schedule may not match';
         }
 
-        return $matchedDays === $days->count()
+        return $matchedDays === $slots->count()
             ? 'Matches the recurring schedule'
-            : 'Matches '.$matchedDays.' of '.$days->count().' requested days';
+            : 'Matches '.$matchedDays.' of '.$slots->count().' requested days';
     }
 
     private function timesOverlap(int $aStart, int $aEnd, int $bStart, int $bEnd): bool

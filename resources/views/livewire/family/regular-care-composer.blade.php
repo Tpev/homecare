@@ -38,7 +38,7 @@
                 <x-slot:header>
                     <div>
                         <h2 class="font-display text-lg font-semibold">When should they come?</h2>
-                        <p class="text-sm text-[#607080]">Choose the days, start time, and end time for weekly care.</p>
+                        <p class="text-sm text-[#607080]">Choose the days, then confirm the time for each weekly visit.</p>
                     </div>
                 </x-slot:header>
 
@@ -59,12 +59,29 @@
                         @error('scheduleDays') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
 
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <x-input type="time" label="Start time" wire:model="scheduleStartTime" />
-                        <x-input type="time" label="End time" wire:model="scheduleEndTime" />
-                    </div>
-                    @error('scheduleStartTime') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                    @error('scheduleEndTime') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                    @if ($scheduleDays !== [])
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-sm font-medium text-[#324457]">Time for each day</p>
+                                <p class="mt-1 text-sm text-[#607080]">Times may be different from one day to another.</p>
+                            </div>
+                            @foreach (collect($scheduleDays)->map(fn ($day) => (int) $day)->unique()->sort() as $day)
+                                <div wire:key="offer-schedule-day-{{ $day }}" class="rounded-2xl border border-[#DED6CA] bg-[#FCFAF7] p-4">
+                                    <div class="grid grid-cols-1 gap-4 md:grid-cols-[8rem_1fr_1fr] md:items-end">
+                                        <p class="font-display text-lg font-semibold text-[#17313F]">{{ $dayOptions[$day] ?? 'Day' }}</p>
+                                        <div>
+                                            <x-input type="time" label="Starts at" wire:model="scheduleSlots.{{ $day }}.start_time" />
+                                            @error('scheduleSlots.'.$day.'.start_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                        </div>
+                                        <div>
+                                            <x-input type="time" label="Ends at" wire:model="scheduleSlots.{{ $day }}.end_time" />
+                                            @error('scheduleSlots.'.$day.'.end_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
 
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <x-input type="date" label="First eligible date" wire:model="startsOn" />

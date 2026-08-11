@@ -177,10 +177,23 @@
                 <form wire:submit="requestScheduleChange" class="border-t border-[#E7E0D8] bg-[#F8FAF8] p-5 sm:p-7">
                     <h3 class="font-display text-xl font-semibold text-[#17313F]">Change future schedule</h3>
                     <p class="mt-1 text-lg text-[#526474]">Current visits remain unchanged until {{ $plan->caregiver?->name }} accepts.</p>
-                    <fieldset class="mt-5"><legend class="text-lg font-semibold text-[#263C48]">New care days</legend><div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">@foreach ($dayOptions as $value => $label)<label class="flex min-h-12 items-center gap-2 rounded-md border border-[#C9D1D4] bg-white px-3 text-lg"><input type="checkbox" wire:model="scheduleDays" value="{{ $value }}" class="h-5 w-5">{{ substr($label, 0, 3) }}</label>@endforeach</div></fieldset>
-                    <div class="mt-4 grid gap-4 md:grid-cols-3"><label class="text-lg font-semibold text-[#263C48]">Start time<input type="time" wire:model="scheduleStartTime" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg"></label><label class="text-lg font-semibold text-[#263C48]">End time<input type="time" wire:model="scheduleEndTime" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg"></label><label class="text-lg font-semibold text-[#263C48]">Start new schedule on<input type="date" wire:model="scheduleEffectiveOn" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg"></label></div>
+                    <fieldset class="mt-5"><legend class="text-lg font-semibold text-[#263C48]">New care days</legend><div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">@foreach ($dayOptions as $value => $label)<label class="flex min-h-12 items-center gap-2 rounded-md border border-[#C9D1D4] bg-white px-3 text-lg"><input type="checkbox" wire:model.live="scheduleDays" value="{{ $value }}" class="h-5 w-5">{{ substr($label, 0, 3) }}</label>@endforeach</div></fieldset>
+                    <div class="mt-4 space-y-3">
+                        @foreach (collect($scheduleDays)->map(fn ($day) => (int) $day)->unique()->sort() as $day)
+                            <div wire:key="change-schedule-day-{{ $day }}" class="rounded-xl border border-[#C9D1D4] bg-white p-4">
+                                <div class="grid gap-4 md:grid-cols-[8rem_1fr_1fr] md:items-end">
+                                    <p class="font-display text-lg font-semibold text-[#17313F]">{{ $dayOptions[$day] ?? 'Day' }}</p>
+                                    <label class="text-lg font-semibold text-[#263C48]">Starts at<input type="time" wire:model="scheduleSlots.{{ $day }}.start_time" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg"></label>
+                                    <label class="text-lg font-semibold text-[#263C48]">Ends at<input type="time" wire:model="scheduleSlots.{{ $day }}.end_time" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg"></label>
+                                </div>
+                                <x-input-error :messages="$errors->get('scheduleSlots.'.$day.'.start_time')" class="mt-2" />
+                                <x-input-error :messages="$errors->get('scheduleSlots.'.$day.'.end_time')" class="mt-2" />
+                            </div>
+                        @endforeach
+                    </div>
+                    <label class="mt-4 block text-lg font-semibold text-[#263C48]">Start new schedule on<input type="date" wire:model="scheduleEffectiveOn" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg"></label>
                     <label class="mt-4 block text-lg font-semibold text-[#263C48]">Optional note<textarea wire:model="scheduleNote" rows="3" class="mt-2 w-full rounded-md border-[#BFC8CE] text-lg"></textarea></label>
-                    <x-input-error :messages="$errors->get('scheduleDays')" class="mt-2" /><x-input-error :messages="$errors->get('scheduleEndTime')" class="mt-2" /><x-input-error :messages="$errors->get('scheduleEffectiveOn')" class="mt-2" />
+                    <x-input-error :messages="$errors->get('scheduleDays')" class="mt-2" /><x-input-error :messages="$errors->get('scheduleEffectiveOn')" class="mt-2" />
                     <div class="mt-5 flex flex-col gap-3 sm:flex-row"><x-button color="green" class="min-h-12 text-lg">Send schedule change</x-button><button type="button" wire:click="openManagePanel('')" class="hc-secondary-button min-h-12 text-lg">Cancel</button></div>
                 </form>
             @elseif ($managePanel === 'pause')

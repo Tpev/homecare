@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToFamilyAccount;
+use App\Support\WeeklySchedule;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -57,6 +58,7 @@ class CarePlan extends Model
         'schedule_days',
         'schedule_start_time',
         'schedule_end_time',
+        'schedule_slots',
         'starts_on',
         'ends_on',
         'timezone',
@@ -66,6 +68,7 @@ class CarePlan extends Model
         'counter_schedule_days',
         'counter_schedule_start_time',
         'counter_schedule_end_time',
+        'counter_schedule_slots',
         'counter_starts_on',
         'counter_note',
         'hourly_rate',
@@ -92,12 +95,14 @@ class CarePlan extends Model
             'address_snapshot' => 'array',
             'task_snapshot' => 'array',
             'schedule_days' => 'array',
+            'schedule_slots' => 'array',
             'starts_on' => 'date',
             'ends_on' => 'date',
             'pause_starts_on' => 'date',
             'resumes_on' => 'date',
             'schedule_version' => 'integer',
             'counter_schedule_days' => 'array',
+            'counter_schedule_slots' => 'array',
             'counter_starts_on' => 'date',
             'hourly_rate' => 'decimal:2',
             'offered_at' => 'datetime',
@@ -228,5 +233,44 @@ class CarePlan extends Model
             self::STATUS_PAYMENT_ATTENTION,
             self::STATUS_PAUSED,
         ], true);
+    }
+
+    /** @return list<array{day:int,start_time:string,end_time:string}> */
+    public function weeklyScheduleSlots(bool $useCounter = false): array
+    {
+        if ($useCounter && $this->counter_schedule_days) {
+            return $this->resolveWeeklySchedule(
+                $this->counter_schedule_slots,
+                $this->counter_schedule_days,
+                $this->counter_schedule_start_time,
+                $this->counter_schedule_end_time,
+            );
+        }
+
+        return $this->resolveWeeklySchedule(
+            $this->schedule_slots,
+            $this->schedule_days,
+            $this->schedule_start_time,
+            $this->schedule_end_time,
+        );
+    }
+
+    /** @return list<array{day:int,start_time:string,end_time:string}> */
+    private function resolveWeeklySchedule(mixed $slotsValue, mixed $days, mixed $startTime, mixed $endTime): array
+    {
+        $slots = WeeklySchedule::normalize($slotsValue);
+        $legacy = WeeklySchedule::normalize(null, $days, $startTime, $endTime);
+
+        if ($slots === [] || $legacy === []) {
+            return $slots !== [] ? $slots : $legacy;
+        }
+
+        $firstSlot = WeeklySchedule::first($slots);
+        $firstLegacy = WeeklySchedule::first($legacy);
+        $legacyStillMatches = WeeklySchedule::days($slots) === WeeklySchedule::days($legacy)
+            && $firstSlot['start_time'] === $firstLegacy['start_time']
+            && $firstSlot['end_time'] === $firstLegacy['end_time'];
+
+        return $legacyStillMatches ? $slots : $legacy;
     }
 }

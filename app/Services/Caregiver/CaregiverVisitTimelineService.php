@@ -171,7 +171,7 @@ class CaregiverVisitTimelineService
         $coverageIds = $rows->where('source_type', 'coverage')->pluck('source_id')->map(fn ($id) => (int) $id);
         $bookings = CareBooking::query()
             ->with([
-                'careRequest:id,title,address_line1,address_line2,city,state,zip,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time',
+                'careRequest:id,title,address_line1,address_line2,city,state,zip,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule',
                 'careRequest.recipient:id,care_request_id,full_name,recipient_is_requester,relationship_to_family',
                 'carePlan:id,title,status',
                 'payment:id,care_booking_id,status,amount_authorized_cents,caregiver_amount_cents,last_error',

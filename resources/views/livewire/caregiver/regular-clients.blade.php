@@ -67,6 +67,14 @@
                         $proposedStart = $isExtra ? \Illuminate\Support\Carbon::parse((string) data_get($proposal, 'start_at')) : null;
                         $proposedEnd = $isExtra ? \Illuminate\Support\Carbon::parse((string) data_get($proposal, 'end_at')) : null;
                         $proposedDays = collect(data_get($proposal, 'days', []))->map(fn ($day) => $dayOptions[(int) $day] ?? null)->filter()->implode(', ');
+                        $proposedScheduleLabel = $isExtra ? '' : \App\Support\WeeklySchedule::label(
+                            \App\Support\WeeklySchedule::normalize(
+                                data_get($proposal, 'slots'),
+                                data_get($proposal, 'days', []),
+                                data_get($proposal, 'start_time'),
+                                data_get($proposal, 'end_time'),
+                            )
+                        );
                     @endphp
                     <article class="px-5 py-5 sm:px-7">
                         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -75,8 +83,8 @@
                                 @if ($isExtra)
                                     <p class="mt-2 text-lg font-semibold text-[#324457]">{{ $proposedStart?->format('l, F j, g:i A') }} to {{ $proposedEnd?->format('g:i A') }}</p>
                                 @else
-                                    <p class="mt-2 text-lg font-semibold text-[#324457]">{{ $proposedDays }}</p>
-                                    <p class="text-base text-[#526474]">{{ \Illuminate\Support\Carbon::parse((string) data_get($proposal, 'start_time'))->format('g:i A') }} to {{ \Illuminate\Support\Carbon::parse((string) data_get($proposal, 'end_time'))->format('g:i A') }}, starting {{ $change->effective_on?->format('F j') }}</p>
+                                    <p class="mt-2 text-lg font-semibold text-[#324457]">{{ $proposedScheduleLabel ?: $proposedDays }}</p>
+                                    <p class="text-base text-[#526474]">Starting {{ $change->effective_on?->format('F j') }}</p>
                                 @endif
                                 @if ($change->note)<p class="mt-3 rounded-md bg-white px-4 py-3 text-base text-[#526474]">{{ $change->note }}</p>@endif
                             </div>
@@ -177,13 +185,24 @@
                                             @error('counterScheduleDays') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                         </div>
 
-                                        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                                            <x-input type="time" label="Start time" wire:model="counterStartTime" />
-                                            <x-input type="time" label="End time" wire:model="counterEndTime" />
-                                            <x-input type="date" label="First date" wire:model="counterStartsOn" />
+                                        <div class="space-y-3">
+                                            @foreach (collect($counterScheduleDays)->map(fn ($day) => (int) $day)->unique()->sort() as $day)
+                                                <div wire:key="counter-day-{{ $day }}" class="rounded-xl border border-[#D8D1F1] bg-white p-3">
+                                                    <div class="grid grid-cols-1 gap-3 md:grid-cols-[6rem_1fr_1fr] md:items-end">
+                                                        <p class="font-display font-semibold text-[#17313F]">{{ $dayOptions[$day] ?? 'Day' }}</p>
+                                                        <div>
+                                                            <x-input type="time" label="Starts at" wire:model="counterScheduleSlots.{{ $day }}.start_time" />
+                                                            @error('counterScheduleSlots.'.$day.'.start_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                                        </div>
+                                                        <div>
+                                                            <x-input type="time" label="Ends at" wire:model="counterScheduleSlots.{{ $day }}.end_time" />
+                                                            @error('counterScheduleSlots.'.$day.'.end_time') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
                                         </div>
-                                        @error('counterStartTime') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                                        @error('counterEndTime') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                        <x-input type="date" label="First date" wire:model="counterStartsOn" />
                                         @error('counterStartsOn') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
                                         <x-textarea label="Note to family" wire:model="counterNote" />

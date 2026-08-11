@@ -322,9 +322,7 @@
                             </p>
                         @else
                             <p class="mt-1 text-[#324457]">
-                                Recurring
-                                {{ collect($requestItem->recurring_days ?? [])->map(fn($d) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][(int) $d] ?? null)->filter()->implode(', ') }}
-                                {{ $requestItem->recurring_start_time }}-{{ $requestItem->recurring_end_time }}
+                                Recurring · {{ $requestItem->recurringScheduleLabel() }}
                             </p>
                         @endif
                     </div>
@@ -454,9 +452,9 @@
                                     </p>
                                 @else
                                     <p class="mt-1 font-semibold text-[#17313F]">
-                                        {{ collect($requestItem->recurring_days ?? [])->map(fn($d) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][(int) $d] ?? null)->filter()->implode(', ') ?: 'Weekly' }}
+                                        Weekly schedule
                                     </p>
-                                    <p class="text-[#607080]">{{ $requestItem->recurring_start_time }}-{{ $requestItem->recurring_end_time }}</p>
+                                    <p class="text-[#607080]">{{ $requestItem->recurringScheduleLabel() }}</p>
                                 @endif
                             </div>
                             <div>
@@ -1404,6 +1402,5 @@
 </script>
 
 </div>
-
 
 

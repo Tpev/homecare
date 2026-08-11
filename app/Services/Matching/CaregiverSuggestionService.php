@@ -196,28 +196,22 @@ class CaregiverSuggestionService
             return ['score' => 24, 'label' => 'Matches requested time window'];
         }
 
-        $days = collect($request->recurring_days ?? [])
-            ->map(fn ($d) => (int) $d)
-            ->unique()
-            ->values();
-        if ($days->isEmpty()) {
+        $slots = collect($request->recurringScheduleSlots());
+        if ($slots->isEmpty()) {
             return ['score' => 0, 'label' => 'No recurring days set'];
         }
 
-        $startMinutes = $this->timeToMinutes((string) $request->recurring_start_time);
-        $endMinutes = $this->timeToMinutes((string) $request->recurring_end_time);
-
-        $matchedDays = $days->filter(function (int $day) use ($ranges, $startMinutes, $endMinutes) {
-            return $ranges->contains(function ($range) use ($day, $startMinutes, $endMinutes) {
-                if ((int) $range->day_of_week !== $day) {
+        $matchedDays = $slots->filter(function (array $slot) use ($ranges) {
+            return $ranges->contains(function ($range) use ($slot) {
+                if ((int) $range->day_of_week !== (int) $slot['day']) {
                     return false;
                 }
 
                 return $this->timesOverlap(
                     $this->timeToMinutes($range->start_time),
                     $this->timeToMinutes($range->end_time),
-                    $startMinutes,
-                    $endMinutes
+                    $this->timeToMinutes($slot['start_time']),
+                    $this->timeToMinutes($slot['end_time'])
                 );
             });
         })->count();
@@ -226,7 +220,7 @@ class CaregiverSuggestionService
             return ['score' => 0, 'label' => 'No recurring overlap'];
         }
 
-        $coverage = (int) round(($matchedDays / max(1, $days->count())) * 100);
+        $coverage = (int) round(($matchedDays / max(1, $slots->count())) * 100);
         $score = 10 + (int) round(($coverage / 100) * 18);
 
         return [

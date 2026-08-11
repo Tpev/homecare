@@ -6,6 +6,7 @@ use App\Models\CareRequest;
 use App\Models\CareTask;
 use App\Support\CaregiverPrelaunch;
 use App\Support\MarketplacePricing;
+use App\Support\WeeklySchedule;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
@@ -19,14 +20,21 @@ class BrowseCareRequests extends Component
     use WithPagination;
 
     public string $city = '';
+
     public string $state = '';
+
     public array $taskIds = [];
+
     public string $requestType = 'all';
+
     public string $when = 'any';
+
     public string $sort = 'newest';
+
     public string $scope = 'new_to_you';
 
     public array $taskOptions = [];
+
     public array $scopeOptions = [
         ['label' => 'New to you', 'value' => 'new_to_you'],
         ['label' => 'Invited', 'value' => 'invited'],
@@ -134,14 +142,9 @@ class BrowseCareRequests extends Component
     public function scheduleLabel(CareRequest $request): string
     {
         if ($request->request_type === CareRequest::TYPE_RECURRING) {
-            $dayMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            $days = collect($request->recurring_days ?? [])
-                ->map(fn ($day) => $dayMap[(int) $day] ?? null)
-                ->filter()
-                ->implode(', ');
-            $time = trim(substr((string) $request->recurring_start_time, 0, 5).'-'.substr((string) $request->recurring_end_time, 0, 5), '-');
+            $schedule = $request->recurringScheduleLabel();
 
-            return 'Recurring'.($days !== '' ? ': '.$days : '').($time !== '' ? ' '.$time : '');
+            return 'Recurring'.($schedule !== '' ? ': '.$schedule : '');
         }
 
         if ($request->requested_start_at && $request->requested_end_at) {
@@ -283,19 +286,12 @@ class BrowseCareRequests extends Component
         }
 
         if ($request->request_type === CareRequest::TYPE_RECURRING) {
-            $startMinutes = $this->timeStringToMinutes($request->recurring_start_time);
-            $endMinutes = $this->timeStringToMinutes($request->recurring_end_time);
-
-            if ($startMinutes === null || $endMinutes === null) {
+            $slot = WeeklySchedule::first($request->recurringScheduleSlots());
+            if (! $slot) {
                 return null;
             }
 
-            $diff = $endMinutes - $startMinutes;
-            if ($diff <= 0) {
-                $diff += 24 * 60;
-            }
-
-            return $diff > 0 ? $diff : null;
+            return WeeklySchedule::durationMinutes($slot);
         }
 
         return null;

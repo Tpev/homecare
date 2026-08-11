@@ -10,6 +10,7 @@ use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\RegularCare\CarePlanService;
 use App\Services\RegularCare\CompletedExtraVisitService;
+use App\Support\WeeklySchedule;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -26,6 +27,8 @@ class RegularCareShow extends Component
     public string $scheduleStartTime = '';
 
     public string $scheduleEndTime = '';
+
+    public array $scheduleSlots = [];
 
     public string $scheduleEffectiveOn = '';
 
@@ -76,19 +79,24 @@ class RegularCareShow extends Component
 
     public function requestScheduleChange(): void
     {
-        $this->validate([
+        $this->syncScheduleSlots();
+        $rules = [
             'scheduleDays' => ['required', 'array', 'min:1'],
             'scheduleDays.*' => ['integer', 'between:0,6'],
-            'scheduleStartTime' => ['required', 'date_format:H:i'],
-            'scheduleEndTime' => ['required', 'date_format:H:i', 'after:scheduleStartTime'],
             'scheduleEffectiveOn' => ['required', 'date', 'after:today'],
             'scheduleNote' => ['nullable', 'string', 'max:1000'],
-        ]);
+        ];
+        foreach ($this->normalizedScheduleDays() as $day) {
+            $rules['scheduleSlots.'.$day.'.start_time'] = ['required', 'date_format:H:i'];
+            $rules['scheduleSlots.'.$day.'.end_time'] = ['required', 'date_format:H:i', 'after:scheduleSlots.'.$day.'.start_time'];
+        }
+        $this->validate($rules);
 
         app(CarePlanService::class)->requestScheduleChange($this->plan, auth()->user(), [
             'schedule_days' => $this->scheduleDays,
             'schedule_start_time' => $this->scheduleStartTime,
             'schedule_end_time' => $this->scheduleEndTime,
+            'schedule_slots' => $this->normalizedScheduleSlots(),
             'starts_on' => $this->scheduleEffectiveOn,
             'effective_on' => $this->scheduleEffectiveOn,
             'ends_on' => $this->plan->ends_on?->toDateString(),
@@ -301,13 +309,83 @@ class RegularCareShow extends Component
 
     private function fillManagementDefaults(): void
     {
-        $this->scheduleDays = array_map('strval', $this->plan->schedule_days ?? []);
-        $this->scheduleStartTime = substr((string) $this->plan->schedule_start_time, 0, 5);
-        $this->scheduleEndTime = substr((string) $this->plan->schedule_end_time, 0, 5);
+        $slots = $this->plan->weeklyScheduleSlots();
+        $first = WeeklySchedule::first($slots);
+        $this->scheduleDays = array_map('strval', WeeklySchedule::days($slots));
+        $this->scheduleStartTime = (string) ($first['start_time'] ?? '');
+        $this->scheduleEndTime = (string) ($first['end_time'] ?? '');
+        $this->scheduleSlots = collect($slots)->mapWithKeys(fn (array $slot): array => [
+            (string) $slot['day'] => [
+                'start_time' => $slot['start_time'],
+                'end_time' => $slot['end_time'],
+            ],
+        ])->all();
         $this->scheduleEffectiveOn = now()->addDays(2)->toDateString();
         $this->extraVisitDate = now()->addDays(2)->toDateString();
         $this->extraVisitTime = $this->scheduleStartTime;
         $this->pauseFrom = now()->addDay()->toDateString();
+    }
+
+    public function updatedScheduleDays(): void
+    {
+        $this->syncScheduleSlots();
+    }
+
+    public function updatedScheduleStartTime(string $value): void
+    {
+        foreach (array_keys($this->scheduleSlots) as $day) {
+            $this->scheduleSlots[$day]['start_time'] = $value;
+        }
+    }
+
+    public function updatedScheduleEndTime(string $value): void
+    {
+        foreach (array_keys($this->scheduleSlots) as $day) {
+            $this->scheduleSlots[$day]['end_time'] = $value;
+        }
+    }
+
+    private function syncScheduleSlots(): void
+    {
+        $existing = $this->scheduleSlots;
+        $template = collect($existing)->first(fn (mixed $slot): bool => is_array($slot) && filled($slot['start_time'] ?? null)) ?? [
+            'start_time' => $this->scheduleStartTime,
+            'end_time' => $this->scheduleEndTime,
+        ];
+
+        $this->scheduleSlots = collect($this->normalizedScheduleDays())->mapWithKeys(function (int $day) use ($existing, $template): array {
+            $slot = $existing[(string) $day] ?? $existing[$day] ?? $template;
+
+            return [(string) $day => [
+                'start_time' => substr((string) ($slot['start_time'] ?? $template['start_time'] ?? ''), 0, 5),
+                'end_time' => substr((string) ($slot['end_time'] ?? $template['end_time'] ?? ''), 0, 5),
+            ]];
+        })->all();
+
+        $first = WeeklySchedule::first($this->normalizedScheduleSlots());
+        $this->scheduleStartTime = (string) ($first['start_time'] ?? '');
+        $this->scheduleEndTime = (string) ($first['end_time'] ?? '');
+    }
+
+    private function normalizedScheduleDays(): array
+    {
+        return collect($this->scheduleDays)
+            ->map(fn ($day): int => (int) $day)
+            ->filter(fn (int $day): bool => $day >= 0 && $day <= 6)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+    }
+
+    private function normalizedScheduleSlots(): array
+    {
+        return WeeklySchedule::normalize(
+            $this->scheduleSlots,
+            $this->normalizedScheduleDays(),
+            $this->scheduleStartTime,
+            $this->scheduleEndTime,
+        );
     }
 
     private function ownedCompletedExtraVisit(int $requestId): CompletedExtraVisitRequest

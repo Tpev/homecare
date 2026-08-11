@@ -101,6 +101,136 @@ class RegularCarePlanFlowTest extends TestCase
         ]);
     }
 
+    public function test_mixed_weekly_times_are_preserved_when_plan_visits_are_generated(): void
+    {
+        config()->set('services.stripe.bypass', true);
+        $clock = Carbon::parse('2026-08-09 10:00:00', 'America/New_York');
+        Carbon::setTestNow($clock);
+
+        try {
+            [$family, $caregiver, $request] = $this->seedCompletedCareRelationship();
+
+            Livewire::actingAs($family)
+                ->test(RegularCareComposer::class, ['careRequest' => $request->id])
+                ->set('title', 'Barbara weekly care')
+                ->set('scheduleDays', ['1', '5'])
+                ->set('scheduleSlots', [
+                    '1' => ['start_time' => '14:00', 'end_time' => '16:00'],
+                    '5' => ['start_time' => '09:30', 'end_time' => '12:30'],
+                ])
+                ->set('startsOn', '2026-08-10')
+                ->call('sendOffer')
+                ->assertHasNoErrors();
+
+            $plan = CarePlan::query()->latest('id')->firstOrFail();
+
+            app(CarePlanService::class)->acceptOffer($plan, $caregiver);
+            $plan->refresh();
+
+            $this->assertSame([
+                ['day' => 1, 'start_time' => '14:00', 'end_time' => '16:00'],
+                ['day' => 5, 'start_time' => '09:30', 'end_time' => '12:30'],
+            ], $plan->weeklyScheduleSlots());
+            $this->assertSame([1, 5], $plan->schedule_days);
+            $this->assertSame('14:00:00', $plan->schedule_start_time);
+            $this->assertSame('16:00:00', $plan->schedule_end_time);
+
+            $bookings = $plan->generatedBookings()->orderBy('scheduled_start_at')->get();
+            $this->assertCount(12, $bookings);
+            foreach ($bookings as $booking) {
+                $localStart = $booking->scheduled_start_at->copy()->setTimezone($plan->timezone);
+                $localEnd = $booking->scheduled_end_at->copy()->setTimezone($plan->timezone);
+
+                if ((int) $localStart->dayOfWeek === 1) {
+                    $this->assertSame('14:00', $localStart->format('H:i'));
+                    $this->assertSame('16:00', $localEnd->format('H:i'));
+                    $this->assertSame(120, $booking->expected_minutes);
+                } else {
+                    $this->assertSame(5, (int) $localStart->dayOfWeek);
+                    $this->assertSame('09:30', $localStart->format('H:i'));
+                    $this->assertSame('12:30', $localEnd->format('H:i'));
+                    $this->assertSame(180, $booking->expected_minutes);
+                }
+            }
+
+            $firstBooking = $bookings->firstOrFail();
+            $this->assertSame(CareBookingPayment::STATUS_AUTHORIZED, $firstBooking->fresh('payment')->payment?->status);
+
+            $lastInitialVisit = $bookings->last()->scheduled_start_at->copy();
+            Carbon::setTestNow($clock->copy()->addWeek());
+
+            $this->artisan('homecare:generate-regular-care-visits', [
+                '--plan' => $plan->id,
+                '--weeks' => 6,
+            ])->assertSuccessful();
+
+            $afterRollingGeneration = $plan->generatedBookings()->orderBy('scheduled_start_at')->get();
+            $this->assertCount(14, $afterRollingGeneration);
+            $this->assertTrue($afterRollingGeneration->last()->scheduled_start_at->gt($lastInitialVisit));
+
+            $this->artisan('homecare:generate-regular-care-visits', [
+                '--plan' => $plan->id,
+                '--weeks' => 6,
+            ])->assertSuccessful();
+            $this->assertSame(14, $plan->generatedBookings()->count());
+
+            $nextDueBooking = $plan->generatedBookings()
+                ->whereBetween('scheduled_start_at', [now(), now()->addHours(48)])
+                ->orderBy('scheduled_start_at')
+                ->firstOrFail();
+
+            $this->artisan('homecare:prepare-regular-care-payments', [
+                '--plan' => $plan->id,
+                '--hours' => 48,
+            ])->assertSuccessful();
+            $this->assertSame(CareBookingPayment::STATUS_AUTHORIZED, $nextDueBooking->fresh('payment')->payment?->status);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_legacy_request_and_plan_without_per_day_slots_keep_their_original_schedule(): void
+    {
+        [$family, $caregiver, $request] = $this->seedCompletedCareRelationship();
+        $first = now()->next('Monday')->startOfDay();
+        $plan = $this->activateDirectPlan($family, $caregiver, $request, $first);
+
+        $request->forceFill([
+            'request_type' => CareRequest::TYPE_RECURRING,
+            'recurring_days' => [1, 5],
+            'recurring_start_time' => '10:15',
+            'recurring_end_time' => '12:45',
+            'recurring_schedule' => null,
+        ])->save();
+        $plan->forceFill([
+            'schedule_days' => [1, 5],
+            'schedule_start_time' => '10:15',
+            'schedule_end_time' => '12:45',
+            'schedule_slots' => null,
+            'starts_on' => $first->toDateString(),
+        ])->save();
+
+        $expectedSlots = [
+            ['day' => 1, 'start_time' => '10:15', 'end_time' => '12:45'],
+            ['day' => 5, 'start_time' => '10:15', 'end_time' => '12:45'],
+        ];
+        $this->assertSame($expectedSlots, $request->fresh()->recurringScheduleSlots());
+        $this->assertSame($expectedSlots, $plan->fresh()->weeklyScheduleSlots());
+
+        $planned = app(CarePlanOccurrenceService::class)->scheduledOccurrences(
+            $plan->fresh(),
+            now()->addWeeks(2)->endOfDay()
+        );
+        $this->assertNotEmpty($planned);
+        foreach ($planned as $occurrence) {
+            $localStart = $occurrence['start']->copy()->setTimezone($plan->timezone);
+            $localEnd = $occurrence['end']->copy()->setTimezone($plan->timezone);
+            $this->assertContains((int) $localStart->dayOfWeek, [1, 5]);
+            $this->assertSame('10:15', $localStart->format('H:i'));
+            $this->assertSame('12:45', $localEnd->format('H:i'));
+        }
+    }
+
     public function test_caregiver_can_counter_and_family_accepts_counter_schedule(): void
     {
         config()->set('services.stripe.bypass', true);

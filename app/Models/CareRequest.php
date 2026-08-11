@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToFamilyAccount;
+use App\Support\WeeklySchedule;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -52,6 +53,7 @@ class CareRequest extends Model
         'recurring_days',
         'recurring_start_time',
         'recurring_end_time',
+        'recurring_schedule',
         'recurring_starts_on',
         'recurring_ends_on',
         'address_line1',
@@ -76,6 +78,7 @@ class CareRequest extends Model
             'first_hire_at' => 'datetime',
             'is_system_generated' => 'boolean',
             'recurring_days' => 'array',
+            'recurring_schedule' => 'array',
             'recurring_starts_on' => 'date',
             'recurring_ends_on' => 'date',
             'lat' => 'decimal:7',
@@ -138,5 +141,34 @@ class CareRequest extends Model
     public function isRecurring(): bool
     {
         return $this->request_type === self::TYPE_RECURRING;
+    }
+
+    /** @return list<array{day:int,start_time:string,end_time:string}> */
+    public function recurringScheduleSlots(): array
+    {
+        $slots = WeeklySchedule::normalize($this->recurring_schedule);
+        $legacy = WeeklySchedule::normalize(
+            null,
+            $this->recurring_days,
+            $this->recurring_start_time,
+            $this->recurring_end_time,
+        );
+
+        if ($slots === [] || $legacy === []) {
+            return $slots !== [] ? $slots : $legacy;
+        }
+
+        $firstSlot = WeeklySchedule::first($slots);
+        $firstLegacy = WeeklySchedule::first($legacy);
+        $legacyStillMatches = WeeklySchedule::days($slots) === WeeklySchedule::days($legacy)
+            && $firstSlot['start_time'] === $firstLegacy['start_time']
+            && $firstSlot['end_time'] === $firstLegacy['end_time'];
+
+        return $legacyStillMatches ? $slots : $legacy;
+    }
+
+    public function recurringScheduleLabel(): string
+    {
+        return WeeklySchedule::label($this->recurringScheduleSlots());
     }
 }

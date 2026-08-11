@@ -10,6 +10,7 @@ use App\Models\CareRelationship;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Services\Booking\BookingTrustService;
+use App\Support\WeeklySchedule;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -38,11 +39,8 @@ class RegularCareMigrationService
         if (! $caregiver) {
             $warnings[] = 'No hired caregiver could be resolved.';
         }
-        if (empty($request->recurring_days)) {
+        if ($request->recurringScheduleSlots() === []) {
             $warnings[] = 'Recurring weekdays are missing.';
-        }
-        if (! $request->recurring_start_time || ! $request->recurring_end_time) {
-            $warnings[] = 'Recurring start or end time is missing.';
         }
         if ($booking?->payment?->authorization_expires_at?->isPast()
             && $booking->payment->status === \App\Models\CareBookingPayment::STATUS_AUTHORIZED) {
@@ -253,6 +251,7 @@ class RegularCareMigrationService
             'schedule_days' => $schedule['days'],
             'schedule_start_time' => $schedule['start_time'],
             'schedule_end_time' => $schedule['end_time'],
+            'schedule_slots' => $schedule['slots'],
             'starts_on' => $schedule['starts_on'],
             'ends_on' => $schedule['ends_on'],
             'timezone' => $schedule['timezone'],
@@ -315,6 +314,7 @@ class RegularCareMigrationService
             'days' => $days,
             'start_time' => $startTime,
             'end_time' => $endTime,
+            'slots' => WeeklySchedule::normalize(null, $days, $startTime, $endTime),
             'starts_on' => $startsOn,
             'ends_on' => $endsOn,
             'timezone' => $timezone,
@@ -324,10 +324,14 @@ class RegularCareMigrationService
     /** @return array{days:list<int>,start_time:string,end_time:string,starts_on:string,ends_on:string|null,timezone:string} */
     private function requestSchedule(CareRequest $request): array
     {
+        $slots = $request->recurringScheduleSlots();
+        $first = WeeklySchedule::first($slots);
+
         return [
-            'days' => array_map('intval', $request->recurring_days ?? []),
-            'start_time' => $this->normalizeTime((string) ($request->recurring_start_time ?: '09:00')),
-            'end_time' => $this->normalizeTime((string) ($request->recurring_end_time ?: '13:00')),
+            'days' => WeeklySchedule::days($slots),
+            'start_time' => $this->normalizeTime((string) ($first['start_time'] ?? '09:00')),
+            'end_time' => $this->normalizeTime((string) ($first['end_time'] ?? '13:00')),
+            'slots' => $slots,
             'starts_on' => $request->recurring_starts_on?->toDateString()
                 ?: $request->requested_start_at?->toDateString()
                 ?: now()->addDay()->toDateString(),
@@ -343,6 +347,7 @@ class RegularCareMigrationService
             'schedule_days' => $schedule['days'],
             'schedule_start_time' => $schedule['start_time'],
             'schedule_end_time' => $schedule['end_time'],
+            'schedule_slots' => $schedule['slots'],
             'starts_on' => $schedule['starts_on'],
             'ends_on' => $schedule['ends_on'],
             'timezone' => $schedule['timezone'],

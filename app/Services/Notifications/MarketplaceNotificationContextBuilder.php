@@ -16,6 +16,7 @@ use App\Models\SupportTicket;
 use App\Models\User;
 use App\Support\MarketplaceEvent;
 use App\Support\MarketplaceNotificationPresentation;
+use App\Support\WeeklySchedule;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -410,50 +411,14 @@ class MarketplaceNotificationContextBuilder
 
     private function recurringRequestSchedule(CareRequest $request): string
     {
-        $days = collect((array) $request->recurring_days)
-            ->map(fn ($day) => $this->dayName((int) $day))
-            ->filter()
-            ->implode(', ');
-        $times = collect([$this->formatTime($request->recurring_start_time), $this->formatTime($request->recurring_end_time)])
-            ->filter()
-            ->implode(' – ');
-
-        return collect([$days, $times])->filter()->implode(' · ');
+        return $request->recurringScheduleLabel();
     }
 
     private function planSchedule(CarePlan $plan): string
     {
-        $days = collect((array) $plan->schedule_days)
-            ->map(fn ($day) => $this->dayName((int) $day))
+        return collect([WeeklySchedule::label($plan->weeklyScheduleSlots()), $plan->timezone])
             ->filter()
-            ->implode(', ');
-        $times = collect([$this->formatTime($plan->schedule_start_time), $this->formatTime($plan->schedule_end_time)])
-            ->filter()
-            ->implode(' – ');
-
-        return collect([$days, $times, $plan->timezone])->filter()->implode(' · ');
-    }
-
-    private function dayName(int $day): string
-    {
-        return [0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'][$day] ?? '';
-    }
-
-    private function formatTime(?string $time): string
-    {
-        if (! $time) {
-            return '';
-        }
-
-        try {
-            return Carbon::createFromFormat('H:i:s', $time)->format('g:i A');
-        } catch (\Throwable) {
-            try {
-                return Carbon::createFromFormat('H:i', $time)->format('g:i A');
-            } catch (\Throwable) {
-                return $time;
-            }
-        }
+            ->implode(' · ');
     }
 
     private function formatDateTime(?Carbon $date, string $timezone): string

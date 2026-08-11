@@ -5,6 +5,7 @@ namespace App\Services\AiCopilot;
 use App\Models\AiRequestSession;
 use App\Models\CareRequest;
 use App\Support\FunnelTracker;
+use App\Support\WeeklySchedule;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -13,8 +14,7 @@ class PublishCareRequestService
 {
     public function __construct(
         private readonly MissingFieldsResolver $missingFieldsResolver
-    ) {
-    }
+    ) {}
 
     /**
      * @throws ValidationException
@@ -31,6 +31,12 @@ class PublishCareRequestService
 
         $request = DB::transaction(function () use ($session, $draft) {
             $isOneTime = ($draft['request_type'] ?? null) === CareRequest::TYPE_ONE_TIME;
+            $recurringSchedule = $isOneTime ? [] : WeeklySchedule::normalize(
+                $draft['recurring_schedule'] ?? null,
+                $draft['recurring_days'] ?? [],
+                $draft['recurring_start_time'] ?? null,
+                $draft['recurring_end_time'] ?? null,
+            );
 
             $careRequest = CareRequest::query()->create([
                 'family_account_id' => $session->family_account_id,
@@ -49,6 +55,7 @@ class PublishCareRequestService
                 'recurring_days' => $isOneTime ? null : ($draft['recurring_days'] ?? []),
                 'recurring_start_time' => $isOneTime ? null : ($draft['recurring_start_time'] ?? null),
                 'recurring_end_time' => $isOneTime ? null : ($draft['recurring_end_time'] ?? null),
+                'recurring_schedule' => $isOneTime ? null : $recurringSchedule,
                 'recurring_starts_on' => $isOneTime ? null : ($draft['recurring_starts_on'] ?? null),
                 'recurring_ends_on' => $isOneTime ? null : ($draft['recurring_ends_on'] ?? null),
                 'address_line1' => (string) $draft['address_line1'],

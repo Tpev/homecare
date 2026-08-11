@@ -35,7 +35,7 @@ class CaregiverWorkInboxBuilder
         $pendingInvitations = CareRequestInvitation::query()
             ->with([
                 'family:id,name',
-                'careRequest:id,family_user_id,title,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,city,state,status',
+                'careRequest:id,family_user_id,title,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,city,state,status',
                 'careRequest.family:id,email',
                 'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
             ])
@@ -138,7 +138,7 @@ class CaregiverWorkInboxBuilder
 
         $applications = CareRequestApplication::query()
             ->with([
-                'careRequest:id,family_user_id,title,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,city,state,status,created_at',
+                'careRequest:id,family_user_id,title,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,city,state,status,created_at',
                 'careRequest.family:id,email',
                 'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
                 'conversation:id,care_request_application_id',
@@ -698,19 +698,12 @@ class CaregiverWorkInboxBuilder
         }
 
         if ($request->request_type === CareRequest::TYPE_RECURRING) {
-            $startMinutes = $this->timeStringToMinutes($request->recurring_start_time);
-            $endMinutes = $this->timeStringToMinutes($request->recurring_end_time);
-
-            if ($startMinutes === null || $endMinutes === null) {
+            $slot = WeeklySchedule::first($request->recurringScheduleSlots());
+            if (! $slot) {
                 return null;
             }
 
-            $diff = $endMinutes - $startMinutes;
-            if ($diff <= 0) {
-                $diff += 24 * 60;
-            }
-
-            return $diff > 0 ? $diff : null;
+            return WeeklySchedule::durationMinutes($slot);
         }
 
         return null;
@@ -733,27 +726,17 @@ class CaregiverWorkInboxBuilder
 
     private function estimatedPlanMinutes(CarePlan $plan): ?int
     {
-        $startMinutes = $this->timeStringToMinutes((string) $plan->schedule_start_time);
-        $endMinutes = $this->timeStringToMinutes((string) $plan->schedule_end_time);
-
-        if ($startMinutes === null || $endMinutes === null) {
+        $slot = WeeklySchedule::first($plan->weeklyScheduleSlots());
+        if (! $slot) {
             return null;
         }
 
-        $diff = $endMinutes - $startMinutes;
-
-        return $diff > 0 ? $diff : null;
+        return WeeklySchedule::durationMinutes($slot);
     }
 
     private function planScheduleLabel(CarePlan $plan): string
     {
-        $dayMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        $days = collect($plan->schedule_days ?? [])
-            ->map(fn ($day) => $dayMap[(int) $day] ?? null)
-            ->filter()
-            ->implode(', ');
-
-        return 'Regular: '.$days.' '.substr((string) $plan->schedule_start_time, 0, 5).'-'.substr((string) $plan->schedule_end_time, 0, 5);
+        return 'Regular: '.WeeklySchedule::label($plan->weeklyScheduleSlots());
     }
 
     private function planLocation(CarePlan $plan): string
@@ -772,13 +755,7 @@ class CaregiverWorkInboxBuilder
         }
 
         if ($request->request_type === CareRequest::TYPE_RECURRING) {
-            $dayMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            $days = collect($request->recurring_days ?? [])
-                ->map(fn ($day) => $dayMap[(int) $day] ?? null)
-                ->filter()
-                ->implode(', ');
-
-            return 'Recurring: '.$days.' '.$request->recurring_start_time.'-'.$request->recurring_end_time;
+            return 'Recurring: '.$request->recurringScheduleLabel();
         }
 
         if ($request->requested_start_at && $request->requested_end_at) {

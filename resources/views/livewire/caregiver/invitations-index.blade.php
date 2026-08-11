@@ -42,9 +42,7 @@
                                 <p class="text-xs text-[#7B8794]">One-time  -  {{ optional($invitation->careRequest?->requested_start_at)->format('M d, Y H:i') }}</p>
                             @else
                                 <p class="text-xs text-[#7B8794]">
-                                    Recurring  - 
-                                    {{ collect($invitation->careRequest?->recurring_days ?? [])->map(fn($d)=>['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][(int)$d] ?? null)->filter()->implode(', ') }}
-                                    {{ $invitation->careRequest?->recurring_start_time }}-{{ $invitation->careRequest?->recurring_end_time }}
+                                    Recurring · {{ $invitation->careRequest?->recurringScheduleLabel() }}
                                 </p>
                             @endif
                             <x-care-recipient-context :recipient="$invitation->careRequest?->recipient" :show-name="true" class="mt-2" />

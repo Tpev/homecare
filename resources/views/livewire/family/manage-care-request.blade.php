@@ -188,7 +188,7 @@
             ? trim((optional($booking->scheduled_start_at)->format('M d, g:i A') ?: 'Time pending').' - '.(optional($booking->scheduled_end_at)->format('g:i A') ?: ''))
             : ($requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME
                 ? (optional($requestItem->requested_start_at)->format('M d, g:i A') ?: 'Time not set')
-                : 'Weekly schedule');
+                : ($requestItem->recurringScheduleLabel() ?: 'Weekly schedule'));
         $visitCaregiverDisplayName = trim((string) $hiredCaregiverFirstName) !== ''
             ? trim((string) $hiredCaregiverFirstName)
             : 'Your caregiver';

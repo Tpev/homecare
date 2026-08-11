@@ -11,6 +11,7 @@ use App\Services\CareRecipientProfiles\CareRecipientProfileService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Support\FamilyQuickRequestDraft;
 use App\Support\FunnelTracker;
+use App\Support\WeeklySchedule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -80,6 +81,9 @@ class CreateCareRequestWizard extends Component
     public string $recurring_end_time = '';
 
     public string $recurring_duration_minutes = '60';
+
+    /** @var array<int|string,array{start_time:string,duration_minutes:string,end_time?:string}> */
+    public array $recurring_schedule = [];
 
     public string $recurring_starts_on = '';
 
@@ -288,16 +292,12 @@ class CreateCareRequestWizard extends Component
             return round($start->diffInMinutes($end) / 60, 2);
         }
 
-        $hoursPerShift = $this->recurringHoursPerShift();
-        if ($hoursPerShift === null) {
+        $slots = $this->normalizedRecurringSchedule();
+        if ($slots === [] || count($slots) !== count($this->normalizedRecurringDays())) {
             return null;
         }
 
-        if ($this->normalizedRecurringDays() === []) {
-            return null;
-        }
-
-        return round($hoursPerShift, 2);
+        return round(collect($slots)->sum(fn (array $slot): float => WeeklySchedule::durationMinutes($slot) / 60), 2);
     }
 
     public function getEstimatedCostProperty(): ?float
@@ -317,13 +317,7 @@ class CreateCareRequestWizard extends Component
     public function getScheduleSummaryProperty(): string
     {
         if ($this->request_type === CareRequest::TYPE_RECURRING) {
-            $days = collect($this->dayOptions)
-                ->whereIn('value', $this->normalizedRecurringDays())
-                ->pluck('label')
-                ->implode(', ');
-
-            $time = $this->formatTimeLabel($this->recurring_start_time);
-            $duration = $this->durationLabel((int) $this->recurring_duration_minutes);
+            $schedule = WeeklySchedule::label($this->normalizedRecurringSchedule());
             $startsOn = null;
             if (trim($this->recurring_starts_on) !== '') {
                 try {
@@ -333,11 +327,11 @@ class CreateCareRequestWizard extends Component
                 }
             }
 
-            if ($days === '' || $time === null) {
-                return 'Choose days and start time';
+            if ($schedule === '') {
+                return 'Choose a time for each day';
             }
 
-            return trim($days.' at '.$time.' for '.$duration.($startsOn ? ' starting '.$startsOn : ''));
+            return trim($schedule.($startsOn ? ' · starting '.$startsOn : ''));
         }
 
         $range = $this->oneTimeScheduleRange();
@@ -387,6 +381,7 @@ class CreateCareRequestWizard extends Component
             $this->recurring_start_time = '';
             $this->recurring_end_time = '';
             $this->recurring_duration_minutes = '60';
+            $this->recurring_schedule = [];
             $this->recurring_starts_on = '';
             $this->recurring_ends_on = '';
         } else {
@@ -395,10 +390,19 @@ class CreateCareRequestWizard extends Component
             $this->requested_start_date = '';
             $this->requested_start_time = '';
             $this->requested_duration_minutes = '60';
-            $this->recurring_days = collect($request->recurring_days ?? [])->map(fn ($day) => (int) $day)->values()->all();
-            $this->recurring_start_time = $this->normalizeTimeForInput((string) ($request->recurring_start_time ?? ''));
-            $this->recurring_end_time = $this->normalizeTimeForInput((string) ($request->recurring_end_time ?? ''));
-            $this->recurring_duration_minutes = (string) ($this->durationMinutesBetweenTimes($this->recurring_start_time, $this->recurring_end_time) ?? 60);
+            $slots = $request->recurringScheduleSlots();
+            $this->recurring_days = WeeklySchedule::days($slots);
+            $this->recurring_schedule = collect($slots)->mapWithKeys(fn (array $slot): array => [
+                (string) $slot['day'] => [
+                    'start_time' => $slot['start_time'],
+                    'duration_minutes' => (string) WeeklySchedule::durationMinutes($slot),
+                    'end_time' => $slot['end_time'],
+                ],
+            ])->all();
+            $firstSlot = WeeklySchedule::first($slots);
+            $this->recurring_start_time = (string) ($firstSlot['start_time'] ?? '');
+            $this->recurring_end_time = (string) ($firstSlot['end_time'] ?? '');
+            $this->recurring_duration_minutes = (string) ($firstSlot ? WeeklySchedule::durationMinutes($firstSlot) : 60);
             $this->recurring_starts_on = '';
             $this->recurring_ends_on = '';
         }
@@ -512,6 +516,7 @@ class CreateCareRequestWizard extends Component
                 'recurring_start_time',
                 'recurring_end_time',
                 'recurring_duration_minutes',
+                'recurring_schedule',
                 'recurring_starts_on',
                 'recurring_ends_on',
             ]);
@@ -528,7 +533,29 @@ class CreateCareRequestWizard extends Component
 
     public function updatedRecurringDays(): void
     {
+        $this->syncRecurringScheduleRows();
         $this->alignRecurringStartDate();
+    }
+
+    public function updatedRecurringSchedule(): void
+    {
+        $this->syncRecurringScheduleFields();
+    }
+
+    public function updateRecurringScheduleSlot(int $day, string $startTime, string|int $durationMinutes): void
+    {
+        if (! in_array($day, $this->normalizedRecurringDays(), true)) {
+            return;
+        }
+
+        $key = (string) $day;
+        $this->recurring_schedule[$key] = [
+            'start_time' => $startTime,
+            'duration_minutes' => (string) $durationMinutes,
+            'end_time' => (string) ($this->recurring_schedule[$key]['end_time'] ?? ''),
+        ];
+
+        $this->syncRecurringScheduleFields();
     }
 
     public function updatedRecurringStartsOn(): void
@@ -623,6 +650,7 @@ class CreateCareRequestWizard extends Component
                 'recurring_days' => $this->request_type === CareRequest::TYPE_RECURRING ? $this->normalizedRecurringDays() : null,
                 'recurring_start_time' => $this->request_type === CareRequest::TYPE_RECURRING ? $this->recurring_start_time : null,
                 'recurring_end_time' => $this->request_type === CareRequest::TYPE_RECURRING ? $this->recurring_end_time : null,
+                'recurring_schedule' => $this->request_type === CareRequest::TYPE_RECURRING ? $this->normalizedRecurringSchedule() : null,
                 'recurring_starts_on' => $this->request_type === CareRequest::TYPE_RECURRING ? $this->recurring_starts_on : null,
                 'recurring_ends_on' => $this->request_type === CareRequest::TYPE_RECURRING ? ($this->recurring_ends_on ?: null) : null,
                 'address_line1' => trim($this->address_line1),
@@ -695,13 +723,13 @@ class CreateCareRequestWizard extends Component
             'requested_start_at.after' => 'Start time must be in the future.',
             'recurring_days.required' => 'Choose at least one day of the week.',
             'recurring_days.min' => 'Choose at least one day of the week.',
-            'recurring_start_time.required' => 'Choose the start time.',
-            'recurring_duration_minutes.required' => 'Choose how long each visit should last.',
-            'recurring_duration_minutes.in' => 'Choose a duration from the list.',
+            'recurring_schedule.*.start_time.required' => 'Choose a start time for this day.',
+            'recurring_schedule.*.duration_minutes.required' => 'Choose how long care should last on this day.',
+            'recurring_schedule.*.duration_minutes.in' => 'Choose a duration from the list.',
+            'recurring_schedule.*.end_time.required' => 'Choose an earlier start time or a shorter visit.',
             'recurring_starts_on.required' => 'Choose the first day care should start.',
             'recurring_starts_on.after_or_equal' => 'The first day cannot be in the past.',
             'recurring_ends_on.required' => 'Choose the last day for regular care.',
-            'recurring_end_time.after' => 'Choose a shorter duration or an earlier start time.',
             'address_line1.required' => 'Enter the care address.',
             'city.required' => 'Enter the city.',
             'state.required' => 'Choose the state.',
@@ -765,9 +793,12 @@ class CreateCareRequestWizard extends Component
         } else {
             $rules['recurring_days'] = ['required', 'array', 'min:1'];
             $rules['recurring_days.*'] = ['integer', Rule::in(range(0, 6))];
-            $rules['recurring_start_time'] = ['required', 'date_format:H:i'];
-            $rules['recurring_duration_minutes'] = ['required', 'integer', Rule::in($this->durationMinuteValues())];
-            $rules['recurring_end_time'] = ['required', 'date_format:H:i', 'after:recurring_start_time'];
+            $rules['recurring_schedule'] = ['required', 'array'];
+            foreach ($this->normalizedRecurringDays() as $day) {
+                $rules['recurring_schedule.'.$day.'.start_time'] = ['required', 'date_format:H:i'];
+                $rules['recurring_schedule.'.$day.'.duration_minutes'] = ['required', 'integer', Rule::in($this->durationMinuteValues())];
+                $rules['recurring_schedule.'.$day.'.end_time'] = ['required', 'date_format:H:i'];
+            }
             $rules['recurring_starts_on'] = ['required', 'date', 'after_or_equal:today'];
             $rules['recurring_end_choice'] = ['required', Rule::in(['ongoing', 'date'])];
             $rules['recurring_ends_on'] = [Rule::requiredIf($this->recurring_end_choice === 'date'), 'nullable', 'date', 'after_or_equal:recurring_starts_on'];
@@ -813,31 +844,7 @@ class CreateCareRequestWizard extends Component
             $this->recurring_ends_on = '';
         }
 
-        if (trim($this->recurring_start_time) !== ''
-            && trim($this->recurring_end_time) !== ''
-            && (int) $this->recurring_duration_minutes === 60
-        ) {
-            $derivedDuration = $this->durationMinutesBetweenTimes($this->recurring_start_time, $this->recurring_end_time);
-            if ($derivedDuration !== null && $this->durationIsAllowed($derivedDuration)) {
-                $this->recurring_duration_minutes = (string) $derivedDuration;
-            }
-        }
-
-        $startMinutes = $this->timeStringToMinutes($this->recurring_start_time);
-        $duration = $this->normalizedDurationMinutes($this->recurring_duration_minutes);
-
-        if ($startMinutes === null || $duration === null) {
-            return;
-        }
-
-        $endMinutes = $startMinutes + $duration;
-        if ($endMinutes >= (24 * 60)) {
-            $this->recurring_end_time = '';
-
-            return;
-        }
-
-        $this->recurring_end_time = $this->minutesToTimeString($endMinutes);
+        $this->syncRecurringScheduleFields();
     }
 
     private function alignRecurringStartDate(): void
@@ -1159,16 +1166,102 @@ class CreateCareRequestWizard extends Component
         $this->hasSavedRecipientProfile = true;
     }
 
-    private function recurringHoursPerShift(): ?float
+    private function syncRecurringScheduleRows(): void
     {
-        $startMinutes = $this->timeStringToMinutes($this->recurring_start_time);
-        $duration = $this->normalizedDurationMinutes($this->recurring_duration_minutes);
+        $days = $this->normalizedRecurringDays();
+        $existing = $this->recurring_schedule;
+        $template = collect($existing)->first(
+            fn (mixed $slot): bool => is_array($slot) && trim((string) ($slot['start_time'] ?? '')) !== ''
+        ) ?? [
+            'start_time' => $this->recurring_start_time,
+            'duration_minutes' => $this->recurring_duration_minutes ?: '60',
+        ];
 
-        if ($startMinutes === null || $duration === null) {
-            return null;
+        $this->recurring_schedule = collect($days)->mapWithKeys(function (int $day) use ($existing, $template): array {
+            $slot = $existing[(string) $day] ?? $existing[$day] ?? $template;
+            if (trim((string) ($slot['start_time'] ?? '')) === '' && trim((string) ($template['start_time'] ?? '')) !== '') {
+                $slot = $template;
+            }
+
+            return [(string) $day => [
+                'start_time' => (string) ($slot['start_time'] ?? ''),
+                'duration_minutes' => (string) ($slot['duration_minutes'] ?? '60'),
+                'end_time' => (string) ($slot['end_time'] ?? ''),
+            ]];
+        })->all();
+    }
+
+    private function syncRecurringScheduleFields(): void
+    {
+        if (trim($this->recurring_start_time) !== '' && trim($this->recurring_end_time) !== '') {
+            $derivedDuration = $this->durationMinutesBetweenTimes($this->recurring_start_time, $this->recurring_end_time);
+            if ($derivedDuration !== null && $this->durationIsAllowed($derivedDuration)) {
+                $this->recurring_duration_minutes = (string) $derivedDuration;
+            }
         }
 
-        return round($duration / 60, 2);
+        $this->syncRecurringScheduleRows();
+
+        foreach ($this->normalizedRecurringDays() as $day) {
+            $key = (string) $day;
+            $startMinutes = $this->timeStringToMinutes($this->recurring_schedule[$key]['start_time'] ?? '');
+            $duration = $this->normalizedDurationMinutes($this->recurring_schedule[$key]['duration_minutes'] ?? null);
+            $endMinutes = $startMinutes !== null && $duration !== null ? $startMinutes + $duration : null;
+            $this->recurring_schedule[$key]['end_time'] = $endMinutes !== null && $endMinutes < (24 * 60)
+                ? $this->minutesToTimeString($endMinutes)
+                : '';
+        }
+
+        $slots = $this->normalizedRecurringSchedule();
+        $first = WeeklySchedule::first($slots);
+        $this->recurring_start_time = (string) ($first['start_time'] ?? '');
+        $this->recurring_end_time = (string) ($first['end_time'] ?? '');
+        $this->recurring_duration_minutes = (string) ($first ? WeeklySchedule::durationMinutes($first) : 60);
+    }
+
+    /** @return list<array{day:int,start_time:string,end_time:string}> */
+    private function normalizedRecurringSchedule(): array
+    {
+        $slots = [];
+        foreach ($this->normalizedRecurringDays() as $day) {
+            $row = $this->recurring_schedule[(string) $day] ?? $this->recurring_schedule[$day] ?? null;
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $start = WeeklySchedule::normalizeTime($row['start_time'] ?? null);
+            $duration = $this->normalizedDurationMinutes($row['duration_minutes'] ?? null);
+            if ($start === null || $duration === null) {
+                continue;
+            }
+
+            $endMinutes = WeeklySchedule::timeToMinutes($start) + $duration;
+            if ($endMinutes >= (24 * 60)) {
+                continue;
+            }
+
+            $slots[] = [
+                'day' => $day,
+                'start_time' => $start,
+                'end_time' => $this->minutesToTimeString($endMinutes),
+            ];
+        }
+
+        if ($slots !== []) {
+            return $slots;
+        }
+
+        $legacyStart = WeeklySchedule::normalizeTime($this->recurring_start_time);
+        $legacyEnd = WeeklySchedule::normalizeTime($this->recurring_end_time);
+        if ($legacyStart !== null && $legacyEnd === null) {
+            $duration = $this->normalizedDurationMinutes($this->recurring_duration_minutes);
+            $endMinutes = $duration !== null ? WeeklySchedule::timeToMinutes($legacyStart) + $duration : null;
+            if ($endMinutes !== null && $endMinutes < (24 * 60)) {
+                $legacyEnd = $this->minutesToTimeString($endMinutes);
+            }
+        }
+
+        return WeeklySchedule::normalize(null, $this->normalizedRecurringDays(), $legacyStart, $legacyEnd);
     }
 
     private function buildDurationOptions(): array

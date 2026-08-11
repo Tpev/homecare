@@ -29,6 +29,7 @@ use App\Support\CaregiverPrelaunch;
 use App\Support\CareRequestProgress;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
+use App\Support\WeeklySchedule;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -1247,6 +1248,7 @@ class ManageCareRequest extends Component
                 'recurring_days',
                 'recurring_start_time',
                 'recurring_end_time',
+                'recurring_schedule',
                 'recurring_starts_on',
                 'recurring_ends_on',
                 'address_line1',
@@ -1584,10 +1586,7 @@ class ManageCareRequest extends Component
             return $this->requestItem->requested_start_at;
         }
 
-        $startDate = $this->requestItem->recurring_starts_on ?: now();
-        $startTime = $this->requestItem->recurring_start_time ?: '09:00:00';
-
-        return $this->combineDateAndTime($startDate, $startTime);
+        return $this->deriveRecurringScheduledRange()[0] ?? null;
     }
 
     private function deriveScheduledEndAt(): ?Carbon
@@ -1596,10 +1595,32 @@ class ManageCareRequest extends Component
             return $this->requestItem->requested_end_at;
         }
 
-        $startDate = $this->requestItem->recurring_starts_on ?: now();
-        $endTime = $this->requestItem->recurring_end_time ?: '13:00:00';
+        return $this->deriveRecurringScheduledRange()[1] ?? null;
+    }
 
-        return $this->combineDateAndTime($startDate, $endTime);
+    /** @return array{0:Carbon,1:Carbon}|null */
+    private function deriveRecurringScheduledRange(): ?array
+    {
+        $slots = $this->requestItem->recurringScheduleSlots();
+        if ($slots === []) {
+            return null;
+        }
+
+        $date = ($this->requestItem->recurring_starts_on ?: now())->copy()->startOfDay();
+        for ($offset = 0; $offset < 7; $offset++) {
+            $candidate = $date->copy()->addDays($offset);
+            $slot = WeeklySchedule::forDay($slots, (int) $candidate->dayOfWeek);
+            if (! $slot) {
+                continue;
+            }
+
+            return [
+                $this->combineDateAndTime($candidate, $slot['start_time']),
+                $this->combineDateAndTime($candidate, $slot['end_time']),
+            ];
+        }
+
+        return null;
     }
 
     private function combineDateAndTime(mixed $dateValue, mixed $timeValue): Carbon

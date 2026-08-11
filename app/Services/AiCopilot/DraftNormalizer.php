@@ -4,6 +4,7 @@ namespace App\Services\AiCopilot;
 
 use App\Models\CareRequest;
 use App\Models\CareTask;
+use App\Support\WeeklySchedule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
@@ -47,6 +48,20 @@ class DraftNormalizer
             'recurring_starts_on', 'recurring_ends_on',
         ] as $path) {
             Arr::set($merged, $path, $this->stringOrNull(Arr::get($merged, $path)));
+        }
+
+        $recurringSchedule = WeeklySchedule::normalize(
+            Arr::get($merged, 'recurring_schedule'),
+            $merged['recurring_days'],
+            Arr::get($merged, 'recurring_start_time'),
+            Arr::get($merged, 'recurring_end_time'),
+        );
+        if ($recurringSchedule !== []) {
+            $first = WeeklySchedule::first($recurringSchedule);
+            $merged['recurring_schedule'] = $recurringSchedule;
+            $merged['recurring_days'] = WeeklySchedule::days($recurringSchedule);
+            $merged['recurring_start_time'] = $first['start_time'];
+            $merged['recurring_end_time'] = $first['end_time'];
         }
 
         foreach ([
@@ -108,7 +123,6 @@ class DraftNormalizer
     }
 
     /**
-     * @param  mixed  $days
      * @return array<int,int>
      */
     private function normalizeRecurringDays(mixed $days): array
@@ -150,6 +164,7 @@ class DraftNormalizer
 
                 if ($map->has($normalized)) {
                     $ids->push((int) $map->get($normalized));
+
                     continue;
                 }
 
@@ -171,7 +186,7 @@ class DraftNormalizer
         }
 
         $value = trim((string) $value);
+
         return $value === '' ? null : $value;
     }
 }
-

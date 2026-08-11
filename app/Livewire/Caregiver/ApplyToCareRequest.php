@@ -22,6 +22,7 @@ use App\Support\CaregiverPrelaunch;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
 use App\Support\MarketplacePricing;
+use App\Support\WeeklySchedule;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -1089,19 +1090,12 @@ class ApplyToCareRequest extends Component
         }
 
         if ($this->requestItem->request_type === CareRequest::TYPE_RECURRING) {
-            $startMinutes = $this->timeStringToMinutes($this->requestItem->recurring_start_time);
-            $endMinutes = $this->timeStringToMinutes($this->requestItem->recurring_end_time);
-
-            if ($startMinutes === null || $endMinutes === null) {
+            $slot = WeeklySchedule::first($this->requestItem->recurringScheduleSlots());
+            if (! $slot) {
                 return null;
             }
 
-            $diff = $endMinutes - $startMinutes;
-            if ($diff <= 0) {
-                $diff += 24 * 60;
-            }
-
-            return $diff > 0 ? $diff : null;
+            return WeeklySchedule::durationMinutes($slot);
         }
 
         return null;
@@ -1110,15 +1104,9 @@ class ApplyToCareRequest extends Component
     public function requestScheduleSummary(): array
     {
         if ($this->requestItem->request_type === CareRequest::TYPE_RECURRING) {
-            $dayMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            $days = collect($this->requestItem->recurring_days ?? [])
-                ->map(fn ($day) => $dayMap[(int) $day] ?? null)
-                ->filter()
-                ->implode(', ');
-
             return [
-                'primary' => $days !== '' ? $days : 'Recurring care',
-                'secondary' => trim((string) $this->requestItem->recurring_start_time.' - '.(string) $this->requestItem->recurring_end_time, ' -'),
+                'primary' => 'Recurring care',
+                'secondary' => $this->requestItem->recurringScheduleLabel(),
             ];
         }
 

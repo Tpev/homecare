@@ -186,7 +186,7 @@ class ShowCaregiver extends Component
             'title' => $request->title,
             'schedule' => $request->request_type === CareRequest::TYPE_ONE_TIME
                 ? collect([$request->requested_start_at?->format('M j, Y g:i A'), $request->requested_end_at?->format('g:i A')])->filter()->implode(' – ')
-                : 'Recurring '.collect($request->recurring_days ?? [])->map(fn ($day) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][(int) $day] ?? null)->filter()->implode(', ').' · '.substr((string) $request->recurring_start_time, 0, 5).'–'.substr((string) $request->recurring_end_time, 0, 5),
+                : 'Recurring · '.$request->recurringScheduleLabel(),
             'location' => collect([$request->city, $request->state])->filter()->implode(', '),
             'back_url' => route('family.requests.show', ['careRequest' => $request->id, 'tab' => 'applicants']),
         ];

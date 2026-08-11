@@ -11,6 +11,7 @@ use App\Services\Booking\BookingTrustService;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Support\MarketplaceEvent;
 use App\Support\MarketplacePricing;
+use App\Support\WeeklySchedule;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -160,23 +161,24 @@ class CarePlanOccurrenceService
             $throughLocal = $endsOn;
         }
 
-        $days = collect($plan->schedule_days ?? [])->map(fn ($day) => (int) $day)->all();
+        $slots = $plan->weeklyScheduleSlots();
         $occurrences = [];
 
         for ($date = $cursor->copy(); $date->lte($throughLocal); $date->addDay()) {
-            if (! in_array((int) $date->dayOfWeek, $days, true) || $this->dateIsPaused($plan, $date)) {
+            $slot = WeeklySchedule::forDay($slots, (int) $date->dayOfWeek);
+            if (! $slot || $this->dateIsPaused($plan, $date)) {
                 continue;
             }
 
-            $start = $this->localDateTime($date, (string) $plan->schedule_start_time, $timezone);
+            $start = $this->localDateTime($date, $slot['start_time'], $timezone);
             if ($start->lte(now())) {
                 continue;
             }
 
-            $end = $this->localDateTime($date, (string) $plan->schedule_end_time, $timezone);
+            $end = $this->localDateTime($date, $slot['end_time'], $timezone);
             $localDate = $date->toDateString();
             $occurrences[] = [
-                'key' => $this->occurrenceKey($plan, $localDate, (string) $plan->schedule_start_time, 'regular'),
+                'key' => $this->occurrenceKey($plan, $localDate, $slot['start_time'], 'regular'),
                 'start' => $start,
                 'end' => $end,
                 'local_date' => $localDate,
@@ -344,13 +346,17 @@ class CarePlanOccurrenceService
         $localDate = $start->copy()->setTimezone($timezone)->startOfDay();
         if ($localDate->lt(Carbon::parse($plan->starts_on->toDateString(), $timezone)->startOfDay())
             || ($plan->ends_on && $localDate->gt(Carbon::parse($plan->ends_on->toDateString(), $timezone)->endOfDay()))
-            || ! in_array((int) $localDate->dayOfWeek, array_map('intval', $plan->schedule_days ?? []), true)
             || $this->dateIsPaused($plan, $localDate)) {
             return false;
         }
 
-        $regularStart = $this->localDateTime($localDate, (string) $plan->schedule_start_time, $timezone);
-        $regularEnd = $this->localDateTime($localDate, (string) $plan->schedule_end_time, $timezone);
+        $slot = WeeklySchedule::forDay($plan->weeklyScheduleSlots(), (int) $localDate->dayOfWeek);
+        if (! $slot) {
+            return false;
+        }
+
+        $regularStart = $this->localDateTime($localDate, $slot['start_time'], $timezone);
+        $regularEnd = $this->localDateTime($localDate, $slot['end_time'], $timezone);
 
         return $regularStart->lt($end) && $regularEnd->gt($start);
     }

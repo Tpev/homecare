@@ -40,6 +40,7 @@ class BookingTrustService
                 'recurring_days' => $request->recurring_days,
                 'recurring_start_time' => $request->recurring_start_time,
                 'recurring_end_time' => $request->recurring_end_time,
+                'recurring_schedule' => $request->recurringScheduleSlots(),
             ],
             'proposed_rate' => app(MarketplacePricing::class)->hourlyRateForRequest(
                 $request,

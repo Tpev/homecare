@@ -14,6 +14,7 @@ use Livewire\Component;
 class WorkInbox extends Component
 {
     public string $scope = 'all';
+
     public string $sort = 'priority';
 
     public array $scopeOptions = [
@@ -114,7 +115,7 @@ class WorkInbox extends Component
         return CareRequestInvitation::query()
             ->where('caregiver_user_id', auth()->id())
             ->with([
-                'careRequest:id,title,request_type,city,state,requested_start_at,recurring_days,recurring_start_time,recurring_end_time',
+                'careRequest:id,title,request_type,city,state,requested_start_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule',
                 'family:id,name',
                 'application:id',
                 'application.conversation:id,care_request_application_id',

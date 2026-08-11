@@ -1410,6 +1410,47 @@ class CareRequestFlowTest extends TestCase
         $this->assertSame(90.0, $component->get('estimatedCost'));
     }
 
+    public function test_family_can_publish_different_times_for_each_recurring_day(): void
+    {
+        $family = User::factory()->create(['role' => 'family', 'city' => 'Raleigh', 'state' => 'NC']);
+        $task = CareTask::query()->create(['name' => 'Companionship']);
+
+        Livewire::actingAs($family)
+            ->test(CreateCareRequestWizard::class)
+            ->set('request_type', CareRequest::TYPE_RECURRING)
+            ->set('additional_info', 'Two weekly visits with different times.')
+            ->set('recurring_days', [1, 5])
+            ->set('recurring_schedule', [
+                '1' => ['start_time' => '14:00', 'duration_minutes' => '120', 'end_time' => ''],
+                '5' => ['start_time' => '09:30', 'duration_minutes' => '180', 'end_time' => ''],
+            ])
+            ->set('recurring_starts_on', now()->addDay()->toDateString())
+            ->set('address_line1', '900 Elm St')
+            ->set('city', 'Raleigh')
+            ->set('state', 'NC')
+            ->set('zip', '27605')
+            ->set('selectedTasks', [$task->id])
+            ->call('nextStep')
+            ->set('recipient_full_name', 'Barbara Pearl')
+            ->set('recipient_relationship_to_family', 'Self')
+            ->call('nextStep')
+            ->call('nextStep')
+            ->call('publish')
+            ->assertHasNoErrors();
+
+        $request = CareRequest::query()->latest('id')->firstOrFail();
+
+        $this->assertSame([1, 5], $request->recurring_days);
+        $this->assertSame('14:00', $request->recurring_start_time);
+        $this->assertSame('16:00', $request->recurring_end_time);
+        $this->assertSame([
+            ['day' => 1, 'start_time' => '14:00', 'end_time' => '16:00'],
+            ['day' => 5, 'start_time' => '09:30', 'end_time' => '12:30'],
+        ], $request->recurringScheduleSlots());
+        $this->assertSame(300, collect($request->recurringScheduleSlots())
+            ->sum(fn (array $slot) => \App\Support\WeeklySchedule::durationMinutes($slot)));
+    }
+
     public function test_family_can_publish_without_custom_title_and_request_gets_generated_title(): void
     {
         $family = User::factory()->create([

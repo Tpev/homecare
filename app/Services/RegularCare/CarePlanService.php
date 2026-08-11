@@ -21,6 +21,7 @@ use App\Support\CaregiverPrelaunch;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
 use App\Support\MarketplacePricing;
+use App\Support\WeeklySchedule;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -28,8 +29,6 @@ use Illuminate\Validation\ValidationException;
 
 class CarePlanService
 {
-    private const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
     public function __construct(
         private readonly BookingPaymentService $payments,
         private readonly BookingTrustService $trust,
@@ -120,10 +119,12 @@ class CarePlanService
         $startAt = $source->requested_start_at ?: $source->booking?->scheduled_start_at;
         $endAt = $source->requested_end_at ?: $source->booking?->scheduled_end_at;
 
-        if ($source->request_type === CareRequest::TYPE_RECURRING && $source->recurring_days) {
-            $days = collect($source->recurring_days)->map(fn ($day) => (int) $day)->values()->all();
-            $startTime = $this->normalizeTimeString($source->recurring_start_time ?: '09:00');
-            $endTime = $this->normalizeTimeString($source->recurring_end_time ?: '13:00');
+        if ($source->request_type === CareRequest::TYPE_RECURRING && $source->recurringScheduleSlots() !== []) {
+            $slots = $source->recurringScheduleSlots();
+            $days = WeeklySchedule::days($slots);
+            $firstSlot = WeeklySchedule::first($slots);
+            $startTime = $this->normalizeTimeString($firstSlot['start_time']);
+            $endTime = $this->normalizeTimeString($firstSlot['end_time']);
             $startsOn = optional($source->recurring_starts_on)?->isFuture()
                 ? $source->recurring_starts_on
                 : now()->addDay()->toDateString();
@@ -133,6 +134,7 @@ class CarePlanService
             $startTime = $startAt ? Carbon::parse($startAt)->format('H:i:s') : '09:00:00';
             $endTime = $endAt ? Carbon::parse($endAt)->format('H:i:s') : '13:00:00';
             $startsOn = $reference->toDateString();
+            $slots = WeeklySchedule::normalize(null, $days, $startTime, $endTime);
         }
 
         return [
@@ -142,6 +144,7 @@ class CarePlanService
             'schedule_days' => $days,
             'schedule_start_time' => substr($startTime, 0, 5),
             'schedule_end_time' => substr($endTime, 0, 5),
+            'schedule_slots' => $slots,
             'starts_on' => (string) $startsOn,
             'hourly_rate' => $this->pricing->hourlyRateForFamily(
                 $source->family,
@@ -254,6 +257,7 @@ class CarePlanService
                     'schedule_days' => $schedule['days'],
                     'schedule_start_time' => $schedule['start_time'],
                     'schedule_end_time' => $schedule['end_time'],
+                    'schedule_slots' => $schedule['slots'],
                     'starts_on' => $schedule['starts_on'],
                     'ends_on' => $schedule['ends_on'],
                     'timezone' => (string) config('app.timezone', 'America/New_York'),
@@ -329,6 +333,7 @@ class CarePlanService
             'schedule_days' => $source->recurring_days,
             'schedule_start_time' => $source->recurring_start_time,
             'schedule_end_time' => $source->recurring_end_time,
+            'schedule_slots' => $source->recurringScheduleSlots(),
             'starts_on' => $source->recurring_starts_on?->toDateString(),
             'ends_on' => $source->recurring_ends_on?->toDateString(),
         ]);
@@ -339,7 +344,6 @@ class CarePlanService
             $plan = DB::transaction(function () use (
                 $source,
                 $application,
-                $family,
                 $caregiver,
                 $schedule,
                 $hourlyRate
@@ -412,6 +416,7 @@ class CarePlanService
                     'schedule_days' => $schedule['days'],
                     'schedule_start_time' => $schedule['start_time'],
                     'schedule_end_time' => $schedule['end_time'],
+                    'schedule_slots' => $schedule['slots'],
                     'starts_on' => $schedule['starts_on'],
                     'ends_on' => $schedule['ends_on'],
                     'timezone' => (string) config('app.timezone', 'America/New_York'),
@@ -541,6 +546,7 @@ class CarePlanService
             'counter_schedule_days' => $schedule['days'],
             'counter_schedule_start_time' => $schedule['start_time'],
             'counter_schedule_end_time' => $schedule['end_time'],
+            'counter_schedule_slots' => $schedule['slots'],
             'counter_starts_on' => $schedule['starts_on'],
             'counter_note' => trim((string) ($payload['counter_note'] ?? '')) ?: null,
             'responded_at' => now(),
@@ -615,6 +621,7 @@ class CarePlanService
                 'schedule_days' => $plan->counter_schedule_days ?: $plan->schedule_days,
                 'schedule_start_time' => $plan->counter_schedule_start_time ?: $plan->schedule_start_time,
                 'schedule_end_time' => $plan->counter_schedule_end_time ?: $plan->schedule_end_time,
+                'schedule_slots' => $plan->counter_schedule_slots ?: $plan->schedule_slots,
                 'starts_on' => $plan->counter_starts_on ?: $plan->starts_on,
                 'accepted_at' => now(),
                 'activated_at' => now(),
@@ -686,6 +693,7 @@ class CarePlanService
                 'days' => $schedule['days'],
                 'start_time' => $schedule['start_time'],
                 'end_time' => $schedule['end_time'],
+                'slots' => $schedule['slots'],
                 'starts_on' => $schedule['starts_on'],
                 'ends_on' => $schedule['ends_on'],
                 'timezone' => $plan->timezone,
@@ -790,6 +798,7 @@ class CarePlanService
                         'schedule_days' => data_get($proposal, 'days', $plan->schedule_days),
                         'schedule_start_time' => data_get($proposal, 'start_time', $plan->schedule_start_time),
                         'schedule_end_time' => data_get($proposal, 'end_time', $plan->schedule_end_time),
+                        'schedule_slots' => data_get($proposal, 'slots', $plan->schedule_slots),
                         'starts_on' => $effectiveOn->toDateString(),
                         'ends_on' => data_get($proposal, 'ends_on', $plan->ends_on?->toDateString()),
                         'schedule_version' => (int) $plan->schedule_version + 1,
@@ -1067,12 +1076,13 @@ class CarePlanService
             if (! empty($schedule['ends_on']) && $date->gt(Carbon::parse($schedule['ends_on'])->endOfDay())) {
                 break;
             }
-            if (! in_array((int) $date->dayOfWeek, $schedule['days'], true)) {
+            $slot = WeeklySchedule::forDay($schedule['slots'], (int) $date->dayOfWeek);
+            if (! $slot) {
                 continue;
             }
 
-            $start = $this->combineDateAndTime($date, $schedule['start_time']);
-            $end = $this->combineDateAndTime($date, $schedule['end_time']);
+            $start = $this->combineDateAndTime($date, $slot['start_time']);
+            $end = $this->combineDateAndTime($date, $slot['end_time']);
             if ($start->lte(now())) {
                 continue;
             }
@@ -1092,23 +1102,23 @@ class CarePlanService
     public function scheduleLabel(CarePlan $plan, bool $useCounter = false): string
     {
         $schedule = $this->scheduleFromPlan($plan, $useCounter);
-        $days = collect($schedule['days'])
-            ->map(fn (int $day) => self::DAY_LABELS[$day] ?? null)
-            ->filter()
-            ->implode(', ');
 
-        return $days.' '.$this->formatTime($schedule['start_time']).' - '.$this->formatTime($schedule['end_time']);
+        return WeeklySchedule::label($schedule['slots']);
     }
 
     /**
-     * @return array{days:list<int>,start_time:string,end_time:string,starts_on:string,ends_on:string|null}
+     * @return array{days:list<int>,start_time:string,end_time:string,slots:list<array{day:int,start_time:string,end_time:string}>,starts_on:string,ends_on:string|null}
      */
     private function scheduleFromPlan(CarePlan $plan, bool $useCounter = false): array
     {
+        $slots = $plan->weeklyScheduleSlots($useCounter);
+        $first = WeeklySchedule::first($slots);
+
         return [
-            'days' => $useCounter && $plan->counter_schedule_days ? $this->normalizeDays($plan->counter_schedule_days) : $this->normalizeDays($plan->schedule_days),
-            'start_time' => $useCounter && $plan->counter_schedule_start_time ? $plan->counter_schedule_start_time : $plan->schedule_start_time,
-            'end_time' => $useCounter && $plan->counter_schedule_end_time ? $plan->counter_schedule_end_time : $plan->schedule_end_time,
+            'days' => WeeklySchedule::days($slots),
+            'start_time' => (string) ($first['start_time'] ?? ''),
+            'end_time' => (string) ($first['end_time'] ?? ''),
+            'slots' => $slots,
             'starts_on' => (string) (($useCounter && $plan->counter_starts_on) ? $plan->counter_starts_on->toDateString() : $plan->starts_on->toDateString()),
             'ends_on' => $plan->ends_on?->toDateString(),
         ];
@@ -1130,6 +1140,7 @@ class CarePlanService
             'days' => $this->normalizeDays($plan->schedule_days),
             'start_time' => (string) $plan->schedule_start_time,
             'end_time' => (string) $plan->schedule_end_time,
+            'slots' => $plan->weeklyScheduleSlots(),
             'starts_on' => $plan->starts_on?->toDateString(),
             'ends_on' => $plan->ends_on?->toDateString(),
             'timezone' => $plan->timezone,
@@ -1226,24 +1237,40 @@ class CarePlanService
 
     /**
      * @param  array<string,mixed>  $payload
-     * @return array{days:list<int>,start_time:string,end_time:string,starts_on:string,ends_on:string|null}
+     * @return array{days:list<int>,start_time:string,end_time:string,slots:list<array{day:int,start_time:string,end_time:string}>,starts_on:string,ends_on:string|null}
      */
     private function normalizeSchedulePayload(array $payload): array
     {
-        $days = $this->normalizeDays($payload['schedule_days'] ?? []);
+        $slots = WeeklySchedule::normalize(
+            $payload['schedule_slots'] ?? null,
+            $payload['schedule_days'] ?? [],
+            $payload['schedule_start_time'] ?? null,
+            $payload['schedule_end_time'] ?? null,
+        );
+        if (is_array($payload['schedule_slots'] ?? null)
+            && $payload['schedule_slots'] !== []
+            && count($slots) !== count($payload['schedule_slots'])
+        ) {
+            throw ValidationException::withMessages([
+                'schedule_slots' => 'Choose a valid start and end time for every selected day.',
+            ]);
+        }
+        $days = WeeklySchedule::days($slots);
+        $declaredDays = $this->normalizeDays($payload['schedule_days'] ?? []);
+        if ($declaredDays !== [] && $declaredDays !== $days) {
+            throw ValidationException::withMessages([
+                'schedule_slots' => 'Choose a valid start and end time for every selected day.',
+            ]);
+        }
         if ($days === []) {
             throw ValidationException::withMessages([
                 'schedule_days' => 'Choose at least one care day.',
             ]);
         }
 
-        $startTime = $this->normalizeTimeString($payload['schedule_start_time'] ?? null);
-        $endTime = $this->normalizeTimeString($payload['schedule_end_time'] ?? null);
-        if ($this->timeToMinutes($endTime) <= $this->timeToMinutes($startTime)) {
-            throw ValidationException::withMessages([
-                'schedule_end_time' => 'End time must be after start time.',
-            ]);
-        }
+        $firstSlot = WeeklySchedule::first($slots);
+        $startTime = $this->normalizeTimeString($firstSlot['start_time']);
+        $endTime = $this->normalizeTimeString($firstSlot['end_time']);
 
         $startsOn = Carbon::parse((string) ($payload['starts_on'] ?? now()->addDay()->toDateString()))->toDateString();
         if (Carbon::parse($startsOn)->lt(now()->startOfDay())) {
@@ -1265,6 +1292,7 @@ class CarePlanService
             'days' => $days,
             'start_time' => $startTime,
             'end_time' => $endTime,
+            'slots' => $slots,
             'starts_on' => $startsOn,
             'ends_on' => $endsOn,
         ];
@@ -1352,36 +1380,24 @@ class CarePlanService
     }
 
     /**
-     * @param  array{days:list<int>,start_time:string,end_time:string,starts_on:string,ends_on:string|null}  $schedule
+     * @param  array{days:list<int>,start_time:string,end_time:string,slots:list<array{day:int,start_time:string,end_time:string}>,starts_on:string,ends_on:string|null}  $schedule
      */
     private function firstProposedOccurrenceStart(array $schedule, Carbon $effectiveOn, string $timezone): ?Carbon
     {
-        $days = array_map('intval', $schedule['days']);
         for ($offset = 0; $offset <= 7; $offset++) {
             $date = $effectiveOn->copy()->addDays($offset);
-            if (! in_array((int) $date->dayOfWeek, $days, true)) {
+            $slot = WeeklySchedule::forDay($schedule['slots'], (int) $date->dayOfWeek);
+            if (! $slot) {
                 continue;
             }
 
             return Carbon::parse(
-                $date->toDateString().' '.substr($schedule['start_time'], 0, 8),
+                $date->toDateString().' '.substr($slot['start_time'], 0, 8),
                 $timezone
             )->setTimezone((string) config('app.timezone', $timezone));
         }
 
         return null;
-    }
-
-    private function timeToMinutes(string $time): int
-    {
-        $normalized = $this->normalizeTimeString($time);
-
-        return ((int) substr($normalized, 0, 2) * 60) + (int) substr($normalized, 3, 2);
-    }
-
-    private function formatTime(string $time): string
-    {
-        return Carbon::parse($time)->format('g:i A');
     }
 
     private function isUniqueConstraintViolation(QueryException $exception): bool

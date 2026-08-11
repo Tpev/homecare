@@ -9,6 +9,7 @@ use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use App\Services\RegularCare\CarePlanService;
 use App\Services\RegularCare\CompletedExtraVisitService;
 use App\Support\CaregiverPrelaunch;
+use App\Support\WeeklySchedule;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -25,6 +26,8 @@ class RegularClients extends Component
     public string $counterStartTime = '';
 
     public string $counterEndTime = '';
+
+    public array $counterScheduleSlots = [];
 
     public string $counterStartsOn = '';
 
@@ -110,9 +113,14 @@ class RegularClients extends Component
         }
 
         $this->counterPlanId = $plan->id;
-        $this->counterScheduleDays = array_map('strval', $plan->schedule_days ?? []);
-        $this->counterStartTime = substr((string) $plan->schedule_start_time, 0, 5);
-        $this->counterEndTime = substr((string) $plan->schedule_end_time, 0, 5);
+        $slots = $plan->weeklyScheduleSlots();
+        $first = WeeklySchedule::first($slots);
+        $this->counterScheduleDays = array_map('strval', WeeklySchedule::days($slots));
+        $this->counterStartTime = (string) ($first['start_time'] ?? '');
+        $this->counterEndTime = (string) ($first['end_time'] ?? '');
+        $this->counterScheduleSlots = collect($slots)->mapWithKeys(fn (array $slot): array => [
+            (string) $slot['day'] => ['start_time' => $slot['start_time'], 'end_time' => $slot['end_time']],
+        ])->all();
         $this->counterStartsOn = $plan->starts_on?->toDateString() ?: now()->addDay()->toDateString();
         $this->counterNote = '';
     }
@@ -128,20 +136,25 @@ class RegularClients extends Component
             return;
         }
 
-        $this->validate([
+        $this->syncCounterScheduleSlots();
+        $rules = [
             'counterScheduleDays' => ['required', 'array', 'min:1'],
             'counterScheduleDays.*' => ['integer', 'between:0,6'],
-            'counterStartTime' => ['required', 'date_format:H:i'],
-            'counterEndTime' => ['required', 'date_format:H:i'],
             'counterStartsOn' => ['required', 'date', 'after_or_equal:today'],
             'counterNote' => ['nullable', 'string', 'max:1000'],
-        ]);
+        ];
+        foreach ($this->normalizedCounterDays() as $day) {
+            $rules['counterScheduleSlots.'.$day.'.start_time'] = ['required', 'date_format:H:i'];
+            $rules['counterScheduleSlots.'.$day.'.end_time'] = ['required', 'date_format:H:i', 'after:counterScheduleSlots.'.$day.'.start_time'];
+        }
+        $this->validate($rules);
 
         $plan = $this->findOwnPlan($this->counterPlanId);
         app(CarePlanService::class)->counterOffer($plan, auth()->user(), [
             'schedule_days' => $this->counterScheduleDays,
             'schedule_start_time' => $this->counterStartTime,
             'schedule_end_time' => $this->counterEndTime,
+            'schedule_slots' => $this->normalizedCounterScheduleSlots(),
             'starts_on' => $this->counterStartsOn,
             'counter_note' => $this->counterNote,
         ]);
@@ -319,8 +332,71 @@ class RegularClients extends Component
         $this->counterScheduleDays = [];
         $this->counterStartTime = '';
         $this->counterEndTime = '';
+        $this->counterScheduleSlots = [];
         $this->counterStartsOn = '';
         $this->counterNote = '';
+    }
+
+    public function updatedCounterScheduleDays(): void
+    {
+        $this->syncCounterScheduleSlots();
+    }
+
+    public function updatedCounterStartTime(string $value): void
+    {
+        foreach (array_keys($this->counterScheduleSlots) as $day) {
+            $this->counterScheduleSlots[$day]['start_time'] = $value;
+        }
+    }
+
+    public function updatedCounterEndTime(string $value): void
+    {
+        foreach (array_keys($this->counterScheduleSlots) as $day) {
+            $this->counterScheduleSlots[$day]['end_time'] = $value;
+        }
+    }
+
+    private function syncCounterScheduleSlots(): void
+    {
+        $existing = $this->counterScheduleSlots;
+        $template = collect($existing)->first(fn (mixed $slot): bool => is_array($slot) && filled($slot['start_time'] ?? null)) ?? [
+            'start_time' => $this->counterStartTime,
+            'end_time' => $this->counterEndTime,
+        ];
+
+        $this->counterScheduleSlots = collect($this->normalizedCounterDays())->mapWithKeys(function (int $day) use ($existing, $template): array {
+            $slot = $existing[(string) $day] ?? $existing[$day] ?? $template;
+
+            return [(string) $day => [
+                'start_time' => substr((string) ($slot['start_time'] ?? $template['start_time'] ?? ''), 0, 5),
+                'end_time' => substr((string) ($slot['end_time'] ?? $template['end_time'] ?? ''), 0, 5),
+            ]];
+        })->all();
+
+        $first = WeeklySchedule::first($this->normalizedCounterScheduleSlots());
+        $this->counterStartTime = (string) ($first['start_time'] ?? '');
+        $this->counterEndTime = (string) ($first['end_time'] ?? '');
+    }
+
+    private function normalizedCounterDays(): array
+    {
+        return collect($this->counterScheduleDays)
+            ->map(fn ($day): int => (int) $day)
+            ->filter(fn (int $day): bool => $day >= 0 && $day <= 6)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+    }
+
+    private function normalizedCounterScheduleSlots(): array
+    {
+        return WeeklySchedule::normalize(
+            $this->counterScheduleSlots,
+            $this->normalizedCounterDays(),
+            $this->counterStartTime,
+            $this->counterEndTime,
+        );
     }
 
     private function reportPlan(): CarePlan
