@@ -15,11 +15,12 @@
             'image' => [$post['cover_image']],
             'author' => [
                 '@type' => 'Organization',
-                'name' => 'HomeCare',
+                'name' => 'LoLo Care',
             ],
             'publisher' => [
                 '@type' => 'Organization',
-                'name' => 'HomeCare',
+                'name' => 'LoLo Care',
+                'url' => route('landing'),
             ],
             'datePublished' => $post['published_at'],
             'dateModified' => $post['published_at'],
@@ -61,11 +62,14 @@
         </header>
 
         <article class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
-            <div class="mb-6 text-sm text-slate-500">
-                <a href="{{ route('blog.index') }}" class="hover:text-blue-700">Blog</a>
-                <span class="mx-1">/</span>
-                <span>{{ $post['title'] }}</span>
-            </div>
+            <x-marketing.breadcrumbs
+                class="mb-6"
+                :items="[
+                    ['name' => 'Home', 'url' => route('landing')],
+                    ['name' => 'Blog', 'url' => route('blog.index')],
+                    ['name' => $post['title'], 'url' => url($post['path'])],
+                ]"
+            />
 
             <div class="grid gap-8 lg:grid-cols-12">
                 <div class="lg:col-span-8">

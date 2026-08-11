@@ -1,4 +1,4 @@
-@extends('layouts.marketing')
+@extends('layouts.marketing-lean')
 
 @section('title', 'LoLo Care | Trusted help at home')
 @section('meta_description', 'Find and coordinate flexible, non-medical home support for someone you love.')
@@ -6,26 +6,47 @@
 @section('og_image', asset('images/marketing/lolo-hero.jpg'))
 @section('og_image_alt', 'LoLo Care guide welcoming families looking for trusted help at home.')
 @section('hide_default_footer', 'true')
-
 @push('head')
-    <link rel="preload" as="image" href="{{ asset('images/marketing/lolo-hero.jpg') }}">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+    <link rel="preload" as="image" href="{{ asset('images/marketing/lolo-hero.jpg') }}" fetchpriority="high">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=optional">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=optional" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=optional" rel="stylesheet"></noscript>
 @endpush
 
 @section('structured_data')
-    <script type="application/ld+json">
-        {!! json_encode([
+    @php
+        $homepageFaqs = config('marketing.homepage_faqs', []);
+        $organizationSchema = [
             '@context' => 'https://schema.org',
             '@type' => 'Organization',
             'name' => 'LoLo Care',
             'url' => route('landing'),
             'description' => 'Flexible, non-medical home support for older adults and their families.',
-        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+        ];
+        $faqSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'FAQPage',
+            'mainEntity' => collect($homepageFaqs)->map(fn (array $faq) => [
+                '@type' => 'Question',
+                'name' => $faq['question'],
+                'acceptedAnswer' => [
+                    '@type' => 'Answer',
+                    'text' => $faq['answer'],
+                ],
+            ])->values()->all(),
+        ];
+    @endphp
+    <script type="application/ld+json">
+        {!! json_encode($organizationSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
     </script>
+    <script type="application/ld+json">{!! json_encode($faqSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 @endsection
 
 @section('content')
     @php
+        $homepageFaqs = config('marketing.homepage_faqs', []);
         $heroCaregiver = $featuredCaregivers->first();
         $heroCaregiverName = $heroCaregiver?->user?->name ?? 'Caregiver profiles';
         $heroCaregiverRate = $heroCaregiver ? '$'.number_format($heroCaregiver->resolvePlatformHourlyRate(), 0).'/hr' : 'From $30/hr';
@@ -54,6 +75,8 @@
             font-size: 16px;
             line-height: 1.55;
         }
+
+        html, body { margin: 0; }
 
         .lolo-home *,
         .lolo-home *::before,
@@ -346,7 +369,27 @@
             background: linear-gradient(125deg, #d7c09d, #789086);
             box-shadow: 0 24px 70px rgba(35, 48, 45, .14);
         }
-        .lolo-home .video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+        .lolo-home .video-frame iframe,
+        .lolo-home .video-facade { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+        .lolo-home .video-facade { cursor: pointer; overflow: hidden; background: var(--deep); padding: 0; }
+        .lolo-home .video-facade img { width: 100%; height: 100%; object-fit: cover; opacity: .82; transition: opacity .2s, transform .25s; }
+        .lolo-home .video-facade:hover img { opacity: .68; transform: scale(1.015); }
+        .lolo-home .video-play {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            display: grid;
+            place-items: center;
+            width: 78px;
+            height: 78px;
+            border-radius: 50%;
+            background: var(--cream);
+            color: var(--green);
+            font-size: 2rem;
+            line-height: 1;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 12px 32px rgba(16, 55, 47, .28);
+        }
 
         .lolo-home .trust { display: grid; grid-template-columns: .8fr 1.2fr; gap: 10vw; background: var(--green); color: var(--cream); padding: 120px max(8vw, 36px); }
         .lolo-home .trust-grid { display: grid; grid-template-columns: 1fr 1fr; }
@@ -502,7 +545,7 @@
             </div>
 
             <div class="hero-visual">
-                <img src="{{ asset('images/marketing/lolo-hero.jpg') }}" alt="LoLo, the warm and reassuring guide to care at home" width="820" height="820">
+                <img src="{{ asset('images/marketing/lolo-hero.jpg') }}" alt="LoLo, the warm and reassuring guide to care at home" width="820" height="820" fetchpriority="high" decoding="async">
                 <div class="profile-float">
                     <span class="avatar peach">{{ $heroInitials }}</span>
                     <div><strong>{{ $heroCaregiverName }}</strong><small>{{ $heroCaregiverMeta }}</small></div>
@@ -583,6 +626,12 @@
                         $photoUrl = $caregiver->profile_photo_path
                             ? \Illuminate\Support\Facades\Storage::disk('public')->url($caregiver->profile_photo_path)
                             : null;
+                        $photoVariantUrls = $photoUrl
+                            ? app(\App\Services\Images\CaregiverProfilePhotoVariants::class)->urlsFor($caregiver->profile_photo_path)
+                            : [];
+                        $photoVariantSrcset = collect($photoVariantUrls)
+                            ->map(fn (string $url, int $width) => $url.' '.$width.'w')
+                            ->implode(', ');
                         $nameParts = preg_split('/\s+/', trim((string) $caregiver->user->name));
                         $initials = collect($nameParts)->filter()->map(fn ($part) => strtoupper(substr($part, 0, 1)))->take(2)->implode('') ?: 'LC';
                         $skills = $caregiver->skills->take(3)->pluck('name')->implode(', ');
@@ -592,7 +641,23 @@
                     <article class="caregiver-card">
                         <div class="portrait {{ $tone }} {{ $photoUrl ? 'has-photo' : '' }}">
                             @if ($photoUrl)
-                                <img src="{{ $photoUrl }}" alt="{{ $caregiver->user->name }}" loading="lazy">
+                                <picture>
+                                    @if ($photoVariantSrcset !== '')
+                                        <source
+                                            type="image/webp"
+                                            srcset="{{ $photoVariantSrcset }}"
+                                            sizes="(max-width: 560px) calc(100vw - 44px), (max-width: 900px) calc(100vw - 72px), 430px"
+                                        >
+                                    @endif
+                                    <img
+                                        src="{{ $photoUrl }}"
+                                        alt="{{ $caregiver->user->name }}"
+                                        width="768"
+                                        height="480"
+                                        loading="lazy"
+                                        decoding="async"
+                                    >
+                                </picture>
                             @else
                                 <span>{{ $initials }}</span>
                             @endif
@@ -738,13 +803,22 @@
                 <p>From requesting help to reviewing the visit, everything stays connected.</p>
             </div>
             <div class="video-frame">
-                <iframe
-                    src="https://www.youtube-nocookie.com/embed/_nve3ZnFsGM?rel=0"
-                    title="How LoLo Care works for families"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    referrerpolicy="strict-origin-when-cross-origin"
-                    allowfullscreen
-                ></iframe>
+                <button
+                    class="video-facade"
+                    type="button"
+                    data-youtube-id="_nve3ZnFsGM"
+                    aria-label="Play: How LoLo Care works for families"
+                >
+                    <img
+                        src="https://i.ytimg.com/vi/_nve3ZnFsGM/hqdefault.jpg"
+                        alt=""
+                        width="480"
+                        height="360"
+                        loading="lazy"
+                        decoding="async"
+                    >
+                    <span class="video-play" aria-hidden="true">▶</span>
+                </button>
             </div>
         </section>
 
@@ -764,11 +838,12 @@
             <p class="eyebrow">Questions, answered</p>
             <h2>What families ask us.</h2>
 
-            <details class="faq-item" open><summary>What types of care does LoLo provide?</summary><p>LoLo connects families with non-medical home support, including companionship, rides, errands, meal preparation, light housekeeping, and respite support.</p></details>
-            <details class="faq-item"><summary>Is there a minimum visit length?</summary><p>You can request flexible help starting from a one-hour visit, subject to caregiver availability.</p></details>
-            <details class="faq-item"><summary>Can I book care for my parent?</summary><p>Yes. Family members can arrange and coordinate care for an older parent or another loved one.</p></details>
-            <details class="faq-item"><summary>Can other family members join the account?</summary><p>Yes. Invite family members so schedules, visit updates, messages, and care history stay in one shared place.</p></details>
-            <details class="faq-item"><summary>How are caregivers verified?</summary><p>Caregiver profiles can include identity verification, background screening status, experience, training, certifications, and family reviews.</p></details>
+            @foreach ($homepageFaqs as $faq)
+                <details class="faq-item" @if ($loop->first) open @endif>
+                    <summary>{{ $faq['question'] }}</summary>
+                    <p>{{ $faq['answer'] }}</p>
+                </details>
+            @endforeach
         </section>
 
         <section class="final-cta">
@@ -792,4 +867,18 @@
             <p class="copyright">© {{ now()->year }} LoLo Care Inc. Non-medical home support.</p>
         </footer>
     </main>
+
+    <script>
+        document.querySelectorAll('[data-youtube-id]').forEach((facade) => {
+            facade.addEventListener('click', () => {
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://www.youtube-nocookie.com/embed/${facade.dataset.youtubeId}?autoplay=1&rel=0`;
+                iframe.title = 'How LoLo Care works for families';
+                iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+                iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+                iframe.allowFullscreen = true;
+                facade.replaceWith(iframe);
+            }, { once: true });
+        });
+    </script>
 @endsection

@@ -7,6 +7,7 @@ use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class MarketingPagesTest extends TestCase
@@ -47,10 +48,45 @@ class MarketingPagesTest extends TestCase
         $response->assertSee('What kind of help do you need?');
         $response->assertSee('name="care_schedule"', false);
         $response->assertSee('$30/hr');
-        $response->assertSee('https://www.youtube-nocookie.com/embed/_nve3ZnFsGM?rel=0', false);
+        $response->assertSee('data-youtube-id="_nve3ZnFsGM"', false);
+        $response->assertSee('https://i.ytimg.com/vi/_nve3ZnFsGM/hqdefault.jpg', false);
+        $response->assertDontSee('<iframe', false);
         $response->assertSee('See how LoLo works for families.');
         $response->assertSee(asset('images/marketing/lolo-hero.jpg'), false);
         $response->assertSee(asset('images/marketing/lolo/lolo-wordmark-evergreen.svg'), false);
+    }
+
+    public function test_homepage_uses_lean_assets_without_losing_analytics(): void
+    {
+        $this->get(route('landing'))
+            ->assertOk()
+            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-WJG3HG6EG6', false)
+            ->assertDontSee('livewire/livewire.js', false)
+            ->assertDontSee('/build/assets/app-', false)
+            ->assertDontSee('tallstackui', false);
+
+        $this->get(route('landing.family'))
+            ->assertOk()
+            ->assertSee('livewire/livewire.js', false)
+            ->assertSee('/build/assets/app-', false);
+    }
+
+    public function test_homepage_faq_schema_exactly_matches_the_visible_faq(): void
+    {
+        $response = $this->get(route('landing'))->assertOk();
+        $schemas = $this->structuredData($response);
+        $faqSchema = collect($schemas)->firstWhere('@type', 'FAQPage');
+        $configuredFaqs = config('marketing.homepage_faqs');
+
+        $this->assertNotNull($faqSchema);
+        $this->assertCount(count($configuredFaqs), $faqSchema['mainEntity']);
+
+        foreach ($configuredFaqs as $index => $faq) {
+            $response->assertSeeText($faq['question']);
+            $response->assertSeeText($faq['answer']);
+            $this->assertSame($faq['question'], $faqSchema['mainEntity'][$index]['name']);
+            $this->assertSame($faq['answer'], $faqSchema['mainEntity'][$index]['acceptedAnswer']['text']);
+        }
     }
 
     public function test_landing_showcases_real_eligible_caregiver_data_only(): void
@@ -168,5 +204,21 @@ class MarketingPagesTest extends TestCase
                 ->assertSee(route('register'), false)
                 ->assertSee(route('login'), false);
         }
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function structuredData(TestResponse $response): array
+    {
+        preg_match_all(
+            '/<script type="application\/ld\+json">\s*(.*?)\s*<\/script>/s',
+            $response->getContent(),
+            $matches
+        );
+
+        return collect($matches[1] ?? [])
+            ->map(fn (string $json): array => json_decode($json, true, flags: JSON_THROW_ON_ERROR))
+            ->all();
     }
 }

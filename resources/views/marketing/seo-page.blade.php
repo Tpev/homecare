@@ -31,33 +31,8 @@
             'mainEntity' => $faqEntities,
         ];
 
-        $breadcrumbSchema = [
-            '@context' => 'https://schema.org',
-            '@type' => 'BreadcrumbList',
-            'itemListElement' => [
-                [
-                    '@type' => 'ListItem',
-                    'position' => 1,
-                    'name' => 'HomeCare',
-                    'item' => route('landing'),
-                ],
-                [
-                    '@type' => 'ListItem',
-                    'position' => 2,
-                    'name' => 'Raleigh Care Guides',
-                    'item' => route('seo.page', ['seoSlug' => 'raleigh-home-care']),
-                ],
-                [
-                    '@type' => 'ListItem',
-                    'position' => 3,
-                    'name' => (string) ($page['h1'] ?? ''),
-                    'item' => url($page['path'] ?? request()->path()),
-                ],
-            ],
-        ];
     @endphp
     <script type="application/ld+json">{!! json_encode($webPageSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
-    <script type="application/ld+json">{!! json_encode($breadcrumbSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
     @if($faqEntities !== [])
         <script type="application/ld+json">{!! json_encode($faqSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
     @endif
@@ -99,6 +74,19 @@
 
             <div class="relative mx-auto grid max-w-7xl gap-10 px-4 pb-14 pt-12 sm:px-6 lg:grid-cols-12 lg:px-8 lg:pb-16 lg:pt-16">
                 <div class="lg:col-span-7">
+                    @php
+                        $currentGuideUrl = url($page['path'] ?? request()->path());
+                        $guideHubUrl = route('seo.page', ['seoSlug' => 'raleigh-home-care']);
+                        $guideBreadcrumbs = [
+                            ['name' => 'Home', 'url' => route('landing')],
+                            ['name' => 'Raleigh Care Guides', 'url' => $guideHubUrl],
+                        ];
+
+                        if ($currentGuideUrl !== $guideHubUrl) {
+                            $guideBreadcrumbs[] = ['name' => (string) ($page['h1'] ?? ''), 'url' => $currentGuideUrl];
+                        }
+                    @endphp
+                    <x-marketing.breadcrumbs :items="$guideBreadcrumbs" class="mb-5" />
                     <x-badge color="blue" :text="$page['eyebrow'] ?? 'Raleigh NC'" round light />
                     <h1 class="mt-4 text-4xl font-black leading-tight tracking-tight sm:text-5xl">
                         {{ $page['h1'] ?? '' }}

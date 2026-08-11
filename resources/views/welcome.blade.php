@@ -13,6 +13,7 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
 
         <!-- Styles -->
+        @livewireStyles
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="antialiased font-sans">
@@ -143,5 +144,6 @@
                 </div>
             </div>
         </div>
+        @livewireScripts
     </body>
 </html>

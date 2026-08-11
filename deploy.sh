@@ -67,6 +67,9 @@ $NPM_BIN run build
 echo "Running migrations..."
 $PHP_BIN artisan migrate --force
 
+echo "Generating responsive caregiver photos..."
+$PHP_BIN artisan caregiver-photos:generate-variants --no-interaction
+
 echo "Clearing and caching Laravel..."
 $PHP_BIN artisan optimize:clear
 $PHP_BIN artisan config:cache
@@ -98,6 +101,7 @@ echo "Restarting voice-agent..."
 sudo systemctl restart "$VOICE_AGENT_SERVICE"
 
 echo "Reloading nginx..."
+sudo nginx -t
 sudo systemctl reload nginx
 
 echo "Running health checks..."

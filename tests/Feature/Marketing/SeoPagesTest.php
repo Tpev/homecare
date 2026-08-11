@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Marketing;
 
+use App\Services\Content\BlogContentService;
 use Tests\TestCase;
 
 class SeoPagesTest extends TestCase
@@ -24,6 +25,26 @@ class SeoPagesTest extends TestCase
         $response->assertSee(route('caregiver.register'), false);
         $response->assertSee('/raleigh-companion-care', false);
         $response->assertSee('Raleigh home care FAQ');
+        $response->assertSee('aria-label="Breadcrumb"', false);
+        $response->assertSee('"@type":"BreadcrumbList"', false);
+        $response->assertSeeText('Raleigh Care Guides');
+    }
+
+    public function test_blog_pages_have_visible_breadcrumbs_backed_by_matching_schema(): void
+    {
+        $index = $this->get(route('blog.index'));
+        $index->assertOk()
+            ->assertSee('aria-label="Breadcrumb"', false)
+            ->assertSee('"@type":"BreadcrumbList"', false)
+            ->assertSeeText('Blog');
+
+        $post = app(BlogContentService::class)->all()[0];
+        $article = $this->get(route('blog.show', ['blogSlug' => $post['slug']]));
+        $article->assertOk()
+            ->assertSee('aria-label="Breadcrumb"', false)
+            ->assertSee('"@type":"BreadcrumbList"', false)
+            ->assertSeeText($post['title'])
+            ->assertSee('"name":"LoLo Care"', false);
     }
 
     public function test_sitemap_robots_and_llms_files_are_exposed_for_crawlers(): void

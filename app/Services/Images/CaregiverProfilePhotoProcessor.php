@@ -43,6 +43,8 @@ class CaregiverProfilePhotoProcessor
         'image/x-tiff',
     ];
 
+    public function __construct(private CaregiverProfilePhotoVariants $variants) {}
+
     public function validationRules(): array
     {
         return [
@@ -111,6 +113,8 @@ class CaregiverProfilePhotoProcessor
             'visibility' => 'public',
         ]);
 
+        $this->variants->generate($path);
+
         return $path;
     }
 
@@ -120,6 +124,7 @@ class CaregiverProfilePhotoProcessor
             return;
         }
 
+        $this->variants->deleteForSource($path);
         Storage::disk('public')->delete($path);
     }
 

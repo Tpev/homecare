@@ -87,6 +87,8 @@ return [
         'max_upload_kb' => (int) env('CAREGIVER_PROFILE_PHOTO_MAX_UPLOAD_KB', 65536),
         'max_dimension' => (int) env('CAREGIVER_PROFILE_PHOTO_MAX_DIMENSION', 1600),
         'quality' => (int) env('CAREGIVER_PROFILE_PHOTO_QUALITY', 86),
+        'responsive_widths' => [480, 768],
+        'responsive_quality' => (int) env('CAREGIVER_PROFILE_PHOTO_RESPONSIVE_QUALITY', 78),
     ],
 
     /*

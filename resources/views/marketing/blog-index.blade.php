@@ -1,6 +1,6 @@
 @extends('layouts.marketing')
 
-@section('title', 'Raleigh Home Care Blog | Family + Caregiver Guides | HomeCare')
+@section('title', 'Raleigh Home Care Blog | Family + Caregiver Guides | LoLo Care')
 @section('meta_description', 'Read local Raleigh NC home care guides for families and caregivers: costs, post-surgery support, jobs, and how to hire faster with confidence.')
 @section('canonical', route('blog.index'))
 @section('og_image', 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80')
@@ -19,7 +19,7 @@
         $schema = [
             '@context' => 'https://schema.org',
             '@type' => 'CollectionPage',
-            'name' => 'HomeCare Raleigh Blog',
+            'name' => 'LoLo Care Raleigh Blog',
             'description' => 'Raleigh home care guides for families and caregivers.',
             'url' => route('blog.index'),
             'hasPart' => $items,
@@ -61,6 +61,13 @@
 
         <section class="border-b border-slate-200 bg-gradient-to-b from-white to-slate-100">
             <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-16">
+                <x-marketing.breadcrumbs
+                    class="mb-5"
+                    :items="[
+                        ['name' => 'Home', 'url' => route('landing')],
+                        ['name' => 'Blog', 'url' => route('blog.index')],
+                    ]"
+                />
                 <x-badge color="blue" text="Raleigh Home Care Blog" round light />
                 <h1 class="mt-4 text-3xl font-black tracking-tight sm:text-5xl">Local guides to help families hire better and faster.</h1>
                 <p class="mt-4 max-w-3xl text-lg text-slate-600">

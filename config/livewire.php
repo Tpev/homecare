@@ -4,6 +4,10 @@ $temporaryUploadMaxKilobytes = max(1024, (int) env('LIVEWIRE_TEMP_UPLOAD_MAX_KB'
 $temporaryUploadMaxMinutes = max(5, (int) env('LIVEWIRE_TEMP_UPLOAD_MAX_MINUTES', 10));
 
 return [
+    // Every interactive layout includes Livewire explicitly. Keeping automatic
+    // injection off prevents static pages from receiving the full Livewire bundle.
+    'inject_assets' => false,
+
     'temporary_file_upload' => [
         'disk' => null,
         'rules' => ['required', 'file', 'max:'.$temporaryUploadMaxKilobytes],
