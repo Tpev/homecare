@@ -2,13 +2,11 @@
 
 namespace App\Livewire\Family;
 
-use App\Models\CareBooking;
-use App\Models\CareBookingPayment;
 use App\Models\CarePlan;
 use App\Models\CareRequest;
-use App\Models\CareRequestApplication;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Support\CareRequestProgress;
+use App\Support\FamilyActionInboxBuilder;
 use App\Support\FamilyRebookingOptions;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -66,7 +64,7 @@ class RequestsIndex extends Component
         $this->resetPage();
     }
 
-    public function render()
+    public function render(FamilyActionInboxBuilder $actionInbox)
     {
         $account = app(FamilyAccountContext::class)->account(auth()->user());
         $requestRelations = [
@@ -103,60 +101,8 @@ class RequestsIndex extends Component
             ->limit(4)
             ->get();
 
-        $paymentAttentionPlans = CarePlan::query()
-            ->with([
-                'caregiver:id,name,email,city,state',
-                'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
-                'nextBooking.payment:id,care_booking_id,status,last_error',
-            ])
-            ->forFamilyAccount($account)
-            ->where('status', CarePlan::STATUS_PAYMENT_ATTENTION)
-            ->orderByDesc('updated_at')
-            ->limit(4)
-            ->get();
-
         $rebookableRequests = app(FamilyRebookingOptions::class)->forUser(auth()->user(), 4);
-
-        $attentionQuery = CareRequest::query()
-            ->forFamilyAccount($account)
-            ->where('is_system_generated', false)
-            ->where(function ($query) {
-                $query->where(function ($requestQuery) {
-                    $requestQuery->where('status', CareRequest::STATUS_OPEN)
-                        ->whereHas('applications', function ($applicationQuery) {
-                            $applicationQuery->whereIn('status', [
-                                CareRequestApplication::STATUS_APPLIED,
-                                CareRequestApplication::STATUS_SHORTLISTED,
-                            ]);
-                        });
-                })->orWhereHas('booking', function ($bookingQuery) {
-                    $bookingQuery->where(function ($query) {
-                        $query->whereIn('status', [
-                            CareBooking::STATUS_IN_PROGRESS,
-                            CareBooking::STATUS_PAUSED,
-                        ])->orWhere(function ($reviewQuery) {
-                            $reviewQuery->whereIn('status', [
-                                CareBooking::STATUS_COMPLETED,
-                                CareBooking::STATUS_REVIEWED,
-                            ])->whereNull('family_confirmed_at');
-                        })->orWhereHas('payment', fn ($paymentQuery) => $paymentQuery
-                            ->whereIn('status', CareBookingPayment::FAMILY_ACTION_REQUIRED_STATUSES));
-                    });
-                });
-            });
-
-        $attentionCount = (clone $attentionQuery)->count()
-            + CarePlan::query()
-                ->forFamilyAccount($account)
-                ->where('status', CarePlan::STATUS_PAYMENT_ATTENTION)
-                ->count();
-
-        $attentionRequests = $attentionQuery
-            ->with($requestRelations)
-            ->withCount('applications')
-            ->orderByDesc('updated_at')
-            ->limit(4)
-            ->get();
+        $familyActions = $actionInbox->buildForAccount($account);
 
         $avgFirstResponseMinutes = CareRequest::query()
             ->forFamilyAccount($account)
@@ -170,10 +116,9 @@ class RequestsIndex extends Component
         return view('livewire.family.requests-index', [
             'requests' => $paginated,
             'carePlans' => $carePlans,
-            'paymentAttentionPlans' => $paymentAttentionPlans,
-            'attentionRequests' => $attentionRequests,
+            'familyActions' => $familyActions,
             'rebookableRequests' => $rebookableRequests,
-            'attentionCount' => $attentionCount,
+            'attentionCount' => $familyActions->count(),
             'avgFirstResponseLabel' => CareRequestProgress::minutesLabel(
                 $avgFirstResponseMinutes !== null ? (int) round($avgFirstResponseMinutes) : null
             ),

@@ -7,6 +7,7 @@ use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Caregiver\ShiftsIndex;
 use App\Livewire\Family\ManageCareRequest;
 use App\Livewire\Family\RegularCareShow;
+use App\Livewire\Family\RequestsIndex;
 use App\Models\CareBooking;
 use App\Models\CareBookingPayment;
 use App\Models\CareBookingTimeCorrection;
@@ -17,7 +18,9 @@ use App\Models\CareRequestApplication;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\Booking\CareBookingTimeCorrectionService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Payments\BookingPaymentService;
+use App\Support\FamilyActionInboxBuilder;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -61,6 +64,47 @@ class CareBookingTimeCorrectionTest extends TestCase
 
         $this->expectException(\LogicException::class);
         $correction->forceFill(['explanation' => 'Changed after submission'])->save();
+    }
+
+    public function test_pending_time_review_stays_visible_on_family_home_and_care_without_a_notification(): void
+    {
+        [$family, $caregiver, $booking] = $this->scenario();
+        $caregiver->forceFill(['name' => 'Tammy Antonelli'])->save();
+        $booking->forceFill(['status' => CareBooking::STATUS_COMPLETED, 'completed_at' => $booking->scheduled_end_at])->save();
+        $correction = $this->submit($booking, $caregiver->fresh());
+
+        $family->notifications()->delete();
+        $actions = app(FamilyActionInboxBuilder::class)->buildForAccount(
+            app(FamilyAccountContext::class)->account($family)
+        );
+        $this->assertSame(['time_correction'], $actions->pluck('type')->all());
+        $this->assertSame("Review Tammy Antonelli's reported visit hours", $actions->first()['title']);
+
+        $this->actingAs($family)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee("Review Tammy Antonelli's reported visit hours")
+            ->assertSee('Review the exact hours before any payment is made.')
+            ->assertSee('Review hours')
+            ->assertSee('#time-correction-review-'.$correction->id, false);
+
+        Livewire::actingAs($family)
+            ->test(RequestsIndex::class)
+            ->assertViewHas('attentionCount', 1)
+            ->assertSee("Review Tammy Antonelli's reported visit hours")
+            ->assertSee('Estimated '.$correction->familyAmountLabel())
+            ->assertSee('Review hours')
+            ->assertSee('#time-correction-review-'.$correction->id, false)
+            ->assertDontSee('Nothing urgent right now');
+
+        app(CareBookingTimeCorrectionService::class)->requestChanges(
+            $correction,
+            $family,
+            'Please correct the reported end time.'
+        );
+        $this->assertTrue(app(FamilyActionInboxBuilder::class)
+            ->buildForAccount(app(FamilyAccountContext::class)->account($family))
+            ->isEmpty());
     }
 
     public function test_disabled_flag_preserves_existing_support_path_and_rejects_new_workflow(): void

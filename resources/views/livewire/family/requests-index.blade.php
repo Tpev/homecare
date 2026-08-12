@@ -6,14 +6,12 @@
 
         @php
             $carePlans = $carePlans ?? collect();
-            $paymentAttentionPlans = $paymentAttentionPlans ?? collect();
-            $attentionRequests = $attentionRequests ?? collect();
+            $familyActions = $familyActions ?? collect();
             $rebookableRequests = $rebookableRequests ?? collect();
             $upcomingRequests = $requests->getCollection()->filter(function ($request) {
                 return (string) ($request->booking?->status ?? '') === \App\Models\CareBooking::STATUS_SCHEDULED
                     && ! ($request->booking?->payment?->requiresFamilyAction() ?? false);
             })->sortBy(fn ($request) => optional($request->booking?->scheduled_start_at)->timestamp ?? PHP_INT_MAX)->values();
-            $remainingAttentionRequestSlots = max(0, 4 - $paymentAttentionPlans->count());
         @endphp
 
         <section class="rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm sm:p-6">
@@ -63,74 +61,11 @@
                     </x-slot:header>
 
                     <div class="space-y-3">
-                        @foreach ($paymentAttentionPlans->take(4) as $plan)
-                            @php
-                                $paymentVisit = $plan->nextBooking;
-                                $paymentHref = $paymentVisit
-                                    ? route('family.requests.show', $paymentVisit->care_request_id)
-                                    : route('family.care.show', $plan->id);
-                            @endphp
-                            <a href="{{ $paymentHref }}" wire:navigate class="block rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-950 transition hover:shadow-sm">
-                                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                    <div>
-                                        <p class="font-display text-lg font-semibold">Payment needs attention</p>
-                                        <p class="mt-1 font-semibold">{{ $plan->title }}</p>
-                                        <p class="mt-1 text-sm text-amber-900">{{ $paymentVisit?->payment?->last_error ?: 'Confirm or replace your card for the next visit.' }}</p>
-                                    </div>
-                                    <span class="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-4 text-sm font-semibold text-amber-900">Fix payment</span>
-                                </div>
-                            </a>
+                        @foreach ($familyActions as $action)
+                            <x-family-action-card :item="$action" />
                         @endforeach
 
-                        @foreach ($attentionRequests->take($remainingAttentionRequestSlots) as $request)
-                            @php
-                                $bookingStatus = (string) ($request->booking?->status ?? '');
-                                $paymentNeedsAction = $request->booking?->payment?->requiresFamilyAction() ?? false;
-                                $actionTitle = 'Review request';
-                                $actionBody = $request->applications_count.' caregiver'.((int) $request->applications_count === 1 ? '' : 's').' to review.';
-                                $actionLabel = 'Review';
-                                $tone = 'border-sky-200 bg-sky-50 text-sky-950';
-
-                                if (in_array($bookingStatus, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true)) {
-                                    $actionTitle = match ($bookingStatus) {
-                                        \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Care is happening now',
-                                        \App\Models\CareBooking::STATUS_PAUSED => 'Visit is paused',
-                                    };
-                                    $actionBody = optional($request->booking?->scheduled_start_at)->format('M d, g:i A') ?: 'Time pending';
-                                    $actionLabel = 'Track visit';
-                                    $tone = 'border-emerald-200 bg-emerald-50 text-emerald-950';
-                                }
-
-                                if (in_array($bookingStatus, [\App\Models\CareBooking::STATUS_COMPLETED, \App\Models\CareBooking::STATUS_REVIEWED], true) && ! $request->booking?->family_confirmed_at) {
-                                    $actionTitle = 'Approve hours';
-                                    $actionBody = 'The caregiver submitted their timesheet.';
-                                    $actionLabel = 'Review hours';
-                                    $tone = 'border-emerald-200 bg-emerald-50 text-emerald-950';
-                                }
-
-                                if ($paymentNeedsAction) {
-                                    $actionTitle = 'Payment needs attention';
-                                    $actionBody = $request->booking?->payment?->last_error ?: 'Confirm or replace your card for this visit.';
-                                    $actionLabel = 'Fix payment';
-                                    $tone = 'border-amber-300 bg-amber-50 text-amber-950';
-                                }
-                            @endphp
-                            <a href="{{ route('family.requests.show', $request->id) }}" wire:navigate class="block rounded-2xl border p-4 transition hover:shadow-sm {{ $tone }}">
-                                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                    <div>
-                                        <p class="font-display text-lg font-semibold">{{ $actionTitle }}</p>
-                                        <p class="mt-1 font-semibold">{{ $request->title }}</p>
-                                        <p class="mt-1 text-sm opacity-80">{{ $actionBody }}</p>
-                                        @if ($request->booking?->caregiver)
-                                            <x-caregiver-identity :caregiver="$request->booking->caregiver" class="mt-3" />
-                                        @endif
-                                    </div>
-                                    <span class="inline-flex min-h-11 items-center justify-center rounded-xl bg-white/85 px-4 text-sm font-semibold text-[#23483F]">{{ $actionLabel }}</span>
-                                </div>
-                            </a>
-                        @endforeach
-
-                        @if ($paymentAttentionPlans->isEmpty() && $attentionRequests->isEmpty())
+                        @if ($familyActions->isEmpty())
                             <div class="rounded-2xl border border-[#D8E1D7] bg-[#F2F8F4] p-5">
                                 <p class="font-display text-lg font-semibold text-[#17313F]">Nothing urgent right now.</p>
                                 <p class="mt-1 text-sm text-[#607080]">You can start new care, rebook a trusted caregiver, or browse all care below.</p>

@@ -28,7 +28,12 @@
                         default => 'border-sky-200 bg-white',
                     };
                 @endphp
-                <article class="rounded-2xl border-2 p-4 sm:p-5 {{ $tone }}" id="completed-extra-visit-{{ $report->id }}">
+                <article
+                    id="completed-extra-visit-{{ $report->id }}"
+                    class="scroll-mt-24 rounded-2xl border-2 p-4 sm:p-5 {{ $tone }}"
+                    x-data
+                    x-init="if (window.location.hash === '#completed-extra-visit-{{ $report->id }}') $nextTick(() => $el.scrollIntoView({ behavior: 'smooth', block: 'start' }))"
+                >
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                             <div class="flex flex-wrap items-center gap-2">

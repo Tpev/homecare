@@ -9,8 +9,8 @@ use App\Models\CareBookingPayment;
 use App\Models\CareBookingTimeCorrection;
 use App\Models\SupportTicket;
 use App\Models\User;
-use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
+use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
 use App\Services\RegularCare\CarePlanHealthService;
 use App\Support\MarketplaceEvent;
@@ -1023,7 +1023,8 @@ class CareBookingTimeCorrectionService
             eventKey: $event,
             title: $title,
             body: $body,
-            url: route('family.requests.show', ['careRequest' => $correction->booking->care_request_id, 'tab' => 'shift']),
+            url: route('family.requests.show', ['careRequest' => $correction->booking->care_request_id, 'tab' => 'shift'])
+                .'#time-correction-review-'.$correction->id,
             payload: ['care_booking_id' => $correction->care_booking_id, 'time_correction_id' => $correction->id, 'version' => $correction->version],
             subject: $correction,
             dedupeKey: $key.':correction-'.$correction->id.'-version-'.$correction->version.'-user-'.$correction->family->id,

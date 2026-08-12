@@ -13,10 +13,12 @@
     @endphp
 
     <section
-        class="rounded-3xl border-2 p-4 sm:p-5 {{ $statusTone }}"
+        id="time-correction-review-{{ $correction->id }}"
+        class="scroll-mt-24 rounded-3xl border-2 p-4 sm:p-5 {{ $statusTone }}"
         aria-labelledby="family-time-correction-heading"
         aria-live="polite"
         x-data
+        x-init="if (window.location.hash === '#time-correction-review-{{ $correction->id }}') $nextTick(() => $el.scrollIntoView({ behavior: 'smooth', block: 'start' }))"
         x-on:time-correction-approval-opened.window="$nextTick(() => $refs.confirmation?.focus())"
         x-on:time-correction-approval-closed.window="$nextTick(() => $refs.approveTrigger?.focus())"
     >

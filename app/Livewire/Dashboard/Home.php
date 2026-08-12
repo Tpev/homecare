@@ -14,6 +14,7 @@ use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Support\CaregiverOnboardingState;
 use App\Support\CaregiverPrelaunch;
 use App\Support\CaregiverWorkInboxBuilder;
+use App\Support\FamilyActionInboxBuilder;
 use App\Support\FamilyRebookingOptions;
 use App\Support\MarketplaceEvent;
 use Illuminate\Support\Collection;
@@ -214,6 +215,8 @@ class Home extends Component
                 ->get();
 
             $familyData['regular_care_sources'] = app(FamilyRebookingOptions::class)->forUser($user, 3);
+
+            $familyData['action_items'] = app(FamilyActionInboxBuilder::class)->buildForAccount($familyAccount);
 
             $familyData['notification_digest'] = $this->notificationDigestForRole($user, 'family');
         }
@@ -522,6 +525,12 @@ class Home extends Component
                 MarketplaceEvent::TIME_CORRECTION_APPLIED => ['label' => 'Time updated', 'tone' => 'success'],
                 MarketplaceEvent::TIME_CORRECTION_ESCALATED => ['label' => 'LoLo Care review', 'tone' => 'warning'],
                 MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => ['label' => 'Time withdrawn', 'tone' => 'neutral'],
+                MarketplaceEvent::COMPLETED_EXTRA_VISIT_SUBMITTED => ['label' => 'Extra visit reported', 'tone' => 'info'],
+                MarketplaceEvent::COMPLETED_EXTRA_VISIT_RESUBMITTED => ['label' => 'Updated extra visit', 'tone' => 'info'],
+                MarketplaceEvent::COMPLETED_EXTRA_VISIT_PAYMENT_ACTION_REQUIRED => ['label' => 'Payment action', 'tone' => 'warning'],
+                MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED => ['label' => 'Extra visit recorded', 'tone' => 'success'],
+                MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED => ['label' => 'LoLo Care review', 'tone' => 'warning'],
+                MarketplaceEvent::COMPLETED_EXTRA_VISIT_WITHDRAWN => ['label' => 'Extra visit withdrawn', 'tone' => 'neutral'],
             ];
         }
 
@@ -563,6 +572,11 @@ class Home extends Component
             MarketplaceEvent::TIME_CORRECTION_APPLIED => ['label' => 'Time finalized', 'tone' => 'success'],
             MarketplaceEvent::TIME_CORRECTION_ESCALATED => ['label' => 'LoLo Care review', 'tone' => 'warning'],
             MarketplaceEvent::TIME_CORRECTION_WITHDRAWN => ['label' => 'Time withdrawn', 'tone' => 'neutral'],
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_CHANGES_REQUESTED => ['label' => 'Extra visit changes', 'tone' => 'warning'],
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPROVED => ['label' => 'Extra visit approved', 'tone' => 'success'],
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_DISPUTED => ['label' => 'Extra visit review', 'tone' => 'warning'],
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED => ['label' => 'Extra visit recorded', 'tone' => 'success'],
+            MarketplaceEvent::COMPLETED_EXTRA_VISIT_ESCALATED => ['label' => 'LoLo Care review', 'tone' => 'warning'],
         ];
     }
 }

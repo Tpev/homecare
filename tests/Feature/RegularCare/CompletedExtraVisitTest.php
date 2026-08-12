@@ -5,6 +5,7 @@ namespace Tests\Feature\RegularCare;
 use App\Exceptions\Payments\PaymentException;
 use App\Livewire\Caregiver\RegularClients;
 use App\Livewire\Family\RegularCareShow;
+use App\Livewire\Family\RequestsIndex;
 use App\Models\CareBooking;
 use App\Models\CareBookingPayment;
 use App\Models\CaregiverProfile;
@@ -17,9 +18,11 @@ use App\Models\User;
 use App\Models\UserNotificationPreference;
 use App\Notifications\MarketplaceEventNotification;
 use App\Services\Family\FamilyCareHistoryService;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
 use App\Services\RegularCare\CompletedExtraVisitService;
+use App\Support\FamilyActionInboxBuilder;
 use App\Support\MarketplaceEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -80,6 +83,46 @@ class CompletedExtraVisitTest extends TestCase
                 && ($mail->viewData['ctaLabel'] ?? null) === 'Review extra visit'
                 && collect($mail->viewData['emailDetails'] ?? [])->contains(fn ($detail) => $detail['label'] === 'Worked time');
         });
+    }
+
+    public function test_reported_extra_visit_stays_visible_on_family_home_and_care_without_a_notification(): void
+    {
+        [$family, $caregiver, $plan] = $this->establishedPlan();
+        $caregiver->forceFill(['name' => 'Tammy Antonelli'])->save();
+        $report = $this->submit($plan, $caregiver->fresh());
+
+        $family->notifications()->delete();
+        $actions = app(FamilyActionInboxBuilder::class)->buildForAccount(
+            app(FamilyAccountContext::class)->account($family)
+        );
+        $this->assertSame(['completed_extra_visit'], $actions->pluck('type')->all());
+        $this->assertSame("Review Tammy Antonelli's reported extra visit", $actions->first()['title']);
+
+        $this->actingAs($family)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee("Review Tammy Antonelli's reported extra visit")
+            ->assertSee('This does not change the regular schedule. Review before payment.')
+            ->assertSee('Review visit')
+            ->assertSee('#completed-extra-visit-'.$report->id, false);
+
+        Livewire::actingAs($family)
+            ->test(RequestsIndex::class)
+            ->assertViewHas('attentionCount', 1)
+            ->assertSee("Review Tammy Antonelli's reported extra visit")
+            ->assertSee('Estimated $')
+            ->assertSee('Review visit')
+            ->assertSee('#completed-extra-visit-'.$report->id, false)
+            ->assertDontSee('Nothing urgent right now');
+
+        app(CompletedExtraVisitService::class)->requestChanges(
+            $report,
+            $family,
+            'Please correct the reported end time.'
+        );
+        $this->assertTrue(app(FamilyActionInboxBuilder::class)
+            ->buildForAccount(app(FamilyAccountContext::class)->account($family))
+            ->isEmpty());
     }
 
     public function test_unrelated_or_unaccepted_caregivers_cannot_report_visits(): void

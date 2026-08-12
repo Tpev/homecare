@@ -794,7 +794,8 @@ class CompletedExtraVisitService
             eventKey: $event,
             title: $title,
             body: $body,
-            url: route('family.care.show', ['carePlan' => $request->care_plan_id, 'extra_visit' => $request->id]),
+            url: route('family.care.show', ['carePlan' => $request->care_plan_id, 'extra_visit' => $request->id])
+                .'#completed-extra-visit-'.$request->id,
             payload: $this->notificationPayload($request, 'family'),
             subject: $request,
             dedupeKey: 'completed-extra-visit:'.$key.':request-'.$request->id.':version-'.$request->version.':user-'.$request->family_user_id,

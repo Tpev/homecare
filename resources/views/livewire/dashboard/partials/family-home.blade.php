@@ -13,6 +13,7 @@
     $regularSources = $familyData['regular_care_sources'] ?? collect();
     $recentApplicants = $familyData['recent_applicants'] ?? collect();
     $familyDigest = $familyData['notification_digest'] ?? collect();
+    $persistentActions = $familyData['action_items'] ?? collect();
     $billingReady = (bool) ($familyData['billing_ready'] ?? false);
     $unreadMessages = (int) ($familyData['stats']['unread_messages'] ?? 0);
 
@@ -92,6 +93,10 @@
             ? 'today at '.$paymentAttentionBooking->scheduled_start_at->format('g:i A')
             : $paymentAttentionBooking->scheduled_start_at->format('M d').' at '.$paymentAttentionBooking->scheduled_start_at->format('g:i A'))
         : 'for the next visit';
+    $reportedCareAction = $persistentActions->first(fn ($item) => in_array($item['type'] ?? '', [
+        'time_correction',
+        'completed_extra_visit',
+    ], true));
 
     $nextActionTitle = 'Get care when you are ready';
     $nextActionDescription = 'Post a short request. LoLo will show caregivers the schedule, location, and care needs clearly.';
@@ -155,6 +160,14 @@
         $nextActionTone = 'success';
     }
 
+    if ($reportedCareAction) {
+        $nextActionTitle = $reportedCareAction['title'];
+        $nextActionDescription = $reportedCareAction['meta'] ?: $reportedCareAction['body'];
+        $nextActionRoute = $reportedCareAction['href'];
+        $nextActionLabel = $reportedCareAction['label'];
+        $nextActionTone = 'warning';
+    }
+
     if ($paymentAttentionHref) {
         $nextActionTitle = 'Fix payment for your visit';
         $nextActionDescription = 'Confirm or replace your card so this visit is payment protected.';
@@ -171,52 +184,49 @@
         $secondaryActionLabel = 'Find caregivers';
     }
 
-    $attentionItems = collect([
-        $paymentAttentionHref ? [
-            'title' => 'Payment needs attention',
-            'body' => $paymentAttentionPayment?->last_error ?: 'Confirm or replace your card for the next visit.',
-            'label' => 'Fix payment',
-            'href' => $paymentAttentionHref,
-            'tone' => 'amber',
-        ] : null,
-        $timesheetRequest ? [
-            'title' => 'Hours need approval',
-            'body' => $timesheetRequest->title,
-            'label' => 'Review hours',
-            'href' => route('family.requests.show', $timesheetRequest->id),
-            'tone' => 'green',
-        ] : null,
-        $reviewRequest ? [
-            'title' => 'Caregiver waiting',
-            'body' => $reviewRequest->title,
-            'label' => 'Review caregiver',
-            'href' => route('family.requests.show', $reviewRequest->id),
-            'tone' => 'blue',
-        ] : null,
+    $suggestedAttentionItems = collect([
         $waitingRequest ? [
+            'key' => 'invite-caregivers-'.$waitingRequest->id,
+            'eyebrow' => 'Care request',
             'title' => 'Need more replies',
-            'body' => $waitingRequest->title,
+            'subject' => $waitingRequest->title,
+            'body' => 'No caregiver has replied yet.',
+            'meta' => 'Inviting a good match can help you find care faster.',
             'label' => 'Invite caregivers',
             'href' => route('caregivers.search'),
             'tone' => 'amber',
+            'caregiver' => null,
         ] : null,
         $unreadMessages > 0 ? [
+            'key' => 'unread-messages',
+            'eyebrow' => 'Messages',
             'title' => 'Unread messages',
+            'subject' => null,
             'body' => $unreadMessages.' conversation'.($unreadMessages === 1 ? '' : 's').' need your attention.',
+            'meta' => null,
             'label' => 'Open messages',
             'href' => route('messages.index'),
             'tone' => 'blue',
+            'caregiver' => null,
         ] : null,
         ! $billingReady ? [
+            'key' => 'billing-not-ready',
+            'eyebrow' => 'Account setup',
             'title' => 'Billing not ready',
+            'subject' => null,
             'body' => 'Add a card so you can hire without delay.',
+            'meta' => null,
             'label' => 'Set up billing',
             'href' => route('family.billing.show'),
             'tone' => 'amber',
+            'caregiver' => null,
         ] : null,
     ])->filter()->values();
 
-    $supportingAttentionItems = $attentionItems
+    $supportingAttentionItems = $persistentActions
+        ->reject(fn ($item) => ($item['href'] ?? null) === $nextActionRoute)
+        ->values();
+    $helpfulNextSteps = $suggestedAttentionItems
         ->reject(fn ($item) => ($item['href'] ?? null) === $nextActionRoute)
         ->values();
 
@@ -268,6 +278,12 @@
         $careSummaryMeta = $timesheetRequest->title;
     }
 
+    if ($reportedCareAction) {
+        $careSummaryTitle = $reportedCareAction['title'];
+        $careSummaryBody = $reportedCareAction['subject'].' · '.$reportedCareAction['body'];
+        $careSummaryMeta = $reportedCareAction['meta'];
+    }
+
     if ($paymentAttentionHref) {
         $careSummaryTitle = 'Payment needs attention.';
         $careSummaryBody = $paymentAttentionCaregiverName.' is scheduled '.$paymentAttentionVisitLabel.'.';
@@ -298,16 +314,29 @@
     </div>
 
     @if ($supportingAttentionItems->isNotEmpty())
-        <div class="mt-4 grid gap-3 sm:grid-cols-2">
-            @foreach ($supportingAttentionItems->take(2) as $item)
-                <a href="{{ $item['href'] }}" wire:navigate class="group flex min-h-20 items-center justify-between gap-3 rounded-2xl border border-[#E4DDD3] bg-white px-4 py-3 text-[#17313F] transition hover:border-[#23483F]/35 hover:shadow-sm">
-                    <span>
-                        <span class="block text-sm font-semibold">{{ $item['title'] }}</span>
-                        <span class="mt-0.5 block text-xs text-[#607080]">{{ $item['body'] }}</span>
-                    </span>
-                    <span class="shrink-0 text-sm font-semibold text-[#2F6F62] group-hover:text-[#23483F]">{{ $item['label'] }}</span>
-                </a>
-            @endforeach
+        <div class="mt-5">
+            <div class="mb-3 flex items-center justify-between gap-3">
+                <h2 class="font-display text-lg font-semibold text-[#17313F]">
+                    {{ $supportingAttentionItems->count() }} more care {{ $supportingAttentionItems->count() === 1 ? 'action' : 'actions' }}
+                </h2>
+                <a href="{{ route('family.requests.index') }}" wire:navigate class="text-sm font-semibold text-[#2F6F62] underline underline-offset-4">See all care actions</a>
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2">
+                @foreach ($supportingAttentionItems->take(2) as $item)
+                    <x-family-action-card :item="$item" compact />
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    @if ($supportingAttentionItems->isEmpty() && $helpfulNextSteps->isNotEmpty())
+        <div class="mt-5">
+            <h2 class="mb-3 font-display text-lg font-semibold text-[#17313F]">Helpful next steps</h2>
+            <div class="grid gap-3 sm:grid-cols-2">
+                @foreach ($helpfulNextSteps->take(2) as $item)
+                    <x-family-action-card :item="$item" compact />
+                @endforeach
+            </div>
         </div>
     @endif
 </section>
