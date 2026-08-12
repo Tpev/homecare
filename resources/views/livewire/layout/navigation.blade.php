@@ -17,7 +17,8 @@ new class extends Component
         $user = auth()->user();
         $isCaregiver = $user?->role === 'caregiver';
         $isFamily = $user?->role === 'family';
-        $isAdmin = $user && ($user->role === 'admin' || strtolower($user->email) === 'test@test.com');
+        $isAdmin = $user?->isAdministrator() === true;
+        $isContentTeam = $user?->isContentTeamMember() === true;
         $isSales = $user?->role === 'sales';
         $isSdr = $user?->role === 'sdr';
         $canAccessCrm = $isAdmin || $isSales;
@@ -150,6 +151,27 @@ new class extends Component
 
         $adminNavGroups = [
             [
+                'label' => 'Content',
+                'active' => request()->routeIs('admin.content.*'),
+                'items' => [
+                    [
+                        'label' => 'Articles',
+                        'href' => route('admin.content.posts.index'),
+                        'active' => request()->routeIs('admin.content.posts.*'),
+                    ],
+                    [
+                        'label' => 'Media Library',
+                        'href' => route('admin.content.media.index'),
+                        'active' => request()->routeIs('admin.content.media.*'),
+                    ],
+                    [
+                        'label' => 'Authors & Taxonomy',
+                        'href' => route('admin.content.settings'),
+                        'active' => request()->routeIs('admin.content.settings'),
+                    ],
+                ],
+            ],
+            [
                 'label' => 'Care ops',
                 'active' => request()->routeIs('admin.requests.*')
                     || request()->routeIs('admin.care-plans.*')
@@ -259,9 +281,29 @@ new class extends Component
             ],
         ];
 
+        $contentNavItems = [
+            [
+                'label' => 'Articles',
+                'href' => route('admin.content.posts.index'),
+                'active' => request()->routeIs('admin.content.posts.*'),
+            ],
+            [
+                'label' => 'Media Library',
+                'href' => route('admin.content.media.index'),
+                'active' => request()->routeIs('admin.content.media.*'),
+            ],
+        ];
+        if ($user?->canPublishContent()) {
+            $contentNavItems[] = [
+                'label' => 'Authors & Taxonomy',
+                'href' => route('admin.content.settings'),
+                'active' => request()->routeIs('admin.content.settings'),
+            ];
+        }
+
         if ($isAdmin && $continuousCoverageVisible) {
-            $adminNavGroups[0]['active'] = $adminNavGroups[0]['active'] || request()->routeIs('admin.continuous-coverage.*');
-            $adminNavGroups[0]['items'][] = [
+            $adminNavGroups[1]['active'] = $adminNavGroups[1]['active'] || request()->routeIs('admin.continuous-coverage.*');
+            $adminNavGroups[1]['items'][] = [
                 'label' => 'Continuous Coverage',
                 'href' => route('admin.continuous-coverage.index'),
                 'active' => request()->routeIs('admin.continuous-coverage.*'),
@@ -375,18 +417,28 @@ new class extends Component
     <div class="hc-page relative">
         <div class="flex h-[4.5rem] items-center justify-between gap-3 py-2">
             <div class="shrink-0 flex items-center">
-                <a href="{{ $user ? ($isAdmin ? route('admin.crm.index') : route('dashboard')) : route('landing') }}" wire:navigate class="inline-flex items-center gap-3">
+                <a href="{{ $user ? ($isAdmin ? route('admin.crm.index') : ($isContentTeam ? route('admin.content.posts.index') : route('dashboard'))) : route('landing') }}" wire:navigate class="inline-flex items-center gap-3">
                     <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#23483F]/10 bg-[rgba(255,253,250,0.96)] shadow-sm">
                         <img src="{{ asset('images/marketing/lolo/lolo-app-icon.svg') }}" alt="LoLo" class="block h-7 w-7 object-contain" />
                     </span>
                     <span class="block">
                         <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo" class="block h-6 w-auto object-contain sm:h-7" />
-                        <span class="mt-1 hidden text-[11px] font-medium uppercase tracking-[0.16em] text-[#6E746F] md:block">{{ $canAccessCrm ? ($isAdmin ? 'Admin console' : 'Sales workspace') : ($isSdr ? 'SDR workspace' : ($isCaregiver ? 'Caregiver workspace' : ($isFamily ? 'Family workspace' : 'Care that feels personal.'))) }}</span>
+                        <span class="mt-1 hidden text-[11px] font-medium uppercase tracking-[0.16em] text-[#6E746F] md:block">{{ $canAccessCrm ? ($isAdmin ? 'Admin console' : 'Sales workspace') : ($isSdr ? 'SDR workspace' : ($isContentTeam ? 'Content workspace' : ($isCaregiver ? 'Caregiver workspace' : ($isFamily ? 'Family workspace' : 'Care that feels personal.')))) }}</span>
                     </span>
                 </a>
             </div>
 
             <div class="hidden min-w-0 flex-1 items-center gap-2 sm:ml-8 sm:mr-72 sm:flex">
+                @if ($isContentTeam && ! $isAdmin)
+                    <div class="relative" x-data="{ open: false }">
+                        <button type="button" @click="open = !open" class="inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('admin.content.*') ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#547067] hover:bg-[#F8F0E2] hover:text-[#23483F]' }}">
+                            <span>Content</span><svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.12l3.71-3.89a.75.75 0 111.08 1.04l-4.25 4.46a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+                        </button>
+                        <div x-cloak x-show="open" x-transition @click.outside="open = false" class="absolute left-0 z-50 mt-2 w-56 rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] p-2 shadow-xl" style="display: none;">
+                            @foreach($contentNavItems as $item)<a href="{{ $item['href'] }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm font-medium {{ $item['active'] ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#23483F] hover:bg-[#F8F0E2]' }}">{{ $item['label'] }}</a>@endforeach
+                        </div>
+                    </div>
+                @endif
                 @if ($canAccessCrm)
                     <x-nav-link :href="$adminCrmLink['href']" :active="$adminCrmLink['active']" wire:navigate>
                         {{ __($adminCrmLink['label']) }}
@@ -684,6 +736,12 @@ new class extends Component
         class="max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-t border-[#E3D6C5]/80 bg-[rgba(255,253,250,0.98)] backdrop-blur sm:hidden"
     >
         <div class="space-y-1 px-2 pb-3 pt-2">
+            @if ($isContentTeam && ! $isAdmin)
+                <div class="px-2 pt-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#6E746F]">Content</div>
+                @foreach($contentNavItems as $item)
+                    <x-responsive-nav-link :href="$item['href']" :active="$item['active']" wire:navigate>{{ __($item['label']) }}</x-responsive-nav-link>
+                @endforeach
+            @endif
             @if ($canAccessCrm)
                 <x-responsive-nav-link :href="$adminCrmLink['href']" :active="$adminCrmLink['active']" wire:navigate>
                     {{ __($adminCrmLink['label']) }}
@@ -791,4 +849,3 @@ new class extends Component
         </div>
     </div>
 </nav>
-

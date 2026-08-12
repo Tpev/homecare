@@ -53,7 +53,7 @@ File: `tests/Feature/Caregiver/CaregiverRegressionTest.php`
 ## Notes
 
 - Tests use `RefreshDatabase`, so each test runs with a clean database state.
-- Admin-only tests assume admin email middleware allows `test@test.com`.
+- Admin-only tests assign the explicit `admin` role; fixture email addresses do not grant permissions.
 - If tests fail after schema updates, run:
 
 ```bash

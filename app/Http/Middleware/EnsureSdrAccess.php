@@ -12,11 +12,7 @@ class EnsureSdrAccess
     {
         $user = $request->user();
 
-        $canAccessSdr = $user
-            && (
-                in_array($user->role, ['admin', 'sales', 'sdr'], true)
-                || strtolower((string) $user->email) === 'test@test.com'
-            );
+        $canAccessSdr = $user && in_array($user->role, ['admin', 'sales', 'sdr'], true);
 
         if (! $canAccessSdr) {
             abort(403);

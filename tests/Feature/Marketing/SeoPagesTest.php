@@ -2,11 +2,14 @@
 
 namespace Tests\Feature\Marketing;
 
-use App\Services\Content\BlogContentService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\CreatesPublishedBlogPosts;
 use Tests\TestCase;
 
 class SeoPagesTest extends TestCase
 {
+    use CreatesPublishedBlogPosts, RefreshDatabase;
+
     public function test_all_configured_seo_pages_render_successfully(): void
     {
         $pages = config('seo_pages.pages', []);
@@ -36,14 +39,14 @@ class SeoPagesTest extends TestCase
         $index->assertOk()
             ->assertSee('aria-label="Breadcrumb"', false)
             ->assertSee('"@type":"BreadcrumbList"', false)
-            ->assertSeeText('Blog');
+            ->assertSeeText('Resources');
 
-        $post = app(BlogContentService::class)->all()[0];
+        $post = $this->createPublishedBlogPost()['post'];
         $article = $this->get(route('blog.show', ['blogSlug' => $post['slug']]));
         $article->assertOk()
             ->assertSee('aria-label="Breadcrumb"', false)
             ->assertSee('"@type":"BreadcrumbList"', false)
-            ->assertSeeText($post['title'])
+            ->assertSeeText($post->title)
             ->assertSee('"name":"LoLo Care"', false);
     }
 
@@ -66,7 +69,7 @@ class SeoPagesTest extends TestCase
             ->assertOk()
             ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
             ->assertSee('# LoLo Care')
-            ->assertSee('https://carelolo.com/families')
-            ->assertSee('https://carelolo.com/legal/privacy-policy');
+            ->assertSee(route('landing.family'), false)
+            ->assertSee(route('legal.show', ['slug' => 'privacy-policy']), false);
     }
 }

@@ -256,3 +256,132 @@
         transform: translateY(0);
     }
 }
+
+@layer components {
+    .content-editor-toolbar-button {
+        @apply min-h-9 rounded-lg border px-2 text-xs font-semibold transition;
+        border-color: #d8d1c7;
+        background: white;
+        color: #17313f;
+    }
+
+    .content-editor-toolbar-button:hover {
+        background: #f1ece5;
+    }
+
+    .content-editor-prose {
+        min-height: 650px;
+        padding: clamp(1.25rem, 4vw, 3rem);
+        color: #243b48;
+        font-family: "Source Serif 4", ui-serif, Georgia, serif;
+        font-size: 1.08rem;
+        line-height: 1.8;
+        outline: none;
+    }
+
+    .content-editor-prose > * + * {
+        margin-top: 1.1rem;
+    }
+
+    .content-editor-prose h2,
+    .content-editor-prose h3,
+    .content-editor-prose h4,
+    .public-article-content h2,
+    .public-article-content h3,
+    .public-article-content h4 {
+        color: #17313f;
+        font-family: "Source Serif 4", ui-serif, Georgia, serif;
+        font-weight: 700;
+        line-height: 1.2;
+        scroll-margin-top: 7rem;
+    }
+
+    .content-editor-prose h2,
+    .public-article-content h2 { margin-top: 2.4rem; font-size: 2rem; }
+    .content-editor-prose h3,
+    .public-article-content h3 { margin-top: 2rem; font-size: 1.55rem; }
+    .content-editor-prose h4,
+    .public-article-content h4 { margin-top: 1.6rem; font-size: 1.25rem; }
+
+    .content-editor-prose ul,
+    .public-article-content ul { list-style: disc; padding-left: 1.5rem; }
+    .content-editor-prose ol,
+    .public-article-content ol { list-style: decimal; padding-left: 1.5rem; }
+    .content-editor-prose li + li,
+    .public-article-content li + li { margin-top: 0.45rem; }
+    .content-editor-prose a,
+    .public-article-content a { color: #0f5b52; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+    .content-editor-prose blockquote,
+    .public-article-content blockquote { border-left: 4px solid #c96b55; background: #fbf4ef; padding: 1rem 1.25rem; font-style: italic; }
+
+    .content-editor-image,
+    .content-figure {
+        margin: 2rem 0;
+    }
+
+    .content-editor-image img,
+    .content-figure img {
+        width: 100%;
+        height: auto;
+        border-radius: 1rem;
+    }
+
+    .content-editor-image figcaption,
+    .content-figure figcaption {
+        margin-top: 0.6rem;
+        color: #6a7784;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    .content-editor-callout,
+    .content-callout {
+        margin: 1.5rem 0;
+        border: 1px solid #a9c9c1;
+        border-radius: 1rem;
+        background: #eff8f5;
+        padding: 1rem 1.25rem;
+    }
+
+    .content-callout--warning { border-color: #e7b660; background: #fff8e8; }
+    .content-callout--important { border-color: #d99b8c; background: #fff2ed; }
+    .content-callout__title { margin-bottom: 0.4rem; font-family: Inter, sans-serif; font-weight: 800; }
+
+    .content-editor-cta,
+    .content-cta { margin: 2rem 0; text-align: center; }
+    .content-editor-cta a,
+    .content-cta__link { display: inline-flex; min-height: 3rem; align-items: center; justify-content: center; border-radius: 0.9rem; padding: 0.75rem 1.2rem; font-family: Inter, sans-serif; font-weight: 750; text-decoration: none; }
+    .content-cta__link--primary,
+    .content-editor-cta a { background: #0f5b52; color: white; }
+    .content-cta__link--secondary { border: 1px solid #0f5b52; color: #0f5b52; }
+
+    .content-editor-citation,
+    .content-citation { color: #0f5b52; font-family: Inter, sans-serif; font-size: 0.72em; font-weight: 800; }
+    .content-editor-faq,
+    .content-faq { margin-top: 2.5rem; border-top: 1px solid #ded6ca; padding-top: 1.5rem; }
+    .content-editor-faq-item,
+    .content-faq__item { border-bottom: 1px solid #e5ded5; padding: 0.8rem 0; }
+    .content-editor-faq-item summary,
+    .content-faq__item summary { cursor: pointer; color: #17313f; font-family: Inter, sans-serif; font-weight: 750; }
+    .content-faq__item > div { margin-top: 0.7rem; }
+
+    .content-table-wrap { margin: 1.75rem 0; overflow-x: auto; }
+    .content-editor-prose table,
+    .public-article-content table { width: 100%; border-collapse: collapse; font-family: Inter, sans-serif; font-size: 0.92rem; }
+    .content-editor-prose th,
+    .content-editor-prose td,
+    .public-article-content th,
+    .public-article-content td { border: 1px solid #d8d1c7; padding: 0.7rem; vertical-align: top; }
+    .content-editor-prose th,
+    .public-article-content th { background: #f5f2ed; color: #17313f; font-weight: 750; }
+
+    .public-article-content {
+        color: #334854;
+        font-family: "Source Serif 4", ui-serif, Georgia, serif;
+        font-size: 1.075rem;
+        line-height: 1.82;
+    }
+
+    .public-article-content > * + * { margin-top: 1.15rem; }
+}

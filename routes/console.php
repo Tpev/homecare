@@ -16,3 +16,6 @@ Schedule::command('homecare:retry-payout-transfers --limit=100')->hourly();
 Schedule::command('homecare:generate-regular-care-visits')->dailyAt('02:15')->withoutOverlapping();
 Schedule::command('homecare:prepare-regular-care-payments')->hourly()->withoutOverlapping();
 Schedule::command('homecare:process-continuous-coverage')->hourly()->withoutOverlapping();
+Schedule::command('content:publish-scheduled')->everyMinute()->withoutOverlapping();
+Schedule::command('content:audit')->weeklyOn(1, '08:00')->withoutOverlapping()->appendOutputTo(storage_path('logs/content-audit.log'));
+Schedule::command('content:prune-events')->dailyAt('03:20')->withoutOverlapping();

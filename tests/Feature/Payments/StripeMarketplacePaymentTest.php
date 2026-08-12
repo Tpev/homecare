@@ -664,7 +664,7 @@ class StripeMarketplacePaymentTest extends TestCase
 
         $admin = User::factory()->create([
             'email' => 'test@test.com',
-            'role' => 'family',
+            'role' => 'admin',
         ]);
 
         Livewire::actingAs($admin)

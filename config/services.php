@@ -2,6 +2,10 @@
 
 return [
 
+    'indexnow' => [
+        'key' => env('INDEXNOW_KEY'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services

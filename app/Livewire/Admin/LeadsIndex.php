@@ -675,8 +675,7 @@ class LeadsIndex extends Component
     {
         return User::query()
             ->where(function (Builder $query) {
-                $query->whereIn('role', ['admin', 'sales', 'sdr'])
-                    ->orWhereRaw('lower(email) = ?', ['test@test.com']);
+                $query->whereIn('role', ['admin', 'sales', 'sdr']);
             })
             ->orderBy('name')
             ->pluck('name', 'id')

@@ -1,27 +1,41 @@
 ﻿<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
+    @php
+        $pageTitle = trim($__env->yieldContent('title', 'LoLo'));
+        $pageDescription = trim($__env->yieldContent('meta_description', 'LoLo helps families arrange trusted, non-medical home care and companionship for an older adult at home.'));
+        $pageRobots = trim($__env->yieldContent('robots', 'index,follow'));
+        $pageCanonical = trim($__env->yieldContent('canonical', request()->url()));
+        $pageOgType = trim($__env->yieldContent('og_type', 'website'));
+        $pageOgTitle = trim($__env->yieldContent('og_title', $pageTitle));
+        $pageOgDescription = trim($__env->yieldContent('og_description', $pageDescription));
+        $pageOgImage = trim($__env->yieldContent('og_image', asset('images/marketing/flyer.png')));
+        $pageOgImageAlt = trim($__env->yieldContent('og_image_alt', 'LoLo helps families find trusted support for an older parent at home.'));
+    @endphp
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'LoLo')</title>
-    <meta name="description" content="@yield('meta_description', 'LoLo helps families arrange trusted, non-medical home care and companionship for an older adult at home.')">
-    <meta name="robots" content="@yield('robots', 'index,follow')">
-    <link rel="canonical" href="@yield('canonical', request()->url())">
+    <title>{{ $pageTitle }}</title>
+    <meta name="description" content="{{ $pageDescription }}">
+    <meta name="robots" content="{{ $pageRobots }}">
+    <link rel="canonical" href="{{ $pageCanonical }}">
 
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="{{ $pageOgType }}">
     <meta property="og:site_name" content="LoLo">
-    <meta property="og:title" content="@yield('title', 'LoLo')">
-    <meta property="og:description" content="@yield('meta_description', 'LoLo helps families arrange trusted, non-medical home care and companionship for an older adult at home.')">
-    <meta property="og:url" content="@yield('canonical', request()->url())">
-    <meta property="og:image" content="@yield('og_image', asset('images/marketing/flyer.png'))">
-    <meta property="og:image:alt" content="@yield('og_image_alt', 'LoLo helps families find trusted support for an older parent at home.')">
+    <meta property="og:title" content="{{ $pageOgTitle }}">
+    <meta property="og:description" content="{{ $pageOgDescription }}">
+    <meta property="og:url" content="{{ $pageCanonical }}">
+    <meta property="og:image" content="{{ $pageOgImage }}">
+    <meta property="og:image:alt" content="{{ $pageOgImageAlt }}">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="@yield('title', 'LoLo')">
-    <meta name="twitter:description" content="@yield('meta_description', 'LoLo helps families arrange trusted, non-medical home care and companionship for an older adult at home.')">
-    <meta name="twitter:image" content="@yield('og_image', asset('images/marketing/flyer.png'))">
-    <meta name="twitter:image:alt" content="@yield('og_image_alt', 'LoLo helps families find trusted support for an older parent at home.')">
+    <meta name="twitter:title" content="{{ $pageTitle }}">
+    <meta name="twitter:description" content="{{ $pageDescription }}">
+    <meta name="twitter:image" content="{{ $pageOgImage }}">
+    <meta name="twitter:image:alt" content="{{ $pageOgImageAlt }}">
+    @hasSection('article_published_time')<meta property="article:published_time" content="{{ trim($__env->yieldContent('article_published_time')) }}">@endif
+    @hasSection('article_modified_time')<meta property="article:modified_time" content="{{ trim($__env->yieldContent('article_modified_time')) }}">@endif
+    @hasSection('feed_url')<link rel="alternate" type="application/atom+xml" title="LoLo Care Resources" href="{{ trim($__env->yieldContent('feed_url')) }}">@endif
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

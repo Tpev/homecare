@@ -12,11 +12,7 @@ class EnsureCrmAccess
     {
         $user = $request->user();
 
-        $canAccessCrm = $user
-            && (
-                in_array($user->role, ['admin', 'sales'], true)
-                || strtolower((string) $user->email) === 'test@test.com'
-            );
+        $canAccessCrm = $user && in_array($user->role, ['admin', 'sales'], true);
 
         if (! $canAccessCrm) {
             abort(403);

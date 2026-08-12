@@ -1,5 +1,89 @@
 import './bootstrap';
 
+document.addEventListener('alpine:init', () => {
+    window.Alpine.data('contentEditor', (params) => ({
+        ready: false,
+        saveState: 'Loading editor…',
+        active: () => false,
+        command: () => {},
+        setLink: () => {},
+        insertCallout: () => {},
+        insertCta: () => {},
+        insertCitation: () => {},
+        insertFaq: () => {},
+
+        async init() {
+            const { createContentEditorController } = await import('./blog-editor');
+            Object.assign(this, createContentEditorController(params));
+            this.initialize();
+        },
+    }));
+});
+
+const initializeBlogAnalytics = () => {
+    const article = document.querySelector('[data-blog-article]');
+    if (!article || article.dataset.analyticsReady === 'true') return;
+
+    article.dataset.analyticsReady = 'true';
+    const endpoint = article.dataset.eventUrl;
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+    const sent = new Set();
+    const utmSource = new URLSearchParams(window.location.search).get('utm_source');
+    const visitorStorageKey = 'lolo-content-visitor-v1';
+    let visitorToken = '';
+    try {
+        const stored = JSON.parse(window.localStorage.getItem(visitorStorageKey) || 'null');
+        if (stored?.token && stored?.expiresAt > Date.now()) visitorToken = stored.token;
+        if (!visitorToken) {
+            visitorToken = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+            window.localStorage.setItem(visitorStorageKey, JSON.stringify({ token: visitorToken, expiresAt: Date.now() + 30 * 86400000 }));
+        }
+    } catch {
+        visitorToken = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+    let engagedSeconds = 0;
+    let progress = 0;
+
+    const record = (event, metadata = {}) => {
+        const signature = `${event}:${metadata.placement ?? ''}`;
+        if (event !== 'cta_click' && event !== 'source_click' && sent.has(signature)) return;
+        sent.add(signature);
+        fetch(endpoint, {
+            method: 'POST',
+            credentials: 'same-origin',
+            keepalive: true,
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Content-Visitor': visitorToken, Accept: 'application/json' },
+            body: JSON.stringify({ event, utm_source: utmSource, ...metadata }),
+        }).catch(() => {});
+    };
+
+    record('page_view');
+    const recordEngagement = () => {
+        if (progress >= 0.5 && engagedSeconds >= 30) record('read_50');
+        if (progress >= 0.9 && engagedSeconds >= 60) record('read_complete');
+    };
+    const onScroll = () => {
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        progress = max > 0 ? Math.max(progress, window.scrollY / max) : 1;
+        recordEngagement();
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            engagedSeconds += 1;
+            recordEngagement();
+        }
+    }, 1000);
+    article.addEventListener('click', (event) => {
+        const link = event.target.closest('[data-blog-event]');
+        if (!link) return;
+        record(link.dataset.blogEvent, { href: link.href, placement: link.dataset.placement ?? '' });
+    });
+};
+
+document.addEventListener('DOMContentLoaded', initializeBlogAnalytics);
+document.addEventListener('livewire:navigated', initializeBlogAnalytics);
+
 const acceptedImageExtensions = new Set([
     'avif',
     'bmp',

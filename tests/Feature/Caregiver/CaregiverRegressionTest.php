@@ -162,7 +162,7 @@ class CaregiverRegressionTest extends TestCase
 
     public function test_admin_can_approve_under_review_profile(): void
     {
-        $admin = User::factory()->create(['email' => 'test@test.com']);
+        $admin = User::factory()->create(['email' => 'test@test.com', 'role' => 'admin']);
         $caregiver = User::factory()->create(['role' => 'caregiver']);
         $profile = CaregiverProfile::query()->create([
             'user_id' => $caregiver->id,
@@ -192,7 +192,7 @@ class CaregiverRegressionTest extends TestCase
 
     public function test_admin_can_reject_under_review_profile_with_reason(): void
     {
-        $admin = User::factory()->create(['email' => 'test@test.com']);
+        $admin = User::factory()->create(['email' => 'test@test.com', 'role' => 'admin']);
         $caregiver = User::factory()->create(['role' => 'caregiver']);
         $profile = CaregiverProfile::query()->create([
             'user_id' => $caregiver->id,
@@ -218,7 +218,7 @@ class CaregiverRegressionTest extends TestCase
 
     public function test_admin_cannot_approve_without_identity_verification(): void
     {
-        $admin = User::factory()->create(['email' => 'test@test.com']);
+        $admin = User::factory()->create(['email' => 'test@test.com', 'role' => 'admin']);
         $caregiver = User::factory()->create(['role' => 'caregiver']);
         $profile = CaregiverProfile::query()->create([
             'user_id' => $caregiver->id,
@@ -239,7 +239,7 @@ class CaregiverRegressionTest extends TestCase
 
     public function test_admin_can_suspend_and_unsuspend_profile(): void
     {
-        $admin = User::factory()->create(['email' => 'test@test.com']);
+        $admin = User::factory()->create(['email' => 'test@test.com', 'role' => 'admin']);
         $caregiver = User::factory()->create(['role' => 'caregiver']);
         $profile = CaregiverProfile::query()->create([
             'user_id' => $caregiver->id,
@@ -530,7 +530,7 @@ class CaregiverRegressionTest extends TestCase
 
     public function test_admin_can_toggle_trust_badges_for_active_caregiver(): void
     {
-        $admin = User::factory()->create(['email' => 'test@test.com']);
+        $admin = User::factory()->create(['email' => 'test@test.com', 'role' => 'admin']);
         $caregiver = User::factory()->create(['role' => 'caregiver']);
         $profile = CaregiverProfile::query()->create([
             'user_id' => $caregiver->id,
@@ -551,7 +551,7 @@ class CaregiverRegressionTest extends TestCase
 
     public function test_admin_moderation_logs_page_lists_recent_actions(): void
     {
-        $admin = User::factory()->create(['email' => 'test@test.com', 'name' => 'Admin User']);
+        $admin = User::factory()->create(['email' => 'test@test.com', 'name' => 'Admin User', 'role' => 'admin']);
         $caregiver = User::factory()->create(['role' => 'caregiver', 'name' => 'Log Target']);
         $profile = CaregiverProfile::query()->create([
             'user_id' => $caregiver->id,

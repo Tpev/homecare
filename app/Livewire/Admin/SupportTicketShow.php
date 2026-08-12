@@ -138,8 +138,7 @@ class SupportTicketShow extends Component
             'assignedAdminId' => [
                 'nullable',
                 Rule::exists('users', 'id')->where(function ($query): void {
-                    $query->where('role', 'admin')
-                        ->orWhereRaw('lower(email) = ?', ['test@test.com']);
+                    $query->where('role', 'admin');
                 }),
             ],
         ]);
@@ -311,8 +310,7 @@ class SupportTicketShow extends Component
     {
         return User::query()
             ->where(function (Builder $query): void {
-                $query->where('role', 'admin')
-                    ->orWhereRaw('lower(email) = ?', ['test@test.com']);
+                $query->where('role', 'admin');
             })
             ->orderBy('name')
             ->pluck('name', 'id')

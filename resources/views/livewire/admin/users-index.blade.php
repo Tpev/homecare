@@ -44,7 +44,7 @@
         <div class="mt-5 space-y-3 md:hidden">
             @forelse($users as $user)
                 @php
-                    $isProtectedStaff = in_array($user->role, ['admin', 'sales'], true) || strtolower((string) $user->email) === 'test@test.com';
+                    $isProtectedStaff = in_array($user->role, ['admin', 'sales', 'sdr'], true);
                     $readiness = $reviewReadiness[$user->id] ?? null;
                     $statusClasses = match ($readiness['status'] ?? 'missing') {
                         'active' => 'text-emerald-700 bg-emerald-50 border-emerald-200',
@@ -121,7 +121,7 @@
                 <tbody class="divide-y divide-slate-200 bg-white">
                     @forelse($users as $user)
                         @php
-                            $isProtectedStaff = in_array($user->role, ['admin', 'sales'], true) || strtolower((string) $user->email) === 'test@test.com';
+                            $isProtectedStaff = in_array($user->role, ['admin', 'sales', 'sdr'], true);
                         @endphp
                         <tr>
                             <td class="px-4 py-3">

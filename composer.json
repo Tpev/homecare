@@ -11,8 +11,8 @@
         "laravel/tinker": "^2.10.1",
         "livewire/livewire": "^3.6.4",
         "livewire/volt": "^1.7.0",
-        "stripe/stripe-php": "16.5",
-        "tallstackui/tallstackui": "3.0.0"
+        "stripe/stripe-php": "^16.5",
+        "tallstackui/tallstackui": "^3.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

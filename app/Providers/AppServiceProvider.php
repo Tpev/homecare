@@ -4,15 +4,20 @@ namespace App\Providers;
 
 use App\Contracts\AiCopilotResponder;
 use App\Listeners\SendOpsUserRegisteredAlert;
+use App\Listeners\AttributeContentRegistration;
 use App\Models\CareRequest;
 use App\Models\CareRequestConversation;
 use App\Models\CareRecipientProfile;
 use App\Models\CareRecipientProfileVersion;
+use App\Models\BlogPost;
+use App\Models\MediaAsset;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Observers\CareRequestObserver;
 use App\Observers\SupportTicketObserver;
 use App\Policies\CareRequestConversationPolicy;
+use App\Policies\BlogPostPolicy;
+use App\Policies\MediaAssetPolicy;
 use App\Policies\CareRecipientProfilePolicy;
 use App\Policies\CareRecipientProfileVersionPolicy;
 use App\Policies\CareRequestPolicy;
@@ -51,6 +56,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(CareRequest::class, CareRequestPolicy::class);
+        Gate::policy(BlogPost::class, BlogPostPolicy::class);
+        Gate::policy(MediaAsset::class, MediaAssetPolicy::class);
         Gate::policy(CareRecipientProfile::class, CareRecipientProfilePolicy::class);
         Gate::policy(CareRecipientProfileVersion::class, CareRecipientProfileVersionPolicy::class);
         Gate::policy(CareRequestConversation::class, CareRequestConversationPolicy::class);
@@ -60,5 +67,6 @@ class AppServiceProvider extends ServiceProvider
         SupportTicket::observe(SupportTicketObserver::class);
 
         Event::listen(Registered::class, SendOpsUserRegisteredAlert::class);
+        Event::listen(Registered::class, AttributeContentRegistration::class);
     }
 }

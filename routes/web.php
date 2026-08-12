@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\Admin\BlogPostPreviewController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogCoverController;
+use App\Http\Controllers\BlogEventController;
+use App\Http\Controllers\BlogFeedController;
 use App\Http\Controllers\CaregiverCertificationDocumentController;
 use App\Http\Controllers\CaregiverIdentityVerificationController;
 use App\Http\Controllers\CaregiverStripeConnectController;
@@ -11,6 +14,7 @@ use App\Http\Controllers\FamilyAccessEndedController;
 use App\Http\Controllers\FamilyAccountInvitationController;
 use App\Http\Controllers\FamilyBillingController;
 use App\Http\Controllers\GoogleSheetsLeadWebhookController;
+use App\Http\Controllers\IndexNowKeyController;
 use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\LlmsController;
 use App\Http\Controllers\MarketingPagesController;
@@ -29,6 +33,10 @@ use App\Livewire\Admin\CarePlanShow;
 use App\Livewire\Admin\CarePlansIndex;
 use App\Livewire\Admin\CareRequestShow as AdminCareRequestShow;
 use App\Livewire\Admin\CareRequestsIndex;
+use App\Livewire\Admin\Content\ContentSettings;
+use App\Livewire\Admin\Content\MediaLibrary as ContentMediaLibrary;
+use App\Livewire\Admin\Content\PostEditor as ContentPostEditor;
+use App\Livewire\Admin\Content\PostsIndex as ContentPostsIndex;
 use App\Livewire\Admin\ContinuousCoverageIndex as AdminContinuousCoverageIndex;
 use App\Livewire\Admin\FunnelAnalytics;
 use App\Livewire\Admin\LeadsIndex;
@@ -101,6 +109,20 @@ Route::middleware(['web', 'auth', 'sdr.access'])
         Route::get('/calling', CallingConsole::class)->name('calling');
     });
 
+Route::middleware(['web', 'auth', 'content.access'])
+    ->prefix('admin/content')
+    ->name('admin.content.')
+    ->group(function () {
+        Route::get('/posts', ContentPostsIndex::class)->name('posts.index');
+        Route::get('/posts/{blogPost:id}/edit', ContentPostEditor::class)->whereNumber('blogPost')->name('posts.edit');
+        Route::get('/posts/{blogPost:id}/preview', BlogPostPreviewController::class)
+            ->middleware('signed')
+            ->whereNumber('blogPost')
+            ->name('posts.preview');
+        Route::get('/media', ContentMediaLibrary::class)->name('media.index');
+        Route::get('/settings', ContentSettings::class)->name('settings');
+    });
+
 Route::middleware(['web', 'auth', 'admin.email'])
     ->prefix('admin')
     ->name('admin.')
@@ -141,8 +163,13 @@ Route::get('/families/{variant}', [MarketingPagesController::class, 'familyVaria
 Route::get('/caregivers', [MarketingPagesController::class, 'caregiver'])->name('landing.caregiver');
 Route::view('/flyer/family', 'marketing.flyer-family')->name('marketing.flyer.family');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/feed.xml', BlogFeedController::class)->name('blog.feed');
+Route::get('/blog/category/{category:slug}', [BlogController::class, 'category'])->name('blog.category');
+Route::get('/blog/topic/{tag:slug}', [BlogController::class, 'tag'])->name('blog.tag');
+Route::get('/blog/authors/{author:slug}', [BlogController::class, 'author'])->name('blog.author');
 Route::get('/blog/{blogSlug}/cover', BlogCoverController::class)->name('blog.cover');
 Route::get('/blog/{blogSlug}', [BlogController::class, 'show'])->name('blog.show');
+Route::post('/blog/{blogPost:id}/events', BlogEventController::class)->middleware('throttle:30,1')->name('blog.events');
 Route::get('/notifications/email/open/{delivery}/{token}', [NotificationEmailTrackingController::class, 'open'])
     ->whereNumber('delivery')
     ->name('notifications.email.open');
@@ -157,6 +184,7 @@ Route::get('/legal/{slug}', [LegalPageController::class, 'show'])
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
 Route::get('/robots.txt', [RobotsController::class, 'index'])->name('robots.txt');
 Route::get('/llms.txt', [LlmsController::class, 'index'])->name('llms.txt');
+Route::get('/indexnow-key.txt', IndexNowKeyController::class)->name('indexnow.key');
 Route::post('/webhooks/didit/identity', DiditWebhookController::class)
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('webhooks.didit.identity');

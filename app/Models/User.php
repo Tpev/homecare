@@ -20,6 +20,7 @@ class User extends Authenticatable
         'stripe_customer_id',
         'password',
         'role',
+        'content_role',
         'phone',
         'city',
         'state',
@@ -62,8 +63,24 @@ class User extends Authenticatable
 
     public function isAdministrator(): bool
     {
-        return $this->role === 'admin'
-            || strtolower((string) $this->email) === 'test@test.com';
+        return $this->role === 'admin';
+    }
+
+    public function isContentTeamMember(): bool
+    {
+        return $this->isAdministrator()
+            || in_array($this->content_role, ['author', 'editor', 'publisher'], true);
+    }
+
+    public function canReviewContent(): bool
+    {
+        return $this->isAdministrator()
+            || in_array($this->content_role, ['editor', 'publisher'], true);
+    }
+
+    public function canPublishContent(): bool
+    {
+        return $this->isAdministrator() || $this->content_role === 'publisher';
     }
 
     public function caregiverProfile(): HasOne

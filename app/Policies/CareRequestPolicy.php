@@ -13,7 +13,7 @@ class CareRequestPolicy
 
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, ['family', 'caregiver'], true) || strtolower($user->email) === 'test@test.com';
+        return in_array($user->role, ['admin', 'family', 'caregiver'], true);
     }
 
     public function view(User $user, CareRequest $careRequest): bool
@@ -26,7 +26,7 @@ class CareRequestPolicy
             return true;
         }
 
-        return strtolower($user->email) === 'test@test.com';
+        return $user->isAdministrator();
     }
 
     public function create(User $user): bool

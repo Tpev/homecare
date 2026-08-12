@@ -12,8 +12,7 @@ class EnsureAdminEmail
     {
         $user = $request->user();
 
-        $isAdmin = $user
-            && ($user->role === 'admin' || strtolower((string) $user->email) === 'test@test.com');
+        $isAdmin = $user?->isAdministrator() === true;
 
         if (! $isAdmin) {
             abort(403);

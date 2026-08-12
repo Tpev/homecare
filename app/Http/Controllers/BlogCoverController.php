@@ -2,22 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\Content\BlogContentService;
-use Illuminate\Http\Response;
+use App\Models\BlogPost;
+use Illuminate\Http\RedirectResponse;
 
 class BlogCoverController extends Controller
 {
-    public function __invoke(string $blogSlug, BlogContentService $blogs): Response
+    public function __invoke(string $blogSlug): RedirectResponse
     {
-        $binary = $blogs->coverBinaryForSlug($blogSlug);
+        $post = BlogPost::published()
+            ->with('publishedRevision')
+            ->whereHas('publishedRevision', fn ($query) => $query->where('snapshot->slug', $blogSlug))
+            ->firstOrFail();
+        $assetId = data_get($post->publishedRevision?->snapshot, 'featured_media_asset_id');
+        $asset = \App\Models\MediaAsset::query()->findOrFail($assetId);
 
-        if (! $binary) {
-            return response('', 404);
-        }
-
-        return response($binary['content'], 200, [
-            'Content-Type' => $binary['mime'],
-            'Cache-Control' => 'public, max-age=604800',
-        ]);
+        return redirect()->to($asset->variantUrl('large'), 302, ['Cache-Control' => 'public, max-age=86400']);
     }
 }

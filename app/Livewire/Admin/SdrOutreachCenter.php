@@ -341,8 +341,7 @@ class SdrOutreachCenter extends Component
     {
         return User::query()
             ->where(function (Builder $query) {
-                $query->whereIn('role', ['sdr', 'sales', 'admin'])
-                    ->orWhereRaw('lower(email) = ?', ['test@test.com']);
+                $query->whereIn('role', ['sdr', 'sales', 'admin']);
             })
             ->orderBy('name')
             ->pluck('name', 'id')

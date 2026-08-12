@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'admin.email' => \App\Http\Middleware\EnsureAdminEmail::class,
+            'content.access' => \App\Http\Middleware\EnsureContentAccess::class,
             'crm.access' => \App\Http\Middleware\EnsureCrmAccess::class,
             'sdr.access' => \App\Http\Middleware\EnsureSdrAccess::class,
             'caregiver.role' => \App\Http\Middleware\EnsureCaregiverRole::class,
