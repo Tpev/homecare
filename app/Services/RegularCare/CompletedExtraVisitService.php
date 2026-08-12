@@ -11,8 +11,8 @@ use App\Models\CompletedExtraVisitRequest;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\Booking\BookingTrustService;
-use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
+use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
 use App\Support\MarketplaceEvent;
 use App\Support\MarketplacePricing;
@@ -570,9 +570,9 @@ class CompletedExtraVisitService
         if ($startLocal->lt(now($timezone)->subDays($historyDays))) {
             throw ValidationException::withMessages(['reportDate' => 'This visit is outside the '.$historyDays.'-day reporting window. Contact LoLo Care support for help.']);
         }
-        if ($plan->activated_at && $startLocal->lt($plan->activated_at->copy()->setTimezone($timezone)->startOfDay())) {
-            throw ValidationException::withMessages(['reportDate' => 'The visit predates this established regular-care relationship.']);
-        }
+        // The plan record may be activated or migrated after care actually began.
+        // Eligibility, the reporting window, overlap checks, caregiver attestation,
+        // and explicit family approval are the authoritative safeguards here.
         if ($plan->ended_at && $startLocal->gt($plan->ended_at->copy()->setTimezone($timezone)->endOfDay())) {
             throw ValidationException::withMessages(['reportDate' => 'The visit happened after this regular-care relationship ended.']);
         }

@@ -109,6 +109,50 @@ class CompletedExtraVisitTest extends TestCase
         $this->assertFalse(app(CompletedExtraVisitService::class)->canReport($plan->fresh(), $caregiver));
     }
 
+    public function test_family_can_approve_a_missed_visit_from_before_the_plan_was_recorded(): void
+    {
+        [$family, $caregiver, $plan] = $this->establishedPlan();
+        $plan->forceFill([
+            'accepted_at' => now()->subDays(2),
+            'activated_at' => now()->subDays(2),
+            'starts_on' => now()->subDays(2)->toDateString(),
+        ])->save();
+
+        Livewire::actingAs($caregiver)
+            ->test(RegularClients::class)
+            ->call('openCompletedExtraVisit', $plan->id)
+            ->set('reportDate', '2026-07-24')
+            ->set('reportStartTime', '10:00')
+            ->set('reportEndTime', '11:45')
+            ->set('reportBreakMinutes', 15)
+            ->set('reportReason', CompletedExtraVisitRequest::REASON_FAMILY_REQUESTED)
+            ->set('reportExplanation', 'Barbara asked me to provide additional care that Friday.')
+            ->set('reportCareNotes', 'Prepared lunch and provided companionship.')
+            ->set('reportAttested', true)
+            ->call('submitCompletedExtraVisit')
+            ->assertSet('reviewingReport', true)
+            ->assertHasNoErrors()
+            ->call('submitCompletedExtraVisit')
+            ->assertHasNoErrors()
+            ->assertSee('Extra visit sent to the family for approval.');
+
+        $report = CompletedExtraVisitRequest::query()->latest('id')->firstOrFail();
+
+        $this->assertTrue($report->proposed_started_at->lt($plan->fresh()->activated_at));
+        $this->assertSame(CompletedExtraVisitRequest::STATUS_PENDING_FAMILY, $report->status);
+        $this->assertNull($report->care_booking_id);
+        $this->assertDatabaseCount('care_booking_payments', 0);
+
+        $approved = app(CompletedExtraVisitService::class)->approve($report, $family);
+
+        $this->assertSame(CompletedExtraVisitRequest::STATUS_APPLIED, $approved->status);
+        $this->assertNotNull($approved->care_booking_id);
+        $this->assertContains($approved->booking->payment->status, [
+            CareBookingPayment::STATUS_CAPTURED,
+            CareBookingPayment::STATUS_TRANSFERRED,
+        ]);
+    }
+
     public function test_future_and_overlapping_reports_are_rejected(): void
     {
         [$family, $caregiver, $plan] = $this->establishedPlan();
