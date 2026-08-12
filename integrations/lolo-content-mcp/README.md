@@ -18,7 +18,7 @@ For the first dependency install by a maintainer, use `npm install` and commit t
 
 The process reads exactly these connector settings from its environment:
 
-- `LOLO_CONTENT_API_URL`, such as `https://care.example.com` (a URL already ending in `/api/content/v1` is also accepted)
+- `LOLO_CONTENT_API_URL`, set to `https://carelolo.com/api/content/v1` in production (the origin-only form is also accepted)
 - `LOLO_CONTENT_API_TOKEN`, the bearer credential issued by the Laravel application
 
 Do not place the token in a committed file, command argument, prompt, log, or source code.

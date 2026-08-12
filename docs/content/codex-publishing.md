@@ -157,7 +157,7 @@ npm --prefix integrations/lolo-content-mcp test
 Export configuration in the operator's process environment through the organization's secret-management mechanism. The API URL should be the origin plus the versioned API base, and production must use HTTPS.
 
 ```bash
-export LOLO_CONTENT_API_URL="https://care.example.com/api/content/v1"
+export LOLO_CONTENT_API_URL="https://carelolo.com/api/content/v1"
 export LOLO_CONTENT_API_TOKEN="<retrieve from the approved secret manager>"
 ```
 
@@ -225,33 +225,29 @@ Scheduling after human approval:
 
 ## Production setup and verification
 
-The following is a runbook for an administrator; it is not an instruction to deploy automatically. Take a database backup and use the application's normal reviewed release process first.
+Production is the live `https://carelolo.com` site. A push to `master` does not replace the deployment procedure. An administrator must take or verify the normal backup, confirm the release commit, and run the repository's reviewed `deploy.sh` from the application host. Do not reconstruct its steps manually and do not let Codex invoke it unattended.
 
-From the released application directory on the production host:
+```bash
+ssh <production-host>
+cd /var/www/homecare
+git fetch origin
+git log -1 --oneline origin/master
+./deploy.sh
+```
+
+`deploy.sh` acquires `/tmp/homecare-deploy.lock`, enters maintenance mode, updates `master` with `git pull --ff-only`, installs locked PHP and Node dependencies, builds production assets, runs migrations, regenerates caregiver image variants, rebuilds Laravel caches, restarts queue workers and PHP-FPM, builds/restarts the voice agent, validates/reloads nginx, and checks both application and voice-agent health. Its exit trap brings Laravel back up after a failure. Investigate any failed step before retrying; do not bypass it with an ad hoc partial deployment.
+
+The Content MCP process is built and run only on the trusted Codex operator workstation. It is not a public production daemon and does not need to be installed or started by `deploy.sh`.
+
+After `deploy.sh` succeeds, verify the new API and scheduler from the production application directory:
 
 ```bash
 cd /var/www/homecare
-composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
-npm ci --no-audit --no-fund
-npm run build
-npm --prefix integrations/lolo-content-mcp ci --ignore-scripts
-npm --prefix integrations/lolo-content-mcp run build
-composer audit --no-dev
-npm audit --omit=dev
-npm --prefix integrations/lolo-content-mcp audit --omit=dev
-php artisan migrate --force
-[ -L public/storage ] || php artisan storage:link
-php artisan optimize:clear
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan queue:restart
 php artisan route:list --path=api/content/v1
 php artisan schedule:list
 php artisan content:audit --fail-on-issues
+curl -fsS https://carelolo.com/ >/dev/null
 ```
-
-The MCP process is normally built and run on the Codex operator's trusted workstation, not as a public production service. Building it on the application host is useful only as a locked dependency/build verification. Do not expose the STDIO server on a network port.
 
 Confirm that the existing queue worker and every-minute Laravel scheduler are healthy. `content:publish-scheduled` must remain scheduled every minute with overlap protection. Keep the existing `storage:link` and durable public-disk setup for managed media.
 
@@ -292,7 +288,7 @@ For an integration release problem:
 1. Revoke affected tokens immediately if requests are unsafe or unaccounted for.
 2. Disable or remove the `lolo_content` entry from the trusted project's Codex configuration and restart Codex.
 3. Put the application into maintenance mode if the API could corrupt state, then deploy the last known-good application revision using the normal release process.
-4. Run `composer install`, the production asset build, Laravel cache rebuild, worker restart, route check, and focused content tests for that known-good revision.
+4. Run the repository's `./deploy.sh` for that known-good `master` revision, then repeat the route, scheduler, content-audit, and public health checks.
 5. Do not roll back a migration destructively until its migration and data impact have been reviewed and a backup has been verified. Leaving new access/audit tables in place is safer than dropping evidence during an incident.
 
 For an incorrect article, use the CMS workflow to archive it or create a corrected working draft, obtain independent review, and republish. Do not overwrite or delete the immutable published revision. Preserve redirects and audit history. If scheduled publication is wrong, cancel or correct it through the CMS before it is due; revoking a token does not cancel an already scheduled article.
