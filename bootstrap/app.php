@@ -12,6 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Tiptap stores meaningful word-boundary whitespace inside nested text nodes.
+        // Trimming those values turns "text [link] text" into joined words in HTML.
+        $middleware->trimStrings(except: ['content_json.*.text', '*.content_json.*.text']);
+
         $middleware->alias([
             'admin.email' => \App\Http\Middleware\EnsureAdminEmail::class,
             'content.access' => \App\Http\Middleware\EnsureContentAccess::class,

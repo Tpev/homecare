@@ -133,7 +133,10 @@ class ContentController extends Controller
             $meta['media'] = $this->paginationMeta($items);
         }
 
-        return response()->json(['data' => $data, 'meta' => $meta]);
+        return response()->json(['data' => $data, 'meta' => [
+            'contract_version' => (int) config('content_api.contract_version'),
+            ...$meta,
+        ]]);
     }
 
     public function store(Request $request): JsonResponse

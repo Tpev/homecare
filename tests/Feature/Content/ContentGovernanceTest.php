@@ -4,6 +4,7 @@ namespace Tests\Feature\Content;
 
 use App\Livewire\Admin\Content\ContentSettings;
 use App\Models\ContentAuthor;
+use App\Models\ContentTag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
@@ -14,6 +15,33 @@ use Tests\TestCase;
 class ContentGovernanceTest extends TestCase
 {
     use CreatesPublishedBlogPosts, RefreshDatabase;
+
+    public function test_standard_reader_intent_topic_tags_are_installed(): void
+    {
+        $this->assertSame([
+            'aging-in-place',
+            'care-coordination',
+            'caregiver-hiring',
+            'companion-care',
+            'costs-and-payment',
+            'family-caregiving',
+            'non-medical-care-boundaries',
+            'respite-care',
+            'safety-and-screening',
+            'transportation',
+        ], ContentTag::query()->whereIn('slug', [
+            'aging-in-place',
+            'care-coordination',
+            'caregiver-hiring',
+            'companion-care',
+            'costs-and-payment',
+            'family-caregiving',
+            'non-medical-care-boundaries',
+            'respite-care',
+            'safety-and-screening',
+            'transportation',
+        ])->orderBy('slug')->pluck('slug')->all());
+    }
 
     public function test_legacy_production_admin_account_is_promoted_to_the_explicit_admin_role(): void
     {
@@ -58,6 +86,7 @@ class ContentGovernanceTest extends TestCase
         Livewire::actingAs($admin)
             ->test(ContentSettings::class)
             ->set('authorForm.name', 'LoLo Care Editorial Team')
+            ->set('authorForm.schema_type', ContentAuthor::SCHEMA_ORGANIZATION)
             ->set('authorForm.bio', 'The LoLo Care editorial team publishes carefully reviewed information about practical, non-medical help at home for local families.')
             ->set('authorForm.same_as', '')
             ->call('saveAuthor')
@@ -66,6 +95,7 @@ class ContentGovernanceTest extends TestCase
         $author = ContentAuthor::query()->where('slug', 'lolo-care-editorial-team')->firstOrFail();
 
         $this->assertSame([], $author->same_as);
+        $this->assertSame(ContentAuthor::SCHEMA_ORGANIZATION, $author->schema_type);
     }
 
     public function test_author_identity_references_are_trimmed_and_empty_lines_are_removed(): void

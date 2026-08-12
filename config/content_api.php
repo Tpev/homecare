@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'contract_version' => 2,
     'rate_limit_per_minute' => max(1, (int) env('CONTENT_API_RATE_LIMIT_PER_MINUTE', 60)),
     'authentication_failures_per_minute' => max(1, (int) env('CONTENT_API_AUTH_FAILURES_PER_MINUTE', 20)),
     'max_json_bytes' => max(1024, (int) env('CONTENT_API_MAX_JSON_BYTES', 1048576)),

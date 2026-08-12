@@ -99,6 +99,7 @@ class ContentApiTest extends TestCase
 
         $this->withToken($token)->getJson('/api/content/v1/options?include=authors,categories')
             ->assertOk()
+            ->assertJsonPath('meta.contract_version', 2)
             ->assertJsonPath('data.authors.0.id', $author->id)
             ->assertJsonPath('data.categories.0.id', $category->id);
         $this->withToken($token)->getJson('/api/content/v1/posts/999999')
@@ -211,6 +212,40 @@ class ContentApiTest extends TestCase
         }
         $this->assertSame($countBeforeFailure, BlogPost::count());
         $this->assertDatabaseHas('content_api_idempotency_keys', ['status' => ContentApiIdempotencyKey::STATUS_PROCESSING]);
+    }
+
+    public function test_structured_content_preserves_word_boundary_whitespace_through_json_middleware(): void
+    {
+        $actor = User::factory()->create(['content_role' => 'author']);
+        $token = $this->token($actor, [ContentApiToken::ABILITY_DRAFT]);
+        $document = [
+            'type' => 'doc',
+            'content' => [[
+                'type' => 'paragraph',
+                'content' => [
+                    ['type' => 'text', 'text' => 'Read the '],
+                    ['type' => 'text', 'text' => 'Raleigh guide', 'marks' => [[
+                        'type' => 'link', 'attrs' => ['href' => '/raleigh-home-care'],
+                    ]]],
+                    ['type' => 'text', 'text' => ' before booking, and '],
+                    ['type' => 'text', 'text' => 'confirm current details', 'marks' => [['type' => 'bold']]],
+                    ['type' => 'text', 'text' => '.'],
+                ],
+            ]],
+        ];
+
+        $response = $this->mutate($token, 'postJson', '/api/content/v1/posts', [
+            'title' => 'Whitespace-safe draft',
+            'content_json' => $document,
+        ], (string) Str::uuid())->assertCreated();
+
+        $post = BlogPost::query()->findOrFail((int) $response->json('data.id'));
+
+        $this->assertSame($document, $post->content_json);
+        $this->assertSame(
+            '<p>Read the <a href="/raleigh-home-care">Raleigh guide</a> before booking, and <strong>confirm current details</strong>.</p>',
+            $post->body_html,
+        );
     }
 
     public function test_managed_media_rejects_unsafe_files_and_returns_no_direct_path(): void

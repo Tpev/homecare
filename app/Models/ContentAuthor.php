@@ -9,8 +9,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ContentAuthor extends Model
 {
+    public const SCHEMA_PERSON = 'Person';
+
+    public const SCHEMA_ORGANIZATION = 'Organization';
+
+    public const SCHEMA_TYPES = [
+        self::SCHEMA_PERSON => 'Person',
+        self::SCHEMA_ORGANIZATION => 'Organization',
+    ];
+
     protected $fillable = [
-        'user_id', 'avatar_media_asset_id', 'name', 'slug', 'headline', 'bio', 'credentials',
+        'user_id', 'avatar_media_asset_id', 'name', 'schema_type', 'slug', 'headline', 'bio', 'credentials',
         'profile_url', 'same_as', 'is_active',
     ];
 

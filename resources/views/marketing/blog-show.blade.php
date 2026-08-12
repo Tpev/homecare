@@ -26,13 +26,13 @@
                 $post['featured_media']->variantUrl('small'),
             ] : [],
             'author' => $post['author'] ? [
-                '@type' => $post['author']->user_id ? 'Person' : 'Organization',
+                '@type' => $post['author']->schema_type,
                 'name' => $post['author']->name,
                 'url' => route('blog.author', $post['author']),
                 'sameAs' => $post['author']->same_as ?: [],
             ] : ['@type' => 'Organization', 'name' => 'LoLo Care', 'url' => route('landing')],
             'reviewedBy' => $post['reviewer'] ? [
-                '@type' => $post['reviewer']->user_id ? 'Person' : 'Organization',
+                '@type' => $post['reviewer']->schema_type,
                 'name' => $post['reviewer']->name,
                 'url' => route('blog.author', $post['reviewer']),
             ] : null,
@@ -91,6 +91,8 @@
                     <div>
                         <div class="public-article-content">{!! $post['body_html'] !!}</div>
 
+                        @if($relatedPosts->isNotEmpty())<nav class="mt-12 rounded-2xl border border-[#DED6CA] bg-white p-6" aria-labelledby="related-guidance-heading"><p class="hc-brand-kicker">Continue planning</p><h2 id="related-guidance-heading" class="mt-2 font-display text-2xl font-semibold">Related local guidance</h2><ul class="mt-4 space-y-3">@foreach($relatedPosts as $related)<li><a href="{{ $related['url'] }}" data-blog-event="related_click" data-placement="article_guidance" class="font-semibold text-[#0F5B52] underline decoration-[#9AC2B8] underline-offset-4 hover:decoration-[#0F5B52]">{{ $related['title'] }}</a><p class="mt-1 text-sm leading-6 text-[#526474]">{{ \Illuminate\Support\Str::limit($related['excerpt'],140) }}</p></li>@endforeach</ul></nav>@endif
+
                         @if($post['research_methodology'])<section class="mt-10 rounded-2xl border border-[#BFD7D0] bg-[#EFF8F5] p-5"><h2 class="font-display text-2xl font-semibold">Methodology</h2><p class="mt-2 leading-7 text-[#394B57]">{{ $post['research_methodology'] }}</p></section>@endif
 
                         @if($post['sources']->isNotEmpty())<section class="mt-12 border-t border-[#DED6CA] pt-8" aria-labelledby="sources-heading"><h2 id="sources-heading" class="font-display text-3xl font-semibold">Sources</h2><p class="mt-2 text-sm text-[#526474]">Sources were accessed and reviewed during the editorial process. External links open in a new tab.</p><ol class="mt-5 space-y-4">@foreach($post['sources'] as $source)<li id="source-{{ $source['uuid'] ?? $loop->iteration }}" class="rounded-xl border border-[#E5DED5] bg-white p-4"><a href="{{ $source['url'] }}" target="_blank" rel="noopener noreferrer" data-blog-event="source_click" data-placement="sources" class="font-semibold text-[#0F5B52] underline">{{ $source['title'] }}</a><p class="mt-1 text-xs text-[#6A7784]">{{ $source['publisher'] ?? 'Source' }} @if($source['published_on'] ?? null)· published {{ \Illuminate\Support\Carbon::parse($source['published_on'])->format('M j, Y') }}@endif @if($source['accessed_on'] ?? null)· accessed {{ \Illuminate\Support\Carbon::parse($source['accessed_on'])->format('M j, Y') }}@endif</p>@if($source['notes'] ?? null)<p class="mt-2 text-sm text-[#526474]">{{ $source['notes'] }}</p>@endif</li>@endforeach</ol></section>@endif
@@ -102,7 +104,6 @@
                 </div>
             </article>
 
-            @if($relatedPosts->isNotEmpty())<section class="border-t border-[#DED6CA] bg-white"><div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8"><p class="hc-brand-kicker">Continue exploring</p><h2 class="mt-2 font-display text-3xl font-semibold">Related reviewed guides</h2><div class="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-4">@foreach($relatedPosts as $related)<article class="rounded-2xl border border-[#DED6CA] p-5"><p class="text-xs text-[#6A7784]">{{ $related['published_at']?->format('M j, Y') }}</p><h3 class="mt-2 font-display text-xl font-semibold"><a href="{{ $related['url'] }}" class="hover:text-[#0F5B52]">{{ $related['title'] }}</a></h3><p class="mt-2 text-sm text-[#526474]">{{ \Illuminate\Support\Str::limit($related['excerpt'],100) }}</p></article>@endforeach</div></div></section>@endif
         </main>
     </div>
 @endsection

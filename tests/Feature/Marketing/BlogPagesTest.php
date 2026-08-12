@@ -50,6 +50,60 @@ class BlogPagesTest extends TestCase
             ->assertSee('rel="author"', false);
     }
 
+    public function test_public_only_human_author_is_emitted_as_a_schema_person(): void
+    {
+        $julie = \App\Models\ContentAuthor::query()->create([
+            'name' => 'Julie',
+            'schema_type' => \App\Models\ContentAuthor::SCHEMA_PERSON,
+            'slug' => 'julie',
+            'headline' => 'Local senior care writer',
+            'bio' => str_repeat('Julie writes practical local guidance for families arranging non-medical help at home. ', 2),
+            'is_active' => true,
+        ]);
+        $post = $this->createPublishedBlogPost(['author_id' => $julie->id])['post'];
+
+        $this->get(route('blog.show', ['blogSlug' => $post->slug]))
+            ->assertOk()
+            ->assertSee('"author":{"@type":"Person","name":"Julie"', false);
+    }
+
+    public function test_related_published_guides_are_linked_inside_the_article_context(): void
+    {
+        config()->set('content.publishing.require_independent_review', false);
+        $fixture = $this->createPublishedBlogPost();
+        $workflow = app(\App\Services\Content\BlogPostWorkflow::class);
+        $snapshot = $workflow->snapshot($fixture['post']);
+        $related = $workflow->createDraft($fixture['publisher'], 'Raleigh transportation planning guide');
+        $related = $workflow->save(
+            $related,
+            array_merge($snapshot, [
+                'title' => 'Raleigh transportation planning guide',
+                'slug' => 'raleigh-transportation-planning-guide',
+            ]),
+            $fixture['publisher'],
+            $snapshot['category_ids'],
+            $snapshot['tag_ids'],
+            $snapshot['sources'],
+        );
+        $workflow->publish($related, $fixture['publisher']);
+
+        $hub = $workflow->save(
+            $fixture['post'],
+            array_merge($snapshot, ['related_post_ids' => [$related->id]]),
+            $fixture['publisher'],
+            $snapshot['category_ids'],
+            $snapshot['tag_ids'],
+            $snapshot['sources'],
+        );
+        $workflow->publish($hub, $fixture['publisher']);
+
+        $this->get(route('blog.show', ['blogSlug' => $hub->slug]))
+            ->assertOk()
+            ->assertSee('Related local guidance')
+            ->assertSee('Raleigh transportation planning guide')
+            ->assertSee('data-placement="article_guidance"', false);
+    }
+
     public function test_sitemap_feed_llms_and_robots_expose_only_public_content(): void
     {
         $post = $this->createPublishedBlogPost()['post'];

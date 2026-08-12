@@ -11,7 +11,19 @@ class LlmsController extends Controller
 {
     public function index(PublicBlogPresenter $presenter): Response
     {
-        $posts = BlogPost::published()->with('publishedRevision')->latest('first_published_at')->limit(30)->get();
+        $pillarSlugs = [
+            'aging-at-home-raleigh-everyday-support-plan',
+            'home-care-cary-nc-flexible-daily-support',
+            'help-at-home-apex-nc-first-visit-checklist',
+            'wake-county-home-care-options-family-guide',
+            'home-care-durham-nc-non-medical-help-guide',
+        ];
+        $recentIds = BlogPost::published()->latest('first_published_at')->limit(30)->pluck('id');
+        $posts = BlogPost::published()
+            ->with('publishedRevision')
+            ->where(fn ($query) => $query->whereIn('slug', $pillarSlugs)->orWhereIn('id', $recentIds))
+            ->latest('first_published_at')
+            ->get();
         $items = $presenter->presentMany($posts);
         $lines = [
             '# LoLo Care',

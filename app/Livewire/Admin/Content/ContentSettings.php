@@ -22,7 +22,7 @@ class ContentSettings extends Component
 {
     public ?int $authorId = null;
 
-    public array $authorForm = ['name' => '', 'slug' => '', 'headline' => '', 'bio' => '', 'credentials' => '', 'user_id' => '', 'avatar_media_asset_id' => '', 'profile_url' => '', 'same_as' => '', 'is_active' => true];
+    public array $authorForm = ['name' => '', 'schema_type' => ContentAuthor::SCHEMA_PERSON, 'slug' => '', 'headline' => '', 'bio' => '', 'credentials' => '', 'user_id' => '', 'avatar_media_asset_id' => '', 'profile_url' => '', 'same_as' => '', 'is_active' => true];
 
     public ?int $categoryId = null;
 
@@ -70,6 +70,7 @@ class ContentSettings extends Component
     {
         $data = $this->validate([
             'authorForm.name' => ['required', 'string', 'max:255'],
+            'authorForm.schema_type' => ['required', Rule::in(array_keys(ContentAuthor::SCHEMA_TYPES))],
             'authorForm.slug' => ['required', 'alpha_dash', 'max:255', Rule::unique('content_authors', 'slug')->ignore($this->authorId)],
             'authorForm.headline' => ['nullable', 'string', 'max:255'],
             'authorForm.bio' => ['required', 'string', 'min:60', 'max:5000'],
@@ -109,7 +110,7 @@ class ContentSettings extends Component
         $author = ContentAuthor::query()->findOrFail($id);
         $this->authorId = $author->id;
         $this->authorForm = [
-            'name' => $author->name, 'slug' => $author->slug, 'headline' => $author->headline ?? '',
+            'name' => $author->name, 'schema_type' => $author->schema_type, 'slug' => $author->slug, 'headline' => $author->headline ?? '',
             'bio' => $author->bio ?? '', 'credentials' => $author->credentials ?? '',
             'user_id' => $author->user_id ?? '', 'same_as' => implode("\n", (array) $author->same_as),
             'avatar_media_asset_id' => $author->avatar_media_asset_id ?? '', 'profile_url' => $author->profile_url ?? '',
@@ -120,7 +121,7 @@ class ContentSettings extends Component
     public function resetAuthor(): void
     {
         $this->authorId = null;
-        $this->authorForm = ['name' => '', 'slug' => '', 'headline' => '', 'bio' => '', 'credentials' => '', 'user_id' => '', 'avatar_media_asset_id' => '', 'profile_url' => '', 'same_as' => '', 'is_active' => true];
+        $this->authorForm = ['name' => '', 'schema_type' => ContentAuthor::SCHEMA_PERSON, 'slug' => '', 'headline' => '', 'bio' => '', 'credentials' => '', 'user_id' => '', 'avatar_media_asset_id' => '', 'profile_url' => '', 'same_as' => '', 'is_active' => true];
     }
 
     public function saveCategory(): void
