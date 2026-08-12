@@ -40,7 +40,7 @@ The server exposes exactly:
 
 Get the latest article immediately before changing it and supply its `edit_version`. Every mutation sends an `Idempotency-Key`; provide an `idempotency_key` UUID and reuse it when retrying an uncertain request. The returned structured result includes the key actually used. A conflict response tells the caller to refetch and merge rather than overwrite.
 
-Run `audit_article`, fix readiness findings, and then use `submit_article_for_review`. A different authorized human must review the work in the CMS. This connector deliberately cannot review or approve an article. `schedule_article` and `publish_article` are destructive/high-impact writes and require explicit user approval.
+Run `audit_article` and fix every readiness finding before publication. When `CONTENT_REQUIRE_INDEPENDENT_REVIEW=true`, use `submit_article_for_review` and wait for a different authorized human to approve the work in the CMS. The default LoLo configuration leaves that optional workflow disabled. This connector deliberately cannot review or approve an article. `schedule_article` and `publish_article` are destructive/high-impact writes and require explicit user approval in either mode.
 
 ## Conservative Markdown
 

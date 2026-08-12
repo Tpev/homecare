@@ -9,7 +9,7 @@
                 @if ($savedAt)<span class="text-xs text-[#6A7784]">Saved {{ $savedAt }}</span>@endif
                 <a href="{{ $previewUrl }}" target="_blank" rel="noopener" class="hc-secondary-button">Preview</a>
                 <button type="button" wire:click="saveDraft" class="hc-secondary-button">Save draft</button>
-                <button type="button" wire:click="submitForReview" class="hc-primary-button">Submit for review</button>
+                @if($independentReviewRequired)<button type="button" wire:click="submitForReview" class="hc-primary-button">Submit for review</button>@endif
             </div>
         </header>
 
@@ -98,14 +98,16 @@
                             <label class="flex items-start gap-2 text-xs text-[#394B57]"><input type="checkbox" wire:model.blur="form.editorial_checklist.{{ $key }}" class="mt-0.5 rounded border-[#B9B0A5] text-[#0F5B52]"> <span>{{ $label }}</span></label>
                         @endforeach
                     </div>
+                    @if($independentReviewRequired)
                     @can('review', $post)
                         @if($post->status === \App\Models\BlogPost::STATUS_IN_REVIEW)
                         <textarea wire:model.blur="reviewNotes" rows="3" placeholder="Review notes and qualifications…" class="w-full rounded-xl border border-[#D8D1C7] px-3 py-2 text-sm"></textarea>
                         <button type="button" wire:click="approveReview" class="hc-secondary-button w-full">Approve independent review</button>
                         @endif
                     @endcan
+                    @endif
                     @can('publish', $post)
-                        <button type="button" wire:click="publishNow" wire:confirm="Publish the current reviewed revision now?" class="hc-primary-button w-full" @disabled(! $readiness['ready'])>Publish now</button>
+                        <button type="button" wire:click="publishNow" wire:confirm="Publish the current ready revision now?" class="hc-primary-button w-full" @disabled(! $readiness['ready'])>Publish now</button>
                         <div class="flex gap-2"><input type="datetime-local" wire:model="scheduleAt" class="min-h-11 min-w-0 flex-1 rounded-xl border border-[#D8D1C7] px-2 text-xs"><button type="button" wire:click="schedule" class="hc-secondary-button">Schedule</button></div>
                     @endcan
                 </section>

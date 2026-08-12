@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Content\BlogPostWorkflow;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Tests\Concerns\CreatesPublishedBlogPosts;
@@ -69,6 +70,7 @@ class BlogCmsWorkflowTest extends TestCase
 
     public function test_any_change_after_review_requires_a_fresh_independent_review(): void
     {
+        config()->set('content.publishing.require_independent_review', true);
         $fixture = $this->createPublishedBlogPost();
         $workflow = app(BlogPostWorkflow::class);
         $snapshot = $workflow->snapshot($fixture['post']);
@@ -100,6 +102,39 @@ class BlogCmsWorkflowTest extends TestCase
         $workflow->publish($changed, $fixture['publisher']);
     }
 
+    public function test_publisher_can_publish_a_ready_draft_directly_when_review_is_disabled(): void
+    {
+        config()->set('content.publishing.require_independent_review', false);
+        $fixture = $this->createPublishedBlogPost();
+        $workflow = app(BlogPostWorkflow::class);
+        $snapshot = $workflow->snapshot($fixture['post']);
+        $draft = $workflow->createDraft($fixture['publisher'], 'Direct publication draft');
+        $draft = $workflow->save(
+            $draft,
+            array_merge($snapshot, [
+                'title' => 'Direct publication draft',
+                'slug' => 'direct-publication-draft',
+                'reviewer_id' => null,
+                'review_notes' => null,
+            ]),
+            $fixture['publisher'],
+            $snapshot['category_ids'],
+            $snapshot['tag_ids'],
+            $snapshot['sources'],
+        );
+
+        $this->assertSame(BlogPost::STATUS_DRAFT, $draft->status);
+        $this->assertNull($draft->reviewed_at);
+        $this->assertTrue(app(\App\Services\Content\BlogPostReadiness::class)->inspect($draft)['ready']);
+
+        $published = $workflow->publish($draft, $fixture['publisher']);
+
+        $this->assertSame(BlogPost::STATUS_PUBLISHED, $published->status);
+        $this->assertNotNull($published->published_revision_id);
+        $this->assertNull($published->reviewed_at);
+        $this->assertSame(0, Artisan::call('content:audit', ['--fail-on-issues' => true]));
+    }
+
     public function test_admin_editor_exposes_workflow_media_sources_preview_and_revisions(): void
     {
         $fixture = $this->createPublishedBlogPost();
@@ -111,7 +146,9 @@ class BlogCmsWorkflowTest extends TestCase
             ->assertSee('Sources and citations')
             ->assertSee('Publishing gate')
             ->assertSee('Revision history')
-            ->assertSee('Managed media');
+            ->assertSee('Managed media')
+            ->assertDontSee('Submit for review')
+            ->assertDontSee('Approve independent review');
 
         Livewire::test(PostEditor::class, ['blogPost' => $fixture['post']])
             ->set('form.title', 'Updated editorial title')

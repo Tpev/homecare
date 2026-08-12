@@ -15,7 +15,7 @@ class AuditBlogContent extends Command
         {--fail-on-issues : Return a failing exit code when public or scheduled content has governance issues}
         {--check-links : Verify that published source URLs still return a successful HTTP response}';
 
-    protected $description = 'Audit public blog revisions for review freshness, authorship, sources, media, metadata, and editorial sign-off';
+    protected $description = 'Audit public blog revisions for freshness, authorship, sources, media, metadata, and editorial readiness';
 
     public function handle(BlogPostReadiness $readiness): int
     {
@@ -82,16 +82,22 @@ class AuditBlogContent extends Command
 
         $check(! $post->robots_index, 'not indexable');
         $check(! $post->first_published_at || ! $post->last_published_at, 'missing truthful publication dates');
-        $check(empty($snapshot['reviewed_at']), 'missing review date');
+        if (config('content.publishing.require_independent_review')) {
+            $check(empty($snapshot['reviewed_at']), 'missing review date');
+        }
         $check(! $post->content_review_due_at, 'missing next review date');
         $check($post->content_review_due_at?->isPast() === true, 'review overdue');
         $check(empty($snapshot['title']) || empty($snapshot['excerpt']), 'missing title or excerpt');
         $check(empty($snapshot['author_id']), 'missing public author');
-        $check(empty($snapshot['reviewer_id']), 'missing independent reviewer');
+        if (config('content.publishing.require_independent_review')) {
+            $check(empty($snapshot['reviewer_id']), 'missing independent reviewer');
+        }
         $author = ! empty($snapshot['author_id']) ? ContentAuthor::query()->find($snapshot['author_id']) : null;
         $reviewer = ! empty($snapshot['reviewer_id']) ? ContentAuthor::query()->find($snapshot['reviewer_id']) : null;
         $check(! $author || ! $author->is_active || mb_strlen(trim((string) $author->bio)) < 60, 'author profile is inactive or incomplete');
-        $check(! $reviewer || ! $reviewer->is_active || mb_strlen(trim((string) $reviewer->bio)) < 60 || trim((string) $reviewer->credentials) === '', 'reviewer profile is inactive or incomplete');
+        if (config('content.publishing.require_independent_review')) {
+            $check(! $reviewer || ! $reviewer->is_active || mb_strlen(trim((string) $reviewer->bio)) < 60 || trim((string) $reviewer->credentials) === '', 'reviewer profile is inactive or incomplete');
+        }
         $featuredMedia = ! empty($snapshot['featured_media_asset_id'])
             ? MediaAsset::query()->find($snapshot['featured_media_asset_id'])
             : null;

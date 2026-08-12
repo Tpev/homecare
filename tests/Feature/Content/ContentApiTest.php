@@ -290,6 +290,7 @@ class ContentApiTest extends TestCase
 
     public function test_submit_schedule_and_publish_enforce_edit_version_independent_review_and_readiness(): void
     {
+        config()->set('content.publishing.require_independent_review', true);
         Storage::fake('public');
         $publisher = User::factory()->create(['content_role' => 'publisher']);
         $reviewerUser = User::factory()->create(['content_role' => 'editor']);

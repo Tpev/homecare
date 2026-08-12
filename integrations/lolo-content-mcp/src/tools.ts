@@ -186,13 +186,13 @@ export const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
     annotations: writeAnnotations,
   },
   submit_article_for_review: {
-    title: 'Submit a LoLo Care article for independent review',
-    description: 'Submit an eligible draft to the existing review workflow. This tool cannot approve or review it.',
+    title: 'Submit a LoLo Care article for optional review',
+    description: 'Submit an eligible draft when the deployment has enabled independent review. This tool cannot approve or review it.',
     annotations: writeAnnotations,
   },
   schedule_article: {
     title: 'Schedule a LoLo Care article for publication',
-    description: 'HIGH-IMPACT WRITE: schedule an independently reviewed, ready article. Obtain explicit user approval first.',
+    description: 'HIGH-IMPACT WRITE: schedule a ready article. Obtain explicit user approval first.',
     annotations: {
       readOnlyHint: false,
       destructiveHint: true,
@@ -202,7 +202,7 @@ export const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
   },
   publish_article: {
     title: 'Publish a LoLo Care article',
-    description: 'HIGH-IMPACT WRITE: publish an independently reviewed, ready article now. Obtain explicit user approval first.',
+    description: 'HIGH-IMPACT WRITE: publish a ready article now. Obtain explicit user approval first.',
     annotations: {
       readOnlyHint: false,
       destructiveHint: true,

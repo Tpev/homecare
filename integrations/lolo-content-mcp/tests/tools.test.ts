@@ -61,7 +61,8 @@ describe('MCP tool contract', () => {
     expect(TOOL_DEFINITIONS.submit_article_for_review.annotations.idempotentHint).toBe(false);
     expect(SERVER_INSTRUCTIONS.slice(0, 512)).toContain('Never review or approve');
     expect(SERVER_INSTRUCTIONS).toContain('explicit approval');
-    expect(SERVER_INSTRUCTIONS).toContain('different authorized human');
+    expect(SERVER_INSTRUCTIONS).toContain('If readiness requires independent review');
+    expect(SERVER_INSTRUCTIONS).toContain('otherwise submission is optional');
   });
 
   it('rejects path traversal and non-canonical article identifiers before any request', async () => {

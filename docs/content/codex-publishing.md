@@ -1,6 +1,6 @@
 # Publishing LoLo Care content with Codex
 
-This integration lets a trusted Codex task work with LoLo Care articles through a versioned Content API and a local STDIO MCP server. It does not create a second publishing path. Every change still passes through the application's existing authorization, `BlogPostWorkflow`, `BlogPostReadiness`, `TiptapDocumentRenderer`, `MediaAssetManager`, optimistic `edit_version` locking, independent review, immutable published revisions, scheduling, redirects, and content-audit behavior.
+This integration lets a trusted Codex task work with LoLo Care articles through a versioned Content API and a local STDIO MCP server. It does not create a second publishing path. Every change still passes through the application's existing authorization, `BlogPostWorkflow`, `BlogPostReadiness`, `TiptapDocumentRenderer`, `MediaAssetManager`, optimistic `edit_version` locking, immutable published revisions, scheduling, redirects, and content-audit behavior. Independent review is an optional deployment policy controlled by `CONTENT_REQUIRE_INDEPENDENT_REVIEW`; LoLo Care currently defaults it off.
 
 Use the connector only from a trusted project and give each machine or automation its own short-lived, least-privilege token. Never place a bearer token in Git, `.env.example`, Codex configuration, a prompt, a ticket, or a log.
 
@@ -24,7 +24,7 @@ The principal trust boundaries are:
 - **Codex task to local MCP server.** Prompts and retrieved text are untrusted input. The server exposes narrow schemas and identifies every write accurately. It must not execute content as code or emit credentials.
 - **MCP server to Content API.** Use HTTPS in production. The bearer token is the machine credential and must be injected from a secret manager or operator environment. Treat the API URL as administrator-controlled configuration, not article input.
 - **Content API to CMS.** Authentication is not sufficient authorization. Every endpoint requires a named ability and the actor's existing application permission. Workflow and readiness failures remain authoritative.
-- **Draft to public content.** Drafts, preview URLs, and managed media are not public merely because Codex can access them. Publishing creates or selects an immutable public revision only after independent review and readiness succeed.
+- **Draft to public content.** Drafts, preview URLs, and managed media are not public merely because Codex can access them. Publishing creates or selects an immutable public revision only after readiness succeeds and an authorized publisher explicitly approves the high-impact operation. When independent-review policy is enabled, that review is an additional gate.
 
 ## Threat model and security properties
 
@@ -38,9 +38,9 @@ The design assumes a prompt, article body, Markdown file, source URL, or uploade
 - Validation rejects unsupported document nodes, raw HTML, unsafe or non-HTTP(S) links, unknown IDs, unmanaged file paths, excessive payloads, and media that fails the existing validation pipeline. Article images are limited to 20 MiB, 12,000 pixels per side, and 25 megapixels before decoding/variant generation. The server does not fetch arbitrary article-supplied URLs or turn source URLs into server-side requests.
 - A protected preview is a short-lived signed URL. It must not be pasted into public channels, indexed, stored as an article source, or treated as durable. Unpublished content is never returned by public blog routes.
 - API actions create `ContentApiAuditEvent` records with token, actor, article, ability, outcome, response status, request ID, and a one-way idempotency-key fingerprint. Raw bearer tokens and idempotency keys are not logged.
-- Editing, authoring, or submitting through a token does not review the article. The token actor cannot approve their own work, and the Content API deliberately exposes no review-approval endpoint or MCP tool.
+- Editing, authoring, or submitting through a token never fabricates a review record. The Content API deliberately exposes no review-approval endpoint or MCP tool. If independent-review policy is enabled, the token actor cannot approve their own work.
 
-The integration reduces risk but does not make generated content trustworthy. A human reviewer remains responsible for facts, sources, privacy, medical boundaries, brand language, and the final publication decision.
+The integration reduces risk but does not make generated content trustworthy. With the current review policy disabled, the human publisher is responsible for facts, sources, privacy, medical boundaries, brand language, readiness, and the final publication decision.
 
 ## API surface
 
@@ -56,9 +56,9 @@ All endpoints are below `/api/content/v1`, require `Authorization: Bearer <token
 | Upload managed article media and create its variants | `POST /posts/{post}/media` | `content:media` |
 | Obtain a protected, expiring preview URL | `GET /posts/{post}/preview` | `content:read` |
 | Inspect audit/readiness state | `POST /posts/{post}/audit` | `content:audit` |
-| Submit the current version for independent review | `POST /posts/{post}/submit` | `content:submit` |
-| Schedule an independently reviewed, ready version | `POST /posts/{post}/schedule` | `content:schedule` |
-| Publish an independently reviewed, ready version now | `POST /posts/{post}/publish` | `content:publish` |
+| Submit the current version when optional independent review is enabled | `POST /posts/{post}/submit` | `content:submit` |
+| Schedule a ready version | `POST /posts/{post}/schedule` | `content:schedule` |
+| Publish a ready version now | `POST /posts/{post}/publish` | `content:publish` |
 
 Write requests should include an opaque, unique `Idempotency-Key` header. Update, submit, schedule, and publish inputs include the article's current `edit_version`. Reuse a key only when retrying the same uncertain request; after a validation or conflict response, correct/refetch and use a new key. Read the returned `request_id` when troubleshooting; use it to find the audit event without exposing a secret.
 
@@ -78,11 +78,11 @@ The local server exposes these one-to-one workflow tools:
 | `upload_article_media` | Upload validated managed media and generate variants | Write, non-destructive |
 | `preview_article` | Obtain a protected short-lived preview URL without persisting it | Read-only |
 | `audit_article` | Run and attribute a readiness/content audit | Write, non-destructive |
-| `submit_article_for_review` | Submit the current version for independent human review | Write, non-destructive |
-| `schedule_article` | Schedule reviewed content for public release | Write, destructive/high impact, idempotent |
-| `publish_article` | Publish reviewed content immediately | Write, destructive/high impact, idempotent |
+| `submit_article_for_review` | Submit the current version when optional independent review is enabled | Write, non-destructive |
+| `schedule_article` | Schedule ready content for public release | Write, destructive/high impact, idempotent |
+| `publish_article` | Publish ready content immediately | Write, destructive/high impact, idempotent |
 
-There is intentionally no `approve_review` tool. A human editor or publisher who is independent from the author, last editor, and submitter approves review in the existing CMS. API and MCP annotations help Codex make approval decisions, but server-side abilities, policies, review separation, readiness checks, and idempotency remain the security controls.
+There is intentionally no `approve_review` tool. When `CONTENT_REQUIRE_INDEPENDENT_REVIEW=true`, a human editor or publisher who is independent from the author, last editor, and submitter approves review in the existing CMS. With the default `false` setting, submission and approval are skipped; abilities, readiness checks, explicit publish approval, immutable revisions, idempotency, and audit attribution remain active controls.
 
 All connector tools are open-world because they call the configured Content API over the network. `schedule_article` and `publish_article` additionally advertise `readOnlyHint = false`, `destructiveHint = true`, and `idempotentHint = true`. Treat annotations as approval-routing metadata, not as a replacement for server enforcement.
 
@@ -190,16 +190,18 @@ Restart Codex after changing the environment or configuration. Use `/mcp` in Cod
 
 ## Editorial workflow
 
+The default LoLo Care workflow uses `CONTENT_REQUIRE_INDEPENDENT_REVIEW=false`. Set it to `true` and rebuild the Laravel config cache to restore the separate submit-and-review steps.
+
 1. **Discover.** Use `list_content_options` and `list_articles` to select a real author profile, taxonomy, existing media, and non-duplicative topic.
 2. **Draft.** Use `create_article_draft`. Supply a unique idempotency key and retain the returned article ID and `edit_version`.
 3. **Develop.** Use `update_article` for metadata, structured content or supported Markdown, taxonomy, related posts, and stable sources. Use `upload_article_media` for files; reference only returned managed-media IDs.
 4. **Inspect.** Use `preview_article`, then `audit_article`. Resolve every blocking readiness issue and assess warnings. Verify citations against their sources outside the CMS when accuracy matters.
-5. **Submit.** Use `submit_article_for_review` with the current `edit_version`. This freezes the handoff point but does not approve it.
-6. **Review outside the API.** A different qualified editor or publisher signs into the CMS, reviews the content and source evidence, records substantive notes and visible credentials, and approves it. The reviewer cannot be the author, last editor, submitter, or token actor when those identities conflict.
-7. **Publish deliberately.** Fetch the article again. Confirm the approved revision and readiness. After an explicit Codex approval prompt, call either `schedule_article` with an unambiguous ISO-8601 timestamp and timezone or `publish_article` for immediate release. Never include both intentions in one request.
+5. **Decide deliberately.** A human publisher previews the article and accepts responsibility for its sources, claims, scope, brand language, and current readiness result.
+6. **Publish deliberately.** Fetch the article again and confirm its latest readiness. After an explicit Codex approval prompt, call either `schedule_article` with an unambiguous ISO-8601 timestamp and timezone or `publish_article` for immediate release. Never include both intentions in one request.
+7. **Optional review mode.** When `CONTENT_REQUIRE_INDEPENDENT_REVIEW=true`, use `submit_article_for_review` after the audit and have a different qualified editor or publisher approve it in the CMS before publication.
 8. **Verify.** Fetch the article, check its workflow state and public URL, then confirm the immutable revision and actor/audit trail as described below.
 
-Any edit after approval may invalidate the review and return the article to the required workflow state. Never work around that by reusing an earlier response, changing tables manually, or repeatedly retrying a conflict.
+Every edit changes the working version and readiness must be checked again. Never work around the workflow by reusing an earlier response, changing tables manually, or repeatedly retrying a conflict.
 
 ## Example Codex prompts
 
@@ -211,21 +213,23 @@ Updating safely:
 
 > Fetch article 123 and summarize its current edit version and readiness. Add the two supplied sources and revise the FAQ using supported structured content. If the edit version conflicts or a Markdown structure is unsupported, stop and show the actionable error instead of replacing content.
 
-Independent-review handoff:
+Optional independent-review handoff when that deployment policy is enabled:
 
 > Audit article 123. If it has no blocking issues, submit its current version for independent review and report the article ID, edit version, submitter actor, and remaining human steps. Do not approve review; there is no API tool for that.
 
-Publishing after human approval:
+Publishing after readiness and human publisher approval:
 
-> Fetch article 123 and verify that an independent reviewer approved the current ready version. Show the exact title, slug, reviewer, readiness result, and intended public URL. Then ask for approval before publishing it now. Do nothing if the review or edit version is stale.
+> Fetch article 123 and verify its current readiness. Show the exact title, slug, readiness result, and intended public URL. Then ask for explicit approval before publishing it now. Do nothing if the edit version is stale.
 
-Scheduling after human approval:
+Scheduling after human publisher approval:
 
-> Fetch article 123 and verify its current independent review and readiness. Propose scheduling it for 2026-08-20 at 09:00 Europe/Paris, show the equivalent ISO-8601 timestamp and article details, and wait for the schedule tool approval. Do not publish immediately.
+> Fetch article 123 and verify its current readiness. Propose scheduling it for 2026-08-20 at 09:00 Europe/Paris, show the equivalent ISO-8601 timestamp and article details, and wait for the schedule tool approval. Do not publish immediately.
 
 ## Production setup and verification
 
 Production is the live `https://carelolo.com` site. A push to `master` does not replace the deployment procedure. An administrator must take or verify the normal backup, confirm the release commit, and run the repository's reviewed `deploy.sh` from the application host. Do not reconstruct its steps manually and do not let Codex invoke it unattended.
+
+`CONTENT_REQUIRE_INDEPENDENT_REVIEW=false` is the current default. It removes review from readiness and lets an authorized publisher publish a ready draft directly. Set it to `true` to restore the independent-review gate; after changing it, run the normal deployment so `config:cache` is rebuilt.
 
 ```bash
 ssh <production-host>
@@ -272,7 +276,7 @@ Issue production tokens only after the release and endpoint checks pass. Start w
 ### Verify actor attribution and the audit trail
 
 1. Run `php artisan content:token:list --active --actor=<actor-email>` and verify the token name, abilities, expiry, last use, safe prefix, and issuer.
-2. In Content administration, open the article and inspect its created/updated/submitted/published actor fields, independent reviewer, review notes, revisions, and current/published version.
+2. In Content administration, open the article and inspect its created/updated/published actor fields, revisions, and current/published version. If optional review mode was used, also inspect its submitter, reviewer, and review notes.
 3. Correlate the API response's `request_id` with `content_api_audit_events`. Verify `content_api_token_id`, `actor_user_id`, `blog_post_id`, `action`, `ability`, `outcome`, `response_status`, and `occurred_at`. The event must not contain the bearer token, request body, raw idempotency key, or protected preview signature.
 4. Inspect `blog_post_revisions` for the matching `actor_user_id`, change summary, monotonically increasing revision number, and immutable published snapshot. A published snapshot should match what the public route renders even if a new working draft is started later.
 5. Run `php artisan content:audit --fail-on-issues`, then fetch the public article, canonical URL, structured data, media variants, redirects after a slug change, and expected cache behavior.
@@ -291,7 +295,7 @@ For an integration release problem:
 4. Run the repository's `./deploy.sh` for that known-good `master` revision, then repeat the route, scheduler, content-audit, and public health checks.
 5. Do not roll back a migration destructively until its migration and data impact have been reviewed and a backup has been verified. Leaving new access/audit tables in place is safer than dropping evidence during an incident.
 
-For an incorrect article, use the CMS workflow to archive it or create a corrected working draft, obtain independent review, and republish. Do not overwrite or delete the immutable published revision. Preserve redirects and audit history. If scheduled publication is wrong, cancel or correct it through the CMS before it is due; revoking a token does not cancel an already scheduled article.
+For an incorrect article, use the CMS workflow to archive it or create a corrected working draft, re-run readiness, and republish deliberately. Do not overwrite or delete the immutable published revision. Preserve redirects and audit history. If scheduled publication is wrong, cancel or correct it through the CMS before it is due; revoking a token does not cancel an already scheduled article.
 
 ## Incident response
 

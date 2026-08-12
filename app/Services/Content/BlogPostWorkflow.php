@@ -276,8 +276,16 @@ class BlogPostWorkflow
             if ($scheduledExecution && ($post->status !== BlogPost::STATUS_SCHEDULED || ! $post->scheduled_for?->lte(now()))) {
                 throw ValidationException::withMessages(['publish' => 'This article is no longer due for scheduled publication.']);
             }
-            if (! in_array($post->status, [BlogPost::STATUS_IN_REVIEW, BlogPost::STATUS_SCHEDULED, BlogPost::STATUS_PUBLISHED], true)) {
-                throw ValidationException::withMessages(['publish' => 'Submit and approve the working draft before publication.']);
+            $publishableStatuses = [BlogPost::STATUS_IN_REVIEW, BlogPost::STATUS_SCHEDULED, BlogPost::STATUS_PUBLISHED];
+            if (! config('content.publishing.require_independent_review')) {
+                $publishableStatuses[] = BlogPost::STATUS_DRAFT;
+            }
+            if (! in_array($post->status, $publishableStatuses, true)) {
+                throw ValidationException::withMessages([
+                    'publish' => config('content.publishing.require_independent_review')
+                        ? 'Submit and approve the working draft before publication.'
+                        : 'The working draft is not in a publishable state.',
+                ]);
             }
 
             $inspection = $this->readiness->inspect($post);

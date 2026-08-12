@@ -51,7 +51,7 @@ class LlmsController extends Controller
             '- [Safety policy]('.route('legal.show', ['slug' => 'safety-policy']).'): Platform scope, safety expectations, and emergency boundaries.',
             '- [XML sitemap]('.route('sitemap.xml').'): Canonical public and indexable URLs with truthful modification dates.',
             '',
-            'Only published, human-reviewed articles are listed here. Drafts and archived articles are excluded.',
+            'Only published articles that pass the CMS readiness checks are listed here. Drafts and archived articles are excluded.',
         ]);
 
         return response(implode("\n", $lines)."\n", 200, [

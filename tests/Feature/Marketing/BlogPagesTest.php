@@ -11,7 +11,7 @@ class BlogPagesTest extends TestCase
 {
     use CreatesPublishedBlogPosts, RefreshDatabase;
 
-    public function test_only_reviewed_published_revisions_appear_on_public_blog(): void
+    public function test_only_published_revisions_appear_on_public_blog(): void
     {
         $published = $this->createPublishedBlogPost()['post'];
         BlogPost::query()->create([
@@ -61,7 +61,7 @@ class BlogPagesTest extends TestCase
             ->assertSee($post->publishedRevision->created_at->toAtomString(), false);
 
         $this->get(route('blog.feed'))->assertOk()->assertSee($post->title)->assertHeader('Content-Type', 'application/atom+xml; charset=UTF-8');
-        $this->get(route('llms.txt'))->assertOk()->assertSee($post->title)->assertSee('Only published, human-reviewed articles');
+        $this->get(route('llms.txt'))->assertOk()->assertSee($post->title)->assertSee('Only published articles that pass the CMS readiness checks');
         $this->get(route('robots.txt'))->assertOk()->assertSee('User-agent: OAI-SearchBot')->assertSee('User-agent: ChatGPT-User')->assertSee('Disallow: /admin/');
     }
 

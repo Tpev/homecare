@@ -168,6 +168,7 @@ class PostEditor extends Component
             'revisions' => $this->post->revisions()->with('actor')->limit(30)->get(),
             'readiness' => $readiness->inspect($this->post),
             'checklist' => BlogPostReadiness::checklist(),
+            'independentReviewRequired' => (bool) config('content.publishing.require_independent_review'),
             'previewUrl' => URL::temporarySignedRoute('admin.content.posts.preview', now()->addHours(2), ['blogPost' => $this->post->id]),
         ]);
     }

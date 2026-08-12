@@ -42,15 +42,17 @@ class BlogPostReadiness
         } elseif (! $post->author->is_active || mb_strlen(trim((string) $post->author->bio)) < 60) {
             $issues[] = 'The public author needs an active profile with a substantive bio.';
         }
-        if (! $post->reviewer || ! $post->reviewed_at) {
-            $issues[] = 'Complete an independent editorial review.';
-        } elseif ((int) $post->reviewer_id === (int) $post->author_id) {
-            $issues[] = 'The author and independent reviewer must be different people.';
-        } elseif (! $post->reviewer->is_active
-            || mb_strlen(trim((string) $post->reviewer->bio)) < 60
-            || trim((string) $post->reviewer->credentials) === ''
-        ) {
-            $issues[] = 'The reviewer needs an active profile, substantive bio, and visible review credentials.';
+        if (config('content.publishing.require_independent_review')) {
+            if (! $post->reviewer || ! $post->reviewed_at) {
+                $issues[] = 'Complete an independent editorial review.';
+            } elseif ((int) $post->reviewer_id === (int) $post->author_id) {
+                $issues[] = 'The author and independent reviewer must be different people.';
+            } elseif (! $post->reviewer->is_active
+                || mb_strlen(trim((string) $post->reviewer->bio)) < 60
+                || trim((string) $post->reviewer->credentials) === ''
+            ) {
+                $issues[] = 'The reviewer needs an active profile, substantive bio, and visible review credentials.';
+            }
         }
         if (! $post->featuredMedia) {
             $issues[] = 'Choose a managed featured image.';
@@ -117,7 +119,9 @@ class BlogPostReadiness
         }
 
         if (Str::contains(Str::lower((string) $post->plain_text), ['hipaa', 'medical', 'background check', 'licensed', 'guarantee']) && $post->sources->count() < 2) {
-            $warnings[] = 'High-trust claims should include multiple authoritative sources and an appropriately qualified reviewer.';
+            $warnings[] = config('content.publishing.require_independent_review')
+                ? 'High-trust claims should include multiple authoritative sources and an appropriately qualified reviewer.'
+                : 'High-trust claims should include multiple authoritative sources and careful publisher verification.';
         }
 
         return [
