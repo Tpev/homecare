@@ -87,7 +87,10 @@ class ContentSettings extends Component
         $data['user_id'] = $data['user_id'] ?: null;
         $data['avatar_media_asset_id'] = $data['avatar_media_asset_id'] ?: null;
         $data['profile_url'] = $data['profile_url'] ?: null;
-        $sameAs = collect(preg_split('/\r?\n/', (string) $data['same_as']))->map->trim()->filter()->values();
+        $sameAs = collect(preg_split('/\r?\n/', (string) $data['same_as']))
+            ->map(fn (string $url): string => trim($url))
+            ->filter()
+            ->values();
         if ($sameAs->contains(fn (string $url): bool => filter_var($url, FILTER_VALIDATE_URL) === false
             || ! in_array(strtolower((string) parse_url($url, PHP_URL_SCHEME)), ['http', 'https'], true))) {
             throw ValidationException::withMessages(['authorForm.same_as' => 'Every identity reference must be a complete HTTP or HTTPS URL.']);
