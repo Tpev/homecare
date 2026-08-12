@@ -26,7 +26,7 @@
             <div class="mt-7 grid gap-3 sm:grid-cols-2">
                 <a href="{{ route('landing') }}" class="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#D7CEC2] px-4 font-semibold text-[#526474]">LoLo Care home</a>
                 @auth
-                    <form method="POST" action="{{ route('logout') }}">
+                    <form method="POST" action="{{ route('logout') }}" data-clear-support-chat>
                         @csrf
                         <button type="submit" class="min-h-11 w-full rounded-xl bg-[#173F35] px-4 font-semibold text-white">Sign out</button>
                     </form>

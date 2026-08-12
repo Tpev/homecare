@@ -1,4 +1,5 @@
 import './bootstrap';
+import './support-chat';
 
 document.addEventListener('alpine:init', () => {
     window.Alpine.data('contentEditor', (params) => ({

@@ -9,6 +9,7 @@ use App\Models\SupportTicketMessage;
 use App\Models\User;
 use App\Services\Booking\BookingCorrectionService;
 use App\Services\Booking\CareBookingTimeCorrectionService;
+use App\Services\Support\SupportChatService;
 use App\Services\Support\SupportTicketMessagingService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -121,6 +122,7 @@ class SupportTicketShow extends Component
         $ticket->forceFill([
             'status' => $validated['status'],
             'assigned_admin_id' => $ticket->assigned_admin_id ?: auth()->id(),
+            'claimed_at' => $ticket->claimed_at ?: now(),
             'resolved_at' => match ($validated['status']) {
                 SupportTicket::STATUS_RESOLVED => $ticket->resolved_at ?: now(),
                 SupportTicket::STATUS_CLOSED => $ticket->resolved_at,
@@ -130,6 +132,18 @@ class SupportTicketShow extends Component
 
         $this->syncControlsFromTicket();
         session()->flash('status', 'Ticket status updated.');
+    }
+
+    public function claimConversation(SupportChatService $chat): void
+    {
+        try {
+            $chat->claim($this->ticket, auth()->user());
+            $this->syncControlsFromTicket();
+            $this->resetValidation('claim');
+            session()->flash('status', 'Conversation claimed.');
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            $this->addError('claim', collect($exception->errors())->flatten()->first());
+        }
     }
 
     public function updateAssignment(): void
@@ -149,6 +163,7 @@ class SupportTicketShow extends Component
             'assigned_admin_id' => filled($validated['assignedAdminId'])
                 ? (int) $validated['assignedAdminId']
                 : null,
+            'claimed_at' => filled($validated['assignedAdminId']) ? now() : null,
         ])->save();
 
         $this->syncControlsFromTicket();
@@ -234,6 +249,8 @@ class SupportTicketShow extends Component
                 'opener:id,name,email,phone,role',
                 'counterparty:id,name,email,phone,role',
                 'assignedAdmin:id,name,email,role',
+                'familyAccount.owner:id,name,email',
+                'familyAccount.activeMemberships:id,family_account_id,user_id,access_level,status',
                 'careRequest:id,title,status',
                 'careBooking',
                 'careBooking.payment',

@@ -1,6 +1,6 @@
 import { expect, Page } from '@playwright/test';
 
-type AccountKey = 'family' | 'familyMember' | 'familyEligible' | 'familyRemoved' | 'caregiverReady' | 'caregiverNew' | 'caregiverMarketplace' | 'admin';
+type AccountKey = 'family' | 'familyMember' | 'familyEligible' | 'familyRemoved' | 'caregiverReady' | 'caregiverMobileVisual' | 'caregiverNew' | 'caregiverMarketplace' | 'admin';
 
 const accounts: Record<AccountKey, { email: string; password: string; name: string }> = {
     family: {
@@ -27,6 +27,11 @@ const accounts: Record<AccountKey, { email: string; password: string; name: stri
         email: 'caregiver.ready.e2e@example.com',
         password: 'password',
         name: 'E2E Ready Caregiver',
+    },
+    caregiverMobileVisual: {
+        email: 'caregiver.mobile-visual.e2e@example.com',
+        password: 'password',
+        name: 'E2E Mobile Visual Caregiver',
     },
     caregiverNew: {
         email: 'caregiver.new.e2e@example.com',

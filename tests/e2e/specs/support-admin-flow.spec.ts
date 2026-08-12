@@ -41,7 +41,7 @@ test.describe('Support + Admin Ticket Flow', () => {
 
         await loginAs(page, 'caregiverReady');
         await page.goto(`/care-requests/${requestId}/apply`);
-        await page.getByRole('button', { name: 'Support' }).click();
+        await page.getByRole('button', { name: 'Support', exact: true }).click();
         await page.locator('summary', { hasText: 'Support ticket' }).click();
         await page.getByLabel('Subject').fill(ticketSubject);
         await page.getByLabel('Describe issue').fill('Need clarification about expected arrival window for upcoming repeat visits.');

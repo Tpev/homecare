@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\FamilyAccounts\FamilyAccountContext;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +14,10 @@ use Illuminate\Support\Facades\Schema;
 class SupportTicket extends Model
 {
     use HasFactory;
+
+    public const SOURCE_SUPPORT_CENTER = 'support_center';
+
+    public const SOURCE_CHAT_WIDGET = 'chat_widget';
 
     public const STATUS_OPEN = 'open';
 
@@ -25,6 +30,9 @@ class SupportTicket extends Model
     protected $fillable = [
         'family_account_id',
         'family_visibility',
+        'source',
+        'origin_route',
+        'origin_path',
         'opener_user_id',
         'counterparty_user_id',
         'care_request_id',
@@ -34,9 +42,11 @@ class SupportTicket extends Model
         'priority',
         'subject',
         'description',
+        'initial_client_message_id',
         'admin_note',
         'resolved_at',
         'assigned_admin_id',
+        'claimed_at',
         'last_public_message_at',
         'last_public_message_sender_id',
         'opener_last_read_at',
@@ -47,6 +57,7 @@ class SupportTicket extends Model
     {
         return [
             'resolved_at' => 'datetime',
+            'claimed_at' => 'datetime',
             'last_public_message_at' => 'datetime',
             'opener_last_read_at' => 'datetime',
             'admin_last_read_at' => 'datetime',
@@ -71,7 +82,8 @@ class SupportTicket extends Model
             if (! $ticket->family_account_id && $ticket->opener_user_id) {
                 $opener = User::query()->find($ticket->opener_user_id);
                 if ($opener?->role === 'family' && ! $opener->isAdministrator()) {
-                    $ticket->family_account_id = app(FamilyAccountContext::class)->account($opener)->id;
+                    $ticket->family_account_id = app(FamilyAccountContext::class)
+                        ->membershipFor($opener)?->family_account_id;
                 }
             }
 
@@ -155,6 +167,65 @@ class SupportTicket extends Model
         return $this->hasMany(FamilySupportTicketRead::class);
     }
 
+    public function activities(): HasMany
+    {
+        return $this->hasMany(SupportTicketActivity::class)->latest('created_at');
+    }
+
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        if ($user->isAdministrator()) {
+            return $query;
+        }
+
+        if ($user->role !== 'family') {
+            return $query->where('opener_user_id', $user->id);
+        }
+
+        $context = app(FamilyAccountContext::class);
+        $membership = $context->membershipFor($user, false);
+
+        return $query->where(function (Builder $visible) use ($user, $membership): void {
+            $visible->where(function (Builder $legacy) use ($user): void {
+                $legacy->whereNull('family_account_id')
+                    ->where('opener_user_id', $user->id);
+            });
+
+            if (! $membership) {
+                return;
+            }
+
+            $visible->orWhere(function (Builder $accountTickets) use ($membership): void {
+                $accountTickets->where('family_account_id', $membership->family_account_id)
+                    ->where(function (Builder $visibility) use ($membership): void {
+                        $visibility->where('family_visibility', 'shared_care');
+                        if ($membership->isOwner()) {
+                            $visibility->orWhere('family_visibility', 'owner_only');
+                        }
+                    });
+            });
+        });
+    }
+
+    public function scopeUnreadForAdmin(Builder $query): Builder
+    {
+        return $query
+            ->whereNotNull('last_public_message_at')
+            ->where(function (Builder $unread): void {
+                $unread->whereNull('admin_last_read_at')
+                    ->orWhereColumn('last_public_message_at', '>', 'admin_last_read_at');
+            })
+            ->where(function (Builder $sender): void {
+                $sender->whereNull('last_public_message_sender_id')
+                    ->orWhereHas('lastPublicMessageSender', fn (Builder $user): Builder => $user->where('role', '!=', 'admin'));
+            });
+    }
+
+    public function isChatWidgetConversation(): bool
+    {
+        return $this->source === self::SOURCE_CHAT_WIDGET;
+    }
+
     public function isUnreadFor(User $user): bool
     {
         if ($user->role !== 'family' || ! $this->family_account_id) {
@@ -198,9 +269,20 @@ class SupportTicket extends Model
 
     public function isUnreadForAdmin(): bool
     {
-        return $this->last_public_message_at
-            && (int) $this->last_public_message_sender_id === (int) $this->opener_user_id
-            && (! $this->admin_last_read_at || $this->last_public_message_at->gt($this->admin_last_read_at));
+        if (! $this->last_public_message_at
+            || ($this->admin_last_read_at && ! $this->last_public_message_at->gt($this->admin_last_read_at))) {
+            return false;
+        }
+
+        if (! $this->last_public_message_sender_id) {
+            return true;
+        }
+
+        $sender = $this->relationLoaded('lastPublicMessageSender')
+            ? $this->lastPublicMessageSender
+            : $this->lastPublicMessageSender()->first(['id', 'role']);
+
+        return ! $sender?->isAdministrator();
     }
 
     public function markReadForOpener(): void

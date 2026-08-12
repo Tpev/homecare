@@ -24,6 +24,7 @@
         $correctionPreview = $booking ? $this->correctionPreview : null;
         $bookingCorrections = $booking ? $this->bookingCorrections : collect();
         $timeCorrection = $ticket->timeCorrection;
+        $familyMembership = $ticket->familyAccount?->activeMemberships?->firstWhere('user_id', $ticket->opener_user_id);
     @endphp
 
     <div class="mx-auto max-w-7xl space-y-5">
@@ -42,11 +43,56 @@
                 <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-slate-950">{{ $ticket->subject }}</h1>
             </div>
             <div class="flex flex-wrap gap-2">
+                @if ($ticket->isChatWidgetConversation())
+                    <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-800">Chat</span>
+                @endif
                 <x-badge :text="strtoupper($ticket->status)" color="blue" />
                 <x-badge :text="strtoupper($ticket->priority)" color="slate" />
                 <x-badge :text="strtoupper($ticket->category)" color="slate" />
             </div>
         </header>
+
+        @if ($ticket->isChatWidgetConversation())
+            <section class="rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm" aria-label="Chat customer context">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">Support chat context</p>
+                        <div class="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                            <h2 class="text-xl font-bold text-slate-950">{{ $ticket->opener?->name ?: 'Former user' }}</h2>
+                            <span class="text-sm font-semibold text-slate-600">{{ str((string) ($ticket->opener?->role ?: 'user'))->headline() }}</span>
+                            @if ($familyMembership)
+                                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{{ $familyMembership->isOwner() ? 'Family account owner' : 'Family member' }}</span>
+                            @endif
+                        </div>
+                        <div class="mt-2 flex flex-col gap-1 text-sm text-slate-600 sm:flex-row sm:flex-wrap sm:gap-x-4">
+                            @if ($ticket->opener?->email)<a href="mailto:{{ $ticket->opener->email }}" class="break-all font-medium text-emerald-700 underline">{{ $ticket->opener->email }}</a>@endif
+                            @if ($ticket->opener?->phone)<a href="tel:{{ $ticket->opener->phone }}" class="font-medium text-emerald-700 underline">{{ $ticket->opener->phone }}</a>@endif
+                            @if ($ticket->opener)
+                                <a href="{{ route('admin.users.show', $ticket->opener) }}" wire:navigate class="font-medium text-emerald-700 underline">Open user profile</a>
+                            @endif
+                        </div>
+                        <p class="mt-3 break-all text-sm text-slate-600">
+                            Started from
+                            <span class="font-semibold text-slate-900">{{ $ticket->origin_route ? str($ticket->origin_route)->replace('.', ' ')->headline() : 'an application page' }}</span>
+                            @if ($ticket->origin_path) <span class="text-slate-500">({{ $ticket->origin_path }})</span> @endif
+                        </p>
+                        <p class="mt-1 text-xs text-slate-500">User presence is not inferred from sign-in status. This MVP updates through five-second polling.</p>
+                    </div>
+
+                    <div class="w-full rounded-xl border border-slate-200 bg-slate-50 p-4 lg:w-72">
+                        <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Conversation owner</p>
+                        <p class="mt-1 font-semibold text-slate-950">{{ $ticket->assignedAdmin?->name ?: 'Unassigned' }}</p>
+                        @if ($ticket->claimed_at)
+                            <p class="mt-1 text-xs text-slate-500">Claimed {{ $ticket->claimed_at->diffForHumans() }}</p>
+                        @endif
+                        @if (! $ticket->assigned_admin_id)
+                            <button type="button" wire:click="claimConversation" class="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-emerald-700 px-4 text-sm font-bold text-white hover:bg-emerald-800">Claim conversation</button>
+                            @error('claim') <p class="mt-2 text-sm font-medium text-amber-800">{{ $message }}</p> @enderror
+                        @endif
+                    </div>
+                </div>
+            </section>
+        @endif
 
         @if ($booking)
             <section class="overflow-hidden rounded-2xl border border-indigo-200 bg-white shadow-sm">

@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 const sqlitePath = path.join(process.cwd(), 'database', 'playwright.sqlite');
 
@@ -33,6 +33,22 @@ export default defineConfig({
         screenshot: 'only-on-failure',
         video: 'retain-on-failure',
     },
+    projects: [
+        {
+            name: 'chromium',
+            use: { ...devices['Desktop Chrome'] },
+        },
+        {
+            name: 'support-mobile-chromium',
+            testMatch: /support-chat-responsive\.spec\.ts/,
+            use: { ...devices['Pixel 7'] },
+        },
+        {
+            name: 'support-mobile-webkit',
+            testMatch: /support-chat-responsive\.spec\.ts/,
+            use: { ...devices['iPhone 13'] },
+        },
+    ],
     webServer: {
         command: 'php -r "if (!is_dir(\'database\')) { mkdir(\'database\', 0777, true); } if (!file_exists(\'database/playwright.sqlite\')) { touch(\'database/playwright.sqlite\'); }" && php artisan migrate:fresh --force && php artisan homecare:e2e-seed && php artisan homecare:verify-family-accounts && php artisan serve --host=127.0.0.1 --port=8010',
         url: 'http://127.0.0.1:8010',

@@ -14,6 +14,7 @@ use App\Models\MediaAsset;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Observers\CareRequestObserver;
+use App\Observers\SupportTicketAuditObserver;
 use App\Observers\SupportTicketObserver;
 use App\Policies\BlogPostPolicy;
 use App\Policies\CareRecipientProfilePolicy;
@@ -82,6 +83,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(SupportTicket::class, SupportTicketPolicy::class);
         Gate::policy(SupportTicketMessage::class, SupportTicketMessagePolicy::class);
         CareRequest::observe(CareRequestObserver::class);
+        SupportTicket::observe(SupportTicketAuditObserver::class);
         SupportTicket::observe(SupportTicketObserver::class);
 
         Event::listen(Registered::class, SendOpsUserRegisteredAlert::class);

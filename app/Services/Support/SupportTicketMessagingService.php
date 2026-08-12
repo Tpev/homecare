@@ -6,16 +6,19 @@ use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Models\User;
 use App\Services\Notifications\MarketplaceNotificationService;
+use App\Services\Notifications\NotificationChannels;
 use App\Support\MarketplaceEvent;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class SupportTicketMessagingService
 {
     public function __construct(
         private readonly MarketplaceNotificationService $notifications,
+        private readonly SupportMessageRateLimiter $rateLimiter,
     ) {}
 
     public function sendUserReply(
@@ -36,7 +39,19 @@ class SupportTicketMessagingService
             throw new AuthorizationException;
         }
 
-        [$message, $created, $assignedAdmin] = DB::transaction(function () use ($ticket, $user, $body, $clientMessageId): array {
+        $this->ensureClientMessageId($clientMessageId);
+        $existing = SupportTicketMessage::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->where('client_message_id', $clientMessageId)
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $this->rateLimiter->ensureAllowed($user);
+
+        [$message, $created, $recipients] = DB::transaction(function () use ($ticket, $user, $body, $clientMessageId): array {
             $lockedTicket = SupportTicket::query()->lockForUpdate()->findOrFail($ticket->id);
             $this->ensureTicketIsOpenForReplies($lockedTicket);
 
@@ -70,19 +85,26 @@ class SupportTicketMessagingService
 
             $lockedTicket->forceFill($updates)->save();
 
-            return [$message, true, $lockedTicket->assignedAdmin()->first()];
+            $recipients = $lockedTicket->assignedAdmin()->get();
+            if ($recipients->isEmpty()) {
+                $recipients = User::query()->where('role', 'admin')->get();
+            }
+
+            return [$message, true, $recipients];
         });
 
-        if ($created && $assignedAdmin) {
+        if ($created && $recipients->isNotEmpty()) {
+            $isChat = $ticket->source === SupportTicket::SOURCE_CHAT_WIDGET;
             $this->notifications->notify(
-                recipients: $assignedAdmin,
+                recipients: $recipients,
                 eventKey: MarketplaceEvent::SUPPORT_TICKET_REPLY,
-                title: 'New support ticket reply',
-                body: $user->name.' replied to support request #'.$ticket->id.'. Open the conversation to review the full message.',
+                title: $isChat ? 'New support chat message' : 'New support ticket reply',
+                body: $user->name.' replied to support request #'.$ticket->id.'. Open the conversation to review it.',
                 url: route('admin.support.tickets.show', $ticket->id),
                 payload: ['support_ticket_id' => $ticket->id, 'support_ticket_message_id' => $message->id],
                 subject: $ticket,
                 dedupeKey: 'support-ticket-'.$ticket->id.'-message-'.$message->id,
+                channelOverrides: [NotificationChannels::EMAIL => false],
             );
         }
 
@@ -104,6 +126,22 @@ class SupportTicketMessagingService
         if (! $admin->isAdministrator()) {
             throw new AuthorizationException;
         }
+
+        if (! Gate::forUser($admin)->allows('replyAsAdmin', $ticket)) {
+            throw new AuthorizationException;
+        }
+
+        $this->ensureClientMessageId($clientMessageId);
+        $existing = SupportTicketMessage::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->where('client_message_id', $clientMessageId)
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $this->rateLimiter->ensureAllowed($admin);
 
         [$message, $created, $opener] = DB::transaction(function () use ($ticket, $admin, $body, $clientMessageId): array {
             $lockedTicket = SupportTicket::query()->lockForUpdate()->findOrFail($ticket->id);
@@ -134,6 +172,7 @@ class SupportTicketMessagingService
 
             if (! $lockedTicket->assigned_admin_id) {
                 $updates['assigned_admin_id'] = $admin->id;
+                $updates['claimed_at'] = $message->created_at;
             }
 
             if ($lockedTicket->status === SupportTicket::STATUS_OPEN) {
@@ -173,6 +212,22 @@ class SupportTicketMessagingService
             throw new AuthorizationException;
         }
 
+        if (! Gate::forUser($admin)->allows('addInternalNote', $ticket)) {
+            throw new AuthorizationException;
+        }
+
+        $this->ensureClientMessageId($clientMessageId);
+        $existing = SupportTicketMessage::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->where('client_message_id', $clientMessageId)
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $this->rateLimiter->ensureAllowed($admin);
+
         return DB::transaction(function () use ($ticket, $admin, $body, $clientMessageId): SupportTicketMessage {
             $lockedTicket = SupportTicket::query()->lockForUpdate()->findOrFail($ticket->id);
             $this->ensureTicketIsOpenForReplies($lockedTicket);
@@ -211,5 +266,14 @@ class SupportTicketMessagingService
         }
 
         return $body;
+    }
+
+    private function ensureClientMessageId(string $clientMessageId): void
+    {
+        if (! Str::isUuid($clientMessageId)) {
+            throw ValidationException::withMessages([
+                'clientMessageId' => 'The message could not be sent. Refresh and try again.',
+            ]);
+        }
     }
 }

@@ -78,6 +78,13 @@
             </footer>
         </div>
 
+        @if (auth()->check() && in_array(auth()->user()?->role, ['family', 'caregiver'], true))
+            <livewire:support.chat-widget
+                :origin-route="request()->route()?->getName()"
+                :origin-path="request()->getPathInfo()"
+            />
+        @endif
+
         @livewireScripts
 
         @if ($shouldTrackFamilySignupConversion)

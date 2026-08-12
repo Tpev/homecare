@@ -17,6 +17,7 @@ use App\Models\FamilyAccountMember;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\SupportTicket;
+use App\Models\SupportTicketMessage;
 use App\Models\User;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Caregiver\CaregiverBackgroundService;
@@ -105,10 +106,10 @@ class SeedE2eFixtures extends Command
             ]);
         }
 
-        User::query()->create([
+        $admin = User::query()->create([
             'name' => 'E2E Admin',
             'email' => 'test@test.com',
-            'role' => 'family',
+            'role' => 'admin',
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
         ]);
@@ -121,6 +122,19 @@ class SeedE2eFixtures extends Command
             'city' => 'Raleigh',
             'state' => 'NC',
             'date_of_birth' => now()->subYears(30)->toDateString(),
+            'onboarding_completed_at' => now(),
+            'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+        ]);
+
+        User::query()->create([
+            'name' => 'E2E Mobile Visual Caregiver',
+            'email' => 'caregiver.mobile-visual.e2e@example.com',
+            'role' => 'caregiver',
+            'phone' => '+1 919 555 0107',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'date_of_birth' => now()->subYears(29)->toDateString(),
             'onboarding_completed_at' => now(),
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
@@ -240,6 +254,35 @@ class SeedE2eFixtures extends Command
         User::query()
             ->where(fn ($query) => $query->where('email', 'like', '%.e2e@example.com')->orWhere('email', 'test@test.com'))
             ->update(['email_verified_at' => now()]);
+
+        $historyTicket = SupportTicket::withoutEvents(fn () => SupportTicket::query()->create([
+            'opener_user_id' => $marketplaceCaregiver->id,
+            'source' => SupportTicket::SOURCE_CHAT_WIDGET,
+            'origin_route' => 'caregiver.work-inbox.index',
+            'origin_path' => '/caregiver/work-inbox',
+            'category' => 'general',
+            'status' => SupportTicket::STATUS_RESOLVED,
+            'priority' => 'normal',
+            'subject' => 'Chat: E2E long support conversation',
+            'description' => 'This seeded conversation verifies long mobile support history.',
+            'resolved_at' => now()->subMinute(),
+            'last_public_message_at' => now()->subMinute(),
+            'last_public_message_sender_id' => $marketplaceCaregiver->id,
+            'opener_last_read_at' => now(),
+        ]));
+        foreach (range(1, 42) as $index) {
+            SupportTicketMessage::query()->create([
+                'support_ticket_id' => $historyTicket->id,
+                'sender_user_id' => $index % 2 === 0 ? $marketplaceCaregiver->id : $admin->id,
+                'kind' => SupportTicketMessage::KIND_PUBLIC,
+                'body' => $index === 1
+                    ? 'E2E oldest mobile support message'
+                    : 'E2E mobile support history message '.$index.' with wrapping text for responsive verification.',
+                'client_message_id' => (string) Str::uuid(),
+                'created_at' => now()->subMinutes(44 - $index),
+                'updated_at' => now()->subMinutes(44 - $index),
+            ]);
+        }
 
         $this->line('E2E fixtures ready');
         $this->table(['Account', 'Email', 'Password'], [

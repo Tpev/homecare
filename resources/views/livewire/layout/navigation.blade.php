@@ -95,11 +95,7 @@ new class extends Component
 
             if ($isAdmin) {
                 $adminSupportUnreadQuery = $supportUnreadQuery
-                    ->whereColumn('last_public_message_sender_id', 'opener_user_id')
-                    ->where(function ($query) {
-                        $query->whereNull('admin_last_read_at')
-                            ->orWhereColumn('last_public_message_at', '>', 'admin_last_read_at');
-                    });
+                    ->unreadForAdmin();
 
                 $supportUnread = (clone $adminSupportUnreadQuery)->count();
                 $supportUnreadTickets = $adminSupportUnreadQuery
@@ -715,7 +711,7 @@ new class extends Component
                         @endif
                     @endif
 
-                    <button wire:click="logout" class="w-full rounded-xl px-3 py-2 text-left text-sm text-rose-700 hover:bg-rose-50">Log Out</button>
+                    <button wire:click="logout" data-clear-support-chat class="w-full rounded-xl px-3 py-2 text-left text-sm text-rose-700 hover:bg-rose-50">Log Out</button>
                 </div>
             @else
                 <div class="flex items-center gap-2">
@@ -835,7 +831,7 @@ new class extends Component
                             </x-responsive-nav-link>
                         @endif
                     @endif
-                    <button wire:click="logout" class="w-full text-start">
+                    <button wire:click="logout" data-clear-support-chat class="w-full text-start">
                         <x-responsive-nav-link>{{ __('Log Out') }}</x-responsive-nav-link>
                     </button>
                 </div>
