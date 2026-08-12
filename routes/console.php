@@ -19,3 +19,6 @@ Schedule::command('homecare:process-continuous-coverage')->hourly()->withoutOver
 Schedule::command('content:publish-scheduled')->everyMinute()->withoutOverlapping();
 Schedule::command('content:audit')->weeklyOn(1, '08:00')->withoutOverlapping()->appendOutputTo(storage_path('logs/content-audit.log'));
 Schedule::command('content:prune-events')->dailyAt('03:20')->withoutOverlapping();
+Schedule::command('model:prune', ['--model' => [\App\Models\ContentApiIdempotencyKey::class]])
+    ->dailyAt('03:30')
+    ->withoutOverlapping();

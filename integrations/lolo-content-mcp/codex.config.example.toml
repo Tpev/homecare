@@ -1,0 +1,16 @@
+# Example only: copy into this trusted project's .codex/config.toml.
+# Export both variables in the environment that starts Codex. Never put a token here.
+[mcp_servers.lolo_content]
+command = "node"
+args = ["integrations/lolo-content-mcp/dist/index.js"]
+cwd = "."
+env_vars = ["LOLO_CONTENT_API_URL", "LOLO_CONTENT_API_TOKEN"]
+default_tools_approval_mode = "writes"
+startup_timeout_sec = 15
+tool_timeout_sec = 90
+
+[mcp_servers.lolo_content.tools.schedule_article]
+approval_mode = "prompt"
+
+[mcp_servers.lolo_content.tools.publish_article]
+approval_mode = "prompt"

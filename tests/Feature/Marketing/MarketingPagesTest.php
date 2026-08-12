@@ -61,13 +61,13 @@ class MarketingPagesTest extends TestCase
         $this->get(route('landing'))
             ->assertOk()
             ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-WJG3HG6EG6', false)
-            ->assertDontSee('livewire/livewire.js', false)
+            ->assertDontSee('livewire/livewire', false)
             ->assertDontSee('/build/assets/app-', false)
             ->assertDontSee('tallstackui', false);
 
         $this->get(route('landing.family'))
             ->assertOk()
-            ->assertSee('livewire/livewire.js', false)
+            ->assertSee('livewire/livewire', false)
             ->assertSee('/build/assets/app-', false);
     }
 

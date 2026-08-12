@@ -24,6 +24,10 @@ class MediaAssetManager
         'large' => 1600,
     ];
 
+    private const MAX_IMAGE_DIMENSION = 12000;
+
+    private const MAX_IMAGE_PIXELS = 25000000;
+
     public function storeUpload(UploadedFile $file, User $actor, array $metadata = []): MediaAsset
     {
         if (! $file->isValid()) {
@@ -60,6 +64,11 @@ class MediaAssetManager
         $dimensions = @getimagesizefromstring($binary);
         if (! is_array($dimensions) || ($dimensions[0] ?? 0) < 1 || ($dimensions[1] ?? 0) < 1) {
             throw ValidationException::withMessages(['media' => 'The image content could not be decoded.']);
+        }
+        $width = (int) $dimensions[0];
+        $height = (int) $dimensions[1];
+        if ($width > self::MAX_IMAGE_DIMENSION || $height > self::MAX_IMAGE_DIMENSION || $width * $height > self::MAX_IMAGE_PIXELS) {
+            throw ValidationException::withMessages(['media' => 'Images must be at most 12,000 pixels on either side and 25 megapixels in total.']);
         }
 
         $extension = match ($mime) {

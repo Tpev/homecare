@@ -160,12 +160,13 @@ class BlogPostWorkflow
         });
     }
 
-    public function submitForReview(BlogPost $post, User $actor): BlogPost
+    public function submitForReview(BlogPost $post, User $actor, ?int $expectedEditVersion = null): BlogPost
     {
         $this->assertCanEdit($post, $actor);
 
-        return DB::transaction(function () use ($post, $actor): BlogPost {
+        return DB::transaction(function () use ($post, $actor, $expectedEditVersion): BlogPost {
             $post = BlogPost::query()->lockForUpdate()->findOrFail($post->id);
+            $this->assertEditVersion($post, $expectedEditVersion);
             $inspection = $this->readiness->inspect($post);
             $reviewIssue = 'Complete an independent editorial review.';
             $blocking = array_values(array_filter($inspection['issues'], fn (string $issue): bool => $issue !== $reviewIssue));
@@ -232,7 +233,7 @@ class BlogPostWorkflow
         });
     }
 
-    public function publish(BlogPost $post, User $publisher, mixed $when = null): BlogPost
+    public function publish(BlogPost $post, User $publisher, mixed $when = null, ?int $expectedEditVersion = null): BlogPost
     {
         if (! $publisher->canPublishContent()) {
             throw ValidationException::withMessages(['authorization' => 'A publisher account is required to publish content.']);
@@ -240,8 +241,9 @@ class BlogPostWorkflow
 
         $publishAt = $when ? now()->parse($when) : now();
         if ($publishAt->isFuture()) {
-            return DB::transaction(function () use ($post, $publisher, $publishAt): BlogPost {
+            return DB::transaction(function () use ($post, $publisher, $publishAt, $expectedEditVersion): BlogPost {
                 $post = BlogPost::query()->lockForUpdate()->findOrFail($post->id);
+                $this->assertEditVersion($post, $expectedEditVersion);
                 $inspection = $this->readiness->inspect($post);
                 if (! $inspection['ready']) {
                     throw ValidationException::withMessages(['publish' => $inspection['issues']]);
@@ -259,17 +261,18 @@ class BlogPostWorkflow
             });
         }
 
-        return $this->publishNow($post, $publisher);
+        return $this->publishNow($post, $publisher, false, $expectedEditVersion);
     }
 
-    public function publishNow(BlogPost $post, User $publisher, bool $scheduledExecution = false): BlogPost
+    public function publishNow(BlogPost $post, User $publisher, bool $scheduledExecution = false, ?int $expectedEditVersion = null): BlogPost
     {
         if (! $publisher->canPublishContent()) {
             throw ValidationException::withMessages(['authorization' => 'A publisher account is required to publish content.']);
         }
 
-        return DB::transaction(function () use ($post, $publisher, $scheduledExecution): BlogPost {
+        return DB::transaction(function () use ($post, $publisher, $scheduledExecution, $expectedEditVersion): BlogPost {
             $post = BlogPost::query()->lockForUpdate()->findOrFail($post->id);
+            $this->assertEditVersion($post, $expectedEditVersion);
             if ($scheduledExecution && ($post->status !== BlogPost::STATUS_SCHEDULED || ! $post->scheduled_for?->lte(now()))) {
                 throw ValidationException::withMessages(['publish' => 'This article is no longer due for scheduled publication.']);
             }
@@ -513,6 +516,15 @@ class BlogPostWorkflow
             || ($actor->content_role === 'author' && (int) $post->created_by_user_id === (int) $actor->id);
         if (! $canEdit) {
             throw ValidationException::withMessages(['authorization' => 'You cannot edit this article.']);
+        }
+    }
+
+    private function assertEditVersion(BlogPost $post, ?int $expectedEditVersion): void
+    {
+        if ($expectedEditVersion !== null && $post->edit_version !== $expectedEditVersion) {
+            throw ValidationException::withMessages([
+                'conflict' => 'This article changed in another editor. Reload before continuing so newer work is not overwritten.',
+            ]);
         }
     }
 
