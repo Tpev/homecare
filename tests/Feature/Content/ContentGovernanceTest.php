@@ -14,6 +14,20 @@ class ContentGovernanceTest extends TestCase
 {
     use CreatesPublishedBlogPosts, RefreshDatabase;
 
+    public function test_legacy_production_admin_account_is_promoted_to_the_explicit_admin_role(): void
+    {
+        $legacyAdmin = User::factory()->create([
+            'email' => 'test@test.com',
+            'role' => 'family',
+        ]);
+
+        $migration = require database_path('migrations/2026_08_12_090300_promote_legacy_admin_account.php');
+        $migration->up();
+
+        $this->assertSame('admin', $legacyAdmin->fresh()->role);
+        $this->assertTrue($legacyAdmin->fresh()->isAdministrator());
+    }
+
     public function test_only_administrators_assign_content_roles_and_team_members_get_content_navigation(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
