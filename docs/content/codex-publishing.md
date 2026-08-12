@@ -1,5 +1,7 @@
 # Publishing LoLo Care content with Codex
 
+For the short, repeatable operator workflow, start with [codex-blog-quickstart.md](codex-blog-quickstart.md). This document is the detailed architecture, security, deployment, and incident-response reference.
+
 This integration lets a trusted Codex task work with LoLo Care articles through a versioned Content API and a local STDIO MCP server. It does not create a second publishing path. Every change still passes through the application's existing authorization, `BlogPostWorkflow`, `BlogPostReadiness`, `TiptapDocumentRenderer`, `MediaAssetManager`, optimistic `edit_version` locking, immutable published revisions, scheduling, redirects, and content-audit behavior. Independent review is an optional deployment policy controlled by `CONTENT_REQUIRE_INDEPENDENT_REVIEW`; LoLo Care currently defaults it off.
 
 Use the connector only from a trusted project and give each machine or automation its own short-lived, least-privilege token. Never place a bearer token in Git, `.env.example`, Codex configuration, a prompt, a ticket, or a log.

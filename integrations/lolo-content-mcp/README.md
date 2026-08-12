@@ -2,6 +2,8 @@
 
 A local STDIO MCP server that gives Codex scoped access to the versioned LoLo Care Content API. It never reads Laravel's database or storage directly and has no review/approval tool.
 
+For the repeatable operator workflow from token issuance through live verification, use [the Codex blog quickstart](../../docs/content/codex-blog-quickstart.md). The larger [publishing runbook](../../docs/content/codex-publishing.md) covers architecture, security, deployment, rollback, and incident response.
+
 ## Requirements and build
 
 - Node.js 20 or newer

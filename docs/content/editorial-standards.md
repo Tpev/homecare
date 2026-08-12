@@ -2,7 +2,7 @@
 
 ## Publication rule
 
-An article may be public only after a named author completes the working draft, a different qualified person reviews it, and a publisher approves the immutable live revision. The CMS enforces this separation. Draft edits never silently change the public revision.
+An article may be public only after a named author completes the working draft, the readiness gate passes, and an authorized publisher deliberately approves the immutable live revision. When `CONTENT_REQUIRE_INDEPENDENT_REVIEW=true`, a different qualified person must also review the article before publication. The policy currently defaults to `false`. Draft edits never silently change the public revision.
 
 ## Evidence and trust
 
@@ -24,8 +24,8 @@ For surveys, interviews, case studies, and proprietary data, complete the method
 - Maintain one canonical URL, a truthful title and description, visible author/reviewer/date information, source links, and original imagery with rights and alt text.
 - Refresh or archive stale content. Do not change dates merely to make an article appear new.
 
-## Required review checklist
+## Required editorial checklist
 
-The publishing gate requires originality, fact verification, source quality, medical boundaries, privacy/product claims, brand/competitor checks, and accessibility. Reviewers record useful notes; publishers set the next review date automatically.
+The publishing gate requires originality, fact verification, source quality, medical boundaries, privacy/product claims, brand/competitor checks, and accessibility. When independent-review policy is enabled, reviewers record useful notes and visible credentials. Publishers set the next review date automatically in either mode.
 
 Run `php artisan content:audit --fail-on-issues` in release checks. The scheduler also records a weekly audit in `storage/logs/content-audit.log`.

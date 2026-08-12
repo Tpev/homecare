@@ -12,15 +12,15 @@
 
 ## Roles and workflow
 
-An administrator assigns Author, Editor, or Publisher from Content -> Authors & Taxonomy. Authors create and revise. Editors independently review. Publishers schedule, publish, archive, merge taxonomy, and maintain public author profiles. Only administrators can change content-team permissions.
+An administrator assigns Author, Editor, or Publisher from Content -> Authors & Taxonomy. Authors create and revise. Editors can independently review when that deployment policy is enabled. Publishers schedule, publish, archive, merge taxonomy, and maintain public author profiles. Only administrators can change content-team permissions.
 
-The CMS requires submission before review and prevents the author, last editor, or submitter from approving that review. Review notes and reviewer credentials are required. The publish gate is checked again when a scheduled article becomes due. A stale browser tab cannot overwrite a newer edit, and autosave does not create permanent revision spam.
+Independent review is controlled by `CONTENT_REQUIRE_INDEPENDENT_REVIEW` and currently defaults to `false`. When enabled, the CMS requires submission before review, prevents the author, last editor, or submitter from approving it, and requires review notes and reviewer credentials. With the policy disabled, an authorized publisher may publish a ready draft directly. In both modes, the publish gate is checked again when a scheduled article becomes due, a stale browser tab cannot overwrite a newer edit, and autosave does not create permanent revision spam.
 
 Draft changes never replace an immutable public revision. Republishing creates the public revision, updates the truthful modification date, creates redirects for changed slugs, clears public caches, and queues IndexNow submission.
 
 ## Legacy migration
 
-Use `content:import-docx` only for article directories. New imports are quarantined as noindex drafts. A forced re-import of an existing public article updates only its working draft and preserves its live revision, public slug, and indexability until it is reviewed and republished.
+Use `content:import-docx` only for article directories. New imports are quarantined as noindex drafts. A forced re-import of an existing public article updates only its working draft and preserves its live revision, public slug, and indexability until it is republished and, when the deployment policy requires it, independently reviewed.
 
 ## Analytics and privacy
 
@@ -33,7 +33,7 @@ The dashboard reports daily visitors, engaged reads, CTA activity, attributed re
 - Verify the domain in Google Search Console and Bing Webmaster Tools, then submit `/sitemap.xml`.
 - Keep `/robots.txt`, `/llms.txt`, `/sitemap.xml`, and `/blog/feed.xml` reachable without authentication or bot challenges.
 - If a CDN or WAF is used, explicitly allow verified search crawlers needed by the business, including OpenAI's search crawler, rather than trusting user-agent text alone.
-- Keep author identity references, reviewer credentials, citations, canonical URLs, structured data, and article dates accurate. Do not create special AI-only page content.
+- Keep author identity references, citations, canonical URLs, structured data, article dates, and any reviewer credentials shown when review mode is enabled accurate. Do not create special AI-only page content.
 - Use the optional `php artisan content:audit --check-links` check periodically; it performs outbound requests and is intentionally not part of the minute-by-minute scheduler.
 
 ## Routine checks
