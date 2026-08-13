@@ -151,7 +151,11 @@ foreach (InitialKnowledgeBaseCatalog::APPROVED_STABLE_IDS as $stableId) {
                 'synthetic_only' => true,
             ],
             'available_navigation_targets' => $caseType === 'positive' ? [$entry['route_target_ids'][0]] : [],
-            'available_tools' => $stableId === 'KB-SUP-001' || $stableId === 'KB-SUP-002' ? ['SUP-HANDOFF-001'] : [],
+            'available_tools' => $outcome === 'handoff'
+                || $stableId === 'KB-SUP-001'
+                || $stableId === 'KB-SUP-002'
+                    ? ['SUP-HANDOFF-001']
+                    : [],
             'expected' => [
                 'outcome' => $outcome,
                 'navigation_target' => $caseType === 'positive' && ! str_starts_with($stableId, 'KB-SUP-')

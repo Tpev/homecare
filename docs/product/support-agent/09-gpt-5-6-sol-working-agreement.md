@@ -34,7 +34,9 @@ Read, in order:
 14. [Production deployment, verification, and next-phase tracker](17-production-deployment-and-next-phase-tracker.md) for the live status, open defects, next gate, and work ordering
 15. [Initial governed KB and evaluation pack](18-initial-kb-and-evaluation-pack.md) when authoring knowledge, evaluations, or the first role-aware answer/navigation runtime
 16. [Phase 1 content and evaluation build plan](19-phase-1-content-and-evaluation-build-plan.md) when implementing the approved initial content/evaluation milestone
-17. The applicable domain product specifications in the [source register](registries/source-register.md)
+17. [Phase 1A governed content build record](20-phase-1a-content-build-record.md) when changing the initial Draft pack or its production evidence
+18. [Phase 1B offline model evaluation adapter and execution record](21-phase-1b-offline-model-evaluation.md) when running, changing, or interpreting model selection evidence
+19. The applicable domain product specifications in the [source register](registries/source-register.md)
 
 Then inspect current code, tests, migrations, routes, policies, and feature configuration. Documentation describes intent; repository inspection establishes the current baseline.
 

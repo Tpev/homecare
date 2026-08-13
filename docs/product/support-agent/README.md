@@ -41,6 +41,7 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 19. [Initial governed KB and evaluation pack](18-initial-kb-and-evaluation-pack.md)
 20. [Phase 1 content and evaluation build plan](19-phase-1-content-and-evaluation-build-plan.md)
 21. [Phase 1A governed content build record](20-phase-1a-content-build-record.md)
+22. [Phase 1B offline model evaluation adapter and execution record](21-phase-1b-offline-model-evaluation.md)
 
 Then consult the live registries:
 

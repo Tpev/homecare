@@ -9,6 +9,15 @@ return [
     'retention_execution_enabled' => (bool) env('AI_SUPPORT_RETENTION_EXECUTION_ENABLED', false),
     'shadow_mutations_allowed' => false,
 
+    /*
+    | This switch controls a local, synthetic-only evaluation adapter. It is
+    | intentionally independent from the customer runtime and defaults off.
+    */
+    'offline_evaluation_enabled' => filter_var(
+        env('AI_SUPPORT_OFFLINE_EVALUATION_ENABLED', false),
+        FILTER_VALIDATE_BOOL,
+    ),
+
     'policy_version' => 'ai-support-eligibility-v1',
     'context_contract_version' => 'support-context-v1',
     'event_contract_version' => 'support-event-v1',

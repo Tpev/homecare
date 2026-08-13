@@ -80,4 +80,11 @@ return [
         'key' => env('MAPTILER_KEY'),
     ],
 
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'base_url' => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
+        'timeout_seconds' => (int) env('OPENAI_TIMEOUT_SECONDS', 60),
+        'ca_bundle' => env('OPENAI_CA_BUNDLE'),
+    ],
+
 ];

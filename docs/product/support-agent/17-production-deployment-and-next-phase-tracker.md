@@ -86,22 +86,22 @@ The exact evidence, artifact checksums, and two Draft-only editorial findings ar
 | `SCOPE-AIS-001` | First Family answer topics and semantic navigation targets | Accepted August 13, 2026 through `DEC-032` | Family KB and evaluation authoring unblocked |
 | `SCOPE-AIS-002` | First Caregiver answer topics and semantic navigation targets | Accepted August 13, 2026 through `DEC-033` | Caregiver KB and evaluation authoring unblocked |
 | `KB-PACK-AIS-001` | Twelve-entry initial KB inventory and five-case-per-entry evaluation structure | 12 validated production Drafts verified; 60 linked cases present | Nothing is published or user-visible |
-| `CONTENT-AIS-001` | Correct two grammatical strings found in `KB-SUP-002` and `KB-FAM-004`, then revalidate repository and production Drafts | Open; Draft-only, no live-user impact | Final content polish and candidate-model evaluation |
+| `CONTENT-AIS-001` | Correct two grammatical strings found in `KB-SUP-002` and `KB-FAM-004`, then revalidate repository and production Drafts | Closed August 14, 2026; both production Drafts and repository content revalidated | None |
 | `KB-SUP-001` | Human transfer without repetition | Validated production Draft verified | Not published |
-| `KB-SUP-002` | Emergencies and non-medical support | Validated production Draft verified; one grammatical correction pending | Not published |
+| `KB-SUP-002` | Emergencies and non-medical support | Corrected and revalidated production Draft verified | Not published |
 | `KB-SUP-003` | English-only intelligent support | Validated production Draft verified | Not published |
 | `KB-FAM-001` | Family dashboard orientation | Validated production Draft verified | Not published |
 | `KB-FAM-002` | Existing care requests and status | Validated production Draft verified | Not published |
 | `KB-FAM-003` | Open the normal new-request form | Validated production Draft verified | Not published |
-| `KB-FAM-004` | Family Account roles and access | Validated production Draft verified; one grammatical correction pending | Not published |
+| `KB-FAM-004` | Family Account roles and access | Corrected and revalidated production Draft verified | Not published |
 | `KB-FAM-005` | Family account/profile orientation | Validated production Draft verified | Not published |
 | `KB-CGV-001` | Caregiver dashboard and onboarding orientation | Validated production Draft verified | Not published |
 | `KB-CGV-002` | Caregiver work inbox orientation | Validated production Draft verified | Not published |
 | `KB-CGV-003` | Caregiver shift orientation | Validated production Draft verified | Not published |
 | `KB-CGV-004` | Caregiver account/profile orientation | Validated production Draft verified | Not published |
-| `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Pending scope/corpus | Offline runtime baseline |
-| `KB-AIS-001` | Author, source, and validate the initial governed KB set | Production Draft import and browser audit complete; two editorial corrections pending | Grounded-answer evaluation and later shadow readiness; publication remains separately prohibited |
-| `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | 60 linked fixtures plus 10 critical cross-entry regressions implemented; deterministic validation passes | Measured candidate-model runs remain pending |
+| `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Three-candidate matrix and gates implemented; credit and all three endpoint smoke checks pass; full repeated run pending | Offline runtime baseline |
+| `KB-AIS-001` | Author, source, and validate the initial governed KB set | Production Draft import, browser audit, and both editorial corrections complete | Grounded-answer evaluation and later shadow readiness; publication remains separately prohibited |
+| `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Corpus, disabled-by-default adapter, deterministic graders, compact reporting, isolation tests, and three-model provider smoke implemented/passed | Complete repeated candidate runs remain pending |
 | `DEC-014` | Close suppressed/diagnostic TTLs and downstream/provider/backup extinction rules | Pending later discussion | Any production-conversation shadowing |
 | `DEC-015` | Approve staffed-hours ownership and truthful human-response promise/SLO | Pending later discussion | Any user-visible pilot |
 
@@ -111,33 +111,32 @@ The exact evidence, artifact checksums, and two Draft-only editorial findings ar
 | --- | --- | --- |
 | Phase 0 | Deployed; operational extinction tail open | Runtime retired and primary data destroyed; backup/derived extinction still tracked |
 | Phase 1 foundation | Deployed | Admin controls, exact-user grants, governed KB workspace, contracts, handoff, evidence, and retention foundations exist |
-| Phase 1 content/evaluation | Production Drafts verified; editorial cleanup and measured runtime evaluation next | 12 validated Drafts, 60 linked fixtures, 10 cross-entry critical regressions, and fail-closed controls verified; nothing is published |
+| Phase 1 content/evaluation | Production Drafts and editorial cleanup verified; offline adapter and provider smoke complete; full measured runtime evaluation pending | 12 validated Drafts, 70 total fixtures, three-candidate 834-call plan, deterministic gates, and fail-closed controls verified; nothing is published |
 | Phase 2 shadow | Blocked | Requires Phase 1 evidence plus `DEC-014`; no real conversations may go to a model yet |
 | Phase 3 grounded answers | Blocked | Requires shadow evidence, `DEC-015`, named grants, usability, monitoring, and release approval |
 | Phases 4-6 | Not started | Navigation, drafting, and confirmed execution remain independently gated |
 
 ## Agreed next-work order
 
-1. Close `CONTENT-AIS-001`: correct the two Draft-only grammatical strings in the repository manifest and production Admin Drafts, rerun validation, and record the new checksum.
-2. Define the least-cost candidate model/configuration matrix and a disabled-by-default offline adapter for the approved synthetic corpus.
-3. Run every candidate on the identical 70-case corpus, including at least five runs for every model-dependent critical case, and retain hard failures, quality, latency, tokens, and estimated cost.
-4. Continue tracking `OPS-EXT-001` without repeating primary destruction; it remains independent from local/offline content authoring.
-5. Accept `DEC-012` only from measured candidate results. Keep every production model and user-visible control disabled.
-6. Complete model-dependent Phase 1 evaluation evidence and a release-readiness record without authorizing shadow or user visibility.
-7. Decide `DEC-014` before any production-data shadow processing.
-8. Run a controlled, non-user-visible shadow phase only after its explicit release gate.
-9. Decide `DEC-015` and complete older-adult usability/support readiness before any named-user visible pilot.
+1. Run every candidate on the identical 70-case corpus, including five runs for each of the 52 critical cases: 278 calls per candidate and 834 total.
+2. Retain and review all hard failures, pass-at-all-runs, quality, p50/p95 latency, retries, tokens, and estimated cost.
+3. Accept `DEC-012` only if at least one current candidate passes every declared gate; select the lowest-cost passing configuration. Keep every production model and user-visible control disabled.
+4. Continue tracking `OPS-EXT-001` without repeating primary destruction; it remains independent from local/offline evaluation.
+5. Complete model-dependent Phase 1 evaluation evidence and a release-readiness record without authorizing shadow or user visibility.
+6. Decide `DEC-014` before any production-data shadow processing.
+7. Run a controlled, non-user-visible shadow phase only after its explicit release gate.
+8. Decide `DEC-015` and complete older-adult usability/support readiness before any named-user visible pilot.
 
 The later care-request draft, confirmation lifetime, and notification/operations packages remain in the readiness ledger and do not block the next offline answer/navigation work.
 
 ## Next implementation milestone
 
-Complete **Phase 1B — measured offline runtime selection** after the two Draft-only wording corrections.
+Complete **Phase 1B — measured offline runtime selection** using the provider-ready adapter.
 
 Required outcome:
 
-- Correct and revalidate the two editorial findings without changing lifecycle state.
-- Build a provider/model adapter that remains unavailable to production runtime paths.
+- Preserve the completed and revalidated editorial findings without changing lifecycle state.
+- Use the implemented provider/model adapter that remains unavailable to production runtime paths.
 - Compare least-cost candidate configurations on the identical approved synthetic corpus.
 - Reject any configuration with one critical hard failure.
 - Record quality, latency, tokens, estimated cost, exact versions/checksums, and the recommended baseline under `DEC-012`.

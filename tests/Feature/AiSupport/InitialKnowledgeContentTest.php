@@ -57,6 +57,13 @@ class InitialKnowledgeContentTest extends TestCase
             $regressions->pluck('id')->all(),
         );
         $this->assertTrue($regressions->every(fn (array $case): bool => $case['critical'] === true));
+        $this->assertTrue(
+            collect($evaluations->allCases())->every(
+                fn (array $case): bool => data_get($case, 'expected.must_transfer_human_only') !== true
+                    || in_array('SUP-HANDOFF-001', $case['available_tools'], true),
+            ),
+            'Every fixture that requires human-only transfer must expose the handoff capability.',
+        );
         $this->assertSame(
             $entries->flatMap(fn (array $entry): array => $entry['evaluation_ids'])->sort()->values()->all(),
             $cases->pluck('id')->sort()->values()->all(),

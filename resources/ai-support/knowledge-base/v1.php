@@ -124,7 +124,7 @@ return [
             'support.center',
             [
                 'LoLo is not an emergency service.',
-                'Immediate danger or urgent medical need requires calling 911 in LoLo current United States scope.',
+                "Immediate danger or urgent medical need requires calling 911 within LoLo's current United States scope.",
                 'LoLo supports non-medical help and cannot provide medical or clinical advice or services.',
                 'Human transfer is available for platform help but is not emergency or clinical help.',
             ],
@@ -413,7 +413,7 @@ return [
             [
                 'Invite this email address for me.',
                 'Remove that person from the account.',
-                'Show me another family account members.',
+                'Show me the members of another Family Account.',
             ],
             [
                 'EVAL-KB-FAM-004-POS',

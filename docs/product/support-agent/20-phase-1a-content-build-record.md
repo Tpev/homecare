@@ -1,6 +1,6 @@
 # Phase 1A Governed Content Build Record
 
-Status: Production deployment and Draft import verified; two Draft-only editorial corrections pending; nothing published
+Status: Production deployment, Draft import, and two Draft-only editorial corrections verified; nothing published
 
 Recorded: August 14, 2026
 
@@ -31,8 +31,8 @@ This implementation does **not** publish knowledge, call a model, enable an AI c
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `resources/ai-support/knowledge-base/v1.php` | `9167B8F80E374D7EE12DCB6C260816C02F2FA0DBFBF911757C0D94AA2E8BC82B` |
-| `resources/ai-support/evaluations/v1.php` | `B1D08BA5AEFF53FA3D4C04D8ADBE9F54C9EAB7802DB1743A8A298A2CC0860500` |
+| `resources/ai-support/knowledge-base/v1.php` | `DC12F6A5517A58D4CB85747E6E30DB791B50352F4996DF341F3590D55EFD59B2` |
+| `resources/ai-support/evaluations/v1.php` | `0AD0C792359AF4D448863F5470F56CB5FCF2F2E4F17DCA4533A0AED761427A5A` |
 
 Any content change produces a new checksum and must be reviewed against the accepted definitions and evaluation expectations before import or model evaluation.
 
@@ -67,7 +67,7 @@ The importer uses the existing governed KB workflow and Admin audit service.
 
 Command: `php artisan test tests/Feature/AiSupport`
 
-Result: **40 tests passed, 367 assertions, 0 failures**.
+Current result after Phase 1B adapter integration: **45 tests passed, 404 assertions, 0 failures**.
 
 The suite proves:
 
@@ -105,14 +105,16 @@ The browser session history contained two earlier Livewire `503` resource messag
 
 The browser-visible Phase 1A UI and imported records prove that the implementation is deployed. The application does not expose the server Git SHA in the Admin UI, so this browser audit does not independently attest the exact server checkout hash.
 
-### Draft-only editorial findings
+### Draft-only editorial findings — closed
 
-The safety, authorization, lifecycle, and source structure passed. Two grammatical strings should be corrected before KB approval or candidate-model evaluation:
+The safety, authorization, lifecycle, and source structure passed. The two grammatical findings were corrected in both the repository manifest and the governed production Drafts on August 14, 2026:
 
 1. `KB-SUP-002` fact: change `in LoLo current United States scope` to `within LoLo's current United States scope`.
 2. `KB-FAM-004` negative retrieval example: change `Show me another family account members.` to `Show me the members of another Family Account.`
 
-These findings do not affect live users because every entry remains Draft and retrieval-ineligible. They do block claiming final content polish.
+Both affected production editors were saved and rerun through validation; each reported `Validation passed`. The production overview remained 12 working, 12 Draft, 0 published, 0 grants, and customer AI failing closed. Repository validation and the focused content suite also passed. These corrections never affected live users because every entry remained Draft and retrieval-ineligible.
+
+Before measured execution, fixture validation also found and corrected a model-contract inconsistency: 24 existing cases required human-only transfer but did not expose `SUP-HANDOFF-001` in their synthetic available-tool list. The case IDs, messages, expected outcomes, critical classification, and total 70-case inventory did not change. The executable fixture now exposes handoff wherever transfer is required, and the catalog validator permanently rejects this impossible configuration.
 
 ## Controlled deployment and import sequence
 
@@ -131,6 +133,4 @@ The production apply step is an explicit operator action. It is not authorized m
 
 ## Remaining gate
 
-Phase 1A deployment and production Draft import are complete and verified. Correct the two editorial findings in both the repository manifest and governed production Drafts, rerun deterministic validation, and retain the new artifact checksum.
-
-After that correction, the next product milestone is `DEC-012`: evaluate least-cost runtime candidates on the identical synthetic corpus. That work remains offline and cannot authorize production shadowing or a user-visible pilot. `DEC-014` still blocks production-data shadowing, and `DEC-015` still blocks a truthful user-visible human-response promise.
+Phase 1A deployment, production Draft import, and editorial cleanup are complete and verified. The next product milestone is `DEC-012`: evaluate least-cost runtime candidates on the identical synthetic corpus. The adapter exists, but provider execution is waiting on usable API credit as recorded in [the Phase 1B adapter and execution record](21-phase-1b-offline-model-evaluation.md). This work remains offline and cannot authorize production shadowing or a user-visible pilot. `DEC-014` still blocks production-data shadowing, and `DEC-015` still blocks a truthful user-visible human-response promise.

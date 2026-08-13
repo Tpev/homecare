@@ -1,6 +1,6 @@
 # Phase 1 Content and Evaluation Build Plan
 
-Status: Production Draft import verified; two editorial corrections pending; publication and runtime remain prohibited
+Status: Production Draft import and editorial corrections verified; offline adapter implemented; measured model run pending; publication and runtime remain prohibited
 
 Last updated: August 14, 2026
 
@@ -219,6 +219,8 @@ Do not add a bulk publish control.
 3. Add adapters for later candidate-model runs without choosing a production model.
 4. Run the deterministic suite and retain content-free summary evidence.
 
+Implementation status on August 14, 2026: complete. The versioned candidate catalog, Responses API adapter, strict structured response, deterministic grader, compact report writer, dry-run command, production refusal, and zero-database-write tests are implemented. The adapter remains disabled by default and cannot execute while the customer runtime guard is available.
+
 ### Slice D — controlled operator verification
 
 1. Import into local/test as Draft.
@@ -235,6 +237,8 @@ Only after Slices A-D pass:
 2. Report hard failures, all-run pass rate, quality, latency, token use, and cost.
 3. Accept `DEC-012` only from measured evidence.
 4. Keep Phase 2 shadow blocked until `DEC-014` and the remaining shadow gate are complete.
+
+Execution status on August 14, 2026: blocked before the first completed model response by the configured OpenAI API project's `credit_balance_exhausted` response. The request reached the provider after TLS and schema validation. No model tokens were consumed, no model output was received, and `DEC-012` remains pending. See [the Phase 1B adapter and execution record](21-phase-1b-offline-model-evaluation.md).
 
 ## Required deterministic tests
 

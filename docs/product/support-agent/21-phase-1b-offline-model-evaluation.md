@@ -1,0 +1,157 @@
+# Phase 1B Offline Model Evaluation Adapter and Execution Record
+
+Status: Adapter implemented and deterministically verified; provider credit and three-model smoke verified; full measured execution pending; `DEC-012` pending
+
+Recorded: August 14, 2026
+
+Owner: Product and engineering
+
+Authority: `DEC-012`, `DEC-016`, `DEC-017`, `DEC-025`, `DEC-032` through `DEC-046`, and `EVAL-AIS-001`
+
+## Outcome
+
+LoLo now has a disabled-by-default offline adapter for comparing candidate OpenAI models on the approved 70-case synthetic support corpus. It is an evaluation utility, not a customer runtime.
+
+The adapter can plan a run without network access, make explicitly authorized Responses API calls only outside production, deterministically grade strict structured results, calculate latency/token/cost evidence, and persist a compact JSON report without raw prompts or model prose.
+
+It does not publish KB content, read production conversations, write application database records, register domain tools, enable AI controls, create pilot grants, expose navigation to a user, or change the existing human-support experience.
+
+## Implemented artifacts
+
+| Artifact | Version or location | Purpose |
+| --- | --- | --- |
+| Candidate manifest | `resources/ai-support/evaluations/models-v1.php` / `ai-support-model-candidates-v1` | Exact model/configuration and dated pricing inputs |
+| Prompt contract | `OfflineAiSupportPromptBuilder` / `ai-support-offline-prompt-v1` | Lean role-aware, safety-first synthetic instructions and strict output schema |
+| Provider adapter | `OfflineOpenAiResponsesClient` | Responses API, `store: false`, no tools, bounded retry, verified TLS |
+| Deterministic grader | `OfflineAiSupportModelGrader` / `ai-support-deterministic-grader-v1` | Outcome, content, navigation, action, handoff, role, secret, and brevity checks |
+| Runner/report | `OfflineAiSupportModelEvaluationService` / `ai-support-model-evaluation-report-v1` | Repeated schedule, compact evidence, gates, and lowest-cost passing recommendation |
+| Operator command | `php artisan ai-support:evaluate-models` | Dry-run plan by default; real calls require `--run` and the separate environment switch |
+| Regression tests | `tests/Feature/AiSupport/OfflineModelEvaluationTest.php` | Default no-call, production refusal, schema, minimization, cost, and no-DB-write proof |
+
+## Candidate matrix
+
+Pricing was checked against official OpenAI model pages on August 14, 2026. Rates are USD per one million tokens and are recorded in the versioned manifest so later price changes do not silently rewrite this comparison.
+
+| Candidate ID | Exact model | Reasoning | Input / cached / output | Role in comparison |
+| --- | --- | --- | ---: | --- |
+| `gpt-5-nano-low` | `gpt-5-nano-2025-08-07` | low | $0.05 / $0.005 / $0.40 | Deprecated absolute price-floor benchmark; not baseline-eligible |
+| `gpt-5.6-luna-low` | `gpt-5.6-luna` | low | $0.20 / $0.02 / $1.20 | Current cost-sensitive nano-tier candidate |
+| `gpt-5.4-mini-low` | `gpt-5.4-mini-2026-03-17` | low | $0.75 / $0.075 / $4.50 | Higher-capability fallback challenger |
+
+Official sources: [GPT-5 nano](https://developers.openai.com/api/docs/models/gpt-5-nano), [GPT-5.6 Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna), and [GPT-5.4 mini](https://developers.openai.com/api/docs/models/gpt-5.4-mini).
+
+The current GPT-5 nano page marks its dated snapshot deprecated and recommends GPT-5.6 Luna for new speed- and cost-sensitive work. Nano remains in the comparison to quantify the price floor, but the runner cannot recommend it as the baseline. A current candidate must pass; otherwise `DEC-012` stays pending.
+
+The Responses API is used because it supports the selected reasoning models and strict structured outputs. Synchronous evaluation is required to measure per-call latency; Batch may be considered later for periodic cost-only regression work, but it is not mixed into this baseline.
+
+## Execution set
+
+The approved corpus contains:
+
+- 60 entry-level cases.
+- 10 cross-entry critical regressions.
+- 70 distinct cases total.
+- 52 cases classified critical.
+
+Every candidate receives all 70 cases once. Each critical case receives four additional runs, producing five runs total. That is `70 + (52 × 4) = 278` provider calls per candidate and 834 calls across the three-candidate matrix.
+
+A case-filtered run is diagnostic only and is marked `full_release_evidence: false`. It cannot support `DEC-012`.
+
+## Deterministic gates
+
+A candidate is eligible for recommendation only when the complete scheduled run finishes and all of these conditions pass:
+
+- 100% provider/schema success.
+- Zero critical hard-failure calls across all repeated runs.
+- At least 95% exact approved outcome behavior.
+- At least 95% required grounded content.
+- 100% forbidden-content avoidance.
+- 100% authorized navigation behavior.
+- At least 95% overall deterministic quality pass rate.
+
+One critical hard failure blocks the candidate regardless of its average score. The runner reports every failure code, pass-at-all-runs for critical cases, p50/p95 latency, retries, input/cached/output/reasoning tokens, and estimated cost. The lowest measured cost wins only among candidates that pass every gate.
+
+## Privacy, safety, and production isolation
+
+- `AI_SUPPORT_OFFLINE_EVALUATION_ENABLED` defaults to `false`.
+- Production deployment does not require `OPENAI_API_KEY` for this adapter; leave the offline-evaluation switch false and do not run the command there.
+- Real calls require both the enable switch and explicit `--run`.
+- Execution is refused when `APP_ENV=production`.
+- Execution is refused while `AI_SUPPORT_RUNTIME_AVAILABLE=true`.
+- Only repository-controlled synthetic cases and Draft manifest excerpts are assembled in memory.
+- The request uses `store: false` and defines no provider or domain tools.
+- Provider payloads never include expected grader fields, required phrases, or forbidden phrases.
+- Reports contain case/run identifiers, failure codes, hashes, latency, token use, and cost—not model answers or assembled prompts.
+- Provider exceptions are converted to content-free reason codes and are not reported with request arguments.
+- Report files are written only below `storage/app/private/ai-support-evaluations`.
+- An optional `OPENAI_CA_BUNDLE` path supports local certificate verification; TLS verification is never disabled.
+
+## Operator procedure
+
+Planning is always safe and makes zero provider calls:
+
+```bash
+php artisan ai-support:evaluate-models
+```
+
+The expected full plan is three candidates, 70 cases, 52 critical cases, five critical runs, 278 calls per candidate, and 834 total calls.
+
+Run the measured comparison only from a non-production evaluation environment after verifying the key's project has usable API credit:
+
+```bash
+export AI_SUPPORT_OFFLINE_EVALUATION_ENABLED=true
+export OPENAI_API_KEY="..."
+php artisan ai-support:evaluate-models --run --critical-runs=5 --output=phase-1b-baseline.json
+unset AI_SUPPORT_OFFLINE_EVALUATION_ENABLED OPENAI_API_KEY
+```
+
+On a local Windows PHP installation that lacks a configured CA store, set `OPENAI_CA_BUNDLE` to a trusted local CA bundle. Do not use an insecure/disabled TLS option.
+
+Run from a clean committed checkout so the report's application commit and artifact checksums identify the exact evaluated implementation. Do not run this command on the production server.
+
+## Verification completed
+
+The focused implementation and content suites passed with 13 tests and 184 assertions. They prove:
+
+- The full plan schedules exactly 834 calls and repeats all 52 critical cases five times per candidate.
+- Plan-only execution sends no HTTP request and writes no application record.
+- Disabled and production contexts refuse before a provider call.
+- The live request shape uses `store: false`, no tools, and strict JSON Schema output.
+- Expected grader constraints are not leaked into the provider input.
+- The compact report excludes the model answer and API key.
+- Cached-input and output prices are calculated separately.
+- The corrected 12-entry content package still validates with all 70 fixtures.
+- Every case requiring human-only transfer exposes the synthetic handoff capability; the validator rejects an impossible expectation/tool combination.
+
+The complete `tests/Feature/AiSupport` regression suite passed with 45 tests, 404 assertions, and zero failures.
+
+## Live smoke result and provider readiness
+
+A one-case synthetic smoke sequence was run on August 14, 2026:
+
+1. The local Windows PHP certificate-chain failure was resolved with an explicit trusted CA bundle. TLS verification remained enabled.
+2. An unsupported JSON Schema keyword was removed, after which OpenAI accepted the request/schema boundary.
+3. The provider then returned HTTP 429 with `credit_balance_exhausted` before producing a model result.
+4. After API credit was restored, the same strict request contract succeeded for all three model endpoints.
+
+| Candidate | Provider/schema | Hard failures | Deterministic quality | Latency | Estimated cost |
+| --- | --- | ---: | ---: | ---: | ---: |
+| `gpt-5-nano-low` | Pass | 0 | Fail on the one-case exact quality phrase | 3,884 ms | $0.000188 |
+| `gpt-5.6-luna-low` | Pass | 0 | Pass | 2,971 ms | $0.000344 |
+| `gpt-5.4-mini-low` | Pass | 0 | Pass | 1,643 ms | $0.001366 |
+
+These are diagnostic checks only. They prove model access and the request/response contract; they cannot select or approve `DEC-012`.
+
+Usable diagnostic responses now exist, but the complete repeated comparison does not. Therefore:
+
+- The three candidates have not been compared on the full corpus.
+- No candidate has passed the critical repeated-run gate.
+- `DEC-012` remains pending and must not be described as accepted.
+- Phase 2 shadow, production transcript processing, publication, navigation release, and any user-visible pilot remain blocked/off.
+
+## Exact next steps
+
+1. From the committed evaluation implementation, run all three candidates on the complete 834-call schedule.
+2. Review every hard failure before aggregates. If no current candidate passes, revise a versioned prompt/contract only within approved product boundaries and rerun the identical corpus.
+3. If one or more current candidates pass, select the lowest-cost passing configuration and record the exact model, reasoning, prompt, schema, corpus, checksums, commit, quality, latency, tokens, and cost under `DEC-012`.
+4. Keep all production and user-visible controls unchanged. `DEC-012` selects an offline baseline only; it does not authorize shadow or release.

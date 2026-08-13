@@ -1,8 +1,8 @@
 # Build Readiness and Remaining Validation Ledger
 
-Status: Phase 0-1 foundation deployed fail-closed; Phase 0 extinction closeout and later validations remain active
+Status: Phase 0-1 foundation deployed fail-closed; offline adapter implemented; Phase 0 extinction closeout and later validations remain active
 
-Last updated: August 13, 2026
+Last updated: August 14, 2026
 
 Owner: Product and engineering
 
@@ -69,6 +69,8 @@ Resolved August 13, 2026: the initial Family package contains only human-help/em
 ### `READY-VAL-001` — Initial runtime baseline (`DEC-012`)
 
 Choose the least costly evaluated model/provider/configuration candidate and the challenger set. This is needed before measuring the offline baseline, not before building model-independent controls.
+
+Delivery status on August 14, 2026: the three-candidate matrix, exact 834-call schedule, disabled-by-default Responses adapter, deterministic gates, compact evidence format, and production/no-write controls are implemented and tested. API credit was restored and strict one-case smoke checks reached valid structured output for all three endpoints. Complete identical-corpus execution and accept `DEC-012` only if a current candidate passes every gate.
 
 ### `READY-VAL-004` — Remaining retention (`DEC-014`)
 

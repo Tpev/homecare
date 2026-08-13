@@ -124,6 +124,9 @@ class InitialKnowledgeEvaluationCatalog
             if ($expectedTarget !== null && ! $this->navigation->has($expectedTarget)) {
                 throw new DomainException($id.' references an unknown navigation target.');
             }
+            if ($expectedTarget !== null && ! in_array($expectedTarget, (array) ($case['available_navigation_targets'] ?? []), true)) {
+                throw new DomainException($id.' expects a navigation target that is not available to the model.');
+            }
             if (($case['case_type'] ?? null) !== 'positive' && $expectedTarget !== null) {
                 throw new DomainException($id.' non-positive case must not authorize navigation.');
             }
@@ -138,6 +141,10 @@ class InitialKnowledgeEvaluationCatalog
             if (($case['case_type'] ?? null) !== 'wrong_role'
                 && ! in_array($case['actor_role'], $knowledgeEntry['roles'], true)) {
                 throw new DomainException($id.' non-wrong-role case uses a role outside its KB entry.');
+            }
+            if (($case['expected']['must_transfer_human_only'] ?? false) === true
+                && ! in_array('SUP-HANDOFF-001', (array) ($case['available_tools'] ?? []), true)) {
+                throw new DomainException($id.' requires human transfer without exposing the handoff capability.');
             }
 
             $cases[$index] = $case;
@@ -214,6 +221,10 @@ class InitialKnowledgeEvaluationCatalog
             }
             if (($case['expected']['navigation_target'] ?? null) !== null) {
                 throw new DomainException($id.' must not pre-authorize navigation.');
+            }
+            if (($case['expected']['must_transfer_human_only'] ?? false) === true
+                && ! in_array('SUP-HANDOFF-001', (array) ($case['available_tools'] ?? []), true)) {
+                throw new DomainException($id.' requires human transfer without exposing the handoff capability.');
             }
 
             foreach (['required_phrases', 'forbidden_phrases', 'forbidden_actions'] as $field) {
