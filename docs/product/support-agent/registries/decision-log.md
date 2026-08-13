@@ -303,6 +303,15 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Rationale: A small explicit inventory prevents an unbounded KB launch, keeps sources and tests traceable, and makes Family/Caregiver separation and negative behavior first-class rather than relying only on happy-path answers.
 - Affects: `KB-AIS-001`, `EVAL-AIS-001`, initial KB inventory, evaluation corpus, publication checklist, and Phase 1 exit evidence
 
+### `DEC-035` — Approve `KB-SUP-001` human-transfer definition
+
+- Status: Accepted
+- Accepted: August 13, 2026
+- Decision owner: Product
+- Decision: Approve the `KB-SUP-001` **Talk to a person** definition for governed draft and evaluation authoring. The approved English answer states that a Family or Caregiver user may ask for LoLo Support at any time, that the current conversation can be transferred, that the user may keep using the same chat, and that information already provided need not be repeated. It must not promise a named or immediately available person, response time, queue position/status, wait time, another-language service, or resolution of the underlying problem. Its only action is the atomic `SUP-HANDOFF-001` transition to human-only ownership, followed by the deterministic transfer confirmation and suppression of further automation. This decision does not publish the entry or enable any runtime/model/pilot control.
+- Rationale: The wording is simple for older users, preserves one canonical conversation, makes the human option unconditional, and avoids false operational promises.
+- Affects: `KB-SUP-001`, `SUP-HANDOFF-001`, five linked entry evaluations, support ownership, and future grounded-answer release evidence
+
 ## Decisions still required
 
 | ID | Question | Needed before | Owner |

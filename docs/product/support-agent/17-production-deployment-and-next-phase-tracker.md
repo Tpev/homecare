@@ -64,6 +64,7 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 | `SCOPE-AIS-001` | First Family answer topics and semantic navigation targets | Accepted August 13, 2026 through `DEC-032` | Family KB and evaluation authoring unblocked |
 | `SCOPE-AIS-002` | First Caregiver answer topics and semantic navigation targets | Accepted August 13, 2026 through `DEC-033` | Caregiver KB and evaluation authoring unblocked |
 | `KB-PACK-AIS-001` | Twelve-entry initial KB inventory and five-case-per-entry evaluation structure | Accepted August 13, 2026 through `DEC-034` | Entry-by-entry definition may proceed |
+| `KB-SUP-001` | Human transfer without repetition | Definition accepted August 13, 2026 through `DEC-035` | Governed draft and five evaluation cases may be authored; not published |
 | `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Pending scope/corpus | Offline runtime baseline |
 | `KB-AIS-001` | Author, source, validate, and publish the initial governed KB set | Pack structure approved; individual entries pending | Grounded answers and shadow readiness |
 | `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Minimum 60-case structure approved; cases pending | Model selection and Phase 1 exit |
@@ -97,22 +98,22 @@ The later care-request draft, confirmation lifetime, and notification/operations
 
 ## Next decision to discuss
 
-`KB-SUP-001` - human transfer without repetition.
+`KB-SUP-002` - emergencies and LoLo's non-medical limitation.
 
-Proposed entry:
+Proposed deterministic answer paths:
 
-- Title: **Talk to a person**
+- Title: **Emergencies and non-medical support**
 - Roles: Family and Caregiver
 - Type: Escalation
 - Sensitivity: Authenticated
 - Semantic destination: `support.center`
-- Proposed answer: **You can ask to talk to LoLo Support at any time. I can transfer this conversation now. You can keep using this chat, and you will not need to repeat what you already told me.**
-- May state: the user may request a person at any time; transfer keeps the same canonical support conversation; automation stops after the deterministic transfer confirmation.
-- Must not state or infer: a named person is available; immediate response; queue position/status; wait time; another-language support; or that human transfer resolves an emergency, medical, billing, safety, or account problem.
-- Approved next action: transfer the current conversation to human-only support through `SUP-HANDOFF-001`.
-- Required sources: `SRC-AI-DECISIONS-001` (`DEC-001`, `DEC-008`) and `SRC-SUPPORT-CHAT-001`, with the implemented handoff contract as release evidence.
-- Initial evaluation IDs: `EVAL-KB-SUP-001-POS`, `-BOUNDARY`, `-WRONG-ROLE`, `-UNSUPPORTED-STATE`, and `-HANDOFF`.
+- Immediate-danger answer: **LoLo is not an emergency service. If someone is in immediate danger or needs urgent medical help, call 911 now. I can also transfer this conversation to LoLo Support, but that is not a substitute for emergency help.**
+- Non-emergency medical/clinical answer: **LoLo supports non-medical help at home. LoLo cannot provide medical advice, diagnosis, treatment, medication decisions, or clinical services. Please contact a licensed healthcare professional for medical help. I can transfer you to LoLo Support for help using the platform.**
+- Must happen deterministically: show the applicable safety instruction before offering/performing human transfer; immediate-danger handling receives the critical priority reason; automation stops after transfer.
+- Must not state or infer: that LoLo contacted 911; that LoLo Support is emergency or clinical help; a diagnosis, severity assessment, medication instruction, treatment recommendation, or assurance that waiting is safe.
+- Required sources: `SRC-LOLO-SAFETY-001`, `SRC-LOLO-TERMS-001`, the applicable role terms, `SRC-AI-DECISIONS-001`, and the critical safety/handoff contracts.
+- Initial evaluation IDs: `EVAL-KB-SUP-002-POS`, `-BOUNDARY`, `-WRONG-ROLE`, `-UNSUPPORTED-STATE`, and `-HANDOFF`, plus a critical paraphrase corpus required to pass at 100%.
 
-Approval of this entry definition still does not publish it or enable a model. Implementation must verify the exact live support copy and state transitions against the cited sources and deterministic handoff contract.
+Approval of this entry definition will permit governed draft and evaluation authoring only. It will not publish the entry, enable a model, or replace deterministic safety detection and routing.
 
 No control, pilot grant, model call, or user-visible behavior changes when this documentation decision is recorded.
