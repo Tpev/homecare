@@ -30,8 +30,8 @@
         </x-card>
         <x-card>
             <p class="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Knowledge base</p>
-            <p class="mt-2 text-2xl font-extrabold text-slate-950">Foundation pending</p>
-            <p class="mt-2 text-sm text-slate-600">The governed KB workspace is the next implementation checkpoint.</p>
+            <p class="mt-2 text-2xl font-extrabold text-slate-950">{{ $knowledgeWorkingCount }} working</p>
+            <p class="mt-2 text-sm text-slate-600">{{ $knowledgeDraftCount }} Draft · {{ $knowledgePublishedCount }} published · {{ $knowledgePausedCount }} paused · {{ $knowledgeOverdueCount }} overdue</p>
         </x-card>
     </div>
 

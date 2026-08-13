@@ -27,12 +27,50 @@ class KnowledgeBaseWorkflowService
     /** @param array<string, mixed> $payload @param list<array<string, mixed>> $sources */
     public function createDraft(User $actor, array $payload, array $sources): KnowledgeBaseEntry
     {
+        return $this->createDraftRecord(
+            $actor,
+            'KB-'.Str::upper((string) Str::ulid()),
+            $payload,
+            $sources,
+        );
+    }
+
+    /** @param array<string, mixed> $payload @param list<array<string, mixed>> $sources */
+    public function createDraftWithStableId(
+        User $actor,
+        string $stableId,
+        array $payload,
+        array $sources,
+    ): KnowledgeBaseEntry {
+        $stableId = Str::upper(trim($stableId));
+        if (! preg_match('/^KB-[A-Z0-9-]{3,37}$/', $stableId)) {
+            throw ValidationException::withMessages([
+                'stable_id' => 'Stable ID must use the KB- registry format and contain at most 40 characters.',
+            ]);
+        }
+
+        return $this->createDraftRecord($actor, $stableId, $payload, $sources);
+    }
+
+    /** @param array<string, mixed> $payload @param list<array<string, mixed>> $sources */
+    private function createDraftRecord(
+        User $actor,
+        string $stableId,
+        array $payload,
+        array $sources,
+    ): KnowledgeBaseEntry {
         $this->authorize($actor);
 
-        return DB::transaction(function () use ($actor, $payload, $sources): KnowledgeBaseEntry {
+        return DB::transaction(function () use ($actor, $stableId, $payload, $sources): KnowledgeBaseEntry {
+            if (KnowledgeBaseEntry::query()->where('stable_id', $stableId)->lockForUpdate()->exists()) {
+                throw ValidationException::withMessages([
+                    'stable_id' => 'A knowledge entry with this stable ID already exists.',
+                ]);
+            }
+
             $now = now();
             $entry = KnowledgeBaseEntry::query()->create([
-                'stable_id' => 'KB-'.Str::upper((string) Str::ulid()),
+                'stable_id' => $stableId,
                 'ever_released' => false,
                 'created_by_user_id' => $actor->id,
             ]);

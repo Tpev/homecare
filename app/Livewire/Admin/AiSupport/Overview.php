@@ -3,6 +3,8 @@
 namespace App\Livewire\Admin\AiSupport;
 
 use App\Models\AiSupportPilotGrant;
+use App\Models\KnowledgeBaseEntry;
+use App\Models\KnowledgeBaseVersion;
 use App\Services\AiSupport\AiSupportControlService;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
@@ -34,6 +36,26 @@ class Overview extends Component
                 ->effectiveAt()
                 ->whereNotNull('expires_at')
                 ->where('expires_at', '<=', $now->copy()->addDays(7))
+                ->count(),
+            'knowledgeWorkingCount' => KnowledgeBaseEntry::query()
+                ->active()
+                ->whereNotNull('working_version_id')
+                ->count(),
+            'knowledgePublishedCount' => KnowledgeBaseEntry::query()
+                ->active()
+                ->whereNotNull('published_version_id')
+                ->count(),
+            'knowledgeDraftCount' => KnowledgeBaseEntry::query()
+                ->active()
+                ->whereHas('workingVersion', fn ($version) => $version->where('status', KnowledgeBaseVersion::STATUS_DRAFT))
+                ->count(),
+            'knowledgePausedCount' => KnowledgeBaseEntry::query()
+                ->active()
+                ->whereHas('workingVersion', fn ($version) => $version->where('status', KnowledgeBaseVersion::STATUS_PAUSED))
+                ->count(),
+            'knowledgeOverdueCount' => KnowledgeBaseEntry::query()
+                ->active()
+                ->whereHas('workingVersion', fn ($version) => $version->whereDate('review_by', '<', today()))
                 ->count(),
         ]);
     }
