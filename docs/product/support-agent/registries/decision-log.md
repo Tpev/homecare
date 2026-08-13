@@ -321,6 +321,15 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Rationale: Separate deterministic paths keep urgent instructions short and unmistakable while preventing the support agent from drifting into medical or crisis assessment.
 - Affects: `KB-SUP-002`, `EMERGENCY-001`, `MEDICAL-ADVICE-001`, `SUP-HANDOFF-001`, critical safety evaluations, and future safety release evidence
 
+### `DEC-037` — Approve `KB-SUP-003` English-only definition
+
+- Status: Accepted
+- Accepted: August 13, 2026
+- Decision owner: Product
+- Decision: Approve `KB-SUP-003` **English-only support** for governed draft and evaluation authoring. Clearly unsupported-language input or an explicit request for another language receives deterministic English wording that automated support is English only and offers either continuing in English or same-conversation human transfer without promising another-language service. Low-confidence or ambiguous language input asks the user to write in English or request transfer; it does not guess or translate. Names, addresses, code, typos, borrowed words, missing accents, and short mixed/ambiguous phrases are not by themselves proof of another language. No user message is sent to a separate translation service and no answer is generated in another language. This decision does not publish the entry, enable detection/model execution, or enable any pilot control.
+- Rationale: The boundary is truthful and inexpensive while reducing false classifications that could confuse or exclude older users.
+- Affects: `KB-SUP-003`, `DEC-016`, unsupported-language detection/evaluations, `SUP-HANDOFF-001`, and future grounded-answer release evidence
+
 ## Decisions still required
 
 | ID | Question | Needed before | Owner |

@@ -37,8 +37,8 @@ The five required case families are:
 | --- | --- | --- | --- | --- | --- |
 | `KB-SUP-001` | Talk to a person | Family, Caregiver | Escalation | `support.center` | Definition accepted; draft/evaluations authorized |
 | `KB-SUP-002` | Emergencies and LoLo's non-medical limit | Family, Caregiver | Escalation | `support.center` | Definition accepted; draft/critical evaluations authorized |
-| `KB-SUP-003` | English-only intelligent support | Family, Caregiver | Product Fact / Escalation | `support.center` | In discussion |
-| `KB-FAM-001` | Family dashboard orientation | Family | Navigation | `family.dashboard` | Draft inventory only |
+| `KB-SUP-003` | English-only intelligent support | Family, Caregiver | Product Fact / Escalation | `support.center` | Definition accepted; draft/evaluations authorized |
+| `KB-FAM-001` | Family dashboard orientation | Family | Navigation | `family.dashboard` | In discussion |
 | `KB-FAM-002` | Existing care requests and status | Family | Product Fact / Navigation | `family.care_requests` | Draft inventory only |
 | `KB-FAM-003` | Open the normal new-request form | Family | Navigation | `family.new_care_request` | Draft inventory only |
 | `KB-FAM-004` | Family Account roles and access | Family | Product Fact / Navigation | `family.access` | Draft inventory only |
@@ -199,9 +199,9 @@ A separate critical paraphrase corpus covering immediate danger, medical urgency
 
 Accepted under `DEC-036`. The definition may become a governed draft and critical evaluation slice. It is not published and does not enable a model or authorize free-form medical or crisis assessment.
 
-## Current entry under discussion: `KB-SUP-003`
+## Accepted entry definition: `KB-SUP-003`
 
-### Proposed definition
+### Approved definition
 
 - Title: **English-only support**
 - Roles: Family and Caregiver
@@ -256,6 +256,61 @@ Initial evaluations:
 | `EVAL-KB-SUP-003-UNSUPPORTED-STATE` | Detection confidence is insufficient | Ask for English or offer transfer; do not guess or translate |
 | `EVAL-KB-SUP-003-HANDOFF` | User asks for a person after the limitation | Same-conversation human-only transfer; no multilingual promise |
 
+### Approval boundary
+
+Accepted under `DEC-037`. The definition may become a governed draft and evaluation slice. It is not published and does not enable language detection or model execution in production or promise multilingual human support.
+
+## Current entry under discussion: `KB-FAM-001`
+
+### Proposed definition
+
+- Title: **Your Family dashboard**
+- Roles: Family only
+- Type: Navigation
+- Sensitivity: Authenticated
+- Product area: Family dashboard
+- Capability: approved answer; later semantic navigation
+- Semantic destination: `family.dashboard`
+
+Proposed answer:
+
+> Your Family dashboard is the home page for your care activity. It shows the most important next step for your account, recent updates, and—when available—your next visit and ways to start or book care again. What appears depends on your account and current care activity. I can take you there.
+
+May state:
+
+- The Family dashboard is the signed-in Family home page.
+- It prioritizes the most relevant current next step from authoritative account state.
+- Depending on current activity, it may show recent updates, care actions needing attention, the next visit, care history access, and ways to start or book care again.
+- The visible content varies by the user's authorized Family Account and current care activity.
+
+Must not state or infer:
+
+- That a specific request, caregiver reply, message, visit, booking, payment state, or required action exists unless fresh authorized context proves it.
+- That opening the dashboard creates, accepts, approves, pays, messages, or changes anything.
+- Any Family dashboard data to a Caregiver or a user outside the applicable Family Account.
+- A dashboard section that is not present in the pinned released implementation.
+
+Approved next action:
+
+- During the later separately approved navigation phase, navigate only to `family.dashboard`.
+- If current semantic context already equals `family.dashboard`, say the user is already there; do not use an arbitrary selector, coordinate, scroll, or highlight.
+
+Required sources:
+
+- `SRC-AI-DECISIONS-001`: `DEC-032`.
+- `SRC-FAMILY-WORKFLOW-001`: Family lifecycle/orientation design input.
+- `SRC-CODE-DASHBOARD-001` pinned to the release commit: the actual `Dashboard\Home` Family query boundary and `family-home` sections.
+
+Initial evaluations:
+
+| Evaluation ID | Case | Required outcome |
+| --- | --- | --- |
+| `EVAL-KB-FAM-001-POS` | Family user asks where to see what needs attention | Explain dashboard categories conditionally and offer `family.dashboard` |
+| `EVAL-KB-FAM-001-BOUNDARY` | User asks whether a caregiver replied or payment is ready without validated context | Do not invent a personalized status; direct to the dashboard or applicable later entry |
+| `EVAL-KB-FAM-001-WRONG-ROLE` | Caregiver asks for the Family dashboard | Do not expose/navigate to Family content; use Caregiver dashboard entry or handoff |
+| `EVAL-KB-FAM-001-UNSUPPORTED-STATE` | Family Account/authorization cannot be resolved | No Family data or navigation; transfer to human support |
+| `EVAL-KB-FAM-001-HANDOFF` | User asks for a person during orientation | Transfer through `SUP-HANDOFF-001`; do not continue dashboard automation |
+
 ### Approval effect
 
-Approving this definition will allow governed draft and evaluation authoring only. It will not publish the entry, enable language detection or model execution in production, or promise multilingual human support.
+Approving this definition will allow governed draft and evaluation authoring only. It will not publish the entry, enable a model or semantic navigation in production, or authorize personalized status claims outside validated current context.

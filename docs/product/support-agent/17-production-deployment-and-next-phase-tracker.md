@@ -66,6 +66,7 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 | `KB-PACK-AIS-001` | Twelve-entry initial KB inventory and five-case-per-entry evaluation structure | Accepted August 13, 2026 through `DEC-034` | Entry-by-entry definition may proceed |
 | `KB-SUP-001` | Human transfer without repetition | Definition accepted August 13, 2026 through `DEC-035` | Governed draft and five evaluation cases may be authored; not published |
 | `KB-SUP-002` | Emergencies and non-medical support | Definition accepted August 13, 2026 through `DEC-036` | Governed draft and critical evaluation corpus may be authored; not published |
+| `KB-SUP-003` | English-only intelligent support | Definition accepted August 13, 2026 through `DEC-037` | Governed draft and five evaluation cases may be authored; not published |
 | `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Pending scope/corpus | Offline runtime baseline |
 | `KB-AIS-001` | Author, source, validate, and publish the initial governed KB set | Pack structure approved; individual entries pending | Grounded answers and shadow readiness |
 | `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Minimum 60-case structure approved; cases pending | Model selection and Phase 1 exit |
@@ -99,23 +100,22 @@ The later care-request draft, confirmation lifetime, and notification/operations
 
 ## Next decision to discuss
 
-`KB-SUP-003` - English-only intelligent support.
+`KB-FAM-001` - Family dashboard orientation.
 
-Proposed deterministic answer:
+Proposed answer:
 
-- Title: **English-only support**
-- Roles: Family and Caregiver
-- Type: Product Fact / Escalation
+- Title: **Your Family dashboard**
+- Roles: Family only
+- Type: Navigation
 - Sensitivity: Authenticated
-- Semantic destination: `support.center`
-- Clearly unsupported-language answer: **LoLo's automated support is available in English only. I can continue in English or transfer this conversation to LoLo Support. LoLo does not promise support in another language.**
-- Low-confidence/ambiguous answer: **Please write your question in English. You can also ask me to transfer this conversation to LoLo Support.**
-- Must happen deterministically: never translate the user's message or generate an answer in another language; explicit requests for another language receive the English-only answer; transfer uses `SUP-HANDOFF-001`.
-- Must not infer from: a person's name, address, isolated borrowed word, code, typo, accent omission, or a short/ambiguous message that cannot be reliably classified.
-- Must not state or infer: that a human will answer in another language; that translation is available; or that a non-English answer is authoritative.
-- Required source: `SRC-AI-DECISIONS-001` (`DEC-016`, `DEC-035`) and the approved unsupported-language/handoff evaluation contract.
-- Initial evaluation IDs: `EVAL-KB-SUP-003-POS`, `-BOUNDARY`, `-WRONG-ROLE`, `-UNSUPPORTED-STATE`, and `-HANDOFF`.
+- Semantic destination: `family.dashboard`
+- Proposed answer: **Your Family dashboard is the home page for your care activity. It shows the most important next step for your account, recent updates, and—when available—your next visit and ways to start or book care again. What appears depends on your account and current care activity. I can take you there.**
+- May state: the dashboard is role-specific; it prioritizes a current next step; it may show recent updates, care needing attention, a next visit, and start/book-again paths when applicable.
+- Must not state or infer: that a request, reply, caregiver, visit, message, booking, payment, or other status exists unless authoritative current context proves it; that the dashboard itself performs an action; or any Family data to a Caregiver.
+- Approved next action: navigate only to the registered `family.dashboard` target after the separate navigation phase is approved; if already there, explain that without arbitrary scrolling or highlighting.
+- Required sources: `SRC-AI-DECISIONS-001` (`DEC-032`), `SRC-FAMILY-WORKFLOW-001`, and `SRC-CODE-DASHBOARD-001` pinned to the release commit for the exact live dashboard sections and role isolation.
+- Initial evaluation IDs: `EVAL-KB-FAM-001-POS`, `-BOUNDARY`, `-WRONG-ROLE`, `-UNSUPPORTED-STATE`, and `-HANDOFF`.
 
-Approval of this entry definition will permit governed draft and evaluation authoring only. It will not publish the entry, enable language detection in production, or promise multilingual human support.
+Approval of this entry definition will permit governed draft and evaluation authoring only. It will not publish the entry, enable a model/navigation in production, or authorize personalized status claims beyond validated context.
 
 No control, pilot grant, model call, or user-visible behavior changes when this documentation decision is recorded.
