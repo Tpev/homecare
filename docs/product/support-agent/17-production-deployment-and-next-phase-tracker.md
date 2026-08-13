@@ -65,6 +65,7 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 | `SCOPE-AIS-002` | First Caregiver answer topics and semantic navigation targets | Accepted August 13, 2026 through `DEC-033` | Caregiver KB and evaluation authoring unblocked |
 | `KB-PACK-AIS-001` | Twelve-entry initial KB inventory and five-case-per-entry evaluation structure | Accepted August 13, 2026 through `DEC-034` | Entry-by-entry definition may proceed |
 | `KB-SUP-001` | Human transfer without repetition | Definition accepted August 13, 2026 through `DEC-035` | Governed draft and five evaluation cases may be authored; not published |
+| `KB-SUP-002` | Emergencies and non-medical support | Definition accepted August 13, 2026 through `DEC-036` | Governed draft and critical evaluation corpus may be authored; not published |
 | `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Pending scope/corpus | Offline runtime baseline |
 | `KB-AIS-001` | Author, source, validate, and publish the initial governed KB set | Pack structure approved; individual entries pending | Grounded answers and shadow readiness |
 | `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Minimum 60-case structure approved; cases pending | Model selection and Phase 1 exit |
@@ -98,22 +99,23 @@ The later care-request draft, confirmation lifetime, and notification/operations
 
 ## Next decision to discuss
 
-`KB-SUP-002` - emergencies and LoLo's non-medical limitation.
+`KB-SUP-003` - English-only intelligent support.
 
-Proposed deterministic answer paths:
+Proposed deterministic answer:
 
-- Title: **Emergencies and non-medical support**
+- Title: **English-only support**
 - Roles: Family and Caregiver
-- Type: Escalation
+- Type: Product Fact / Escalation
 - Sensitivity: Authenticated
 - Semantic destination: `support.center`
-- Immediate-danger answer: **LoLo is not an emergency service. If someone is in immediate danger or needs urgent medical help, call 911 now. I can also transfer this conversation to LoLo Support, but that is not a substitute for emergency help.**
-- Non-emergency medical/clinical answer: **LoLo supports non-medical help at home. LoLo cannot provide medical advice, diagnosis, treatment, medication decisions, or clinical services. Please contact a licensed healthcare professional for medical help. I can transfer you to LoLo Support for help using the platform.**
-- Must happen deterministically: show the applicable safety instruction before offering/performing human transfer; immediate-danger handling receives the critical priority reason; automation stops after transfer.
-- Must not state or infer: that LoLo contacted 911; that LoLo Support is emergency or clinical help; a diagnosis, severity assessment, medication instruction, treatment recommendation, or assurance that waiting is safe.
-- Required sources: `SRC-LOLO-SAFETY-001`, `SRC-LOLO-TERMS-001`, the applicable role terms, `SRC-AI-DECISIONS-001`, and the critical safety/handoff contracts.
-- Initial evaluation IDs: `EVAL-KB-SUP-002-POS`, `-BOUNDARY`, `-WRONG-ROLE`, `-UNSUPPORTED-STATE`, and `-HANDOFF`, plus a critical paraphrase corpus required to pass at 100%.
+- Clearly unsupported-language answer: **LoLo's automated support is available in English only. I can continue in English or transfer this conversation to LoLo Support. LoLo does not promise support in another language.**
+- Low-confidence/ambiguous answer: **Please write your question in English. You can also ask me to transfer this conversation to LoLo Support.**
+- Must happen deterministically: never translate the user's message or generate an answer in another language; explicit requests for another language receive the English-only answer; transfer uses `SUP-HANDOFF-001`.
+- Must not infer from: a person's name, address, isolated borrowed word, code, typo, accent omission, or a short/ambiguous message that cannot be reliably classified.
+- Must not state or infer: that a human will answer in another language; that translation is available; or that a non-English answer is authoritative.
+- Required source: `SRC-AI-DECISIONS-001` (`DEC-016`, `DEC-035`) and the approved unsupported-language/handoff evaluation contract.
+- Initial evaluation IDs: `EVAL-KB-SUP-003-POS`, `-BOUNDARY`, `-WRONG-ROLE`, `-UNSUPPORTED-STATE`, and `-HANDOFF`.
 
-Approval of this entry definition will permit governed draft and evaluation authoring only. It will not publish the entry, enable a model, or replace deterministic safety detection and routing.
+Approval of this entry definition will permit governed draft and evaluation authoring only. It will not publish the entry, enable language detection in production, or promise multilingual human support.
 
 No control, pilot grant, model call, or user-visible behavior changes when this documentation decision is recorded.

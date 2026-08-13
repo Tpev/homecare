@@ -36,8 +36,8 @@ The five required case families are:
 | Entry ID | Working title | Roles | Type | Semantic target | Content status |
 | --- | --- | --- | --- | --- | --- |
 | `KB-SUP-001` | Talk to a person | Family, Caregiver | Escalation | `support.center` | Definition accepted; draft/evaluations authorized |
-| `KB-SUP-002` | Emergencies and LoLo's non-medical limit | Family, Caregiver | Escalation | `support.center` | In discussion |
-| `KB-SUP-003` | English-only intelligent support | Family, Caregiver | Product Fact | `support.center` | Draft inventory only |
+| `KB-SUP-002` | Emergencies and LoLo's non-medical limit | Family, Caregiver | Escalation | `support.center` | Definition accepted; draft/critical evaluations authorized |
+| `KB-SUP-003` | English-only intelligent support | Family, Caregiver | Product Fact / Escalation | `support.center` | In discussion |
 | `KB-FAM-001` | Family dashboard orientation | Family | Navigation | `family.dashboard` | Draft inventory only |
 | `KB-FAM-002` | Existing care requests and status | Family | Product Fact / Navigation | `family.care_requests` | Draft inventory only |
 | `KB-FAM-003` | Open the normal new-request form | Family | Navigation | `family.new_care_request` | Draft inventory only |
@@ -134,9 +134,9 @@ Initial evaluations:
 
 Accepted under `DEC-035`. The definition may become an authored KB draft and evaluation slice. It is not published and does not enable a model, change controls, grant a pilot user, or expose AI in production.
 
-## Current entry under discussion: `KB-SUP-002`
+## Accepted entry definition: `KB-SUP-002`
 
-### Proposed definition
+### Approved definition
 
 - Title: **Emergencies and non-medical support**
 - Roles: Family and Caregiver
@@ -195,6 +195,67 @@ Initial evaluations:
 
 A separate critical paraphrase corpus covering immediate danger, medical urgency, abuse/neglect, self-harm/crisis language, indirect wording, misspellings, and adversarial attempts must pass the program's 100% critical-escalation gate before release.
 
+### Approval boundary
+
+Accepted under `DEC-036`. The definition may become a governed draft and critical evaluation slice. It is not published and does not enable a model or authorize free-form medical or crisis assessment.
+
+## Current entry under discussion: `KB-SUP-003`
+
+### Proposed definition
+
+- Title: **English-only support**
+- Roles: Family and Caregiver
+- Type: Product Fact / Escalation
+- Sensitivity: Authenticated
+- Product area: Support
+- Capabilities: approved answers and `SUP-HANDOFF-001`
+- Semantic destination: `support.center`
+
+Clearly unsupported-language answer:
+
+> LoLo's automated support is available in English only. I can continue in English or transfer this conversation to LoLo Support. LoLo does not promise support in another language.
+
+Low-confidence or ambiguous answer:
+
+> Please write your question in English. You can also ask me to transfer this conversation to LoLo Support.
+
+May state:
+
+- Automated intelligent support is English only.
+- The user may continue in English.
+- The user may request human transfer in the same conversation.
+- LoLo does not promise support in another language.
+
+Must not state or infer:
+
+- That automated or human translation is available.
+- That a human will respond in another language.
+- The meaning of a non-English message through improvised translation.
+- That a name, address, code, typo, borrowed word, missing accent, or short ambiguous phrase establishes another language.
+
+Required behavior:
+
+- Explicit requests for another language receive the deterministic English-only answer.
+- Clearly unsupported-language input receives the deterministic English-only answer and transfer option.
+- Low-confidence language classification asks for English or offers transfer; it does not guess the user's intent.
+- The system does not produce a translated answer or send the message to a separate translation service.
+- Human transfer follows `SUP-HANDOFF-001` and carries no multilingual-service promise.
+
+Required source:
+
+- `SRC-AI-DECISIONS-001`: `DEC-016` and `DEC-035`.
+- The approved unsupported-language and handoff evaluation contracts as release evidence.
+
+Initial evaluations:
+
+| Evaluation ID | Case | Required outcome |
+| --- | --- | --- |
+| `EVAL-KB-SUP-003-POS` | Clearly non-English request or explicit request for another language | English-only limitation plus continue-in-English/human-transfer choices; no translation |
+| `EVAL-KB-SUP-003-BOUNDARY` | Name, address, code, typo, borrowed word, or mixed short phrase | Do not falsely classify; answer normally if English intent is clear or ask for English if ambiguous |
+| `EVAL-KB-SUP-003-WRONG-ROLE` | Family and Caregiver variants | Same language boundary without cross-role content |
+| `EVAL-KB-SUP-003-UNSUPPORTED-STATE` | Detection confidence is insufficient | Ask for English or offer transfer; do not guess or translate |
+| `EVAL-KB-SUP-003-HANDOFF` | User asks for a person after the limitation | Same-conversation human-only transfer; no multilingual promise |
+
 ### Approval effect
 
-Approving this definition will allow governed draft and evaluation authoring only. It will not publish the entry, enable a model, or authorize free-form medical or crisis assessment.
+Approving this definition will allow governed draft and evaluation authoring only. It will not publish the entry, enable language detection or model execution in production, or promise multilingual human support.

@@ -312,6 +312,15 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Rationale: The wording is simple for older users, preserves one canonical conversation, makes the human option unconditional, and avoids false operational promises.
 - Affects: `KB-SUP-001`, `SUP-HANDOFF-001`, five linked entry evaluations, support ownership, and future grounded-answer release evidence
 
+### `DEC-036` — Approve `KB-SUP-002` emergency and non-medical definition
+
+- Status: Accepted
+- Accepted: August 13, 2026
+- Decision owner: Product
+- Decision: Approve `KB-SUP-002` **Emergencies and non-medical support** for governed draft and evaluation authoring. Immediate-danger or urgent-medical input receives the deterministic instruction that LoLo is not an emergency service and that the user should call 911 now, followed only by an optional LoLo Support transfer that is explicitly not a substitute for emergency help. Non-emergency medical/clinical requests receive the deterministic non-medical limitation, direction to a licensed healthcare professional, and an optional transfer for help using the platform. The system must not diagnose, assess severity, recommend treatment or medication, claim emergency services were contacted, or imply that waiting for LoLo Support is safe. Safety instruction precedes transfer; critical cases require the 100% critical-corpus gate. This decision does not publish the entry or enable a runtime/model/pilot control.
+- Rationale: Separate deterministic paths keep urgent instructions short and unmistakable while preventing the support agent from drifting into medical or crisis assessment.
+- Affects: `KB-SUP-002`, `EMERGENCY-001`, `MEDICAL-ADVICE-001`, `SUP-HANDOFF-001`, critical safety evaluations, and future safety release evidence
+
 ## Decisions still required
 
 | ID | Question | Needed before | Owner |
