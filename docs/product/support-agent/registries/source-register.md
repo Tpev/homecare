@@ -2,7 +2,7 @@
 
 Status: Draft registry
 
-Last updated: August 13, 2026
+Last updated: August 14, 2026
 
 Owner: Product content
 
@@ -23,6 +23,9 @@ The source register names documents and application contracts that may support c
 | `SRC-CODE-CARE-REQUESTS-001` | Current Care Request model/policy, Family Care page/detail components, lifecycle service, semantic target registry, and tests | Repository evidence pinned to a release commit | Descriptive current behavior; not independent policy authority | Request/visit status labels and transitions, Family Account isolation, caregiver visibility, and registered Care navigation | Engineering/product |
 | `SRC-CODE-NEW-CARE-REQUEST-001` | Current Family new-care-request route, wizard, policy, semantic target registry, and tests | Repository evidence pinned to a release commit | Descriptive current behavior; not independent policy authority | Family-only access, essential form sections, review/estimate presentation, and explicit publish boundary | Engineering/product |
 | `SRC-CODE-FAMILY-ACCESS-001` | Current Family access route/component, membership context, invitation/access services, policies, views, and tests | Repository evidence pinned to a release commit | Descriptive current behavior; not independent policy authority | Owner/member labels, shared-care and owner-only boundaries, invitation/removal/leave behavior, and registered Family access navigation | Engineering/product/security |
+| `SRC-CODE-ACCOUNT-SETTINGS-001` | Current authenticated Account Settings route/view, profile/password forms, semantic target registry, and tests | Repository evidence pinned to a release commit | Descriptive current behavior; not independent policy authority | Name/email/password orientation, role-aware linked sections, credential handling boundaries, and registered account navigation | Engineering/product/security |
+| `SRC-CODE-CAREGIVER-WORK-INBOX-001` | Current Caregiver Work Inbox component, builder, invitation-response service boundary, view, semantic target registry, and tests | Repository evidence pinned to a release commit | Descriptive current behavior; not independent policy authority | Caregiver-only filters, opportunity/application/visit presentation, current-state labels, and separation between navigation and work-response mutations | Engineering/product |
+| `SRC-CODE-CAREGIVER-VISITS-001` | Current Caregiver My visits component, visit-timeline service, booking states, view, semantic target registry, and tests | Repository evidence pinned to a release commit | Descriptive current behavior; not independent policy authority | Caregiver-only visit types, filters, timeline/status presentation, and separation between generic navigation and visit mutations | Engineering/product |
 | `SRC-CODE-COPILOT-001` | Current `App\Services\AiCopilot`, `AiRequestCopilot`, models, and tests | Legacy retirement inventory | Not a product or implementation authority | Identify every removal and `DEC-011` destruction target while protecting ordinary domain records | Engineering |
 | `SRC-AI-DECISIONS-001` | [Intelligent Support decision log](decision-log.md) | Accepted product decision registry | Normative for accepted program boundaries and scope | Model authority, roles, handoff, language, initial scope, KB/evaluation structure, retention, and release boundaries | Product |
 | `SRC-LOLO-SAFETY-001` | [Acceptable Use and Safety Policy](../../../../resources/legal/acceptable-use-and-safety-policy.txt) | Approved legal/product policy; current published status must be confirmed before release | Normative for prohibited conduct and emergency limitation | Platform safety, prohibited medical/clinical services, emergency behavior | Legal/product |

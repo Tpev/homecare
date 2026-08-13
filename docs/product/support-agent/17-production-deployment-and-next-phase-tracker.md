@@ -2,7 +2,7 @@
 
 Status: Active tracker
 
-Last updated: August 13, 2026
+Last updated: August 14, 2026
 
 Owner: Product and engineering
 
@@ -63,16 +63,22 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 | `DEC-016` | English-only intelligent support across every phase | Accepted August 13, 2026 | Closed; governs KB, evaluation, unsupported-language behavior, and release |
 | `SCOPE-AIS-001` | First Family answer topics and semantic navigation targets | Accepted August 13, 2026 through `DEC-032` | Family KB and evaluation authoring unblocked |
 | `SCOPE-AIS-002` | First Caregiver answer topics and semantic navigation targets | Accepted August 13, 2026 through `DEC-033` | Caregiver KB and evaluation authoring unblocked |
-| `KB-PACK-AIS-001` | Twelve-entry initial KB inventory and five-case-per-entry evaluation structure | Accepted August 13, 2026 through `DEC-034` | Entry-by-entry definition may proceed |
+| `KB-PACK-AIS-001` | Twelve-entry initial KB inventory and five-case-per-entry evaluation structure | All 12 definitions accepted through `DEC-046`; 60 named entry-level cases authorized | Governed record and evaluation-fixture implementation may proceed; nothing published |
 | `KB-SUP-001` | Human transfer without repetition | Definition accepted August 13, 2026 through `DEC-035` | Governed draft and five evaluation cases may be authored; not published |
 | `KB-SUP-002` | Emergencies and non-medical support | Definition accepted August 13, 2026 through `DEC-036` | Governed draft and critical evaluation corpus may be authored; not published |
 | `KB-SUP-003` | English-only intelligent support | Definition accepted August 13, 2026 through `DEC-037` | Governed draft and five evaluation cases may be authored; not published |
 | `KB-FAM-001` | Family dashboard orientation | Definition accepted August 13, 2026 through `DEC-038` | Governed draft and five evaluation cases may be authored; not published |
 | `KB-FAM-002` | Existing care requests and status | Definition accepted August 13, 2026 through `DEC-039` | Governed draft and five evaluation cases may be authored; not published |
 | `KB-FAM-003` | Open the normal new-request form | Definition accepted August 13, 2026 through `DEC-040` | Governed draft and five evaluation cases may be authored; not published |
+| `KB-FAM-004` | Family Account roles and access | Definition accepted August 14, 2026 through `DEC-041` | Governed draft and five evaluation cases may be authored; not published |
+| `KB-FAM-005` | Family account/profile orientation | Definition accepted August 14, 2026 through `DEC-042` | Governed draft and five evaluation cases may be authored; not published |
+| `KB-CGV-001` | Caregiver dashboard and onboarding orientation | Definition accepted August 14, 2026 through `DEC-043` | Governed draft and five evaluation cases may be authored; not published |
+| `KB-CGV-002` | Caregiver work inbox orientation | Definition accepted August 14, 2026 through `DEC-044` | Governed draft and five evaluation cases may be authored; not published |
+| `KB-CGV-003` | Caregiver shift orientation | Definition accepted August 14, 2026 through `DEC-045` | Governed draft and five evaluation cases may be authored; not published |
+| `KB-CGV-004` | Caregiver account/profile orientation | Definition accepted August 14, 2026 through `DEC-046` | Governed draft and five evaluation cases may be authored; not published |
 | `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Pending scope/corpus | Offline runtime baseline |
-| `KB-AIS-001` | Author, source, validate, and publish the initial governed KB set | Pack structure approved; individual entries pending | Grounded answers and shadow readiness |
-| `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Minimum 60-case structure approved; cases pending | Model selection and Phase 1 exit |
+| `KB-AIS-001` | Author, source, and validate the initial governed KB set | All definitions approved; repository manifest/import and Admin-draft records pending | Grounded-answer evaluation and later shadow readiness; publication remains separately prohibited |
+| `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Sixty named case definitions approved; executable fixtures/graders pending | Model selection and Phase 1 exit |
 | `DEC-014` | Close suppressed/diagnostic TTLs and downstream/provider/backup extinction rules | Pending later discussion | Any production-conversation shadowing |
 | `DEC-015` | Approve staffed-hours ownership and truthful human-response promise/SLO | Pending later discussion | Any user-visible pilot |
 
@@ -82,43 +88,36 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 | --- | --- | --- |
 | Phase 0 | Deployed; operational extinction tail open | Runtime retired and primary data destroyed; backup/derived extinction still tracked |
 | Phase 1 foundation | Deployed | Admin controls, exact-user grants, governed KB workspace, contracts, handoff, evidence, and retention foundations exist |
-| Phase 1 content/evaluation | Next | Both role packages and the 12-entry structure are approved; review/author each entry and its evaluations, then select the runtime baseline |
+| Phase 1 content/evaluation | In progress | All 12 definitions and 60 named cases are approved; implement governed drafts, executable fixtures, deterministic validation, then select the runtime baseline |
 | Phase 2 shadow | Blocked | Requires Phase 1 evidence plus `DEC-014`; no real conversations may go to a model yet |
 | Phase 3 grounded answers | Blocked | Requires shadow evidence, `DEC-015`, named grants, usability, monitoring, and release approval |
 | Phases 4-6 | Not started | Navigation, drafting, and confirmed execution remain independently gated |
 
 ## Agreed next-work order
 
-1. Close the small production status defect `UI-AIS-001` and continue tracking `OPS-EXT-001` without repeating primary destruction.
-2. Apply accepted `DEC-016`: all intelligent support and its KB/evaluations are English only; unsupported-language input offers human transfer without translation promises.
-3. Apply accepted `DEC-032` and `DEC-033` to the role-isolated, read-only Family and Caregiver packages.
-4. Apply accepted `DEC-034`: review and author the 12 governed entries individually with at least five linked evaluation cases each.
-5. Evaluate the least-cost runtime candidates and accept `DEC-012` only from measured results.
-6. Complete the Phase 1 evaluation runner, critical regressions, offline quality/cost/latency baseline, and release evidence.
+1. Implement the approved [Phase 1 content and evaluation build plan](19-phase-1-content-and-evaluation-build-plan.md): versioned initial-content manifest, safe draft-only importer, 12 governed Admin drafts, and 60 executable evaluation fixtures.
+2. Close `UI-AIS-001` so the Admin overview reports actual KB counts/state before operators inspect the imported drafts.
+3. Run deterministic KB schema, source, role, target, draft-isolation, wrong-role, handoff, and critical safety validation with zero hard failures.
+4. Continue tracking `OPS-EXT-001` without repeating primary destruction; it remains independent from local/offline content authoring.
+5. Evaluate the least-cost runtime candidates on the identical approved corpus and accept `DEC-012` only from measured quality, hard-failure, latency, and cost evidence.
+6. Complete the Phase 1 evaluation runner, critical regressions, offline baseline, and release evidence. Keep every production model and user-visible control disabled.
 7. Decide `DEC-014` before any production-data shadow processing.
 8. Run a controlled, non-user-visible shadow phase only after its explicit release gate.
 9. Decide `DEC-015` and complete older-adult usability/support readiness before any named-user visible pilot.
 
 The later care-request draft, confirmation lifetime, and notification/operations packages remain in the readiness ledger and do not block the next offline answer/navigation work.
 
-## Next decision to discuss
+## Next implementation milestone
 
-`KB-FAM-004` - Family access roles and permissions.
+Deliver **Phase 1A — governed content and executable evaluations** from [the approved build plan](19-phase-1-content-and-evaluation-build-plan.md).
 
-Proposed answer:
+Required outcome:
 
-- Title: **Family access and permissions**
-- Roles: Family only
-- Type: Product Fact / Navigation
-- Sensitivity: Authenticated
-- Semantic destination: `family.access`
-- Proposed answer: **Family access lets trusted people help manage care using their own LoLo login. The Account owner can invite or remove Family members and manage the family payment method. Family members can help with day-to-day care, including scheduling care and approving care-related charges using the family's saved payment method, but they cannot manage invitations, remove someone else's access, or change the payment method. I can take you to Family access.**
-- May state: the only user-facing roles are Account owner and Family member; active members share the Family Account's care information; actions remain attributed to the signed-in person; members can leave the Family Account; owner-issued private invitations expire after seven days.
-- Must not state or infer: that the current user or another named person has a particular role or active access without fresh account-scoped membership context; any member, email, invitation, payment method, care record, or action not proven by authoritative context; or that the assistant may send/resend/cancel an invitation, remove access, leave an account, transfer ownership, or change a payment method.
-- Approved next action: after the navigation phase is separately approved and the authorized Family user clearly asks to view access, navigate only to `family.access`. This entry authorizes no access or financial mutation.
-- Required sources: `SRC-AI-DECISIONS-001` (`DEC-032`), `SRC-FAMILY-ACCESS-001`, and `SRC-CODE-FAMILY-ACCESS-001` pinned to the release commit.
-- Initial evaluation IDs: `EVAL-KB-FAM-004-POS`, `-OWNER-BOUNDARY`, `-NO-MUTATION`, `-WRONG-ROLE`, and `-HANDOFF`.
+- Twelve repository-controlled initial definitions map deterministically to the existing KB schema.
+- A dry-run-first, idempotent import path creates or reconciles **Draft** versions only and refuses unsafe overwrites.
+- The Admin UI shows and permits normal single-operator review/edit lifecycle for all imported entries.
+- All 60 named evaluation cases exist as executable fixtures with hard constraints and deterministic checks where possible.
+- Draft exclusion, role isolation, registered-target validity, emergency/handoff behavior, and zero production model/user visibility remain proven.
+- No entry is approved or published by the importer, and no production model call or pilot grant is enabled.
 
-Approval of this entry definition will permit governed draft and evaluation authoring only. It will not publish the entry, enable a model/navigation in production, expose an account's member list, or authorize any invitation, access, ownership, or payment-method change.
-
-No control, pilot grant, model call, or user-visible behavior changes when this documentation decision is recorded.
+Completion of this milestone moves the program to measured model/configuration selection under `DEC-012`; it does not authorize shadowing or a user-visible pilot.

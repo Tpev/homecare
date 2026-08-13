@@ -39,6 +39,7 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 17. [Phase 0-1 foundation build record](16-phase-0-1-foundation-build-record.md)
 18. [Production deployment, verification, and next-phase tracker](17-production-deployment-and-next-phase-tracker.md)
 19. [Initial governed KB and evaluation pack](18-initial-kb-and-evaluation-pack.md)
+20. [Phase 1 content and evaluation build plan](19-phase-1-content-and-evaluation-build-plan.md)
 
 Then consult the live registries:
 

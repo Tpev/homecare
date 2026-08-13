@@ -2,7 +2,7 @@
 
 Status: Active registry
 
-Last updated: August 13, 2026
+Last updated: August 14, 2026
 
 Owner: Product
 
@@ -356,6 +356,60 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Decision: Approve `KB-FAM-003` **Start a new care request** for governed draft and evaluation authoring. The English answer may explain that the normal Family form collects the person, help, time, and care address and provides a review and schedule-dependent estimate before publication. Opening or viewing the page does not post anything to caregivers. During a later separately approved navigation phase, clear intent from an authorized Family user may navigate only to `family.new_care_request`. This entry never authorizes the assistant to select care details, enter or alter form values, submit the form, publish a request, or claim any price, caregiver availability, saved information, or outcome not proven by authoritative current context. Caregivers and users without active Family authorization receive no Family-form navigation. This decision does not publish the entry or enable model/navigation/pilot controls.
 - Rationale: Separating safe page opening from request publication gives older Family users a clear starting point without turning a navigation article into an unconfirmed domain write.
 - Affects: `KB-FAM-003`, `family.new_care_request`, Family authorization, publish boundaries, five linked evaluations, and future Family navigation release evidence
+
+### `DEC-041` — Approve `KB-FAM-004` Family access definition
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Approve `KB-FAM-004` **Family access and permissions** exactly as defined in the initial KB pack. It may explain the generic Account owner and Family member roles, including the required disclosure that members can schedule care and approve care-related charges using the saved family payment method. It must preserve owner-only invitation, access-removal, payment-method, ownership, and closure boundaries; never infer or expose a person's membership or account data without fresh authorization; and authorize only later generic navigation to `family.access`. It authorizes no invitation, membership, ownership, or financial mutation.
+- Rationale: Older users need a short explanation of shared care access without obscuring the real financial capability or exposing private membership information.
+- Affects: `KB-FAM-004`, `family.access`, Family membership authorization, five linked evaluations, and future Family navigation release evidence
+
+### `DEC-042` — Approve `KB-FAM-005` Family Account Settings definition
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Approve `KB-FAM-005` **Your Account Settings** exactly as defined in the initial KB pack. It may explain that an authenticated Family user can use Account Settings for their own name, email, and password and can reach Care profiles and Family access from that page. It must never request, collect, repeat, infer, or change a password or other credential in chat; never claim a save succeeded; and authorize only later generic navigation to `account.profile`. It authorizes no profile, credential, care-profile, access, or account mutation.
+- Rationale: Clear separation between page orientation and sensitive account changes helps users reach the right manual controls without exposing credentials to the assistant.
+- Affects: `KB-FAM-005`, `account.profile`, credential safety, five linked evaluations, and future account-navigation release evidence
+
+### `DEC-043` — Approve `KB-CGV-001` Caregiver dashboard definition
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Approve `KB-CGV-001` **Your Caregiver dashboard** exactly as defined in the initial KB pack. It may conditionally describe the dashboard's current next step, setup/profile status, Work Inbox, and visit orientation. It must not decide or invent onboarding completion, identity/background/credential status, marketplace eligibility, work, messages, visits, earnings, or required actions without fresh Caregiver-scoped context. It authorizes only later generic navigation to `caregiver.dashboard` and no onboarding, verification, profile, work, visit, message, or payout mutation.
+- Rationale: Conditional dashboard guidance helps caregivers orient themselves while leaving eligibility and verification decisions to authoritative application services.
+- Affects: `KB-CGV-001`, `caregiver.dashboard`, Caregiver context isolation, five linked evaluations, and future Caregiver navigation release evidence
+
+### `DEC-044` — Approve `KB-CGV-002` Caregiver Work Inbox definition
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Approve `KB-CGV-002` **Your Work Inbox** exactly as defined in the initial KB pack. It may explain the All, Needs response, New requests, Applied, Hired, and Completed views and that each item must be opened for its current details. It must not invent an item, response deadline, fit, compensation, family decision, application, hire, booking, or outcome. It authorizes only later generic navigation to `caregiver.work_inbox` and never authorizes accepting/declining an invitation, applying for work, messaging, or any other work mutation.
+- Rationale: The Work Inbox is the safest single orientation point for caregiver opportunities, provided generic navigation is kept separate from consequential responses.
+- Affects: `KB-CGV-002`, `caregiver.work_inbox`, Caregiver-only work data, five linked evaluations, and future Caregiver navigation release evidence
+
+### `DEC-045` — Approve `KB-CGV-003` Caregiver visits definition
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Approve `KB-CGV-003` **Your visits** exactly as defined in the initial KB pack. It may explain that My visits combines one-time, regular, and Continuous Coverage visits and provides the All, Scheduled, In progress, Paused, Completed, Reviewed, Issues, and Time to update filters. It must not infer that a visit exists, that a control is available, or any visit, time, issue, earnings, payment, or family-confirmation state without fresh Caregiver-scoped context. It authorizes only later generic navigation to `caregiver.shifts` and no visit start, pause, resume, end, time, issue, or payment mutation.
+- Rationale: A generic timeline explanation improves findability while current visit controls and status remain authoritative and resource-bound.
+- Affects: `KB-CGV-003`, `caregiver.shifts`, Caregiver-only visit data, five linked evaluations, and future Caregiver navigation release evidence
+
+### `DEC-046` — Approve `KB-CGV-004` Caregiver Account Settings definition
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Approve `KB-CGV-004` **Your Account Settings** exactly as defined in the initial KB pack. It may explain that Account Settings covers the caregiver's own name, email, and password and is distinct from professional Caregiver setup for services, availability, verification, and payouts. It must never request, collect, repeat, infer, or change credentials; claim a save succeeded; or treat Account Settings as the professional-profile editor. It authorizes only later generic navigation to `account.profile` and no account, credential, professional-profile, verification, availability, service, or payout mutation.
+- Rationale: Caregivers need a clean distinction between login/account settings and marketplace profile setup, especially when asking for help in plain language.
+- Affects: `KB-CGV-004`, `account.profile`, credential safety, five linked evaluations, and future account-navigation release evidence
 
 ## Decisions still required
 
