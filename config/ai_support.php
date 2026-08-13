@@ -6,6 +6,7 @@ return [
     | A missing environment value must never make customer AI available.
     */
     'runtime_available' => (bool) env('AI_SUPPORT_RUNTIME_AVAILABLE', false),
+    'retention_execution_enabled' => (bool) env('AI_SUPPORT_RETENTION_EXECUTION_ENABLED', false),
     'shadow_mutations_allowed' => false,
 
     'policy_version' => 'ai-support-eligibility-v1',

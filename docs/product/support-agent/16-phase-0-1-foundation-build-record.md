@@ -69,7 +69,7 @@ This record documents implemented behavior. It does not authorize a model/provid
 
 - The unified support transcript remains canonical while active. Final resolution records authoritative `retention_started_at` and schedules content deletion 12 calendar months later.
 - Resolved-to-closed preserves the original clock. Reopening clears transcript and interaction-event deletion dates. A later final resolution starts new 12- and 24-month clocks.
-- `ai-support:apply-retention` is dry-run by default. The scheduled `--execute` job runs daily and is idempotent.
+- `ai-support:apply-retention` is dry-run by default. The idempotent daily `--execute` schedule exists only when `AI_SUPPORT_RETENTION_EXECUTION_ENABLED=true`; missing configuration is off so the first production deployment cannot purge existing transcripts before its dry run is reviewed.
 - Expired transcript processing deletes message rows and content-bearing ticket fields while preserving the ticket tombstone and linked care requests, bookings, payments, accounts, and other domain records.
 - Active narrowly scoped holds skip affected deletion. A required review date does not release a hold; optional expiry and explicit release are distinct. Expired or released holds do not silently extend retention.
 - Invalid/expired preview content is cleared immediately by lifecycle services and the short-lived preview record is removed by the daily job after hold checks; compact events, confirmed-action evidence, pilot/control audit, released KB content/tombstones, and successful deletion evidence follow the accepted bounded periods.
@@ -155,7 +155,7 @@ Completed August 13, 2026:
 - The two completed slices total **86 passing tests and 639 assertions**.
 - `php artisan route:list --name=admin.ai-support`: seven authorized admin routes present.
 - Legacy route scan: no `/family/requests/create/ai` or `AiRequestCopilot` route remains.
-- `php artisan schedule:list`: daily `ai-support:apply-retention --execute` present at 03:40.
+- Retention schedule verification: absent under the default-off configuration; when `AI_SUPPORT_RETENTION_EXECUTION_ENABLED=true`, daily `ai-support:apply-retention --execute` is registered at 03:40.
 - `php artisan view:cache` followed by `php artisan view:clear`: all Blade templates compiled successfully and the verification cache was cleared.
 - `git diff --check`: passed.
 - The five new migrations were exercised by every `RefreshDatabase` test run. They remain intentionally pending in the developer's ordinary local database; no deployment migration or data destruction was executed.
