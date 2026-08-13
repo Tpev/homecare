@@ -292,4 +292,3 @@ An implementation agent may proceed without further entry-definition approval, b
 3. Implement only Slices A-D unless the task explicitly includes measured model evaluation.
 4. Preserve direct-to-`master` workflow only when explicitly requested by the user; otherwise follow the repository's current instruction.
 5. Stop and open a decision if the accepted definitions cannot map safely to the existing schema or if current code conflicts with an approved product boundary.
-
