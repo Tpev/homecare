@@ -38,6 +38,7 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 16. [Legacy copilot destruction execution runbook](15-legacy-copilot-execution-runbook.md)
 17. [Phase 0-1 foundation build record](16-phase-0-1-foundation-build-record.md)
 18. [Production deployment, verification, and next-phase tracker](17-production-deployment-and-next-phase-tracker.md)
+19. [Initial governed KB and evaluation pack](18-initial-kb-and-evaluation-pack.md)
 
 Then consult the live registries:
 

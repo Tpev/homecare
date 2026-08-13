@@ -63,9 +63,10 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 | `DEC-016` | English-only intelligent support across every phase | Accepted August 13, 2026 | Closed; governs KB, evaluation, unsupported-language behavior, and release |
 | `SCOPE-AIS-001` | First Family answer topics and semantic navigation targets | Accepted August 13, 2026 through `DEC-032` | Family KB and evaluation authoring unblocked |
 | `SCOPE-AIS-002` | First Caregiver answer topics and semantic navigation targets | Accepted August 13, 2026 through `DEC-033` | Caregiver KB and evaluation authoring unblocked |
+| `KB-PACK-AIS-001` | Twelve-entry initial KB inventory and five-case-per-entry evaluation structure | Accepted August 13, 2026 through `DEC-034` | Entry-by-entry definition may proceed |
 | `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Pending scope/corpus | Offline runtime baseline |
-| `KB-AIS-001` | Author, source, validate, and publish the initial governed KB set | Both role scopes approved; authoring next | Grounded answers and shadow readiness |
-| `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Both role scopes approved; authoring next | Model selection and Phase 1 exit |
+| `KB-AIS-001` | Author, source, validate, and publish the initial governed KB set | Pack structure approved; individual entries pending | Grounded answers and shadow readiness |
+| `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Minimum 60-case structure approved; cases pending | Model selection and Phase 1 exit |
 | `DEC-014` | Close suppressed/diagnostic TTLs and downstream/provider/backup extinction rules | Pending later discussion | Any production-conversation shadowing |
 | `DEC-015` | Approve staffed-hours ownership and truthful human-response promise/SLO | Pending later discussion | Any user-visible pilot |
 
@@ -75,7 +76,7 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 | --- | --- | --- |
 | Phase 0 | Deployed; operational extinction tail open | Runtime retired and primary data destroyed; backup/derived extinction still tracked |
 | Phase 1 foundation | Deployed | Admin controls, exact-user grants, governed KB workspace, contracts, handoff, evidence, and retention foundations exist |
-| Phase 1 content/evaluation | Next | Both role packages approved; define and author the first KB/evaluation pack, then select the runtime baseline |
+| Phase 1 content/evaluation | Next | Both role packages and the 12-entry structure are approved; review/author each entry and its evaluations, then select the runtime baseline |
 | Phase 2 shadow | Blocked | Requires Phase 1 evidence plus `DEC-014`; no real conversations may go to a model yet |
 | Phase 3 grounded answers | Blocked | Requires shadow evidence, `DEC-015`, named grants, usability, monitoring, and release approval |
 | Phases 4-6 | Not started | Navigation, drafting, and confirmed execution remain independently gated |
@@ -85,7 +86,7 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 1. Close the small production status defect `UI-AIS-001` and continue tracking `OPS-EXT-001` without repeating primary destruction.
 2. Apply accepted `DEC-016`: all intelligent support and its KB/evaluations are English only; unsupported-language input offers human transfer without translation promises.
 3. Apply accepted `DEC-032` and `DEC-033` to the role-isolated, read-only Family and Caregiver packages.
-4. Approve and author the first authoritative Family and Caregiver KB entries with representative evaluation cases attached to every entry.
+4. Apply accepted `DEC-034`: review and author the 12 governed entries individually with at least five linked evaluation cases each.
 5. Evaluate the least-cost runtime candidates and accept `DEC-012` only from measured results.
 6. Complete the Phase 1 evaluation runner, critical regressions, offline quality/cost/latency baseline, and release evidence.
 7. Decide `DEC-014` before any production-data shadow processing.
@@ -96,15 +97,22 @@ The later care-request draft, confirmation lifetime, and notification/operations
 
 ## Next decision to discuss
 
-`KB-AIS-001` - first governed KB and evaluation pack.
+`KB-SUP-001` - human transfer without repetition.
 
-Proposed authoring order:
+Proposed entry:
 
-1. Shared safety/support entries: what LoLo support can help with, emergency/non-medical limitations, human transfer, and English-only behavior.
-2. Family orientation entries: dashboard, existing request list/status meanings, normal new-request form navigation, Family Account roles/access, and account/profile orientation.
-3. Caregiver orientation entries: dashboard/onboarding status, work inbox, shift status/navigation, and account/profile orientation.
-4. One positive, one boundary, one wrong-role, one unsupported-state, and one handoff evaluation case for each entry before publication.
+- Title: **Talk to a person**
+- Roles: Family and Caregiver
+- Type: Escalation
+- Sensitivity: Authenticated
+- Semantic destination: `support.center`
+- Proposed answer: **You can ask to talk to LoLo Support at any time. I can transfer this conversation now. You can keep using this chat, and you will not need to repeat what you already told me.**
+- May state: the user may request a person at any time; transfer keeps the same canonical support conversation; automation stops after the deterministic transfer confirmation.
+- Must not state or infer: a named person is available; immediate response; queue position/status; wait time; another-language support; or that human transfer resolves an emergency, medical, billing, safety, or account problem.
+- Approved next action: transfer the current conversation to human-only support through `SUP-HANDOFF-001`.
+- Required sources: `SRC-AI-DECISIONS-001` (`DEC-001`, `DEC-008`) and `SRC-SUPPORT-CHAT-001`, with the implemented handoff contract as release evidence.
+- Initial evaluation IDs: `EVAL-KB-SUP-001-POS`, `-BOUNDARY`, `-WRONG-ROLE`, `-UNSUPPORTED-STATE`, and `-HANDOFF`.
 
-Each KB fact must cite an authoritative LoLo product/policy source. Existing support transcripts may suggest wording or missing questions but cannot serve as truth. The initial pack excludes pricing, payments, payouts, identity decisions, safety/medical advice, request drafting/submission, applications, shift actions, messaging, and every other domain write unless a later separately sourced entry and capability approval adds them.
+Approval of this entry definition still does not publish it or enable a model. Implementation must verify the exact live support copy and state transitions against the cited sources and deterministic handoff contract.
 
 No control, pilot grant, model call, or user-visible behavior changes when this documentation decision is recorded.

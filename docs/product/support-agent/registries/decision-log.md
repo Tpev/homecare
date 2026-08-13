@@ -294,6 +294,15 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Rationale: This gives caregivers useful orientation across their core existing surfaces while preserving the same reversible, role-isolated, read-only starting boundary approved for Family users.
 - Affects: `SCOPE-AIS-002`, initial Caregiver KB entries, evaluation corpus, semantic target registry use, Phases 3 and 4, and named Caregiver pilot scope
 
+### `DEC-034` — First governed KB and evaluation pack structure
+
+- Status: Accepted
+- Accepted: August 13, 2026
+- Decision owner: Product
+- Decision: The first governed English KB pack contains 12 individually governed entries: three shared support/safety entries, five Family orientation entries, and four Caregiver orientation entries. Every entry requires at least five linked evaluation cases before publication: correct answer, boundary/refusal, wrong-role isolation, unsupported-state behavior, and human handoff. This creates a minimum initial baseline of 60 entry-level evaluation cases. Pack-level approval authorizes the inventory and authoring order only; it does not approve an entry's answer, sources, applicability, publication, model use, navigation release, or user-visible behavior. Each entry remains draft until its facts, exclusions, sources, role/state scope, semantic targets, and evaluation IDs are reviewed and approved through the governed KB lifecycle.
+- Rationale: A small explicit inventory prevents an unbounded KB launch, keeps sources and tests traceable, and makes Family/Caregiver separation and negative behavior first-class rather than relying only on happy-path answers.
+- Affects: `KB-AIS-001`, `EVAL-AIS-001`, initial KB inventory, evaluation corpus, publication checklist, and Phase 1 exit evidence
+
 ## Decisions still required
 
 | ID | Question | Needed before | Owner |

@@ -32,7 +32,8 @@ Read, in order:
 12. [Build readiness and remaining validation ledger](14-build-readiness-ledger.md) to confirm which phase is authorized and which later decisions must remain disabled
 13. [Phase 0-1 foundation build record](16-phase-0-1-foundation-build-record.md) to avoid rebuilding completed foundations or enabling excluded behavior
 14. [Production deployment, verification, and next-phase tracker](17-production-deployment-and-next-phase-tracker.md) for the live status, open defects, next gate, and work ordering
-15. The applicable domain product specifications in the [source register](registries/source-register.md)
+15. [Initial governed KB and evaluation pack](18-initial-kb-and-evaluation-pack.md) when authoring knowledge, evaluations, or the first role-aware answer/navigation runtime
+16. The applicable domain product specifications in the [source register](registries/source-register.md)
 
 Then inspect current code, tests, migrations, routes, policies, and feature configuration. Documentation describes intent; repository inspection establishes the current baseline.
 
