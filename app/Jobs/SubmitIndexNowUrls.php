@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Services\Search\IndexNowKey;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -18,9 +19,9 @@ class SubmitIndexNowUrls implements ShouldQueue
     /** @param list<string> $urls */
     public function __construct(public array $urls) {}
 
-    public function handle(): void
+    public function handle(IndexNowKey $keys): void
     {
-        $key = trim((string) config('services.indexnow.key'));
+        $key = $keys->value();
         $host = parse_url((string) config('app.url'), PHP_URL_HOST);
         if ($key === '' || ! is_string($host) || $host === '') {
             return;

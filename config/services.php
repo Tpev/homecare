@@ -4,6 +4,7 @@ return [
 
     'indexnow' => [
         'key' => env('INDEXNOW_KEY'),
+        'derive_host_key' => env('INDEXNOW_DERIVE_HOST_KEY', env('APP_ENV', 'production') !== 'testing'),
     ],
 
     /*
