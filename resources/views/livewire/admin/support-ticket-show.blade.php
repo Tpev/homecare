@@ -367,7 +367,11 @@
                         @foreach ($messages as $message)
                             @php
                                 $internal = $message->isInternalNote();
-                                $fromAdmin = $message->sender?->isAdministrator() ?? false;
+                                $fromAdmin = ($message->sender?->isAdministrator() ?? false)
+                                    || in_array($message->responder_type, [
+                                        \App\Models\SupportTicketMessage::RESPONDER_AUTOMATED,
+                                        \App\Models\SupportTicketMessage::RESPONDER_SYSTEM,
+                                    ], true);
                             @endphp
                             <div wire:key="admin-support-message-{{ $message->id }}" class="flex {{ $internal || $fromAdmin ? 'justify-end' : 'justify-start' }}">
                                 <article class="max-w-[88%] rounded-2xl px-4 py-3 shadow-sm md:max-w-[72%] {{ $internal ? 'border border-amber-200 bg-amber-50 text-amber-950' : ($fromAdmin ? 'bg-emerald-800 text-white' : 'border border-slate-200 bg-white text-slate-800') }}">
@@ -376,7 +380,7 @@
                                     @endif
                                     <p class="{{ $internal ? 'mt-2 ' : '' }}whitespace-pre-line text-sm">{{ $message->body }}</p>
                                     <div class="mt-2 flex items-center justify-between gap-4 text-[11px] {{ $internal ? 'text-amber-700' : ($fromAdmin ? 'text-emerald-100' : 'text-slate-500') }}">
-                                        <span>{{ $message->sender?->name ?: 'Former user' }} · {{ $message->sender?->role ?: 'unknown' }}</span>
+                                        <span>{{ $message->responder_type === \App\Models\SupportTicketMessage::RESPONDER_AUTOMATED ? 'LoLo Support assistant' : ($message->sender?->name ?: 'System/former user') }} · {{ $message->responder_type ?: ($message->sender?->role ?: 'unknown') }}</span>
                                         <span>{{ $message->created_at?->format('M j, g:i A') }}</span>
                                     </div>
                                 </article>
@@ -463,6 +467,44 @@
                         @error('assignedAdminId') <p class="text-sm text-rose-600">{{ $message }}</p> @enderror
                         <button type="submit" class="min-h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">Update assignment</button>
                     </form>
+
+                    @if ($ticket->isHumanOnly() && ! $isClosed && ! $ticket->transcript_deleted_at)
+                        <form wire:submit="returnToAutomation" class="mt-5 space-y-2 border-t border-slate-200 pt-5">
+                            <label class="block text-sm font-medium text-slate-700" for="return-ai-reason">Return to assistant</label>
+                            <textarea id="return-ai-reason" wire:model="returnToAutomationReason" rows="2" placeholder="Why is automation safe again?" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"></textarea>
+                            @error('returnToAutomationReason') <p class="text-sm text-rose-600">{{ $message }}</p> @enderror
+                            <button type="submit" wire:confirm="Return this conversation to the assistant? The exact user must still have active pilot access." class="min-h-10 w-full rounded-xl border border-amber-300 bg-amber-50 px-3 text-sm font-semibold text-amber-900 hover:bg-amber-100">Return deliberately</button>
+                        </form>
+                    @endif
+                </section>
+
+                <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="flex items-center justify-between gap-3">
+                        <h2 class="font-bold text-slate-950">AI evidence</h2>
+                        <span class="rounded-full px-2.5 py-1 text-xs font-bold uppercase {{ $ticket->isHumanOnly() ? 'bg-slate-100 text-slate-700' : 'bg-violet-100 text-violet-800' }}">{{ str_replace('_', ' ', $ticket->responder_mode) }}</span>
+                    </div>
+                    <p class="mt-2 text-xs text-slate-500">Compact event evidence only. Message content remains in the conversation.</p>
+
+                    <dl class="mt-4 space-y-2 text-xs">
+                        <div class="flex justify-between gap-3"><dt class="text-slate-500">Context contract</dt><dd class="font-semibold text-slate-800">{{ $this->aiContractVersions['context'] }}</dd></div>
+                        <div class="flex justify-between gap-3"><dt class="text-slate-500">Event contract</dt><dd class="font-semibold text-slate-800">{{ $this->aiContractVersions['event'] }}</dd></div>
+                        <div class="flex justify-between gap-3"><dt class="text-slate-500">Retention policy</dt><dd class="font-semibold text-slate-800">{{ $this->aiContractVersions['retention'] }}</dd></div>
+                    </dl>
+
+                    <div class="mt-4 space-y-2">
+                        @forelse ($this->aiEvidence as $event)
+                            <article wire:key="ai-evidence-{{ $event->id }}" class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
+                                <p class="font-bold text-slate-900">{{ str_replace('_', ' ', $event->event_type) }}</p>
+                                <p class="mt-1 text-slate-600">{{ $event->actor?->name ?: 'System' }} · {{ $event->occurred_at?->format('M j, g:i A') }}</p>
+                                <p class="mt-1 text-slate-500">Result: {{ $event->result_code ?: 'recorded' }}@if($event->capability_id) · {{ $event->capability_id }}@endif</p>
+                                @if ($event->knowledge_version_ids)
+                                    <p class="mt-1 text-slate-500">KB versions: {{ implode(', ', $event->knowledge_version_ids) }}</p>
+                                @endif
+                            </article>
+                        @empty
+                            <p class="rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-500">No automated interaction events were recorded.</p>
+                        @endforelse
+                    </div>
                 </section>
 
                 @if ($ticket->careRequest || $ticket->careBooking)
@@ -486,6 +528,10 @@
                     @if ($ticket->resolved_at)
                         <p class="mt-2"><span class="font-semibold text-slate-800">Resolved:</span> {{ $ticket->resolved_at->format('M j, Y g:i A') }}</p>
                     @endif
+                    <p class="mt-2"><span class="font-semibold text-slate-800">Transcript deletion:</span> {{ $ticket->transcript_deleted_at ? 'Completed '.$ticket->transcript_deleted_at->format('M j, Y') : ($ticket->transcript_delete_after?->format('M j, Y') ?: 'Not scheduled while active') }}</p>
+                    @foreach ($this->activeRetentionHolds as $hold)
+                        <p class="mt-2 rounded-lg bg-amber-50 px-2 py-2 text-amber-900"><span class="font-semibold">Retention hold:</span> {{ str_replace('_', ' ', $hold->reason_category) }} · review {{ $hold->review_at->format('M j, Y') }}@if($hold->expires_at) · expires {{ $hold->expires_at->format('M j, Y') }}@endif</p>
+                    @endforeach
                 </section>
             </aside>
         </div>

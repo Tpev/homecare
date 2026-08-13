@@ -17,7 +17,6 @@ class FamilyAccountBackfill
         'care_request_conversations',
         'care_bookings',
         'family_caregiver_favorites',
-        'ai_request_sessions',
         'care_booking_payments',
         'family_recipient_profiles',
         'family_household_profiles',

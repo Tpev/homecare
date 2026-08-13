@@ -27,7 +27,8 @@ class SupportChatService
 
         $query = SupportTicket::query()
             ->visibleTo($user)
-            ->where('source', SupportTicket::SOURCE_CHAT_WIDGET);
+            ->where('source', SupportTicket::SOURCE_CHAT_WIDGET)
+            ->whereNull('transcript_deleted_at');
 
         $active = (clone $query)
             ->whereIn('status', [SupportTicket::STATUS_OPEN, SupportTicket::STATUS_IN_PROGRESS])

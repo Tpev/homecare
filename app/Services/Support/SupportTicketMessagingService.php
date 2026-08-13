@@ -2,9 +2,11 @@
 
 namespace App\Services\Support;
 
+use App\Models\AiSupportActionPreview;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Models\User;
+use App\Services\AiSupport\AiSupportEventRecorder;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Notifications\NotificationChannels;
 use App\Support\MarketplaceEvent;
@@ -19,6 +21,7 @@ class SupportTicketMessagingService
     public function __construct(
         private readonly MarketplaceNotificationService $notifications,
         private readonly SupportMessageRateLimiter $rateLimiter,
+        private readonly AiSupportEventRecorder $aiEvents,
     ) {}
 
     public function sendUserReply(
@@ -63,6 +66,7 @@ class SupportTicketMessagingService
                 [
                     'sender_user_id' => $user->id,
                     'kind' => SupportTicketMessage::KIND_PUBLIC,
+                    'responder_type' => SupportTicketMessage::RESPONDER_HUMAN,
                     'body' => trim($body),
                 ]
             );
@@ -146,6 +150,7 @@ class SupportTicketMessagingService
         [$message, $created, $opener] = DB::transaction(function () use ($ticket, $admin, $body, $clientMessageId): array {
             $lockedTicket = SupportTicket::query()->lockForUpdate()->findOrFail($ticket->id);
             $this->ensureTicketIsOpenForReplies($lockedTicket);
+            $wasAutomated = $lockedTicket->responder_mode === SupportTicket::RESPONDER_MODE_AUTOMATED;
 
             $message = SupportTicketMessage::query()->firstOrCreate(
                 [
@@ -155,6 +160,7 @@ class SupportTicketMessagingService
                 [
                     'sender_user_id' => $admin->id,
                     'kind' => SupportTicketMessage::KIND_PUBLIC,
+                    'responder_type' => SupportTicketMessage::RESPONDER_HUMAN,
                     'body' => trim($body),
                 ]
             );
@@ -168,6 +174,9 @@ class SupportTicketMessagingService
                 'last_public_message_sender_id' => $admin->id,
                 'admin_last_read_at' => $message->created_at,
                 'opener_last_read_at' => null,
+                'responder_mode' => SupportTicket::RESPONDER_MODE_HUMAN_ONLY,
+                'transferred_to_human_at' => $lockedTicket->transferred_to_human_at ?: $message->created_at,
+                'handoff_reason_code' => $lockedTicket->handoff_reason_code ?: 'human_admin_replied',
             ];
 
             if (! $lockedTicket->assigned_admin_id) {
@@ -180,6 +189,26 @@ class SupportTicketMessagingService
             }
 
             $lockedTicket->forceFill($updates)->save();
+            AiSupportActionPreview::query()
+                ->where('support_ticket_id', $lockedTicket->id)
+                ->whereNull('content_deleted_at')
+                ->update([
+                    'preview_payload' => null,
+                    'invalidated_at' => $message->created_at,
+                    'invalidation_reason' => 'human_admin_replied',
+                    'content_deleted_at' => $message->created_at,
+                ]);
+            if ($wasAutomated) {
+                $this->aiEvents->record($lockedTicket, 'transferred_to_human', [
+                    'support_ticket_message_id' => $message->id,
+                    'reason_code' => 'human_admin_replied',
+                    'result_code' => 'human_only',
+                    'safe_metadata' => [
+                        'ownership_from' => 'automated',
+                        'ownership_to' => 'human_only',
+                    ],
+                ], $admin);
+            }
 
             return [$message, true, $lockedTicket->opener()->first()];
         });
@@ -240,6 +269,7 @@ class SupportTicketMessagingService
                 [
                     'sender_user_id' => $admin->id,
                     'kind' => SupportTicketMessage::KIND_INTERNAL_NOTE,
+                    'responder_type' => SupportTicketMessage::RESPONDER_HUMAN,
                     'body' => trim($body),
                 ]
             );

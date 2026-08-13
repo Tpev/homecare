@@ -147,6 +147,37 @@ new class extends Component
 
         $adminNavGroups = [
             [
+                'label' => 'AI Support',
+                'active' => request()->routeIs('admin.ai-support.*'),
+                'items' => [
+                    [
+                        'label' => 'Overview',
+                        'href' => route('admin.ai-support.index'),
+                        'active' => request()->routeIs('admin.ai-support.index'),
+                    ],
+                    [
+                        'label' => 'Pilot Users',
+                        'href' => route('admin.ai-support.pilots.index'),
+                        'active' => request()->routeIs('admin.ai-support.pilots.*'),
+                    ],
+                    [
+                        'label' => 'Knowledge Base',
+                        'href' => route('admin.ai-support.knowledge.index'),
+                        'active' => request()->routeIs('admin.ai-support.knowledge.*'),
+                    ],
+                    [
+                        'label' => 'Activity',
+                        'href' => route('admin.ai-support.activity.index'),
+                        'active' => request()->routeIs('admin.ai-support.activity.*'),
+                    ],
+                    [
+                        'label' => 'Settings',
+                        'href' => route('admin.ai-support.settings'),
+                        'active' => request()->routeIs('admin.ai-support.settings'),
+                    ],
+                ],
+            ],
+            [
                 'label' => 'Content',
                 'active' => request()->routeIs('admin.content.*'),
                 'items' => [
@@ -298,8 +329,8 @@ new class extends Component
         }
 
         if ($isAdmin && $continuousCoverageVisible) {
-            $adminNavGroups[1]['active'] = $adminNavGroups[1]['active'] || request()->routeIs('admin.continuous-coverage.*');
-            $adminNavGroups[1]['items'][] = [
+            $adminNavGroups[2]['active'] = $adminNavGroups[2]['active'] || request()->routeIs('admin.continuous-coverage.*');
+            $adminNavGroups[2]['items'][] = [
                 'label' => 'Continuous Coverage',
                 'href' => route('admin.continuous-coverage.index'),
                 'active' => request()->routeIs('admin.continuous-coverage.*'),
@@ -349,7 +380,7 @@ new class extends Component
                 $primaryLinks[] = [
                     'label' => 'Get care',
                     'href' => route('family.requests.create'),
-                    'active' => request()->routeIs('family.requests.create') || request()->routeIs('family.requests.create_ai'),
+                    'active' => request()->routeIs('family.requests.create'),
                     'primary' => true,
                 ];
             }

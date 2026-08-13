@@ -146,7 +146,11 @@
                     @php $previousMessageAt = $ticket->created_at; @endphp
                     @foreach ($messages as $message)
                         @php
-                            $fromSupport = $message->sender?->role === 'admin';
+                            $fromSupport = $message->sender?->role === 'admin'
+                                || in_array($message->responder_type, [
+                                    \App\Models\SupportTicketMessage::RESPONDER_AUTOMATED,
+                                    \App\Models\SupportTicketMessage::RESPONDER_SYSTEM,
+                                ], true);
                             $mine = (int) $message->sender_user_id === (int) auth()->id();
                             $showTime = ! $previousMessageAt
                                 || ! $message->created_at?->isSameDay($previousMessageAt)
@@ -160,7 +164,7 @@
                                 <p class="support-chat-message-text">{{ $message->body }}</p>
                                 <p class="mt-1.5 text-[11px] {{ $fromSupport ? 'text-[#76818B]' : 'text-[#DDEEEA]' }}">
                                     @if ($fromSupport)
-                                        {{ $message->sender?->name ?: 'LoLo' }} &middot; Support
+                                        {{ $message->responder_type === \App\Models\SupportTicketMessage::RESPONDER_AUTOMATED ? 'LoLo Support assistant' : ($message->sender?->name ?: 'LoLo Support') }} &middot; Support
                                     @elseif ($mine)
                                         You &middot; Sent
                                     @else

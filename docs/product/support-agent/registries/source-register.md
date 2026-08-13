@@ -1,0 +1,35 @@
+# Source Register
+
+Status: Draft registry
+
+Last updated: August 13, 2026
+
+Owner: Product content
+
+## Purpose
+
+The source register names documents and application contracts that may support capabilities and KB entries. Registration does not automatically approve every statement in a source; each KB entry still requires applicability and review.
+
+| Source ID | Source | Type | Authority | Scope | Review owner |
+| --- | --- | --- | --- | --- | --- |
+| `SRC-SUPPORT-CHAT-001` | [Support live-chat specification](../../support-live-chat-spec.md) | Product/engineering spec | Approved status must be confirmed; normative design input | Authenticated support chat, admin inbox, mobile/accessibility, privacy | Product/support |
+| `SRC-SUPPORT-IMPL-001` | [Support implementation prompt](../../support-live-chat-implementation-prompt.md) | Implementation handoff | Discovery/current delivery input | Human-chat MVP constraints | Engineering |
+| `SRC-FAMILY-WORKFLOW-001` | [Family care receiver workflow](../../family-care-receiver-workflow.md) | Product workflow | Domain design input | Request, hire, visit, payment, rebook lifecycle | Product |
+| `SRC-FAMILY-ACCESS-001` | [Family account access specification](../../family-account-access-spec.md) | Product/security spec | Normative for shared-family access once approved/released | Roles, membership, billing ownership, attribution | Product/security |
+| `SRC-RECIPIENT-001` | [Care recipient profile specification](../../care-recipient-profile-spec.md) | Product/security spec | Normative for recipient/profile handling once approved/released | Recipient data, privacy, profile versioning | Product/security |
+| `SRC-REGULAR-CARE-001` | [Regular care product specification](../../regular-care-product-spec.md) | Product/engineering spec | Normative for regular-care behavior once approved/released | Plans, schedules, visits, changes | Product |
+| `SRC-CODE-SUPPORT-001` | Current support chat services, Livewire components, models, policies, and tests | Repository evidence | Descriptive current behavior | Actual support implementation | Engineering |
+| `SRC-CODE-COPILOT-001` | Current `App\Services\AiCopilot`, `AiRequestCopilot`, models, and tests | Legacy retirement inventory | Not a product or implementation authority | Identify every removal and `DEC-011` destruction target while protecting ordinary domain records | Engineering |
+| `SRC-LOLO-PRIVACY-001` | [LoLo Privacy Policy](../../../../resources/legal/privacy-policy.txt) | Approved legal/product notice; current status must be confirmed before release | Governs disclosed purpose-based personal-information retention and privacy rights | Personal data, retention purposes, deletion requests, healthcare-adjacent information | Legal/privacy |
+| `SRC-FTC-RETENTION-001` | [FTC Protecting Personal Information: A Guide for Business](https://www.ftc.gov/business-guidance/resources/protecting-personal-information-guide-business) | External official guidance, checked August 13, 2026 | Risk-management guidance, not a universal statutory duration | Data inventory, minimization, written retention policy, secure disposal | Security/privacy |
+| `SRC-NIST-PRIVACY-001` | [NIST Privacy Framework](https://www.nist.gov/privacy-framework/privacy-framework) | External official voluntary framework, checked August 13, 2026 | Privacy-risk and lifecycle reference, not a legal conclusion | Data processing lifecycle, governance, risk management | Security/privacy |
+| `SRC-OPENAI-SOL-001` | [Official GPT-5.6 Sol documentation](https://developers.openai.com/api/docs/models/gpt-5.6-sol) | External official documentation | Technical capability/pricing reference at access date | Model features, endpoints, current pricing | Engineering |
+| `SRC-OPENAI-GUIDE-001` | [Official OpenAI model guidance](https://developers.openai.com/api/docs/guides/latest-model) | External official documentation | Technical guidance at access date | Evaluation, tools, prompt/cost guidance | Engineering |
+
+## Source review rules
+
+- Confirm document approval and implementation status before treating a proposed product spec as normative.
+- Record line/section or stable anchor in individual KB entries when possible.
+- External documentation must include access date and be rechecked for model, price, endpoint, retention, or availability claims.
+- Code references must identify the commit in release evidence.
+- If code and approved product intent conflict, open a decision and do not teach the code behavior as policy without review.

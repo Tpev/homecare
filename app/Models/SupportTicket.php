@@ -27,10 +27,15 @@ class SupportTicket extends Model
 
     public const STATUS_CLOSED = 'closed';
 
+    public const RESPONDER_MODE_HUMAN_ONLY = 'human_only';
+
+    public const RESPONDER_MODE_AUTOMATED = 'automated';
+
     protected $fillable = [
         'family_account_id',
         'family_visibility',
         'source',
+        'responder_mode',
         'origin_route',
         'origin_path',
         'opener_user_id',
@@ -45,8 +50,14 @@ class SupportTicket extends Model
         'initial_client_message_id',
         'admin_note',
         'resolved_at',
+        'retention_started_at',
+        'transcript_delete_after',
+        'transcript_deleted_at',
         'assigned_admin_id',
         'claimed_at',
+        'transferred_to_human_at',
+        'returned_to_automation_at',
+        'handoff_reason_code',
         'last_public_message_at',
         'last_public_message_sender_id',
         'opener_last_read_at',
@@ -57,7 +68,12 @@ class SupportTicket extends Model
     {
         return [
             'resolved_at' => 'datetime',
+            'retention_started_at' => 'datetime',
+            'transcript_delete_after' => 'datetime',
+            'transcript_deleted_at' => 'datetime',
             'claimed_at' => 'datetime',
+            'transferred_to_human_at' => 'datetime',
+            'returned_to_automation_at' => 'datetime',
             'last_public_message_at' => 'datetime',
             'opener_last_read_at' => 'datetime',
             'admin_last_read_at' => 'datetime',
@@ -66,6 +82,27 @@ class SupportTicket extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (SupportTicket $ticket): void {
+            if (! Schema::hasColumn('support_tickets', 'retention_started_at') || ! $ticket->isDirty('status')) {
+                return;
+            }
+
+            $finalStatuses = [self::STATUS_RESOLVED, self::STATUS_CLOSED];
+            $wasFinal = in_array($ticket->getOriginal('status'), $finalStatuses, true);
+            $isFinal = in_array($ticket->status, $finalStatuses, true);
+
+            if ($isFinal && ! $wasFinal) {
+                $startedAt = now();
+                $ticket->retention_started_at = $startedAt;
+                $ticket->transcript_delete_after = $startedAt->copy()->addMonths(
+                    (int) config('ai_support.support_transcript_months', 12)
+                );
+            } elseif (! $isFinal) {
+                $ticket->retention_started_at = null;
+                $ticket->transcript_delete_after = null;
+            }
+        });
+
         static::creating(function (SupportTicket $ticket): void {
             if (! $ticket->family_account_id) {
                 $ticket->family_account_id = $ticket->care_request_id
@@ -170,6 +207,16 @@ class SupportTicket extends Model
     public function activities(): HasMany
     {
         return $this->hasMany(SupportTicketActivity::class)->latest('created_at');
+    }
+
+    public function aiInteractionEvents(): HasMany
+    {
+        return $this->hasMany(AiSupportInteractionEvent::class);
+    }
+
+    public function isHumanOnly(): bool
+    {
+        return $this->responder_mode !== self::RESPONDER_MODE_AUTOMATED;
     }
 
     public function scopeVisibleTo(Builder $query, User $user): Builder

@@ -44,6 +44,8 @@
         </div>
     </x-card>
 
+    <livewire:admin.ai-support.user-pilot-card :user="$user" :key="'ai-support-pilot-user-'.$user->id" />
+
     @if($caregiverProfile)
         <x-card>
             <x-slot:header>

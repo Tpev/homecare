@@ -37,13 +37,15 @@ class SupportTicketPolicy
     {
         return $this->view($user, $supportTicket)
             && ! $user->isAdministrator()
-            && $supportTicket->status !== SupportTicket::STATUS_CLOSED;
+            && $supportTicket->status !== SupportTicket::STATUS_CLOSED
+            && $supportTicket->transcript_deleted_at === null;
     }
 
     public function replyAsAdmin(User $user, SupportTicket $supportTicket): bool
     {
         return $user->isAdministrator()
-            && $supportTicket->status !== SupportTicket::STATUS_CLOSED;
+            && $supportTicket->status !== SupportTicket::STATUS_CLOSED
+            && $supportTicket->transcript_deleted_at === null;
     }
 
     public function addInternalNote(User $user, SupportTicket $supportTicket): bool

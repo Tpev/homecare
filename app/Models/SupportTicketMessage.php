@@ -16,10 +16,17 @@ class SupportTicketMessage extends Model
 
     public const KIND_INTERNAL_NOTE = 'internal_note';
 
+    public const RESPONDER_HUMAN = 'human';
+
+    public const RESPONDER_AUTOMATED = 'automated';
+
+    public const RESPONDER_SYSTEM = 'system';
+
     protected $fillable = [
         'support_ticket_id',
         'sender_user_id',
         'kind',
+        'responder_type',
         'body',
         'client_message_id',
     ];

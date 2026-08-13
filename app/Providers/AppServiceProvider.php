@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Contracts\AiCopilotResponder;
 use App\Listeners\AttributeContentRegistration;
 use App\Listeners\SendOpsUserRegisteredAlert;
 use App\Models\BlogPost;
@@ -24,8 +23,6 @@ use App\Policies\CareRequestPolicy;
 use App\Policies\MediaAssetPolicy;
 use App\Policies\SupportTicketMessagePolicy;
 use App\Policies\SupportTicketPolicy;
-use App\Services\AiCopilot\OpenAiCopilotResponder;
-use App\Services\AiCopilot\RuleBasedCopilotResponder;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -41,17 +38,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(AiCopilotResponder::class, function ($app) {
-            if (! config('features.ai_request_copilot')) {
-                return $app->make(RuleBasedCopilotResponder::class);
-            }
-
-            if ((string) config('services.openai.key') === '') {
-                return $app->make(RuleBasedCopilotResponder::class);
-            }
-
-            return $app->make(OpenAiCopilotResponder::class);
-        });
+        //
     }
 
     /**

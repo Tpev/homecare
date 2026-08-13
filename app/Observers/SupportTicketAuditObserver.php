@@ -9,7 +9,11 @@ class SupportTicketAuditObserver
 {
     public function updated(SupportTicket $ticket): void
     {
-        $tracked = collect(['status', 'assigned_admin_id', 'claimed_at', 'resolved_at'])
+        $tracked = collect([
+            'status', 'assigned_admin_id', 'claimed_at', 'resolved_at', 'responder_mode',
+            'transferred_to_human_at', 'returned_to_automation_at', 'handoff_reason_code',
+            'retention_started_at', 'transcript_delete_after',
+        ])
             ->filter(fn (string $field): bool => $ticket->wasChanged($field));
 
         if ($tracked->isEmpty()) {
@@ -37,6 +41,15 @@ class SupportTicketAuditObserver
             ])->all(),
             'created_at' => now(),
         ]);
+
+        if ($ticket->wasChanged('retention_started_at') || $ticket->wasChanged('transcript_delete_after')) {
+            $ticket->aiInteractionEvents()->update([
+                'retention_started_at' => $ticket->retention_started_at,
+                'delete_after' => $ticket->retention_started_at?->copy()->addMonths(
+                    (int) config('ai_support.interaction_event_months', 24)
+                ),
+            ]);
+        }
     }
 
     private function serializeValue(mixed $value): mixed

@@ -68,6 +68,8 @@ Reusing the existing support records preserves one history, one permissions mode
 
 The Support Center remains the better path for issues that require a category, priority, booking reference, detailed evidence, or an operational correction.
 
+Future knowledge-grounded answers, semantic navigation, guided drafts, confirmed actions, evaluation, and human-handoff controls are specified separately in the [LoLo Intelligent Support Agent documentation](support-agent/README.md). That program does not change the Phase 1 human-chat non-goals or authorize AI behavior in this release.
+
 ## 5. Surfaces
 
 The feature has two connected surfaces.
@@ -409,7 +411,7 @@ Preserve the unsent draft when the widget is minimized or the user navigates thr
 9. Maintain idempotency for repeated sends and network retries.
 10. Do not include sensitive message content in notification email subject lines, lock-screen text, or analytics events.
 11. Log assignment, status, resolution, and administrative actions using existing audit patterns.
-12. Chat messages use the same retention and deletion rules as support tickets.
+12. Chat messages use the same retention and deletion rules as support tickets. Under support-agent `DEC-026`, the unified human-and-AI conversation content is retained while open and for 12 calendar months after its most recent final resolution. Reopening resets the clock; expiry automatically deletes conversation-bearing content and identifiable derivatives unless a narrow authorized legal/security hold applies. Linked care, booking, payment, account, and other authoritative domain records retain their own rules.
 
 ## 11. Accessibility
 

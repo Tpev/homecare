@@ -27,6 +27,12 @@ use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TwilioSmsStatusWebhookController;
 use App\Http\Controllers\TwilioSmsWebhookController;
 use App\Http\Controllers\TwilioVoiceWebhookController;
+use App\Livewire\Admin\AiSupport\ActivityIndex as AiSupportActivityIndex;
+use App\Livewire\Admin\AiSupport\KnowledgeEditor as AiSupportKnowledgeEditor;
+use App\Livewire\Admin\AiSupport\KnowledgeIndex as AiSupportKnowledgeIndex;
+use App\Livewire\Admin\AiSupport\Overview as AiSupportOverview;
+use App\Livewire\Admin\AiSupport\PilotsIndex as AiSupportPilotsIndex;
+use App\Livewire\Admin\AiSupport\Settings as AiSupportSettings;
 use App\Livewire\Admin\CaregiverCoverageMap;
 use App\Livewire\Admin\CaregiverReviewsQueue;
 use App\Livewire\Admin\CarePlanShow;
@@ -71,7 +77,6 @@ use App\Livewire\Caregiver\TaskComfortSetup;
 use App\Livewire\Caregiver\WorkInbox;
 use App\Livewire\Dashboard\Home as DashboardHome;
 use App\Livewire\Family\AcceptFamilyInvitation;
-use App\Livewire\Family\AiRequestCopilot;
 use App\Livewire\Family\BookAgain;
 use App\Livewire\Family\CareHistory;
 use App\Livewire\Family\CareProfileEditor;
@@ -127,6 +132,13 @@ Route::middleware(['web', 'auth', 'admin.email'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
+        Route::get('/ai-support', AiSupportOverview::class)->name('ai-support.index');
+        Route::get('/ai-support/pilots', AiSupportPilotsIndex::class)->name('ai-support.pilots.index');
+        Route::get('/ai-support/knowledge', AiSupportKnowledgeIndex::class)->name('ai-support.knowledge.index');
+        Route::get('/ai-support/knowledge/create', AiSupportKnowledgeEditor::class)->name('ai-support.knowledge.create');
+        Route::get('/ai-support/knowledge/{entry}/edit', AiSupportKnowledgeEditor::class)->name('ai-support.knowledge.edit');
+        Route::get('/ai-support/activity', AiSupportActivityIndex::class)->name('ai-support.activity.index');
+        Route::get('/ai-support/settings', AiSupportSettings::class)->name('ai-support.settings');
         Route::get('/caregivers/reviews', CaregiverReviewsQueue::class)->name('caregivers.reviews');
         Route::get('/caregivers/moderation-logs', \App\Livewire\Admin\CaregiverModerationLogs::class)
             ->name('caregivers.moderation_logs');
@@ -316,7 +328,6 @@ Route::middleware(['auth', 'family.role'])->prefix('family')->name('family.')->g
         ->name('care.show');
     Route::get('/requests', RequestsIndex::class)->name('requests.index');
     Route::get('/requests/create', CreateCareRequestWizard::class)->name('requests.create');
-    Route::get('/requests/create/ai', AiRequestCopilot::class)->name('requests.create_ai');
     Route::get('/notifications', FamilyNotificationsCenter::class)->name('notifications.index');
     Route::get('/billing', [FamilyBillingController::class, 'show'])->name('billing.show');
     Route::post('/billing/checkout', [FamilyBillingController::class, 'createCheckout'])->name('billing.checkout');

@@ -2,11 +2,15 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\AiSupportInteractionEvent;
 use App\Models\CareBookingCorrection;
 use App\Models\CareBookingTimeCorrection;
+use App\Models\DataRetentionHold;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Models\User;
+use App\Services\AiSupport\AiSupportContractRegistry;
+use App\Services\AiSupport\AiSupportHandoffService;
 use App\Services\Booking\BookingCorrectionService;
 use App\Services\Booking\CareBookingTimeCorrectionService;
 use App\Services\Support\SupportChatService;
@@ -33,6 +37,8 @@ class SupportTicketShow extends Component
     public string $status = SupportTicket::STATUS_OPEN;
 
     public string $assignedAdminId = '';
+
+    public string $returnToAutomationReason = '';
 
     public int $messagesLimit = 50;
 
@@ -170,6 +176,29 @@ class SupportTicketShow extends Component
         session()->flash('status', 'Ticket assignment updated.');
     }
 
+    public function returnToAutomation(AiSupportHandoffService $handoff): void
+    {
+        $validated = $this->validate([
+            'returnToAutomationReason' => ['required', 'string', 'min:5', 'max:500'],
+        ]);
+
+        try {
+            $handoff->returnToAutomation(
+                auth()->user(),
+                $this->ticket,
+                $validated['returnToAutomationReason'],
+            );
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            $this->addError('returnToAutomationReason', collect($exception->errors())->flatten()->first());
+
+            return;
+        }
+
+        $this->returnToAutomationReason = '';
+        $this->syncControlsFromTicket();
+        session()->flash('status', 'Conversation deliberately returned to the assistant.');
+    }
+
     public function loadMore(): void
     {
         $this->messagesLimit = min(300, $this->messagesLimit + 40);
@@ -290,6 +319,31 @@ class SupportTicketShow extends Component
         return SupportTicketMessage::query()
             ->where('support_ticket_id', $this->ticketId)
             ->count() > $this->messagesLimit;
+    }
+
+    public function getAiEvidenceProperty(): Collection
+    {
+        return AiSupportInteractionEvent::query()
+            ->with('actor:id,name')
+            ->where('support_ticket_id', $this->ticketId)
+            ->latest('occurred_at')
+            ->get();
+    }
+
+    public function getActiveRetentionHoldsProperty(): Collection
+    {
+        return DataRetentionHold::query()
+            ->active()
+            ->where('scope_type', SupportTicket::class)
+            ->where('scope_id', (string) $this->ticketId)
+            ->orderBy('review_at')
+            ->get();
+    }
+
+    /** @return array<string, mixed> */
+    public function getAiContractVersionsProperty(): array
+    {
+        return app(AiSupportContractRegistry::class)->versions();
     }
 
     /** @return array<string, mixed>|null */
