@@ -330,6 +330,15 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Rationale: The boundary is truthful and inexpensive while reducing false classifications that could confuse or exclude older users.
 - Affects: `KB-SUP-003`, `DEC-016`, unsupported-language detection/evaluations, `SUP-HANDOFF-001`, and future grounded-answer release evidence
 
+### `DEC-038` — Approve `KB-FAM-001` Family dashboard definition
+
+- Status: Accepted
+- Accepted: August 13, 2026
+- Decision owner: Product
+- Decision: Approve `KB-FAM-001` **Your Family dashboard** for governed draft and evaluation authoring. The English answer may describe the dashboard as the signed-in Family home page that conditionally prioritizes the most important current next step, recent updates, care needing attention, the next visit, care-history access, and ways to start or book care again. It must say that visible content depends on the authorized Family Account and current care activity. It may never invent a request, caregiver reply, message, visit, booking, payment state, or required action without fresh authorized context. Caregivers and users outside the applicable Family Account receive no Family dashboard data or navigation. The only later navigation action is the registered `family.dashboard` target; if already there, no arbitrary scroll, selector, coordinate, or highlight is permitted. This decision does not publish the entry or enable model/navigation/pilot controls.
+- Rationale: Conditional orientation helps older users understand the page without turning a generic KB answer into an unsupported personalized status claim.
+- Affects: `KB-FAM-001`, `family.dashboard`, Family context authorization, five linked evaluations, and future Family answer/navigation release evidence
+
 ## Decisions still required
 
 | ID | Question | Needed before | Owner |

@@ -67,6 +67,7 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 | `KB-SUP-001` | Human transfer without repetition | Definition accepted August 13, 2026 through `DEC-035` | Governed draft and five evaluation cases may be authored; not published |
 | `KB-SUP-002` | Emergencies and non-medical support | Definition accepted August 13, 2026 through `DEC-036` | Governed draft and critical evaluation corpus may be authored; not published |
 | `KB-SUP-003` | English-only intelligent support | Definition accepted August 13, 2026 through `DEC-037` | Governed draft and five evaluation cases may be authored; not published |
+| `KB-FAM-001` | Family dashboard orientation | Definition accepted August 13, 2026 through `DEC-038` | Governed draft and five evaluation cases may be authored; not published |
 | `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Pending scope/corpus | Offline runtime baseline |
 | `KB-AIS-001` | Author, source, validate, and publish the initial governed KB set | Pack structure approved; individual entries pending | Grounded answers and shadow readiness |
 | `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Minimum 60-case structure approved; cases pending | Model selection and Phase 1 exit |
@@ -100,22 +101,22 @@ The later care-request draft, confirmation lifetime, and notification/operations
 
 ## Next decision to discuss
 
-`KB-FAM-001` - Family dashboard orientation.
+`KB-FAM-002` - existing care requests and status.
 
 Proposed answer:
 
-- Title: **Your Family dashboard**
+- Title: **Your care requests and visits**
 - Roles: Family only
-- Type: Navigation
+- Type: Product Fact / Navigation
 - Sensitivity: Authenticated
-- Semantic destination: `family.dashboard`
-- Proposed answer: **Your Family dashboard is the home page for your care activity. It shows the most important next step for your account, recent updates, and—when available—your next visit and ways to start or book care again. What appears depends on your account and current care activity. I can take you there.**
-- May state: the dashboard is role-specific; it prioritizes a current next step; it may show recent updates, care needing attention, a next visit, and start/book-again paths when applicable.
-- Must not state or infer: that a request, reply, caregiver, visit, message, booking, payment, or other status exists unless authoritative current context proves it; that the dashboard itself performs an action; or any Family data to a Caregiver.
-- Approved next action: navigate only to the registered `family.dashboard` target after the separate navigation phase is approved; if already there, explain that without arbitrary scrolling or highlighting.
-- Required sources: `SRC-AI-DECISIONS-001` (`DEC-032`), `SRC-FAMILY-WORKFLOW-001`, and `SRC-CODE-DASHBOARD-001` pinned to the release commit for the exact live dashboard sections and role isolation.
-- Initial evaluation IDs: `EVAL-KB-FAM-001-POS`, `-BOUNDARY`, `-WRONG-ROLE`, `-UNSUPPORTED-STATE`, and `-HANDOFF`.
+- Semantic destination: `family.care_requests`
+- Proposed answer: **Your Care page keeps your care requests and visits in one place. Draft means the request has not been posted. Open means caregivers can still respond. Visit scheduled means a caregiver was selected; open the request to see the visit's current status. Withdrawn or Expired requests no longer accept new caregiver responses. I can take you to your Care page.**
+- May state: Family users can filter Care by Open, Visit scheduled, Draft, Withdrawn, and Expired; only Open requests are eligible for caregiver responses; a request card with a booking may show the fresher visit state and next step.
+- Must not state or infer: that a particular request exists or has a particular status without fresh Family Account-scoped data; that Open guarantees a response; that Visit scheduled means the visit is currently upcoming rather than completed/cancelled/disputed; or any payment, applicant, caregiver, or visit outcome not proven by authoritative context.
+- Approved next action: navigate only to `family.care_requests` after the navigation phase is approved. Opening a particular request requires a separately authorized resource-bound target/action and is not approved by this entry.
+- Required sources: `SRC-AI-DECISIONS-001` (`DEC-032`), `SRC-FAMILY-WORKFLOW-001`, and `SRC-CODE-CARE-REQUESTS-001` pinned to the release commit.
+- Initial evaluation IDs: `EVAL-KB-FAM-002-POS`, `-BOUNDARY`, `-WRONG-ROLE`, `-UNSUPPORTED-STATE`, and `-HANDOFF`.
 
-Approval of this entry definition will permit governed draft and evaluation authoring only. It will not publish the entry, enable a model/navigation in production, or authorize personalized status claims beyond validated context.
+Approval of this entry definition will permit governed draft and evaluation authoring only. It will not publish the entry, enable a model/navigation in production, or authorize opening a particular request or changing any request/visit state.
 
 No control, pilot grant, model call, or user-visible behavior changes when this documentation decision is recorded.

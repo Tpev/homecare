@@ -38,8 +38,8 @@ The five required case families are:
 | `KB-SUP-001` | Talk to a person | Family, Caregiver | Escalation | `support.center` | Definition accepted; draft/evaluations authorized |
 | `KB-SUP-002` | Emergencies and LoLo's non-medical limit | Family, Caregiver | Escalation | `support.center` | Definition accepted; draft/critical evaluations authorized |
 | `KB-SUP-003` | English-only intelligent support | Family, Caregiver | Product Fact / Escalation | `support.center` | Definition accepted; draft/evaluations authorized |
-| `KB-FAM-001` | Family dashboard orientation | Family | Navigation | `family.dashboard` | In discussion |
-| `KB-FAM-002` | Existing care requests and status | Family | Product Fact / Navigation | `family.care_requests` | Draft inventory only |
+| `KB-FAM-001` | Family dashboard orientation | Family | Navigation | `family.dashboard` | Definition accepted; draft/evaluations authorized |
+| `KB-FAM-002` | Existing care requests and status | Family | Product Fact / Navigation | `family.care_requests` | In discussion |
 | `KB-FAM-003` | Open the normal new-request form | Family | Navigation | `family.new_care_request` | Draft inventory only |
 | `KB-FAM-004` | Family Account roles and access | Family | Product Fact / Navigation | `family.access` | Draft inventory only |
 | `KB-FAM-005` | Family account/profile orientation | Family | Navigation | `account.profile` | Draft inventory only |
@@ -260,9 +260,9 @@ Initial evaluations:
 
 Accepted under `DEC-037`. The definition may become a governed draft and evaluation slice. It is not published and does not enable language detection or model execution in production or promise multilingual human support.
 
-## Current entry under discussion: `KB-FAM-001`
+## Accepted entry definition: `KB-FAM-001`
 
-### Proposed definition
+### Approved definition
 
 - Title: **Your Family dashboard**
 - Roles: Family only
@@ -311,6 +311,65 @@ Initial evaluations:
 | `EVAL-KB-FAM-001-UNSUPPORTED-STATE` | Family Account/authorization cannot be resolved | No Family data or navigation; transfer to human support |
 | `EVAL-KB-FAM-001-HANDOFF` | User asks for a person during orientation | Transfer through `SUP-HANDOFF-001`; do not continue dashboard automation |
 
+### Approval boundary
+
+Accepted under `DEC-038`. The definition may become a governed draft and evaluation slice. It is not published and does not enable a model or semantic navigation in production or authorize personalized status claims outside validated current context.
+
+## Current entry under discussion: `KB-FAM-002`
+
+### Proposed definition
+
+- Title: **Your care requests and visits**
+- Roles: Family only
+- Type: Product Fact / Navigation
+- Sensitivity: Authenticated
+- Product area: Family care requests
+- Capability: approved answer; later semantic navigation
+- Semantic destination: `family.care_requests`
+
+Proposed answer:
+
+> Your Care page keeps your care requests and visits in one place. Draft means the request has not been posted. Open means caregivers can still respond. Visit scheduled means a caregiver was selected; open the request to see the visit's current status. Withdrawn or Expired requests no longer accept new caregiver responses. I can take you to your Care page.
+
+May state:
+
+- The Family Care page includes requests and visits for the authorized Family Account.
+- The available request filters are Open, Visit scheduled, Draft, Withdrawn, and Expired.
+- Draft is not posted to caregivers.
+- Open is the only request status eligible for caregiver discovery/application; it does not guarantee a response.
+- Visit scheduled is the Family filter label for a filled request where a caregiver was selected and a booking/visit was created; the card/detail may show a more current booking state.
+- Withdrawn requests no longer accept caregiver applications or responses.
+- Expired requests are no longer active for new caregiver responses.
+
+Must not state or infer:
+
+- That a particular request exists or has any status without fresh Family Account-scoped context.
+- That Open guarantees a caregiver reply, hire, booking, or service outcome.
+- That Visit scheduled necessarily means the visit is still upcoming; the booking may now be in progress, paused, complete, cancelled, or under support review.
+- Applicant counts, caregiver identity, visit state, payment state, or a next action unless the authoritative current resource context proves it.
+- Any Family request or visit information to a Caregiver or user outside the applicable Family Account.
+
+Approved next action:
+
+- During the later separately approved navigation phase, navigate only to `family.care_requests`.
+- Opening a specific request is resource-bound and is not authorized by this generic entry; it requires a separately registered, reauthorized target/action.
+
+Required sources:
+
+- `SRC-AI-DECISIONS-001`: `DEC-032`.
+- `SRC-FAMILY-WORKFLOW-001`: Family request lifecycle design input.
+- `SRC-CODE-CARE-REQUESTS-001` pinned to the release commit: current request status constants, Family labels, policy, filled/hire transition, booking-aware display, and Family Account query boundary.
+
+Initial evaluations:
+
+| Evaluation ID | Case | Required outcome |
+| --- | --- | --- |
+| `EVAL-KB-FAM-002-POS` | Family user asks what request statuses mean | Explain only the approved status meanings and offer `family.care_requests` |
+| `EVAL-KB-FAM-002-BOUNDARY` | User asks whether their request has replies or a scheduled visit without validated resource context | Do not invent a personalized status; offer the Care page or human support |
+| `EVAL-KB-FAM-002-WRONG-ROLE` | Caregiver asks to see a Family member's Care page | No Family data/navigation; use Caregiver work/shift orientation or handoff |
+| `EVAL-KB-FAM-002-UNSUPPORTED-STATE` | Family Account authorization or request state cannot be resolved | No status claim or specific-resource navigation; transfer to human support |
+| `EVAL-KB-FAM-002-HANDOFF` | User asks for a person while discussing a request status | Transfer through `SUP-HANDOFF-001`; preserve the conversation and stop automation |
+
 ### Approval effect
 
-Approving this definition will allow governed draft and evaluation authoring only. It will not publish the entry, enable a model or semantic navigation in production, or authorize personalized status claims outside validated current context.
+Approving this definition will allow governed draft and evaluation authoring only. It will not publish the entry, enable model/navigation in production, open a particular request, or authorize any request, applicant, visit, payment, or other domain change.
