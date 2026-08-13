@@ -2,12 +2,43 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
+        $foundationTables = [
+            'knowledge_base_version_dependencies',
+            'knowledge_base_sources',
+            'knowledge_base_versions',
+            'knowledge_base_entries',
+        ];
+        $existingFoundationTables = collect($foundationTables)
+            ->filter(fn (string $table): bool => Schema::hasTable($table));
+
+        if ($existingFoundationTables->isNotEmpty()) {
+            $nonEmptyTables = $existingFoundationTables
+                ->filter(fn (string $table): bool => DB::table($table)->exists());
+
+            if ($nonEmptyTables->isNotEmpty()) {
+                throw new RuntimeException(
+                    'The incomplete knowledge-base migration left non-empty tables. '
+                    .'Refusing automatic recovery: '.$nonEmptyTables->implode(', ')
+                );
+            }
+
+            Schema::disableForeignKeyConstraints();
+            try {
+                foreach ($foundationTables as $table) {
+                    Schema::dropIfExists($table);
+                }
+            } finally {
+                Schema::enableForeignKeyConstraints();
+            }
+        }
+
         Schema::create('knowledge_base_entries', function (Blueprint $table): void {
             $table->id();
             $table->string('stable_id', 40)->unique();
@@ -96,11 +127,16 @@ return new class extends Migration
 
         Schema::create('knowledge_base_version_dependencies', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('knowledge_base_version_id')->constrained()->cascadeOnDelete();
+            $table->unsignedBigInteger('knowledge_base_version_id');
             $table->string('dependency_type', 80);
             $table->string('dependency_id', 120);
             $table->timestamp('protect_until')->nullable();
             $table->timestamp('created_at')->useCurrent();
+
+            $table->foreign('knowledge_base_version_id', 'kbvd_version_fk')
+                ->references('id')
+                ->on('knowledge_base_versions')
+                ->cascadeOnDelete();
 
             $table->unique(
                 ['knowledge_base_version_id', 'dependency_type', 'dependency_id'],
