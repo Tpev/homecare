@@ -285,6 +285,15 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Rationale: These topics address common orientation and support needs using already registered role-aware destinations while keeping the first package reversible, observable, and independent from material-action workflows.
 - Affects: `SCOPE-AIS-001`, initial Family KB entries, evaluation corpus, semantic target registry use, Phases 3 and 4, and named Family pilot scope
 
+### `DEC-033` — First Caregiver answer and semantic-navigation scope
+
+- Status: Accepted
+- Accepted: August 13, 2026
+- Decision owner: Product
+- Decision: The first Caregiver intelligent-support package is limited to English read-only answers and semantic navigation for five areas: human help and emergency/non-medical limitations through `support.center`; Caregiver dashboard and onboarding/status orientation through `caregiver.dashboard`; available work/request orientation through `caregiver.work_inbox`; upcoming, active, and completed shift orientation through `caregiver.shifts`; and basic account/profile orientation through `account.profile`. The assistant may explain and offer an approved **Take me there** action only after the applicable answer and navigation phases pass their separate gates. It may not apply for or accept work, start/end/edit a shift, record or approve time, affect payouts, decide identity or credential verification, change services/rates/availability/profile data, send a message, create a booking, or perform any other domain write under this approval.
+- Rationale: This gives caregivers useful orientation across their core existing surfaces while preserving the same reversible, role-isolated, read-only starting boundary approved for Family users.
+- Affects: `SCOPE-AIS-002`, initial Caregiver KB entries, evaluation corpus, semantic target registry use, Phases 3 and 4, and named Caregiver pilot scope
+
 ## Decisions still required
 
 | ID | Question | Needed before | Owner |

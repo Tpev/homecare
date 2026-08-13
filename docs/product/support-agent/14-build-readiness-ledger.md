@@ -62,7 +62,7 @@ Resolved August 13, 2026: intelligent support is English only in every phase. No
 
 ### `READY-VAL-003` — First Family answer and navigation scope (`DEC-032`)
 
-Resolved August 13, 2026: the initial Family package contains only human-help/emergency limitation, dashboard orientation, existing request basics/status, navigation to the normal manual new-request form, Family Account roles/access, and account/profile orientation. Answers and navigation remain separately phased. No write or care-request drafting/publication is authorized.
+Resolved August 13, 2026: the initial Family package contains only human-help/emergency limitation, dashboard orientation, existing request basics/status, navigation to the normal manual new-request form, Family Account roles/access, and account/profile orientation. Answers and navigation remain separately phased. No write or care-request drafting/publication is authorized. The companion first Caregiver read-only scope was subsequently accepted under `DEC-033`; it does not add another validation package to this Family one-time-request readiness count.
 
 ## Remaining validation packages
 

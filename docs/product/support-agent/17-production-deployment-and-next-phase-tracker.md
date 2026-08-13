@@ -62,10 +62,10 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 | `PROD-KB-001` | Exercise create/edit/validate/publish/pause/withdraw/delete with an authorized test entry and retain content-free evidence | Pending authorization and initial KB scope | Production mutation verification |
 | `DEC-016` | English-only intelligent support across every phase | Accepted August 13, 2026 | Closed; governs KB, evaluation, unsupported-language behavior, and release |
 | `SCOPE-AIS-001` | First Family answer topics and semantic navigation targets | Accepted August 13, 2026 through `DEC-032` | Family KB and evaluation authoring unblocked |
-| `SCOPE-AIS-002` | Approve the first Caregiver answer topics and semantic navigation targets | Pending discussion | Initial Caregiver KB and evaluation authoring |
+| `SCOPE-AIS-002` | First Caregiver answer topics and semantic navigation targets | Accepted August 13, 2026 through `DEC-033` | Caregiver KB and evaluation authoring unblocked |
 | `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Pending scope/corpus | Offline runtime baseline |
-| `KB-AIS-001` | Author, source, validate, and publish the initial governed KB set | Family scope approved; Caregiver scope pending | Grounded answers and shadow readiness |
-| `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Family scope approved; Caregiver scope pending | Model selection and Phase 1 exit |
+| `KB-AIS-001` | Author, source, validate, and publish the initial governed KB set | Both role scopes approved; authoring next | Grounded answers and shadow readiness |
+| `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Both role scopes approved; authoring next | Model selection and Phase 1 exit |
 | `DEC-014` | Close suppressed/diagnostic TTLs and downstream/provider/backup extinction rules | Pending later discussion | Any production-conversation shadowing |
 | `DEC-015` | Approve staffed-hours ownership and truthful human-response promise/SLO | Pending later discussion | Any user-visible pilot |
 
@@ -75,7 +75,7 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 | --- | --- | --- |
 | Phase 0 | Deployed; operational extinction tail open | Runtime retired and primary data destroyed; backup/derived extinction still tracked |
 | Phase 1 foundation | Deployed | Admin controls, exact-user grants, governed KB workspace, contracts, handoff, evidence, and retention foundations exist |
-| Phase 1 content/evaluation | Next | Family package approved; decide Caregiver package, create approved KB, build eval corpus/runner, and select runtime baseline |
+| Phase 1 content/evaluation | Next | Both role packages approved; define and author the first KB/evaluation pack, then select the runtime baseline |
 | Phase 2 shadow | Blocked | Requires Phase 1 evidence plus `DEC-014`; no real conversations may go to a model yet |
 | Phase 3 grounded answers | Blocked | Requires shadow evidence, `DEC-015`, named grants, usability, monitoring, and release approval |
 | Phases 4-6 | Not started | Navigation, drafting, and confirmed execution remain independently gated |
@@ -84,8 +84,8 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 
 1. Close the small production status defect `UI-AIS-001` and continue tracking `OPS-EXT-001` without repeating primary destruction.
 2. Apply accepted `DEC-016`: all intelligent support and its KB/evaluations are English only; unsupported-language input offers human transfer without translation promises.
-3. Apply accepted `DEC-032` to the six-item read-only Family package and decide `SCOPE-AIS-002`, the corresponding first Caregiver package under `DEC-009`.
-4. Author authoritative Family and Caregiver KB entries and representative evaluation cases together after each role's scope is accepted.
+3. Apply accepted `DEC-032` and `DEC-033` to the role-isolated, read-only Family and Caregiver packages.
+4. Approve and author the first authoritative Family and Caregiver KB entries with representative evaluation cases attached to every entry.
 5. Evaluate the least-cost runtime candidates and accept `DEC-012` only from measured results.
 6. Complete the Phase 1 evaluation runner, critical regressions, offline quality/cost/latency baseline, and release evidence.
 7. Decide `DEC-014` before any production-data shadow processing.
@@ -96,16 +96,15 @@ The later care-request draft, confirmation lifetime, and notification/operations
 
 ## Next decision to discuss
 
-`SCOPE-AIS-002` - first Caregiver answer and semantic-navigation scope.
+`KB-AIS-001` - first governed KB and evaluation pack.
 
-Proposed initial Caregiver scope:
+Proposed authoring order:
 
-1. How to get human help and what to do for an emergency, with clear support/non-medical limitations (`support.center`).
-2. What the Caregiver dashboard and onboarding/status information mean and where to start (`caregiver.dashboard`).
-3. How to find and understand available work/request information without applying or accepting on the caregiver's behalf (`caregiver.work_inbox`).
-4. How to find and understand upcoming, active, and completed shifts without starting, ending, editing, or approving time (`caregiver.shifts`).
-5. Where to review basic account/profile information without changing identity, verification, credentials, services, rates, availability, or other profile data (`account.profile`).
+1. Shared safety/support entries: what LoLo support can help with, emergency/non-medical limitations, human transfer, and English-only behavior.
+2. Family orientation entries: dashboard, existing request list/status meanings, normal new-request form navigation, Family Account roles/access, and account/profile orientation.
+3. Caregiver orientation entries: dashboard/onboarding status, work inbox, shift status/navigation, and account/profile orientation.
+4. One positive, one boundary, one wrong-role, one unsupported-state, and one handoff evaluation case for each entry before publication.
 
-Every item is answer-and-navigation only. No application/acceptance, shift action, timekeeping, payout, verification decision, profile change, message, booking, or other domain write is authorized.
+Each KB fact must cite an authoritative LoLo product/policy source. Existing support transcripts may suggest wording or missing questions but cannot serve as truth. The initial pack excludes pricing, payments, payouts, identity decisions, safety/medical advice, request drafting/submission, applications, shift actions, messaging, and every other domain write unless a later separately sourced entry and capability approval adds them.
 
 No control, pilot grant, model call, or user-visible behavior changes when this documentation decision is recorded.
