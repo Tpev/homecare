@@ -8,6 +8,8 @@ use App\Models\ContentTag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 use Tests\Concerns\CreatesPublishedBlogPosts;
 use Tests\TestCase;
@@ -128,5 +130,50 @@ class ContentGovernanceTest extends TestCase
         $fixture['post']->update(['content_review_due_at' => now()->subDay()]);
         $this->assertSame(1, Artisan::call('content:audit', ['--fail-on-issues' => true]));
         $this->assertStringContainsString('review overdue', Artisan::output());
+    }
+
+    public function test_public_content_verifier_checks_discovery_metadata_and_internal_links(): void
+    {
+        $post = $this->createPublishedBlogPost()['post'];
+        config()->set('app.url', 'https://carelolo.test');
+        URL::forceRootUrl('https://carelolo.test');
+        URL::forceScheme('https');
+        $url = route('blog.show', ['blogSlug' => $post->slug]);
+        $snapshot = $post->publishedRevision->snapshot;
+        $snapshot['body_html'] = '<p>Read the <a href="/raleigh-home-care">Raleigh overview</a>.</p>';
+        $post->publishedRevision->update(['snapshot' => $snapshot]);
+        Http::fake([
+            $url => Http::response('<html><head><link rel="canonical" href="'.$url.'"><script type="application/ld+json">{"@type":"BlogPosting"}</script></head></html>'),
+            route('sitemap.xml') => Http::response('<urlset><loc>'.$url.'</loc></urlset>'),
+            route('llms.txt') => Http::response($url),
+            'https://carelolo.test/raleigh-home-care' => Http::response('OK'),
+        ]);
+
+        $this->assertSame(0, Artisan::call('content:verify-public', ['--fail-on-issues' => true]));
+        $successfulOutput = Artisan::output();
+        $this->assertStringContainsString('1 public article(s)', $successfulOutput);
+        $this->assertStringContainsString('1 unique internal link(s)', $successfulOutput);
+        $this->assertStringContainsString('0 issue(s)', $successfulOutput);
+
+    }
+
+    public function test_public_content_verifier_can_fail_for_missing_discovery_metadata(): void
+    {
+        $post = $this->createPublishedBlogPost()['post'];
+        config()->set('app.url', 'https://carelolo.test');
+        URL::forceRootUrl('https://carelolo.test');
+        URL::forceScheme('https');
+        $url = route('blog.show', ['blogSlug' => $post->slug]);
+        Http::fake([
+            $url => Http::response('<html><head><script type="application/ld+json">{"@type":"BlogPosting"}</script></head></html>'),
+            route('sitemap.xml') => Http::response('<urlset/>'),
+            route('llms.txt') => Http::response(''),
+        ]);
+
+        $this->assertSame(1, Artisan::call('content:verify-public', ['--fail-on-issues' => true]));
+        $failedOutput = Artisan::output();
+        $this->assertStringContainsString('canonical mismatch', $failedOutput);
+        $this->assertStringContainsString('missing from sitemap', $failedOutput);
+        $this->assertStringContainsString('missing from llms.txt', $failedOutput);
     }
 }

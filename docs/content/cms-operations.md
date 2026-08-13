@@ -6,6 +6,7 @@
 2. Ensure `php artisan storage:link` has been run and the public disk is durable in production.
 3. Run both a queue worker and `php artisan schedule:run` every minute. The scheduler publishes due articles, prunes analytics, and runs the weekly audit.
 4. IndexNow uses a stable public key derived from the configured application host when `INDEXNOW_DERIVE_HOST_KEY=true` (the production default). Set `INDEXNOW_KEY` only when an explicit public-key override is needed; it is not a secret. Host-key derivation defaults off in the test environment to prevent accidental network requests.
+5. `content:verify-public --fail-on-issues` runs daily at 09:20 in the application timezone, after the editorial publication slot. It verifies every live article's HTTP response, canonical, article schema, sitemap and `llms.txt` presence, and article-body internal links. Results are appended to `storage/logs/content-public-verification.log`.
 5. Configure `CONTENT_ANALYTICS_RETENTION_DAYS` and `CONTENT_ANALYTICS_IDENTITY_RETENTION_DAYS` to match the approved privacy policy.
 6. Build production assets with `npm ci && npm run build`.
 7. Run `php artisan content:audit --fail-on-issues` as a release gate.
