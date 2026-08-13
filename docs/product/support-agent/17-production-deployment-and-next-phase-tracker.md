@@ -68,6 +68,7 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 | `KB-SUP-002` | Emergencies and non-medical support | Definition accepted August 13, 2026 through `DEC-036` | Governed draft and critical evaluation corpus may be authored; not published |
 | `KB-SUP-003` | English-only intelligent support | Definition accepted August 13, 2026 through `DEC-037` | Governed draft and five evaluation cases may be authored; not published |
 | `KB-FAM-001` | Family dashboard orientation | Definition accepted August 13, 2026 through `DEC-038` | Governed draft and five evaluation cases may be authored; not published |
+| `KB-FAM-002` | Existing care requests and status | Definition accepted August 13, 2026 through `DEC-039` | Governed draft and five evaluation cases may be authored; not published |
 | `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Pending scope/corpus | Offline runtime baseline |
 | `KB-AIS-001` | Author, source, validate, and publish the initial governed KB set | Pack structure approved; individual entries pending | Grounded answers and shadow readiness |
 | `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Minimum 60-case structure approved; cases pending | Model selection and Phase 1 exit |
@@ -101,22 +102,22 @@ The later care-request draft, confirmation lifetime, and notification/operations
 
 ## Next decision to discuss
 
-`KB-FAM-002` - existing care requests and status.
+`KB-FAM-003` - open the normal new-request form.
 
 Proposed answer:
 
-- Title: **Your care requests and visits**
+- Title: **Start a new care request**
 - Roles: Family only
-- Type: Product Fact / Navigation
+- Type: Navigation
 - Sensitivity: Authenticated
-- Semantic destination: `family.care_requests`
-- Proposed answer: **Your Care page keeps your care requests and visits in one place. Draft means the request has not been posted. Open means caregivers can still respond. Visit scheduled means a caregiver was selected; open the request to see the visit's current status. Withdrawn or Expired requests no longer accept new caregiver responses. I can take you to your Care page.**
-- May state: Family users can filter Care by Open, Visit scheduled, Draft, Withdrawn, and Expired; only Open requests are eligible for caregiver responses; a request card with a booking may show the fresher visit state and next step.
-- Must not state or infer: that a particular request exists or has a particular status without fresh Family Account-scoped data; that Open guarantees a response; that Visit scheduled means the visit is currently upcoming rather than completed/cancelled/disputed; or any payment, applicant, caregiver, or visit outcome not proven by authoritative context.
-- Approved next action: navigate only to `family.care_requests` after the navigation phase is approved. Opening a particular request requires a separately authorized resource-bound target/action and is not approved by this entry.
-- Required sources: `SRC-AI-DECISIONS-001` (`DEC-032`), `SRC-FAMILY-WORKFLOW-001`, and `SRC-CODE-CARE-REQUESTS-001` pinned to the release commit.
-- Initial evaluation IDs: `EVAL-KB-FAM-002-POS`, `-BOUNDARY`, `-WRONG-ROLE`, `-UNSUPPORTED-STATE`, and `-HANDOFF`.
+- Semantic destination: `family.new_care_request`
+- Proposed answer: **I can take you to the New care request page. You will choose who needs care, the kind of help, when care should happen, and the care address. You can review the details and estimated cost before selecting Publish request. Opening the page does not post anything to caregivers.**
+- May state: the normal Family form covers Person, Help, Time, and Address; it supports one visit or a regular weekly schedule; the page provides a review before the Family user publishes; a usable estimate appears only when the required schedule inputs are available.
+- Must not state or infer: that opening the page creates or posts a request; any price, estimate, caregiver availability, or outcome not shown by authoritative current form state; that saved details or a previous request exist; or that the assistant may fill, submit, or publish the request.
+- Approved next action: after the navigation phase is separately approved and the Family user clearly asks to start/open the form, navigate only to `family.new_care_request`. The assistant performs no form entry or domain write under this entry.
+- Required sources: `SRC-AI-DECISIONS-001` (`DEC-032`), `SRC-FAMILY-WORKFLOW-001`, and `SRC-CODE-NEW-CARE-REQUEST-001` pinned to the release commit.
+- Initial evaluation IDs: `EVAL-KB-FAM-003-POS`, `-NO-PUBLISH`, `-WRONG-ROLE`, `-UNSUPPORTED-STATE`, and `-HANDOFF`.
 
-Approval of this entry definition will permit governed draft and evaluation authoring only. It will not publish the entry, enable a model/navigation in production, or authorize opening a particular request or changing any request/visit state.
+Approval of this entry definition will permit governed draft and evaluation authoring only. It will not publish the entry, enable a model/navigation in production, or authorize the assistant to enter form data, submit the form, or publish a care request.
 
 No control, pilot grant, model call, or user-visible behavior changes when this documentation decision is recorded.

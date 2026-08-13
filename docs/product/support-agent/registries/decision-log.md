@@ -339,6 +339,15 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Rationale: Conditional orientation helps older users understand the page without turning a generic KB answer into an unsupported personalized status claim.
 - Affects: `KB-FAM-001`, `family.dashboard`, Family context authorization, five linked evaluations, and future Family answer/navigation release evidence
 
+### `DEC-039` — Approve `KB-FAM-002` care requests and visits definition
+
+- Status: Accepted
+- Accepted: August 13, 2026
+- Decision owner: Product
+- Decision: Approve `KB-FAM-002` **Your care requests and visits** for governed draft and evaluation authoring. The English answer may explain the Family Care page and the Draft, Open, Visit scheduled, Withdrawn, and Expired labels. It must distinguish request status from a booking's fresher visit status: Open allows caregiver responses but guarantees none; Visit scheduled means a caregiver was selected but does not prove that the visit is still upcoming. It may never claim that a particular request, applicant, caregiver, visit, payment, or next action exists without fresh authorized Family Account-scoped context. Caregivers and users outside the applicable Family Account receive no Family request or visit data or navigation. The only later navigation action is the generic `family.care_requests` target; opening a particular request requires separately registered resource-bound authorization. This decision does not publish the entry, change a request/visit, or enable model/navigation/pilot controls.
+- Rationale: Simple status definitions help older Family users find their care activity while the request-versus-visit boundary prevents stale or invented personalized claims.
+- Affects: `KB-FAM-002`, `family.care_requests`, Family Account context authorization, five linked evaluations, and future Family answer/navigation release evidence
+
 ## Decisions still required
 
 | ID | Question | Needed before | Owner |
