@@ -1,8 +1,8 @@
 # Phase 0-1 Foundation Build Record
 
-Status: Implemented and locally verified; not released
+Status: Implemented, locally verified, and deployed to production fail-closed
 
-Build date: August 13, 2026
+Build and production deployment date: August 13, 2026
 
 Owner: Product and engineering
 
@@ -10,7 +10,7 @@ Scope authority: Approved Phase 0-1 slice in [the readiness ledger](14-build-rea
 
 ## Outcome
 
-LoLo now has the model-independent control, governance, evidence, and human-handoff foundations required before an intelligent support runtime can be evaluated. The existing human support experience remains the only customer-facing support behavior. AI is unavailable by deployment default, every stored control defaults safe, no model endpoint exists, and no material-action tool is registered.
+LoLo now has the model-independent control, governance, evidence, and human-handoff foundations required before an intelligent support runtime can be evaluated. Those foundations are deployed in production. The existing human support experience remains the only customer-facing support behavior. AI is unavailable by deployment default, every stored control defaults safe, no model endpoint exists, and no material-action tool is registered.
 
 This record documents implemented behavior. It does not authorize a model/provider, shadow processing of real conversations, customer-facing AI responses, navigation execution, care-request drafting, care-request publication, or broad release.
 
@@ -22,7 +22,7 @@ This record documents implemented behavior. It does not authorize a model/provid
 - Removed the legacy `AiRequestCopilot` route, Livewire UI, AI-specific models/services/bindings/configuration, and legacy tests. No component from that implementation is an authority for the new support agent.
 - Added `ai-support:destroy-legacy-copilot-data`, which is dry-run by default and requires exact environment/database confirmation, operator identity, two approval references, backup status, code version, and explicit execution.
 - Added a guarded follow-up schema-removal migration that refuses non-empty legacy tables and, in production, requires successful destruction evidence.
-- Did not execute legacy destruction against any production or unspecified database. See [the execution runbook](15-legacy-copilot-execution-runbook.md).
+- The original build did not execute legacy destruction. During the later authorized production deployment, the guarded primary-database destruction completed and recorded content-free evidence. Derived-target and containing-backup extinction remains open under [the execution runbook](15-legacy-copilot-execution-runbook.md).
 
 ### Deny-by-default control plane and exact-user pilots
 
@@ -158,10 +158,26 @@ Completed August 13, 2026:
 - Retention schedule verification: absent under the default-off configuration; when `AI_SUPPORT_RETENTION_EXECUTION_ENABLED=true`, daily `ai-support:apply-retention --execute` is registered at 03:40.
 - `php artisan view:cache` followed by `php artisan view:clear`: all Blade templates compiled successfully and the verification cache was cleared.
 - `git diff --check`: passed.
-- The five new migrations were exercised by every `RefreshDatabase` test run. They remain intentionally pending in the developer's ordinary local database; no deployment migration or data destruction was executed.
+- The five new migrations were exercised by every `RefreshDatabase` test run. At the original local completion checkpoint they remained pending in the developer's ordinary local database; they were later deployed through the production sequence recorded below.
+- After the production MySQL identifier failure was repaired, the targeted KB regression slice passed with **9 tests and 51 assertions**.
+- After destructive retention execution was made default-off, the targeted retention slice passed with **5 tests and 41 assertions** and the schedule was verified absent by default and present only when explicitly enabled.
 
-Repository-wide `php artisan test --stop-on-failure` was attempted with two-minute and ten-minute limits. Both executions reached the runner timeout before PHPUnit emitted a summary and did not print a failure. This is **not recorded as a repository-wide pass**. The affected feature, support, and manual-care regression gates above are complete and passing; CI or a longer unbuffered environment must complete the entire repository suite before merge/release.
+Repository-wide `php artisan test --stop-on-failure` was attempted with two-minute and ten-minute limits. Both executions reached the runner timeout before PHPUnit emitted a summary and did not print a failure. This is **not recorded as a repository-wide pass**. The affected feature, support, and manual-care regression gates above are complete and passing; CI or a longer unbuffered environment must complete the entire repository suite before the next model-enabled release gate.
 
-Production legacy destruction: not executed.
+## Production deployment and smoke verification
 
-Production release: not authorized.
+Deployed from `master` through the normal `deploy.sh` workflow on August 13, 2026. The deployed foundation consists of:
+
+- `decf24f66bb0848c65e63aceb05101256881b79b` - Phase 0-1 foundation.
+- `b5df2f5a48e8eae9b27f9e33b930b7665cf53612` - MySQL KB migration recovery and explicit short foreign-key name after the first production migration attempt exceeded MySQL's 64-character identifier limit.
+- `338a9db25d98eff6ce096a92dda05d4a1878bee2` - destructive retention scheduling gated off by default unless `AI_SUPPORT_RETENTION_EXECUTION_ENABLED=true`.
+
+The authenticated, read-only production smoke test verified the overview, settings, exact-user Family and Caregiver pilot cards, KB index/draft editor, compact activity view, human-support queue, canonical conversation, internal notes, ownership, and AI-evidence panel. Unauthenticated AI-admin URLs redirected to login; the public site showed no AI; the runtime guard was off; master and user visibility were off; human-only was on; active grants, KB entries, and AI audit events were all zero. No production setting, grant, KB entry, or support conversation was changed during the smoke test.
+
+One non-blocking UI issue remains: the overview card says **Knowledge base - Foundation pending** although the governed KB workspace is deployed. Production KB create/edit/publish/delete mutations were not exercised because the verification was intentionally read-only and the KB is empty.
+
+Production foundation deployment: complete and fail-closed.
+
+Primary legacy-database destruction: complete with content-free evidence; external derived-target and containing-backup extinction remains open.
+
+Customer-facing AI, real-conversation shadowing, and model execution: not authorized and not present.

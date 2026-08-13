@@ -1,12 +1,18 @@
 # Legacy AI Care-Request Copilot Retirement Runbook
 
-Status: Implementation-ready; production execution not authorized by this document
+Status: Primary production destruction executed; derived-target and backup extinction closeout remains active
 
 Last updated: August 13, 2026
 
 Decision authority: `DEC-005` and `DEC-011`
 
 Required production execution approval: Security/privacy owner and database/operations owner
+
+## Production execution status
+
+On August 13, 2026, the production operator completed the guarded primary-database destruction flow and the command reported that primary legacy copilot data was destroyed with content-free evidence recorded. The normal remaining migrations were then applied after recovery from the MySQL identifier-length issue documented in [the production deployment tracker](17-production-deployment-and-next-phase-tracker.md).
+
+This updates only the primary execution status. Under `DEC-011`, Phase 0 destruction remains open until every actual derived destination is verified extinct and every containing backup is destroyed or reaches its recorded immutable expiry with restore-time deletion controls. The repository does not contain enough evidence to mark that external extinction complete. Do not repeat the primary destruction merely to close this documentation item; close it from the recorded destination and backup evidence.
 
 ## Purpose
 

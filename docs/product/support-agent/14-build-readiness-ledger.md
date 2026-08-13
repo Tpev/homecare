@@ -1,6 +1,6 @@
 # Build Readiness and Remaining Validation Ledger
 
-Status: Phase 0-1 foundation implemented; later release validations remain active
+Status: Phase 0-1 foundation deployed fail-closed; Phase 0 extinction closeout and later validations remain active
 
 Last updated: August 13, 2026
 
@@ -8,7 +8,7 @@ Owner: Product and engineering
 
 ## Executive answer
 
-The approved Phase 0-1 foundation slice has been implemented without enabling customer-facing AI, real-conversation shadowing, semantic navigation execution, care-request drafting, or Class D commits. Its evidence and limitations are recorded in [the Phase 0-1 build record](16-phase-0-1-foundation-build-record.md).
+The approved Phase 0-1 foundation slice has been implemented and deployed to production without enabling customer-facing AI, real-conversation shadowing, semantic navigation execution, care-request drafting, or Class D commits. Its implementation evidence and limitations are recorded in [the Phase 0-1 build record](16-phase-0-1-foundation-build-record.md); production evidence and active follow-ups are recorded in [the production deployment and next-phase tracker](17-production-deployment-and-next-phase-tracker.md).
 
 Eight product-validation packages remain before the complete first one-time-request pilot can reach Phase 6. One package contains two retention choices, so the ledger represents nine individual product decisions. They are deliberately scheduled at the latest safe gate rather than blocking offline work.
 
@@ -18,7 +18,7 @@ This count covers product decisions requiring owner validation. It does not coun
 
 | Gate | Product validations still required | Count | Can engineering proceed before them? |
 | --- | --- | ---: | --- |
-| Phase 0-1 foundation | Approved and implemented; verify the build record for exact exclusions | 0 | Complete for the declared foundation scope |
+| Phase 0-1 foundation | Implemented and deployed fail-closed; Phase 0 backup/derived-target extinction remains an operational closeout item | 0 product decisions | Complete for the declared deployed foundation scope; not complete as an intelligent-agent release |
 | Before offline model baseline and first capability approval | Runtime model/configuration; initial language; initial answer/navigation capability scope | 3 | Yes, Phase 0-1 admin, KB, controls, contracts, and deterministic foundations can proceed |
 | Before shadow processing of production conversations | Remaining retention package: short-lived output/diagnostic TTLs and downstream provider/analytics/export/backup extinction rules | 1 package / 2 decisions | Yes for local/offline work; no production conversation data until resolved |
 | Before any user-visible named-user pilot | Staffed-hours/ownership promise and human-response SLO | 1 | Yes for offline and shadow work |
@@ -39,6 +39,20 @@ The first engineering slice contains no user-visible production AI and no new ca
 7. Added deterministic tests for authorization, isolation, KB lifecycle, retention clocks, deletion/hold behavior, handoff, and confirmation boundaries.
 
 The slice explicitly excludes customer-facing AI replies, shadowing real conversations, semantic navigation execution, care-request drafting, and all Class D commits.
+
+## Production state after deployment
+
+The production smoke test on August 13, 2026 verified that:
+
+- The public site showed no AI assistant.
+- Unauthenticated requests to every `/admin/ai-support*` workspace redirected to login.
+- The authenticated overview reported the deployment guard off, customer state failing closed, master off, user-visible off, human-only on, and zero active exact-user grants.
+- The Family and Caregiver user-profile views each exposed the correct role-specific exact-user grant workflow without bypassing higher-level controls.
+- The KB index and draft editor loaded with zero production entries; no production KB mutation was performed during verification.
+- The canonical human support queue and ticket detail remained available, including human messages, internal notes, ownership, and compact AI evidence.
+- No application console error occurred during the inspected flow.
+
+Two tracked limitations remain: the overview's KB summary copy still says **Foundation pending** even though the governed workspace is deployed, and create/edit/publish/delete behavior was not mutation-tested in production because the smoke test was intentionally read-only.
 
 ## Remaining validation packages
 
@@ -107,4 +121,4 @@ These are not pre-build questions, but they block their declared release stage:
 
 ## Readiness conclusion
 
-The model-independent Phase 0-1 foundation is implemented and remains deny-by-default. The remaining eight validation packages should be completed in the order above. None is implicitly approved by the foundation build, and no real conversation may be sent to a model until its declared gate is complete.
+The model-independent Phase 0-1 foundation is deployed and remains deny-by-default. The remaining eight validation packages should be completed in the order above. None is implicitly approved by the foundation deployment, and no real conversation may be sent to a model until its declared gate is complete. Phase 0 also remains operationally open until every legacy-data derivative and containing backup reaches verified extinction under the recorded restore controls.

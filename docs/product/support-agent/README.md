@@ -1,6 +1,6 @@
 # LoLo Intelligent Support Agent Documentation
 
-Status: Draft program documentation
+Status: Active program documentation; production foundation deployed fail-closed
 
 Established: August 13, 2026
 
@@ -37,6 +37,7 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 15. [Build readiness and remaining validation ledger](14-build-readiness-ledger.md)
 16. [Legacy copilot destruction execution runbook](15-legacy-copilot-execution-runbook.md)
 17. [Phase 0-1 foundation build record](16-phase-0-1-foundation-build-record.md)
+18. [Production deployment, verification, and next-phase tracker](17-production-deployment-and-next-phase-tracker.md)
 
 Then consult the live registries:
 

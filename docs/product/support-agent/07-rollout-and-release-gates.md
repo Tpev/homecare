@@ -1,6 +1,6 @@
 # Rollout and Release Gates
 
-Status: Proposed
+Status: Accepted phased plan; Phase 0-1 foundation deployed fail-closed
 
 Last reviewed: August 13, 2026
 
@@ -13,6 +13,20 @@ Required approvers: Product, engineering, support operations; security/privacy f
 Phase the platform and each capability separately. A platform phase makes a class of behavior possible; an individual capability still moves through offline evaluation, shadow, internal use, limited release, and general release.
 
 Never enable every tool because the architecture supports tools.
+
+## Current program position
+
+As of August 13, 2026, the Phase 0-1 model-independent foundation is deployed to production from `master` at `338a9db25d98eff6ce096a92dda05d4a1878bee2`. The deployment runtime guard is off, all missing database controls fail closed, human-only is on by default, no exact-user pilot grant is active, and no customer model-call path exists.
+
+This production deployment does not mean Phase 1 or the intelligent agent is complete. The current position is:
+
+- Phase 0 application/runtime retirement: deployed.
+- Phase 0 primary legacy database destruction: executed with content-free evidence; derived-target and containing-backup extinction remains an operational closeout item until verified complete.
+- Phase 1 control plane, KB workspace, contracts, handoff, evidence, and retention foundation: deployed.
+- Phase 1 initial approved KB content, evaluation corpus/runner, runtime baseline, and first capability approvals: not complete.
+- Phase 2 production-conversation shadowing and every user-visible phase: not authorized.
+
+The live status and next work are tracked in [the production deployment and next-phase tracker](17-production-deployment-and-next-phase-tracker.md).
 
 ## Role release sequence
 
