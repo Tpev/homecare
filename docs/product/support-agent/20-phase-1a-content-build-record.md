@@ -1,6 +1,6 @@
 # Phase 1A Governed Content Build Record
 
-Status: Repository implementation complete; production deployment and Draft import pending
+Status: Production deployment and Draft import verified; two Draft-only editorial corrections pending; nothing published
 
 Recorded: August 14, 2026
 
@@ -12,7 +12,7 @@ Authority: `DEC-016`, `DEC-022`, `DEC-023`, `DEC-025`, and `DEC-032` through `DE
 
 ## Outcome
 
-The approved English-only initial knowledge package is now reproducible, schema-validated, executable offline, and ready for a controlled Draft-only import after deployment.
+The approved English-only initial knowledge package is reproducible, schema-validated, executable offline, deployed, and imported into production as governed Drafts.
 
 This implementation does **not** publish knowledge, call a model, enable an AI control, create a pilot grant, expose navigation, or change the existing human-only customer experience.
 
@@ -81,7 +81,42 @@ The suite proves:
 - Admin overview counts use actual KB state.
 - Existing legacy-retirement, pilot-isolation, retention, handoff, confirmation, and runtime-safety controls still pass.
 
+### Production Admin audit
+
+Performed August 14, 2026 in an authenticated full-Administrator browser session. The audit was read-only: no KB field, lifecycle state, control, grant, support record, or domain record was changed.
+
+| Area | Observed production evidence | Result |
+| --- | --- | --- |
+| Overview | Runtime guard off; customer AI failing closed; master off; user-visible off; human-only on | Pass |
+| Pilot isolation | 0 active, 0 scheduled, and 0 expiring exact-user grants; pilot list empty | Pass |
+| KB aggregate state | 12 working, 12 Draft, 0 published, 0 paused, 0 overdue | Pass |
+| Stable inventory | All 12 approved `KB-SUP-*`, `KB-FAM-*`, and `KB-CGV-*` IDs present as Version 1 | Pass |
+| Entry validation | Every one of the 12 entry editors reports `Validation passed` | Pass |
+| Evaluation linkage | Every entry contains five linked evaluation IDs; 60 total | Pass |
+| Source linkage | Every entry contains authoritative sources; 33 source records total | Pass |
+| Role and target isolation | Shared entries map to Family and Caregiver plus `support.center`; each Family/Caregiver entry maps only to its expected role and registered semantic target | Pass |
+| Audit evidence | 12 successful Draft-creation events plus 12 successful validation events; 0 failed events | Pass |
+| Settings | No stored control versions; safe defaults remain master off, user-visible off, shadow off, human-only on, both roles off, and support capability off | Pass |
+| Unauthenticated isolation | Overview, pilots, KB, activity, and settings each returned `302` to `/login` without a session | Pass |
+| Public invisibility | Public home returned `200`; rendered source contained no `AI Support`, `AI assistant`, or `automated support` marker | Pass |
+| Current browser health | No console error reproduced on the final current-page check; all audited pages loaded successfully | Pass |
+
+The browser session history contained two earlier Livewire `503` resource messages and one dialog-state error. These did not recur during the completed page audit, and the final current-page console check was clean. Treat recurrence outside deployment/maintenance windows as an operational follow-up.
+
+The browser-visible Phase 1A UI and imported records prove that the implementation is deployed. The application does not expose the server Git SHA in the Admin UI, so this browser audit does not independently attest the exact server checkout hash.
+
+### Draft-only editorial findings
+
+The safety, authorization, lifecycle, and source structure passed. Two grammatical strings should be corrected before KB approval or candidate-model evaluation:
+
+1. `KB-SUP-002` fact: change `in LoLo current United States scope` to `within LoLo's current United States scope`.
+2. `KB-FAM-004` negative retrieval example: change `Show me another family account members.` to `Show me the members of another Family Account.`
+
+These findings do not affect live users because every entry remains Draft and retrieval-ineligible. They do block claiming final content polish.
+
 ## Controlled deployment and import sequence
+
+This sequence completed successfully on August 14, 2026 and remains the recovery/redeployment reference.
 
 After the implementation commit is deployed through the normal `deploy.sh` process:
 
@@ -96,6 +131,6 @@ The production apply step is an explicit operator action. It is not authorized m
 
 ## Remaining gate
 
-Phase 1A repository implementation is complete. Production still requires controlled deployment, dry-run evidence, explicit Draft import, and Admin inspection.
+Phase 1A deployment and production Draft import are complete and verified. Correct the two editorial findings in both the repository manifest and governed production Drafts, rerun deterministic validation, and retain the new artifact checksum.
 
-After that evidence is recorded, the next product milestone is `DEC-012`: evaluate least-cost runtime candidates on the identical synthetic corpus. That work remains offline and cannot authorize production shadowing or a user-visible pilot. `DEC-014` still blocks production-data shadowing, and `DEC-015` still blocks a truthful user-visible human-response promise.
+After that correction, the next product milestone is `DEC-012`: evaluate least-cost runtime candidates on the identical synthetic corpus. That work remains offline and cannot authorize production shadowing or a user-visible pilot. `DEC-014` still blocks production-data shadowing, and `DEC-015` still blocks a truthful user-visible human-response promise.
