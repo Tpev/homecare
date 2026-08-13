@@ -276,6 +276,15 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Rationale: A single supported language keeps product truth, evaluations, elder usability, safety behavior, and operating cost bounded and avoids giving users false confidence in unverified translation.
 - Affects: All support-agent capabilities, KB applicability, evaluation corpora, prompts, unsupported-language handling, human handoff, analytics, and release gates
 
+### `DEC-032` — First Family answer and semantic-navigation scope
+
+- Status: Accepted
+- Accepted: August 13, 2026
+- Decision owner: Product
+- Decision: The first Family/care-receiver intelligent-support package is limited to English read-only answers and semantic navigation for six areas: human help and emergency/non-medical limitations through `support.center`; Family dashboard orientation through `family.dashboard`; existing care-request basics and status through `family.care_requests`; navigation to the normal manual new-request form through `family.new_care_request`; Family Account roles/access through `family.access`; and basic account/profile orientation through `account.profile`. The assistant may explain and offer an approved **Take me there** action only after the applicable answer and navigation phases pass their separate gates. It may not draft or submit a care request, send a message, change a profile or permission, book care, affect payment, or perform any other domain write under this approval.
+- Rationale: These topics address common orientation and support needs using already registered role-aware destinations while keeping the first package reversible, observable, and independent from material-action workflows.
+- Affects: `SCOPE-AIS-001`, initial Family KB entries, evaluation corpus, semantic target registry use, Phases 3 and 4, and named Family pilot scope
+
 ## Decisions still required
 
 | ID | Question | Needed before | Owner |

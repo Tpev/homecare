@@ -143,7 +143,7 @@ The following remain unavailable:
 - Caregiver operational tools
 - Broad role/account/percentage rollout
 
-Before offline runtime evaluation and later release, resolve the remaining seven packages in [the readiness ledger](14-build-readiness-ledger.md): runtime baseline, first answer/navigation scope, remaining downstream retention, staffed-hours/SLO, care-request draft fields, Class D confirmation lifetime, and request notification/operations behavior. Product language is already resolved as English only under `DEC-016`.
+Before offline runtime evaluation and later release, resolve the remaining six packages in [the readiness ledger](14-build-readiness-ledger.md): runtime baseline, remaining downstream retention, staffed-hours/SLO, care-request draft fields, Class D confirmation lifetime, and request notification/operations behavior. Product language is resolved as English only under `DEC-016`, and the first Family answer/navigation scope is resolved under `DEC-032`.
 
 ## Completion section
 
