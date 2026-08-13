@@ -223,4 +223,5 @@ Gates follow [evaluation and testing](../06-evaluation-and-testing.md), includin
 
 - Exact minimum domain-required fields versus current copilot completeness fields
 - Whether profile values need individual confirmation or only final review
-- Initial language scope
+
+Language scope is closed by `DEC-016`: the capability is English only.

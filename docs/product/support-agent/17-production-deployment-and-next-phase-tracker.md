@@ -28,7 +28,7 @@ The deployment is a safe foundation release, not an intelligent-agent release. W
 
 ### Migration incident and recovery
 
-The first production attempt at `2026_08_13_100300_create_ai_support_knowledge_base_tables` failed because MySQL generated a foreign-key identifier longer than its 64-character limit. Commit `b5df2f5` replaced it with the explicit short name `kbvd_version_fk` and added fail-closed recovery for only the four new, empty, partially created KB tables. Recovery refuses to drop any of those tables if one contains data. The deployed KB pages loading successfully provides production evidence that the repaired schema is available.
+The first production attempt at `2026_08_13_100300_create_ai_support_knowledge_base_tables` failed because MySQL generated a foreign-key identifier longer than its 64-character limit. Commit `b5df2f5` replaced it with the explicit short name `kbvd_version_fk` and added fail-closed recovery for only the four new, empty, partially created KB tables. Recovery refuses to drop any of those tables if one contains data. The successful loading of the deployed KB pages provides production evidence that the repaired schema is available.
 
 ## Read-only production smoke test
 
@@ -60,11 +60,11 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 | `OPS-EXT-001` | Verify and close every legacy derived destination and containing-backup extinction record | In progress | Formal Phase 0 destruction closure |
 | `UI-AIS-001` | Replace stale overview copy **Knowledge base: Foundation pending** with live KB counts/state | Open, non-safety | Accurate admin status only |
 | `PROD-KB-001` | Exercise create/edit/validate/publish/pause/withdraw/delete with an authorized test entry and retain content-free evidence | Pending authorization and initial KB scope | Production mutation verification |
-| `DEC-016` | Approve initial supported language | Pending discussion | First capability approval and offline corpus |
+| `DEC-016` | English-only intelligent support across every phase | Accepted August 13, 2026 | Closed; governs KB, evaluation, unsupported-language behavior, and release |
 | `SCOPE-AIS-001` | Approve first Family answer topics and semantic navigation targets; then the first Caregiver set | Pending discussion | Initial KB and evaluation authoring |
 | `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Pending scope/corpus | Offline runtime baseline |
-| `KB-AIS-001` | Author, source, validate, and publish the initial governed KB set | Pending language and scope | Grounded answers and shadow readiness |
-| `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Pending language and scope | Model selection and Phase 1 exit |
+| `KB-AIS-001` | Author, source, validate, and publish the initial governed KB set | Pending scope | Grounded answers and shadow readiness |
+| `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Pending scope | Model selection and Phase 1 exit |
 | `DEC-014` | Close suppressed/diagnostic TTLs and downstream/provider/backup extinction rules | Pending later discussion | Any production-conversation shadowing |
 | `DEC-015` | Approve staffed-hours ownership and truthful human-response promise/SLO | Pending later discussion | Any user-visible pilot |
 
@@ -74,7 +74,7 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 | --- | --- | --- |
 | Phase 0 | Deployed; operational extinction tail open | Runtime retired and primary data destroyed; backup/derived extinction still tracked |
 | Phase 1 foundation | Deployed | Admin controls, exact-user grants, governed KB workspace, contracts, handoff, evidence, and retention foundations exist |
-| Phase 1 content/evaluation | Next | Decide language/scope, create approved KB, build eval corpus/runner, and select runtime baseline |
+| Phase 1 content/evaluation | Next | Apply English-only scope, decide first topics/targets, create approved KB, build eval corpus/runner, and select runtime baseline |
 | Phase 2 shadow | Blocked | Requires Phase 1 evidence plus `DEC-014`; no real conversations may go to a model yet |
 | Phase 3 grounded answers | Blocked | Requires shadow evidence, `DEC-015`, named grants, usability, monitoring, and release approval |
 | Phases 4-6 | Not started | Navigation, drafting, and confirmed execution remain independently gated |
@@ -82,7 +82,7 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 ## Agreed next-work order
 
 1. Close the small production status defect `UI-AIS-001` and continue tracking `OPS-EXT-001` without repeating primary destruction.
-2. Decide `DEC-016`, the initial language.
+2. Apply accepted `DEC-016`: all intelligent support and its KB/evaluations are English only; unsupported-language input offers human transfer without translation promises.
 3. Decide `SCOPE-AIS-001`, the exact first approved answer topics and semantic targets for Family, followed by Caregiver scope under `DEC-009`.
 4. Author authoritative KB entries and representative evaluation cases together.
 5. Evaluate the least-cost runtime candidates and accept `DEC-012` only from measured results.
@@ -95,8 +95,17 @@ The later care-request draft, confirmation lifetime, and notification/operations
 
 ## Next decision to discuss
 
-`DEC-016` - initial language.
+`SCOPE-AIS-001` - first Family answer and semantic-navigation scope.
 
-Recommendation: support English only for the first offline corpus, shadow phase, and named-user pilot for both role tracks. If a user writes in another language, do not improvise partial support; transfer to human support with simple deterministic wording. Additional languages require authoritative translated KB sources and their own evaluations before release.
+Proposed initial Family scope:
+
+1. How to get human help and what to do for an emergency, with a clear non-emergency/non-medical limitation (`support.center`).
+2. What the Family dashboard shows and where to start (`family.dashboard`).
+3. How to find and understand existing care requests and their status (`family.care_requests`).
+4. How to reach the normal new-request form, while the assistant itself performs no drafting or submission (`family.new_care_request`).
+5. How Family Account roles/access work (`family.access`).
+6. Where to review basic account/profile information (`account.profile`).
+
+Every item is answer-and-navigation only. No care request, booking, payment, message, account permission, or profile value is created or changed. Once this Family set is approved, define the corresponding first Caregiver set for `caregiver.dashboard`, `caregiver.work_inbox`, `caregiver.shifts`, `account.profile`, and `support.center` before implementing either role's runtime.
 
 No control, pilot grant, model call, or user-visible behavior changes when this documentation decision is recorded.

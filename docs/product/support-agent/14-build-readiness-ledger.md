@@ -10,7 +10,7 @@ Owner: Product and engineering
 
 The approved Phase 0-1 foundation slice has been implemented and deployed to production without enabling customer-facing AI, real-conversation shadowing, semantic navigation execution, care-request drafting, or Class D commits. Its implementation evidence and limitations are recorded in [the Phase 0-1 build record](16-phase-0-1-foundation-build-record.md); production evidence and active follow-ups are recorded in [the production deployment and next-phase tracker](17-production-deployment-and-next-phase-tracker.md).
 
-Eight product-validation packages remain before the complete first one-time-request pilot can reach Phase 6. One package contains two retention choices, so the ledger represents nine individual product decisions. They are deliberately scheduled at the latest safe gate rather than blocking offline work.
+Seven product-validation packages remain before the complete first one-time-request pilot can reach Phase 6. One package contains two retention choices, so the ledger represents eight individual product decisions. `READY-VAL-002` was resolved by the English-only `DEC-016`. The remaining packages are deliberately scheduled at the latest safe gate rather than blocking offline work.
 
 This count covers product decisions requiring owner validation. It does not count implementation work, tests, evaluations, privacy inventories, usability studies, production access checks, or release evidence as separate product questions; those are delivery requirements created during the relevant phase.
 
@@ -19,12 +19,12 @@ This count covers product decisions requiring owner validation. It does not coun
 | Gate | Product validations still required | Count | Can engineering proceed before them? |
 | --- | --- | ---: | --- |
 | Phase 0-1 foundation | Implemented and deployed fail-closed; Phase 0 backup/derived-target extinction remains an operational closeout item | 0 product decisions | Complete for the declared deployed foundation scope; not complete as an intelligent-agent release |
-| Before offline model baseline and first capability approval | Runtime model/configuration; initial language; initial answer/navigation capability scope | 3 | Yes, Phase 0-1 admin, KB, controls, contracts, and deterministic foundations can proceed |
+| Before offline model baseline and first capability approval | Runtime model/configuration; initial answer/navigation capability scope | 2 | Yes, Phase 0-1 admin, KB, controls, contracts, and deterministic foundations can proceed |
 | Before shadow processing of production conversations | Remaining retention package: short-lived output/diagnostic TTLs and downstream provider/analytics/export/backup extinction rules | 1 package / 2 decisions | Yes for local/offline work; no production conversation data until resolved |
 | Before any user-visible named-user pilot | Staffed-hours/ownership promise and human-response SLO | 1 | Yes for offline and shadow work |
 | Before Phase 5 care-request drafting | Required-field/profile-prefill contract | 1 | Yes for lower-risk answers/navigation |
 | Before Phase 6 confirmed care-request publication | Confirmation lifetime; notification/operations behavior | 2 | Yes for drafting; Class D commit remains disabled |
-| **Total remaining** | **Eight later validation packages** | **8 packages / 9 individual decisions** | Continue offline work only within the declared gates |
+| **Total remaining** | **Seven later validation packages** | **7 packages / 8 individual decisions** | Continue offline work only within the declared gates |
 
 ## Implemented Phase 0-1 build slice
 
@@ -54,19 +54,21 @@ The production smoke test on August 13, 2026 verified that:
 
 Two tracked limitations remain: the overview's KB summary copy still says **Foundation pending** even though the governed workspace is deployed, and create/edit/publish/delete behavior was not mutation-tested in production because the smoke test was intentionally read-only.
 
+## Resolved validation packages
+
+### `READY-VAL-002` — Product language (`DEC-016`)
+
+Resolved August 13, 2026: intelligent support is English only in every phase. Non-English input does not trigger translation or an unverified answer; approved simple English copy offers human transfer without promising another-language human service.
+
 ## Remaining validation packages
 
 ### `READY-VAL-001` — Initial runtime baseline (`DEC-012`)
 
 Choose the least costly evaluated model/provider/configuration candidate and the challenger set. This is needed before measuring the offline baseline, not before building model-independent controls.
 
-### `READY-VAL-002` — Initial language (`DEC-016`)
-
-Recommendation: English only for the first offline corpus and named-user pilot. Other languages remain deterministic handoff until separately sourced and evaluated.
-
 ### `READY-VAL-003` — First answer and navigation scope
 
-Approve the exact small set of family/care-receiver KB topics and semantic destinations. Recommendation: human help/emergency limitation, family roles, care-request basics/status, messages, and the family dashboard/request/support destinations. Caregiver knowledge/navigation follows as required by `DEC-009`, but not in the first user-visible cohort.
+Approve the exact small set of family/care-receiver KB topics and semantic destinations. Current recommendation: human help/emergency limitation, dashboard orientation, existing care-request basics/status, navigation to the normal new-request form, Family Account roles/access, and account/profile orientation. Caregiver knowledge/navigation follows as required by `DEC-009`, but not in the first user-visible cohort.
 
 ### `READY-VAL-004` — Remaining retention (`DEC-014`)
 
@@ -121,4 +123,4 @@ These are not pre-build questions, but they block their declared release stage:
 
 ## Readiness conclusion
 
-The model-independent Phase 0-1 foundation is deployed and remains deny-by-default. The remaining eight validation packages should be completed in the order above. None is implicitly approved by the foundation deployment, and no real conversation may be sent to a model until its declared gate is complete. Phase 0 also remains operationally open until every legacy-data derivative and containing backup reaches verified extinction under the recorded restore controls.
+The model-independent Phase 0-1 foundation is deployed and remains deny-by-default. The remaining seven validation packages should be completed in the order above. None is implicitly approved by the foundation deployment, and no real conversation may be sent to a model until its declared gate is complete. Phase 0 also remains operationally open until every legacy-data derivative and containing backup reaches verified extinction under the recorded restore controls.

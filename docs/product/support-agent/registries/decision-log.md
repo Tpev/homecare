@@ -267,6 +267,15 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Rationale: `DEC-010` already approved the bounded draft-to-confirmed-publication architecture. Separate phase and release gates preserve a safe draft-first rollout without leaving the product decision ambiguous.
 - Affects: `CARE-REQUEST-001` through `CARE-REQUEST-003`, Phases 5 and 6, capability flags, confirmation, evaluation, and release approval
 
+### `DEC-016` — English-only intelligent support
+
+- Status: Accepted
+- Accepted: August 13, 2026
+- Decision owner: Product
+- Decision: LoLo's intelligent support agent supports English only across offline evaluation, shadow, pilot, and any later released phase. It does not translate or answer in another language. When the user writes in a language the agent cannot safely treat as English, automation uses approved simple English wording to explain the limitation and offer transfer to human support; it does not promise that the human will respond in another language. Adding another intelligent-support language would require this decision to be superseded, authoritative language-specific sources, a governed translated KB, dedicated evaluations, usability/accessibility evidence, and a separate release approval.
+- Rationale: A single supported language keeps product truth, evaluations, elder usability, safety behavior, and operating cost bounded and avoids giving users false confidence in unverified translation.
+- Affects: All support-agent capabilities, KB applicability, evaluation corpora, prompts, unsupported-language handling, human handoff, analytics, and release gates
+
 ## Decisions still required
 
 | ID | Question | Needed before | Owner |
@@ -274,4 +283,3 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 | `DEC-012` | What is the first evaluated runtime model/configuration? | Offline baseline | Engineering/product |
 | `DEC-014` | What exact TTLs remain for suppressed/diagnostic data and what maximum extinction rules apply to analytics, exports, providers, replicas, caches, indexes, and backups under `DEC-024`? | Shadow production data | Privacy/operations |
 | `DEC-015` | What business-hours promise and escalation SLO can support staff? | User-visible rollout | Support operations |
-| `DEC-016` | Which languages are supported at each phase? | Capability approval | Product/support |
