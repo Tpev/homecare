@@ -69,6 +69,7 @@ The browser emitted an existing Meta Pixel availability warning. It did not affe
 | `KB-SUP-003` | English-only intelligent support | Definition accepted August 13, 2026 through `DEC-037` | Governed draft and five evaluation cases may be authored; not published |
 | `KB-FAM-001` | Family dashboard orientation | Definition accepted August 13, 2026 through `DEC-038` | Governed draft and five evaluation cases may be authored; not published |
 | `KB-FAM-002` | Existing care requests and status | Definition accepted August 13, 2026 through `DEC-039` | Governed draft and five evaluation cases may be authored; not published |
+| `KB-FAM-003` | Open the normal new-request form | Definition accepted August 13, 2026 through `DEC-040` | Governed draft and five evaluation cases may be authored; not published |
 | `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Pending scope/corpus | Offline runtime baseline |
 | `KB-AIS-001` | Author, source, validate, and publish the initial governed KB set | Pack structure approved; individual entries pending | Grounded answers and shadow readiness |
 | `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Minimum 60-case structure approved; cases pending | Model selection and Phase 1 exit |
@@ -102,22 +103,22 @@ The later care-request draft, confirmation lifetime, and notification/operations
 
 ## Next decision to discuss
 
-`KB-FAM-003` - open the normal new-request form.
+`KB-FAM-004` - Family access roles and permissions.
 
 Proposed answer:
 
-- Title: **Start a new care request**
+- Title: **Family access and permissions**
 - Roles: Family only
-- Type: Navigation
+- Type: Product Fact / Navigation
 - Sensitivity: Authenticated
-- Semantic destination: `family.new_care_request`
-- Proposed answer: **I can take you to the New care request page. You will choose who needs care, the kind of help, when care should happen, and the care address. You can review the details and estimated cost before selecting Publish request. Opening the page does not post anything to caregivers.**
-- May state: the normal Family form covers Person, Help, Time, and Address; it supports one visit or a regular weekly schedule; the page provides a review before the Family user publishes; a usable estimate appears only when the required schedule inputs are available.
-- Must not state or infer: that opening the page creates or posts a request; any price, estimate, caregiver availability, or outcome not shown by authoritative current form state; that saved details or a previous request exist; or that the assistant may fill, submit, or publish the request.
-- Approved next action: after the navigation phase is separately approved and the Family user clearly asks to start/open the form, navigate only to `family.new_care_request`. The assistant performs no form entry or domain write under this entry.
-- Required sources: `SRC-AI-DECISIONS-001` (`DEC-032`), `SRC-FAMILY-WORKFLOW-001`, and `SRC-CODE-NEW-CARE-REQUEST-001` pinned to the release commit.
-- Initial evaluation IDs: `EVAL-KB-FAM-003-POS`, `-NO-PUBLISH`, `-WRONG-ROLE`, `-UNSUPPORTED-STATE`, and `-HANDOFF`.
+- Semantic destination: `family.access`
+- Proposed answer: **Family access lets trusted people help manage care using their own LoLo login. The Account owner can invite or remove Family members and manage the family payment method. Family members can help with day-to-day care, including scheduling care and approving care-related charges using the family's saved payment method, but they cannot manage invitations, remove someone else's access, or change the payment method. I can take you to Family access.**
+- May state: the only user-facing roles are Account owner and Family member; active members share the Family Account's care information; actions remain attributed to the signed-in person; members can leave the Family Account; owner-issued private invitations expire after seven days.
+- Must not state or infer: that the current user or another named person has a particular role or active access without fresh account-scoped membership context; any member, email, invitation, payment method, care record, or action not proven by authoritative context; or that the assistant may send/resend/cancel an invitation, remove access, leave an account, transfer ownership, or change a payment method.
+- Approved next action: after the navigation phase is separately approved and the authorized Family user clearly asks to view access, navigate only to `family.access`. This entry authorizes no access or financial mutation.
+- Required sources: `SRC-AI-DECISIONS-001` (`DEC-032`), `SRC-FAMILY-ACCESS-001`, and `SRC-CODE-FAMILY-ACCESS-001` pinned to the release commit.
+- Initial evaluation IDs: `EVAL-KB-FAM-004-POS`, `-OWNER-BOUNDARY`, `-NO-MUTATION`, `-WRONG-ROLE`, and `-HANDOFF`.
 
-Approval of this entry definition will permit governed draft and evaluation authoring only. It will not publish the entry, enable a model/navigation in production, or authorize the assistant to enter form data, submit the form, or publish a care request.
+Approval of this entry definition will permit governed draft and evaluation authoring only. It will not publish the entry, enable a model/navigation in production, expose an account's member list, or authorize any invitation, access, ownership, or payment-method change.
 
 No control, pilot grant, model call, or user-visible behavior changes when this documentation decision is recorded.

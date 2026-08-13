@@ -348,6 +348,15 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Rationale: Simple status definitions help older Family users find their care activity while the request-versus-visit boundary prevents stale or invented personalized claims.
 - Affects: `KB-FAM-002`, `family.care_requests`, Family Account context authorization, five linked evaluations, and future Family answer/navigation release evidence
 
+### `DEC-040` — Approve `KB-FAM-003` new care request navigation definition
+
+- Status: Accepted
+- Accepted: August 13, 2026
+- Decision owner: Product
+- Decision: Approve `KB-FAM-003` **Start a new care request** for governed draft and evaluation authoring. The English answer may explain that the normal Family form collects the person, help, time, and care address and provides a review and schedule-dependent estimate before publication. Opening or viewing the page does not post anything to caregivers. During a later separately approved navigation phase, clear intent from an authorized Family user may navigate only to `family.new_care_request`. This entry never authorizes the assistant to select care details, enter or alter form values, submit the form, publish a request, or claim any price, caregiver availability, saved information, or outcome not proven by authoritative current context. Caregivers and users without active Family authorization receive no Family-form navigation. This decision does not publish the entry or enable model/navigation/pilot controls.
+- Rationale: Separating safe page opening from request publication gives older Family users a clear starting point without turning a navigation article into an unconfirmed domain write.
+- Affects: `KB-FAM-003`, `family.new_care_request`, Family authorization, publish boundaries, five linked evaluations, and future Family navigation release evidence
+
 ## Decisions still required
 
 | ID | Question | Needed before | Owner |
