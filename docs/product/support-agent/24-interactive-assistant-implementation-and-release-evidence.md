@@ -14,9 +14,9 @@ Normative scope: `DEC-047` through `DEC-066`, [interactive expansion](22-interac
 
 The approved initial interactive assistant is implemented without enabling production AI. The implementation supports role-scoped answers and semantic navigation, Family care-path selection, authorized Family context, encrypted one-time and recurring drafts, deterministic recap, 30-minute confirmation, idempotent live request publication, authoritative receipt, and direct human transfer. Caregiver scope remains answers and navigation only. A 24/7, medical, emergency, explicit-human, knowledge-gap, cost-limit, or repeated-provider-failure condition cannot create a request and transfers to human support.
 
-This is build evidence, not limited-release approval. Repository defaults, example environment values, and database controls remain fail-closed. No production user, grant, KB publication, provider call, or control activation is authorized by this record.
+This is build evidence, not limited-release approval. Repository defaults, example environment values, and database controls remain fail-closed. This record alone authorizes no production user, grant, provider call, or control activation. Subsequent governed publication of 23 reviewed non-pricing entries is recorded separately and did not activate customer AI.
 
-An authenticated production audit on August 14, 2026 verified that the interactive surfaces are deployed and failing closed. The Admin control plane renders, there are zero exact-user grants and zero published entries, and the dedicated Family test account sees human support only. The expanded 12-entry interactive KB package was subsequently imported and verified as validated Drafts with 60 linked evaluations and no failed audit event. See the [production deployment audit](25-production-interactive-deployment-audit.md).
+An authenticated production audit on August 14, 2026 verified that the interactive surfaces are deployed and failing closed. The Admin control plane renders, there are zero exact-user grants, and the dedicated Family test account sees human support only. The expanded package was imported, then 23 reviewed non-pricing entries were Published while held `KB-CARE-006` remained Draft and all AI gates stayed off. See the [production deployment audit](25-production-interactive-deployment-audit.md) and [publication verification](26-production-kb-publication-and-settings-verification.md).
 
 No Stripe, customer charging, fee, authorization-buffer, Caregiver payout, Family pricing override, or payment-service file was changed. Pricing answers remain held under `DEC-049` even though the approved business truth is $30 per hour.
 
@@ -148,7 +148,7 @@ php artisan ai-support:import-interactive-kb
 php artisan ai-support:import-interactive-kb --apply --actor-email=<admin-email>
 ```
 
-The authenticated follow-up audit verified all 12 stable IDs, Version 1, validation passed, authoritative sources, 60 linked evaluations, 12 successful creations, 12 successful validations, zero failed events, zero publication, and zero AI activation. Review/publish only the non-pricing entries needed for the declared pilot through Admin. Keep `KB-CARE-006` unavailable while the pricing implementation hold remains.
+The authenticated follow-up audit verified all 12 stable IDs, Version 1, validation passed, authoritative sources, 60 linked evaluations, 12 successful creations, and 12 successful validations. A later governed Admin review Published 11 non-pricing interactive entries plus all 12 initial entries, with exactly 23 successful publication events and zero failures. Keep `KB-CARE-006` unavailable while the pricing implementation hold remains.
 
 Do not enable deployment guards or create an exact-user grant until the remaining limited-release gates below are explicitly approved. When approval exists, enable only the Family one-time capability slice first; recurring commit and Caregiver controls remain independent.
 

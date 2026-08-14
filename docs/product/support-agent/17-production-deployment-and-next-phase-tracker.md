@@ -28,6 +28,7 @@ Evidence: [interactive assistant implementation and release evidence](24-interac
 | Interactive request deployment | `61fca0341a467e2cb2ea65f559bd81c7c268658f`; authenticated production UI and fail-closed behavior verified August 14, 2026; exact server `HEAD` is not exposed by the inspected pages; not pilot-authorized |
 | Interactive release evidence | `e8694a8ee71e5de7382c159058efca709d60f264` |
 | Interactive KB production import | `KB-CARE-001` through `KB-CARE-012` imported and authenticated-audited August 14, 2026: 12 creations, 12 validation passes, 0 failures, 24 total Drafts, 0 published |
+| Settings cleanup and governed publication | `4ac0f07` deployed and Shadow absent; 23 reviewed non-pricing Version 1 entries published; `KB-CARE-006` remains Draft; both guards off, human-only on, zero grants |
 | Legacy primary data | Guarded destruction reported complete with content-free evidence |
 | Legacy external extinction | Open until every derivative and containing backup is verified extinct or reaches its controlled final expiry |
 | Customer AI runtime | Code present but unavailable through both disabled deployment guards and deny-by-default controls |
@@ -82,15 +83,15 @@ The exact evidence, artifact checksums, and two Draft-only editorial findings ar
 
 ## Interactive deployment production audit
 
-Performed August 14, 2026 with an authenticated full-Administrator session followed by the dedicated production editorial Family test account. No message, request, grant, control version, KB record, or assignment was created or changed.
+The initial read-only portion was performed August 14, 2026 with an authenticated full-Administrator session followed by the dedicated production editorial Family test account. A later authorized Admin session performed only the governed KB lifecycle changes recorded in the [publication verification](26-production-kb-publication-and-settings-verification.md); it created no message, request, grant, control version, or assignment.
 
 - Admin overview, pilots, KB, editor, activity, and settings surfaces render.
-- Both deployment guards and every AI capability/role control are off; human-only is on; there are zero active grants and zero published KB entries.
+- Both deployment guards and every AI capability/role control are off; human-only is on; there are zero active grants; 23 non-pricing entries are published and the held pricing entry remains Draft.
 - The customer support dialog remains human-only and fits a 390-pixel viewport with no horizontal overflow and 44-pixel visible controls.
 - A fresh authenticated flow produced zero current application console errors.
-- All 12 `KB-CARE-*` entries are present as validated Version 1 Drafts with authoritative sources and 60 linked evaluations.
+- All 12 `KB-CARE-*` entries are present and validated with authoritative sources and 60 linked evaluations; 11 are Published and held `KB-CARE-006` remains Draft.
 - The import activity contains 12 successful creation events and 12 successful validation events with no failure.
-- The audit found the permanently denied `shadow_enabled` control visible in Settings; repository cleanup `4ac0f07` removes it and awaits production verification.
+- The permanently denied `shadow_enabled` control is absent from production Settings after deployment of `4ac0f07`.
 
 Full evidence and next actions: [production interactive assistant deployment audit](25-production-interactive-deployment-audit.md).
 
@@ -104,30 +105,30 @@ Full evidence and next actions: [production interactive assistant deployment aud
 | `DEC-016` | English-only intelligent support across every phase | Accepted August 13, 2026 | Closed; governs KB, evaluation, unsupported-language behavior, and release |
 | `SCOPE-AIS-001` | First Family answer topics and semantic navigation targets | Accepted August 13, 2026 through `DEC-032` | Family KB and evaluation authoring unblocked |
 | `SCOPE-AIS-002` | First Caregiver answer topics and semantic navigation targets | Accepted August 13, 2026 through `DEC-033` | Caregiver KB and evaluation authoring unblocked |
-| `KB-PACK-AIS-001` | Twelve-entry initial KB inventory and five-case-per-entry evaluation structure | 12 validated production Drafts verified; 60 linked cases present | Nothing is published or user-visible |
+| `KB-PACK-AIS-001` | Twelve-entry initial KB inventory and five-case-per-entry evaluation structure | All 12 Version 1 entries validated and Published; 60 linked cases present | Customer AI remains disabled by independent gates |
 | `CONTENT-AIS-001` | Correct two grammatical strings found in `KB-SUP-002` and `KB-FAM-004`, then revalidate repository and production Drafts | Closed August 14, 2026; both production Drafts and repository content revalidated | None |
-| `KB-SUP-001` | Human transfer without repetition | Validated production Draft verified | Not published |
-| `KB-SUP-002` | Emergencies and non-medical support | Corrected and revalidated production Draft verified | Not published |
-| `KB-SUP-003` | English-only intelligent support | Validated production Draft verified | Not published |
-| `KB-FAM-001` | Family dashboard orientation | Validated production Draft verified | Not published |
-| `KB-FAM-002` | Existing care requests and status | Validated production Draft verified | Not published |
-| `KB-FAM-003` | Open the normal new-request form | Validated production Draft verified | Not published |
-| `KB-FAM-004` | Family Account roles and access | Corrected and revalidated production Draft verified | Not published |
-| `KB-FAM-005` | Family account/profile orientation | Validated production Draft verified | Not published |
-| `KB-CGV-001` | Caregiver dashboard and onboarding orientation | Validated production Draft verified | Not published |
-| `KB-CGV-002` | Caregiver work inbox orientation | Validated production Draft verified | Not published |
-| `KB-CGV-003` | Caregiver shift orientation | Validated production Draft verified | Not published |
-| `KB-CGV-004` | Caregiver account/profile orientation | Validated production Draft verified | Not published |
+| `KB-SUP-001` | Human transfer without repetition | Validated Version 1 Published | Customer AI disabled |
+| `KB-SUP-002` | Emergencies and non-medical support | Corrected, revalidated, and Published | Customer AI disabled |
+| `KB-SUP-003` | English-only intelligent support | Validated Version 1 Published | Customer AI disabled |
+| `KB-FAM-001` | Family dashboard orientation | Validated Version 1 Published | Customer AI disabled |
+| `KB-FAM-002` | Existing care requests and status | Validated Version 1 Published | Customer AI disabled |
+| `KB-FAM-003` | Open the normal new-request form | Validated Version 1 Published | Customer AI disabled |
+| `KB-FAM-004` | Family Account roles and access | Corrected, revalidated, and Published | Customer AI disabled |
+| `KB-FAM-005` | Family account/profile orientation | Validated Version 1 Published | Customer AI disabled |
+| `KB-CGV-001` | Caregiver dashboard and onboarding orientation | Validated Version 1 Published | Customer AI disabled |
+| `KB-CGV-002` | Caregiver work inbox orientation | Validated Version 1 Published | Customer AI disabled |
+| `KB-CGV-003` | Caregiver shift orientation | Validated Version 1 Published | Customer AI disabled |
+| `KB-CGV-004` | Caregiver account/profile orientation | Validated Version 1 Published | Customer AI disabled |
 | `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Accepted: Luna low baseline; Mini low challenger; 556/556 calls, zero hard/critical failures, 99.64% quality each; Luna 83.95% lower measured cost | Offline runtime baseline complete; no production authority |
-| `KB-AIS-001` | Author, source, and validate the initial governed KB set | Initial and expanded production Draft imports verified; 24 total Drafts and 120 entry-linked evaluations across both packages | Review and selective non-pricing publication |
+| `KB-AIS-001` | Author, source, validate, and selectively publish governed KB | 24 validated Version 1 entries and 120 entry-linked evaluations; 23 non-pricing entries Published; `KB-CARE-006` held as Draft | Customer AI remains disabled pending release gates |
 | `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Complete: v4 corpus/runner, isolation controls, 556-call current-candidate release comparison, exact checksums, and accepted baseline recorded | Re-run on every governed model/prompt/schema/KB change |
 | `DEC-014` | Close suppressed/diagnostic TTLs and downstream/provider/backup extinction rules | Closed by `DEC-058` | Destination/configuration and deletion evidence still block production data |
 | `DEC-015` | Approve human ownership and truthful response promise | Closed by `DEC-057`: both admins alerted; either may claim; no time/business-hours/queue promise | Implementation and rehearsal still block pilot |
 | `INT-AIS-001` | Approved interactive Family build contract | Implemented; deterministic/browser/live-model evidence pass | Provider/privacy, production-like rehearsal, older-adult usability, named pilot, and release approval |
-| `INT-AIS-002` | Expanded 12-entry interactive KB package | Production import verified: 12 Version 1 Drafts, validation passed, sources present, 60 linked cases, no failures, no publication | Review and selective non-pricing publication |
+| `INT-AIS-002` | Expanded 12-entry interactive KB package | Validation, sources, and 60 cases verified; 11 non-pricing entries Published; `KB-CARE-006` remains Draft; no publication failure | Customer AI remains disabled pending release gates |
 | `EVAL-INT-001` | Frozen 56-case interactive runtime gate | Prompt v3: 56/56, 100% extraction, zero hard failures, P95 4.769 seconds | Re-run on any governed model/prompt/schema/KB/corpus change |
 | `PROD-KB-INT-001` | Import `KB-CARE-001` through `KB-CARE-012` into production | Closed August 14, 2026; authenticated audit verified all records, validations, sources, evaluations, events, and unchanged publication/activation state | None |
-| `PROD-UI-AIS-002` | Remove permanently denied shadow control from the Admin selector | Implemented and tested in `4ac0f07`; UI and forged-mutation paths exclude it while the server denial remains; production verification pending | Deploy and verify before control activation |
+| `PROD-UI-AIS-002` | Remove permanently denied shadow control from the Admin selector | Closed in production August 14, 2026; state list and selector omit it while server denial remains | None |
 
 ## Current phase status
 
@@ -135,31 +136,28 @@ Full evidence and next actions: [production interactive assistant deployment aud
 | --- | --- | --- |
 | Phase 0 | Deployed; operational extinction tail open | Runtime retired and primary data destroyed; backup/derived extinction still tracked |
 | Phase 1 foundation | Deployed | Admin controls, exact-user grants, governed KB workspace, contracts, handoff, evidence, and retention foundations exist |
-| Phase 1 content/evaluation | Complete; offline Luna-low baseline accepted under `DEC-012` | 12 validated Drafts, 70 fixtures, 556/556 current-candidate calls, zero hard/critical failures, exact evidence recorded; nothing is published and runtime remains off |
+| Phase 1 content/evaluation | Complete; offline Luna-low baseline accepted under `DEC-012` | 23 reviewed entries Published, held pricing entry Draft, 120 linked KB cases plus runtime corpora, zero hard/critical failures; runtime remains off |
 | Phase 2 shadow | Skipped by `DEC-047` | No invisible processing of production conversations will be performed |
-| Phase 3 grounded answers | Implemented and deployed behind disabled controls; release blocked | Requires reviewed applicable KB publication, provider/privacy, staff-account evidence, usability, monitoring, exact grants, and release approval |
+| Phase 3 grounded answers | Implemented with governed content Published behind disabled controls; release blocked | Requires provider/privacy, staff-account evidence, usability, monitoring, exact grants, and release approval |
 | Phases 4-6 | Implemented and deployed behind independent disabled controls; release blocked | Navigation, Family context/intake, drafts, recap, and one-time/recurring confirmed publication have evidence but no production authority |
 
 ## Agreed next-work order
 
-1. Deploy `4ac0f07` through the unchanged `deploy.sh` with both AI deployment guards false, then verify the Shadow control is absent and the fail-closed state is unchanged.
-2. Review and selectively publish only the non-pricing entries required by the one-time Family rehearsal; keep `KB-CARE-006` held.
-3. Produce provider/retention, staff-account, human-handoff, monitoring, cost-stop, and rollback evidence; do not build shadow mode.
-4. Complete the five-person representative older-adult study and comprehension/accessibility gates.
-5. Continue tracking `OPS-EXT-001` without repeating primary destruction.
-6. Request an explicit release decision before activating the first two exact Family grants; enable recurring publication only after the one-time gate.
+1. Produce provider/retention, staff-account, human-handoff, monitoring, cost-stop, and rollback evidence; do not build shadow mode.
+2. Complete the five-person representative older-adult study and comprehension/accessibility gates.
+3. Continue tracking `OPS-EXT-001` without repeating primary destruction.
+4. Request an explicit release decision before activating the first two exact Family grants; enable recurring publication only after the one-time gate.
 
 All product packages for the declared build are closed. The [readiness ledger](14-build-readiness-ledger.md) now tracks delivery evidence rather than product interviews.
 
 ## Next implementation milestone
 
-Complete **KB publication readiness and limited-release evidence** without enabling a production user prematurely.
+Complete **limited-release operational and usability evidence** without enabling a production user prematurely.
 
 Required outcome:
 
-- Review the imported Drafts and publish only the approved non-pricing slice needed for rehearsal.
-- Deploy and verify the completed shadow-selector cleanup, then close the remaining production portions of `DEC-058`, `DEC-064`, `DEC-065`, and `DEC-066`.
+- Close the remaining production portions of `DEC-058`, `DEC-064`, `DEC-065`, and `DEC-066`.
 - Preserve zero production conversation processing until a visible named-user pilot release is explicitly approved.
-- Preserve zero user-visible model calls, zero active grants, Draft-only KB content, and disabled AI controls.
+- Preserve zero user-visible model calls, zero active grants, disabled AI controls, and the `KB-CARE-006` pricing hold.
 
 The accepted product package authorizes engineering, not release. No production transcript processing, exact-user grant, or user-visible pilot is authorized by documentation alone.

@@ -1,6 +1,6 @@
 # LoLo Intelligent Support Agent Documentation
 
-Status: Active program documentation; production foundation deployed fail-closed
+Status: Active program documentation; production runtime fail-closed, governed non-pricing content published, limited release disabled
 
 Established: August 13, 2026
 
@@ -46,6 +46,7 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 24. [Interactive assistant approved build contract](23-interactive-assistant-approved-build-contract.md)
 25. [Interactive assistant implementation and release evidence](24-interactive-assistant-implementation-and-release-evidence.md)
 26. [Production interactive assistant deployment audit](25-production-interactive-deployment-audit.md)
+27. [Production KB publication and Settings verification](26-production-kb-publication-and-settings-verification.md)
 
 Then consult the live registries:
 

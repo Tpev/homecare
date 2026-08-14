@@ -1,6 +1,6 @@
 # Production Interactive Assistant Deployment Audit
 
-Status: Authenticated production deployment and Draft-import audit complete; limited release remains blocked
+Status: Authenticated production deployment, Draft import, Settings cleanup, and selective publication verified; limited release remains blocked
 
 Audit date: August 14, 2026
 
@@ -12,17 +12,17 @@ Related release evidence: `e8694a8ee71e5de7382c159058efca709d60f264`
 
 ## Executive result
 
-The interactive assistant code is present in production and is failing closed as designed. No live user can receive an AI answer or AI action in the observed state: both deployment guards are off, user-visible AI is off, all AI roles and capabilities are off, human-only is on, there are no exact-user grants, and no KB entry is published.
+The interactive assistant code is present in production and is failing closed as designed. No live user can receive an AI answer or AI action in the observed state: both deployment guards are off, user-visible AI is off, all AI roles and capabilities are off, human-only is on, and there are no exact-user grants. Subsequent governed KB publication did not change those independent eligibility gates.
 
 The authenticated Admin surfaces render correctly, the existing human-support fallback remains available, and the support dialog fits a 390-pixel mobile viewport without horizontal overflow. The browser inspection created or changed no message, request, grant, control version, KB record, or support assignment. The separately executed production import intentionally created the 12 governed Draft records described below.
 
-The expanded interactive KB import was subsequently completed and verified in production. The database now contains all 24 governed entries as Drafts, including `KB-CARE-001` through `KB-CARE-012`; nothing is published. Every imported entry is Version 1, reports validation passed, contains authoritative-source evidence, and has exactly five linked evaluation IDs. The content-free activity trail records 12 successful creations and 12 successful validation runs with no failure.
+The expanded interactive KB import was subsequently completed and verified in production. All 24 governed entries were then reviewed; 23 approved non-pricing entries were published and `KB-CARE-006` remained a validated Draft. Every entry is Version 1, reports validation passed, contains authoritative-source evidence, and has exactly five linked evaluation IDs. The content-free activity trail records the import plus exactly 23 successful publication events with no matching publication failure.
 
-Limited release is not ready yet. The non-safety-blocking Settings inconsistency has been corrected in repository commit `4ac0f07`: the operator UI no longer renders or accepts `shadow_enabled`, while the server retains the historical key and permanent `DEC-047` enablement denial. Production verification awaits the next unchanged `deploy.sh` run. The imported non-pricing entries also require deliberate review and selective publication before a controlled staff rehearsal.
+Limited release is not ready yet. The Settings inconsistency corrected in `4ac0f07` is deployed and production-verified: the operator UI no longer renders or accepts `shadow_enabled`, while the server retains the historical key and permanent `DEC-047` enablement denial. The governed non-pricing publication is recorded in the [production KB publication and Settings verification](26-production-kb-publication-and-settings-verification.md).
 
 ## Audit scope and method
 
-The audit used an authenticated full-Administrator session for the control plane and then the dedicated production editorial Family test account for the customer view. The Family account received no pilot grant. The audit was read-only except for the existing Admin **Login as** session change; no application-domain data was mutated.
+The initial deployment audit used an authenticated full-Administrator session for the control plane and then the dedicated production editorial Family test account for the customer view. The Family account received no pilot grant. That initial audit was read-only except for the existing Admin **Login as** session change. The later authorized KB lifecycle mutations are separately scoped and evidenced in the [publication verification](26-production-kb-publication-and-settings-verification.md).
 
 The deployed pages prove that the interactive Admin and runtime UI introduced by the implementation are present. The application does not expose an exact deployed Git revision in the inspected pages, so this browser audit does not independently attest the production server's Git `HEAD`.
 
@@ -39,20 +39,20 @@ Screenshots were captured for immediate visual review but are intentionally excl
 | Answer, navigation, context, intake, draft, recap, publication, and 24/7 controls | Off | Pass |
 | Human-only control | On | Pass |
 | Exact-user grants | 0 active | Pass |
-| Governed KB | 24 working, 24 Draft, 0 published, 0 paused, 0 overdue | Pass; interactive import verified |
+| Governed KB | 24 working, 1 Draft, 23 published, 0 paused, 0 overdue | Pass; selective non-pricing publication verified |
 | Customer support presentation | Human support only | Pass |
 
 ## Surface audit
 
 | Surface | Evidence | Result |
 | --- | --- | --- |
-| Admin overview | Failing-closed state, both deployment guards off, zero grants, Draft-only KB counts, human support preserved, no-shadow policy shown | Pass |
+| Admin overview | Failing-closed state, both deployment guards off, zero grants, 23 published / 1 held Draft, human support preserved, no-shadow policy shown | Pass |
 | Pilot list | Empty exact-user grant list; search and status filters render | Pass |
 | User pilot card | Dedicated Family test account reports **Not enabled** and **Runtime Deployment Guard Off**; exact-user bundle, date, reason, acknowledgement, and higher-control warning render | Pass; no grant created |
-| KB index | Search, lifecycle/role filters, create-draft entry point, and 24 Draft records render | Pass |
-| KB editor | Content, roles, applicability, permitted/prohibited facts, navigation targets, sources, evaluation IDs, validation, review/publish workflow, history, and guarded deletion render | Pass; no mutation |
+| KB index | Search, lifecycle/role filters, create-draft entry point, 23 Published entries, and one held Draft render | Pass |
+| KB editor | Content, roles, applicability, permitted/prohibited facts, navigation targets, sources, evaluation IDs, validation, review/publish workflow, history, and guarded deletion render | Pass; initial read-only audit plus separately evidenced governed publication |
 | Activity | Content-free control-plane events render with actor, policy/outcome, and timestamp evidence; no transcript body is exposed | Pass |
-| Settings | Deployment warnings and deny-by-default controls render; operational reason, impact acknowledgement, and typed `APPLY` confirmation are required | Pass; finding `PROD-UI-AIS-002` implemented, production verification pending |
+| Settings | Deployment warnings and deny-by-default controls render; Shadow is absent; operational reason, impact acknowledgement, and typed `APPLY` confirmation are required | Pass; finding `PROD-UI-AIS-002` closed in production |
 | Family desktop support | Launcher and dialog say **LoLo Support** and explicitly promise a human team-member reply; no AI label or action appears | Pass |
 | Family mobile support | At 390 by 844 pixels, the dialog fits the viewport, document width equals viewport width, and visible navigation/minimize/send controls are 44 by 44 pixels | Pass |
 
@@ -89,9 +89,11 @@ The apply operation created validated Drafts only and did not enable AI. Keep `K
 
 ### `PROD-UI-AIS-002` - remove shadow control from operator settings
 
-Status: Implemented and tested in `4ac0f07`; production deployment verification pending.
+Status: Closed in production August 14, 2026.
 
 The prior Settings selector included `shadow_enabled` even though `DEC-047` permanently excludes production-conversation shadowing. The Admin component now excludes the key from both its rendered current-state/change-control surfaces and its accepted mutation validation. A forged Livewire change is rejected before any control version can be stored. The service still recognizes the key for historical compatibility and independently rejects enablement under `DEC-047`.
+
+Production verification found no Shadow row and no Shadow selector option, 17 remaining operator controls, both deployment guards off, and human-only as the sole On control.
 
 Verification passed:
 
@@ -102,7 +104,7 @@ Verification passed:
 
 ### Live AI execution deliberately not exercised
 
-No production model call, automated conversation, draft, recap, publication, or human-transfer transition was attempted. Exercising those paths would require deployment guards, controls, published KB content, and an exact-user grant, which were intentionally absent. Their current evidence remains the isolated deterministic, browser, accessibility, and model-evaluation suite recorded in the implementation evidence. A production-like staff rehearsal is still required before a named-user pilot.
+No production model call, automated conversation, draft, recap, Care Request publication, or human-transfer transition was attempted. Exercising those paths would require deployment guards, controls, and an exact-user grant, which remain intentionally absent. Their current evidence remains the isolated deterministic, browser, accessibility, and model-evaluation suite recorded in the implementation evidence. A production-like staff rehearsal is still required before a named-user pilot.
 
 ## Release position
 
@@ -110,9 +112,7 @@ This audit authorizes no AI activation. It confirms that the deployed state is s
 
 The next controlled batch is:
 
-1. Deploy `4ac0f07` through the unchanged `deploy.sh` while both AI deployment guards remain false, then verify that Admin Settings contains no Shadow control and that the server policy still fails closed.
-2. Review and selectively publish only the non-pricing KB entries needed for the first one-time Family rehearsal; keep every runtime, role, capability, and grant control off.
-3. Close provider privacy/retention and monitoring ownership evidence.
-4. Run the production-like staff-account safety, handoff, cost-stop, and rollback rehearsal.
-5. Complete the five-person older-adult usability gate.
-6. Name the first two Family users and obtain an explicit limited-release decision before creating 14-day exact-user grants.
+1. Close provider privacy/retention and monitoring ownership evidence.
+2. Run the production-like staff-account safety, handoff, cost-stop, and rollback rehearsal.
+3. Complete the five-person older-adult usability gate.
+4. Name the first two Family users and obtain an explicit limited-release decision before creating 14-day exact-user grants.

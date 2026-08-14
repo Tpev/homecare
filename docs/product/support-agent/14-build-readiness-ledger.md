@@ -90,15 +90,16 @@ Return to Product for any change to user-visible scope, authorization, role/data
 ## Delivery evidence completed
 
 - Runtime, Family/Caregiver isolation, exact-user private transcripts, navigation, context, draft, recap, confirmation, publication, receipt, handoff, retention, observability, and kill switches implemented
-- 12-entry expanded KB manifest and 60 entry-linked evaluation cases implemented as Draft-only import
+- 12-entry expanded KB manifest and 60 entry-linked evaluation cases implemented with governed import and selective publication controls
 - Frozen 56-case live Luna-low v3 gate: 56/56, 100% extraction, zero hard failures, P95 4.769 seconds
-- Final full deterministic Laravel suite: 680 passing with 5,037 assertions after all hardening; final transfer/draft/runtime slice passes 22 tests with 159 assertions
+- Final full deterministic Laravel suite: 682 passing with 5,051 assertions after all hardening; final transfer/draft/runtime slice passes 22 tests with 159 assertions
 - Isolated fresh migration/seed and new recap-to-live-request Playwright flow pass
 - Same-account exact-user privacy, Admin evidence, 200% text, responsive mobile, keyboard, offline retry, and established human support regressions pass
 - Production asset build and feature-scoped formatting pass
 - Fail-closed production deployment and authenticated Admin/Family browser audit pass
 - Expanded production KB import verified: 12 interactive Version 1 Drafts, 60 linked evaluations, 24 successful create/validate events, zero failures, zero publication, and zero activation
 - Shadow control removed from the Admin operator UI in `4ac0f07` while permanent server denial remains; 67 AI Support tests and the 682-test full suite pass
+- Production verified with Shadow absent, 23 reviewed non-pricing entries Published, `KB-CARE-006` held as Draft, 23 successful publication events, zero publication failures, zero grants, and all AI gates off
 
 Exact metrics, report checksum, audit corrections, and the deploy/rollback sequence are in [the implementation record](24-interactive-assistant-implementation-and-release-evidence.md).
 
@@ -117,7 +118,7 @@ These are implementation/release tasks, not unanswered product decisions:
 
 ### Knowledge and evaluation
 
-- Publish only reviewed, non-held entries needed by the approved pilot; the expanded production Draft import is complete
+- Governed publication complete for 23 reviewed non-held entries; keep `KB-CARE-006` outside ordinary retrieval until `DEC-049` is released
 - Re-run the frozen Luna-low gate after any governed model, prompt, schema, KB, or corpus change
 - Keep the pricing entry outside ordinary answer retrieval until `DEC-049` is released
 
@@ -144,4 +145,4 @@ The payment/pricing reconciliation is a separate project. Do not modify Stripe, 
 
 ## Readiness conclusion
 
-The declared implementation is complete and deployed fail-closed. The expanded governed content is imported as validated Drafts. Production/user-visible controls must remain off. Limited release still requires the open provider/privacy, operations, KB publication, usability, named-user, monitoring, and explicit approval gates. Payment/pricing code remains outside this project.
+The declared implementation is complete and deployed fail-closed. Twenty-three reviewed non-pricing entries are Published and the pricing entry remains a validated Draft. Production/user-visible controls must remain off. Limited release still requires the open provider/privacy, operations, usability, named-user, monitoring, and explicit approval gates. Payment/pricing code remains outside this project.
