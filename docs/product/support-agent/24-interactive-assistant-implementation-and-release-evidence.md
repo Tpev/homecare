@@ -73,7 +73,9 @@ Conversation controls target less than $0.02, emit compact alert evidence at $0.
 
 | Evidence | Result |
 | --- | --- |
-| Final full Laravel suite after all hardening | 680 passed, 5,037 assertions, 0 failed |
+| Final full Laravel suite after operator-UI cleanup | 682 passed, 5,051 assertions, 0 failed |
+| AI Support suite after operator-UI cleanup | 67 passed, 583 assertions, 0 failed |
+| Focused Admin Settings cleanup regression | 2 passed, 11 assertions, 0 failed |
 | Final transfer/draft/runtime safety slice | 22 passed, 159 assertions, 0 failed |
 | Interactive request runtime slice after task-note correction | One-time/recurring, privacy, takeover, idempotency, expiry, logout, invalid dates/slots/ZIP all pass |
 | Feature-scoped Pint | 46 feature files pass; later touched files pass targeted Pint |
@@ -124,6 +126,7 @@ The final full gate meets the declared zero-hard-failure, at-least-98%-extractio
 6. Invalid/rolled calendar dates, duplicate recurring-day slots, and malformed ZIP values cannot produce a ready draft.
 7. Draft mutation, recap/message/action creation, and human transfer now use a consistent ticket-lock boundary; stale automated ticket objects cannot create work after human ownership wins.
 8. Windows compiled-view failures from a parallel formatter/test experiment disappeared in the required serial full-suite rerun; they were test-environment file locks, not application failures.
+9. Admin Settings no longer renders or accepts the obsolete `shadow_enabled` control. The service retains the historical key and permanent `DEC-047` denial; focused, AI Support, and full-suite regressions pass in `4ac0f07`.
 
 ## Production deployment and next operational step
 

@@ -18,7 +18,7 @@ The authenticated Admin surfaces render correctly, the existing human-support fa
 
 The expanded interactive KB import was subsequently completed and verified in production. The database now contains all 24 governed entries as Drafts, including `KB-CARE-001` through `KB-CARE-012`; nothing is published. Every imported entry is Version 1, reports validation passed, contains authoritative-source evidence, and has exactly five linked evaluation IDs. The content-free activity trail records 12 successful creations and 12 successful validation runs with no failure.
 
-Limited release is not ready yet. A non-safety-blocking finding remains: Settings still displays the permanently denied `shadow_enabled` control even though the overview and server policy correctly state that shadow mode is outside the release. The imported non-pricing entries also require deliberate review and selective publication before a controlled staff rehearsal.
+Limited release is not ready yet. The non-safety-blocking Settings inconsistency has been corrected in repository commit `4ac0f07`: the operator UI no longer renders or accepts `shadow_enabled`, while the server retains the historical key and permanent `DEC-047` enablement denial. Production verification awaits the next unchanged `deploy.sh` run. The imported non-pricing entries also require deliberate review and selective publication before a controlled staff rehearsal.
 
 ## Audit scope and method
 
@@ -52,7 +52,7 @@ Screenshots were captured for immediate visual review but are intentionally excl
 | KB index | Search, lifecycle/role filters, create-draft entry point, and 24 Draft records render | Pass |
 | KB editor | Content, roles, applicability, permitted/prohibited facts, navigation targets, sources, evaluation IDs, validation, review/publish workflow, history, and guarded deletion render | Pass; no mutation |
 | Activity | Content-free control-plane events render with actor, policy/outcome, and timestamp evidence; no transcript body is exposed | Pass |
-| Settings | Deployment warnings and deny-by-default controls render; operational reason, impact acknowledgement, and typed `APPLY` confirmation are required | Pass with finding `PROD-UI-AIS-002` |
+| Settings | Deployment warnings and deny-by-default controls render; operational reason, impact acknowledgement, and typed `APPLY` confirmation are required | Pass; finding `PROD-UI-AIS-002` implemented, production verification pending |
 | Family desktop support | Launcher and dialog say **LoLo Support** and explicitly promise a human team-member reply; no AI label or action appears | Pass |
 | Family mobile support | At 390 by 844 pixels, the dialog fits the viewport, document width equals viewport width, and visible navigation/minimize/send controls are 44 by 44 pixels | Pass |
 
@@ -87,11 +87,18 @@ php artisan ai-support:import-interactive-kb --apply --actor-email=<admin-email>
 
 The apply operation created validated Drafts only and did not enable AI. Keep `KB-CARE-006` held and unpublished.
 
-### `PROD-UI-AIS-002` - shadow control remains visible
+### `PROD-UI-AIS-002` - remove shadow control from operator settings
 
-Severity: Operator-consistency cleanup; not a current safety failure.
+Status: Implemented and tested in `4ac0f07`; production deployment verification pending.
 
-The Settings selector includes `shadow_enabled` even though `DEC-047` permanently excludes production-conversation shadowing. Server policy correctly rejects any attempt to enable it, and the overview says **No shadow mode**. Remove the control from the Admin selector so the operator interface matches the approved product model and cannot invite a meaningless failed operation.
+The prior Settings selector included `shadow_enabled` even though `DEC-047` permanently excludes production-conversation shadowing. The Admin component now excludes the key from both its rendered current-state/change-control surfaces and its accepted mutation validation. A forged Livewire change is rejected before any control version can be stored. The service still recognizes the key for historical compatibility and independently rejects enablement under `DEC-047`.
+
+Verification passed:
+
+- focused Settings regression: 2 tests, 11 assertions;
+- complete AI Support suite: 67 tests, 583 assertions;
+- full Laravel suite: 682 tests, 5,051 assertions; and
+- targeted Pint plus `git diff --check`.
 
 ### Live AI execution deliberately not exercised
 
@@ -103,7 +110,7 @@ This audit authorizes no AI activation. It confirms that the deployed state is s
 
 The next controlled batch is:
 
-1. Remove the visible shadow control and redeploy that small operator-UI cleanup while preserving the server denial.
+1. Deploy `4ac0f07` through the unchanged `deploy.sh` while both AI deployment guards remain false, then verify that Admin Settings contains no Shadow control and that the server policy still fails closed.
 2. Review and selectively publish only the non-pricing KB entries needed for the first one-time Family rehearsal; keep every runtime, role, capability, and grant control off.
 3. Close provider privacy/retention and monitoring ownership evidence.
 4. Run the production-like staff-account safety, handoff, cost-stop, and rollback rehearsal.

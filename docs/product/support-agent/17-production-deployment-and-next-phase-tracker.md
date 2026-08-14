@@ -90,7 +90,7 @@ Performed August 14, 2026 with an authenticated full-Administrator session follo
 - A fresh authenticated flow produced zero current application console errors.
 - All 12 `KB-CARE-*` entries are present as validated Version 1 Drafts with authoritative sources and 60 linked evaluations.
 - The import activity contains 12 successful creation events and 12 successful validation events with no failure.
-- The permanently denied `shadow_enabled` control remains visible in Settings and should be removed from the operator selector.
+- The audit found the permanently denied `shadow_enabled` control visible in Settings; repository cleanup `4ac0f07` removes it and awaits production verification.
 
 Full evidence and next actions: [production interactive assistant deployment audit](25-production-interactive-deployment-audit.md).
 
@@ -127,7 +127,7 @@ Full evidence and next actions: [production interactive assistant deployment aud
 | `INT-AIS-002` | Expanded 12-entry interactive KB package | Production import verified: 12 Version 1 Drafts, validation passed, sources present, 60 linked cases, no failures, no publication | Review and selective non-pricing publication |
 | `EVAL-INT-001` | Frozen 56-case interactive runtime gate | Prompt v3: 56/56, 100% extraction, zero hard failures, P95 4.769 seconds | Re-run on any governed model/prompt/schema/KB/corpus change |
 | `PROD-KB-INT-001` | Import `KB-CARE-001` through `KB-CARE-012` into production | Closed August 14, 2026; authenticated audit verified all records, validations, sources, evaluations, events, and unchanged publication/activation state | None |
-| `PROD-UI-AIS-002` | Remove permanently denied shadow control from the Admin selector | Pending; server denial is correct, so this is not a safety failure | Operator clarity before control activation |
+| `PROD-UI-AIS-002` | Remove permanently denied shadow control from the Admin selector | Implemented and tested in `4ac0f07`; UI and forged-mutation paths exclude it while the server denial remains; production verification pending | Deploy and verify before control activation |
 
 ## Current phase status
 
@@ -142,7 +142,7 @@ Full evidence and next actions: [production interactive assistant deployment aud
 
 ## Agreed next-work order
 
-1. Remove the visible shadow control from Admin Settings while preserving the permanent server denial, then deploy through the unchanged `deploy.sh` with both AI deployment guards false.
+1. Deploy `4ac0f07` through the unchanged `deploy.sh` with both AI deployment guards false, then verify the Shadow control is absent and the fail-closed state is unchanged.
 2. Review and selectively publish only the non-pricing entries required by the one-time Family rehearsal; keep `KB-CARE-006` held.
 3. Produce provider/retention, staff-account, human-handoff, monitoring, cost-stop, and rollback evidence; do not build shadow mode.
 4. Complete the five-person representative older-adult study and comprehension/accessibility gates.
@@ -158,7 +158,7 @@ Complete **KB publication readiness and limited-release evidence** without enabl
 Required outcome:
 
 - Review the imported Drafts and publish only the approved non-pricing slice needed for rehearsal.
-- Remove the stale shadow selector and close the remaining production portions of `DEC-058`, `DEC-064`, `DEC-065`, and `DEC-066`.
+- Deploy and verify the completed shadow-selector cleanup, then close the remaining production portions of `DEC-058`, `DEC-064`, `DEC-065`, and `DEC-066`.
 - Preserve zero production conversation processing until a visible named-user pilot release is explicitly approved.
 - Preserve zero user-visible model calls, zero active grants, Draft-only KB content, and disabled AI controls.
 

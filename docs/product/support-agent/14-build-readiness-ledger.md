@@ -98,6 +98,7 @@ Return to Product for any change to user-visible scope, authorization, role/data
 - Production asset build and feature-scoped formatting pass
 - Fail-closed production deployment and authenticated Admin/Family browser audit pass
 - Expanded production KB import verified: 12 interactive Version 1 Drafts, 60 linked evaluations, 24 successful create/validate events, zero failures, zero publication, and zero activation
+- Shadow control removed from the Admin operator UI in `4ac0f07` while permanent server denial remains; 67 AI Support tests and the 682-test full suite pass
 
 Exact metrics, report checksum, audit corrections, and the deploy/rollback sequence are in [the implementation record](24-interactive-assistant-implementation-and-release-evidence.md).
 
