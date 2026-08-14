@@ -244,7 +244,7 @@ The August 15 read-only production preflight later found one newly opened `Opera
 
 The source correction treats the current, unexpired Passed `operations_alert_delivery` evidence record's creation time as a recovery checkpoint. It excludes only failed `ai-support-operations-test-*` rows at or before that checkpoint. A later operations-test failure still opens an incident immediately, and no `support-handoff-*` or other AI Support notification failure is suppressed. Focused readiness coverage passes 11 tests and 51 assertions, including post-checkpoint failure detection, historical handoff-failure detection, and rejection of expired recovery evidence. The combined readiness and Administrator-notification regression batch passes 15 tests and 56 assertions.
 
-The correction is not production evidence until it is deployed. After deployment, run the health monitor, require a zero failed-notification result, resolve the one regression-created incident with a content-free reason tied to the deployed commit and monitor result, and rerun the read-only preflight. Do not restore the documented 12-of-21 current state until those checks succeed.
+The correction was deployed through the standard production script at full commit `106ca5d11c8e179aff9b7b82b4e1051ce74c4ba8`. The immediate production health monitor reported zero conversation and tool samples, zero failed operations notifications, zero daily model cost, and no daily cost stop. The regression-created incident was then resolved with a content-free reason tied to the deployed correction and zero monitor result. A full authenticated reload proved 12 of 21 checks passing, nine required checks open, zero incidents, zero warnings, both deployment guards off, only human-only on, and zero grants. The global incident banner was absent after the full reload. A final post-resolution CLI preflight remains to be captured; no capability or grant was enabled during this correction.
 
 These documentation facts are not a substitute for verifying the actual OpenAI project and production environment. The following remain unrecorded until server/API or account-owned evidence proves them:
 
@@ -269,14 +269,14 @@ After the initial production records, readiness was `BLOCKED` at 9 of 21 checks 
 
 ## Work queue
 
-1. Deploy the operations-alert monitor recovery-checkpoint correction, prove a zero failed-notification monitor result, resolve only the regression-created incident, and rerun the read-only preflight.
+1. Capture the post-resolution read-only production preflight and confirm the 12-of-21 state remains stable.
 2. Verify the intended provider project, project controls, and `$25` spend alert through the approved server/API or account-evidence route without using the provider website.
-3. Verify the content-free production environment prerequisites while both deployment guards remain off.
+3. Verify the remaining downstream-extinction and restore evidence while both deployment guards remain off.
 4. Record the remaining monitoring/cost and provider evidence in Admin only after each fact is observed.
 5. Run the staffed human-takeover, emergency/24/7, automatic-stop, confirmation-invalidation, rollback, and continuous human-chat drill.
 6. Complete the remaining accessibility checks and five qualifying older-adult sessions using the approved study kit.
-7. Add planned dates and review ownership to the two named Family users without creating grants.
-8. Run the read-only preflight and return for an explicit release decision.
+7. Add planned dates to the two named Family users without creating grants; review ownership is already recorded.
+8. Run the final read-only preflight and return for an explicit release decision.
 
 ## Explicitly prohibited shortcuts
 
