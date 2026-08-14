@@ -2,7 +2,7 @@
 
 Status: Approved runbook; execution evidence open
 
-Last updated: August 14, 2026
+Last updated: August 15, 2026
 
 Owner: Either full administrator or engineering operator
 
@@ -85,6 +85,22 @@ Record `rollback_rehearsal` only after observing the following in a synthetic en
 6. Both administrators receive the content-free stop/handoff alerts.
 7. Resolving the incident does not re-enable the capability.
 8. Human support remains usable throughout.
+
+### Content-free staffed record and validator
+
+Copy [the pending safety-rehearsal JSON template](templates/safety-rehearsal-record.template.json) to a non-public working location. Replace the reference, full release commit, timestamp, and operator reference. Change an observation to `true` only after the operator actually witnesses it. Do not add transcripts, prompts, model answers, customer content, synthetic task text, email addresses, record IDs, credentials, or free-form notes. The shipped template intentionally fails validation.
+
+After the witnessed drill, validate the record against the exact candidate commit:
+
+```bash
+php artisan ai-support:validate-safety-rehearsal \
+  /safe/path/safety-rehearsal.json \
+  --expected-commit=<full-40-character-release-commit>
+```
+
+The command is read-only. It rejects missing or extra fields, a non-synthetic environment, an invalid/future timestamp, a commit that does not exist in the repository, a commit mismatch, or any observation that is not exactly `true`. On success it prints only the schema, release commit, `14 / 14` observation count, content-free record hash, and zero-mutation result. It does not substitute for the witnessed drill and does not record Admin readiness evidence.
+
+If any observation fails, preserve that failed record. Correct the product or procedure, repeat the affected drill on the resulting exact commit, and create a new record; never rewrite the historical failure into a pass.
 
 ## Later pilot activation order
 

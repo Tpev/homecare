@@ -4,6 +4,8 @@ Status: Implemented fail-closed; production release evidence remains open
 
 Implemented: August 14, 2026
 
+Updated: August 15, 2026
+
 Authority: `DEC-067`
 
 ## Outcome
@@ -28,6 +30,7 @@ This build adds evidence and operational controls. It does not authorize a pilot
 - Responses API requests remain stateless with `store:false`, strict JSON Schema, parallel tools disabled, no hosted tools or provider-side files/vector stores, a 900-token output ceiling, and at most one retry.
 - Versioned Luna-low pricing and cached-input accounting based on the official catalog checked August 14, 2026.
 - The approved provider/privacy checklist, staff/rollback runbook, and five-person older-adult usability study kit.
+- Strict read-only, exact-commit validators and deliberately failing content-free templates for the witnessed safety/rollback drill and real five-person older-adult/accessibility record. They do not create evidence or replace human observation.
 
 ## Schema and deployment safety
 
@@ -54,6 +57,8 @@ The new provider safety secret is intentionally absent from source control. Prod
 | Readiness page authorization | Full Administrator only; Family forbidden |
 | Readiness activation isolation | No activation, control, or grant action exists on the readiness page |
 | Plan-only rehearsal | No process, provider call, database mutation, or report write |
+| Human-evidence validator slice | 5 passed, 35 assertions |
+| Current AI Support feature slice after the August 15 addendum | 96 passed, 742 assertions |
 
 ### Isolated combined rehearsal
 
@@ -85,6 +90,10 @@ The report is content-free and retained locally under the private storage disk. 
 The rehearsal was repeated from clean deployed commit `003c7ccd09249be1fa6c03b731431c7126bb7778`. It passed the browser gate, all 56 provider cases with zero hard failures, all 27 extraction fields, the cost ceiling at `$0.01787196`, and verified temporary-database destruction. Its content-free result hash is `885cfc733fafa4aa8e2634a3d17d785c5b2404c998428868071f7d3a988cc421`. Provider latency was 3,173 ms P50 and 5,531 ms P95, so the performance warning remains open.
 
 Subsequent production and accessibility execution is tracked in the [limited-release readiness execution log](32-limited-release-readiness-execution-log.md).
+
+### August 15 human-evidence validation addendum
+
+`ai-support:validate-safety-rehearsal` validates the exact-commit synthetic drill record only when all 14 required observations are true. `ai-support:validate-older-adult-study` validates exactly five coded non-team participants, recruitment minimums, the 27-of-30 unassisted threshold, universal comprehension/draft preservation, unassisted human transfer, and the complete accessibility matrix. Both reject unrecognized fields and make no application, readiness, control, grant, or provider write. Their templates remain Pending by construction and cannot pass until filled from real observation. Implementation and automated tests are not human evidence.
 
 ## Gates intentionally still open
 

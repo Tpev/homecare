@@ -266,6 +266,10 @@ This simplification does not turn an unsupported claim into evidence. A normal A
 
 The documented Admin Audit Logs schema was also checked on August 15, 2026; its organization and project update events do not expose a model-improvement sharing field, so it cannot close that evidence item. The current-key verifier/readiness batch passes 21 tests and 110 assertions, and the complete AI Support feature suite passes 91 tests and 707 assertions.
 
+### Human-evidence validation tooling
+
+The staffed safety/rollback drill and the five-person older-adult/accessibility protocol now have strict content-free JSON templates and read-only validators. The safety validator requires all 14 witnessed observations, a synthetic environment, a past timestamp, and the exact 40-character candidate commit. The study validator requires five unique coded non-team participants, every recruitment minimum, at least 27 of 30 unassisted tasks, unassisted human transfer for all five, universal comprehension and draft preservation, the complete accessibility matrix, and the exact commit. Both reject missing/extra fields, output only safe aggregates and a SHA-256 record reference, and make no application, readiness, control, grant, or provider mutation. The pending templates deliberately fail. The validator batch passes five tests and 35 assertions; the complete AI Support suite passes 96 tests and 742 assertions. This is validation tooling only; no staffed drill, screen-reader check, or human study is claimed from implementation or automated tests.
+
 These documentation facts are not a substitute for verifying the actual OpenAI project and production environment. The following remain unrecorded until server/API or account-owned evidence proves them:
 
 - dedicated project and project-scoped credential;

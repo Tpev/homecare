@@ -1,0 +1,134 @@
+{
+    "schema_version": "ai-support-older-adult-study-v1",
+    "study_reference": "OA-STUDY-REPLACE-ME",
+    "release_commit": "REPLACE_WITH_FULL_40_CHARACTER_LOWERCASE_COMMIT",
+    "conducted_from": "YYYY-MM-DD",
+    "conducted_to": "YYYY-MM-DD",
+    "participants": [
+        {
+            "participant_id": "OA-01",
+            "age_band": "REPLACE",
+            "digital_confidence": "REPLACE",
+            "primary_device": "REPLACE",
+            "accessibility_setting": "REPLACE",
+            "team_member": false,
+            "tasks": {
+                "t1": "pending",
+                "t2": "pending",
+                "t3": "pending",
+                "t4": "pending",
+                "t5": "pending",
+                "t6": "pending"
+            },
+            "comprehension": {
+                "recap_understood": false,
+                "live_is_not_hired_understood": false,
+                "no_payment_authorization_understood": false,
+                "human_transfer_understood": false,
+                "draft_preserved": false
+            }
+        },
+        {
+            "participant_id": "OA-02",
+            "age_band": "REPLACE",
+            "digital_confidence": "REPLACE",
+            "primary_device": "REPLACE",
+            "accessibility_setting": "REPLACE",
+            "team_member": false,
+            "tasks": {
+                "t1": "pending",
+                "t2": "pending",
+                "t3": "pending",
+                "t4": "pending",
+                "t5": "pending",
+                "t6": "pending"
+            },
+            "comprehension": {
+                "recap_understood": false,
+                "live_is_not_hired_understood": false,
+                "no_payment_authorization_understood": false,
+                "human_transfer_understood": false,
+                "draft_preserved": false
+            }
+        },
+        {
+            "participant_id": "OA-03",
+            "age_band": "REPLACE",
+            "digital_confidence": "REPLACE",
+            "primary_device": "REPLACE",
+            "accessibility_setting": "REPLACE",
+            "team_member": false,
+            "tasks": {
+                "t1": "pending",
+                "t2": "pending",
+                "t3": "pending",
+                "t4": "pending",
+                "t5": "pending",
+                "t6": "pending"
+            },
+            "comprehension": {
+                "recap_understood": false,
+                "live_is_not_hired_understood": false,
+                "no_payment_authorization_understood": false,
+                "human_transfer_understood": false,
+                "draft_preserved": false
+            }
+        },
+        {
+            "participant_id": "OA-04",
+            "age_band": "REPLACE",
+            "digital_confidence": "REPLACE",
+            "primary_device": "REPLACE",
+            "accessibility_setting": "REPLACE",
+            "team_member": false,
+            "tasks": {
+                "t1": "pending",
+                "t2": "pending",
+                "t3": "pending",
+                "t4": "pending",
+                "t5": "pending",
+                "t6": "pending"
+            },
+            "comprehension": {
+                "recap_understood": false,
+                "live_is_not_hired_understood": false,
+                "no_payment_authorization_understood": false,
+                "human_transfer_understood": false,
+                "draft_preserved": false
+            }
+        },
+        {
+            "participant_id": "OA-05",
+            "age_band": "REPLACE",
+            "digital_confidence": "REPLACE",
+            "primary_device": "REPLACE",
+            "accessibility_setting": "REPLACE",
+            "team_member": false,
+            "tasks": {
+                "t1": "pending",
+                "t2": "pending",
+                "t3": "pending",
+                "t4": "pending",
+                "t5": "pending",
+                "t6": "pending"
+            },
+            "comprehension": {
+                "recap_understood": false,
+                "live_is_not_hired_understood": false,
+                "no_payment_authorization_understood": false,
+                "human_transfer_understood": false,
+                "draft_preserved": false
+            }
+        }
+    ],
+    "accessibility": {
+        "zoom_200_without_overflow": false,
+        "keyboard_and_focus_order": false,
+        "screen_reader_names_and_states": false,
+        "contrast": false,
+        "primary_touch_targets_44px": false,
+        "focus_return_after_error": false,
+        "short_singular_questions": false,
+        "safe_draft_survived_refresh_navigation_timeout_and_expiry": false
+    }
+}

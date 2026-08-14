@@ -2,7 +2,7 @@
 
 Status: Approved protocol; participant evidence open
 
-Last updated: August 14, 2026
+Last updated: August 15, 2026
 
 Owner: Product, design/accessibility, or either full administrator
 
@@ -119,6 +119,29 @@ Pass: participant finds or requests human transfer, sees the approved no-queue/n
 | OA-05 |  |  |  |  |  |  |  |  |  |  |  |
 
 The denominator is always 30 task attempts. Assistance is a failed unassisted attempt even when the participant ultimately finishes.
+
+## Content-free structured record
+
+Copy [the pending study JSON template](templates/older-adult-study-record.template.json) to a non-public working location. It permits only the coded fields in this protocol and intentionally fails validation until real sessions and accessibility checks are complete. Do not add names, contact information, exact ages, recordings, transcripts, task-card content, health details, addresses, credentials, or free-form notes. Retain any separately consented research material under its own approved research process; it is not AI Support readiness evidence.
+
+Allowed coded values are:
+
+- `age_band`: `65-74`, `75-84`, or `85+`;
+- `digital_confidence`: `low`, `medium`, or `high`;
+- `primary_device`: `mobile` or `desktop`;
+- `accessibility_setting`: `none`, `enlarged_text`, `screen_reader`, `keyboard`, or `other`;
+- each task: `pass_unassisted`, `completed_with_assistance`, or `not_completed`;
+- every universal comprehension, draft, and accessibility result: JSON `true` only when actually observed as passing.
+
+After five real non-team sessions, validate the record against the exact candidate commit:
+
+```bash
+php artisan ai-support:validate-older-adult-study \
+  /safe/path/older-adult-study.json \
+  --expected-commit=<full-40-character-release-commit>
+```
+
+The read-only validator requires exactly `OA-01` through `OA-05`, the complete recruitment matrix, at least 27 of 30 unassisted tasks, unassisted human transfer for every participant, universal comprehension and draft preservation, and every accessibility check. It rejects missing/extra fields, a commit that does not exist in the repository, and commit/date mismatches, writes no application or Admin record, and outputs only aggregate counts plus a content-free record hash. A passing validator result supports—but never replaces—the real moderator record and witnessed sessions.
 
 ## Accessibility record
 

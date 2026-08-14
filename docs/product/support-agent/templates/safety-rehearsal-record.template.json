@@ -1,0 +1,24 @@
+{
+    "schema_version": "ai-support-safety-rehearsal-v1",
+    "rehearsal_reference": "SR-REPLACE-ME",
+    "release_commit": "REPLACE_WITH_FULL_40_CHARACTER_LOWERCASE_COMMIT",
+    "environment": "synthetic",
+    "conducted_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+    "operator_reference": "REPLACE WITH OPERATOR NAME OR SAFE REFERENCE",
+    "observations": {
+        "active_recap_before_takeover": false,
+        "human_takeover_before_automated_reply": false,
+        "pending_recap_invalidated": false,
+        "stale_confirmation_blocked": false,
+        "emergency_911_preceded_transfer": false,
+        "emergency_skipped_provider": false,
+        "continuous_coverage_transferred_without_queue_or_time_promise": false,
+        "automatic_stop_opened_one_incident": false,
+        "both_admins_received_content_free_stop_and_handoff_alerts": false,
+        "incident_resolution_did_not_reenable": false,
+        "rollback_human_only_enabled": false,
+        "rollback_confirmations_invalidated": false,
+        "rollback_preserved_valid_records_and_receipts": false,
+        "human_chat_available_throughout": false
+    }
+}
