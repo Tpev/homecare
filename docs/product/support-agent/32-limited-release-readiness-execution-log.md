@@ -244,7 +244,15 @@ The August 15 read-only production preflight later found one newly opened `Opera
 
 The source correction treats the current, unexpired Passed `operations_alert_delivery` evidence record's creation time as a recovery checkpoint. It excludes only failed `ai-support-operations-test-*` rows at or before that checkpoint. A later operations-test failure still opens an incident immediately, and no `support-handoff-*` or other AI Support notification failure is suppressed. Focused readiness coverage passes 11 tests and 51 assertions, including post-checkpoint failure detection, historical handoff-failure detection, and rejection of expired recovery evidence. The combined readiness and Administrator-notification regression batch passes 15 tests and 56 assertions.
 
-The correction was deployed through the standard production script at full commit `106ca5d11c8e179aff9b7b82b4e1051ce74c4ba8`. The immediate production health monitor reported zero conversation and tool samples, zero failed operations notifications, zero daily model cost, and no daily cost stop. The regression-created incident was then resolved with a content-free reason tied to the deployed correction and zero monitor result. A full authenticated reload proved 12 of 21 checks passing, nine required checks open, zero incidents, zero warnings, both deployment guards off, only human-only on, and zero grants. The global incident banner was absent after the full reload. A final post-resolution CLI preflight remains to be captured; no capability or grant was enabled during this correction.
+The correction was deployed through the standard production script at full commit `106ca5d11c8e179aff9b7b82b4e1051ce74c4ba8`. The immediate production health monitor reported zero conversation and tool samples, zero failed operations notifications, zero daily model cost, and no daily cost stop. The regression-created incident was then resolved with a content-free reason tied to the deployed correction and zero monitor result. A full authenticated reload proved 12 of 21 checks passing, nine required checks open, zero incidents, zero warnings, both deployment guards off, only human-only on, and zero grants. The global incident banner was absent after the full reload.
+
+The final post-resolution CLI preflight independently reproduced that state: all eight computed foundation checks Passed, including both guards off, only human-only on, zero non-revoked grants, 23 governed published KB entries with the pricing hold intact, the bounded credential/safety-secret prerequisites, the current Luna price catalog, and zero open incidents. The same nine genuine evidence gates remained Blocked. The command confirmed it was read-only and changed no control, grant, provider state, or evidence record. No capability or grant was enabled during this correction.
+
+### Documented provider Admin API route
+
+The current official Admin API reference was checked on August 15 without accessing the provider account website. A separate Admin API credential can retrieve the intended project, enumerate that project's redacted API-key records, retrieve its project data-retention type, and list or create project spend alerts. A `$25` monthly alert is represented as `2500` cents, `USD`, interval `month`, with email recipients. These Admin endpoints provide a stronger server-only route for the project/key, retention, and cost-alert portions of the gate than the earlier ordinary model request.
+
+The normal project API key is not an Admin API credential, and neither key may be printed or recorded. The documented Admin API surface does not expose the model-improvement data-sharing opt-in state, so that fact still requires safe account-owned evidence rather than inference. No Admin API credential, intended project ID, or alert recipient set has yet been supplied; no provider account state was changed during this documentation check.
 
 These documentation facts are not a substitute for verifying the actual OpenAI project and production environment. The following remain unrecorded until server/API or account-owned evidence proves them:
 
@@ -269,8 +277,8 @@ After the initial production records, readiness was `BLOCKED` at 9 of 21 checks 
 
 ## Work queue
 
-1. Capture the post-resolution read-only production preflight and confirm the 12-of-21 state remains stable.
-2. Verify the intended provider project, project controls, and `$25` spend alert through the approved server/API or account-evidence route without using the provider website.
+1. Use an ephemeral Admin API credential plus the non-secret intended project ID to verify the project/key match and retention type, then verify or create the `$25` monthly alert for the approved recipients; do not print either credential.
+2. Supply safe account-owned evidence for the model-improvement sharing state and the destination/contract acknowledgement.
 3. Verify the remaining downstream-extinction and restore evidence while both deployment guards remain off.
 4. Record the remaining monitoring/cost and provider evidence in Admin only after each fact is observed.
 5. Run the staffed human-takeover, emergency/24/7, automatic-stop, confirmation-invalidation, rollback, and continuous human-chat drill.

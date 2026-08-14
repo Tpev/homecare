@@ -35,6 +35,16 @@ The operator has directed that this release exercise must not connect to the Ope
 - Creating or verifying the `$25` monthly spend alert requires project-level account evidence. The application's `$25` configuration value alone does not prove that the provider alert exists.
 - Never paste an Admin API key, project API key, safety secret, full provider response, customer content, or prompt into the terminal transcript or readiness evidence.
 
+The official Admin API reference checked on August 15, 2026 now documents server-side endpoints that can close part of this evidence gap when an organization-owned Admin API credential is available:
+
+- `GET /v1/organization/projects/{project_id}` retrieves the intended non-secret project record;
+- `GET /v1/organization/projects/{project_id}/api_keys` lists that project's API-key records with redacted values;
+- `GET /v1/organization/projects/{project_id}/data_retention` retrieves the configured project retention type;
+- `GET /v1/organization/projects/{project_id}/spend_alerts` lists project spend alerts;
+- `POST /v1/organization/projects/{project_id}/spend_alerts` creates an alert. The approved `$25` monthly alert uses `threshold_amount: 2500`, `currency: USD`, `interval: month`, and the approved email recipients.
+
+Use a separate, ephemeral `OPENAI_ADMIN_KEY` for these Administration endpoints. Do not store it in application configuration, pass it as a visible command argument, or substitute the production project key. Verify an existing alert before creating one to prevent duplicates, and require an explicit confirmation before the provider write. The documented Admin API surface does not expose the model-improvement data-sharing opt-in state; that setting still requires account-owned evidence and must remain Pending if none is supplied.
+
 ## Data-use and retention checklist
 
 Record `provider_data_controls` only after verifying:
