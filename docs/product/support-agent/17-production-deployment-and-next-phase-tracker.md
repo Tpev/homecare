@@ -8,11 +8,11 @@ Owner: Product and engineering
 
 ## Executive state
 
-The currently deployed model-independent AI Support foundation is failing closed. Human support remains the only customer-facing support behavior in that revision. The repository candidate now contains the interactive model-call path, but it remains disabled by default: there is no active exact-user pilot grant, no published KB content, and no enabled user-visible AI control.
+The interactive AI Support implementation is deployed and failing closed. Human support remains the only customer-facing support behavior: both deployment guards are off, there is no active exact-user pilot grant, no published KB content, and no enabled user-visible AI control.
 
-The deployment is a safe foundation release, not an intelligent-agent release. The interactive runtime/request candidate is now implemented and has deterministic, browser, accessibility, migration, cost, and live Luna-low evidence, but it is not yet recorded as deployed or authorized for a pilot. Product explicitly skipped production-conversation shadowing under `DEC-047`; no production model use or user-visible AI is thereby authorized.
+The production deployment is safe infrastructure, not an authorized intelligent-agent release. The interactive runtime/request path has deterministic, browser, accessibility, migration, cost, live Luna-low, and authenticated fail-closed production evidence. Product explicitly skipped production-conversation shadowing under `DEC-047`; no production model use or user-visible AI is thereby authorized.
 
-Candidate evidence: [interactive assistant implementation and release evidence](24-interactive-assistant-implementation-and-release-evidence.md).
+Evidence: [interactive assistant implementation and release evidence](24-interactive-assistant-implementation-and-release-evidence.md) and [production deployment audit](25-production-interactive-deployment-audit.md).
 
 ## Deployment record
 
@@ -25,10 +25,11 @@ Candidate evidence: [interactive assistant implementation and release evidence](
 | Foundation deployed branch state | `master` and `origin/master` at `338a9db25d98eff6ce096a92dda05d4a1878bee2` before the foundation deployment |
 | Phase 1A implementation | `688de776dc0fa9a18ebe9c8108ac298eec73db70`; browser-visible behavior and imported records verified August 14, 2026 |
 | Phase 1A documentation | `d6bcdb14e160186664ff11cf419d334081f0e9e8` |
-| Interactive request candidate | `61fca0341a467e2cb2ea65f559bd81c7c268658f`; implementation, tests, governed content, model evaluation, browser evidence, and release record; not yet deployed or pilot-authorized |
+| Interactive request deployment | `61fca0341a467e2cb2ea65f559bd81c7c268658f`; authenticated production UI and fail-closed behavior verified August 14, 2026; exact server `HEAD` is not exposed by the inspected pages; not pilot-authorized |
+| Interactive release evidence | `e8694a8ee71e5de7382c159058efca709d60f264` |
 | Legacy primary data | Guarded destruction reported complete with content-free evidence |
 | Legacy external extinction | Open until every derivative and containing backup is verified extinct or reaches its controlled final expiry |
-| Customer AI runtime | Unavailable by deployment guard and absent from this phase |
+| Customer AI runtime | Code present but unavailable through both disabled deployment guards and deny-by-default controls |
 | Retention execution schedule | Off by default; destructive daily execution requires explicit environment enablement |
 
 ### Migration incident and recovery
@@ -78,6 +79,19 @@ The reused browser session contained two earlier Livewire `503` messages and one
 
 The exact evidence, artifact checksums, and two Draft-only editorial findings are retained in the [Phase 1A governed content build record](20-phase-1a-content-build-record.md).
 
+## Interactive deployment production audit
+
+Performed August 14, 2026 with an authenticated full-Administrator session followed by the dedicated production editorial Family test account. No message, request, grant, control version, KB record, or assignment was created or changed.
+
+- Admin overview, pilots, KB, editor, activity, and settings surfaces render.
+- Both deployment guards and every AI capability/role control are off; human-only is on; there are zero active grants and zero published KB entries.
+- The customer support dialog remains human-only and fits a 390-pixel viewport with no horizontal overflow and 44-pixel visible controls.
+- A fresh authenticated flow produced zero current application console errors.
+- The new 12-entry `KB-CARE-*` package is not yet present in production and must be imported as validated Drafts.
+- The permanently denied `shadow_enabled` control remains visible in Settings and should be removed from the operator selector.
+
+Full evidence and next actions: [production interactive assistant deployment audit](25-production-interactive-deployment-audit.md).
+
 ## Known limitations and follow-ups
 
 | ID | Work item | Status | Blocks |
@@ -110,6 +124,8 @@ The exact evidence, artifact checksums, and two Draft-only editorial findings ar
 | `INT-AIS-001` | Approved interactive Family build contract | Implemented; deterministic/browser/live-model evidence pass | Provider/privacy, production-like rehearsal, older-adult usability, named pilot, and release approval |
 | `INT-AIS-002` | Expanded 12-entry interactive KB package | Repository manifest and 60 linked cases complete; isolated Draft import verified | Production Draft import, review, and selective non-pricing publication |
 | `EVAL-INT-001` | Frozen 56-case interactive runtime gate | Prompt v3: 56/56, 100% extraction, zero hard failures, P95 4.769 seconds | Re-run on any governed model/prompt/schema/KB/corpus change |
+| `PROD-KB-INT-001` | Import `KB-CARE-001` through `KB-CARE-012` into production | Pending; authenticated audit found only the original 12 Drafts | Limited-release content readiness |
+| `PROD-UI-AIS-002` | Remove permanently denied shadow control from the Admin selector | Pending; server denial is correct, so this is not a safety failure | Operator clarity before control activation |
 
 ## Current phase status
 
@@ -119,14 +135,14 @@ The exact evidence, artifact checksums, and two Draft-only editorial findings ar
 | Phase 1 foundation | Deployed | Admin controls, exact-user grants, governed KB workspace, contracts, handoff, evidence, and retention foundations exist |
 | Phase 1 content/evaluation | Complete; offline Luna-low baseline accepted under `DEC-012` | 12 validated Drafts, 70 fixtures, 556/556 current-candidate calls, zero hard/critical failures, exact evidence recorded; nothing is published and runtime remains off |
 | Phase 2 shadow | Skipped by `DEC-047` | No invisible processing of production conversations will be performed |
-| Phase 3 grounded answers | Implemented; release blocked | Requires reviewed applicable KB publication, provider/privacy, staff-account evidence, usability, monitoring, exact grants, and release approval |
-| Phases 4-6 | Implemented behind independent controls; release blocked | Navigation, Family context/intake, drafts, recap, and one-time/recurring confirmed publication have evidence but no production authority |
+| Phase 3 grounded answers | Implemented and deployed behind disabled controls; release blocked | Requires reviewed applicable KB publication, provider/privacy, staff-account evidence, usability, monitoring, exact grants, and release approval |
+| Phases 4-6 | Implemented and deployed behind independent disabled controls; release blocked | Navigation, Family context/intake, drafts, recap, and one-time/recurring confirmed publication have evidence but no production authority |
 
 ## Agreed next-work order
 
-1. Complete final repository review, commit, and push the implementation candidate to `master` when authorized.
-2. Deploy through the unchanged `deploy.sh` with both AI deployment guards false; verify migrations and public invisibility.
-3. Dry-run and apply the expanded KB import as validated Drafts, then review and selectively publish only the non-pricing entries required by the pilot.
+1. Dry-run and apply the expanded KB import as validated Drafts; retain the content-free command evidence and verify all 12 `KB-CARE-*` entries.
+2. Remove the visible shadow control from Admin Settings while preserving the permanent server denial, then deploy through the unchanged `deploy.sh` with both AI deployment guards false.
+3. Review and selectively publish only the non-pricing entries required by the one-time Family rehearsal; keep `KB-CARE-006` held.
 4. Produce provider/retention, staff-account, human-handoff, monitoring, cost-stop, and rollback evidence; do not build shadow mode.
 5. Complete the five-person representative older-adult study and comprehension/accessibility gates.
 6. Continue tracking `OPS-EXT-001` without repeating primary destruction.
@@ -136,12 +152,12 @@ All product packages for the declared build are closed. The [readiness ledger](1
 
 ## Next implementation milestone
 
-Complete **fail-closed deployment and limited-release evidence** without enabling a production user prematurely.
+Complete **interactive KB readiness and limited-release evidence** without enabling a production user prematurely.
 
 Required outcome:
 
-- Deploy and smoke-test the implemented intake, context, draft, recap, publication, and 24/7 handoff capabilities with deny-by-default controls.
-- Import the expanded KB/evaluation package as Drafts and close the remaining production portions of `DEC-058`, `DEC-064`, `DEC-065`, and `DEC-066`.
+- Import and audit the expanded KB package as Drafts, then publish only the approved non-pricing slice needed for rehearsal.
+- Remove the stale shadow selector and close the remaining production portions of `DEC-058`, `DEC-064`, `DEC-065`, and `DEC-066`.
 - Preserve zero production conversation processing until a visible named-user pilot release is explicitly approved.
 - Preserve zero user-visible model calls, zero active grants, Draft-only KB content, and disabled AI controls.
 

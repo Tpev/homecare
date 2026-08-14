@@ -1,6 +1,6 @@
 # Interactive Assistant Implementation and Release Evidence
 
-Status: Implementation complete; production deployment and limited-release approval pending
+Status: Implementation and fail-closed production deployment verified; limited-release approval pending
 
 Evidence date: August 14, 2026
 
@@ -15,6 +15,8 @@ Normative scope: `DEC-047` through `DEC-066`, [interactive expansion](22-interac
 The approved initial interactive assistant is implemented without enabling production AI. The implementation supports role-scoped answers and semantic navigation, Family care-path selection, authorized Family context, encrypted one-time and recurring drafts, deterministic recap, 30-minute confirmation, idempotent live request publication, authoritative receipt, and direct human transfer. Caregiver scope remains answers and navigation only. A 24/7, medical, emergency, explicit-human, knowledge-gap, cost-limit, or repeated-provider-failure condition cannot create a request and transfers to human support.
 
 This is build evidence, not limited-release approval. Repository defaults, example environment values, and database controls remain fail-closed. No production user, grant, KB publication, provider call, or control activation is authorized by this record.
+
+An authenticated production audit on August 14, 2026 verified that the interactive surfaces are deployed and failing closed. The Admin control plane renders, there are zero exact-user grants and zero published entries, and the dedicated Family test account sees human support only. The expanded 12-entry interactive KB package still requires its production Draft import. See the [production deployment audit](25-production-interactive-deployment-audit.md).
 
 No Stripe, customer charging, fee, authorization-buffer, Caregiver payout, Family pricing override, or payment-service file was changed. Pricing answers remain held under `DEC-049` even though the approved business truth is $30 per hour.
 
@@ -123,11 +125,11 @@ The final full gate meets the declared zero-hard-failure, at-least-98%-extractio
 7. Draft mutation, recap/message/action creation, and human transfer now use a consistent ticket-lock boundary; stale automated ticket objects cannot create work after human ownership wins.
 8. Windows compiled-view failures from a parallel formatter/test experiment disappeared in the required serial full-suite rerun; they were test-environment file locks, not application failures.
 
-## Production-safe deployment sequence
+## Production deployment and next operational step
 
-The existing `deploy.sh` may be used unchanged after this batch is committed and pushed. It pulls `master`, installs dependencies, builds assets, runs additive migrations, refreshes Laravel caches, restarts workers/PHP-FPM, and performs health checks.
+The existing `deploy.sh` was used without changing its workflow. The resulting authenticated audit verified deny-by-default production behavior. It pulls `master`, installs dependencies, builds assets, runs additive migrations, refreshes Laravel caches, restarts workers/PHP-FPM, and performs health checks.
 
-Before deployment, keep these values false:
+The audited production state keeps these values false:
 
 ```dotenv
 AI_SUPPORT_RUNTIME_AVAILABLE=false
@@ -136,10 +138,10 @@ AI_SUPPORT_RETENTION_EXECUTION_ENABLED=false
 AI_SUPPORT_OFFLINE_EVALUATION_ENABLED=false
 ```
 
-After the fail-closed code deployment, preview and import the expanded KB manifest as validated Drafts using an authorized administrator:
+The next production operation is to preview and import the expanded KB manifest as validated Drafts using an authorized administrator:
 
 ```bash
-php artisan ai-support:import-interactive-kb --actor-email=<admin-email>
+php artisan ai-support:import-interactive-kb
 php artisan ai-support:import-interactive-kb --apply --actor-email=<admin-email>
 ```
 

@@ -45,6 +45,7 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 23. [Interactive support and care-request expansion](22-interactive-care-request-expansion.md)
 24. [Interactive assistant approved build contract](23-interactive-assistant-approved-build-contract.md)
 25. [Interactive assistant implementation and release evidence](24-interactive-assistant-implementation-and-release-evidence.md)
+26. [Production interactive assistant deployment audit](25-production-interactive-deployment-audit.md)
 
 Then consult the live registries:
 
