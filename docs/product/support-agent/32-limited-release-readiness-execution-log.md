@@ -183,6 +183,14 @@ Provider deletion behavior was then recorded as Passed in production from applic
 
 The optional ZDR item was separately recorded as Pending. No request or approval reference has been supplied for the bounded non-medical pilot; ZDR remains desirable but is not a release gate under `DEC-067`. The status is explicit rather than being omitted or inferred from the standard retention baseline.
 
+The remaining provider rows were versioned with their exact partial status:
+
+- `provider_project_configuration` is Pending: the rehearsal credential authenticated to the standard destination and used the project-scoped `sk-proj-` form, but production credential presence, the intended-project match, project sharing state, and the production safety secret are not yet proved;
+- `provider_data_controls` is Pending: `store:false`, excluded stateful provider features, and the documented no-training-unless-opted-in/default-retention baseline are proved, but the actual project's sharing and retention settings are not;
+- `provider_destination_contract` is Pending: the standard API destination and no-regional-residency decision are proved, but account-owned agreement, privacy, and subprocessor acknowledgement evidence has not been supplied.
+
+`downstream_extinction_restore` was also recorded as Pending. Primary legacy copilot destruction and its content-free evidence are preserved, while complete extinction across every derived destination and containing backup, plus a restore that reapplies deletion before access, remain unproved. These Pending records do not alter controls, grants, or the 10-of-21 readiness count.
+
 These documentation facts are not a substitute for verifying the actual OpenAI project and production environment. The following remain unrecorded until server/API or account-owned evidence proves them:
 
 - dedicated project and project-scoped credential;
