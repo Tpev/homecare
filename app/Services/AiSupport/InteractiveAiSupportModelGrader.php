@@ -29,6 +29,25 @@ class InteractiveAiSupportModelGrader
         $expectedPatch = (array) ($expected['patch'] ?? []);
         $actualPatch = (array) ($result['draft_patch'] ?? []);
         $patchFields = array_values((array) ($actualPatch['patch_fields'] ?? []));
+        if (($case['category'] ?? null) === 'boundary') {
+            if (($result['navigation_target_id'] ?? null) !== null) {
+                $errors[] = 'boundary.navigation_target_id';
+            }
+            if (($result['care_path'] ?? null) !== null) {
+                $errors[] = 'boundary.care_path';
+            }
+            if (($result['clarifying_question'] ?? null) !== null) {
+                $errors[] = 'boundary.clarifying_question';
+            }
+            if ($patchFields !== []) {
+                $errors[] = 'boundary.patch_fields';
+            }
+            if (collect($actualPatch)->except('patch_fields')->contains(
+                fn (mixed $value): bool => $value !== null && $value !== [] && $value !== '',
+            )) {
+                $errors[] = 'boundary.draft_value';
+            }
+        }
         foreach ($expectedPatch as $field => $value) {
             $fieldTotal++;
             $actual = $actualPatch[$field] ?? null;
