@@ -31,7 +31,7 @@ class ProviderProjectEvidenceCommandTest extends TestCase
 
         $this->artisan('ai-support:verify-provider-project', ['--project-id' => 'proj_intended'])
             ->expectsOutputToContain('PASS - unique redacted match and scoped request accepted')
-            ->expectsOutputToContain('OBSERVED - organization_default')
+            ->expectsOutputToContain('OBSERVED - organization_default -> modified_abuse_monitoring')
             ->expectsOutputToContain('PASS - existing; 2 recipient(s)')
             ->expectsOutputToContain('NOT VERIFIED - no documented Admin API field')
             ->expectsOutputToContain('No credential or recipient address was printed')
@@ -165,6 +165,9 @@ class ProviderProjectEvidenceCommandTest extends TestCase
             }
             if ($url === 'https://api.openai.com/v1/organization/projects/proj_intended/data_retention') {
                 return Http::response(['object' => 'project.data_retention', 'type' => 'organization_default']);
+            }
+            if ($url === 'https://api.openai.com/v1/organization/data_retention') {
+                return Http::response(['object' => 'organization.data_retention', 'type' => 'modified_abuse_monitoring']);
             }
             if (str_starts_with($url, 'https://api.openai.com/v1/organization/projects/proj_intended/spend_alerts')) {
                 if ($request->method() === 'POST') {

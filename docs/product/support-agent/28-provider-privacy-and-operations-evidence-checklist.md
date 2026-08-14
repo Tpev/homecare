@@ -40,6 +40,7 @@ The official Admin API reference checked on August 15, 2026 now documents server
 - `GET /v1/organization/projects/{project_id}` retrieves the intended non-secret project record;
 - `GET /v1/organization/projects/{project_id}/api_keys` lists that project's API-key records with redacted values;
 - `GET /v1/organization/projects/{project_id}/data_retention` retrieves the configured project retention type;
+- `GET /v1/organization/data_retention` resolves the effective retention type when the project reports `organization_default`;
 - `GET /v1/organization/projects/{project_id}/spend_alerts` lists project spend alerts;
 - `POST /v1/organization/projects/{project_id}/spend_alerts` creates an alert. The approved `$25` monthly alert uses `threshold_amount: 2500`, `currency: USD`, `interval: month`, and the approved email recipients.
 
@@ -59,7 +60,7 @@ php artisan ai-support:verify-provider-project \
 unset OPENAI_ADMIN_KEY AI_SUPPORT_PROVIDER_PROJECT_ID
 ```
 
-Read-only mode retrieves the exact active project, matches the configured production key to exactly one redacted project-key record, makes a content-free `GET /models` request with the intended project header, observes the project retention type, and checks for an existing `$25` monthly email alert. It refuses any configured destination other than exactly `https://api.openai.com/v1`, never prints either credential or recipient addresses, and never changes provider state.
+Read-only mode retrieves the exact active project, matches the configured production key to exactly one redacted project-key record, makes a content-free `GET /models` request with the intended project header, observes the project retention type and its effective organization type when inherited, and checks for an existing `$25` monthly email alert. It refuses any configured destination other than exactly `https://api.openai.com/v1`, never prints either credential or recipient addresses, and never changes provider state.
 
 If and only if read-only mode reports the alert as `MISSING`, run the confirmed creation mode with the approved recipients. Recipient input is hidden and ephemeral, and every supplied address must be valid and unique or the command fails before provider access. The command creates only a `2500`-cent USD monthly email alert, supplies an idempotency key, and re-lists alerts before claiming success.
 

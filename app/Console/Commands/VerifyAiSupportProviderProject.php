@@ -97,16 +97,28 @@ class VerifyAiSupportProviderProject extends Command
                 'organization/projects/'.$projectId.'/data_retention',
                 'project data-retention lookup',
             );
-            $retentionType = trim((string) ($retention['type'] ?? ''));
-            if (! in_array($retentionType, [
+            $retentionType = $this->retentionType($retention, 'project.data_retention', [
                 'organization_default',
                 'none',
                 'zero_data_retention',
                 'modified_abuse_monitoring',
                 'enhanced_zero_data_retention',
                 'enhanced_modified_abuse_monitoring',
-            ], true)) {
-                throw new RuntimeException('The project data-retention response was not recognized.');
+            ]);
+            $retentionEvidence = $retentionType;
+            if ($retentionType === 'organization_default') {
+                $organizationRetention = $this->getAdminJson(
+                    $adminKey,
+                    'organization/data_retention',
+                    'organization data-retention lookup',
+                );
+                $effectiveType = $this->retentionType($organizationRetention, 'organization.data_retention', [
+                    'zero_data_retention',
+                    'modified_abuse_monitoring',
+                    'enhanced_zero_data_retention',
+                    'enhanced_modified_abuse_monitoring',
+                ]);
+                $retentionEvidence .= ' -> '.$effectiveType;
             }
 
             $alerts = $this->listAdminCollection($adminKey, 'organization/projects/'.$projectId.'/spend_alerts');
@@ -123,7 +135,7 @@ class VerifyAiSupportProviderProject extends Command
                     ['Official destination', 'PASS'],
                     ['Intended project', 'PASS - active'],
                     ['Configured project key', 'PASS - unique redacted match and scoped request accepted'],
-                    ['Project data retention', 'OBSERVED - '.$retentionType],
+                    ['Project data retention', 'OBSERVED - '.$retentionEvidence],
                     ['$25 monthly spend alert', 'MISSING'],
                     ['Model-improvement sharing', 'NOT VERIFIED - no documented Admin API field'],
                 ]);
@@ -138,7 +150,7 @@ class VerifyAiSupportProviderProject extends Command
                 ['Official destination', 'PASS'],
                 ['Intended project', 'PASS - active'],
                 ['Configured project key', 'PASS - unique redacted match and scoped request accepted'],
-                ['Project data retention', 'OBSERVED - '.$retentionType],
+                ['Project data retention', 'OBSERVED - '.$retentionEvidence],
                 ['$25 monthly spend alert', 'PASS - '.($alertCreated ? 'created' : 'existing').'; '.$recipientCount.' recipient(s)'],
                 ['Model-improvement sharing', 'NOT VERIFIED - no documented Admin API field'],
             ]);
@@ -283,6 +295,20 @@ class VerifyAiSupportProviderProject extends Command
         }
 
         return true;
+    }
+
+    /**
+     * @param  array<string,mixed>  $retention
+     * @param  list<string>  $allowedTypes
+     */
+    private function retentionType(array $retention, string $expectedObject, array $allowedTypes): string
+    {
+        $type = trim((string) ($retention['type'] ?? ''));
+        if (($retention['object'] ?? null) !== $expectedObject || ! in_array($type, $allowedTypes, true)) {
+            throw new RuntimeException('The data-retention response was not recognized.');
+        }
+
+        return $type;
     }
 
     /** @param list<array<string,mixed>> $alerts */
