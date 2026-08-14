@@ -7,6 +7,8 @@ use App\Notifications\Auth\LoLoCareResetPasswordNotification;
 use App\Notifications\Auth\LoLoCareVerifyEmailNotification;
 use App\Notifications\MarketplaceEventNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Mail\MailManager;
+use Illuminate\Mail\Transport\SesTransport;
 use Tests\TestCase;
 
 class AdministratorNotificationRoutingTest extends TestCase
@@ -45,6 +47,23 @@ class AdministratorNotificationRoutingTest extends TestCase
         ]);
 
         $this->assertSame('family@example.com', $family->routeNotificationFor('mail', $this->marketplaceNotification()));
+    }
+
+    public function test_configured_ses_mailer_can_construct_its_transport(): void
+    {
+        config([
+            'mail.default' => 'ses',
+            'services.ses' => [
+                'key' => 'test-key',
+                'secret' => 'test-secret',
+                'region' => 'us-east-1',
+            ],
+        ]);
+
+        $manager = app(MailManager::class);
+        $manager->purge('ses');
+
+        $this->assertInstanceOf(SesTransport::class, $manager->mailer('ses')->getSymfonyTransport());
     }
 
     private function marketplaceNotification(): MarketplaceEventNotification
