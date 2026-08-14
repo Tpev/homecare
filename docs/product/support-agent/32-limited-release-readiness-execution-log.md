@@ -23,7 +23,7 @@ Authenticated production inspection on August 14, 2026 established:
 - zero pilot grants;
 - 23 governed non-pricing KB entries published and the pricing entry held as Draft;
 - no unresolved AI Support incident or warning at the time of inspection;
-- Admin readiness `BLOCKED`, with 7 of 21 required checks passing and 14 open;
+- Admin readiness `BLOCKED`, with 9 of 21 required checks passing and 12 open;
 - public and ordinary Family support remained human-only, with no user-visible AI marker.
 
 ## Exact deployed-commit rehearsal
@@ -175,9 +175,11 @@ This proves the synthetic safety behavior and continuous human-support path. `ro
 
 The official OpenAI data-control baseline was rechecked on August 14, 2026. API input and output are not used for training unless the organization opts in. Default abuse-monitoring logs may be retained for up to 30 days. `/v1/responses` is eligible for approved Zero Data Retention; ZDR requires prior approval and can then be configured at organization or project level. Prompt caching may retain encrypted key/value tensors in GPU-local storage for no more than 24 hours. LoLo's implementation separately sends `store:false` and does not use provider conversations, files, vector stores, background mode, hosted tools, or provider memory. These behaviors fit the approved 30-day provider maximum and 24-hour cache-extinction maximum, subject to verifying the actual project controls.
 
-The credential used for the exact synthetic rehearsal was checked without displaying or fingerprinting it. A content-free request authenticated successfully to the configured standard destination `api.openai.com`, and the credential uses the project-scoped `sk-proj-` form. OpenAI did not return project or organization identity headers on that request. This proves the rehearsal credential format and destination, but not that the production server uses the same credential or that its project is the intended dedicated AI Support project. The authenticated Platform project screen and production preflight remain authoritative for those facts.
+The credential used for the exact synthetic rehearsal was checked without displaying or fingerprinting it. A content-free request authenticated successfully to the configured standard destination `api.openai.com`, and the credential uses the project-scoped `sk-proj-` form. OpenAI did not return project or organization identity headers on that request. This proves the rehearsal credential format and destination, but not that the production server uses the same credential or that its project is the intended dedicated AI Support project.
 
-These documentation facts are not a substitute for inspecting the actual OpenAI project. The following remain unrecorded until the authenticated project and production environment are verified:
+The operator subsequently directed that this exercise must not connect to the OpenAI website. Project identity, project-level data-sharing controls, retention settings, and the `$25` alert must therefore be proved through content-free server/API evidence or an account-owned export/receipt. An ordinary successful model/API request, the key prefix, and LoLo's configured `$25` threshold are not sufficient substitutes. Any item unavailable through the approved route remains Pending rather than inferred.
+
+These documentation facts are not a substitute for verifying the actual OpenAI project and production environment. The following remain unrecorded until server/API or account-owned evidence proves them:
 
 - dedicated project and project-scoped credential;
 - model-improvement sharing disabled;
@@ -199,15 +201,14 @@ After these records, production readiness remained correctly `BLOCKED` at 9 of 2
 
 ## Work queue
 
-1. Deploy and production-retest the navigation reflow remediation.
-2. Complete the authenticated OpenAI project inspection and configure the `$25` spend alert.
-3. Verify the content-free production environment prerequisites while both deployment guards remain off.
-4. Send the content-free operations test and have both Administrators confirm both channels.
-5. Record the exact-commit rehearsal, monitoring/cost, provider, and alert evidence in Admin only after each fact is observed.
-6. Run the synthetic human-takeover, emergency/24/7, automatic-stop, confirmation-invalidation, rollback, and continuous human-chat drill.
-7. Complete the remaining accessibility checks and five qualifying older-adult sessions using the approved study kit.
-8. Name exactly two Family pilot users and dates without creating grants.
-9. Run the read-only preflight and return for an explicit release decision.
+1. Verify the intended provider project, project controls, and `$25` spend alert through the approved server/API or account-evidence route without using the provider website.
+2. Verify the content-free production environment prerequisites while both deployment guards remain off.
+3. Send the content-free operations test and have both Administrators confirm both channels.
+4. Record the remaining monitoring/cost, provider, and alert evidence in Admin only after each fact is observed.
+5. Run the staffed human-takeover, emergency/24/7, automatic-stop, confirmation-invalidation, rollback, and continuous human-chat drill.
+6. Complete the remaining accessibility checks and five qualifying older-adult sessions using the approved study kit.
+7. Add planned dates and review ownership to the two named Family users without creating grants.
+8. Run the read-only preflight and return for an explicit release decision.
 
 ## Explicitly prohibited shortcuts
 

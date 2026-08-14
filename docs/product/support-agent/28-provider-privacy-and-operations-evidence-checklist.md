@@ -23,7 +23,17 @@ Record `provider_project_configuration` only after verifying:
 - `AI_SUPPORT_SAFETY_IDENTIFIER_SECRET` is a separate random secret of at least 32 characters and is not the API key or application key.
 - The release preflight reports the credential and safety-secret prerequisites as present without displaying either value.
 
-Safe evidence: project name or non-secret reference, checked date, operator, restriction summary, and source screen name. Never paste the API key or safety secret.
+Safe evidence: project name or non-secret reference, checked date, operator, restriction summary, and source system/reference. Never paste the API key or safety secret.
+
+### Server-only verification route
+
+The operator has directed that this release exercise must not connect to the OpenAI website. Use content-free production configuration checks and, when available, the provider Admin API or an account-owned export/receipt. Do not weaken the evidence claim to accommodate that constraint.
+
+- A successful standard API request proves that a credential authenticates to the configured destination. A project-scoped `sk-proj-` key shape is supporting evidence, not proof of the intended project identity.
+- Project identity requires a non-secret intended-project ID/name matched to provider-account evidence. If no Admin API credential or account-owned evidence is available, keep `provider_project_configuration` Pending.
+- Confirming model-improvement sharing and project retention settings requires project-level account evidence. The documented default policy does not prove the project's current opt-in state.
+- Creating or verifying the `$25` monthly spend alert requires project-level account evidence. The application's `$25` configuration value alone does not prove that the provider alert exists.
+- Never paste an Admin API key, project API key, safety secret, full provider response, customer content, or prompt into the terminal transcript or readiness evidence.
 
 ## Data-use and retention checklist
 
@@ -89,7 +99,7 @@ php artisan ai-support:test-operations-alert \
   --confirm=SEND-CONTENT-FREE-ALERT
 ```
 
-The command records Pending when both channel dispatches are accepted. Both administrators must personally confirm the in-app notification and email before one administrator records `operations_alert_delivery` as Passed. A failed channel opens an Admin incident.
+The command records Pending when both channel dispatches are accepted. Both administrators must personally confirm the in-app notification and email before one administrator records `operations_alert_delivery` as Passed. A failed channel opens an Admin incident. A queued or accepted email delivery is not inbox-receipt evidence.
 
 ## Downstream extinction evidence
 
