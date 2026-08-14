@@ -54,6 +54,7 @@ echo "Pulling latest code..."
 git fetch origin
 git checkout "$BRANCH"
 git pull --ff-only origin "$BRANCH"
+DEPLOY_COMMIT="$(git rev-parse HEAD)"
 
 echo "Installing PHP dependencies..."
 $COMPOSER_BIN install --no-dev --prefer-dist --no-interaction --optimize-autoloader
@@ -108,4 +109,4 @@ echo "Running health checks..."
 curl -fsS "$APP_HEALTH_URL" >/dev/null
 curl -fsS "$VOICE_HEALTH_URL" >/dev/null
 
-echo "Deployment complete!"
+echo "Deployment complete at commit $DEPLOY_COMMIT"
