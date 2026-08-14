@@ -22,8 +22,8 @@ Authenticated production inspection on August 14, 2026 established:
 - every AI role, capability, commit, and publication control off;
 - zero pilot grants;
 - 23 governed non-pricing KB entries published and the pricing entry held as Draft;
-- two unresolved critical AI Support incidents now remain from the failed first operations-alert attempt; no customer interaction caused either incident;
-- Admin readiness `BLOCKED`, with 10 of 21 required checks passing and 11 open;
+- zero unresolved AI Support incidents or warnings after the two alert-test incidents were resolved from verified correction evidence;
+- Admin readiness `BLOCKED`, with 12 of 21 required checks passing and 9 open;
 - public and ordinary Family support remained human-only, with no user-visible AI marker.
 
 ## Exact deployed-commit rehearsal
@@ -171,9 +171,9 @@ The following content-free synthetic matrix was exercised on August 14, 2026. Th
 | Human chat continuity | Family sends; Admin claims and replies; Family receives unread reply; closed chat starts a new human conversation |
 | Human chat accessibility | Keyboard open/minimize/draft preservation, mobile focus containment, offline retry, rotation, navigation, and back dismissal pass |
 
-This proves the synthetic safety behavior and continuous human-support path. `rollback_rehearsal` must not be marked Passed until the final committed candidate is tied to the evidence record, both Administrators confirm the required production operations alert, and the staffed observation is complete. Resolving an incident never re-enables a stopped capability.
+This proves the synthetic safety behavior and continuous human-support path. `rollback_rehearsal` must not be marked Passed until the final committed candidate is tied to the evidence record and the staffed observation is complete. Both Administrators have now confirmed the separate production operations alert. Resolving an incident never re-enables a stopped capability.
 
-The focused matrix was rerun against pushed current master `afe647f27007e624527afcb55c6688b7e7252b9d`: 47 tests and 301 assertions passed. It covered atomic final takeover, emergency instruction before transfer, 24/7 transfer without provider or queue claims, one automatic-stop incident with no re-enable after resolution, stale/expired/logout confirmation invalidation with no unintended write, rollback-safe records, and continuous human chat. The production `rollback_rehearsal` evidence was versioned with this result and remains Pending for both-Administrator alert receipt and staffed rollback observation.
+The focused matrix was rerun against pushed current master `afe647f27007e624527afcb55c6688b7e7252b9d`: 47 tests and 301 assertions passed. It covered atomic final takeover, emergency instruction before transfer, 24/7 transfer without provider or queue claims, one automatic-stop incident with no re-enable after resolution, stale/expired/logout confirmation invalidation with no unintended write, rollback-safe records, and continuous human chat. The production `rollback_rehearsal` evidence was versioned with this result and remains Pending only for the staffed rollback observation.
 
 ## Provider and operations evidence state
 
@@ -230,7 +230,13 @@ The remediation was deployed at commit `fd43a4037a3dbad91f68c6fad3ba5c9d3a5b1469
 
 A fresh alert attempt used reference `b0c3a462-f64a-4769-8d5a-c1c4bcaaebc3`. It again recorded all four expected rows: both in-app rows were Sent and both email rows were Failed. A content-sanitized read of the stored provider errors proved the shared cause was `Class "Aws\Ses\SesClient" not found`. Production was configured for Laravel's Amazon SES transport but the required AWS SDK was absent, so the failure occurred before SES evaluated either recipient address.
 
-The source correction adds Laravel's supported `aws/aws-sdk-php` production dependency under the `^3.322.9` compatibility range. The lock selects `3.392.3`, above both security-advisory affected ranges reported by Composer; `composer audit` reports no known advisories. Regression coverage constructs Laravel's SES transport with synthetic credentials without sending mail. The combined notification and limited-release batch passed 15 tests and 68 assertions, and a production-mode Composer install dry run accepted the lock. This correction still requires deployment and one fresh-reference alert retry. Do not resolve either incident or record operations delivery as Passed until the retry has zero failed rows and both Administrators personally confirm both channels.
+The source correction adds Laravel's supported `aws/aws-sdk-php` production dependency under the `^3.322.9` compatibility range. The lock selects `3.392.3`, above both security-advisory affected ranges reported by Composer; `composer audit` reports no known advisories. Regression coverage constructs Laravel's SES transport with synthetic credentials without sending mail. The combined notification and limited-release batch passed 15 tests and 68 assertions, and a production-mode Composer install dry run accepted the lock.
+
+### Operations-alert closure
+
+The secure SES correction was deployed at commit `ba651d91f732474e89fa9cf25557f8ca553e1b97`. Fresh alert reference `c0f9cffe-6788-48ed-9e45-a7f63cdf5836` recorded all four expected rows with zero failures. Both full Administrators personally confirmed the email and in-app receipts; authenticated production inspection separately observed the logged-in Administrator's fresh in-app notification.
+
+`operations_alert_delivery` was versioned as Passed with that content-free reference. The two historical alert-test incidents were then resolved individually with the verified SDK correction, clean dispatch, and both-person receipt confirmation as their content-free resolution reason. A full production reload proved zero incidents, zero warnings, both deployment guards off, only human-only on, and zero non-revoked grants. Readiness advanced from 10 of 21 to 12 of 21, with nine required checks still open. Incident resolution did not enable any capability.
 
 These documentation facts are not a substitute for verifying the actual OpenAI project and production environment. The following remain unrecorded until server/API or account-owned evidence proves them:
 
@@ -240,7 +246,6 @@ These documentation facts are not a substitute for verifying the actual OpenAI p
 - `$25` monthly project spend alert;
 - actual destination/contract position;
 - current project retention-control and ZDR-request status;
-- both-Administrator email and in-app operations-alert receipt.
 
 ## Production readiness evidence updates
 
@@ -250,7 +255,7 @@ The requested first two Family pilot candidates were verified as production Fami
 
 The pilot evidence was subsequently versioned to apply the approved two-person operating model: full Administrators `1` and `18` are joint pilot reviewers, and either may complete a review independently. The item remains Pending only for the planned 14-day start and end dates. Zero active or scheduled grants were rechecked, and no grant was created.
 
-The accepted isolated rehearsal was recorded as Passed using runtime candidate `c409fe3`, its content-free result hash, complete browser/provider metrics, and verified temporary-database destruction. Deployed HEAD `827dd08` differs from that candidate only in `deploy.sh` and this documentation; runtime-relevant tracked paths are unchanged. The synthetic rollback/safety and engineering accessibility matrices were recorded as Pending, preserving the remaining both-admin alert, staffed rollback, real screen-reader, and older-adult human gates.
+The accepted isolated rehearsal was recorded as Passed using runtime candidate `c409fe3`, its content-free result hash, complete browser/provider metrics, and verified temporary-database destruction. Deployed HEAD `ba651d9` adds deployment/documentation updates, Administrator notification routing, its nullable schema field and UI, and the required secure SES dependency; AI conversation runtime paths are unchanged. The synthetic rollback/safety and engineering accessibility matrices remain Pending, preserving the staffed rollback, real screen-reader, and older-adult human gates.
 
 After the initial production records, readiness was `BLOCKED` at 9 of 21 checks passing. Recording the independently proved provider-deletion behavior increased the authoritative state to 10 of 21 checks passing, 11 required checks open, zero open incidents, and zero open warnings.
 
@@ -258,12 +263,11 @@ After the initial production records, readiness was `BLOCKED` at 9 of 21 checks 
 
 1. Verify the intended provider project, project controls, and `$25` spend alert through the approved server/API or account-evidence route without using the provider website.
 2. Verify the content-free production environment prerequisites while both deployment guards remain off.
-3. Send the content-free operations test and have both Administrators confirm both channels.
-4. Record the remaining monitoring/cost, provider, and alert evidence in Admin only after each fact is observed.
-5. Run the staffed human-takeover, emergency/24/7, automatic-stop, confirmation-invalidation, rollback, and continuous human-chat drill.
-6. Complete the remaining accessibility checks and five qualifying older-adult sessions using the approved study kit.
-7. Add planned dates and review ownership to the two named Family users without creating grants.
-8. Run the read-only preflight and return for an explicit release decision.
+3. Record the remaining monitoring/cost and provider evidence in Admin only after each fact is observed.
+4. Run the staffed human-takeover, emergency/24/7, automatic-stop, confirmation-invalidation, rollback, and continuous human-chat drill.
+5. Complete the remaining accessibility checks and five qualifying older-adult sessions using the approved study kit.
+6. Add planned dates and review ownership to the two named Family users without creating grants.
+7. Run the read-only preflight and return for an explicit release decision.
 
 ## Explicitly prohibited shortcuts
 
