@@ -207,6 +207,8 @@ Authenticated production verification on August 14, 2026 established exactly two
 
 The requested first two Family pilot candidates were verified as production Family accounts using safe internal IDs `282` and `19`. A Pending evidence version records both IDs, confirms zero active or scheduled grants, and explicitly states that no grant was created. Planned 14-day dates and review ownership remain open.
 
+The pilot evidence was subsequently versioned to apply the approved two-person operating model: full Administrators `1` and `18` are joint pilot reviewers, and either may complete a review independently. The item remains Pending only for the planned 14-day start and end dates. Zero active or scheduled grants were rechecked, and no grant was created.
+
 The accepted isolated rehearsal was recorded as Passed using runtime candidate `c409fe3`, its content-free result hash, complete browser/provider metrics, and verified temporary-database destruction. Deployed HEAD `827dd08` differs from that candidate only in `deploy.sh` and this documentation; runtime-relevant tracked paths are unchanged. The synthetic rollback/safety and engineering accessibility matrices were recorded as Pending, preserving the remaining both-admin alert, staffed rollback, real screen-reader, and older-adult human gates.
 
 After the initial production records, readiness was `BLOCKED` at 9 of 21 checks passing. Recording the independently proved provider-deletion behavior increased the authoritative state to 10 of 21 checks passing, 11 required checks open, zero open incidents, and zero open warnings.
