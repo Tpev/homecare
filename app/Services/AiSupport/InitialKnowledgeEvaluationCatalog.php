@@ -6,7 +6,7 @@ use DomainException;
 
 class InitialKnowledgeEvaluationCatalog
 {
-    public const VERSION = 'initial-kb-evals-v1';
+    public const VERSION = 'initial-kb-evals-v4';
 
     public const APPROVED_CRITICAL_REGRESSION_IDS = [
         'EVAL-REG-EMERGENCY-PRECEDENCE',
@@ -73,6 +73,16 @@ class InitialKnowledgeEvaluationCatalog
         }
 
         $allowedTypes = ['positive', 'boundary', 'wrong_role', 'unsupported_state', 'handoff', 'no_mutation', 'credential', 'verification'];
+        $allowedOutcomes = [
+            'answer',
+            'safe_boundary',
+            'handoff',
+            'emergency_instruction',
+            'clarify_or_handoff',
+            'authentication_required',
+            'unsupported_context',
+            'answer_without_navigation',
+        ];
         $knowledgeById = collect($this->knowledge->entries())->keyBy('stable_id');
         $seen = [];
         foreach ($cases as $index => $case) {
@@ -97,10 +107,10 @@ class InitialKnowledgeEvaluationCatalog
             if (! in_array($case['case_type'] ?? null, $allowedTypes, true)) {
                 throw new DomainException($id.' contains an unsupported case type.');
             }
-            if (! in_array($case['actor_role'] ?? null, ['family', 'caregiver'], true)) {
+            if (! in_array($case['actor_role'] ?? null, ['family', 'caregiver', 'admin', 'signed_out'], true)) {
                 throw new DomainException($id.' contains an unsupported actor role.');
             }
-            if (! in_array($case['membership_state'] ?? null, ['active', 'removed', 'unresolved'], true)) {
+            if (! in_array($case['membership_state'] ?? null, ['active', 'removed', 'unresolved', 'not_applicable'], true)) {
                 throw new DomainException($id.' contains an unsupported membership state.');
             }
             if (trim((string) ($case['user_message'] ?? '')) === '') {
@@ -109,6 +119,12 @@ class InitialKnowledgeEvaluationCatalog
             if (empty($case['expected']['outcome'] ?? null)) {
                 throw new DomainException($id.' requires an expected outcome.');
             }
+            $case['expected']['acceptable_outcomes'] = $this->normalizeAcceptableOutcomes(
+                $id,
+                $case['expected']['outcome'],
+                $case['expected']['acceptable_outcomes'] ?? [],
+                $allowedOutcomes,
+            );
 
             foreach (['required_phrases', 'forbidden_phrases', 'forbidden_actions'] as $field) {
                 $case['expected'][$field] = array_values(array_unique(array_filter(array_map(
@@ -116,6 +132,10 @@ class InitialKnowledgeEvaluationCatalog
                     (array) ($case['expected'][$field] ?? []),
                 ))));
             }
+            $case['expected']['required_any_phrase_groups'] = $this->normalizePhraseGroups(
+                $id,
+                $case['expected']['required_any_phrase_groups'] ?? [],
+            );
 
             $expectedTarget = $case['expected']['navigation_target'] ?? null;
             if ($expectedTarget !== null && ! is_string($expectedTarget)) {
@@ -134,8 +154,7 @@ class InitialKnowledgeEvaluationCatalog
                 throw new DomainException($id.' navigation target does not match its KB entry.');
             }
             if (($case['case_type'] ?? null) === 'wrong_role'
-                && in_array($case['actor_role'], $knowledgeEntry['roles'], true)
-                && count($knowledgeEntry['roles']) === 1) {
+                && in_array($case['actor_role'], $knowledgeEntry['roles'], true)) {
                 throw new DomainException($id.' wrong-role case uses an allowed role.');
             }
             if (($case['case_type'] ?? null) !== 'wrong_role'
@@ -145,6 +164,14 @@ class InitialKnowledgeEvaluationCatalog
             if (($case['expected']['must_transfer_human_only'] ?? false) === true
                 && ! in_array('SUP-HANDOFF-001', (array) ($case['available_tools'] ?? []), true)) {
                 throw new DomainException($id.' requires human transfer without exposing the handoff capability.');
+            }
+            if (($case['expected']['must_transfer_human_only'] ?? false) === true
+                && ($case['expected']['may_transfer_human'] ?? false) !== true) {
+                throw new DomainException($id.' requires a human transfer that it does not permit.');
+            }
+            if (($case['expected']['may_transfer_human'] ?? false) === true
+                && ! in_array('SUP-HANDOFF-001', (array) ($case['available_tools'] ?? []), true)) {
+                throw new DomainException($id.' permits human transfer without exposing the handoff capability.');
             }
 
             $cases[$index] = $case;
@@ -210,6 +237,12 @@ class InitialKnowledgeEvaluationCatalog
             if (trim((string) ($case['user_message'] ?? '')) === '' || empty($case['expected']['outcome'] ?? null)) {
                 throw new DomainException($id.' requires a synthetic message and expected outcome.');
             }
+            $case['expected']['acceptable_outcomes'] = $this->normalizeAcceptableOutcomes(
+                $id,
+                $case['expected']['outcome'],
+                $case['expected']['acceptable_outcomes'] ?? [],
+                $allowedOutcomes,
+            );
             if (data_get($case, 'authorized_context.synthetic_only') !== true) {
                 throw new DomainException($id.' must use synthetic context only.');
             }
@@ -226,6 +259,14 @@ class InitialKnowledgeEvaluationCatalog
                 && ! in_array('SUP-HANDOFF-001', (array) ($case['available_tools'] ?? []), true)) {
                 throw new DomainException($id.' requires human transfer without exposing the handoff capability.');
             }
+            if (($case['expected']['must_transfer_human_only'] ?? false) === true
+                && ($case['expected']['may_transfer_human'] ?? false) !== true) {
+                throw new DomainException($id.' requires a human transfer that it does not permit.');
+            }
+            if (($case['expected']['may_transfer_human'] ?? false) === true
+                && ! in_array('SUP-HANDOFF-001', (array) ($case['available_tools'] ?? []), true)) {
+                throw new DomainException($id.' permits human transfer without exposing the handoff capability.');
+            }
 
             foreach (['required_phrases', 'forbidden_phrases', 'forbidden_actions'] as $field) {
                 $case['expected'][$field] = array_values(array_unique(array_filter(array_map(
@@ -233,6 +274,10 @@ class InitialKnowledgeEvaluationCatalog
                     (array) ($case['expected'][$field] ?? []),
                 ))));
             }
+            $case['expected']['required_any_phrase_groups'] = $this->normalizePhraseGroups(
+                $id,
+                $case['expected']['required_any_phrase_groups'] ?? [],
+            );
             if ($case['expected']['forbidden_actions'] === []) {
                 throw new DomainException($id.' must explicitly forbid writable actions.');
             }
@@ -253,5 +298,46 @@ class InitialKnowledgeEvaluationCatalog
             'cases' => $cases,
             'critical_regressions' => $regressions,
         ];
+    }
+
+    /** @return list<list<string>> */
+    private function normalizePhraseGroups(string $caseId, mixed $rawGroups): array
+    {
+        $groups = [];
+        foreach ((array) $rawGroups as $group) {
+            $phrases = array_values(array_unique(array_filter(array_map(
+                fn (mixed $value): string => trim((string) $value),
+                (array) $group,
+            ))));
+            if ($phrases === []) {
+                throw new DomainException($caseId.' contains an empty required phrase group.');
+            }
+            $groups[] = $phrases;
+        }
+
+        return $groups;
+    }
+
+    /** @param list<string> $allowedOutcomes @return list<string> */
+    private function normalizeAcceptableOutcomes(
+        string $caseId,
+        mixed $canonicalOutcome,
+        mixed $rawOutcomes,
+        array $allowedOutcomes,
+    ): array {
+        $canonical = trim((string) $canonicalOutcome);
+        $outcomes = array_values(array_unique(array_filter(array_map(
+            fn (mixed $value): string => trim((string) $value),
+            (array) $rawOutcomes,
+        ))));
+
+        if (! in_array($canonical, $outcomes, true)) {
+            throw new DomainException($caseId.' acceptable outcomes must include its canonical outcome.');
+        }
+        if (array_diff($outcomes, $allowedOutcomes) !== []) {
+            throw new DomainException($caseId.' contains an unsupported acceptable outcome.');
+        }
+
+        return $outcomes;
     }
 }

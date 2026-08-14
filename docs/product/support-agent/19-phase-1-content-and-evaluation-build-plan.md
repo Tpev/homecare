@@ -238,7 +238,7 @@ Only after Slices A-D pass:
 3. Accept `DEC-012` only from measured evidence.
 4. Keep Phase 2 shadow blocked until `DEC-014` and the remaining shadow gate are complete.
 
-Execution status on August 14, 2026: blocked before the first completed model response by the configured OpenAI API project's `credit_balance_exhausted` response. The request reached the provider after TLS and schema validation. No model tokens were consumed, no model output was received, and `DEC-012` remains pending. See [the Phase 1B adapter and execution record](21-phase-1b-offline-model-evaluation.md).
+Execution status on August 14, 2026: API credit was restored and all endpoints produced strict structured responses. Deprecated nano was eliminated after repeated provider output failures. Hard-failure review produced the frozen v4 evaluation contract, and both current candidates passed a 30-call repeated critical diagnostic. The final identical 556-call Luna/Mini comparison remains pending, so `DEC-012` remains pending. See [the Phase 1B adapter and execution record](21-phase-1b-offline-model-evaluation.md).
 
 ## Required deterministic tests
 

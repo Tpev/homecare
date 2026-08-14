@@ -1,6 +1,6 @@
 # Phase 1B Offline Model Evaluation Adapter and Execution Record
 
-Status: Adapter implemented and deterministically verified; provider credit and three-model smoke verified; full measured execution pending; `DEC-012` pending
+Status: Adapter implemented; provider credit verified; deprecated benchmark eliminated; release evaluation contract v4 frozen; final repeated current-model comparison pending; `DEC-012` pending
 
 Recorded: August 14, 2026
 
@@ -21,9 +21,9 @@ It does not publish KB content, read production conversations, write application
 | Artifact | Version or location | Purpose |
 | --- | --- | --- |
 | Candidate manifest | `resources/ai-support/evaluations/models-v1.php` / `ai-support-model-candidates-v1` | Exact model/configuration and dated pricing inputs |
-| Prompt contract | `OfflineAiSupportPromptBuilder` / `ai-support-offline-prompt-v1` | Lean role-aware, safety-first synthetic instructions and strict output schema |
+| Prompt contract | `OfflineAiSupportPromptBuilder` / `ai-support-offline-prompt-v4` | Role-aware safety instructions, precedence rules, applicable-KB filtering, and case-bounded strict output schema |
 | Provider adapter | `OfflineOpenAiResponsesClient` | Responses API, `store: false`, no tools, bounded retry, verified TLS |
-| Deterministic grader | `OfflineAiSupportModelGrader` / `ai-support-deterministic-grader-v1` | Outcome, content, navigation, action, handoff, role, secret, and brevity checks |
+| Deterministic grader | `OfflineAiSupportModelGrader` / `ai-support-deterministic-grader-v3` | Materially equivalent safe labels plus strict content, navigation, action, handoff, role, citation, secret, and brevity checks |
 | Runner/report | `OfflineAiSupportModelEvaluationService` / `ai-support-model-evaluation-report-v1` | Repeated schedule, compact evidence, gates, and lowest-cost passing recommendation |
 | Operator command | `php artisan ai-support:evaluate-models` | Dry-run plan by default; real calls require `--run` and the separate environment switch |
 | Regression tests | `tests/Feature/AiSupport/OfflineModelEvaluationTest.php` | Default no-call, production refusal, schema, minimization, cost, and no-DB-write proof |
@@ -53,7 +53,7 @@ The approved corpus contains:
 - 70 distinct cases total.
 - 52 cases classified critical.
 
-Every candidate receives all 70 cases once. Each critical case receives four additional runs, producing five runs total. That is `70 + (52 × 4) = 278` provider calls per candidate and 834 calls across the three-candidate matrix.
+Every selected candidate receives all 70 cases once. Each critical case receives four additional runs, producing five runs total. That is `70 + (52 x 4) = 278` provider calls per candidate. The original three-candidate plan contained 834 calls. The deprecated nano endpoint was eliminated after its measured attempt stopped on repeated missing/schema output and it remains baseline-ineligible. The final release run therefore compares the two current eligible candidates on 278 identical calls each, or 556 calls total.
 
 A case-filtered run is diagnostic only and is marked `full_release_evidence: false`. It cannot support `DEC-012`.
 
@@ -81,7 +81,7 @@ One critical hard failure blocks the candidate regardless of its average score. 
 - Only repository-controlled synthetic cases and Draft manifest excerpts are assembled in memory.
 - The request uses `store: false` and defines no provider or domain tools.
 - Provider payloads never include expected grader fields, required phrases, or forbidden phrases.
-- Reports contain case/run identifiers, failure codes, hashes, latency, token use, and cost—not model answers or assembled prompts.
+- Reports contain case/run identifiers, compact response labels/flags/citations, failure codes, hashes, latency, token use, and cost--not model answers or assembled prompts.
 - Provider exceptions are converted to content-free reason codes and are not reported with request arguments.
 - Report files are written only below `storage/app/private/ai-support-evaluations`.
 - An optional `OPENAI_CA_BUNDLE` path supports local certificate verification; TLS verification is never disabled.
@@ -94,14 +94,14 @@ Planning is always safe and makes zero provider calls:
 php artisan ai-support:evaluate-models
 ```
 
-The expected full plan is three candidates, 70 cases, 52 critical cases, five critical runs, 278 calls per candidate, and 834 total calls.
+The default catalog plan is three candidates, 70 cases, 52 critical cases, five critical runs, 278 calls per candidate, and 834 total calls. The release comparison explicitly selects only the two current eligible candidates, for 556 total calls; the deprecated nano attempt is retained separately.
 
 Run the measured comparison only from a non-production evaluation environment after verifying the key's project has usable API credit:
 
 ```bash
 export AI_SUPPORT_OFFLINE_EVALUATION_ENABLED=true
 export OPENAI_API_KEY="..."
-php artisan ai-support:evaluate-models --run --critical-runs=5 --output=phase-1b-baseline.json
+php artisan ai-support:evaluate-models --run --model=gpt-5.6-luna-low --model=gpt-5.4-mini-low --critical-runs=5 --output=phase-1b-baseline.json
 unset AI_SUPPORT_OFFLINE_EVALUATION_ENABLED OPENAI_API_KEY
 ```
 
@@ -111,9 +111,9 @@ Run from a clean committed checkout so the report's application commit and artif
 
 ## Verification completed
 
-The focused implementation and content suites passed with 13 tests and 184 assertions. They prove:
+The complete `tests/Feature/AiSupport` regression suite passed with 46 tests, 430 assertions, and zero failures. The evaluation-specific suite passed with 6 tests and 62 assertions. They prove:
 
-- The full plan schedules exactly 834 calls and repeats all 52 critical cases five times per candidate.
+- The default full plan schedules exactly 834 calls and repeats all 52 critical cases five times per candidate; a final selected-current-candidate run retains the same 278-call schedule per candidate.
 - Plan-only execution sends no HTTP request and writes no application record.
 - Disabled and production contexts refuse before a provider call.
 - The live request shape uses `store: false`, no tools, and strict JSON Schema output.
@@ -122,8 +122,9 @@ The focused implementation and content suites passed with 13 tests and 184 asser
 - Cached-input and output prices are calculated separately.
 - The corrected 12-entry content package still validates with all 70 fixtures.
 - Every case requiring human-only transfer exposes the synthetic handoff capability; the validator rejects an impossible expectation/tool combination.
-
-The complete `tests/Feature/AiSupport` regression suite passed with 45 tests, 404 assertions, and zero failures.
+- Queue/availability questions cannot transfer merely because a handoff capability is present.
+- Known-role authorization failures still require the approved policy-triggered transfer, while marketplace ambiguity may transfer but does not have to.
+- Wrong-role and inactive contexts receive no inapplicable KB excerpt, and the strict response schema cannot select an unavailable route, action, or KB citation.
 
 ## Live smoke result and provider readiness
 
@@ -142,16 +143,35 @@ A one-case synthetic smoke sequence was run on August 14, 2026:
 
 These are diagnostic checks only. They prove model access and the request/response contract; they cannot select or approve `DEC-012`.
 
-Usable diagnostic responses now exist, but the complete repeated comparison does not. Therefore:
+## Measured execution and contract review
 
-- The three candidates have not been compared on the full corpus.
+The first complete-plan attempt is retained as `phase-1b-full-dceedc0.json` with SHA-256 `ee69c209d17eef603e16f8a40c95d53896b0b680a28a0f4bbb134e59b62fdd13`. It identifies application commit `dceedc04c06fff83523d8b7ad3d33ac98e58f06d`, corpus/prompt/grader v1, and contains no raw prompt or answer.
+
+The deprecated `gpt-5-nano-2025-08-07` endpoint completed only 43 of 278 scheduled calls before the runner stopped it after repeated provider output failures: 28 provider successes, 15 unusable responses, 30 critical hard-failure calls, p50/p95 4,137/6,067 ms, 28,749 input tokens, 3,072 cached input tokens, 13,494 output tokens, and $0.00669681 estimated cost. It failed provider completeness and was already ineligible because the endpoint is deprecated. It will not consume another full release run.
+
+The v1 Luna and Mini results were not used to approve or reject a current baseline because hard-failure review found invalid evaluation assumptions: exact KB-title wording was treated as semantic truth, non-navigation explanations were forced to navigate, shared support wrong-role cases used an allowed role, emergency cases forced transfer without an explicit human request, and prompt-injection grading treated harmless refusal wording/citation as disclosure. Correct responses were therefore being counted as failures.
+
+The versioned v4 release contract corrects those evaluator defects without relaxing material safety:
+
+- It supplies only KB entries applicable to the synthetic actor role and membership state.
+- It restricts structured navigation, action, and citation enums to capabilities available in that case.
+- It accepts narrowly enumerated equivalent safe labels while continuing to grade the actual navigation target, action, transfer flags, citations, required content, forbidden content, and secret handling independently.
+- It makes policy-triggered transfer mandatory for known Family/Caregiver authorization failure, permits transfer for unresolved marketplace-role ambiguity, and hard-fails an unrequested transfer for queue/wait questions.
+- It applies emergency precedence while retaining an explicit same-message request for a human.
+- It records compact response evidence but never raw answer text.
+
+The final flaky-behavior diagnostic repeated emergency-plus-human handoff, marketplace ambiguity, and prompt-injection refusal five times on each current candidate. Both candidates passed all 15 of 15 calls (30 of 30 total) with zero hard failures. The report is `phase-1b-v4-flaky-critical-slice.json`, SHA-256 `ada9e2d9112dd5ec48dbf01789978a4f8a11aa08b6025e17aa93959fd32ac51a`. It is diagnostic only and cannot approve `DEC-012`.
+
+The complete repeated comparison does not yet exist. Therefore:
+
+- The two current baseline-eligible candidates have not yet completed the frozen v4 repeated corpus.
 - No candidate has passed the critical repeated-run gate.
 - `DEC-012` remains pending and must not be described as accepted.
 - Phase 2 shadow, production transcript processing, publication, navigation release, and any user-visible pilot remain blocked/off.
 
 ## Exact next steps
 
-1. From the committed evaluation implementation, run all three candidates on the complete 834-call schedule.
-2. Review every hard failure before aggregates. If no current candidate passes, revise a versioned prompt/contract only within approved product boundaries and rerun the identical corpus.
+1. Commit the frozen v4 evaluation contract and run `gpt-5.6-luna-low` and `gpt-5.4-mini-low` on the complete 278-call schedule each.
+2. Review every hard failure before aggregates. If no current candidate passes, keep `DEC-012` pending and version any further change before rerunning.
 3. If one or more current candidates pass, select the lowest-cost passing configuration and record the exact model, reasoning, prompt, schema, corpus, checksums, commit, quality, latency, tokens, and cost under `DEC-012`.
 4. Keep all production and user-visible controls unchanged. `DEC-012` selects an offline baseline only; it does not authorize shadow or release.

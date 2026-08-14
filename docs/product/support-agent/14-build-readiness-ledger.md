@@ -70,7 +70,7 @@ Resolved August 13, 2026: the initial Family package contains only human-help/em
 
 Choose the least costly evaluated model/provider/configuration candidate and the challenger set. This is needed before measuring the offline baseline, not before building model-independent controls.
 
-Delivery status on August 14, 2026: the three-candidate matrix, exact 834-call schedule, disabled-by-default Responses adapter, deterministic gates, compact evidence format, and production/no-write controls are implemented and tested. API credit was restored and strict one-case smoke checks reached valid structured output for all three endpoints. Complete identical-corpus execution and accept `DEC-012` only if a current candidate passes every gate.
+Delivery status on August 14, 2026: the candidate matrix, disabled-by-default Responses adapter, deterministic gates, compact evidence format, and production/no-write controls are implemented and tested. API credit and strict endpoints pass. Deprecated nano was eliminated after repeated output failures. The v4 contract and 30-call repeated critical diagnostic pass for both current candidates. Complete the identical 556-call Luna/Mini run and accept `DEC-012` only if a current candidate passes every gate.
 
 ### `READY-VAL-004` — Remaining retention (`DEC-014`)
 

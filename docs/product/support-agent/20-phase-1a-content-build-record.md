@@ -21,8 +21,8 @@ This implementation does **not** publish knowledge, call a model, enable an AI c
 | Artifact | Version or command | Result |
 | --- | --- | --- |
 | Initial governed knowledge manifest | `initial-kb-v1` | Exactly 12 approved stable IDs with sources, roles, semantic targets, boundaries, review dates, and 60 linked evaluation IDs |
-| Entry-level evaluation catalog | `initial-kb-evals-v1` | Exactly 60 executable synthetic fixtures linked one-to-one with the approved entry definitions |
-| Critical regression catalog | `initial-kb-evals-v1` | 10 additional synthetic cross-entry regressions covering emergency and human-transfer precedence, role ambiguity, removed/signed-out/Admin contexts, prompt injection, secret handling, missing targets, and in-flight handoff |
+| Entry-level evaluation catalog | `initial-kb-evals-v4` | Exactly 60 executable synthetic fixtures linked one-to-one with the approved entry definitions |
+| Critical regression catalog | `initial-kb-evals-v4` | 10 additional synthetic cross-entry regressions covering emergency and human-transfer precedence, role ambiguity, removed/signed-out/Admin contexts, prompt injection, secret handling, missing targets, and in-flight handoff |
 | Deterministic validator | `php artisan ai-support:validate-initial-content` | Validates manifest, fixtures, roles, targets, actions, safety outcomes, and handoff suppression with zero model calls |
 | Draft-only importer | `php artisan ai-support:import-initial-kb` | Dry-run by default; explicit Admin actor and `--apply` required for writes |
 | Admin overview | `/admin/ai-support` | Reports actual working, Draft, published, paused, and overdue KB counts |
@@ -32,7 +32,7 @@ This implementation does **not** publish knowledge, call a model, enable an AI c
 | Artifact | SHA-256 |
 | --- | --- |
 | `resources/ai-support/knowledge-base/v1.php` | `DC12F6A5517A58D4CB85747E6E30DB791B50352F4996DF341F3590D55EFD59B2` |
-| `resources/ai-support/evaluations/v1.php` | `0AD0C792359AF4D448863F5470F56CB5FCF2F2E4F17DCA4533A0AED761427A5A` |
+| `resources/ai-support/evaluations/v1.php` | `BA7466FB8F94B12E491D95140E5491A77BA40CFB0563DBC5897AD06ED98A4BC3` |
 
 Any content change produces a new checksum and must be reviewed against the accepted definitions and evaluation expectations before import or model evaluation.
 
@@ -67,7 +67,7 @@ The importer uses the existing governed KB workflow and Admin audit service.
 
 Command: `php artisan test tests/Feature/AiSupport`
 
-Current result after Phase 1B adapter integration: **45 tests passed, 404 assertions, 0 failures**.
+Current result after Phase 1B contract freeze: **46 tests passed, 430 assertions, 0 failures**.
 
 The suite proves:
 
@@ -133,4 +133,4 @@ The production apply step is an explicit operator action. It is not authorized m
 
 ## Remaining gate
 
-Phase 1A deployment, production Draft import, and editorial cleanup are complete and verified. The next product milestone is `DEC-012`: evaluate least-cost runtime candidates on the identical synthetic corpus. The adapter exists, but provider execution is waiting on usable API credit as recorded in [the Phase 1B adapter and execution record](21-phase-1b-offline-model-evaluation.md). This work remains offline and cannot authorize production shadowing or a user-visible pilot. `DEC-014` still blocks production-data shadowing, and `DEC-015` still blocks a truthful user-visible human-response promise.
+Phase 1A deployment, production Draft import, and editorial cleanup are complete and verified. The next product milestone is `DEC-012`: evaluate the two current least-cost runtime candidates on the identical frozen v4 synthetic corpus. API credit, strict endpoint checks, and repeated critical diagnostics pass; the final 556-call comparison remains pending as recorded in [the Phase 1B adapter and execution record](21-phase-1b-offline-model-evaluation.md). This work remains offline and cannot authorize production shadowing or a user-visible pilot. `DEC-014` still blocks production-data shadowing, and `DEC-015` still blocks a truthful user-visible human-response promise.

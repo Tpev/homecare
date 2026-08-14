@@ -99,7 +99,7 @@ The exact evidence, artifact checksums, and two Draft-only editorial findings ar
 | `KB-CGV-002` | Caregiver work inbox orientation | Validated production Draft verified | Not published |
 | `KB-CGV-003` | Caregiver shift orientation | Validated production Draft verified | Not published |
 | `KB-CGV-004` | Caregiver account/profile orientation | Validated production Draft verified | Not published |
-| `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Three-candidate matrix and gates implemented; credit and all three endpoint smoke checks pass; full repeated run pending | Offline runtime baseline |
+| `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Deprecated nano eliminated; v4 contract and current-candidate critical diagnostics pass; 556-call repeated Luna/Mini run pending | Offline runtime baseline |
 | `KB-AIS-001` | Author, source, and validate the initial governed KB set | Production Draft import, browser audit, and both editorial corrections complete | Grounded-answer evaluation and later shadow readiness; publication remains separately prohibited |
 | `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Corpus, disabled-by-default adapter, deterministic graders, compact reporting, isolation tests, and three-model provider smoke implemented/passed | Complete repeated candidate runs remain pending |
 | `DEC-014` | Close suppressed/diagnostic TTLs and downstream/provider/backup extinction rules | Pending later discussion | Any production-conversation shadowing |
@@ -111,14 +111,14 @@ The exact evidence, artifact checksums, and two Draft-only editorial findings ar
 | --- | --- | --- |
 | Phase 0 | Deployed; operational extinction tail open | Runtime retired and primary data destroyed; backup/derived extinction still tracked |
 | Phase 1 foundation | Deployed | Admin controls, exact-user grants, governed KB workspace, contracts, handoff, evidence, and retention foundations exist |
-| Phase 1 content/evaluation | Production Drafts and editorial cleanup verified; offline adapter and provider smoke complete; full measured runtime evaluation pending | 12 validated Drafts, 70 total fixtures, three-candidate 834-call plan, deterministic gates, and fail-closed controls verified; nothing is published |
+| Phase 1 content/evaluation | Production Drafts and editorial cleanup verified; offline adapter and v4 contract frozen; full measured runtime evaluation pending | 12 validated Drafts, 70 total fixtures, deprecated benchmark eliminated, two-current-candidate 556-call release run pending, and fail-closed controls verified; nothing is published |
 | Phase 2 shadow | Blocked | Requires Phase 1 evidence plus `DEC-014`; no real conversations may go to a model yet |
 | Phase 3 grounded answers | Blocked | Requires shadow evidence, `DEC-015`, named grants, usability, monitoring, and release approval |
 | Phases 4-6 | Not started | Navigation, drafting, and confirmed execution remain independently gated |
 
 ## Agreed next-work order
 
-1. Run every candidate on the identical 70-case corpus, including five runs for each of the 52 critical cases: 278 calls per candidate and 834 total.
+1. Run both current eligible candidates on the identical 70-case v4 corpus, including five runs for each of the 52 critical cases: 278 calls per candidate and 556 total.
 2. Retain and review all hard failures, pass-at-all-runs, quality, p50/p95 latency, retries, tokens, and estimated cost.
 3. Accept `DEC-012` only if at least one current candidate passes every declared gate; select the lowest-cost passing configuration. Keep every production model and user-visible control disabled.
 4. Continue tracking `OPS-EXT-001` without repeating primary destruction; it remains independent from local/offline evaluation.

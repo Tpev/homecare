@@ -84,7 +84,11 @@ class OfflineAiSupportModelEvaluationService
                         $candidate,
                         $this->prompts->instructions(),
                         $this->prompts->input($case),
-                        $this->prompts->responseSchema(),
+                        $this->prompts->responseSchema(
+                            array_values((array) ($case['available_navigation_targets'] ?? [])),
+                            in_array('SUP-HANDOFF-001', (array) ($case['available_tools'] ?? []), true),
+                            $this->prompts->applicableKnowledgeIds($case),
+                        ),
                     );
                     $grade = $this->grader->grade($case, $execution['response']);
                     $usage = $execution['usage'];
@@ -103,6 +107,7 @@ class OfflineAiSupportModelEvaluationService
                         'usage' => $usage,
                         'estimated_cost_usd' => round($this->candidates->estimatedCost($candidate, $usage), 10),
                         'response_hash' => $execution['response_hash'],
+                        'response_evidence' => $this->compactResponseEvidence($execution['response']),
                     ];
                     $consecutiveProviderErrors = 0;
                 } catch (Throwable $exception) {
@@ -130,6 +135,7 @@ class OfflineAiSupportModelEvaluationService
                         'usage' => $this->emptyUsage(),
                         'estimated_cost_usd' => 0.0,
                         'response_hash' => null,
+                        'response_evidence' => null,
                     ];
                 }
 
@@ -409,6 +415,20 @@ class OfflineAiSupportModelEvaluationService
         }
 
         return preg_match('/^[0-9a-f]{40}$/', $head) ? $head : 'working-tree';
+    }
+
+    /** @param array<string,mixed> $response @return array<string,mixed> */
+    private function compactResponseEvidence(array $response): array
+    {
+        return [
+            'outcome' => $response['outcome'] ?? null,
+            'navigation_target' => $response['navigation_target'] ?? null,
+            'action' => $response['action'] ?? null,
+            'handoff_human_only' => $response['handoff_human_only'] ?? null,
+            'suppress_after_handoff' => $response['suppress_after_handoff'] ?? null,
+            'cited_kb_ids' => array_values((array) ($response['cited_kb_ids'] ?? [])),
+            'answer_word_count' => str_word_count((string) ($response['answer'] ?? '')),
+        ];
     }
 
     private function providerErrorCode(Throwable $exception): string

@@ -110,6 +110,9 @@ class InitialKnowledgeEvaluationService
             if ($expected['must_transfer_human_only'] && ! $expected['must_suppress_after_handoff']) {
                 $errors[] = $case['id'].' transfers without suppressing later automation.';
             }
+            if ($expected['must_transfer_human_only'] && ! $expected['may_transfer_human']) {
+                $errors[] = $case['id'].' requires a transfer that its contract does not permit.';
+            }
         }
 
         foreach ($regressions as $case) {
@@ -127,6 +130,10 @@ class InitialKnowledgeEvaluationService
             if (in_array($case['case_type'], ['handoff_precedence', 'handoff_race'], true)
                 && (! $expected['must_transfer_human_only'] || ! $expected['must_suppress_after_handoff'])) {
                 $errors[] = $case['id'].' does not enforce final human-only handoff.';
+            }
+
+            if ($expected['must_transfer_human_only'] && ! $expected['may_transfer_human']) {
+                $errors[] = $case['id'].' requires a transfer that its contract does not permit.';
             }
 
             if ($case['case_type'] === 'unauthorized_context'

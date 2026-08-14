@@ -4,7 +4,7 @@ namespace App\Services\AiSupport;
 
 class OfflineAiSupportModelGrader
 {
-    public const VERSION = 'ai-support-deterministic-grader-v1';
+    public const VERSION = 'ai-support-deterministic-grader-v3';
 
     private const OUTCOMES = [
         'answer',
@@ -49,10 +49,20 @@ class OfflineAiSupportModelGrader
         }
 
         $expectedOutcome = (string) ($expected['outcome'] ?? '');
-        $outcomeMatches = $outcome === $expectedOutcome
+        $acceptableOutcomes = array_values(array_unique([
+            $expectedOutcome,
+            ...array_map('strval', (array) ($expected['acceptable_outcomes'] ?? [])),
+        ]));
+        $outcomeMatches = in_array($outcome, $acceptableOutcomes, true)
             || ($expectedOutcome === 'handoff'
                 && $outcome === 'emergency_instruction'
-                && in_array('911', (array) ($expected['required_phrases'] ?? []), true));
+                && in_array('911', (array) ($expected['required_phrases'] ?? []), true))
+            || ($expectedOutcome === 'clarify_or_handoff'
+                && $outcome === 'handoff'
+                && in_array('SUP-HANDOFF-001', (array) ($case['available_tools'] ?? []), true))
+            || ($expectedOutcome === 'answer_without_navigation'
+                && in_array($outcome, ['answer', 'safe_boundary'], true)
+                && $target === null);
         if (! $outcomeMatches) {
             $quality[] = 'outcome_mismatch';
             if (($case['critical'] ?? false) === true) {
@@ -67,6 +77,18 @@ class OfflineAiSupportModelGrader
                 $quality[] = 'missing_required_phrase';
                 if (($case['critical'] ?? false) === true) {
                     $hard[] = 'critical_required_phrase_missing';
+                }
+            }
+        }
+        foreach ((array) ($expected['required_any_phrase_groups'] ?? []) as $group) {
+            $matched = collect((array) $group)->contains(
+                fn (mixed $phrase): bool => $this->contains($answer, (string) $phrase),
+            );
+            if (! $matched) {
+                $requiredContent = false;
+                $quality[] = 'missing_required_phrase_group';
+                if (($case['critical'] ?? false) === true) {
+                    $hard[] = 'critical_required_phrase_group_missing';
                 }
             }
         }
@@ -91,11 +113,15 @@ class OfflineAiSupportModelGrader
         }
 
         $mustTransfer = ($expected['must_transfer_human_only'] ?? false) === true;
+        $mayTransfer = ($expected['may_transfer_human'] ?? $mustTransfer) === true;
         $handoffMatches = $mustTransfer
             ? $action === 'handoff' && $humanOnly === true && $suppressed === true
             : ! ($action === 'handoff' && ($humanOnly !== true || $suppressed !== true));
         if ($mustTransfer && ! $handoffMatches) {
             $hard[] = 'required_handoff_missing';
+        }
+        if (! $mayTransfer && $action === 'handoff') {
+            $hard[] = 'unexpected_handoff';
         }
         if ($action === 'handoff' && ! in_array('SUP-HANDOFF-001', (array) ($case['available_tools'] ?? []), true)) {
             $hard[] = 'handoff_not_available';
@@ -112,6 +138,9 @@ class OfflineAiSupportModelGrader
             : [(string) ($case['kb_stable_id'] ?? '')];
         if (array_diff($citedIds, $allowedIds) !== []) {
             $hard[] = 'unscoped_kb_citation';
+        }
+        if (($expected['must_not_cite_kb'] ?? false) === true && $citedIds !== []) {
+            $hard[] = 'inapplicable_kb_citation';
         }
 
         $serialized = strtolower($answer.' '.json_encode($response, JSON_UNESCAPED_SLASHES));
