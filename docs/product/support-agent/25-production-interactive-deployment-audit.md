@@ -1,6 +1,6 @@
 # Production Interactive Assistant Deployment Audit
 
-Status: Authenticated production audit complete; limited release remains blocked
+Status: Authenticated production deployment and Draft-import audit complete; limited release remains blocked
 
 Audit date: August 14, 2026
 
@@ -14,9 +14,11 @@ Related release evidence: `e8694a8ee71e5de7382c159058efca709d60f264`
 
 The interactive assistant code is present in production and is failing closed as designed. No live user can receive an AI answer or AI action in the observed state: both deployment guards are off, user-visible AI is off, all AI roles and capabilities are off, human-only is on, there are no exact-user grants, and no KB entry is published.
 
-The authenticated Admin surfaces render correctly, the existing human-support fallback remains available, and the support dialog fits a 390-pixel mobile viewport without horizontal overflow. No message, request, grant, control version, KB record, or support assignment was created or changed during this audit.
+The authenticated Admin surfaces render correctly, the existing human-support fallback remains available, and the support dialog fits a 390-pixel mobile viewport without horizontal overflow. The browser inspection created or changed no message, request, grant, control version, KB record, or support assignment. The separately executed production import intentionally created the 12 governed Draft records described below.
 
-Limited release is not ready yet. The production database still contains only the original 12 governed Draft entries. The new `KB-CARE-001` through `KB-CARE-012` interactive package has not been imported. A second, non-safety-blocking finding is that Settings still displays the permanently denied `shadow_enabled` control even though the overview and server policy correctly state that shadow mode is outside the release.
+The expanded interactive KB import was subsequently completed and verified in production. The database now contains all 24 governed entries as Drafts, including `KB-CARE-001` through `KB-CARE-012`; nothing is published. Every imported entry is Version 1, reports validation passed, contains authoritative-source evidence, and has exactly five linked evaluation IDs. The content-free activity trail records 12 successful creations and 12 successful validation runs with no failure.
+
+Limited release is not ready yet. A non-safety-blocking finding remains: Settings still displays the permanently denied `shadow_enabled` control even though the overview and server policy correctly state that shadow mode is outside the release. The imported non-pricing entries also require deliberate review and selective publication before a controlled staff rehearsal.
 
 ## Audit scope and method
 
@@ -37,7 +39,7 @@ Screenshots were captured for immediate visual review but are intentionally excl
 | Answer, navigation, context, intake, draft, recap, publication, and 24/7 controls | Off | Pass |
 | Human-only control | On | Pass |
 | Exact-user grants | 0 active | Pass |
-| Governed KB | 12 working, 12 Draft, 0 published, 0 paused, 0 overdue | Safe; interactive package pending |
+| Governed KB | 24 working, 24 Draft, 0 published, 0 paused, 0 overdue | Pass; interactive import verified |
 | Customer support presentation | Human support only | Pass |
 
 ## Surface audit
@@ -47,7 +49,7 @@ Screenshots were captured for immediate visual review but are intentionally excl
 | Admin overview | Failing-closed state, both deployment guards off, zero grants, Draft-only KB counts, human support preserved, no-shadow policy shown | Pass |
 | Pilot list | Empty exact-user grant list; search and status filters render | Pass |
 | User pilot card | Dedicated Family test account reports **Not enabled** and **Runtime Deployment Guard Off**; exact-user bundle, date, reason, acknowledgement, and higher-control warning render | Pass; no grant created |
-| KB index | Search, lifecycle/role filters, create-draft entry point, and 12 Draft records render | Pass |
+| KB index | Search, lifecycle/role filters, create-draft entry point, and 24 Draft records render | Pass |
 | KB editor | Content, roles, applicability, permitted/prohibited facts, navigation targets, sources, evaluation IDs, validation, review/publish workflow, history, and guarded deletion render | Pass; no mutation |
 | Activity | Content-free control-plane events render with actor, policy/outcome, and timestamp evidence; no transcript body is exposed | Pass |
 | Settings | Deployment warnings and deny-by-default controls render; operational reason, impact acknowledgement, and typed `APPLY` confirmation are required | Pass with finding `PROD-UI-AIS-002` |
@@ -62,20 +64,28 @@ The reused browser session initially retained two earlier Livewire `503` respons
 
 ## Findings
 
-### `PROD-KB-INT-001` - interactive KB package not imported
+### `PROD-KB-INT-001` - interactive KB package imported and verified
 
-Severity: Release blocker; current users remain safe because AI is disabled.
+Status: Closed August 14, 2026.
 
-Production contains the original 12 `KB-SUP-*`, `KB-FAM-*`, and `KB-CGV-*` Drafts but none of the 12 `KB-CARE-*` interactive Drafts. The repository manifest and import service are deployed and default to a dry run. The dry run should report 12 creates if production remains unchanged; its output is authoritative.
+The production command created all 12 missing `KB-CARE-*` records. The authenticated follow-up audit verified:
 
-Run the dry run first. Apply only with an authorized Administrator email:
+- 24 total working entries, all Draft, with zero published, paused, or overdue entries;
+- all stable IDs from `KB-CARE-001` through `KB-CARE-012` present as Version 1;
+- validation passed and authoritative sources present for every imported entry;
+- exactly five linked evaluation IDs per entry, 60 total;
+- 12 successful `draft_created` audit events and 12 successful `validation_passed` events at the import timestamp;
+- zero failed import events; and
+- zero exact-user grants, both deployment guards off, and human-only on after import.
+
+The command sequence used a dry run first and applied only with an authorized Administrator email:
 
 ```bash
 php artisan ai-support:import-interactive-kb
 php artisan ai-support:import-interactive-kb --apply --actor-email=<admin-email>
 ```
 
-The apply operation creates validated Drafts only, is idempotent for existing stable IDs, refuses tombstone conflicts, verifies that the published count does not change, and does not enable AI. Afterward, verify `KB-CARE-001` through `KB-CARE-012`, validation status, sources, linked evaluations, and an unchanged published count. Keep `KB-CARE-006` held and unpublished.
+The apply operation created validated Drafts only and did not enable AI. Keep `KB-CARE-006` held and unpublished.
 
 ### `PROD-UI-AIS-002` - shadow control remains visible
 
@@ -93,10 +103,9 @@ This audit authorizes no AI activation. It confirms that the deployed state is s
 
 The next controlled batch is:
 
-1. Run and retain the production interactive-KB dry-run output, then apply the Draft-only import and audit all 12 entries.
-2. Remove the visible shadow control and redeploy that small operator-UI cleanup while preserving the server denial.
-3. Review and selectively publish only the non-pricing KB entries needed for the first one-time Family rehearsal; keep every runtime, role, capability, and grant control off.
-4. Close provider privacy/retention and monitoring ownership evidence.
-5. Run the production-like staff-account safety, handoff, cost-stop, and rollback rehearsal.
-6. Complete the five-person older-adult usability gate.
-7. Name the first two Family users and obtain an explicit limited-release decision before creating 14-day exact-user grants.
+1. Remove the visible shadow control and redeploy that small operator-UI cleanup while preserving the server denial.
+2. Review and selectively publish only the non-pricing KB entries needed for the first one-time Family rehearsal; keep every runtime, role, capability, and grant control off.
+3. Close provider privacy/retention and monitoring ownership evidence.
+4. Run the production-like staff-account safety, handoff, cost-stop, and rollback rehearsal.
+5. Complete the five-person older-adult usability gate.
+6. Name the first two Family users and obtain an explicit limited-release decision before creating 14-day exact-user grants.

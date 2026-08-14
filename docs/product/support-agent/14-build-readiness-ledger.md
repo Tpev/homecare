@@ -96,6 +96,8 @@ Return to Product for any change to user-visible scope, authorization, role/data
 - Isolated fresh migration/seed and new recap-to-live-request Playwright flow pass
 - Same-account exact-user privacy, Admin evidence, 200% text, responsive mobile, keyboard, offline retry, and established human support regressions pass
 - Production asset build and feature-scoped formatting pass
+- Fail-closed production deployment and authenticated Admin/Family browser audit pass
+- Expanded production KB import verified: 12 interactive Version 1 Drafts, 60 linked evaluations, 24 successful create/validate events, zero failures, zero publication, and zero activation
 
 Exact metrics, report checksum, audit corrections, and the deploy/rollback sequence are in [the implementation record](24-interactive-assistant-implementation-and-release-evidence.md).
 
@@ -114,7 +116,7 @@ These are implementation/release tasks, not unanswered product decisions:
 
 ### Knowledge and evaluation
 
-- Import the expanded manifest as validated production Drafts and publish only reviewed, non-held entries needed by the approved pilot
+- Publish only reviewed, non-held entries needed by the approved pilot; the expanded production Draft import is complete
 - Re-run the frozen Luna-low gate after any governed model, prompt, schema, KB, or corpus change
 - Keep the pricing entry outside ordinary answer retrieval until `DEC-049` is released
 
@@ -141,4 +143,4 @@ The payment/pricing reconciliation is a separate project. Do not modify Stripe, 
 
 ## Readiness conclusion
 
-The declared implementation is complete and may proceed to fail-closed deployment after final repository review. Production/user-visible controls must remain off. Limited release still requires the open provider/privacy, operations, usability, named-user, monitoring, and explicit approval gates. Payment/pricing code remains outside this project.
+The declared implementation is complete and deployed fail-closed. The expanded governed content is imported as validated Drafts. Production/user-visible controls must remain off. Limited release still requires the open provider/privacy, operations, KB publication, usability, named-user, monitoring, and explicit approval gates. Payment/pricing code remains outside this project.

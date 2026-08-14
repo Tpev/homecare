@@ -16,7 +16,7 @@ The approved initial interactive assistant is implemented without enabling produ
 
 This is build evidence, not limited-release approval. Repository defaults, example environment values, and database controls remain fail-closed. No production user, grant, KB publication, provider call, or control activation is authorized by this record.
 
-An authenticated production audit on August 14, 2026 verified that the interactive surfaces are deployed and failing closed. The Admin control plane renders, there are zero exact-user grants and zero published entries, and the dedicated Family test account sees human support only. The expanded 12-entry interactive KB package still requires its production Draft import. See the [production deployment audit](25-production-interactive-deployment-audit.md).
+An authenticated production audit on August 14, 2026 verified that the interactive surfaces are deployed and failing closed. The Admin control plane renders, there are zero exact-user grants and zero published entries, and the dedicated Family test account sees human support only. The expanded 12-entry interactive KB package was subsequently imported and verified as validated Drafts with 60 linked evaluations and no failed audit event. See the [production deployment audit](25-production-interactive-deployment-audit.md).
 
 No Stripe, customer charging, fee, authorization-buffer, Caregiver payout, Family pricing override, or payment-service file was changed. Pricing answers remain held under `DEC-049` even though the approved business truth is $30 per hour.
 
@@ -138,14 +138,14 @@ AI_SUPPORT_RETENTION_EXECUTION_ENABLED=false
 AI_SUPPORT_OFFLINE_EVALUATION_ENABLED=false
 ```
 
-The next production operation is to preview and import the expanded KB manifest as validated Drafts using an authorized administrator:
+The expanded KB manifest was previewed and imported as validated production Drafts using an authorized administrator:
 
 ```bash
 php artisan ai-support:import-interactive-kb
 php artisan ai-support:import-interactive-kb --apply --actor-email=<admin-email>
 ```
 
-The import is idempotent, does not publish entries, and does not activate AI. Review/publish only the non-pricing entries needed for the declared pilot through Admin. Keep `KB-CARE-006` unavailable while the pricing implementation hold remains.
+The authenticated follow-up audit verified all 12 stable IDs, Version 1, validation passed, authoritative sources, 60 linked evaluations, 12 successful creations, 12 successful validations, zero failed events, zero publication, and zero AI activation. Review/publish only the non-pricing entries needed for the declared pilot through Admin. Keep `KB-CARE-006` unavailable while the pricing implementation hold remains.
 
 Do not enable deployment guards or create an exact-user grant until the remaining limited-release gates below are explicitly approved. When approval exists, enable only the Family one-time capability slice first; recurring commit and Caregiver controls remain independent.
 
