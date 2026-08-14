@@ -1,8 +1,41 @@
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { expect, test, type Page } from '@playwright/test';
 import { loginAs } from '../helpers/auth';
 
 async function expectNoHorizontalOverflow(page: Page) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+}
+
+function expireActiveRecap(): void {
+    const phpCode = String.raw`
+require 'vendor/autoload.php';
+$app = require 'bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+$action = App\Models\AiSupportMessageAction::query()
+    ->where('action_type', App\Models\AiSupportMessageAction::TYPE_RECAP)
+    ->whereNull('consumed_at')
+    ->whereNull('invalidated_at')
+    ->latest('created_at')
+    ->firstOrFail();
+$action->forceFill(['expires_at' => now()->subMinute()])->save();
+`;
+
+    execFileSync('php', ['-r', phpCode], {
+        cwd: process.cwd(),
+        env: {
+            ...process.env,
+            APP_ENV: 'playwright',
+            APP_URL: 'http://127.0.0.1:8010',
+            DB_CONNECTION: 'sqlite',
+            DB_DATABASE: path.join(process.cwd(), 'database', 'playwright.sqlite'),
+            CACHE_STORE: 'file',
+            SESSION_DRIVER: 'file',
+            QUEUE_CONNECTION: 'sync',
+            MAIL_MAILER: 'array',
+        },
+    });
 }
 
 test.describe.serial('Interactive AI Support pilot', () => {
@@ -37,7 +70,15 @@ test.describe.serial('Interactive AI Support pilot', () => {
         await page.screenshot({ path: testInfo.outputPath('ai-support-recap-200-percent.png') });
         await page.addStyleTag({ content: 'html { font-size: 16px !important; }' });
 
+        expireActiveRecap();
         await confirm.click();
+        await expect(panel.getByRole('alert')).toHaveText('This confirmation expired or changed. Review the current draft and confirm again.');
+        await expect(recap).toBeFocused();
+        await recap.getByRole('button', { name: 'Review and confirm again' }).click();
+
+        const renewedRecap = panel.getByRole('region', { name: 'Care request recap' }).last();
+        await expect(renewedRecap).toBeVisible();
+        await renewedRecap.getByRole('button', { name: 'Confirm and create request' }).click();
         await expect(panel.getByText('Your care request is live. Eligible caregivers can now see it.')).toBeVisible();
         const viewRequest = panel.getByRole('link', { name: 'View request' });
         await expect(viewRequest).toBeVisible();

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { expectMinimumTextContrast } from '../helpers/accessibility';
 import { loginAs } from '../helpers/auth';
 
 const phoneSizes = [
@@ -96,6 +97,7 @@ test.describe('Mobile support chat', () => {
         await page.keyboard.press('Enter');
         const panel = page.getByTestId('support-chat-panel');
         const minimize = page.getByRole('button', { name: 'Minimize support chat' });
+        await expect(panel).toHaveAttribute('aria-modal', 'true');
         await minimize.focus();
         await page.keyboard.press('Shift+Tab');
         await expect(panel.getByRole('link', { name: 'Open Support Center' })).toBeFocused();
@@ -103,6 +105,10 @@ test.describe('Mobile support chat', () => {
         const draft = 'Draft retained across mobile navigation and rotation.';
         await composer.fill(draft);
         await page.getByRole('button', { name: 'Minimize support chat' }).click();
+        await expect(page.getByTestId('support-chat-launcher')).toBeVisible();
+        await page.waitForFunction(() => Object.keys(sessionStorage)
+            .filter((key) => key.startsWith('lolo-support-chat:open:'))
+            .every((key) => sessionStorage.getItem(key) === 'false'));
 
         await page.goto('/caregiver/work-inbox');
         await page.getByTestId('support-chat-launcher').click();
@@ -151,6 +157,9 @@ test.describe('Mobile support chat', () => {
         const panel = page.getByTestId('support-chat-panel');
         await expect(panel.getByText('This conversation is resolved. Replying will reopen it.')).toBeVisible();
         await expect(panel.getByRole('button', { name: 'Load earlier messages' })).toBeVisible();
+        await expectMinimumTextContrast(panel.locator('.support-chat-time-separator').first(), [247, 242, 234]);
+        await expectMinimumTextContrast(panel.locator('.support-chat-bubble-support p.mt-1\\.5').first(), [255, 255, 255]);
+        await expectMinimumTextContrast(panel.locator('#support-chat-composer-help'), [255, 253, 249]);
         await panel.getByRole('button', { name: 'Load earlier messages' }).click();
         await expect(panel.getByText('E2E oldest mobile support message')).toBeVisible();
 

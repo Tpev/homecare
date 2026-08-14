@@ -387,6 +387,17 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
+        confirmationFailed(detail = {}) {
+            this.announcement = detail.message || 'The confirmation needs another review.';
+            this.$nextTick(() => {
+                const recaps = Array.from(this.$refs.panel?.querySelectorAll('[data-support-chat-recap]') ?? []);
+                const recap = recaps.find((element) => element.dataset.supportChatRecap === String(detail.actionId ?? ''))
+                    ?? recaps[0];
+                recap?.focus({ preventScroll: true });
+                recap?.scrollIntoView({ block: 'nearest' });
+            });
+        },
+
         wentOffline() {
             this.online = false;
             if (this.pendingMessage?.status === 'sending') {

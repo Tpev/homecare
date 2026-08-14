@@ -23,6 +23,7 @@
     x-on:support-chat-message-sent.window="messageSent($event.detail)"
     x-on:support-chat-send-failed.window="messageFailed($event.detail)"
     x-on:support-chat-conversation-reset.window="conversationReset()"
+    x-on:support-chat-confirmation-failed.window="confirmationFailed($event.detail)"
     x-on:keydown.window="handleKeydown($event)"
     x-on:online.window="wentOnline()"
     x-on:offline.window="wentOffline()"
@@ -173,7 +174,7 @@
                         <div wire:key="support-chat-message-{{ $message->id }}" class="flex {{ $fromSupport ? 'justify-start' : 'justify-end' }}">
                             <article class="support-chat-bubble {{ $fromSupport ? 'support-chat-bubble-support' : 'support-chat-bubble-user' }}" title="{{ $message->created_at?->format('M j, Y g:i A') }}">
                                 <p class="support-chat-message-text">{{ $message->body }}</p>
-                                <p class="mt-1.5 text-[11px] {{ $fromSupport ? 'text-[#76818B]' : 'text-[#DDEEEA]' }}">
+                                <p class="mt-1.5 text-[11px] {{ $fromSupport ? 'text-[#626B73]' : 'text-[#DDEEEA]' }}">
                                     @if ($fromSupport)
                                         {{ $message->responder_type === \App\Models\SupportTicketMessage::RESPONDER_AUTOMATED ? 'LoLo Support assistant' : ($message->sender?->name ?: 'LoLo Support') }} &middot; Support
                                     @elseif ($mine)
@@ -209,7 +210,13 @@
                                         >{{ $actionPayload['label'] ?? 'Open page' }}</a>
                                     @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_RECAP && ! $action->invalidated_at && ! $action->consumed_at)
                                         @php $recap = (array) ($actionPayload['recap'] ?? []); @endphp
-                                        <section class="mt-3 space-y-3 rounded-2xl border border-[#C8DDD7] bg-white p-4 text-sm text-[#17313F]" aria-label="Care request recap">
+                                        <section
+                                            data-support-chat-recap="{{ $action->id }}"
+                                            tabindex="-1"
+                                            class="mt-3 space-y-3 rounded-2xl border border-[#C8DDD7] bg-white p-4 text-sm text-[#17313F] outline-none focus:ring-2 focus:ring-[#0F5B52] focus:ring-offset-2"
+                                            aria-label="Care request recap"
+                                            @if ($errors->has('confirmation')) aria-describedby="support-chat-confirmation-error" @endif
+                                        >
                                             <h3 class="font-display text-lg font-bold">Review your request</h3>
                                             <dl class="space-y-2">
                                                 <div><dt class="font-semibold">Type</dt><dd>{{ $recap['request_type_label'] ?? '' }}</dd></div>
@@ -346,17 +353,17 @@
                         </button>
                     </div>
                     <div class="flex min-h-5 items-start justify-between gap-3">
-                        <p id="support-chat-composer-help" class="text-[11px] leading-4 text-[#747D86]">Replies appear here and in your Support Center.</p>
-                        <p class="shrink-0 text-[11px] text-[#747D86]" x-text="draft.length ? `${draft.length}/3000` : ''"></p>
+                        <p id="support-chat-composer-help" class="text-[11px] leading-4 text-[#626B73]">Replies appear here and in your Support Center.</p>
+                        <p class="shrink-0 text-[11px] text-[#626B73]" x-text="draft.length ? `${draft.length}/3000` : ''"></p>
                     </div>
                     <p id="support-chat-send-error" x-show="sendError" x-text="sendError" class="break-words text-sm font-medium text-rose-700" role="alert"></p>
                     @error('messageBody') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
                     @error('conversation') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
-                    @error('confirmation') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
+                    @error('confirmation') <p id="support-chat-confirmation-error" class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
                 </form>
             @endif
 
-            <div class="mt-2 flex flex-col gap-1 border-t border-[#E7DED2] pt-2 text-[11px] leading-4 text-[#747D86]">
+            <div class="mt-2 flex flex-col gap-1 border-t border-[#E7DED2] pt-2 text-[11px] leading-4 text-[#626B73]">
                 <a href="{{ route('support.index') }}" wire:navigate x-on:click="closeForNavigation()" class="inline-flex min-h-11 items-center font-semibold text-[#0F5B52] underline underline-offset-2">Open Support Center</a>
                 <p>LoLo Support is not an emergency service. If someone is in immediate danger, call 911.</p>
             </div>

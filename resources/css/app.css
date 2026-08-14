@@ -307,7 +307,7 @@
         border: 2px solid #fffdf9;
         border-radius: 999px;
         padding: 0 0.3rem;
-        background: #c95f4b;
+        background: #b84d3d;
         color: white;
         font-size: 0.7rem;
         font-weight: 800;
@@ -395,7 +395,7 @@
     .support-chat-time-separator {
         padding: 0.25rem 0;
         text-align: center;
-        color: #7b838b;
+        color: #626b73;
         font-size: 0.68rem;
         font-weight: 600;
     }

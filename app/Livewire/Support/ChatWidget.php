@@ -182,7 +182,13 @@ class ChatWidget extends Component
             $this->resetValidation();
             $this->dispatch('support-chat-action-completed');
         } catch (ValidationException $exception) {
-            $this->addError('confirmation', (string) collect($exception->errors())->flatten()->first());
+            $message = (string) collect($exception->errors())->flatten()->first();
+            $this->addError('confirmation', $message);
+            $this->dispatch(
+                'support-chat-confirmation-failed',
+                actionId: $actionId,
+                message: $message,
+            );
         }
     }
 

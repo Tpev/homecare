@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { expectMinimumTextContrast } from '../helpers/accessibility';
 import { loginAs } from '../helpers/auth';
 
 test.describe('In-app support chat', () => {
@@ -54,6 +55,7 @@ test.describe('In-app support chat', () => {
 
         await loginAs(page, 'family');
         await expect(page.getByTestId('support-chat-unread')).toHaveText('1');
+        await expectMinimumTextContrast(page.getByTestId('support-chat-unread'));
         await expect(page.getByTestId('support-chat-launcher')).toHaveAccessibleName(/1 unread message/);
         await page.getByTestId('support-chat-launcher').click();
         await expect(page.getByTestId('support-chat-panel').getByText(reply, { exact: true })).toBeVisible();

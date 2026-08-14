@@ -85,6 +85,53 @@ On August 14, 2026, the new test passed in all three configured projects:
 
 The production reflow issue remains open until this remediation is committed, deployed through `deploy.sh`, and rechecked on production. Contrast, an assistive-technology screen-reader run, focus after validation errors, and the complete five-person study also remain open.
 
+### Production deployment recheck
+
+A follow-up authenticated production inspection after the first remediation push proved that production had not yet pulled it. At a 640-by-400 CSS-pixel viewport, the live DOM still contained `sm:ml-8 sm:mr-72 sm:flex`, the compact navigation still used `sm:hidden`, and the document remained 829 pixels wide inside a 625-pixel client area. This is deployment evidence, not a new code failure. Production accessibility remains open until `deploy.sh` pulls the current candidate and the same measurement passes.
+
+### Contrast and confirmation-focus remediation
+
+A source and rendered-color audit found three small-text contrast failures in the support surface:
+
+| Element | Before | Requirement |
+| --- | ---: | ---: |
+| Time separator on warm message background | 3.45:1 | 4.5:1 |
+| Composer/footer help on the panel background | 4.12:1 | 4.5:1 |
+| White unread-count text on the coral badge | 4.02:1 | 4.5:1 |
+
+The candidate darkens neutral helper text to `#626B73` and the unread badge to `#B84D3D`. Computed browser assertions now enforce at least 4.5:1 for the badge, time separator, support-message metadata, and composer help. The resulting palette checks are at least 4.87:1 on the warm background, 5.43:1 on white, and 5.04:1 for white badge text.
+
+The 30-minute confirmation path also now restores focus deliberately. A synthetic browser test expires the active recap, proves the stale confirmation writes nothing, observes the announced error, verifies visible keyboard focus on the same recap, renews it in one action without losing the draft, and then confirms exactly one live request.
+
+Candidate validation on August 14, 2026:
+
+- 21/21 combined interactive-AI, human-chat, responsive, offline, large-text, contrast, and confirmation-expiry browser journeys passed across desktop Chromium, mobile Chromium, and mobile WebKit;
+- 48 focused AI-runtime, readiness, support-widget, and human-messaging tests passed with 274 assertions;
+- the production asset build passed with only the pre-existing large-chunk advisory;
+- the complete application suite passed 691/691 tests and 5,097 assertions after the remediation.
+
+These results close the known engineering defects. They do not yet satisfy the production recheck, real assistive-technology session, or five-person study.
+
+## Synthetic safety and human-support rehearsal
+
+The following content-free synthetic matrix was exercised on August 14, 2026. The application/runtime cases ran through the focused feature suite, the customer/admin chat loop ran through Chromium, and the interactive recap/publication path ran through the combined browser gate.
+
+| Scenario | Observed result |
+| --- | --- |
+| Provider/runtime unavailable | Ordinary Family/Caregiver support remains human-only; no model call or AI event |
+| Human transfer | Ticket becomes human-owned; a stale automated ticket cannot create a draft |
+| Human takeover with active recap | Recap payload is invalidated; stale confirmation cannot publish; zero Care Requests created |
+| Emergency | `call 911 now` appears before transfer; no provider call |
+| 24/7 coverage | Immediate human transfer; no provider call, queue claim, minute estimate, or request publication |
+| Unsafe fabricated success | Candidate answer is suppressed; conversation transfers; capability stops; zero Care Requests created |
+| Automatic system stop | One visible incident; control remains off after incident resolution; repeated stop is deduplicated |
+| Expired confirmation | No write; draft preserved; one-step fresh recap; keyboard focus returns to the recap |
+| Logout invalidation | Confirmation invalidated; seven-day draft remains available for fresh review |
+| Human chat continuity | Family sends; Admin claims and replies; Family receives unread reply; closed chat starts a new human conversation |
+| Human chat accessibility | Keyboard open/minimize/draft preservation, mobile focus containment, offline retry, rotation, navigation, and back dismissal pass |
+
+This proves the synthetic safety behavior and continuous human-support path. `rollback_rehearsal` must remain unrecorded in production until the final committed candidate is tied to the evidence record and both Administrators confirm the required production operations alert. Resolving an incident never re-enables a stopped capability.
+
 ## Provider and operations evidence state
 
 The official OpenAI data-control baseline was rechecked on August 14, 2026. API input and output are not used for training unless the organization opts in. Default abuse-monitoring logs may be retained for up to 30 days. Zero Data Retention requires approval and, if approved, can be configured at organization or project level. LoLo's implementation separately sends `store:false` and does not use provider conversations, files, vector stores, background mode, hosted tools, or provider memory.
