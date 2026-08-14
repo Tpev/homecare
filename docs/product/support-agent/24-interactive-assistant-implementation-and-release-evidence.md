@@ -6,6 +6,8 @@ Evidence date: August 14, 2026
 
 Owner: Product and engineering
 
+Implementation commit: `61fca0341a467e2cb2ea65f559bd81c7c268658f`
+
 Normative scope: `DEC-047` through `DEC-066`, [interactive expansion](22-interactive-care-request-expansion.md), and [approved build contract](23-interactive-assistant-approved-build-contract.md)
 
 ## Outcome

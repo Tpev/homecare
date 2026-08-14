@@ -25,6 +25,7 @@ Candidate evidence: [interactive assistant implementation and release evidence](
 | Foundation deployed branch state | `master` and `origin/master` at `338a9db25d98eff6ce096a92dda05d4a1878bee2` before the foundation deployment |
 | Phase 1A implementation | `688de776dc0fa9a18ebe9c8108ac298eec73db70`; browser-visible behavior and imported records verified August 14, 2026 |
 | Phase 1A documentation | `d6bcdb14e160186664ff11cf419d334081f0e9e8` |
+| Interactive request candidate | `61fca0341a467e2cb2ea65f559bd81c7c268658f`; implementation, tests, governed content, model evaluation, browser evidence, and release record; not yet deployed or pilot-authorized |
 | Legacy primary data | Guarded destruction reported complete with content-free evidence |
 | Legacy external extinction | Open until every derivative and containing backup is verified extinct or reaches its controlled final expiry |
 | Customer AI runtime | Unavailable by deployment guard and absent from this phase |
