@@ -4,6 +4,7 @@ namespace App\Services\AiSupport;
 
 use App\Models\AiSupportIncident;
 use App\Models\AiSupportInteractionEvent;
+use App\Models\AiSupportReadinessEvidence;
 use App\Models\MarketplaceNotificationDelivery;
 
 class AiSupportHealthMonitorService
@@ -56,12 +57,27 @@ class AiSupportHealthMonitorService
             );
         }
 
+        $lastPassedOperationsAlertAt = AiSupportReadinessEvidence::query()
+            ->current()
+            ->where('evidence_key', 'operations_alert_delivery')
+            ->where('status', AiSupportReadinessEvidence::STATUS_PASSED)
+            ->where(function ($query): void {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
+            ->value('created_at');
         $failedNotifications = MarketplaceNotificationDelivery::query()
             ->where('status', 'failed')
             ->where('updated_at', '>=', $hourStartedAt)
             ->where(function ($query): void {
                 $query->where('dedupe_key', 'like', 'ai-support-%')
                     ->orWhere('dedupe_key', 'like', 'support-handoff-%');
+            })
+            ->when($lastPassedOperationsAlertAt, function ($query) use ($lastPassedOperationsAlertAt): void {
+                $query->where(function ($query) use ($lastPassedOperationsAlertAt): void {
+                    $query->where('dedupe_key', 'not like', 'ai-support-operations-test-%')
+                        ->orWhere('updated_at', '>', $lastPassedOperationsAlertAt);
+                });
             })
             ->count();
         if ($failedNotifications > 0) {

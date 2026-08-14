@@ -198,6 +198,140 @@ class LimitedReleaseReadinessTest extends TestCase
         $this->assertTrue(collect($snapshot['checks'])->firstWhere('id', 'incidents')['passed']);
     }
 
+    public function test_health_monitor_does_not_reopen_an_incident_for_alert_failures_before_a_passed_recovery_checkpoint(): void
+    {
+        Notification::fake();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $failedAt = now()->subMinutes(20);
+        $recoveredAt = now()->subMinutes(10);
+
+        $historicalFailure = MarketplaceNotificationDelivery::query()->create([
+            'user_id' => $admin->id,
+            'event_key' => 'support_ticket_reply',
+            'channel' => 'email',
+            'status' => 'failed',
+            'dedupe_key' => 'ai-support-operations-test-historical:user-'.$admin->id.':email',
+            'payload' => ['provider_error' => 'Synthetic historical failure.'],
+        ]);
+        MarketplaceNotificationDelivery::query()->whereKey($historicalFailure->id)->update([
+            'created_at' => $failedAt,
+            'updated_at' => $failedAt,
+        ]);
+        AiSupportReadinessEvidence::query()->create([
+            'id' => (string) Str::uuid(),
+            'evidence_key' => 'operations_alert_delivery',
+            'version' => 1,
+            'status' => AiSupportReadinessEvidence::STATUS_PASSED,
+            'summary' => 'Synthetic recovery checkpoint with confirmed delivery.',
+            'recorded_by_user_id' => $admin->id,
+            'observed_at' => $recoveredAt,
+            'retain_until' => now()->addYear(),
+            'created_at' => $recoveredAt,
+        ]);
+
+        $recoveredResult = app(AiSupportHealthMonitorService::class)->run();
+
+        $this->assertSame(0, $recoveredResult['failed_notifications']);
+        $this->assertDatabaseCount('ai_support_incidents', 0);
+
+        MarketplaceNotificationDelivery::query()->create([
+            'user_id' => $admin->id,
+            'event_key' => 'support_ticket_reply',
+            'channel' => 'email',
+            'status' => 'failed',
+            'dedupe_key' => 'ai-support-operations-test-new:user-'.$admin->id.':email',
+            'payload' => ['provider_error' => 'Synthetic new failure.'],
+        ]);
+
+        $newFailureResult = app(AiSupportHealthMonitorService::class)->run();
+
+        $this->assertSame(1, $newFailureResult['failed_notifications']);
+        $this->assertDatabaseHas('ai_support_incidents', [
+            'reason_code' => 'operations_notification_failed',
+            'status' => AiSupportIncident::STATUS_OPEN,
+        ]);
+    }
+
+    public function test_operations_alert_recovery_does_not_hide_a_handoff_notification_failure(): void
+    {
+        Notification::fake();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $failedAt = now()->subMinutes(20);
+        $recoveredAt = now()->subMinutes(10);
+
+        $handoffFailure = MarketplaceNotificationDelivery::query()->create([
+            'user_id' => $admin->id,
+            'event_key' => 'support_ticket_reply',
+            'channel' => 'email',
+            'status' => 'failed',
+            'dedupe_key' => 'support-handoff-historical:user-'.$admin->id.':email',
+            'payload' => ['provider_error' => 'Synthetic handoff failure.'],
+        ]);
+        MarketplaceNotificationDelivery::query()->whereKey($handoffFailure->id)->update([
+            'created_at' => $failedAt,
+            'updated_at' => $failedAt,
+        ]);
+        AiSupportReadinessEvidence::query()->create([
+            'id' => (string) Str::uuid(),
+            'evidence_key' => 'operations_alert_delivery',
+            'version' => 1,
+            'status' => AiSupportReadinessEvidence::STATUS_PASSED,
+            'summary' => 'Synthetic operations-alert recovery checkpoint.',
+            'recorded_by_user_id' => $admin->id,
+            'observed_at' => $recoveredAt,
+            'retain_until' => now()->addYear(),
+            'created_at' => $recoveredAt,
+        ]);
+
+        $result = app(AiSupportHealthMonitorService::class)->run();
+
+        $this->assertSame(1, $result['failed_notifications']);
+        $this->assertDatabaseHas('ai_support_incidents', [
+            'reason_code' => 'operations_notification_failed',
+            'status' => AiSupportIncident::STATUS_OPEN,
+        ]);
+    }
+
+    public function test_expired_operations_alert_evidence_is_not_a_recovery_checkpoint(): void
+    {
+        Notification::fake();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $failedAt = now()->subMinutes(20);
+
+        $historicalFailure = MarketplaceNotificationDelivery::query()->create([
+            'user_id' => $admin->id,
+            'event_key' => 'support_ticket_reply',
+            'channel' => 'email',
+            'status' => 'failed',
+            'dedupe_key' => 'ai-support-operations-test-historical:user-'.$admin->id.':email',
+            'payload' => ['provider_error' => 'Synthetic historical failure.'],
+        ]);
+        MarketplaceNotificationDelivery::query()->whereKey($historicalFailure->id)->update([
+            'created_at' => $failedAt,
+            'updated_at' => $failedAt,
+        ]);
+        AiSupportReadinessEvidence::query()->create([
+            'id' => (string) Str::uuid(),
+            'evidence_key' => 'operations_alert_delivery',
+            'version' => 1,
+            'status' => AiSupportReadinessEvidence::STATUS_PASSED,
+            'summary' => 'Synthetic expired recovery checkpoint.',
+            'recorded_by_user_id' => $admin->id,
+            'observed_at' => now()->subMinutes(10),
+            'expires_at' => now()->subMinute(),
+            'retain_until' => now()->addYear(),
+            'created_at' => now()->subMinutes(10),
+        ]);
+
+        $result = app(AiSupportHealthMonitorService::class)->run();
+
+        $this->assertSame(1, $result['failed_notifications']);
+        $this->assertDatabaseHas('ai_support_incidents', [
+            'reason_code' => 'operations_notification_failed',
+            'status' => AiSupportIncident::STATUS_OPEN,
+        ]);
+    }
+
     public function test_release_rehearsal_is_plan_only_by_default(): void
     {
         Storage::fake('local');

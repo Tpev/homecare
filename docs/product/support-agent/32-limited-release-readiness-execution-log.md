@@ -238,6 +238,14 @@ The secure SES correction was deployed at commit `ba651d91f732474e89fa9cf25557f8
 
 `operations_alert_delivery` was versioned as Passed with that content-free reference. The two historical alert-test incidents were then resolved individually with the verified SDK correction, clean dispatch, and both-person receipt confirmation as their content-free resolution reason. A full production reload proved zero incidents, zero warnings, both deployment guards off, only human-only on, and zero non-revoked grants. Readiness advanced from 10 of 21 to 12 of 21, with nine required checks still open. Incident resolution did not enable any capability.
 
+### Operations-alert monitor recovery checkpoint
+
+The August 15 read-only production preflight later found one newly opened `Operations Notification Failed` incident and reduced the displayed readiness state to 11 of 21. Both deployment guards were still off, human-only was still the sole enabled stored control, and there were still zero grants. The incident was traced to the hourly health monitor counting the earlier failed operations-alert test delivery rows again even though a later clean alert had been personally received and `operations_alert_delivery` had been recorded as Passed. This was a monitoring-state regression, not a new delivery attempt or a user-visible AI activation.
+
+The source correction treats the current, unexpired Passed `operations_alert_delivery` evidence record's creation time as a recovery checkpoint. It excludes only failed `ai-support-operations-test-*` rows at or before that checkpoint. A later operations-test failure still opens an incident immediately, and no `support-handoff-*` or other AI Support notification failure is suppressed. Focused readiness coverage passes 11 tests and 51 assertions, including post-checkpoint failure detection, historical handoff-failure detection, and rejection of expired recovery evidence. The combined readiness and Administrator-notification regression batch passes 15 tests and 56 assertions.
+
+The correction is not production evidence until it is deployed. After deployment, run the health monitor, require a zero failed-notification result, resolve the one regression-created incident with a content-free reason tied to the deployed commit and monitor result, and rerun the read-only preflight. Do not restore the documented 12-of-21 current state until those checks succeed.
+
 These documentation facts are not a substitute for verifying the actual OpenAI project and production environment. The following remain unrecorded until server/API or account-owned evidence proves them:
 
 - dedicated project and project-scoped credential;
@@ -261,13 +269,14 @@ After the initial production records, readiness was `BLOCKED` at 9 of 21 checks 
 
 ## Work queue
 
-1. Verify the intended provider project, project controls, and `$25` spend alert through the approved server/API or account-evidence route without using the provider website.
-2. Verify the content-free production environment prerequisites while both deployment guards remain off.
-3. Record the remaining monitoring/cost and provider evidence in Admin only after each fact is observed.
-4. Run the staffed human-takeover, emergency/24/7, automatic-stop, confirmation-invalidation, rollback, and continuous human-chat drill.
-5. Complete the remaining accessibility checks and five qualifying older-adult sessions using the approved study kit.
-6. Add planned dates and review ownership to the two named Family users without creating grants.
-7. Run the read-only preflight and return for an explicit release decision.
+1. Deploy the operations-alert monitor recovery-checkpoint correction, prove a zero failed-notification monitor result, resolve only the regression-created incident, and rerun the read-only preflight.
+2. Verify the intended provider project, project controls, and `$25` spend alert through the approved server/API or account-evidence route without using the provider website.
+3. Verify the content-free production environment prerequisites while both deployment guards remain off.
+4. Record the remaining monitoring/cost and provider evidence in Admin only after each fact is observed.
+5. Run the staffed human-takeover, emergency/24/7, automatic-stop, confirmation-invalidation, rollback, and continuous human-chat drill.
+6. Complete the remaining accessibility checks and five qualifying older-adult sessions using the approved study kit.
+7. Add planned dates and review ownership to the two named Family users without creating grants.
+8. Run the read-only preflight and return for an explicit release decision.
 
 ## Explicitly prohibited shortcuts
 
