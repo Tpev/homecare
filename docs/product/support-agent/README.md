@@ -47,6 +47,11 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 25. [Interactive assistant implementation and release evidence](24-interactive-assistant-implementation-and-release-evidence.md)
 26. [Production interactive assistant deployment audit](25-production-interactive-deployment-audit.md)
 27. [Production KB publication and Settings verification](26-production-kb-publication-and-settings-verification.md)
+28. [Limited-release readiness contract](27-limited-release-readiness-contract.md)
+29. [Provider privacy and operations evidence checklist](28-provider-privacy-and-operations-evidence-checklist.md)
+30. [Staff rehearsal and rollback runbook](29-staff-rehearsal-and-rollback-runbook.md)
+31. [Older-adult usability study kit](30-older-adult-usability-study-kit.md)
+32. [Limited-release readiness implementation record](31-limited-release-readiness-implementation-record.md)
 
 Then consult the live registries:
 

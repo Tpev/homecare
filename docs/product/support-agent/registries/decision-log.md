@@ -637,6 +637,16 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Affects: Kill switches, monitoring, alerts, rollback, draft/confirmation lifecycle, incident response, and release readiness
 - Detailed contract: [Interactive assistant approved build contract](../23-interactive-assistant-approved-build-contract.md)
 
+### `DEC-067` - Limited-release operational-readiness package
+
+- Status: Accepted; implementing behind disabled production controls
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Preserve the fully fail-closed production state while implementing a dedicated provider project and restricted credential, Luna-low Responses calls with `store: false` and a privacy-preserving safety identifier, no provider-hosted state or autonomous/background tools, versioned current cost rates, release-readiness Admin evidence, both-admin alerting, bounded automatic stops, an isolated live-provider rehearsal, and the five-person older-adult study. The first prepared release remains exactly two 14-day Family grants with non-pricing answers/navigation and one-time publication; recurring commit, Caregiver AI, pricing, payment behavior, and every non-granted user remain off. Deployment of the readiness batch does not authorize a grant or a production model call.
+- Rationale: The complete readiness package closes privacy, operations, cost, rehearsal, and usability evidence without exposing a live user or turning deployment into release.
+- Affects: Provider configuration, request contract, cost catalog, Admin readiness, monitoring, alert delivery, staff rehearsal, usability evidence, release order, and rollback
+- Detailed contract: [Limited-release readiness contract](../27-limited-release-readiness-contract.md)
+
 ## Product decision status
 
-No remaining product interview blocks the approved initial build. Implementation and frozen interactive model evaluation are complete as recorded in [the implementation evidence](../24-interactive-assistant-implementation-and-release-evidence.md). Privacy/provider evidence, representative older-adult usability, support/rollback rehearsal, named-user pilot approval, and the separately held pricing reconciliation remain release gates rather than unanswered product decisions.
+No remaining product interview blocks the approved initial build or the `DEC-067` readiness implementation. The interactive runtime is implemented and the readiness package is now the active engineering milestone. Privacy/provider evidence, representative older-adult usability, support/rollback rehearsal, named-user pilot approval, and the separately held pricing reconciliation remain release gates rather than unanswered product decisions.

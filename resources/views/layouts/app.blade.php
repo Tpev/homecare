@@ -27,6 +27,13 @@
         $shouldTrackFamilySignupConversion = session('google_ads_family_signup_conversion')
             && auth()->check()
             && auth()->user()?->role === 'family';
+        $openAiSupportIncidentCount = auth()->user()?->isAdministrator()
+            && \Illuminate\Support\Facades\Schema::hasTable('ai_support_incidents')
+                ? \App\Models\AiSupportIncident::query()
+                    ->where('status', \App\Models\AiSupportIncident::STATUS_OPEN)
+                    ->where('severity', \App\Models\AiSupportIncident::SEVERITY_CRITICAL)
+                    ->count()
+                : 0;
     @endphp
 
     <body class="overflow-x-hidden antialiased text-[#17313F]">
@@ -41,6 +48,15 @@
                         {{ $header }}
                     </div>
                 </header>
+            @endif
+
+            @if($openAiSupportIncidentCount > 0)
+                <div class="border-b border-rose-300 bg-rose-700 text-white">
+                    <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+                        <strong>{{ $openAiSupportIncidentCount }} unresolved AI Support incident{{ $openAiSupportIncidentCount === 1 ? '' : 's' }}. Affected capabilities remain stopped.</strong>
+                        <a href="{{ route('admin.ai-support.readiness') }}" class="font-semibold underline underline-offset-2">Review release readiness</a>
+                    </div>
+                </div>
             @endif
 
             <main class="flex-1">

@@ -10,8 +10,8 @@ use Throwable;
 
 class AiSupportOpenAiClient
 {
-    /** @return array{result:array<string,mixed>,usage:array<string,int>,latency_ms:int,retries:int,cost_microunits:int} */
-    public function respond(string $instructions, string $input): array
+    /** @return array{result:array<string,mixed>,usage:array<string,int>,latency_ms:int,retries:int,cost_microunits:int,price_version:string} */
+    public function respond(string $instructions, string $input, int $localUserId): array
     {
         $this->assertMayRun();
         $payload = [
@@ -22,6 +22,7 @@ class AiSupportOpenAiClient
             'reasoning' => ['effort' => (string) config('ai_support.reasoning_effort', 'low')],
             'max_output_tokens' => (int) config('ai_support.max_output_tokens', 900),
             'parallel_tool_calls' => false,
+            'safety_identifier' => $this->safetyIdentifier($localUserId),
             'text' => [
                 'format' => [
                     'type' => 'json_schema',
@@ -87,9 +88,9 @@ class AiSupportOpenAiClient
             'output_tokens' => (int) data_get($body, 'usage.output_tokens', 0),
         ];
         $uncached = max(0, $usage['input_tokens'] - $usage['cached_input_tokens']);
-        $inputCost = ($uncached * (float) config('ai_support.provider_input_usd_per_million', 1.0))
-            + ($usage['cached_input_tokens'] * (float) config('ai_support.provider_input_usd_per_million', 1.0) * 0.1);
-        $outputCost = $usage['output_tokens'] * (float) config('ai_support.provider_output_usd_per_million', 6.0);
+        $inputCost = ($uncached * (float) config('ai_support.provider_input_usd_per_million', 0.20))
+            + ($usage['cached_input_tokens'] * (float) config('ai_support.provider_cached_input_usd_per_million', 0.02));
+        $outputCost = $usage['output_tokens'] * (float) config('ai_support.provider_output_usd_per_million', 1.20);
 
         return [
             'result' => $result,
@@ -97,7 +98,18 @@ class AiSupportOpenAiClient
             'latency_ms' => $latency,
             'retries' => max(0, $attempts - 1),
             'cost_microunits' => (int) ceil($inputCost + $outputCost),
+            'price_version' => (string) config('ai_support.provider_price_version'),
         ];
+    }
+
+    public function safetyIdentifier(int $localUserId): string
+    {
+        $secret = trim((string) config('ai_support.safety_identifier_secret'));
+        if ($localUserId < 1 || strlen($secret) < 32) {
+            throw new RuntimeException('AI Support safety-identifier configuration is unavailable.');
+        }
+
+        return hash_hmac('sha256', 'user:'.$localUserId, $secret);
     }
 
     public function assertMayRun(): void
@@ -108,6 +120,9 @@ class AiSupportOpenAiClient
         }
         if (trim((string) config('services.openai.api_key')) === '') {
             throw new RuntimeException('AI Support provider credentials are unavailable.');
+        }
+        if (strlen(trim((string) config('ai_support.safety_identifier_secret'))) < 32) {
+            throw new RuntimeException('AI Support safety-identifier configuration is unavailable.');
         }
         $caBundle = trim((string) config('services.openai.ca_bundle'));
         if ($caBundle !== '' && ! is_file($caBundle)) {

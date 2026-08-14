@@ -32,6 +32,7 @@ use App\Livewire\Admin\AiSupport\KnowledgeEditor as AiSupportKnowledgeEditor;
 use App\Livewire\Admin\AiSupport\KnowledgeIndex as AiSupportKnowledgeIndex;
 use App\Livewire\Admin\AiSupport\Overview as AiSupportOverview;
 use App\Livewire\Admin\AiSupport\PilotsIndex as AiSupportPilotsIndex;
+use App\Livewire\Admin\AiSupport\Readiness as AiSupportReadiness;
 use App\Livewire\Admin\AiSupport\Settings as AiSupportSettings;
 use App\Livewire\Admin\CaregiverCoverageMap;
 use App\Livewire\Admin\CaregiverReviewsQueue;
@@ -138,6 +139,7 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/ai-support/knowledge/create', AiSupportKnowledgeEditor::class)->name('ai-support.knowledge.create');
         Route::get('/ai-support/knowledge/{entry}/edit', AiSupportKnowledgeEditor::class)->name('ai-support.knowledge.edit');
         Route::get('/ai-support/activity', AiSupportActivityIndex::class)->name('ai-support.activity.index');
+        Route::get('/ai-support/readiness', AiSupportReadiness::class)->name('ai-support.readiness');
         Route::get('/ai-support/settings', AiSupportSettings::class)->name('ai-support.settings');
         Route::get('/caregivers/reviews', CaregiverReviewsQueue::class)->name('caregivers.reviews');
         Route::get('/caregivers/moderation-logs', \App\Livewire\Admin\CaregiverModerationLogs::class)

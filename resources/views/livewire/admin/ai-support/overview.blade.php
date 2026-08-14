@@ -9,6 +9,7 @@
             <a href="{{ route('admin.ai-support.pilots.index') }}" wire:navigate class="inline-flex min-h-11 items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800">Pilot users</a>
             <a href="{{ route('admin.ai-support.knowledge.index') }}" wire:navigate class="inline-flex min-h-11 items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800">Knowledge base</a>
             <a href="{{ route('admin.ai-support.activity.index') }}" wire:navigate class="inline-flex min-h-11 items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800">Activity</a>
+            <a href="{{ route('admin.ai-support.readiness') }}" wire:navigate class="inline-flex min-h-11 items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800">Release readiness</a>
             <a href="{{ route('admin.ai-support.settings') }}" wire:navigate class="inline-flex min-h-11 items-center rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white">Settings</a>
         </div>
     </div>

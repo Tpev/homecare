@@ -152,7 +152,7 @@ All product packages for the declared build are closed. The [readiness ledger](1
 
 ## Next implementation milestone
 
-Complete **limited-release operational and usability evidence** without enabling a production user prematurely.
+Deploy and operate the implemented `DEC-067` **limited-release operational and usability evidence** package without enabling a production user prematurely. The normative implementation boundary is [the limited-release readiness contract](27-limited-release-readiness-contract.md), and delivery evidence is in the [limited-release readiness implementation record](31-limited-release-readiness-implementation-record.md).
 
 Required outcome:
 

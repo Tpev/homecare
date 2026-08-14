@@ -65,6 +65,27 @@ class AiSupportRuntimeService
             return;
         }
 
+        $dayStartedAt = now('UTC')->startOfDay();
+        $dailyTurns = AiSupportInteractionEvent::query()
+            ->where('actor_user_id', $actor->id)
+            ->whereIn('event_type', ['model_turn_completed', 'model_turn_failed'])
+            ->where('occurred_at', '>=', $dayStartedAt)
+            ->count();
+        if ($dailyTurns >= (int) config('ai_support.pilot_daily_model_turn_limit', 50)) {
+            $this->handoff->transfer($actor, $ticket, 'daily_turn_limit');
+
+            return;
+        }
+
+        $dailySpent = (int) AiSupportInteractionEvent::query()
+            ->where('occurred_at', '>=', $dayStartedAt)
+            ->sum('cost_microunits');
+        if ($dailySpent >= (int) config('ai_support.pilot_daily_cost_stop_microunits', 5_000_000)) {
+            $this->handoff->transfer($actor, $ticket, 'daily_cost_limit');
+
+            return;
+        }
+
         $spent = (int) AiSupportInteractionEvent::query()
             ->where('support_ticket_id', $ticket->id)
             ->sum('cost_microunits');
@@ -98,6 +119,7 @@ class AiSupportRuntimeService
             $provider = $this->client->respond(
                 $this->prompt->instructions(),
                 $this->prompt->input($actor, $ticket, $newestMessage, $knowledge, $familyContext, $draft),
+                (int) $actor->id,
             );
             $result = $provider['result'];
             $message = $this->safeMessage($result['message'] ?? '');
@@ -117,6 +139,10 @@ class AiSupportRuntimeService
                 'input_tokens' => $provider['usage']['input_tokens'],
                 'output_tokens' => $provider['usage']['output_tokens'],
                 'cost_microunits' => $provider['cost_microunits'],
+                'safe_metadata' => [
+                    'cached_input_tokens' => $provider['usage']['cached_input_tokens'],
+                    'provider_price_version' => $provider['price_version'],
+                ],
             ], $actor);
 
             if ($spent + $provider['cost_microunits'] >= (int) config('ai_support.conversation_cost_stop_microunits', 50_000)) {

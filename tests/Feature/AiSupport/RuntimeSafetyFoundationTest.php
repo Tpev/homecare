@@ -13,6 +13,7 @@ use App\Services\AiSupport\AiSupportControlService;
 use App\Services\AiSupport\AiSupportEligibilityService;
 use App\Services\AiSupport\AiSupportEventRecorder;
 use App\Services\AiSupport\AiSupportHandoffService;
+use App\Services\AiSupport\AiSupportIncidentService;
 use App\Services\AiSupport\AiSupportPilotGrantService;
 use App\Services\AiSupport\NavigationTargetRegistry;
 use App\Services\Notifications\MarketplaceNotificationService;
@@ -170,6 +171,7 @@ class RuntimeSafetyFoundationTest extends TestCase
             app(AiSupportEventRecorder::class),
             app(AiSupportEligibilityService::class),
             $notifications,
+            app(AiSupportIncidentService::class),
         );
 
         $handoff->transfer($family, $ticket);

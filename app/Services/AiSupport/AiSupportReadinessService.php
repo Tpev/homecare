@@ -1,0 +1,269 @@
+<?php
+
+namespace App\Services\AiSupport;
+
+use App\Models\AiSupportAdminAuditEvent;
+use App\Models\AiSupportIncident;
+use App\Models\AiSupportPilotGrant;
+use App\Models\AiSupportReadinessEvidence;
+use App\Models\KnowledgeBaseEntry;
+use App\Models\KnowledgeBaseVersion;
+use App\Models\User;
+use Carbon\CarbonInterface;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+
+class AiSupportReadinessService
+{
+    /** @return array<string,array{label:string,required:bool,guidance:string}> */
+    public function definitions(): array
+    {
+        return [
+            'provider_project_configuration' => [
+                'label' => 'Dedicated provider project and credential',
+                'required' => true,
+                'guidance' => 'Record the dedicated OpenAI project, restricted service credential, and disabled data-sharing configuration without copying a secret.',
+            ],
+            'provider_data_controls' => [
+                'label' => 'Provider no-training and retention controls',
+                'required' => true,
+                'guidance' => 'Record no-training, store:false, and no-more-than-30-day abuse-monitoring evidence.',
+            ],
+            'provider_destination_contract' => [
+                'label' => 'Provider destination and contract',
+                'required' => true,
+                'guidance' => 'Record the actual standard provider destination and applicable contractual reference.',
+            ],
+            'provider_deletion' => [
+                'label' => 'Provider deletion behavior',
+                'required' => true,
+                'guidance' => 'Record application-state deletion behavior and the absence of hosted conversations, files, vector stores, and background mode.',
+            ],
+            'provider_zdr_request' => [
+                'label' => 'Zero Data Retention request',
+                'required' => false,
+                'guidance' => 'Record whether ZDR was requested, approved, rejected, or remains pending. It is desirable but not a gate for this bounded non-medical pilot.',
+            ],
+            'downstream_extinction_restore' => [
+                'label' => 'Downstream extinction and restore rehearsal',
+                'required' => true,
+                'guidance' => 'Record caches, indexes, replicas, exports, backups, and restore/re-deletion evidence under DEC-058.',
+            ],
+            'monitoring_ownership' => [
+                'label' => 'Monitoring ownership',
+                'required' => true,
+                'guidance' => 'Record that both full administrators receive alerts and either may claim incidents and human transfers.',
+            ],
+            'cost_monitoring' => [
+                'label' => 'Cost and performance monitoring',
+                'required' => true,
+                'guidance' => 'Record the $25 project billing alert plus conversation, daily, turn, latency, and tool-action monitors.',
+            ],
+            'operations_alert_delivery' => [
+                'label' => 'Operations alert delivery',
+                'required' => true,
+                'guidance' => 'Record a content-free in-app and email delivery test to both administrators.',
+            ],
+            'staff_rehearsal' => [
+                'label' => 'Isolated staff rehearsal',
+                'required' => true,
+                'guidance' => 'Record the exact release commit, synthetic browser flow, live-model gate, hashes, timings, cost, and destroyed temporary database.',
+            ],
+            'rollback_rehearsal' => [
+                'label' => 'Human takeover and rollback rehearsal',
+                'required' => true,
+                'guidance' => 'Record human takeover, 24/7, emergency, cost stop, capability stop, confirmation invalidation, and preserved human support.',
+            ],
+            'older_adult_usability' => [
+                'label' => 'Five-person older-adult usability study',
+                'required' => true,
+                'guidance' => 'Record at least 27 of 30 unassisted tasks and universal recap, hire, payment, draft, and human-transfer comprehension.',
+            ],
+            'accessibility' => [
+                'label' => 'Accessibility verification',
+                'required' => true,
+                'guidance' => 'Record 200% zoom, screen reader, keyboard, focus order, contrast, and touch-target results.',
+            ],
+            'pilot_users_named' => [
+                'label' => 'First two Family pilot users named',
+                'required' => true,
+                'guidance' => 'Record only safe internal user references, 14-day planned dates, and review ownership. Do not create grants here.',
+            ],
+        ];
+    }
+
+    public function record(
+        User $actor,
+        string $evidenceKey,
+        string $status,
+        string $summary,
+        ?string $sourceReference = null,
+        ?CarbonInterface $observedAt = null,
+        ?CarbonInterface $expiresAt = null,
+        array $safeMetadata = [],
+    ): AiSupportReadinessEvidence {
+        if (! $actor->canManageAiSupportControls()) {
+            throw new AuthorizationException;
+        }
+        if (! array_key_exists($evidenceKey, $this->definitions())) {
+            throw ValidationException::withMessages(['evidenceKey' => 'Select a recognized readiness evidence item.']);
+        }
+        if (! in_array($status, [
+            AiSupportReadinessEvidence::STATUS_PASSED,
+            AiSupportReadinessEvidence::STATUS_FAILED,
+            AiSupportReadinessEvidence::STATUS_PENDING,
+        ], true)) {
+            throw ValidationException::withMessages(['evidenceStatus' => 'Select Passed, Failed, or Pending.']);
+        }
+        $summary = trim($summary);
+        if (mb_strlen($summary) < 5 || mb_strlen($summary) > 500) {
+            throw ValidationException::withMessages(['evidenceSummary' => 'Enter a content-free summary between 5 and 500 characters.']);
+        }
+        $sourceReference = filled($sourceReference) ? trim((string) $sourceReference) : null;
+        if ($sourceReference !== null && (mb_strlen($sourceReference) > 500 || str_contains($sourceReference, "\n"))) {
+            throw ValidationException::withMessages(['sourceReference' => 'Use one compact source reference of at most 500 characters.']);
+        }
+        $observedAt ??= now();
+        if ($expiresAt && $expiresAt->lessThanOrEqualTo($observedAt)) {
+            throw ValidationException::withMessages(['evidenceExpiresAt' => 'Expiry must be after the observation time.']);
+        }
+
+        return DB::transaction(function () use (
+            $actor, $evidenceKey, $status, $summary, $sourceReference, $observedAt, $expiresAt, $safeMetadata
+        ): AiSupportReadinessEvidence {
+            $current = AiSupportReadinessEvidence::query()
+                ->where('evidence_key', $evidenceKey)
+                ->whereNull('superseded_at')
+                ->lockForUpdate()
+                ->latest('version')
+                ->first();
+            $now = now();
+            if ($current) {
+                $current->forceFill(['superseded_at' => $now])->save();
+            }
+            $evidence = AiSupportReadinessEvidence::query()->create([
+                'id' => (string) Str::uuid(),
+                'evidence_key' => $evidenceKey,
+                'version' => ((int) ($current?->version ?? 0)) + 1,
+                'status' => $status,
+                'summary' => $summary,
+                'source_reference' => $sourceReference,
+                'safe_metadata' => $safeMetadata ?: null,
+                'recorded_by_user_id' => $actor->id,
+                'observed_at' => $observedAt,
+                'expires_at' => $expiresAt,
+                'retain_until' => $observedAt->copy()->addMonths((int) config('ai_support.readiness_evidence_months', 24)),
+                'created_at' => $now,
+            ]);
+            AiSupportAdminAuditEvent::query()->create([
+                'id' => (string) Str::uuid(),
+                'event_family' => 'readiness',
+                'action' => 'readiness_evidence_recorded',
+                'actor_user_id' => $actor->id,
+                'subject_type' => AiSupportReadinessEvidence::class,
+                'subject_id' => $evidence->id,
+                'result' => 'succeeded',
+                'reason_code' => $status,
+                'reason' => $summary,
+                'metadata' => ['evidence_key' => $evidenceKey, 'version' => $evidence->version],
+                'policy_version' => (string) config('ai_support.policy_version'),
+                'retain_until' => $now->copy()->addMonths((int) config('ai_support.readiness_evidence_months', 24)),
+                'occurred_at' => $now,
+                'created_at' => $now,
+            ]);
+
+            return $evidence;
+        }, 3);
+    }
+
+    /** @return array{ready:bool,state:string,checks:list<array{id:string,label:string,passed:bool,detail:string}>,evidence:array<string,array<string,mixed>>,open_incidents:int,open_warnings:int} */
+    public function snapshot(AiSupportControlService $controls): array
+    {
+        $checks = [];
+        $add = function (string $id, string $label, bool $passed, string $detail) use (&$checks): void {
+            $checks[] = compact('id', 'label', 'passed', 'detail');
+        };
+
+        $add('runtime_guard', 'Runtime deployment guard remains off', ! (bool) config('ai_support.runtime_available', false), (bool) config('ai_support.runtime_available', false) ? 'On' : 'Off');
+        $add('provider_guard', 'Provider deployment guard remains off', ! (bool) config('ai_support.provider_enabled', false), (bool) config('ai_support.provider_enabled', false) ? 'On' : 'Off');
+
+        $unsafeControls = [];
+        foreach ((array) config('ai_support.controls', []) as $key => $default) {
+            $expected = $key === 'human_only';
+            if ($controls->state($key)['enabled'] !== $expected) {
+                $unsafeControls[] = $key;
+            }
+        }
+        $add('stored_controls', 'Stored controls fail closed', $unsafeControls === [], $unsafeControls === [] ? 'Only human-only is on' : 'Unexpected: '.implode(', ', $unsafeControls));
+
+        $nonRevokedGrants = AiSupportPilotGrant::query()->notRevoked()->count();
+        $add('pilot_grants', 'No active or scheduled exact-user grant', $nonRevokedGrants === 0, $nonRevokedGrants.' non-revoked grant(s)');
+
+        $published = KnowledgeBaseEntry::query()->active()->whereNotNull('published_version_id')->count();
+        $held = KnowledgeBaseEntry::query()->active()->where('stable_id', 'KB-CARE-006')->with('workingVersion')->first();
+        $heldCorrectly = $held !== null
+            && $held->published_version_id === null
+            && $held->workingVersion?->status === KnowledgeBaseVersion::STATUS_DRAFT;
+        $overdue = KnowledgeBaseEntry::query()->active()
+            ->whereHas('workingVersion', fn ($query) => $query->whereDate('review_by', '<', today()))
+            ->count();
+        $add('knowledge', 'Governed non-pricing KB ready and pricing held', $published === 23 && $heldCorrectly && $overdue === 0, "{$published} published; pricing hold ".($heldCorrectly ? 'valid' : 'invalid')."; {$overdue} overdue");
+
+        $providerConfigurationValid = (string) config('ai_support.model') === 'gpt-5.6-luna'
+            && (string) config('ai_support.reasoning_effort') === 'low'
+            && (int) config('ai_support.max_output_tokens') <= 900
+            && (int) config('ai_support.provider_retry_attempts') <= 2
+            && strlen(trim((string) config('ai_support.safety_identifier_secret'))) >= 32
+            && trim((string) config('services.openai.api_key')) !== '';
+        $add('provider_configuration', 'Bounded provider configuration is present', $providerConfigurationValid, $providerConfigurationValid ? 'Luna low; 900-token ceiling; bounded retry; credential and safety secret present' : 'One or more provider prerequisites are missing');
+
+        $priceValid = (string) config('ai_support.provider_price_version') === 'openai-gpt-5.6-luna-2026-08-14'
+            && (float) config('ai_support.provider_input_usd_per_million') === 0.20
+            && (float) config('ai_support.provider_cached_input_usd_per_million') === 0.02
+            && (float) config('ai_support.provider_output_usd_per_million') === 1.20;
+        $add('provider_price', 'Versioned provider price catalog is current', $priceValid, (string) config('ai_support.provider_price_version'));
+
+        $openIncidents = AiSupportIncident::query()
+            ->where('status', AiSupportIncident::STATUS_OPEN)
+            ->where('severity', AiSupportIncident::SEVERITY_CRITICAL)
+            ->count();
+        $openWarnings = AiSupportIncident::query()
+            ->where('status', AiSupportIncident::STATUS_OPEN)
+            ->where('severity', AiSupportIncident::SEVERITY_WARNING)
+            ->count();
+        $add('incidents', 'No unresolved AI Support incident', $openIncidents === 0, $openIncidents.' open incident(s)');
+
+        $currentEvidence = AiSupportReadinessEvidence::query()->current()->with('recordedBy')->get()->keyBy('evidence_key');
+        $evidenceRows = [];
+        foreach ($this->definitions() as $key => $definition) {
+            $record = $currentEvidence->get($key);
+            $passed = $record?->isEffectivePass() ?? false;
+            if ($definition['required']) {
+                $add('evidence.'.$key, $definition['label'], $passed, $record ? ucfirst($record->status).' - '.$record->summary : 'Not recorded');
+            }
+            $evidenceRows[$key] = [
+                ...$definition,
+                'status' => $record?->status ?? 'not_recorded',
+                'summary' => $record?->summary,
+                'source_reference' => $record?->source_reference,
+                'observed_at' => $record?->observed_at,
+                'expires_at' => $record?->expires_at,
+                'recorded_by' => $record?->recordedBy?->name,
+                'effective_pass' => $passed,
+            ];
+        }
+
+        $ready = collect($checks)->every(fn (array $check): bool => $check['passed']);
+
+        return [
+            'ready' => $ready,
+            'state' => $ready ? 'READY FOR EXPLICIT APPROVAL' : 'BLOCKED',
+            'checks' => $checks,
+            'evidence' => $evidenceRows,
+            'open_incidents' => $openIncidents,
+            'open_warnings' => $openWarnings,
+        ];
+    }
+}

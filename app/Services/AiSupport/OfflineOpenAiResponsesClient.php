@@ -28,6 +28,11 @@ class OfflineOpenAiResponsesClient
             'input' => $input,
             'reasoning' => ['effort' => $candidate['reasoning_effort']],
             'max_output_tokens' => $candidate['max_output_tokens'],
+            'safety_identifier' => hash_hmac(
+                'sha256',
+                'synthetic-evaluation',
+                trim((string) config('ai_support.safety_identifier_secret')),
+            ),
             'text' => [
                 'format' => [
                     'type' => 'json_schema',
@@ -42,7 +47,7 @@ class OfflineOpenAiResponsesClient
         $response = null;
         $lastException = null;
         $attempts = 0;
-        for ($attempt = 1; $attempt <= 3; $attempt++) {
+        for ($attempt = 1; $attempt <= 2; $attempt++) {
             $attempts = $attempt;
             try {
                 $request = Http::baseUrl(rtrim((string) config('services.openai.base_url'), '/'))
@@ -56,12 +61,12 @@ class OfflineOpenAiResponsesClient
                 }
                 $response = $request->post('responses', $payload);
 
-                if ($response->successful() || ! $this->mayRetry($response) || $attempt === 3) {
+                if ($response->successful() || ! $this->mayRetry($response) || $attempt === 2) {
                     break;
                 }
             } catch (ConnectionException $exception) {
                 $lastException = $exception;
-                if ($attempt === 3) {
+                if ($attempt === 2) {
                     break;
                 }
             }
@@ -127,6 +132,9 @@ class OfflineOpenAiResponsesClient
         }
         if (trim((string) config('services.openai.api_key')) === '') {
             throw new RuntimeException('OPENAI_API_KEY is required for offline AI Support evaluation.');
+        }
+        if (strlen(trim((string) config('ai_support.safety_identifier_secret'))) < 32) {
+            throw new RuntimeException('AI_SUPPORT_SAFETY_IDENTIFIER_SECRET is required for offline AI Support evaluation.');
         }
         $caBundle = trim((string) config('services.openai.ca_bundle'));
         if ($caBundle !== '' && ! is_file($caBundle)) {

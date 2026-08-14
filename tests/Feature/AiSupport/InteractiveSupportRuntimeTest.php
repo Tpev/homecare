@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\AiSupport;
 
+use App\Models\AiSupportInteractionEvent;
 use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportRequestDraft;
 use App\Models\CareRequest;
@@ -47,6 +48,28 @@ class InteractiveSupportRuntimeTest extends TestCase
         app(AiSupportRuntimeService::class)->respond($family, $ticket, 'Where are my care requests?');
         Http::assertNothingSent();
         $this->assertDatabaseCount('ai_support_interaction_events', 0);
+    }
+
+    public function test_daily_model_turn_limit_transfers_without_another_provider_call(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        config(['ai_support.pilot_daily_model_turn_limit' => 1]);
+        AiSupportInteractionEvent::query()->create([
+            'id' => (string) Str::uuid(),
+            'actor_user_id' => $family->id,
+            'event_type' => 'model_turn_completed',
+            'event_contract_version' => 'support-event-v1',
+            'occurred_at' => now(),
+            'created_at' => now(),
+        ]);
+        Http::fake();
+        $ticket = $this->automatedTicket($family);
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, 'Where are my care requests?');
+
+        Http::assertNothingSent();
+        $this->assertTrue($ticket->fresh()->isHumanOnly());
+        $this->assertSame('daily_turn_limit', $ticket->fresh()->handoff_reason_code);
     }
 
     public function test_exact_family_pilot_gets_private_automated_conversation_and_strict_path_choice(): void

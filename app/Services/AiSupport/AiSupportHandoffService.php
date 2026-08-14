@@ -5,6 +5,7 @@ namespace App\Services\AiSupport;
 use App\Models\AiSupportActionPreview;
 use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportRequestDraft;
+use App\Models\MarketplaceNotificationDelivery;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketActivity;
 use App\Models\SupportTicketMessage;
@@ -24,6 +25,7 @@ class AiSupportHandoffService
         private readonly AiSupportEventRecorder $events,
         private readonly AiSupportEligibilityService $eligibility,
         private readonly MarketplaceNotificationService $notifications,
+        private readonly AiSupportIncidentService $incidents,
     ) {}
 
     public function transfer(User $actor, SupportTicket $ticket, string $reasonCode = 'user_requested'): SupportTicket
@@ -123,6 +125,7 @@ class AiSupportHandoffService
 
         $admins = User::query()->where('role', 'admin')->get();
         if ($admins->isNotEmpty()) {
+            $dedupeKey = 'support-handoff-'.$fresh->id.'-'.$message->id;
             try {
                 $this->notifications->notify(
                     recipients: $admins,
@@ -132,12 +135,37 @@ class AiSupportHandoffService
                     url: route('admin.support.tickets.show', $fresh),
                     payload: ['support_ticket_id' => $fresh->id, 'reason_code' => $reasonCode],
                     subject: $fresh,
-                    dedupeKey: 'support-handoff-'.$fresh->id.'-'.$message->id,
-                    channelOverrides: [NotificationChannels::EMAIL => false],
+                    dedupeKey: $dedupeKey,
+                    channelOverrides: [
+                        NotificationChannels::EMAIL => true,
+                        NotificationChannels::IN_APP => true,
+                    ],
                 );
+                if (MarketplaceNotificationDelivery::query()
+                    ->whereIn('user_id', $admins->pluck('id'))
+                    ->where('dedupe_key', 'like', $dedupeKey.':%')
+                    ->where('status', 'failed')
+                    ->exists()) {
+                    $this->incidents->open(
+                        'operations_notification_failed',
+                        'One or more administrator handoff notifications failed delivery.',
+                        supportTicketId: $fresh->id,
+                    );
+                }
             } catch (\Throwable $exception) {
                 report($exception);
+                $this->incidents->open(
+                    'operations_notification_failed',
+                    'Administrator handoff notification dispatch failed.',
+                    supportTicketId: $fresh->id,
+                );
             }
+        } else {
+            $this->incidents->open(
+                'operations_owners_missing',
+                'No full administrator was available for the human handoff alert.',
+                supportTicketId: $fresh->id,
+            );
         }
 
         return $fresh;

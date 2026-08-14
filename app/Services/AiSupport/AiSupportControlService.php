@@ -134,7 +134,8 @@ class AiSupportControlService
             throw ValidationException::withMessages(['reasonCode' => 'Use a compact automatic-stop reason code.']);
         }
 
-        return DB::transaction(function () use ($controlKey, $reasonCode, $reason): ?AiSupportControlVersion {
+        $stopped = false;
+        $version = DB::transaction(function () use ($controlKey, $reasonCode, $reason, &$stopped): ?AiSupportControlVersion {
             $current = AiSupportControlVersion::query()
                 ->where('control_key', $controlKey)
                 ->whereNull('replaced_at')
@@ -162,6 +163,7 @@ class AiSupportControlService
                 'effective_at' => $now,
                 'created_at' => $now,
             ]);
+            $stopped = true;
             AiSupportAdminAuditEvent::query()->create([
                 'id' => (string) Str::uuid(),
                 'event_family' => 'control',
@@ -182,6 +184,16 @@ class AiSupportControlService
 
             return $version;
         }, 3);
+
+        if ($stopped) {
+            app(AiSupportIncidentService::class)->open(
+                $reasonCode,
+                $reason,
+                $controlKey,
+            );
+        }
+
+        return $version;
     }
 
     /** @return list<string> */

@@ -23,6 +23,7 @@ Schedule::command('content:prune-events')->dailyAt('03:20')->withoutOverlapping(
 if (config('ai_support.retention_execution_enabled', false)) {
     Schedule::command('ai-support:apply-retention --execute')->dailyAt('03:40')->withoutOverlapping();
 }
+Schedule::command('ai-support:monitor-health')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('model:prune', ['--model' => [\App\Models\ContentApiIdempotencyKey::class]])
     ->dailyAt('03:30')
     ->withoutOverlapping();

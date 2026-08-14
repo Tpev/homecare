@@ -52,6 +52,10 @@ class InteractiveAiSupportModelEvaluationService
             foreach ($usage as $key => $value) {
                 $usage[$key] += (int) ($response['usage'][$key] ?? 0);
             }
+            if ((int) ceil($this->candidates->estimatedCost($candidate, $usage) * 1_000_000)
+                >= (int) config('ai_support.rehearsal_daily_cost_stop_microunits', 2_000_000)) {
+                throw new \RuntimeException('The synthetic rehearsal reached its daily provider cost stop.');
+            }
             $latencies[] = $response['latency_ms'];
             $results[] = [
                 'case_id' => $case['id'],
@@ -71,11 +75,7 @@ class InteractiveAiSupportModelEvaluationService
         $fieldPassed = (int) collect($results)->sum('field_passed');
         $hardFailures = collect($results)->where('hard_failure', true)->count();
         $extractionAccuracy = $fieldTotal > 0 ? $fieldPassed / $fieldTotal : 1.0;
-        $estimatedCost = $candidate['model'] === 'gpt-5.6-luna'
-            ? (((max(0, $usage['input_tokens'] - $usage['cached_input_tokens'])) * 1.00)
-                + ($usage['cached_input_tokens'] * 0.10)
-                + ($usage['output_tokens'] * 6.00)) / 1_000_000
-            : $this->candidates->estimatedCost($candidate, $usage);
+        $estimatedCost = $this->candidates->estimatedCost($candidate, $usage);
 
         return [
             ...$plan,

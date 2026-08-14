@@ -8,7 +8,7 @@ Owner: Product and engineering
 
 ## Executive answer
 
-There are **zero remaining product interviews blocking engineering** for the declared initial intelligent-support build. The Phase 0-1 foundation is deployed fail-closed, the consolidated interactive scope is approved through `DEC-047` through `DEC-066`, and the runtime/request implementation now has deterministic, browser, and live-model evidence recorded in [the implementation record](24-interactive-assistant-implementation-and-release-evidence.md).
+There are **zero remaining product interviews blocking engineering** for the declared initial intelligent-support build. The Phase 0-1 foundation is deployed fail-closed, the consolidated interactive scope is approved through `DEC-047` through `DEC-067`, and the runtime/request implementation now has deterministic, browser, and live-model evidence recorded in [the implementation record](24-interactive-assistant-implementation-and-release-evidence.md). `DEC-067` authorizes the limited-release-readiness implementation while explicitly withholding production activation.
 
 This is implementation readiness, not limited-release approval. Production/user-visible AI remains off. Provider/privacy, older-adult usability, production-like operations/rollback rehearsal, named pilot users, and explicit limited-release approval remain required before any release switch or grant is activated.
 
@@ -69,8 +69,9 @@ The current repository candidate adds the customer runtime, semantic navigation,
 | Accuracy and elder usability | `DEC-064` |
 | Cost/performance | `DEC-065` |
 | Automatic stop and rollback | `DEC-066` |
+| Limited-release operational readiness | `DEC-067` |
 
-The normative consolidated source is [the approved build contract](23-interactive-assistant-approved-build-contract.md).
+The normative sources are [the approved build contract](23-interactive-assistant-approved-build-contract.md) and [the limited-release readiness contract](27-limited-release-readiness-contract.md).
 
 ## Engineering decisions that do not require another product interview
 
@@ -100,12 +101,15 @@ Return to Product for any change to user-visible scope, authorization, role/data
 - Expanded production KB import verified: 12 interactive Version 1 Drafts, 60 linked evaluations, 24 successful create/validate events, zero failures, zero publication, and zero activation
 - Shadow control removed from the Admin operator UI in `4ac0f07` while permanent server denial remains; 67 AI Support tests and the 682-test full suite pass
 - Production verified with Shadow absent, 23 reviewed non-pricing entries Published, `KB-CARE-006` held as Draft, 23 successful publication events, zero publication failures, zero grants, and all AI gates off
+- `DEC-067` readiness controls verified with 76 AI Support tests / 629 assertions and the complete 691-test / 5,097-assertion Laravel suite; final isolated browser/provider rehearsal passed 56/56 with 100% extraction and temporary-database destruction
 
 Exact metrics, report checksum, audit corrections, and the deploy/rollback sequence are in [the implementation record](24-interactive-assistant-implementation-and-release-evidence.md).
 
 ## Limited-release evidence still required
 
 These are implementation/release tasks, not unanswered product decisions:
+
+The readiness control layer, Admin evidence register, incident/warning visibility, cost and latency monitor, content-free operations-alert test, and isolated one-command rehearsal are implemented under `DEC-067`. The final local combined rehearsal passed 56/56 model cases and the browser flow, but its 5.468-second P95 crossed the five-second warning target. See the [implementation record](31-limited-release-readiness-implementation-record.md). The remaining items below require production configuration, human execution, or explicit release authority.
 
 ### Privacy and operations
 

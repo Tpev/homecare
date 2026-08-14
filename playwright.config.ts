@@ -17,6 +17,7 @@ const laravelEnv = {
     MARKETPLACE_TIME_CORRECTIONS_ENABLED: 'true',
     AI_SUPPORT_RUNTIME_AVAILABLE: 'true',
     AI_SUPPORT_PROVIDER_ENABLED: 'true',
+    AI_SUPPORT_SAFETY_IDENTIFIER_SECRET: 'playwright-only-ai-support-safety-identifier-secret',
 };
 
 export default defineConfig({
