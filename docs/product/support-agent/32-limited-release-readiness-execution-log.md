@@ -76,6 +76,24 @@ Validation before the next clean-commit rehearsal:
 
 These are pre-commit diagnostic and full-corpus results. They do not replace the required clean exact-commit combined browser/provider rehearsal.
 
+### Exact v4 release-candidate rehearsal
+
+The governed combined rehearsal was then run from clean pushed commit `c409fe3445be5ba02769ae06c87fa99218490895`. Its first attempt stopped at the isolated browser gate before any provider evaluation, reported only `isolated_ai_support_browser_rehearsal_failed`, and verified temporary-database destruction. The same three-test Chromium journey then passed directly, and one controlled repeat of the full governed command completed successfully. The failed attempt is retained rather than omitted as a transient result.
+
+| Metric | Accepted repeat result |
+| --- | --- |
+| Exact commit | `c409fe3445be5ba02769ae06c87fa99218490895` |
+| Browser scenario | Pass |
+| Frozen provider cases | 56/56 pass; zero hard failures |
+| Structured extraction | 27/27 fields, 100% |
+| Input/cached/output tokens | 77,850 / 77,682 / 13,676 |
+| Estimated provider cost | `$0.01799844` |
+| Provider P50/P95 | 3,206 / 5,118 ms |
+| Temporary database | Verified destroyed after both attempts |
+| Content-free result hash | `4d07cbb6e5f11144891e08ceb117448e6061ffcbed93421fb4585f3dd71eb11d` |
+
+The 5,118 ms P95 is slightly above the five-second conversational warning target, so performance monitoring remains open. Correctness, extraction, hard-safety, cost, browser, and destruction gates passed for this exact candidate. This evidence still does not authorize deployment guards, AI controls, or pilot grants.
+
 ## Accessibility execution record
 
 ### Authenticated production observations
@@ -105,6 +123,8 @@ The production reflow issue remains open until this remediation is committed, de
 ### Production deployment recheck
 
 A follow-up authenticated production inspection after the first remediation push proved that production had not yet pulled it. At a 640-by-400 CSS-pixel viewport, the live DOM still contained `sm:ml-8 sm:mr-72 sm:flex`, the compact navigation still used `sm:hidden`, and the document remained 829 pixels wide inside a 625-pixel client area. This is deployment evidence, not a new code failure. Production accessibility remains open until `deploy.sh` pulls the current candidate and the same measurement passes.
+
+A second authenticated check after the operator reported completing the server step produced the same result: production still served `app-CbFSqK5s.css`, the old `sm` navigation classes remained in the DOM, and the 829-to-625-pixel horizontal overflow remained. The deployed revision or cached production assets therefore still need correction before the accessibility recheck can pass.
 
 ### Contrast and confirmation-focus remediation
 
