@@ -181,6 +181,8 @@ The operator subsequently directed that this exercise must not connect to the Op
 
 Provider deletion behavior was then recorded as Passed in production from application and test evidence. Both runtime and synthetic Responses requests set `store:false`; the client uses only the Responses endpoint and creates no provider conversations, files, vector stores, hosted tools, or background jobs. The focused tests assert `store:false` and the absence of background mode and provider tools. This evidence does not claim project identity, the current sharing opt-in state, a project alert, ZDR approval, or provider-side deletion beyond the documented endpoint behavior.
 
+The optional ZDR item was separately recorded as Pending. No request or approval reference has been supplied for the bounded non-medical pilot; ZDR remains desirable but is not a release gate under `DEC-067`. The status is explicit rather than being omitted or inferred from the standard retention baseline.
+
 These documentation facts are not a substitute for verifying the actual OpenAI project and production environment. The following remain unrecorded until server/API or account-owned evidence proves them:
 
 - dedicated project and project-scoped credential;
