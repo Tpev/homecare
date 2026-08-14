@@ -151,6 +151,8 @@ Candidate validation on August 14, 2026:
 
 These results close the known engineering defects. They do not yet satisfy the production recheck, real assistive-technology session, or five-person study.
 
+The focused accessibility and interactive journeys were rerun against current master `a14b8a2`: 18 of 18 passed across desktop Chromium, mobile Chromium, and mobile WebKit. The run covered 640/768/1024 reflow, five phone sizes, 200% text, minimum contrast, 44-pixel touch controls, accessible names, keyboard and expired-confirmation focus recovery, offline retry, navigation/rotation/back draft preservation, exact-user isolation, and deterministic recap/publication behavior. The isolated synthetic database was verified destroyed afterward. Production accessibility evidence was versioned with this result and remains Pending only for a real screen-reader session and the five-person human study.
+
 ## Synthetic safety and human-support rehearsal
 
 The following content-free synthetic matrix was exercised on August 14, 2026. The application/runtime cases ran through the focused feature suite, the customer/admin chat loop ran through Chromium, and the interactive recap/publication path ran through the combined browser gate.
