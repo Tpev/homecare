@@ -118,7 +118,10 @@ class RuntimeSafetyFoundationTest extends TestCase
 
         $handoff = app(AiSupportHandoffService::class);
         $transferred = $handoff->transfer($family, $ticket, 'user_requested');
-        $body = SupportTicketMessage::query()->where('support_ticket_id', $ticket->id)->sole()->body;
+        $body = SupportTicketMessage::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->where('kind', SupportTicketMessage::KIND_PUBLIC)
+            ->sole()->body;
 
         $this->assertTrue($transferred->isHumanOnly());
         $this->assertSame("I've sent this conversation to LoLo Support. You can keep using this chat, and you won't need to repeat what you already told me.", $body);
@@ -133,7 +136,8 @@ class RuntimeSafetyFoundationTest extends TestCase
         ]);
 
         $handoff->transfer($family, $ticket->fresh(), 'user_requested');
-        $this->assertDatabaseCount('support_ticket_messages', 1);
+        $this->assertSame(1, SupportTicketMessage::query()->where('support_ticket_id', $ticket->id)->where('kind', SupportTicketMessage::KIND_PUBLIC)->count());
+        $this->assertSame(1, SupportTicketMessage::query()->where('support_ticket_id', $ticket->id)->where('kind', SupportTicketMessage::KIND_INTERNAL_NOTE)->count());
 
         $returned = $handoff->returnToAutomation($admin, $ticket->fresh(), 'User remains in the named pilot');
         $this->assertSame(SupportTicket::RESPONDER_MODE_AUTOMATED, $returned->responder_mode);
@@ -171,7 +175,8 @@ class RuntimeSafetyFoundationTest extends TestCase
         $handoff->transfer($family, $ticket);
 
         $this->assertTrue($ticket->fresh()->isHumanOnly());
-        $this->assertDatabaseCount('support_ticket_messages', 1);
+        $this->assertSame(1, SupportTicketMessage::query()->where('support_ticket_id', $ticket->id)->where('kind', SupportTicketMessage::KIND_PUBLIC)->count());
+        $this->assertSame(1, SupportTicketMessage::query()->where('support_ticket_id', $ticket->id)->where('kind', SupportTicketMessage::KIND_INTERNAL_NOTE)->count());
         $this->assertDatabaseHas('ai_support_interaction_events', ['event_type' => 'transferred_to_human']);
     }
 

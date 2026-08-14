@@ -5,6 +5,7 @@ namespace App\Services\Support;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketActivity;
 use App\Models\User;
+use App\Services\AiSupport\AiSupportEligibilityService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\QueryException;
@@ -19,6 +20,7 @@ class SupportChatService
     public function __construct(
         private readonly FamilyAccountContext $familyAccounts,
         private readonly SupportMessageRateLimiter $rateLimiter,
+        private readonly AiSupportEligibilityService $aiEligibility,
     ) {}
 
     public function conversationFor(User $user): ?SupportTicket
@@ -87,9 +89,13 @@ class SupportChatService
         [$safeRoute, $safePath] = $this->sanitizeOrigin($originRoute, $originPath);
         $membership = $user->role === 'family' ? $this->familyAccounts->membershipFor($user) : null;
         $account = $membership?->familyAccount;
+        $responderMode = config('ai_support.provider_enabled', false)
+            && $this->aiEligibility->evaluate($user, 'support_answers_v1')->allowed
+                ? SupportTicket::RESPONDER_MODE_AUTOMATED
+                : SupportTicket::RESPONDER_MODE_HUMAN_ONLY;
 
         try {
-            return DB::transaction(function () use ($user, $body, $clientMessageId, $safeRoute, $safePath, $account): SupportTicket {
+            return DB::transaction(function () use ($user, $body, $clientMessageId, $safeRoute, $safePath, $account, $responderMode): SupportTicket {
                 $duplicate = SupportTicket::query()
                     ->where('opener_user_id', $user->id)
                     ->where('initial_client_message_id', $clientMessageId)
@@ -101,8 +107,11 @@ class SupportChatService
 
                 return SupportTicket::query()->create([
                     'family_account_id' => $account?->id,
-                    'family_visibility' => 'shared_care',
+                    'family_visibility' => $responderMode === SupportTicket::RESPONDER_MODE_AUTOMATED
+                        ? 'opener_only'
+                        : 'shared_care',
                     'source' => SupportTicket::SOURCE_CHAT_WIDGET,
+                    'responder_mode' => $responderMode,
                     'origin_route' => $safeRoute,
                     'origin_path' => $safePath,
                     'opener_user_id' => $user->id,

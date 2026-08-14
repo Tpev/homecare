@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Listeners\AttributeContentRegistration;
+use App\Listeners\InvalidateAiSupportConfirmationsOnLogout;
 use App\Listeners\SendOpsUserRegisteredAlert;
 use App\Models\BlogPost;
 use App\Models\CareRecipientProfile;
@@ -23,6 +24,7 @@ use App\Policies\CareRequestPolicy;
 use App\Policies\MediaAssetPolicy;
 use App\Policies\SupportTicketMessagePolicy;
 use App\Policies\SupportTicketPolicy;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -75,5 +77,6 @@ class AppServiceProvider extends ServiceProvider
 
         Event::listen(Registered::class, SendOpsUserRegisteredAlert::class);
         Event::listen(Registered::class, AttributeContentRegistration::class);
+        Event::listen(Logout::class, InvalidateAiSupportConfirmationsOnLogout::class);
     }
 }

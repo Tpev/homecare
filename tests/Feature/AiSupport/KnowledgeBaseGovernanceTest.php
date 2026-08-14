@@ -62,6 +62,8 @@ class KnowledgeBaseGovernanceTest extends TestCase
         $familyResults = $retrieval->applicable($family, 'support_answers_v1', 'active', 'support.center');
         $this->assertCount(1, $familyResults);
         $this->assertSame($entry->published_version_id, $familyResults->first()->id);
+        $this->assertCount(1, $retrieval->relevant($family, 'support_answers_v1', 'How do I contact support?', 'active'));
+        $this->assertCount(0, $retrieval->relevant($family, 'support_answers_v1', 'banana gardening weather', 'active'));
         $this->assertCount(0, $retrieval->applicable($caregiver, 'support_answers_v1'));
         $this->assertCount(0, $retrieval->applicable($family, 'unreleased_capability'));
 

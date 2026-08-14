@@ -42,6 +42,9 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 20. [Phase 1 content and evaluation build plan](19-phase-1-content-and-evaluation-build-plan.md)
 21. [Phase 1A governed content build record](20-phase-1a-content-build-record.md)
 22. [Phase 1B offline model evaluation adapter and execution record](21-phase-1b-offline-model-evaluation.md)
+23. [Interactive support and care-request expansion](22-interactive-care-request-expansion.md)
+24. [Interactive assistant approved build contract](23-interactive-assistant-approved-build-contract.md)
+25. [Interactive assistant implementation and release evidence](24-interactive-assistant-implementation-and-release-evidence.md)
 
 Then consult the live registries:
 
@@ -50,11 +53,20 @@ Then consult the live registries:
 - [Source register](registries/source-register.md)
 - [Risk register](registries/risk-register.md)
 
-Initial drafted capability specifications:
+Capability specifications:
 
 - [Human handoff without repetition](capabilities/SUP-HANDOFF-001.md)
-- [Prepare a one-time care-request draft](capabilities/CARE-REQUEST-001.md)
-- [Publish a confirmed one-time care request](capabilities/CARE-REQUEST-003.md)
+- [Recommend and select a care path](capabilities/CARE-INTAKE-001.md)
+- [Retrieve authorized Family care context](capabilities/CARE-CONTEXT-001.md)
+- [Prepare a one-time or recurring request draft](capabilities/CARE-REQUEST-005.md)
+- [Validate and present the request recap](capabilities/CARE-REQUEST-006.md)
+- [Publish a confirmed one-time or recurring request](capabilities/CARE-REQUEST-007.md)
+- [Transfer a 24/7 coverage need](capabilities/CARE-24H-001.md)
+
+Historical superseded specifications retained for traceability:
+
+- [Original one-time draft specification](capabilities/CARE-REQUEST-001.md)
+- [Original one-time publication specification](capabilities/CARE-REQUEST-003.md)
 
 Use the templates for every new unit of work:
 

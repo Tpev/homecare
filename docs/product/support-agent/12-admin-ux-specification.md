@@ -758,7 +758,7 @@ These do not weaken the accepted default-off, exact-user, or KB-governance requi
 
 | ID | Question | Recommendation | Needed before |
 | --- | --- | --- | --- |
-| `UX-AUDIT-001` | What exact periods remain for KB history, deletion evidence, diagnostics, providers, exports, and backups? | Resolve each duration under `DEC-014` within the accepted `DEC-024` minimum-retention rule | Production data design |
+| `UX-AUDIT-001` | Do every diagnostic, provider, export, cache/index/replica, analytics, and backup destination meet `DEC-058`? | Show the configured class, expiry, failure/overdue state, and content-free deletion/restore evidence | Production data design |
 
 ## Accepted UX decisions
 

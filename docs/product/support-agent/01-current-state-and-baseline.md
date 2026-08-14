@@ -153,7 +153,7 @@ The following are audit findings and design gaps, not assertions that production
 
 ### Evaluation and operations
 
-- No shadow-mode comparison against real support decisions is defined.
+- Production-conversation shadowing is explicitly skipped under `DEC-047`; offline, staff-account, older-adult, and exact-user pilot evidence replaces it.
 - No older-adult usability study is attached to the AI request flow.
 - No production transcript review queue, safety dashboard, grounded-answer metric, or cost-per-resolution metric is defined.
 - Token and latency fields exist for copilot messages, but model/tool/KB cost attribution is not unified with support conversations.
@@ -166,8 +166,8 @@ Track the exact phase blockers in the [build-readiness ledger](14-build-readines
 | --- | --- |
 | Initial evaluated serving model/configuration | Accepted: `DEC-012`; `gpt-5.6-luna` at low reasoning is the offline baseline; no production runtime is authorized |
 | Draft-only versus confirmed publication | Resolved: `DEC-010` and `DEC-013`; draft in Phase 5, separately gated publication in Phase 6 |
-| Retention and redaction | Governing rule and principal data classes resolved in `DEC-024` through `DEC-031`; two remaining packages under `DEC-014` are required before production-data shadow |
-| Operational owner, staffed hours, and handoff SLO | Open: `DEC-015`; required before user-visible rollout |
+| Retention and redaction | Periods closed through `DEC-058`; destination/configuration, deletion, and restore evidence remain required before production data |
+| Operational owner and handoff promise | Closed by `DEC-057`: both administrators alerted, either may claim, and no queue/business-hours/response-time promise |
 | Supported languages | Open: `DEC-016`; required before capability approval and corpus construction |
 
 ## Required stabilization outcome

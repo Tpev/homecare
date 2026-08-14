@@ -1,6 +1,6 @@
 # Capability Specification: `CARE-REQUEST-003` — Publish a Confirmed One-Time Care Request
 
-Status: Draft
+Status: Superseded by `CARE-REQUEST-007`; retained for historical traceability only
 
 Version: 0.1
 
@@ -9,6 +9,8 @@ Owner: Family care product
 Required approvers: Product, engineering, security/privacy, support operations, design/accessibility
 
 Last reviewed: August 13, 2026
+
+Do not implement this document as current authority. The approved one-time and recurring publication contract is [`CARE-REQUEST-007`](CARE-REQUEST-007.md), governed by `DEC-048` through `DEC-066`.
 
 ## 1. User outcome
 
@@ -216,7 +218,7 @@ Gates:
 ## 12. Rollout and rollback
 
 - Depends on released `SUP-HANDOFF-001`, `CARE-REQUEST-001`, and approved preview/event contracts.
-- Start shadowing proposed commits without exposing a commit button.
+- Historical initial plan called for shadowing proposed commits; `DEC-047` later rejected that path. Current authority is `CARE-REQUEST-007` and `DEC-063`.
 - Then internal accounts and an opt-in limited cohort.
 - Separate feature switches for preview and commit.
 - Disabling commit leaves draft review, manual form, and human chat available.

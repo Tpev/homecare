@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SupportTicketMessage extends Model
 {
@@ -45,6 +46,11 @@ class SupportTicketMessage extends Model
         return $this->belongsTo(User::class, 'sender_user_id');
     }
 
+    public function aiActions(): HasMany
+    {
+        return $this->hasMany(AiSupportMessageAction::class, 'support_ticket_message_id');
+    }
+
     public function isInternalNote(): bool
     {
         return $this->kind === self::KIND_INTERNAL_NOTE;
@@ -73,13 +79,17 @@ class SupportTicketMessage extends Model
                     $visible->where(function (Builder $legacy) use ($user): void {
                         $legacy->whereNull('family_account_id')
                             ->where('opener_user_id', $user->id);
-                    })->orWhere(function (Builder $accountTicket) use ($account, $isOwner): void {
+                    })->orWhere(function (Builder $accountTicket) use ($account, $isOwner, $user): void {
                         $accountTicket->where('family_account_id', $account->id)
-                            ->where(function (Builder $visibility) use ($isOwner): void {
+                            ->where(function (Builder $visibility) use ($isOwner, $user): void {
                                 $visibility->where('family_visibility', 'shared_care');
                                 if ($isOwner) {
                                     $visibility->orWhere('family_visibility', 'owner_only');
                                 }
+                                $visibility->orWhere(function (Builder $private) use ($user): void {
+                                    $private->where('family_visibility', 'opener_only')
+                                        ->where('opener_user_id', $user->id);
+                                });
                             });
                     });
                 });

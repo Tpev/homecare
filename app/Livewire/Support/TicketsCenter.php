@@ -91,13 +91,17 @@ class TicketsCenter extends Component
                     $tickets->where(function ($legacy) use ($user): void {
                         $legacy->whereNull('family_account_id')
                             ->where('opener_user_id', $user->id);
-                    })->orWhere(function ($accountTickets) use ($account, $isOwner): void {
+                    })->orWhere(function ($accountTickets) use ($account, $isOwner, $user): void {
                         $accountTickets->where('family_account_id', $account->id)
-                            ->where(function ($visibility) use ($isOwner): void {
+                            ->where(function ($visibility) use ($isOwner, $user): void {
                                 $visibility->where('family_visibility', 'shared_care');
                                 if ($isOwner) {
                                     $visibility->orWhere('family_visibility', 'owner_only');
                                 }
+                                $visibility->orWhere(function ($private) use ($user): void {
+                                    $private->where('family_visibility', 'opener_only')
+                                        ->where('opener_user_id', $user->id);
+                                });
                             });
                     });
                 });

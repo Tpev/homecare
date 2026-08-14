@@ -4,6 +4,7 @@
     $unreadCount = $this->unreadCount;
     $isClosed = $ticket?->status === \App\Models\SupportTicket::STATUS_CLOSED;
     $isResolved = $ticket?->status === \App\Models\SupportTicket::STATUS_RESOLVED;
+    $assistantActive = $ticket?->responder_mode === \App\Models\SupportTicket::RESPONDER_MODE_AUTOMATED;
     $firstName = str((string) auth()->user()?->name)->before(' ')->value() ?: 'there';
     $assignedFirstName = $ticket?->assignedAdmin?->name
         ? str($ticket->assignedAdmin->name)->before(' ')->value()
@@ -89,7 +90,7 @@
                     <div class="min-w-0">
                         <h2 id="support-chat-title" class="truncate font-display text-lg font-semibold text-white">LoLo Support</h2>
                         <p class="truncate text-xs text-[#DDEEEA]">
-                            {{ $assignedFirstName ? $assignedFirstName.' from LoLo Support will reply here' : 'Leave us a message' }}
+                            {{ $assistantActive ? 'AI assistant - You can ask for a person anytime' : ($assignedFirstName ? $assignedFirstName.' from LoLo Support will reply here' : 'Leave us a message') }}
                         </p>
                     </div>
                 </div>
@@ -133,6 +134,16 @@
                 </div>
             @else
                 <div class="space-y-3">
+                    @if ($assistantActive)
+                        <div class="flex justify-center">
+                            <button
+                                type="button"
+                                wire:click="transferToPerson"
+                                wire:loading.attr="disabled"
+                                class="inline-flex min-h-11 items-center rounded-xl border border-[#B9D7CF] bg-white px-4 text-sm font-semibold text-[#0F5B52] shadow-sm disabled:opacity-60"
+                            >Talk to a person</button>
+                        </div>
+                    @endif
                     <p class="support-chat-time-separator">{{ $ticket->created_at?->format('M j, g:i A') }}</p>
                     <div class="flex justify-end">
                         <article class="support-chat-bubble support-chat-bubble-user">
@@ -171,6 +182,95 @@
                                         {{ $message->sender?->name ?: 'Family' }}
                                     @endif
                                 </p>
+
+                                @foreach ($message->aiActions as $action)
+                                    @php
+                                        $actionPayload = (array) $action->payload;
+                                        $actionActive = $action->isActive();
+                                    @endphp
+
+                                    @if ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_PATH_CHOICES && $actionActive)
+                                        <div class="mt-3 grid gap-2" aria-label="Choose care type">
+                                            @foreach ((array) ($actionPayload['choices'] ?? []) as $choice)
+                                                <button
+                                                    type="button"
+                                                    wire:click="chooseCarePath('{{ $action->id }}', '{{ $choice['id'] }}')"
+                                                    wire:loading.attr="disabled"
+                                                    class="min-h-11 rounded-xl bg-[#23483F] px-4 text-left text-sm font-semibold text-white disabled:opacity-60"
+                                                >{{ $choice['label'] }}</button>
+                                            @endforeach
+                                        </div>
+                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_NAVIGATE && $actionActive)
+                                        <a
+                                            href="{{ $actionPayload['url'] }}"
+                                            wire:navigate
+                                            x-on:click="closeForNavigation()"
+                                            class="mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white"
+                                        >{{ $actionPayload['label'] ?? 'Open page' }}</a>
+                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_RECAP && ! $action->invalidated_at && ! $action->consumed_at)
+                                        @php $recap = (array) ($actionPayload['recap'] ?? []); @endphp
+                                        <section class="mt-3 space-y-3 rounded-2xl border border-[#C8DDD7] bg-white p-4 text-sm text-[#17313F]" aria-label="Care request recap">
+                                            <h3 class="font-display text-lg font-bold">Review your request</h3>
+                                            <dl class="space-y-2">
+                                                <div><dt class="font-semibold">Type</dt><dd>{{ $recap['request_type_label'] ?? '' }}</dd></div>
+                                                <div><dt class="font-semibold">Who needs care</dt><dd>{{ $recap['recipient'] ?? '' }}</dd></div>
+                                                <div><dt class="font-semibold">Help needed</dt><dd>{{ implode(', ', (array) ($recap['tasks'] ?? [])) }}</dd></div>
+                                                <div><dt class="font-semibold">Schedule</dt><dd>{{ $recap['schedule'] ?? '' }}</dd></div>
+                                                @if (filled($recap['schedule_adjustment'] ?? null))
+                                                    <div class="rounded-xl bg-amber-50 p-2 text-amber-900"><dt class="font-semibold">Start-date adjustment</dt><dd>{{ $recap['schedule_adjustment'] }}</dd></div>
+                                                @endif
+                                                <div><dt class="font-semibold">Address</dt><dd>{{ $recap['address'] ?? '' }}</dd></div>
+                                                @if (filled($recap['additional_info'] ?? null))
+                                                    <div><dt class="font-semibold">Additional instructions</dt><dd>{{ $recap['additional_info'] }}</dd></div>
+                                                @endif
+                                                <div><dt class="font-semibold">Caregiver response time</dt><dd>Within {{ $recap['preferred_response_hours'] ?? 12 }} hours</dd></div>
+                                            </dl>
+                                            <p class="rounded-xl bg-[#F2F8F6] p-3 font-medium">{{ $recap['disclosure'] ?? '' }}</p>
+                                            <div class="grid gap-2">
+                                                <button
+                                                    type="button"
+                                                    x-on:click="draft = 'I want to change '; $nextTick(() => { $refs.composer?.focus(); autoResize(); })"
+                                                    class="min-h-11 rounded-xl border border-[#0F5B52] px-4 text-sm font-semibold text-[#0F5B52]"
+                                                >Modify something</button>
+                                                @if (($actionPayload['can_confirm'] ?? false) && $actionActive)
+                                                    <button
+                                                        type="button"
+                                                        wire:click="confirmCareRequest('{{ $action->id }}')"
+                                                        wire:loading.attr="disabled"
+                                                        class="min-h-11 rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white disabled:opacity-60"
+                                                    >Confirm and create request</button>
+                                                @elseif (($actionPayload['can_confirm'] ?? false) && $action->expires_at?->isPast())
+                                                    <button
+                                                        type="button"
+                                                        wire:click="renewCareRequestRecap('{{ $action->id }}')"
+                                                        wire:loading.attr="disabled"
+                                                        class="min-h-11 rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white disabled:opacity-60"
+                                                    >Review and confirm again</button>
+                                                @endif
+                                                <button
+                                                    type="button"
+                                                    wire:click="discardCareRequestDraft"
+                                                    wire:confirm="Discard this private request draft?"
+                                                    class="min-h-11 rounded-xl px-4 text-sm font-semibold text-rose-700 underline"
+                                                >Discard this draft</button>
+                                            </div>
+                                        </section>
+                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_RECEIPT)
+                                        <a
+                                            href="{{ $actionPayload['url'] }}"
+                                            wire:navigate
+                                            x-on:click="closeForNavigation()"
+                                            class="mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white"
+                                        >View request</a>
+                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_RECAP && $action->invalidation_reason === 'actor_logged_out')
+                                        <button
+                                            type="button"
+                                            wire:click="renewCareRequestRecap('{{ $action->id }}')"
+                                            wire:loading.attr="disabled"
+                                            class="mt-3 min-h-11 rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white disabled:opacity-60"
+                                        >Review and confirm again</button>
+                                    @endif
+                                @endforeach
                             </article>
                         </div>
                         @php $previousMessageAt = $message->created_at; @endphp
@@ -252,6 +352,7 @@
                     <p id="support-chat-send-error" x-show="sendError" x-text="sendError" class="break-words text-sm font-medium text-rose-700" role="alert"></p>
                     @error('messageBody') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
                     @error('conversation') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
+                    @error('confirmation') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
                 </form>
             @endif
 

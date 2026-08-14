@@ -24,6 +24,7 @@ class Overview extends Component
 
         return view('livewire.admin.ai-support.overview', [
             'runtimeAvailable' => (bool) config('ai_support.runtime_available', false),
+            'providerEnabled' => (bool) config('ai_support.provider_enabled', false),
             'masterState' => $controls->state('master_enabled'),
             'visibleState' => $controls->state('user_visible_enabled'),
             'humanOnlyState' => $controls->state('human_only'),

@@ -2,12 +2,18 @@
 
 namespace App\Livewire\Support;
 
+use App\Models\AiSupportMessageAction;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
+use App\Services\AiSupport\AiSupportHandoffService;
+use App\Services\AiSupport\AiSupportRecapService;
+use App\Services\AiSupport\AiSupportRequestDraftService;
+use App\Services\AiSupport\AiSupportRuntimeService;
 use App\Services\Support\SupportChatService;
 use App\Services\Support\SupportTicketMessagingService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -78,18 +84,20 @@ class ChatWidget extends Component
                 ]);
             }
 
+            $shouldRunAssistant = false;
             if ($this->ticketId) {
                 $ticket = $this->ticket;
                 abort_unless($ticket, 404);
                 abort_unless(Gate::forUser($user)->allows('reply', $ticket), 403);
 
                 if ($ticket->initial_client_message_id !== $clientMessageId) {
-                    app(SupportTicketMessagingService::class)->sendUserReply(
+                    $sent = app(SupportTicketMessagingService::class)->sendUserReply(
                         ticket: $ticket,
                         user: $user,
                         body: $body,
                         clientMessageId: $clientMessageId,
                     );
+                    $shouldRunAssistant = $sent->wasRecentlyCreated;
                 }
             } else {
                 $ticket = app(SupportChatService::class)->startConversation(
@@ -100,6 +108,11 @@ class ChatWidget extends Component
                     originPath: $this->originPath,
                 );
                 $this->ticketId = $ticket->id;
+                $shouldRunAssistant = $ticket->wasRecentlyCreated;
+            }
+
+            if ($shouldRunAssistant && $ticket->responder_mode === SupportTicket::RESPONDER_MODE_AUTOMATED) {
+                app(AiSupportRuntimeService::class)->respond($user, $ticket, trim($body));
             }
 
             $ticket->fresh()->markReadFor($user);
@@ -119,6 +132,78 @@ class ChatWidget extends Component
                 message: $message,
             );
         }
+    }
+
+    public function chooseCarePath(string $actionId, string $path): void
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+        abort_unless($user && $ticket, 404);
+        DB::transaction(function () use ($user, $ticket, $actionId, $path): void {
+            $lockedTicket = SupportTicket::query()->lockForUpdate()->findOrFail($ticket->id);
+            abort_unless($lockedTicket->responder_mode === SupportTicket::RESPONDER_MODE_AUTOMATED, 409);
+            $action = AiSupportMessageAction::query()->lockForUpdate()->whereKey($actionId)
+                ->where('support_ticket_id', $lockedTicket->id)
+                ->where('actor_user_id', $user->id)
+                ->where('action_type', AiSupportMessageAction::TYPE_PATH_CHOICES)
+                ->firstOrFail();
+            abort_unless($action->isActive(), 409);
+            $allowed = collect((array) data_get($action->payload, 'choices', []))->pluck('id')->all();
+            abort_unless(in_array($path, $allowed, true), 422);
+
+            $draft = app(AiSupportRequestDraftService::class)->start($user, $lockedTicket, $path);
+            $action->forceFill(['consumed_at' => now()])->save();
+            $question = app(AiSupportRequestDraftService::class)->nextQuestion($user, $draft);
+            if ($question === null) {
+                app(AiSupportRecapService::class)->issue($user, $lockedTicket, $draft);
+            } else {
+                $this->createAutomatedMessage($lockedTicket, $question);
+            }
+        }, 3);
+        $this->dispatch('support-chat-action-completed');
+    }
+
+    public function transferToPerson(): void
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+        abort_unless($user && $ticket, 404);
+        app(AiSupportHandoffService::class)->transfer($user, $ticket, 'user_requested');
+        $this->dispatch('support-chat-action-completed');
+    }
+
+    public function confirmCareRequest(string $actionId): void
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+        abort_unless($user && $ticket, 404);
+        try {
+            app(AiSupportRecapService::class)->confirm($user, $ticket, $actionId);
+            $this->resetValidation();
+            $this->dispatch('support-chat-action-completed');
+        } catch (ValidationException $exception) {
+            $this->addError('confirmation', (string) collect($exception->errors())->flatten()->first());
+        }
+    }
+
+    public function renewCareRequestRecap(string $actionId): void
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+        abort_unless($user && $ticket, 404);
+        app(AiSupportRecapService::class)->renew($user, $ticket, $actionId);
+        $this->resetValidation();
+        $this->dispatch('support-chat-action-completed');
+    }
+
+    public function discardCareRequestDraft(): void
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+        abort_unless($user && $ticket, 404);
+        app(AiSupportRequestDraftService::class)->discard($user, $ticket);
+        $this->createAutomatedMessage($ticket, 'Your private request draft was discarded.');
+        $this->dispatch('support-chat-action-completed');
     }
 
     public function startNewConversation(): void
@@ -168,7 +253,10 @@ class ChatWidget extends Component
 
         return SupportTicketMessage::query()
             ->visibleTo(auth()->user())
-            ->with('sender:id,name,role')
+            ->with([
+                'sender:id,name,role',
+                'aiActions' => fn ($query) => $query->where('actor_user_id', auth()->id()),
+            ])
             ->where('support_ticket_id', $this->ticketId)
             ->latest('created_at')
             ->latest('id')
@@ -210,5 +298,32 @@ class ChatWidget extends Component
     public function render(): View
     {
         return view('livewire.support.chat-widget');
+    }
+
+    private function createAutomatedMessage(SupportTicket $ticket, string $body): ?SupportTicketMessage
+    {
+        return DB::transaction(function () use ($ticket, $body): ?SupportTicketMessage {
+            $locked = SupportTicket::query()->lockForUpdate()->findOrFail($ticket->id);
+            if ($locked->responder_mode !== SupportTicket::RESPONDER_MODE_AUTOMATED
+                || $locked->status === SupportTicket::STATUS_CLOSED
+                || $locked->transcript_deleted_at) {
+                return null;
+            }
+            $message = SupportTicketMessage::query()->create([
+                'support_ticket_id' => $locked->id,
+                'sender_user_id' => null,
+                'kind' => SupportTicketMessage::KIND_PUBLIC,
+                'responder_type' => SupportTicketMessage::RESPONDER_AUTOMATED,
+                'body' => $body,
+                'client_message_id' => (string) Str::uuid(),
+            ]);
+            $locked->forceFill([
+                'last_public_message_at' => $message->created_at,
+                'last_public_message_sender_id' => null,
+                'opener_last_read_at' => null,
+            ])->save();
+
+            return $message;
+        }, 3);
     }
 }

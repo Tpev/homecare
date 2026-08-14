@@ -196,11 +196,11 @@ The report also records:
 
 `DEC-012` is accepted with `gpt-5.6-luna`, low reasoning, as the initial offline baseline. `gpt-5.4-mini-2026-03-17`, low reasoning, remains the measured challenger. The deprecated nano snapshot is excluded.
 
-This decision does not enable a production model or user-visible assistant. Phase 2 shadow, production transcript processing, KB publication, navigation release, and any user-visible pilot remain blocked/off.
+This decision does not enable a production model or user-visible assistant. Production transcript processing, KB publication, navigation release, and every user-visible pilot remain blocked/off. `DEC-047` later skipped Phase 2 shadow.
 
 ## Exact next steps
 
-1. Preserve Luna low as an offline configuration only; do not add a production API key requirement or enable any runtime control.
-2. Decide `DEC-014` retention/extinction rules before any production-conversation shadow processing.
-3. Build the Phase 2 non-user-visible shadow path only after its explicit release gate, then rerun the frozen corpus for any model, prompt, schema, KB, or candidate change.
-4. Decide `DEC-015` and complete older-adult usability, support-operations, monitoring, and named-user release evidence before any visible pilot.
+1. Preserve Luna low as the accepted baseline and keep every production/runtime control off until implementation evidence and explicit release approval exist.
+2. Apply the retention/extinction limits closed by `DEC-058` to every actual provider and destination.
+3. Do not build production-conversation shadowing; use the offline, staff-account, older-adult, and exact-user sequence in `DEC-047` and `DEC-063`.
+4. Rerun the frozen corpus after any governed model, prompt, schema, KB, or candidate change and complete the `DEC-064` through `DEC-066` release evidence.

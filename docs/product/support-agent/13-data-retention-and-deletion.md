@@ -1,6 +1,6 @@
 # Data Retention, Deletion, and Legal Holds
 
-Status: Accepted periods implemented for canonical transcripts, compact events, previews/action evidence, grants/controls, KB history, and deletion evidence; downstream/provider periods remain open under `DEC-014`
+Status: All initial-build periods accepted; destination implementation and extinction evidence remain open
 
 Established: August 13, 2026
 
@@ -10,7 +10,7 @@ Required approvers for exact periods: Security/privacy, product, operations, eng
 
 ## Purpose
 
-Define how LoLo minimizes, retains, expires, deletes, and proves deletion of data created or touched by the intelligent support agent. This specification implements `DEC-024` and separates the accepted policy from the exact duration decisions still required by `DEC-014`.
+Define how LoLo minimizes, retains, expires, deletes, and proves deletion of data created or touched by the intelligent support agent. This specification implements `DEC-024` through `DEC-031` and the final downstream/provider limits accepted in `DEC-058`.
 
 This document is not a legal opinion and does not invent a universal retention number. Before production, LoLo must validate the duration matrix against its contracts, jurisdictions, tax/accounting duties, litigation and security obligations, privacy notices, subprocessors, and actual support operating needs.
 
@@ -35,7 +35,7 @@ Repository review on August 13, 2026 found:
 - No automatic support-ticket retention/purge job or exact support-ticket retention schedule was identified in the repository review.
 - The Privacy Policy says LoLo does not intend users to submit medical records or other regulated health information unless a specifically approved workflow and safeguards exist; inadvertently submitted information may be permanently deleted.
 
-The accepted `DEC-026` rule now closes the support-transcript policy gap, but it is not implemented in the current application. Every remaining agent-specific class still requires an explicit `DEC-014` duration decision before shadow or customer production data is stored.
+The accepted `DEC-026` rule closes the support-transcript policy gap, and `DEC-058` closes the remaining agent-specific periods. Production data remains blocked until every actual destination is inventoried, configured, tested, and proven to meet those limits.
 
 ## Data architecture principles
 
@@ -80,26 +80,26 @@ Deletion does not cascade into valid linked domain records. A minimal tombstone 
 
 ## Retention-class decision matrix
 
-Exact periods marked **TBD** are blocked by `DEC-014`; they are not engineering defaults.
+Every period in this matrix is approved. A missing destination mapping or unenforced deletion path fails closed rather than becoming an engineering default.
 
 | Class | Examples | Canonical location | Accepted treatment | Exact period / trigger |
 | --- | --- | --- | --- | --- |
 | `RET-CONTENT-001` Canonical support transcript | User and AI public messages, human replies, private support notes | Support tickets/messages | One canonical copy; visible only under support permissions; delete content automatically unless a narrow hold applies | **12 calendar months after the most recent final resolution** under `DEC-026`; reopening resets the clock |
 | `RET-TRANSIENT-001` Model input/context copy | Constructed prompt, retrieved snippets, recent transcript context, semantic page state | In-memory/request path and provider processing | Under `DEC-025`, send only what the turn needs and create no LoLo-side persistent copy of the complete assembled request; provider treatment must match contract/configuration | **No LoLo persistence beyond request processing.** Provider extinction remains open under `RET-DEC-005` |
-| `RET-TRANSIENT-002` Candidate output before delivery | Unvalidated model output, suppressed reply, intermediate structured result | Short-lived orchestration store if required | Never add to canonical transcript unless delivered; delete quickly after validation, suppression, failure, or reconciliation | **TBD:** short technical TTL |
+| `RET-TRANSIENT-002` Candidate output before delivery | Unvalidated model output, suppressed reply, intermediate structured result | In memory; short-lived orchestration store only if technically required | Never add to canonical transcript unless delivered; delete immediately after validation, suppression, failure, or reconciliation | **Absolute maximum one hour** under `DEC-058` |
 | `RET-EVENT-001` Structured interaction events | Capability route, KB IDs/versions, reason codes, navigation result, policy denial, latency/cost | Agent event store | Store minimized observable metadata and references, never copied message bodies, KB bodies, complete model requests, or chain-of-thought | **24 calendar months after the conversation's most recent final resolution** under `DEC-027`; reopening resets the clock |
 | `RET-ACTION-001` Unconfirmed preview content | Rendered preview and reversible proposed-action state | Short-lived preview store | Delete at cancellation, replacement, invalidation, or expiry; do not treat storage time as preview validity | **As soon as invalid; absolute maximum 24 hours after creation** under `DEC-028` |
 | `RET-ACTION-002` Confirmed-action evidence | Actor/capability references, preview hash, confirmation, idempotency reference, outcome, authoritative receipt link | Agent evidence plus domain audit/record | Compact proof only; no rendered preview, message text, unrestricted arguments, credentials, or copied domain content | **24 calendar months after authoritative commit** under `DEC-028`; domain record keeps its own schedule |
-| `RET-DIAG-001` Detailed diagnostics | Error snapshot, provider trace, safe request fragment | Restricted diagnostic store | Redact at collection; short TTL; no full transcript or secrets by default | **TBD:** short diagnostic TTL |
+| `RET-DIAG-001` Detailed diagnostics | Error snapshot, provider trace, safe request fragment | Restricted diagnostic store | Redact at collection; no full transcript, complete prompt, credentials, payment data, or unrestricted tool payloads | **Seven calendar days** under `DEC-058` |
 | `RET-GRANT-001` Pilot access history | Grant, scope, start, expiry, revocation, actor, minimized reason | Pilot grant/audit store | Retain while scheduled/active and long enough to prove dependent AI eligibility; no transcript or care content | **24 calendar months after expiry/revocation** under `DEC-029`, extended only while retained evidence depends on it |
 | `RET-KB-001` Never-released KB versions | Draft/approved working versions never used in production | Versioned KB store | Permanently deletable through approved admin workflow only when no protected dependency exists | **Immediate on authorized deletion** under `DEC-030` |
 | `RET-KB-002` Released KB versions | Released body/facts/exclusions, KB-held source copies, authoring/review notes, compact lifecycle audit | Versioned KB store | Retain while published/paused and for bounded historical evidence; dependency extension only until evidence expires | **36 calendar months after permanent supersession/withdrawal/final retirement** under `DEC-030` |
 | `RET-KB-003` Released-version tombstone | Stable IDs, lifecycle timestamps/status, replacement, policy version, deletion result, minimized actor/action references | Versioned KB tombstone store | No answer, facts, source copies, notes, or customer content; stable ID is never reused | **24 additional calendar months after full-version deletion** under `DEC-030`, then delete/de-identify; reserve ID permanently |
 | `RET-ADMIN-001` Effective AI control versions | Master, capability, tool, model route, human-only, and other production control states | Immutable/minimized control audit | Retain while effective and long enough to prove dependent interactions; no transcript/KB body copies | **24 calendar months after replacement/deactivation** under `DEC-029`, extended only while retained evidence depends on it |
 | `RET-ADMIN-002` Failed/denied/cancelled AI control attempts | Actor, target, attempted scope, reason/result, timestamp | Immutable/minimized control audit | Compact attempt evidence only | **24 calendar months after attempt** under `DEC-029`, extended only while retained incident/hold evidence depends on it |
-| `RET-ANALYTICS-001` Product metrics | Cost, latency, completion, error counts | Analytics store | Prefer aggregated/de-identified metrics; delete linkable raw events on their class schedule | **TBD:** linkable raw period; aggregate period may be longer |
-| `RET-EXPORT-001` Manual exports | Approved audit or incident export | Controlled export location | Purpose-bound, encrypted, access-logged, explicit expiry; never an unmanaged retention bypass | **TBD per export purpose**, required before creation |
-| `RET-BACKUP-001` Backups and replicas | Database backups, snapshots, replicas, caches | Infrastructure/provider systems | Document maximum extinction; prevent ordinary access; restored systems reapply deletions before exposure | **TBD:** maximum backup/replica extinction |
+| `RET-ANALYTICS-001` Product metrics | Cost, latency, completion, error counts | Analytics store | Delete linkable raw analytics after 30 days; retain only de-identified aggregate metrics afterward | **30 days linkable; 24 calendar months de-identified aggregate** under `DEC-058` |
+| `RET-EXPORT-001` Manual exports | Approved audit or incident export | Controlled export location | Purpose-bound, encrypted, access-logged, explicit expiry; never an unmanaged retention bypass | **Seven days by default; maximum 30 days** only with documented incident/legal/security/contractual authority under `DEC-058` |
+| `RET-BACKUP-001` Backups and replicas | Database backups, snapshots, replicas, caches, indexes | Infrastructure/provider systems | Invalidate caches/indexes immediately; replicas extinguish within 24 hours; backups within 35 days; restored systems reapply deletions before exposure | **24 hours for cache/index/replica extinction; 35 days for backups/snapshots** under `DEC-058` |
 | `RET-HOLD-001` Held records | Records under legal, regulatory, contractual, fraud, security, or incident hold | Original store plus hold registry | Suspend only covered deletion; preserve normal access restrictions; review or expire the hold | Set by authorized hold record, not indefinite by default |
 | `RET-DELETE-001` Successful deletion evidence | Rule/class, policy version, job/run or operator, timestamps, necessary counts, outcome, restricted request/exception reference | Minimized audit store | Retain no deleted content, prompt, message body, KB/source copy, unrestricted argument, credential, or reversible value | **36 calendar months after successful deletion** under `DEC-031` |
 | `RET-DELETE-002` Failed/incomplete deletion evidence | Rule/class, failure/retry state, timestamps, safe destination/result metadata | Minimized audit store | Retain through remediation without copying affected content | **Until resolved, then 36 calendar months** under `DEC-031` |
@@ -202,19 +202,16 @@ Release evidence must include a data-flow inventory, approved matrix, sample dry
 
 ## Current gaps and blockers
 
-1. Exact periods for suppressed output, diagnostics, linkable analytics, exports, providers, replicas, caches, indexes, and backups remain unresolved in `DEC-014`.
-2. Every production provider and downstream destination still needs an extinction inventory and restore/re-deletion exercise before real conversation shadowing.
+1. Exact periods are closed by `DEC-058`; each actual provider and destination must still prove it can meet them.
+2. Every production provider and downstream destination still needs an extinction inventory and restore/re-deletion exercise before a named-user pilot processes real conversations.
 3. LoLo must confirm whether current published privacy notices and contracts need amendment before provider processing or customer-facing AI is released.
 4. The Phase 0-1 implementation provides database holds and narrow deletion skipping, but a complete authorized hold-management UI, failure alerting, downstream deletion adapters, and restore reconciliation remain later operational work.
 
-Implemented foundation evidence is recorded in [the Phase 0-1 build record](16-phase-0-1-foundation-build-record.md). These foundations do not authorize model calls, real-conversation shadowing, or customer-facing AI.
+Implemented foundation evidence is recorded in [the Phase 0-1 build record](16-phase-0-1-foundation-build-record.md). These foundations and retention decisions do not authorize model calls or customer-facing AI.
 
-## Next decisions, in order
+## Retention decision status
 
-Discuss and record these one at a time:
-
-1. `RET-DEC-004` — What short TTLs apply to suppressed outputs and detailed diagnostic/error data?
-2. `RET-DEC-005` — What maximum extinction time applies to providers, replicas, caches, indexes, analytics copies, exports, and backups?
+No retention-period interview remains open for the approved initial build. Production use still requires destination inventory, provider configuration evidence, automated deletion tests, and restore/re-deletion evidence.
 
 ## Accepted retention decisions
 
@@ -227,6 +224,8 @@ Discuss and record these one at a time:
 | `RET-DEC-003C` / `DEC-029` | Retain pilot grants while scheduled/active and AI control versions while effective, then for 24 calendar months; retain failed/denied/cancelled attempts for 24 months; extend only for retained dependencies. | August 13, 2026 |
 | `RET-DEC-003D` / `DEC-030` | Keep released KB versions for 36 calendar months after final retirement, extended only for retained dependencies; then retain a content-free tombstone for 24 additional months and permanently reserve the stable ID. | August 13, 2026 |
 | `RET-DEC-003E` / `DEC-031` | Retain successful content-free deletion evidence for 36 calendar months; retain failure evidence until resolved plus 36 months and hold/exception evidence while active plus 36 months. | August 13, 2026 |
+| `RET-DEC-004` / `DEC-058` | Suppressed output is memory-only where possible and at most one hour; redacted diagnostics retain seven days; linkable analytics 30 days and de-identified aggregates 24 months. | August 14, 2026 |
+| `RET-DEC-005` / `DEC-058` | Caches/indexes/replicas extinguish within 24 hours, exports default to seven and never exceed 30 days without documented authority, provider retention is shortest available and at most 30 days with no training, and backups extinguish within 35 days with pre-access re-deletion on restore. | August 14, 2026 |
 
 ## Source basis
 

@@ -16,11 +16,14 @@
     @if(! $runtimeAvailable)
         <x-alert color="blue">The deployment runtime guard is off. No customer-facing AI can become eligible, even when a grant is stored.</x-alert>
     @endif
+    @if(! $providerEnabled)
+        <x-alert color="blue">The provider deployment guard is off. No customer model call can run.</x-alert>
+    @endif
 
     <div class="grid gap-4 md:grid-cols-3">
         <x-card>
             <p class="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Customer AI state</p>
-            <p class="mt-2 text-2xl font-extrabold text-slate-950">{{ $runtimeAvailable && $masterState['enabled'] && $visibleState['enabled'] && ! $humanOnlyState['enabled'] ? 'Pilot controls open' : 'Failing closed' }}</p>
+            <p class="mt-2 text-2xl font-extrabold text-slate-950">{{ $runtimeAvailable && $providerEnabled && $masterState['enabled'] && $visibleState['enabled'] && ! $humanOnlyState['enabled'] ? 'Pilot controls open' : 'Failing closed' }}</p>
             <p class="mt-2 text-sm text-slate-600">Master {{ $masterState['enabled'] ? 'on' : 'off' }} · user-visible {{ $visibleState['enabled'] ? 'on' : 'off' }} · human-only {{ $humanOnlyState['enabled'] ? 'on' : 'off' }}</p>
         </x-card>
         <x-card>
@@ -39,9 +42,9 @@
         <x-slot:header><h2 class="text-lg font-semibold">Safety posture</h2></x-slot:header>
         <ul class="grid gap-3 text-sm text-slate-700 md:grid-cols-2">
             <li class="rounded-xl border border-slate-200 p-4"><strong>Exact users only.</strong> Grants never extend to another family or account member.</li>
-            <li class="rounded-xl border border-slate-200 p-4"><strong>No model runtime.</strong> This phase contains no customer model-call path.</li>
+            <li class="rounded-xl border border-slate-200 p-4"><strong>Two deployment guards.</strong> Runtime and provider access must both be configured before any customer model call.</li>
             <li class="rounded-xl border border-slate-200 p-4"><strong>Human support preserved.</strong> Existing chat, claim, reply, resolve, and close behavior remains primary.</li>
-            <li class="rounded-xl border border-slate-200 p-4"><strong>Shadow locked.</strong> Production-data shadowing cannot be enabled before DEC-014 is approved.</li>
+            <li class="rounded-xl border border-slate-200 p-4"><strong>No shadow mode.</strong> Production-conversation shadowing is permanently outside this release.</li>
         </ul>
     </x-card>
 </div>

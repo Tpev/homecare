@@ -8,7 +8,7 @@
     <x-card>
         <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_220px]">
             <label class="text-sm font-semibold text-slate-800">Search
-                <input wire:model.live.debounce.300ms="search" type="search" placeholder="Name, email, user ID, or grant ID" class="mt-1 min-h-11 w-full rounded-xl border-slate-300 text-base">
+                <input wire:model.blur="search" type="search" placeholder="Name, email, user ID, or grant ID" class="mt-1 min-h-11 w-full rounded-xl border-slate-300 text-base">
             </label>
             <label class="text-sm font-semibold text-slate-800">Status
                 <select wire:model.live="status" class="mt-1 min-h-11 w-full rounded-xl border-slate-300 text-base">

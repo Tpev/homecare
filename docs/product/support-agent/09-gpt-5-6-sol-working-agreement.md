@@ -1,6 +1,6 @@
 # GPT-5.6 Sol Working Agreement
 
-Status: Proposed
+Status: Active
 
 Last reviewed: August 14, 2026
 
@@ -29,14 +29,16 @@ Read, in order:
 9. [Admin control plane, pilot access, and KB workspace](11-admin-control-plane-and-pilot.md)
 10. [Admin UX specification](12-admin-ux-specification.md) when the task affects admin or KB experiences
 11. [Data retention, deletion, and legal holds](13-data-retention-and-deletion.md) when the task stores, copies, exports, logs, sends, backs up, or deletes customer or agent data
-12. [Build readiness and remaining validation ledger](14-build-readiness-ledger.md) to confirm which phase is authorized and which later decisions must remain disabled
+12. [Build readiness and validation ledger](14-build-readiness-ledger.md) to distinguish approved implementation scope from release evidence and controls that must remain disabled
 13. [Phase 0-1 foundation build record](16-phase-0-1-foundation-build-record.md) to avoid rebuilding completed foundations or enabling excluded behavior
 14. [Production deployment, verification, and next-phase tracker](17-production-deployment-and-next-phase-tracker.md) for the live status, open defects, next gate, and work ordering
 15. [Initial governed KB and evaluation pack](18-initial-kb-and-evaluation-pack.md) when authoring knowledge, evaluations, or the first role-aware answer/navigation runtime
 16. [Phase 1 content and evaluation build plan](19-phase-1-content-and-evaluation-build-plan.md) when implementing the approved initial content/evaluation milestone
 17. [Phase 1A governed content build record](20-phase-1a-content-build-record.md) when changing the initial Draft pack or its production evidence
 18. [Phase 1B offline model evaluation adapter and execution record](21-phase-1b-offline-model-evaluation.md) when running, changing, or interpreting model selection evidence
-19. The applicable domain product specifications in the [source register](registries/source-register.md)
+19. [Interactive care-request expansion](22-interactive-care-request-expansion.md) for the accepted Family scope and current-form evidence
+20. [Interactive assistant approved build contract](23-interactive-assistant-approved-build-contract.md) for the consolidated defaults, gates, and build order
+21. The applicable domain product specifications in the [source register](registries/source-register.md)
 
 Then inspect current code, tests, migrations, routes, policies, and feature configuration. Documentation describes intent; repository inspection establishes the current baseline.
 

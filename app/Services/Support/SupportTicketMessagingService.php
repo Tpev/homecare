@@ -89,9 +89,12 @@ class SupportTicketMessagingService
 
             $lockedTicket->forceFill($updates)->save();
 
-            $recipients = $lockedTicket->assignedAdmin()->get();
-            if ($recipients->isEmpty()) {
-                $recipients = User::query()->where('role', 'admin')->get();
+            $recipients = collect();
+            if ($lockedTicket->responder_mode !== SupportTicket::RESPONDER_MODE_AUTOMATED) {
+                $recipients = $lockedTicket->assignedAdmin()->get();
+                if ($recipients->isEmpty()) {
+                    $recipients = User::query()->where('role', 'admin')->get();
+                }
             }
 
             return [$message, true, $recipients];

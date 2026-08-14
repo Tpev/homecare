@@ -162,9 +162,9 @@ Sentiment may help prioritize review but must not be the only escalation signal.
 
 ### User sees
 
-> I don't want to give you the wrong help. I'm sending this conversation to LoLo Support. You can keep using this chat, and you won't need to repeat what you already told me.
+> I’ve transferred this conversation to LoLo Support. They’ll reply here as soon as they can.
 
-Do not show queue position, queue status, or automated wait-time updates. Do not say “someone is joining now” unless a person is actually present.
+Do not show queue position, queue status, business hours, guaranteed response time, or automated wait-time updates. Do not say “someone is joining now” unless a person is actually present. Both authorized administrators receive an alert and either may claim; the public response does not depend on which person is staffed.
 
 ### Support sees
 
@@ -179,6 +179,8 @@ Do not show queue position, queue status, or automated wait-time updates. Do not
 - Pending draft, without an active commit confirmation
 - Escalation reason and priority
 - Complete transcript and event timeline
+
+For a 24/7 coverage transfer, include available confirmed recipient, location, desired start, care needs, continuous/overnight requirement, emergency-screening result, and unanswered questions without delaying transfer for a long intake. After the `DEC-049` pricing activation hold is separately released, the assistant may state $30 per hour and perform requested deterministic duration arithmetic; coverage coordination and availability remain human responsibilities. See `DEC-057`.
 
 The generated summary is convenience, not evidence. Support can inspect the original events.
 

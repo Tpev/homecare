@@ -18,6 +18,24 @@ return [
         FILTER_VALIDATE_BOOL,
     ),
 
+    /*
+    | Customer-runtime provider access is an additional deployment guard. It is
+    | intentionally independent from eligibility and every database control.
+    */
+    'provider_enabled' => filter_var(env('AI_SUPPORT_PROVIDER_ENABLED', false), FILTER_VALIDATE_BOOL),
+    'model' => env('AI_SUPPORT_MODEL', 'gpt-5.6-luna'),
+    'reasoning_effort' => env('AI_SUPPORT_REASONING_EFFORT', 'low'),
+    'max_output_tokens' => (int) env('AI_SUPPORT_MAX_OUTPUT_TOKENS', 900),
+    'model_configuration_version' => 'luna-low-v1',
+    'prompt_schema_version' => 'interactive-support-v3',
+    'provider_retry_attempts' => 2,
+    'provider_input_usd_per_million' => 1.00,
+    'provider_output_usd_per_million' => 6.00,
+    'conversation_cost_alert_microunits' => 30_000,
+    'conversation_cost_stop_microunits' => 50_000,
+    'draft_retention_days' => 7,
+    'confirmation_validity_minutes' => 30,
+
     'policy_version' => 'ai-support-eligibility-v1',
     'context_contract_version' => 'support-context-v1',
     'event_contract_version' => 'support-event-v1',
@@ -43,12 +61,21 @@ return [
         'family_support_v1' => [
             'label' => 'Family support pilot v1',
             'roles' => ['family'],
-            'capabilities' => ['support_answers_v1'],
+            'capabilities' => [
+                'support_answers_v1',
+                'semantic_navigation_v1',
+                'family_context_v1',
+                'care_intake_v1',
+                'care_request_draft_v1',
+                'care_request_recap_v1',
+                'care_request_publish_v1',
+                'care_24h_handoff_v1',
+            ],
         ],
         'caregiver_support_v1' => [
             'label' => 'Caregiver support pilot v1',
             'roles' => ['caregiver'],
-            'capabilities' => ['support_answers_v1'],
+            'capabilities' => ['support_answers_v1', 'semantic_navigation_v1'],
         ],
     ],
 
@@ -60,14 +87,36 @@ return [
         'role.family' => false,
         'role.caregiver' => false,
         'capability.support_answers_v1' => false,
+        'capability.semantic_navigation_v1' => false,
+        'capability.family_context_v1' => false,
+        'capability.care_intake_v1' => false,
+        'capability.care_request_draft_v1' => false,
+        'capability.care_request_recap_v1' => false,
+        'capability.care_request_publish_v1' => false,
+        'capability.care_24h_handoff_v1' => false,
+        'commit.one_time' => false,
+        'commit.recurring' => false,
+        'tool.care-request.publish.one-time' => false,
+        'tool.care-request.publish.recurring' => false,
     ],
 
     /*
-    | Material-action tools remain unregistered in this foundation release.
-    | A later capability release must add an exact tool/capability/version entry
-    | and its deny-by-default capability and tool controls before use.
+    | Material-action tools are registered here but remain disabled by default.
+    | Each release still requires its exact capability/version entry plus both
+    | the capability and tool controls to be explicitly enabled.
     */
-    'tools' => [],
+    'tools' => [
+        'care-request.publish.one-time' => [
+            'capability_id' => 'care_request_publish_v1',
+            'versions' => ['v1'],
+            'preview_validity_minutes' => 30,
+        ],
+        'care-request.publish.recurring' => [
+            'capability_id' => 'care_request_publish_v1',
+            'versions' => ['v1'],
+            'preview_validity_minutes' => 30,
+        ],
+    ],
 
     'navigation_targets' => [
         'support.center' => ['route' => 'support.index', 'roles' => ['family', 'caregiver']],

@@ -1,6 +1,6 @@
-# Build Readiness and Remaining Validation Ledger
+# Build Readiness and Validation Ledger
 
-Status: Phase 0-1 foundation deployed fail-closed; offline adapter implemented; Phase 0 extinction closeout and later validations remain active
+Status: Approved interactive build implemented and evaluated; limited-release evidence open
 
 Last updated: August 14, 2026
 
@@ -8,121 +8,137 @@ Owner: Product and engineering
 
 ## Executive answer
 
-The approved Phase 0-1 foundation slice has been implemented and deployed to production without enabling customer-facing AI, real-conversation shadowing, semantic navigation execution, care-request drafting, or Class D commits. Its implementation evidence and limitations are recorded in [the Phase 0-1 build record](16-phase-0-1-foundation-build-record.md); production evidence and active follow-ups are recorded in [the production deployment and next-phase tracker](17-production-deployment-and-next-phase-tracker.md).
+There are **zero remaining product interviews blocking engineering** for the declared initial intelligent-support build. The Phase 0-1 foundation is deployed fail-closed, the consolidated interactive scope is approved through `DEC-047` through `DEC-066`, and the runtime/request implementation now has deterministic, browser, and live-model evidence recorded in [the implementation record](24-interactive-assistant-implementation-and-release-evidence.md).
 
-Six product-validation packages remain before the complete first one-time-request pilot can reach Phase 6. One package contains two retention choices, so the ledger represents seven individual product decisions. `READY-VAL-002` was resolved by the English-only `DEC-016`, and `READY-VAL-003` was resolved for the first Family package by `DEC-032`. The remaining packages are deliberately scheduled at the latest safe gate rather than blocking offline work.
+This is implementation readiness, not limited-release approval. Production/user-visible AI remains off. Provider/privacy, older-adult usability, production-like operations/rollback rehearsal, named pilot users, and explicit limited-release approval remain required before any release switch or grant is activated.
 
-This count covers product decisions requiring owner validation. It does not count implementation work, tests, evaluations, privacy inventories, usability studies, production access checks, or release evidence as separate product questions; those are delivery requirements created during the relevant phase.
+Phase 0 also retains one independent operational tail: every legacy-data derivative and containing backup must reach verified extinction or controlled final expiry. Do not repeat the completed primary destruction.
 
-## Count by gate
+## Product-decision count
 
-| Gate | Product validations still required | Count | Can engineering proceed before them? |
-| --- | --- | ---: | --- |
-| Phase 0-1 foundation | Implemented and deployed fail-closed; Phase 0 backup/derived-target extinction remains an operational closeout item | 0 product decisions | Complete for the declared deployed foundation scope; not complete as an intelligent-agent release |
-| Before offline model baseline and first capability approval | Runtime model/configuration | 1 | Family KB and evaluation authoring may proceed under `DEC-016` and `DEC-032`; model selection still requires measured evidence |
-| Before shadow processing of production conversations | Remaining retention package: short-lived output/diagnostic TTLs and downstream provider/analytics/export/backup extinction rules | 1 package / 2 decisions | Yes for local/offline work; no production conversation data until resolved |
-| Before any user-visible named-user pilot | Staffed-hours/ownership promise and human-response SLO | 1 | Yes for offline and shadow work |
-| Before Phase 5 care-request drafting | Required-field/profile-prefill contract | 1 | Yes for lower-risk answers/navigation |
-| Before Phase 6 confirmed care-request publication | Confirmation lifetime; notification/operations behavior | 2 | Yes for drafting; Class D commit remains disabled |
-| **Total remaining** | **Six later validation packages** | **6 packages / 7 individual decisions** | Continue offline work only within the declared gates |
+| Gate | Unanswered product decisions | Engineering status |
+| --- | ---: | --- |
+| Model-independent foundation | 0 | Deployed fail-closed |
+| Offline model and governed initial content | 0 | Complete; Luna-low baseline accepted; content remains non-user-visible |
+| Production-data retention and provider maximums | 0 | Periods accepted; destination/configuration evidence still required |
+| Human transfer and 24/7 handling | 0 | Implemented and deterministically tested; operations rehearsal required |
+| Family request intake, draft, recap, and publication | 0 | Implemented; deterministic, browser, and model evidence pass |
+| Exact-user pilot sequence and release gates | 0 | Contract accepted; release approval still required after evidence |
+| Caregiver initial answer/navigation scope | 0 | Runtime boundaries implemented and deterministically tested; release evidence required |
+| **Total** | **0** | **Engineering may begin within the approved boundaries** |
 
-## Implemented Phase 0-1 build slice
+## Deployed foundation and implementation candidate
 
-The first engineering slice contains no user-visible production AI and no new care-request publication:
+The deployed Phase 0-1 slice provides:
 
-1. Verify and stabilize the existing human support conversation and administrator workflow.
-2. Retire the legacy AI care-request copilot and implement the separately controlled `DEC-011` data-destruction procedure. Production execution of destructive steps still requires verified environment targets and its own operational authorization.
-3. Establish deny-by-default master/capability controls and prove non-granted users see and invoke no AI behavior.
-4. Build exact per-user pilot grants in the existing admin user experience, including expiry, immediate revocation, audit, and effective-state display.
-5. Build the governed KB admin workspace with draft, edit, validate, self-review/approve, publish-now, pause, supersede, bounded withdrawal/deletion, version history, and retention visibility.
-6. Defined versioned context, event, retention, semantic-navigation, handoff, and confirmation contracts without enabling customer-facing model execution.
-7. Added deterministic tests for authorization, isolation, KB lifecycle, retention clocks, deletion/hold behavior, handoff, and confirmation boundaries.
+1. Existing canonical human-support conversation and Admin workflow.
+2. Retired legacy AI care-request runtime and guarded destruction procedure.
+3. Deny-by-default deployment, master, role, capability, tool, and human-only controls.
+4. Exact per-user pilot grants with expiry, revocation, and audit.
+5. Governed KB draft/edit/validate/self-approve/publish/pause/supersede/withdraw/delete workflow.
+6. Versioned context, event, retention, navigation, handoff, and confirmation foundations.
+7. Deterministic authorization, isolation, retention, handoff, and confirmation-boundary tests.
+8. Admin conversation evidence surfaces.
 
-The slice explicitly excludes customer-facing AI replies, shadowing real conversations, semantic navigation execution, care-request drafting, and all Class D commits.
+The current repository candidate adds the customer runtime, semantic navigation, authorized context, private drafts, deterministic recap, confirmed one-time/recurring publication, receipt, cost stop, provider adapter, and direct handoff without changing the production fail-closed state. It is not yet recorded as deployed or released.
 
-## Production state after deployment
+## Resolved product packages
 
-The production smoke test on August 13, 2026 verified that:
+| Package | Resolution |
+| --- | --- |
+| Runtime baseline | `DEC-012`: Luna-low is the least-cost passing offline baseline; Mini-low remains challenger |
+| Language | `DEC-016`: English only |
+| Family and Caregiver initial read scope | `DEC-032` and `DEC-033` |
+| Shadow mode | `DEC-047`: skipped; use offline, staff-account, usability, and exact-user pilot evidence |
+| Interactive Family request scope | `DEC-048`: recommend/select, context, one-time/recurring draft, recap, confirmed publication; 24/7 human only |
+| Pricing truth and implementation hold | `DEC-049`: $30/hour customer truth; no pricing/payment code change or live quote until reconciliation |
+| Authorized Family context | `DEC-050` |
+| Minimum progressive flow | `DEC-051` |
+| Recap and direct publication | `DEC-052` |
+| Draft persistence | `DEC-053`: private seven-day autosave/resume |
+| Recap modification | `DEC-054` |
+| Confirmation | `DEC-055`: 30 minutes with one-step fresh recap |
+| Publication effects | `DEC-056`: ordinary workflow plus restricted internal provenance |
+| Human operations and 24/7 summary | `DEC-057` |
+| Retention/extinction periods | `DEC-058` |
+| Temporal, ambiguity, and ownership rules | `DEC-059` |
+| Receipt and failure behavior | `DEC-060` |
+| Admin evidence | `DEC-061` |
+| Expanded KB and role scope | `DEC-062` |
+| Pilot sequence | `DEC-063` |
+| Accuracy and elder usability | `DEC-064` |
+| Cost/performance | `DEC-065` |
+| Automatic stop and rollback | `DEC-066` |
 
-- The public site showed no AI assistant.
-- Unauthenticated requests to every `/admin/ai-support*` workspace redirected to login.
-- The authenticated overview reported the deployment guard off, customer state failing closed, master off, user-visible off, human-only on, and zero active exact-user grants.
-- The Family and Caregiver user-profile views each exposed the correct role-specific exact-user grant workflow without bypassing higher-level controls.
-- The KB index and draft editor loaded with zero production entries; no production KB mutation was performed during verification.
-- The canonical human support queue and ticket detail remained available, including human messages, internal notes, ownership, and compact AI evidence.
-- No application console error occurred during the inspected flow.
-
-Two tracked limitations remain: the overview's KB summary copy still says **Foundation pending** even though the governed workspace is deployed, and create/edit/publish/delete behavior was not mutation-tested in production because the smoke test was intentionally read-only.
-
-## Resolved validation packages
-
-### `READY-VAL-002` — Product language (`DEC-016`)
-
-Resolved August 13, 2026: intelligent support is English only in every phase. Non-English input does not trigger translation or an unverified answer; approved simple English copy offers human transfer without promising another-language human service.
-
-### `READY-VAL-003` — First Family answer and navigation scope (`DEC-032`)
-
-Resolved August 13, 2026: the initial Family package contains only human-help/emergency limitation, dashboard orientation, existing request basics/status, navigation to the normal manual new-request form, Family Account roles/access, and account/profile orientation. Answers and navigation remain separately phased. No write or care-request drafting/publication is authorized. The companion first Caregiver read-only scope was subsequently accepted under `DEC-033`; it does not add another validation package to this Family one-time-request readiness count.
-
-## Remaining validation packages
-
-### `READY-VAL-001` — Initial runtime baseline (`DEC-012`)
-
-Choose the least costly evaluated model/provider/configuration candidate and the challenger set. This is needed before measuring the offline baseline, not before building model-independent controls.
-
-Resolved August 14, 2026. `DEC-012` accepts `gpt-5.6-luna` at low reasoning as the offline baseline and retains `gpt-5.4-mini-2026-03-17` low as challenger. Both completed 278/278 calls with zero hard and critical failures, 100% critical pass across all five runs, and 99.64% deterministic quality. Luna's measured cost was $0.06563460 versus $0.40898655 for Mini. Exact commit, checksums, latency, tokens, and content-minimized report evidence are recorded in [the Phase 1B execution record](21-phase-1b-offline-model-evaluation.md). No production or user-visible authority was granted.
-
-### `READY-VAL-004` — Remaining retention (`DEC-014`)
-
-Resolve two questions before production-data shadow:
-
-1. TTLs for suppressed/undelivered output and restricted detailed diagnostics.
-2. Maximum extinction for linkable analytics, manual exports, providers, replicas, caches, indexes, and backups.
-
-### `READY-VAL-005` — Human operations (`DEC-015`)
-
-Name the owner during and outside staffed hours and approve truthful response/SLO copy. Transfer remains immediate and automation stops; LoLo does not show queue status.
-
-### `READY-VAL-006` — Care-request draft contract
-
-Approve the exact domain-required fields and whether authorized profile values need field-by-field confirmation or only clear final review. Do not inherit legacy copilot completeness rules.
-
-### `READY-VAL-007` — Confirmation lifetime
-
-Approve the short server-bound validity window and invalidation rules for a Class D preview. The accepted 24-hour preview storage ceiling is not a validity window.
-
-### `READY-VAL-008` — Request notification and operations behavior
-
-Approve which existing user/caregiver/admin notifications and operational events follow an agent-created request. No notification may imply an outcome not proven by the authoritative domain receipt.
+The normative consolidated source is [the approved build contract](23-interactive-assistant-approved-build-contract.md).
 
 ## Engineering decisions that do not require another product interview
 
-Engineering may resolve these within approved boundaries and document the result:
+Engineering may decide and document:
 
-- Exact schema/table layout
-- Domain-service composition, provided it does not reuse the legacy copilot path or weaken policy
-- Transactional outbox/event durability design
-- Idempotency implementation
-- Job scheduling and retry mechanics
-- Admin component organization within the accepted UX
-- Test runner and evaluation harness implementation
+- Exact schema and index layout
+- Service and domain composition that does not reuse legacy copilot code
+- Transactional outbox/event durability mechanics
+- Idempotency storage and reconciliation implementation
+- Queue/job and retry mechanics within the approved retry ceilings
+- Component organization and internal API boundaries
+- Evaluation runner implementation and fixture organization
+- Safe redaction implementation that meets the approved evidence contract
 
-Any choice that changes user-visible scope, authorization, confirmation, retention, source truth, human ownership, or release gates returns to the decision log.
+Return to Product for any change to user-visible scope, authorization, role/data access, confirmation, retention, source truth, pricing truth, human ownership, pilot size, release order, hard gates, or automatic stop conditions.
 
-## Evidence still required during delivery
+## Delivery evidence completed
 
-These are not pre-build questions, but they block their declared release stage:
+- Runtime, Family/Caregiver isolation, exact-user private transcripts, navigation, context, draft, recap, confirmation, publication, receipt, handoff, retention, observability, and kill switches implemented
+- 12-entry expanded KB manifest and 60 entry-linked evaluation cases implemented as Draft-only import
+- Frozen 56-case live Luna-low v3 gate: 56/56, 100% extraction, zero hard failures, P95 4.769 seconds
+- Final full deterministic Laravel suite: 680 passing with 5,037 assertions after all hardening; final transfer/draft/runtime slice passes 22 tests with 159 assertions
+- Isolated fresh migration/seed and new recap-to-live-request Playwright flow pass
+- Same-account exact-user privacy, Admin evidence, 200% text, responsive mobile, keyboard, offline retry, and established human support regressions pass
+- Production asset build and feature-scoped formatting pass
 
-- Current production configuration and legacy-data inventory
-- Context-field purpose/redaction inventory
-- Authoritative initial KB entries and evaluation cases
-- Deterministic authorization, isolation, confirmation, deletion, and concurrency tests
-- Offline repeated-run model evaluations
-- Shadow review before user-visible answers
-- Older-adult mobile/accessibility usability evidence
-- Named-user pilot list, support readiness, monitoring, cost budget, and rollback rehearsal
-- Zero unresolved critical failures for the released scope
+Exact metrics, report checksum, audit corrections, and the deploy/rollback sequence are in [the implementation record](24-interactive-assistant-implementation-and-release-evidence.md).
+
+## Limited-release evidence still required
+
+These are implementation/release tasks, not unanswered product decisions:
+
+### Privacy and operations
+
+- Complete context-field purpose/source/redaction inventory
+- Provider no-training and retention configuration evidence
+- Cache/index/replica/export/backup destination inventory
+- Automated deletion, downstream extinction, and restore/re-deletion exercises
+- Human alerting, takeover, and 24/7 handoff rehearsal
+- Phase 0 derived-target/backup extinction closeout
+
+### Knowledge and evaluation
+
+- Import the expanded manifest as validated production Drafts and publish only reviewed, non-held entries needed by the approved pilot
+- Re-run the frozen Luna-low gate after any governed model, prompt, schema, KB, or corpus change
+- Keep the pricing entry outside ordinary answer retrieval until `DEC-049` is released
+
+### Usability and pilot
+
+- Five-person representative older-adult mobile/desktop/accessibility study
+- Staff-operated production-like test-account results
+- Exact initial two-user Family pilot list and 14-day grants
+- Monitoring, alert, cost, latency, abort, and rollback rehearsal
+- Review process for every pilot interaction and request
+- Explicit limited-release approval after all evidence passes
+
+## Build order
+
+1. Common runtime, canonical transcript integration, governed retrieval, and human handoff.
+2. Semantic navigation.
+3. Family context reads and care-path recommendation.
+4. Shared one-time/recurring draft and recap foundations.
+5. One-time confirmed publication and exact-user pilot.
+6. Recurring publication after the one-time gate.
+7. Separately controlled Caregiver answers/navigation.
+
+The payment/pricing reconciliation is a separate project. Do not modify Stripe, customer fees, authorization buffer, Caregiver payout, or account overrides in this build.
 
 ## Readiness conclusion
 
-The model-independent Phase 0-1 foundation is deployed and remains deny-by-default. The remaining six validation packages should be completed in the order above. None is implicitly approved by the foundation deployment, and no real conversation may be sent to a model until its declared gate is complete. Phase 0 also remains operationally open until every legacy-data derivative and containing backup reaches verified extinction under the recorded restore controls.
+The declared implementation is complete and may proceed to fail-closed deployment after final repository review. Production/user-visible controls must remain off. Limited release still requires the open provider/privacy, operations, usability, named-user, monitoring, and explicit approval gates. Payment/pricing code remains outside this project.

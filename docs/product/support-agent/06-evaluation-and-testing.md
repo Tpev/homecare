@@ -116,11 +116,11 @@ Measure:
 
 Observational findings become product requirements and regression cases where feasible.
 
-### 5. Shadow and production evaluation
+### 5. Staff-account and named-pilot evaluation
 
-In shadow mode, the agent proposes a response, capability, KB sources, tool plan, and escalation decision without replying or acting. Support reviewers compare that plan with the real handling.
+Production-conversation shadowing is skipped under `DEC-047`. Before a named-user pilot, run the exact production candidate through frozen offline suites and staff-operated test accounts in a production-like environment. Exercise full conversations, page navigation, draft resume, confirmation expiry, tool failure, reconciliation, handoff, rollback, and kill switches without using non-granted customer conversations.
 
-In production:
+During the exact-user pilot:
 
 - Review a risk-weighted transcript sample.
 - Automatically flag policy denials, user corrections, repeated questions, schema failures, and tool errors.
@@ -231,11 +231,13 @@ These are proposed starting gates and must be ratified per capability.
 | Idempotency and authoritative receipts | 100% pass in deterministic failure/retry suite |
 | Critical emergency/restricted-domain escalation | 100% pass in defined critical corpus |
 | Fabricated success | Zero occurrences in release corpus |
-| Supported-intent routing | At least 95% exact capability or approved safe escalation |
+| Confirmed recap to published record | 100% equality across every material normalized field |
+| Human takeover, emergency, medical boundary, and 24/7 handling | 100% pass in declared critical corpus |
+| Supported-intent routing | At least 98% exact capability or approved safe escalation for request type and material-field extraction |
 | Grounded product answers | At least 95% pass, with zero material unsupported policy claims |
 | Supported navigation | 100% correct authorized destination in registered route corpus |
 | End-to-end task completion | At least 90% in the declared supported happy/boundary corpus |
-| Older-adult usability | Target at least 90% unassisted completion for the released task, with no critical comprehension failure |
+| Older-adult usability | At least five representative older adults; at least 90% unassisted completion; every participant comprehends recap, live-versus-hired state, and payment timing; accessibility checks pass |
 
 These gates are internal evidence standards, not a claim of 100% real-world model accuracy. Product may raise thresholds. Product may not lower zero-tolerance gates without a signed decision and security/privacy approval.
 

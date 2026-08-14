@@ -489,7 +489,26 @@
                         <div class="flex justify-between gap-3"><dt class="text-slate-500">Context contract</dt><dd class="font-semibold text-slate-800">{{ $this->aiContractVersions['context'] }}</dd></div>
                         <div class="flex justify-between gap-3"><dt class="text-slate-500">Event contract</dt><dd class="font-semibold text-slate-800">{{ $this->aiContractVersions['event'] }}</dd></div>
                         <div class="flex justify-between gap-3"><dt class="text-slate-500">Retention policy</dt><dd class="font-semibold text-slate-800">{{ $this->aiContractVersions['retention'] }}</dd></div>
+                        <div class="flex justify-between gap-3"><dt class="text-slate-500">Active recaps</dt><dd class="font-semibold text-slate-800">{{ $this->aiActionState['active_recaps'] }}</dd></div>
+                        <div class="flex justify-between gap-3"><dt class="text-slate-500">Expired recaps</dt><dd class="font-semibold text-slate-800">{{ $this->aiActionState['expired_recaps'] }}</dd></div>
+                        <div class="flex justify-between gap-3"><dt class="text-slate-500">Receipts</dt><dd class="font-semibold text-slate-800">{{ $this->aiActionState['receipts'] }}</dd></div>
                     </dl>
+
+                    @foreach ($this->aiDrafts as $draft)
+                        <div class="mt-4 rounded-xl border border-violet-200 bg-violet-50 p-3 text-xs text-violet-950">
+                            <p class="font-bold">Private request draft</p>
+                            <p class="mt-1">{{ $draft->actor?->name ?: 'Former user' }} &middot; {{ str_replace('_', ' ', $draft->request_type ?: 'type not selected') }}</p>
+                            <p class="mt-1">State {{ str_replace('_', ' ', $draft->state) }} &middot; version {{ $draft->version }} &middot; expires {{ $draft->expires_at?->format('M j, Y g:i A') }}</p>
+                        </div>
+                    @endforeach
+
+                    @foreach ($this->aiConfirmedActions as $confirmed)
+                        <div class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-950">
+                            <p class="font-bold">Confirmed action receipt</p>
+                            <p class="mt-1">{{ $confirmed->receipt_reference }} &middot; {{ $confirmed->outcome_code }}</p>
+                            <p class="mt-1">{{ $confirmed->tool_id }} {{ $confirmed->tool_version }} &middot; {{ $confirmed->committed_at?->format('M j, Y g:i A') }}</p>
+                        </div>
+                    @endforeach
 
                     <div class="mt-4 space-y-2">
                         @forelse ($this->aiEvidence as $event)
@@ -499,6 +518,9 @@
                                 <p class="mt-1 text-slate-500">Result: {{ $event->result_code ?: 'recorded' }}@if($event->capability_id) · {{ $event->capability_id }}@endif</p>
                                 @if ($event->knowledge_version_ids)
                                     <p class="mt-1 text-slate-500">KB versions: {{ implode(', ', $event->knowledge_version_ids) }}</p>
+                                @endif
+                                @if ($event->latency_ms !== null || $event->input_tokens !== null)
+                                    <p class="mt-1 text-slate-500">{{ $event->model_configuration_version ?: 'deterministic' }} &middot; {{ $event->latency_ms ?? 0 }} ms &middot; {{ $event->input_tokens ?? 0 }} in / {{ $event->output_tokens ?? 0 }} out &middot; ${{ number_format(($event->cost_microunits ?? 0) / 1_000_000, 4) }}</p>
                                 @endif
                             </article>
                         @empty

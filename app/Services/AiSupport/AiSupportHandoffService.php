@@ -3,6 +3,8 @@
 namespace App\Services\AiSupport;
 
 use App\Models\AiSupportActionPreview;
+use App\Models\AiSupportMessageAction;
+use App\Models\AiSupportRequestDraft;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketActivity;
 use App\Models\SupportTicketMessage;
@@ -36,9 +38,11 @@ class AiSupportHandoffService
                 return [$locked, null, false];
             }
 
-            $body = $reasonCode === 'user_requested'
-                ? "I've sent this conversation to LoLo Support. You can keep using this chat, and you won't need to repeat what you already told me."
-                : "I don't want to give you the wrong help. I'm sending this conversation to LoLo Support.";
+            $body = in_array($reasonCode, ['continuous_coverage', 'emergency', 'medical_boundary'], true)
+                ? "I've transferred this conversation to LoLo Support. They'll reply here as soon as they can."
+                : ($reasonCode === 'user_requested'
+                    ? "I've sent this conversation to LoLo Support. You can keep using this chat, and you won't need to repeat what you already told me."
+                    : "I don't want to give you the wrong help. I'm sending this conversation to LoLo Support.");
             $message = SupportTicketMessage::query()->create([
                 'support_ticket_id' => $locked->id,
                 'sender_user_id' => null,
@@ -70,6 +74,20 @@ class AiSupportHandoffService
                     'invalidation_reason' => 'human_handoff',
                     'content_deleted_at' => $message->created_at,
                 ]);
+            AiSupportMessageAction::query()
+                ->where('support_ticket_id', $locked->id)
+                ->whereNull('consumed_at')
+                ->whereNull('invalidated_at')
+                ->update([
+                    'payload' => null,
+                    'invalidated_at' => $message->created_at,
+                    'invalidation_reason' => 'human_handoff',
+                ]);
+            AiSupportRequestDraft::query()
+                ->where('support_ticket_id', $locked->id)
+                ->whereNull('discarded_at')
+                ->whereNull('published_at')
+                ->update(['state' => AiSupportRequestDraft::STATE_TRANSFERRED, 'updated_at' => $message->created_at]);
             SupportTicketActivity::query()->create([
                 'support_ticket_id' => $locked->id,
                 'actor_user_id' => $actor->id,
@@ -95,6 +113,12 @@ class AiSupportHandoffService
 
         if (! $changed) {
             return $fresh;
+        }
+
+        try {
+            $this->recordInternalSummary($actor, $fresh, $reasonCode);
+        } catch (\Throwable $exception) {
+            report($exception);
         }
 
         $admins = User::query()->where('role', 'admin')->get();
@@ -181,5 +205,46 @@ class AiSupportHandoffService
 
         return $fresh?->opener !== null
             && $this->eligibility->evaluate($fresh->opener, 'support_answers_v1', $fresh)->allowed;
+    }
+
+    private function recordInternalSummary(User $actor, SupportTicket $ticket, string $reasonCode): void
+    {
+        $draft = AiSupportRequestDraft::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->where('actor_user_id', $actor->id)
+            ->first();
+        $payload = (array) ($draft?->payload ?? []);
+        $lines = [
+            'AI handoff summary',
+            'Actor: '.$actor->name.' ('.$actor->role.', user #'.$actor->id.')',
+            'Family account: '.($ticket->family_account_id ? '#'.$ticket->family_account_id : 'not applicable'),
+            'Reason: '.str_replace('_', ' ', $reasonCode),
+            'Emergency screening: '.($reasonCode === 'emergency' ? 'immediate-danger language detected; 911 instruction shown' : 'no immediate-danger trigger recorded'),
+        ];
+        if ($draft) {
+            $lines[] = 'Private draft: #'.$draft->id.'; '.str_replace('_', ' ', $draft->request_type ?: 'type not selected').'; state '.str_replace('_', ' ', $draft->state).'.';
+            if (filled($payload['recipient_full_name'] ?? null)) {
+                $lines[] = 'Recipient: '.$payload['recipient_full_name'];
+            }
+            if (filled($payload['city'] ?? null) || filled($payload['state'] ?? null)) {
+                $lines[] = 'Confirmed location: '.trim(($payload['city'] ?? '').', '.($payload['state'] ?? ''), ', ');
+            }
+            if (filled($payload['requested_start_date'] ?? null) || filled($payload['recurring_starts_on'] ?? null)) {
+                $lines[] = 'Desired start: '.($payload['requested_start_date'] ?? $payload['recurring_starts_on']);
+            }
+            if ((array) ($payload['task_ids'] ?? []) !== []) {
+                $lines[] = 'Authorized care task IDs: '.implode(', ', array_map('intval', $payload['task_ids']));
+            }
+        }
+        $lines[] = 'Use the canonical conversation above for the complete user-supplied context. Do not ask the user to repeat it.';
+
+        SupportTicketMessage::query()->create([
+            'support_ticket_id' => $ticket->id,
+            'sender_user_id' => null,
+            'kind' => SupportTicketMessage::KIND_INTERNAL_NOTE,
+            'responder_type' => SupportTicketMessage::RESPONDER_SYSTEM,
+            'body' => implode("\n", $lines),
+            'client_message_id' => (string) Str::uuid(),
+        ]);
     }
 }

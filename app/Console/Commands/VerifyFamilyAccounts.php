@@ -119,7 +119,7 @@ class VerifyFamilyAccounts extends Command
 
         $supportWithInvalidVisibility = SupportTicket::query()
             ->whereNotNull('family_account_id')
-            ->whereNotIn('family_visibility', ['shared_care', 'owner_only'])
+            ->whereNotIn('family_visibility', ['shared_care', 'owner_only', 'opener_only'])
             ->count();
         if ($supportWithInvalidVisibility > 0) {
             $errors[] = "support_tickets has {$supportWithInvalidVisibility} mapped records with an invalid visibility boundary.";

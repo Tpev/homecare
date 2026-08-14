@@ -20,6 +20,9 @@ class SupportTicketObserver implements ShouldHandleEventsAfterCommit
     public function created(SupportTicket $ticket): void
     {
         $ticket = $ticket->fresh(['opener']) ?? $ticket;
+        if ($ticket->responder_mode === SupportTicket::RESPONDER_MODE_AUTOMATED) {
+            return;
+        }
         $this->opsAlerts->notifySupportTicketCreated($ticket);
 
         $admins = User::query()->where('role', 'admin')->get();

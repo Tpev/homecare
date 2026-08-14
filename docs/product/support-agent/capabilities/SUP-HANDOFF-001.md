@@ -197,11 +197,11 @@ Gates:
 ## 12. Rollout
 
 - Implement and test before any user-visible intelligent answer.
-- Shadow-test summaries and routing with support staff.
+- Test summaries and routing through frozen offline cases and staff-operated accounts; do not process invisible production shadow conversations.
 - Exercise human-only fallback and global disable.
 - Release for the same user roles as each intelligent capability.
 
-## 13. Open decisions
+## 13. Closed decisions
 
-- `DEC-014`: structured agent-event retention
-- `DEC-015`: staffed-hours promise and handoff SLO
+- `DEC-057`: both administrators are alerted; either may claim; the public message promises no queue, hours, or response time and defines compact 24/7 transfer context.
+- `DEC-058`: structured events and every transient/downstream class have approved retention/extinction limits.

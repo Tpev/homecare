@@ -136,6 +136,8 @@ No implementation should infer missing product decisions from a generic system p
 
 ### Approved to shadow
 
+This generic lifecycle state is not used by the current LoLo program. `DEC-047` skips production-conversation shadowing; capabilities move from approved offline/staff-account evidence to exact-user limited release only after their declared gates pass.
+
 - Deterministic tests pass.
 - Offline agent gates pass across repeated runs.
 - Event logging and admin review work.
@@ -184,4 +186,4 @@ The agent must distinguish:
 
 ## Change control
 
-Any change to action class, required confirmation, authorized roles, writable fields, domain service, KB source, or escalation behavior is a material capability change. Return the capability to at least **Approved**, rerun its complete evaluation slice, and repeat shadow or limited release when the risk materially increases.
+Any change to action class, required confirmation, authorized roles, writable fields, domain service, KB source, or escalation behavior is a material capability change. Return the capability to at least **Approved**, rerun its complete evaluation slice, and repeat staff-account or limited-release evidence when the risk materially increases.

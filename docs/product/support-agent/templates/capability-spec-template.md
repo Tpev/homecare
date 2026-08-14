@@ -139,7 +139,7 @@ Confirmation binding, expiry, invalidation, and duplicate behavior:
 
 | Evaluation ID | Layer | Expected result | Gate |
 | --- | --- | --- | --- |
-| `{ID}` | `{deterministic/offline/E2E/usability/shadow}` | `{result}` | `{threshold}` |
+| `{ID}` | `{deterministic/offline/E2E/usability/staff-account/limited-pilot}` | `{result}` | `{threshold}` |
 
 Include role permutations, ambiguity, changes of mind, retries, timeouts, human claim, mobile, and accessibility.
 
@@ -162,4 +162,3 @@ Include role permutations, ambiguity, changes of mind, retries, timeouts, human 
 | Version | Date | Author | Change | Evaluation impact |
 | --- | --- | --- | --- | --- |
 | 0.1 | `{date}` | `{author}` | Initial draft | New corpus required |
-

@@ -4,7 +4,9 @@ namespace App\Services\AiSupport;
 
 use App\Models\AiSupportActionPreview;
 use App\Models\AiSupportAdminAuditEvent;
+use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportPilotGrant;
+use App\Models\SupportTicket;
 use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -14,6 +16,8 @@ use Illuminate\Validation\ValidationException;
 
 class AiSupportPilotGrantService
 {
+    public function __construct(private readonly AiSupportHandoffService $handoff) {}
+
     public function grant(
         User $actor,
         User $target,
@@ -125,7 +129,7 @@ class AiSupportPilotGrantService
         $this->ensureManager($actor, $grant->user, 'pilot_revocation_denied');
         $reason = $this->validatedReason($reason, 'revocationReason');
 
-        return DB::transaction(function () use ($actor, $grant, $reason): AiSupportPilotGrant {
+        $revoked = DB::transaction(function () use ($actor, $grant, $reason): AiSupportPilotGrant {
             $locked = AiSupportPilotGrant::query()->lockForUpdate()->findOrFail($grant->id);
             if ($locked->revoked_at) {
                 return $locked;
@@ -146,6 +150,15 @@ class AiSupportPilotGrantService
                     'invalidated_at' => $now,
                     'invalidation_reason' => 'pilot_grant_revoked',
                     'content_deleted_at' => $now,
+                ]);
+            AiSupportMessageAction::query()
+                ->where('actor_user_id', $locked->user_id)
+                ->whereNull('consumed_at')
+                ->whereNull('invalidated_at')
+                ->update([
+                    'payload' => null,
+                    'invalidated_at' => $now,
+                    'invalidation_reason' => 'pilot_grant_revoked',
                 ]);
 
             AiSupportAdminAuditEvent::query()->create([
@@ -171,6 +184,29 @@ class AiSupportPilotGrantService
 
             return $locked;
         }, 3);
+
+        $target = $revoked->user_id ? User::query()->find($revoked->user_id) : null;
+        if ($target) {
+            SupportTicket::query()
+                ->where('opener_user_id', $target->id)
+                ->where('responder_mode', SupportTicket::RESPONDER_MODE_AUTOMATED)
+                ->whereNotIn('status', [SupportTicket::STATUS_CLOSED])
+                ->get()
+                ->each(function (SupportTicket $ticket) use ($target): void {
+                    try {
+                        $this->handoff->transfer($target, $ticket, 'pilot_grant_revoked');
+                    } catch (\Throwable $exception) {
+                        report($exception);
+                        $ticket->forceFill([
+                            'responder_mode' => SupportTicket::RESPONDER_MODE_HUMAN_ONLY,
+                            'transferred_to_human_at' => now(),
+                            'handoff_reason_code' => 'pilot_grant_revoked',
+                        ])->save();
+                    }
+                });
+        }
+
+        return $revoked;
     }
 
     /** @return array<string, mixed> */

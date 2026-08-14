@@ -9,6 +9,39 @@ use Illuminate\Support\Collection;
 class KnowledgeBaseRetrievalService
 {
     /** @return Collection<int, KnowledgeBaseVersion> */
+    public function relevant(
+        User $user,
+        string $capabilityId,
+        string $queryText,
+        ?string $membershipState = null,
+        ?string $routeTargetId = null,
+        int $limit = 5,
+    ): Collection {
+        $terms = collect(preg_split('/[^a-z0-9]+/i', mb_strtolower($queryText)) ?: [])
+            ->filter(fn (string $term): bool => mb_strlen($term) >= 3)
+            ->unique()
+            ->values();
+
+        return $this->applicable($user, $capabilityId, $membershipState, $routeTargetId)
+            ->map(function (KnowledgeBaseVersion $version) use ($terms): array {
+                $haystack = mb_strtolower(implode(' ', [
+                    $version->title,
+                    $version->answer_body,
+                    implode(' ', (array) $version->retrieval_examples_match),
+                    implode(' ', (array) $version->facts_may_state),
+                ]));
+                $score = $terms->sum(fn (string $term): int => substr_count($haystack, $term));
+
+                return ['version' => $version, 'score' => $score];
+            })
+            ->filter(fn (array $candidate): bool => $candidate['score'] > 0)
+            ->sortByDesc('score')
+            ->take(max(1, min(8, $limit)))
+            ->pluck('version')
+            ->values();
+    }
+
+    /** @return Collection<int, KnowledgeBaseVersion> */
     public function applicable(
         User $user,
         string $capabilityId,

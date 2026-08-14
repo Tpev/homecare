@@ -10,21 +10,22 @@ Required approvers: Product, engineering, support operations; security/privacy f
 
 ## Rollout principle
 
-Phase the platform and each capability separately. A platform phase makes a class of behavior possible; an individual capability still moves through offline evaluation, shadow, internal use, limited release, and general release.
+Phase the platform and each capability separately. A platform phase makes a class of behavior possible; an individual capability still moves through offline evaluation, staff-operated test accounts, exact-user limited release, and only later an explicitly approved broader release. Production-conversation shadowing is skipped under `DEC-047`.
 
 Never enable every tool because the architecture supports tools.
 
 ## Current program position
 
-As of August 13, 2026, the Phase 0-1 model-independent foundation is deployed to production from `master` at `338a9db25d98eff6ce096a92dda05d4a1878bee2`. The deployment runtime guard is off, all missing database controls fail closed, human-only is on by default, no exact-user pilot grant is active, and no customer model-call path exists.
+As of August 14, 2026, the Phase 0-1 model-independent foundation is deployed, the initial governed content and frozen offline baseline are complete, and the expanded interactive contract is approved. The deployment runtime guard remains off, missing controls fail closed, human-only is on by default, no exact-user pilot grant is active, and no customer model-call path exists.
 
 This production deployment does not mean Phase 1 or the intelligent agent is complete. The current position is:
 
 - Phase 0 application/runtime retirement: deployed.
 - Phase 0 primary legacy database destruction: executed with content-free evidence; derived-target and containing-backup extinction remains an operational closeout item until verified complete.
 - Phase 1 control plane, KB workspace, contracts, handoff, evidence, and retention foundation: deployed.
-- Phase 1 initial approved KB content, evaluation corpus/runner, runtime baseline, and first capability approvals: not complete.
-- Phase 2 production-conversation shadowing and every user-visible phase: not authorized.
+- Phase 1 initial governed KB content, evaluation corpus/runner, and Luna-low offline baseline: complete; KB remains unpublished and runtime disabled.
+- Phase 2 production-conversation shadowing: skipped by product decision.
+- Every user-visible capability: not implemented or authorized for release.
 
 The live status and next work are tracked in [the production deployment and next-phase tracker](17-production-deployment-and-next-phase-tracker.md).
 
@@ -32,9 +33,10 @@ The live status and next work are tracked in [the production deployment and next
 
 The shared conversation, authenticated role resolution, KB governance, safety, transfer-to-human, observability, and evaluation foundation must support both family/care-receiver and caregiver tracks from the start. User-visible capabilities release in this order:
 
-1. Family/care-receiver approved answers, semantic navigation, and then the separately gated one-time care-request workflow.
-2. Caregiver approved answers and semantic navigation using caregiver-only sources, routes, states, and evaluations.
-3. Caregiver operational capabilities released individually after capability specification, authorization review, offline and end-to-end evaluation, shadow review, and limited rollout.
+1. Family/care-receiver approved answers and semantic navigation.
+2. Family context and care-path guidance, then one-time drafting/publication, followed by separately gated recurring publication.
+3. Caregiver approved answers and semantic navigation using Caregiver-only sources, routes, states, and evaluations.
+4. Caregiver operational capabilities individually after capability specification, authorization review, offline/end-to-end evaluation, staff-account evidence, and limited rollout.
 
 No release for one role exposes that role's knowledge, records, routes, or tools to the other role.
 
@@ -79,20 +81,18 @@ Exit evidence:
 - Support and security/privacy approve escalation and data handling.
 - Pilot grant and KB mutation permissions, audit events, fail-closed behavior, and disable paths pass deterministic tests.
 
-### Phase 2: Shadow agent
+### Phase 2: Production-conversation shadow agent — skipped
 
 Scope:
 
-- Run against eligible real support conversations without user-visible output.
-- Generate intent, KB, answer, navigation/tool proposal, and escalation recommendation.
-- Have support review risk-weighted samples.
+- No invisible processing of production conversations.
+- Keep the existing shadow control disabled.
+- Replace shadow evidence with frozen offline evaluation, staff-operated test accounts, older-adult usability, and review of every exact-user pilot interaction.
 
 Exit evidence:
 
-- Shadow metrics meet capability gates.
-- No unresolved critical safety failure.
-- Reviewers agree the proposed handoff contains enough context.
-- Cost and latency fit the limited-release budget.
+- `DEC-047` and `DEC-063` are reflected in every affected capability and checklist.
+- No release checklist requires unavailable shadow evidence.
 
 ### Phase 3: Grounded answers
 
@@ -127,11 +127,11 @@ Exit evidence:
 
 Scope:
 
-- Begin the first approved Class C/D workflow under `DEC-010` as draft-only assistance.
-- Class C one-time care-request drafting.
+- Begin the expanded Class C/D workflow under `DEC-048` and `DEC-062` as draft-only assistance.
+- Class C one-time and recurring care-request drafting behind separate capability controls.
 - Collect one detail at a time.
-- Reuse authorized recipient/address information only after showing it to the user.
-- User reviews in the normal product surface.
+- Reuse authorized Family context only within `DEC-050` and show material values in the recap.
+- Autosave/resume under `DEC-053`; deterministic recap and modification under `DEC-052` and `DEC-054`.
 
 Exit evidence:
 
@@ -144,8 +144,9 @@ Exit evidence:
 
 Scope:
 
-- Complete the first approved Class C/D workflow under `DEC-010` with Class D publication of the already-supported one-time care-request draft.
-- Deterministic preview, explicit action button, transactional idempotent commit, and receipt.
+- Publish a confirmed one-time request first under `CARE-REQUEST-007`.
+- Enable recurring publication only after the one-time exact-user pilot gate passes.
+- Use deterministic recap, explicit action button, 30-minute renewable confirmation, transactional idempotent commit, and authoritative receipt.
 
 Exit evidence:
 
@@ -160,7 +161,6 @@ Candidate sequence:
 - Explain request status and next action.
 - Open a relevant message conversation.
 - Prepare **Book again** with existing recipient, address, tasks, and caregiver.
-- Prepare regular care without committing payment-affecting steps.
 - Add caregiver approved answers and semantic navigation.
 - Add caregiver operational capabilities one at a time after separate approval.
 
@@ -185,7 +185,7 @@ Use capability-specific feature flags. A single global `ai_request_copilot` swit
 
 - Master agent switch
 - User-visible AI reply switch
-- Shadow mode switch
+- Shadow mode switch retained off; no production shadow workflow
 - Capability switch
 - Tool switch
 - Class D commit switch
@@ -210,12 +210,12 @@ Reviewers inspect:
 - Open decisions and risks
 - Deterministic tests
 - Offline and repeated-run evals
-- Shadow or prior-cohort evidence
+- Frozen offline, staff-account, and prior exact-user cohort evidence
 - Usability/accessibility evidence
 - Privacy/context inventory
 - Exact pilot-user list and grant audit
 - Proof that all non-granted production users receive no AI UI, model call, navigation, draft, or action
-- Support readiness and business hours
+- Support alerting, ownership, and the no-response-time-promise handoff contract
 - Monitoring, alerts, cost budget, and rollback
 - Incident owner
 

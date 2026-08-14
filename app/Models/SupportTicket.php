@@ -214,6 +214,16 @@ class SupportTicket extends Model
         return $this->hasMany(AiSupportInteractionEvent::class);
     }
 
+    public function aiRequestDrafts(): HasMany
+    {
+        return $this->hasMany(AiSupportRequestDraft::class);
+    }
+
+    public function aiMessageActions(): HasMany
+    {
+        return $this->hasMany(AiSupportMessageAction::class);
+    }
+
     public function isHumanOnly(): bool
     {
         return $this->responder_mode !== self::RESPONDER_MODE_AUTOMATED;
@@ -242,13 +252,17 @@ class SupportTicket extends Model
                 return;
             }
 
-            $visible->orWhere(function (Builder $accountTickets) use ($membership): void {
+            $visible->orWhere(function (Builder $accountTickets) use ($membership, $user): void {
                 $accountTickets->where('family_account_id', $membership->family_account_id)
-                    ->where(function (Builder $visibility) use ($membership): void {
+                    ->where(function (Builder $visibility) use ($membership, $user): void {
                         $visibility->where('family_visibility', 'shared_care');
                         if ($membership->isOwner()) {
                             $visibility->orWhere('family_visibility', 'owner_only');
                         }
+                        $visibility->orWhere(function (Builder $private) use ($user): void {
+                            $private->where('family_visibility', 'opener_only')
+                                ->where('opener_user_id', $user->id);
+                        });
                     });
             });
         });

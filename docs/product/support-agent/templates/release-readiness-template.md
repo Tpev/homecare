@@ -2,7 +2,7 @@
 
 Status: Draft
 
-Release type: `{shadow/internal/limited/general}`
+Release type: `{staff-account/limited/general}` (`DEC-047` prohibits production-conversation shadowing)
 
 Capability version: `{version}`
 

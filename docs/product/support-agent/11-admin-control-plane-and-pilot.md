@@ -56,7 +56,7 @@ A non-granted live user:
 
 ### Shadow processing
 
-User-invisible shadow evaluation is not enabled merely by a pilot grant. It requires its own environment/control setting, documented privacy basis, restricted transcript access, zero public output, and zero navigation or data-changing side effect.
+User-invisible shadow evaluation is not enabled by a pilot grant and is not part of the approved program under `DEC-047`. Keep the shadow control off; use frozen offline evaluation, staff-operated accounts, older-adult testing, and exact-user pilot evidence.
 
 ## 2. Per-user pilot administration
 

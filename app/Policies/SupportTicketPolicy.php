@@ -27,7 +27,9 @@ class SupportTicketPolicy
             }
 
             return $supportTicket->family_visibility === 'shared_care'
-                || ($supportTicket->family_visibility === 'owner_only' && $this->familyAccounts->isOwner($user));
+                || ($supportTicket->family_visibility === 'owner_only' && $this->familyAccounts->isOwner($user))
+                || ($supportTicket->family_visibility === 'opener_only'
+                    && (int) $supportTicket->opener_user_id === (int) $user->id);
         }
 
         return (int) $supportTicket->opener_user_id === (int) $user->id;

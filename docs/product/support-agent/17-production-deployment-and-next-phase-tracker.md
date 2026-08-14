@@ -8,9 +8,11 @@ Owner: Product and engineering
 
 ## Executive state
 
-The model-independent AI Support foundation is deployed to production and is failing closed. Human support remains the only customer-facing support behavior. There is no production model-call path, no active exact-user pilot grant, no published KB content, and no enabled user-visible AI control.
+The currently deployed model-independent AI Support foundation is failing closed. Human support remains the only customer-facing support behavior in that revision. The repository candidate now contains the interactive model-call path, but it remains disabled by default: there is no active exact-user pilot grant, no published KB content, and no enabled user-visible AI control.
 
-The deployment is a safe foundation release, not an intelligent-agent release. Work now moves from infrastructure and governance into scope decisions, approved knowledge, offline evaluation, and only later controlled shadowing.
+The deployment is a safe foundation release, not an intelligent-agent release. The interactive runtime/request candidate is now implemented and has deterministic, browser, accessibility, migration, cost, and live Luna-low evidence, but it is not yet recorded as deployed or authorized for a pilot. Product explicitly skipped production-conversation shadowing under `DEC-047`; no production model use or user-visible AI is thereby authorized.
+
+Candidate evidence: [interactive assistant implementation and release evidence](24-interactive-assistant-implementation-and-release-evidence.md).
 
 ## Deployment record
 
@@ -100,10 +102,13 @@ The exact evidence, artifact checksums, and two Draft-only editorial findings ar
 | `KB-CGV-003` | Caregiver shift orientation | Validated production Draft verified | Not published |
 | `KB-CGV-004` | Caregiver account/profile orientation | Validated production Draft verified | Not published |
 | `DEC-012` | Choose least-cost runtime candidate/challengers through measured offline evaluation | Accepted: Luna low baseline; Mini low challenger; 556/556 calls, zero hard/critical failures, 99.64% quality each; Luna 83.95% lower measured cost | Offline runtime baseline complete; no production authority |
-| `KB-AIS-001` | Author, source, and validate the initial governed KB set | Production Draft import, browser audit, and both editorial corrections complete | Grounded-answer evaluation and later shadow readiness; publication remains separately prohibited |
+| `KB-AIS-001` | Author, source, and validate the initial governed KB set | Initial production Draft import and editorial corrections complete; expanded 12-entry package and 60 linked evaluations complete in the repository | Expanded package still requires production Draft import, review, and selective non-pricing publication |
 | `EVAL-AIS-001` | Build versioned offline evaluation corpus/runner and critical regression gates | Complete: v4 corpus/runner, isolation controls, 556-call current-candidate release comparison, exact checksums, and accepted baseline recorded | Re-run on every governed model/prompt/schema/KB change |
-| `DEC-014` | Close suppressed/diagnostic TTLs and downstream/provider/backup extinction rules | Pending later discussion | Any production-conversation shadowing |
-| `DEC-015` | Approve staffed-hours ownership and truthful human-response promise/SLO | Pending later discussion | Any user-visible pilot |
+| `DEC-014` | Close suppressed/diagnostic TTLs and downstream/provider/backup extinction rules | Closed by `DEC-058` | Destination/configuration and deletion evidence still block production data |
+| `DEC-015` | Approve human ownership and truthful response promise | Closed by `DEC-057`: both admins alerted; either may claim; no time/business-hours/queue promise | Implementation and rehearsal still block pilot |
+| `INT-AIS-001` | Approved interactive Family build contract | Implemented; deterministic/browser/live-model evidence pass | Provider/privacy, production-like rehearsal, older-adult usability, named pilot, and release approval |
+| `INT-AIS-002` | Expanded 12-entry interactive KB package | Repository manifest and 60 linked cases complete; isolated Draft import verified | Production Draft import, review, and selective non-pricing publication |
+| `EVAL-INT-001` | Frozen 56-case interactive runtime gate | Prompt v3: 56/56, 100% extraction, zero hard failures, P95 4.769 seconds | Re-run on any governed model/prompt/schema/KB/corpus change |
 
 ## Current phase status
 
@@ -112,29 +117,31 @@ The exact evidence, artifact checksums, and two Draft-only editorial findings ar
 | Phase 0 | Deployed; operational extinction tail open | Runtime retired and primary data destroyed; backup/derived extinction still tracked |
 | Phase 1 foundation | Deployed | Admin controls, exact-user grants, governed KB workspace, contracts, handoff, evidence, and retention foundations exist |
 | Phase 1 content/evaluation | Complete; offline Luna-low baseline accepted under `DEC-012` | 12 validated Drafts, 70 fixtures, 556/556 current-candidate calls, zero hard/critical failures, exact evidence recorded; nothing is published and runtime remains off |
-| Phase 2 shadow | Blocked | Requires Phase 1 evidence plus `DEC-014`; no real conversations may go to a model yet |
-| Phase 3 grounded answers | Blocked | Requires shadow evidence, `DEC-015`, named grants, usability, monitoring, and release approval |
-| Phases 4-6 | Not started | Navigation, drafting, and confirmed execution remain independently gated |
+| Phase 2 shadow | Skipped by `DEC-047` | No invisible processing of production conversations will be performed |
+| Phase 3 grounded answers | Implemented; release blocked | Requires reviewed applicable KB publication, provider/privacy, staff-account evidence, usability, monitoring, exact grants, and release approval |
+| Phases 4-6 | Implemented behind independent controls; release blocked | Navigation, Family context/intake, drafts, recap, and one-time/recurring confirmed publication have evidence but no production authority |
 
 ## Agreed next-work order
 
-1. Preserve the accepted Luna-low offline baseline and rerun the frozen gate after any governed model, prompt, schema, KB, or corpus change.
-2. Continue tracking `OPS-EXT-001` without repeating primary destruction; it remains independent from local/offline evaluation.
-3. Decide `DEC-014` before any production-data shadow processing.
-4. Build and run a controlled, non-user-visible shadow phase only after its explicit release gate.
-5. Decide `DEC-015` and complete older-adult usability/support readiness before any named-user visible pilot.
+1. Complete final repository review, commit, and push the implementation candidate to `master` when authorized.
+2. Deploy through the unchanged `deploy.sh` with both AI deployment guards false; verify migrations and public invisibility.
+3. Dry-run and apply the expanded KB import as validated Drafts, then review and selectively publish only the non-pricing entries required by the pilot.
+4. Produce provider/retention, staff-account, human-handoff, monitoring, cost-stop, and rollback evidence; do not build shadow mode.
+5. Complete the five-person representative older-adult study and comprehension/accessibility gates.
+6. Continue tracking `OPS-EXT-001` without repeating primary destruction.
+7. Request an explicit release decision before activating the first two exact Family grants; enable recurring publication only after the one-time gate.
 
-The later care-request draft, confirmation lifetime, and notification/operations packages remain in the readiness ledger and do not block the next offline answer/navigation work.
+All product packages for the declared build are closed. The [readiness ledger](14-build-readiness-ledger.md) now tracks delivery evidence rather than product interviews.
 
 ## Next implementation milestone
 
-Complete **Phase 2 prerequisite decisions and non-user-visible shadow design** without enabling it.
+Complete **fail-closed deployment and limited-release evidence** without enabling a production user prematurely.
 
 Required outcome:
 
-- Resolve `DEC-014` retention/extinction rules for suppressed output, diagnostics, providers, indexes, exports, and backups.
-- Specify shadow sampling, access, redaction, retention, deletion, review, abort, and cost limits.
-- Preserve zero production transcript processing until the Phase 2 release gate is explicitly approved.
+- Deploy and smoke-test the implemented intake, context, draft, recap, publication, and 24/7 handoff capabilities with deny-by-default controls.
+- Import the expanded KB/evaluation package as Drafts and close the remaining production portions of `DEC-058`, `DEC-064`, `DEC-065`, and `DEC-066`.
+- Preserve zero production conversation processing until a visible named-user pilot release is explicitly approved.
 - Preserve zero user-visible model calls, zero active grants, Draft-only KB content, and disabled AI controls.
 
-`DEC-012` is complete. It selected an offline baseline only and does not authorize shadowing, production transcript processing, or a user-visible pilot.
+The accepted product package authorizes engineering, not release. No production transcript processing, exact-user grant, or user-visible pilot is authorized by documentation alone.

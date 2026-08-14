@@ -1,6 +1,6 @@
 # Phase 1 Content and Evaluation Build Plan
 
-Status: Production Draft import and editorial corrections verified; offline adapter implemented; measured model run pending; publication and runtime remain prohibited
+Status: Historical plan completed; production Draft import, editorial corrections, and measured offline baseline verified; publication and runtime remain prohibited
 
 Last updated: August 14, 2026
 
@@ -236,7 +236,7 @@ Only after Slices A-D pass:
 1. Run least-cost candidate configurations on the identical corpus.
 2. Report hard failures, all-run pass rate, quality, latency, token use, and cost.
 3. Accept `DEC-012` only from measured evidence.
-4. Keep Phase 2 shadow blocked until `DEC-014` and the remaining shadow gate are complete.
+4. Preserve production runtime off; later `DEC-047` superseded the planned Phase 2 shadow path.
 
 Execution completed August 14, 2026. The frozen v4 run completed 556/556 current-candidate calls with zero hard failures and zero critical failures. Luna low and Mini low each achieved 99.64% deterministic quality and passed every critical case across five runs. `DEC-012` accepts Luna low because its measured cost was $0.06563460 versus $0.40898655 for Mini. Exact evidence is in [the Phase 1B adapter and execution record](21-phase-1b-offline-model-evaluation.md). This offline selection does not authorize shadow or user-visible behavior.
 
@@ -285,7 +285,7 @@ This plan does not authorize:
 - Resource-specific navigation, arbitrary DOM operation, form filling, drafting, confirmation, or domain writes.
 - Translation or non-English answers.
 - A production runtime model decision without `DEC-012` evidence.
-- A user-visible response-time promise without `DEC-015`.
+- A user-visible response-time promise beyond the no-time-promise wording later accepted in `DEC-057`.
 
 ## GPT-5.6 Sol implementation handoff
 

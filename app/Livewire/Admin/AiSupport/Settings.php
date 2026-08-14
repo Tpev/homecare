@@ -56,6 +56,7 @@ class Settings extends Component
         return view('livewire.admin.ai-support.settings', [
             'states' => $states,
             'runtimeAvailable' => (bool) config('ai_support.runtime_available', false),
+            'providerEnabled' => (bool) config('ai_support.provider_enabled', false),
         ]);
     }
 }

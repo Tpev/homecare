@@ -7,6 +7,7 @@
 
     @if(session('status'))<x-alert color="green">{{ session('status') }}</x-alert>@endif
     @if(! $runtimeAvailable)<x-alert color="blue">The deployment runtime guard is off. Stored control changes cannot expose customer AI.</x-alert>@endif
+    @if(! $providerEnabled)<x-alert color="blue">The provider deployment guard is off. Stored controls cannot cause a model call.</x-alert>@endif
     @error('controlKey')<x-alert color="red">{{ $message }}</x-alert>@enderror
 
     <x-card>

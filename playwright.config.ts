@@ -15,6 +15,8 @@ const laravelEnv = {
     DIDIT_BYPASS: 'true',
     STRIPE_BYPASS: 'true',
     MARKETPLACE_TIME_CORRECTIONS_ENABLED: 'true',
+    AI_SUPPORT_RUNTIME_AVAILABLE: 'true',
+    AI_SUPPORT_PROVIDER_ENABLED: 'true',
 };
 
 export default defineConfig({

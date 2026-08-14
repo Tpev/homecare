@@ -19,6 +19,11 @@ use App\Models\Skill;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Models\User;
+use App\Services\AiSupport\AiSupportControlService;
+use App\Services\AiSupport\AiSupportPilotGrantService;
+use App\Services\AiSupport\AiSupportRecapService;
+use App\Services\AiSupport\AiSupportRequestDraftService;
+use App\Services\AiSupport\InteractiveKnowledgeBaseImportService;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Caregiver\CaregiverBackgroundService;
 use App\Services\FamilyAccounts\FamilyAccountProvisioner;
@@ -238,6 +243,8 @@ class SeedE2eFixtures extends Command
             ->pluck('id')
             ->all();
 
+        $this->seedInteractiveAiSupport($admin);
+
         $request->tasks()->sync(collect($taskIds)->mapWithKeys(
             fn (int $id) => [$id => ['task_note' => null]]
         )->all());
@@ -288,6 +295,8 @@ class SeedE2eFixtures extends Command
         $this->table(['Account', 'Email', 'Password'], [
             ['Family', 'family.e2e@example.com', 'password'],
             ['Family member', 'family.member.e2e@example.com', 'password'],
+            ['AI pilot Family', 'family.ai.e2e@example.com', 'password'],
+            ['AI pilot Family member', 'family.ai-member.e2e@example.com', 'password'],
             ['Eligible relative', 'family.eligible.e2e@example.com', 'password'],
             ['Removed relative', 'family.removed.e2e@example.com', 'password'],
             ['Admin', 'test@test.com', 'password'],
@@ -302,6 +311,113 @@ class SeedE2eFixtures extends Command
         $this->line('Existing-user invitation: '.route('family.invitations.show', $existingInviteToken));
 
         return self::SUCCESS;
+    }
+
+    private function seedInteractiveAiSupport(User $admin): void
+    {
+        config([
+            'ai_support.runtime_available' => true,
+            'ai_support.provider_enabled' => true,
+        ]);
+
+        $family = User::query()->create([
+            'name' => 'E2E AI Family',
+            'email' => 'family.ai.e2e@example.com',
+            'role' => 'family',
+            'phone' => '+1 919 555 0110',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+        ]);
+        $account = app(FamilyAccountProvisioner::class)->provisionOwner($family, 'e2e_ai_pilot_fixture');
+
+        $member = User::query()->create([
+            'name' => 'E2E AI Family Member',
+            'email' => 'family.ai-member.e2e@example.com',
+            'role' => 'family',
+            'phone' => '+1 919 555 0111',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+        ]);
+        $account->memberships()->create([
+            'user_id' => $member->id,
+            'access_level' => FamilyAccountMember::ACCESS_MEMBER,
+            'status' => FamilyAccountMember::STATUS_ACTIVE,
+            'joined_at' => now(),
+        ]);
+
+        $controls = app(AiSupportControlService::class);
+        foreach ([
+            'master_enabled', 'user_visible_enabled', 'role.family',
+            'capability.support_answers_v1', 'capability.semantic_navigation_v1',
+            'capability.family_context_v1', 'capability.care_intake_v1',
+            'capability.care_request_draft_v1', 'capability.care_request_recap_v1',
+            'capability.care_request_publish_v1', 'capability.care_24h_handoff_v1',
+            'commit.one_time', 'tool.care-request.publish.one-time',
+        ] as $control) {
+            $controls->set($admin, $control, true, 'Isolated Playwright AI Support fixture');
+        }
+        $controls->set($admin, 'human_only', false, 'Isolated Playwright AI Support fixture');
+
+        app(AiSupportPilotGrantService::class)->grant(
+            $admin,
+            $family,
+            'family_support_v1',
+            now(),
+            now()->addDay(),
+            'Isolated Playwright AI Support fixture',
+            (string) Str::uuid(),
+        );
+
+        $ticket = SupportTicket::withoutEvents(fn () => SupportTicket::query()->create([
+            'family_account_id' => $account->id,
+            'family_visibility' => 'opener_only',
+            'opener_user_id' => $family->id,
+            'source' => SupportTicket::SOURCE_CHAT_WIDGET,
+            'origin_route' => 'family.dashboard',
+            'origin_path' => '/dashboard',
+            'responder_mode' => SupportTicket::RESPONDER_MODE_AUTOMATED,
+            'category' => 'general',
+            'status' => SupportTicket::STATUS_OPEN,
+            'priority' => 'normal',
+            'subject' => 'AI support pilot request fixture',
+            'description' => 'Help me create one companionship visit for my father.',
+            'initial_client_message_id' => (string) Str::uuid(),
+        ]));
+
+        $task = CareTask::query()->where('name', 'Companionship')->firstOrFail();
+        $drafts = app(AiSupportRequestDraftService::class);
+        $draft = $drafts->start($family, $ticket, CareRequest::TYPE_ONE_TIME);
+        $start = now('America/New_York')->addDays(7)->setTime(10, 0);
+        $draft = $drafts->applyPatch($family, $ticket, [
+            'patch_fields' => [
+                'recipient_is_requester', 'recipient_full_name', 'recipient_relationship',
+                'task_ids', 'task_notes', 'requested_start_date', 'requested_start_time',
+                'duration_minutes', 'address_line1', 'city', 'state', 'zip',
+                'additional_info', 'home_access_notes', 'preferred_response_hours',
+            ],
+            'recipient_is_requester' => false,
+            'recipient_full_name' => 'Arthur E2E',
+            'recipient_relationship' => 'Father',
+            'task_ids' => [$task->id],
+            'task_notes' => [['task_id' => $task->id, 'note' => 'Bring a deck of cards.']],
+            'requested_start_date' => $start->format('Y-m-d'),
+            'requested_start_time' => $start->format('H:i'),
+            'duration_minutes' => 120,
+            'address_line1' => '110 Pilot Lane',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+            'additional_info' => 'Arthur prefers calm, clearly explained support.',
+            'home_access_notes' => 'Call on arrival.',
+            'preferred_response_hours' => 12,
+        ], $draft->version);
+
+        app(AiSupportRecapService::class)->issue($family, $ticket, $draft);
+        app(InteractiveKnowledgeBaseImportService::class)->apply($admin);
     }
 
     /** @param list<int> $taskIds */

@@ -119,7 +119,7 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Status: Accepted
 - Accepted: August 13, 2026
 - Decision owner: Product
-- Decision: New AI support behavior is deny-by-default in every live environment. A live user without an active pilot grant must see the existing human-support experience with no AI entry point, label, greeting, reply, suggestion, navigation, draft, or action. The server must not make a customer-facing model call for that user. Deployment or missing configuration must resolve to AI off. Invisible shadow evaluation may run only under a separately approved privacy scope and must have no user-visible output or side effect.
+- Decision: New AI support behavior is deny-by-default in every live environment. A live user without an active pilot grant must see the existing human-support experience with no AI entry point, label, greeting, reply, suggestion, navigation, draft, or action. The server must not make a customer-facing model call for that user. Deployment or missing configuration must resolve to AI off. `DEC-047` later rejects invisible production-conversation shadowing entirely.
 - Rationale: Development and deployment must not accidentally expose an unfinished assistant to live users.
 - Affects: UI rendering, endpoints, orchestration, production configuration, feature controls, testing, and rollout
 
@@ -264,25 +264,41 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Accepted: August 14, 2026
 - Decision owner: Engineering and product
 - Decision: Accept `gpt-5.6-luna` at low reasoning as the initial offline runtime baseline and retain `gpt-5.4-mini-2026-03-17` at low reasoning as the measured challenger. On the identical frozen-v4 schedule, each completed 278 of 278 calls, had zero hard failures and zero critical hard failures, passed every critical case across five runs, and achieved 99.64% deterministic quality. Luna cost $0.06563460 versus Mini's $0.40898655, so Luna wins the approved lowest-cost-passing rule. The deprecated `gpt-5-nano-2025-08-07` benchmark was excluded after repeated provider output failures and remains baseline-ineligible. Exact commit, versions, checksums, latency, token use, and content-minimized report evidence are recorded in the Phase 1B execution record.
-- Non-authority: This decision selects an offline baseline only. It does not publish KB content, enable production model calls, process production transcripts, authorize shadow, enable semantic navigation, create a pilot grant, or expose AI to a user.
+- Non-authority: This decision selects an offline baseline only. It does not publish KB content, enable production model calls, process production transcripts, enable semantic navigation, create a pilot grant, or expose AI to a user.
 - Evidence: [Phase 1B offline model evaluation adapter and execution record](../21-phase-1b-offline-model-evaluation.md)
-- Affects: `EVAL-AIS-001`, prompt/model configuration, cost baseline, Phase 1 exit evidence, and later shadow readiness
+- Affects: `EVAL-AIS-001`, prompt/model configuration, cost baseline, Phase 1 exit evidence, and later staff-account/pilot readiness
 
 ### `DEC-013` — First one-time request workflow may progress to confirmed publication
 
-- Status: Accepted through `DEC-010`
+- Status: Accepted scope; original one-time and shadow sequencing superseded by `DEC-047`, `DEC-048`, and `DEC-063`
 - Accepted: August 13, 2026
 - Decision owner: Product
-- Decision: The one-time non-medical care-request workflow begins as reversible Class C draft assistance in Phase 5 and may progress to Class D publication in Phase 6 only after its deterministic preview, action-specific server-bound confirmation, authorization, idempotency, authoritative receipt, safety, usability, shadow, limited-cohort, and rollback gates pass. Approval to build or pilot drafting does not automatically enable publication; the Class D commit remains independently disabled until Phase 6 release approval.
+- Decision: The original one-time non-medical workflow approved reversible Class C draft assistance and separately gated Class D publication after deterministic preview, action-specific confirmation, authorization, idempotency, receipt, safety, usability, limited-cohort, and rollback evidence. `DEC-048` expands current authority to one-time and recurring; `DEC-047` removes shadow; `CARE-REQUEST-005` through `CARE-REQUEST-007` supersede the original capability specifications. Publication remains independently disabled until explicit release approval.
 - Rationale: `DEC-010` already approved the bounded draft-to-confirmed-publication architecture. Separate phase and release gates preserve a safe draft-first rollout without leaving the product decision ambiguous.
 - Affects: `CARE-REQUEST-001` through `CARE-REQUEST-003`, Phases 5 and 6, capability flags, confirmation, evaluation, and release approval
+
+### `DEC-014` — Production-data transient and downstream extinction limits
+
+- Status: Accepted through `DEC-058`
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Apply the exact transient, diagnostic, analytics, export, provider, cache/index/replica, and backup periods recorded in `DEC-058` and the approved build contract. A provider or destination that cannot meet its maximum is not eligible for production data.
+- Affects: Production providers and destinations, deletion/restore operations, privacy evidence, and release gates
+
+### `DEC-015` — Human ownership and response promise
+
+- Status: Accepted through `DEC-057`
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Both authorized administrators are alerted to a transferred conversation and either may claim it. The user is told only that LoLo Support will reply in the chat as soon as it can. Do not promise a queue position, queue status, business hours, wait time, or response SLO.
+- Affects: `SUP-HANDOFF-001`, `CARE-24H-001`, Admin alerting/claiming, user copy, and pilot operations
 
 ### `DEC-016` — English-only intelligent support
 
 - Status: Accepted
 - Accepted: August 13, 2026
 - Decision owner: Product
-- Decision: LoLo's intelligent support agent supports English only across offline evaluation, shadow, pilot, and any later released phase. It does not translate or answer in another language. When the user writes in a language the agent cannot safely treat as English, automation uses approved simple English wording to explain the limitation and offer transfer to human support; it does not promise that the human will respond in another language. Adding another intelligent-support language would require this decision to be superseded, authoritative language-specific sources, a governed translated KB, dedicated evaluations, usability/accessibility evidence, and a separate release approval.
+- Decision: LoLo's intelligent support agent supports English only across offline evaluation, staff-account testing, pilot, and any later released phase. It does not translate or answer in another language. When the user writes in a language the agent cannot safely treat as English, automation uses approved simple English wording to explain the limitation and offer transfer to human support; it does not promise that the human will respond in another language. Adding another intelligent-support language would require this decision to be superseded, authoritative language-specific sources, a governed translated KB, dedicated evaluations, usability/accessibility evidence, and a separate release approval.
 - Rationale: A single supported language keeps product truth, evaluations, elder usability, safety behavior, and operating cost bounded and avoids giving users false confidence in unverified translation.
 - Affects: All support-agent capabilities, KB applicability, evaluation corpora, prompts, unsupported-language handling, human handoff, analytics, and release gates
 
@@ -421,10 +437,206 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Rationale: Caregivers need a clean distinction between login/account settings and marketplace profile setup, especially when asking for help in plain language.
 - Affects: `KB-CGV-004`, `account.profile`, credential safety, five linked evaluations, and future account-navigation release evidence
 
-## Decisions still required
+### `DEC-047` — Skip production-conversation shadow mode
 
-| ID | Question | Needed before | Owner |
-| --- | --- | --- | --- |
-| `DEC-012` | What is the first evaluated runtime model/configuration? | Offline baseline | Engineering/product |
-| `DEC-014` | What exact TTLs remain for suppressed/diagnostic data and what maximum extinction rules apply to analytics, exports, providers, replicas, caches, indexes, and backups under `DEC-024`? | Shadow production data | Privacy/operations |
-| `DEC-015` | What business-hours promise and escalation SLO can support staff? | User-visible rollout | Support operations |
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Do not run a production-conversation shadow phase. Replace it with deterministic and offline evaluation, staff-operated test accounts, older-adult usability evidence, and a tiny exact-user visible pilot with live monitoring, Admin interaction visibility, immediate human transfer, and kill switches. Skipping shadow does not authorize production model use or weaken role isolation, retention, safety, confirmation, rollback, or pilot gates.
+- Rationale: Product chose to move directly from strong offline and controlled test evidence to an explicitly granted named-user pilot rather than process invisible copies of live conversations.
+- Affects: Phase 2, rollout sequencing, evaluation evidence, retention gates, named-user pilot readiness, and all capability specifications that previously required shadow evidence
+- Detailed contract: [Interactive support and care-request expansion](../22-interactive-care-request-expansion.md)
+
+### `DEC-048` — Expand Family support into interactive care-request assistance
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: The Family assistant may ultimately recommend a care path, retrieve authorized Family context, prepare one-time and regular/recurring request drafts, present a deterministic recap, and publish only after action-specific confirmation. The user explicitly selects the recommended path before drafting. One-time and recurring requests may go live directly after confirmation; 24/7 coverage transfers to a human and produces no AI-created request. Immediate danger remains a separate emergency override.
+- Rationale: Families should be able to complete the ordinary care-request journey conversationally while consequential behavior remains bounded by server authorization, validation, and confirmation.
+- Affects: `CARE-REQUEST-*`, Family context tools, human handoff, confirmation, evaluation, pilot scope, and capability registry
+- Detailed contract: [Interactive support and care-request expansion](../22-interactive-care-request-expansion.md)
+
+### `DEC-049` — Fixed $30 customer price and deferred payment-code reconciliation
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: All platform care costs the customer $30 per hour with no added platform fee, tax, holiday fee, mileage fee, or other surcharge in the assistant's quote. LoLo retains 10% from within that $30, and the actual Stripe processing fee is deducted from the Caregiver payout. Publishing a request does not authorize payment; authorization remains at Caregiver hire/booking creation and capture remains later in the completed/approved-hours flow. Existing conflicting pricing/payment implementation must not be changed in this work. Assistant pricing and total calculation remain disabled until a separately approved reconciliation makes the authoritative pricing service match this decision.
+- Rationale: The assistant requires one simple, accurate customer promise, but must not state that promise against a contradictory production payment path.
+- Affects: Pricing answers, request recaps, estimates, payment timing explanations, Caregiver payout explanations, future pricing reconciliation, and release gates
+- Detailed contract: [Interactive support and care-request expansion](../22-interactive-care-request-expansion.md)
+
+### `DEC-050` — Authorized Family context reuse
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Approved server tools may retrieve and reuse the authenticated Family account's own profiles, saved addresses/contact information, care requests, visits, care preferences/instructions, and relevant non-secret account information. A previous request may be reused only when the user explicitly asks, and important reused values must be confirmed. Payment credentials, authentication secrets, cross-family records, Caregiver-only private data, and unrelated support content are excluded. Server-side authorization is mandatory for every read.
+- Rationale: Safe reuse makes the conversation materially easier for older users without turning the model into an unrestricted account-data browser.
+- Affects: Context contracts, tool schemas, privacy inventory, role isolation, draft provenance, evaluations, and logging/redaction
+- Detailed contract: [Interactive support and care-request expansion](../22-interactive-care-request-expansion.md)
+
+### `DEC-051` — One progressive request flow and minimum fields
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Use one progressive conversational flow and do not expose Fast Track versus Complete Setup. Collect only the recipient, at least one approved task, address, and applicable schedule: date/time/duration for one-time care; weekdays, per-day time/duration, start date, and ongoing/end date for recurring care. Ask optional care, mobility, access, recipient, and third-party questions only when relevant. Generate title/scope. Use the Family Account's saved response window or default to 12 hours, and show it in the final recap with a modification path rather than routinely asking for it.
+- Rationale: This matches the maintained domain minimum while reducing avoidable cognitive load and repeated questions for older users.
+- Affects: Request drafting, field provenance, validation, recap, accessibility, evaluation, and ordinary-form interoperability
+- Detailed contract: [Interactive support and care-request expansion](../22-interactive-care-request-expansion.md)
+
+### `DEC-052` — Deterministic recap and direct confirmed publication
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: When the request is complete, show a deterministic recap with **Modify something** and **Confirm and create request**. The recap states that confirmation makes the request live and visible to eligible Caregivers but does not hire one. The action-specific server-bound confirmation publishes directly without human review. The server revalidates authorization and all material fields and enforces idempotency. Failure or uncertainty preserves/reconciles the draft and never produces a false success statement.
+- Rationale: Users need a simple final choice and a truthful, authoritative result without an extra manual approval bottleneck.
+- Affects: Request preview, confirmation binding, publication, receipts, error recovery, human handoff, and Class D evaluations
+- Detailed contract: [Interactive support and care-request expansion](../22-interactive-care-request-expansion.md)
+
+### `DEC-053` — Seven-day private resumable request drafts
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Autosave each valid normalized request field in a private structured draft. The authorized user may resume the draft for seven calendar days after its last valid update, discard it immediately, or choose between resuming and starting over when a different request is detected. The inactivity deadline automatically deletes draft content and invalidates related recaps/confirmations, subject only to an approved legal/security hold. Drafts never notify Caregivers or become marketplace-visible. Versioning and field provenance prevent silent stale overwrites or unrelated-request merging.
+- Rationale: Older users can safely pause and return without leaving sensitive unfinished care information indefinitely or accidentally publishing it.
+- Affects: Draft storage, retention/deletion, conversation resumption, concurrency, provenance, publication confirmation, Admin evidence, and evaluations
+- Detailed contract: [Interactive support and care-request expansion](../22-interactive-care-request-expansion.md)
+
+### `DEC-054` — Section-level recap modification and reconfirmation
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: **Modify something** exposes individual **Change** controls for who needs care, help needed, schedule, address, additional instructions, and Caregiver response time. The user may also state a modification in ordinary English. The assistant changes only the intended fields, collects any newly required information, and shows a complete fresh recap. Every material change increments the draft version, invalidates the previous confirmation, and requires a new server-bound confirmation before publication. Incompatible schedule values cannot survive a request-type change silently.
+- Rationale: Section-level controls and natural-language correction make review understandable for older users while preventing a stale recap from authorizing changed content.
+- Affects: Recap UI, conversation handling, draft versioning, confirmation invalidation, accessibility, validation, and evaluations
+- Detailed contract: [Interactive support and care-request expansion](../22-interactive-care-request-expansion.md)
+
+### `DEC-055` — Thirty-minute confirmation with one-step renewal
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: A request-publication confirmation is valid for 30 minutes from recap generation and invalidates earlier on any material draft change, human transfer, logout, authorization change, pilot revocation/expiry, or capability/tool shutdown. Expiration preserves the private seven-day draft. The expired action becomes **Review and confirm again**; one activation reloads and revalidates the saved draft and presents a fresh complete recap and confirmation without re-entering valid information or finding the earlier chat turn. If authoritative data changed, identify and open only the affected section for correction.
+- Rationale: A short authorization window limits stale commits while a one-step renewal avoids punishing older users who need more time to review.
+- Affects: Confirmation service, recap UI, draft resumption, authorization revalidation, accessibility, error handling, and evaluations
+- Detailed contract: [Interactive support and care-request expansion](../22-interactive-care-request-expansion.md)
+
+### `DEC-056` — Match ordinary publication effects with internal AI provenance
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Assistant-created requests use the ordinary publication effects: create an open Caregiver-discoverable request, send the existing operations new-request alert, record the existing publication funnel event, and route the Family to the authoritative request page after receipt. Do not add a mass Caregiver notification or separate user-visible AI treatment. Record restricted internal `origin: ai_support` provenance linked to the conversation, action evidence, confirmation/idempotency data, and authoritative receipt. An operations-alert failure after commit is retried/reported separately and must not create a duplicate or cause the assistant to deny a successful request.
+- Rationale: One domain workflow keeps marketplace and user behavior consistent while preserving enough internal evidence to audit and support the assistant safely.
+- Affects: Request publication, marketplace visibility, operations email, funnel analytics, Admin evidence, receipts, retries, and duplicate prevention
+- Detailed contract: [Interactive support and care-request expansion](../22-interactive-care-request-expansion.md)
+
+### `DEC-057` — Prompt 24/7 transfer with compact authorized context
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: A 24/7 coverage need transfers promptly to human support without a long mandatory AI intake. The human receives available authorized identity/role, Family reference, recipient, confirmed location, desired start, described needs, continuous/overnight requirement, emergency-screening result, unanswered questions, and the canonical conversation. The final automated message promises only that LoLo Support will reply in the chat as soon as it can; there is no queue, wait, business-hours, or response-time promise. Both administrators are alerted and either may claim. After the `DEC-049` pricing activation hold is released, the assistant may state $30 per hour and perform requested deterministic arithmetic while leaving coverage coordination and availability to the human.
+- Rationale: Prompt transfer minimizes user effort while preserving enough verified context to avoid repetition and false operational promises.
+- Affects: `CARE-24H-001`, `SUP-HANDOFF-001`, operations alerts, summary fields, price explanation, emergency routing, and evaluations
+- Detailed contract: [Interactive assistant approved build contract](../23-interactive-assistant-approved-build-contract.md)
+
+### `DEC-058` — Close production-data retention and extinction limits
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Suppressed output is memory-only where possible and never retained beyond one hour; redacted diagnostics retain seven days; linkable raw analytics 30 days; de-identified aggregates 24 months; caches, indexes, and replicas extinguish within 24 hours; exports default to seven days and may not exceed 30 days without documented authority; model providers may not train and use the shortest available retention never above 30 days; backups extinguish within 35 days and restores reapply deletions before access. Narrow authorized holds remain the only exception. A destination that cannot comply blocks production use.
+- Rationale: These limits provide enough short-term operations evidence without creating parallel long-lived conversation stores.
+- Affects: `DEC-014`, all production providers and destinations, retention jobs, restore procedures, release evidence, and incident handling
+- Detailed contract: [Interactive assistant approved build contract](../23-interactive-assistant-approved-build-contract.md)
+
+### `DEC-059` — Deterministic temporal, ambiguity, and draft-ownership rules
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Use Eastern Time by default and show it; clarify another apparent timezone; resolve relative dates explicitly; never guess vague times; accept one-to-twelve-hour visits in 30-minute increments; support different recurring schedules per weekday; and explain recurring start-date alignment. Ask one short question for ambiguous material values and offer transfer after two misunderstandings of the same field. Bind each draft to actor, Family Account, and conversation with optimistic versioning, access revocation, and explicit resume/discard behavior. Saved data is proposed visibly, never silently reused, and previous requests require explicit user instruction.
+- Rationale: Deterministic schedule and ownership behavior prevents silent guesses or stale overwrites while keeping the flow easy to resume.
+- Affects: `CARE-INTAKE-001`, `CARE-CONTEXT-001`, `CARE-REQUEST-005`, validation, concurrency, accessibility, and evaluation
+- Detailed contract: [Interactive assistant approved build contract](../23-interactive-assistant-approved-build-contract.md)
+
+### `DEC-060` — Authoritative receipt and bounded failure recovery
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: A successful publication receipt states that the request is live, provides its safe reference, recipient, schedule, and route, and explains that eligible Caregivers can see it but none is hired and no payment is authorized. Provider failure preserves the draft; a read tool retries once; validation opens the affected section; uncertain commits reconcile by idempotency key; post-commit notification failure is handled separately; invalid confirmation never writes. No unconfirmed action is queued and no success is claimed without an authoritative receipt.
+- Rationale: Users receive one truthful outcome while retries and partial failures cannot create duplicates or fabricated results.
+- Affects: `CARE-REQUEST-007`, receipts, retry/reconciliation, notification handling, human transfer, and critical evaluations
+- Detailed contract: [Interactive assistant approved build contract](../23-interactive-assistant-approved-build-contract.md)
+
+### `DEC-061` — Complete Admin evidence without private reasoning or pilot exports
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Authorized administrators can inspect the complete labeled canonical conversation, ownership, KB versions, safe tool summaries, draft/expiry, recap/confirmation, publication receipt, model/configuration, latency/tokens/cost, handoff reason, and retry/reconciliation results. Do not expose private chain-of-thought, complete assembled prompts, credentials, payment data, or unnecessary sensitive payloads. The initial pilot has no transcript-export feature. Access and takeover are audited.
+- Rationale: The two-person team needs complete operational visibility without creating new sensitive copies or presenting hidden model reasoning as evidence.
+- Affects: Admin conversation UI, event schema, redaction, permissions, retention, incident review, and pilot operations
+- Detailed contract: [Interactive assistant approved build contract](../23-interactive-assistant-approved-build-contract.md)
+
+### `DEC-062` — Approve expanded KB inventory and initial role scope
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Add the 12 governed request-related English KB topics listed in the approved build contract; the pricing entry remains unreleased/inapplicable until the `DEC-049` hold is released. The first Family package may include answers, handoff, semantic navigation, authorized context, care-path guidance, one-time/recurring drafts and confirmed publication, 24/7 transfer, and receipt navigation behind separate controls. The initial Caregiver package remains answers, orientation/navigation, and handoff only. Attachments, voice, hiring, payments, cancellations/disputes, timesheets/approval, marketplace messaging, and profile/access mutations are excluded.
+- Rationale: This gives each role useful bounded scope while preventing the long-term conversational aspiration from becoming blanket mutation authority.
+- Affects: KB inventory, capability registry, role isolation, evaluation corpus, implementation scope, and pilot bundles
+- Detailed contract: [Interactive assistant approved build contract](../23-interactive-assistant-approved-build-contract.md)
+
+### `DEC-063` — Staged exact-user release without shadow
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Build common runtime/handoff, then navigation, Family context/intake, shared one-time/recurring drafts, one-time publication pilot, recurring publication after that gate, and separately controlled Caregiver answers/navigation. Use staff test accounts, then exactly two named Family users, then at most five, with 14-day grants and review of every interaction. No percentage or general release occurs without another explicit decision. One-time and recurring may share implementation foundations but keep separate commit flags and evidence.
+- Rationale: The release path preserves tight control and learning despite the explicit decision to skip invisible production shadowing.
+- Affects: Phase plan, pilot grants, capability flags, release evidence, review workload, and rollout tracker
+- Detailed contract: [Interactive assistant approved build contract](../23-interactive-assistant-approved-build-contract.md)
+
+### `DEC-064` — Accuracy, elder-usability, and accessibility gates
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Require 100% pass for authorization/isolation, confirmation, duplicate prevention, recap-to-record equality, emergency/medical/24/7/handoff behavior, and non-granted invisibility; zero fabricated success; at least 98% first-pass request-type and material-field extraction; and no guessed publishable ambiguity. Review every pilot conversation/request. Before expansion, test at least five representative older adults, require at least 90% unassisted completion, universal comprehension of recap/live-versus-hired/payment timing, and passing zoom, screen-reader, keyboard, focus, contrast, touch-target, short-question, and draft-preservation checks.
+- Rationale: Hard safety can be deterministic and absolute while measured language and usability quality receive explicit, demanding gates.
+- Affects: Evaluation corpus, test suites, usability research, accessibility QA, release checklist, and cohort expansion
+- Detailed contract: [Interactive assistant approved build contract](../23-interactive-assistant-approved-build-contract.md)
+
+### `DEC-065` — Low-cost runtime and performance limits
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Continue Luna-low while it passes the frozen gates; use deterministic code for authorization, validation, dates, pricing arithmetic, recaps, confirmation, and receipts; retrieve minimum context; default to one model round trip per user message; avoid autonomous loops; target under $0.02 per completed conversation, alert at $0.03, and stop further model loops with safe transfer at $0.05; target five-second P95 conversational response and eight-second P95 tool action. Cost never weakens correctness or safety.
+- Rationale: The assistant should remain inexpensive and responsive by constraining model work rather than weakening controls.
+- Affects: Runtime orchestration, retrieval, monitoring, cost budgets, circuit breakers, performance tests, and model evaluation
+- Detailed contract: [Interactive assistant approved build contract](../23-interactive-assistant-approved-build-contract.md)
+
+### `DEC-066` — Automatic capability stop and safe rollback
+
+- Status: Accepted
+- Accepted: August 14, 2026
+- Decision owner: Product
+- Decision: Immediately disable an affected capability for non-granted exposure, unauthorized or cross-scope access, unconfirmed/duplicate/mismatched publication, fabricated success, reply after takeover, emergency failure, repeated provider/tool instability, or material privacy leakage. Rollback invalidates confirmations and automated writes while preserving valid domain records, receipts, safe unexpired drafts, and human support.
+- Rationale: Pre-authorized stop conditions allow the small team to contain a serious failure without debating scope during an incident.
+- Affects: Kill switches, monitoring, alerts, rollback, draft/confirmation lifecycle, incident response, and release readiness
+- Detailed contract: [Interactive assistant approved build contract](../23-interactive-assistant-approved-build-contract.md)
+
+## Product decision status
+
+No remaining product interview blocks the approved initial build. Implementation and frozen interactive model evaluation are complete as recorded in [the implementation evidence](../24-interactive-assistant-implementation-and-release-evidence.md). Privacy/provider evidence, representative older-adult usability, support/rollback rehearsal, named-user pilot approval, and the separately held pricing reconciliation remain release gates rather than unanswered product decisions.

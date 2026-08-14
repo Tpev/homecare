@@ -1,6 +1,6 @@
 # Capability Specification: `CARE-REQUEST-001` — Prepare a One-Time Care-Request Draft
 
-Status: Draft
+Status: Superseded by `CARE-REQUEST-005`; retained for historical traceability only
 
 Version: 0.1
 
@@ -9,6 +9,8 @@ Owner: Family care product
 Required approvers: Product, engineering, design/accessibility, security/privacy, support operations
 
 Last reviewed: August 13, 2026
+
+Do not implement this document as current authority. The approved one-time and recurring draft contract is [`CARE-REQUEST-005`](CARE-REQUEST-005.md), governed by `DEC-048` through `DEC-066`.
 
 ## 1. User outcome
 
@@ -215,7 +217,7 @@ Gates follow [evaluation and testing](../06-evaluation-and-testing.md), includin
 
 - Dependencies: `SUP-HANDOFF-001`, context/event contracts, approved task/recipient/address sources.
 - Release after grounded answers and semantic navigation are stable.
-- Begin in shadow mode using real eligible request-creation conversations.
+- Historical initial plan called for real-conversation shadowing; `DEC-047` later rejected that path. Current authority is `CARE-REQUEST-005` and `DEC-063`.
 - Capability flag disables intelligent drafting while preserving the manual form and human chat.
 - Rollback preserves safe drafts when permitted and removes any pending publication confirmation.
 

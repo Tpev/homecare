@@ -2,7 +2,10 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\AiSupportConfirmedActionEvidence;
 use App\Models\AiSupportInteractionEvent;
+use App\Models\AiSupportMessageAction;
+use App\Models\AiSupportRequestDraft;
 use App\Models\CareBookingCorrection;
 use App\Models\CareBookingTimeCorrection;
 use App\Models\DataRetentionHold;
@@ -327,6 +330,42 @@ class SupportTicketShow extends Component
             ->with('actor:id,name')
             ->where('support_ticket_id', $this->ticketId)
             ->latest('occurred_at')
+            ->get();
+    }
+
+    public function getAiDraftsProperty(): Collection
+    {
+        return AiSupportRequestDraft::query()
+            ->with('actor:id,name')
+            ->where('support_ticket_id', $this->ticketId)
+            ->latest('updated_at')
+            ->get();
+    }
+
+    public function getAiActionStateProperty(): array
+    {
+        return [
+            'active_recaps' => AiSupportMessageAction::query()
+                ->where('support_ticket_id', $this->ticketId)
+                ->where('action_type', AiSupportMessageAction::TYPE_RECAP)
+                ->whereNull('consumed_at')->whereNull('invalidated_at')
+                ->where('expires_at', '>', now())->count(),
+            'expired_recaps' => AiSupportMessageAction::query()
+                ->where('support_ticket_id', $this->ticketId)
+                ->where('action_type', AiSupportMessageAction::TYPE_RECAP)
+                ->whereNull('consumed_at')->whereNull('invalidated_at')
+                ->where('expires_at', '<=', now())->count(),
+            'receipts' => AiSupportMessageAction::query()
+                ->where('support_ticket_id', $this->ticketId)
+                ->where('action_type', AiSupportMessageAction::TYPE_RECEIPT)->count(),
+        ];
+    }
+
+    public function getAiConfirmedActionsProperty(): Collection
+    {
+        return AiSupportConfirmedActionEvidence::query()
+            ->where('support_ticket_id', $this->ticketId)
+            ->latest('committed_at')
             ->get();
     }
 

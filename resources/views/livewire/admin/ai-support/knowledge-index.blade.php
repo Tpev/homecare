@@ -17,7 +17,7 @@
     <x-card>
         <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_180px]">
             <label class="text-sm font-semibold text-slate-800">Search all entries
-                <input wire:model.live.debounce.300ms="search" type="search" placeholder="Stable ID, title, or answer" class="mt-1 min-h-11 w-full rounded-xl border-slate-300 text-base">
+                <input wire:model.blur="search" type="search" placeholder="Stable ID, title, or answer" class="mt-1 min-h-11 w-full rounded-xl border-slate-300 text-base">
             </label>
             <label class="text-sm font-semibold text-slate-800">Lifecycle
                 <select wire:model.live="status" class="mt-1 min-h-11 w-full rounded-xl border-slate-300 text-base"><option value="">All</option>@foreach(['draft','in_review','approved','published','paused','superseded','withdrawn','deleted'] as $value)<option value="{{ $value }}">{{ str($value)->replace('_',' ')->headline() }}</option>@endforeach</select>
