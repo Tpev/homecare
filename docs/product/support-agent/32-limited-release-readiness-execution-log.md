@@ -169,7 +169,9 @@ The following content-free synthetic matrix was exercised on August 14, 2026. Th
 | Human chat continuity | Family sends; Admin claims and replies; Family receives unread reply; closed chat starts a new human conversation |
 | Human chat accessibility | Keyboard open/minimize/draft preservation, mobile focus containment, offline retry, rotation, navigation, and back dismissal pass |
 
-This proves the synthetic safety behavior and continuous human-support path. `rollback_rehearsal` must remain unrecorded in production until the final committed candidate is tied to the evidence record and both Administrators confirm the required production operations alert. Resolving an incident never re-enables a stopped capability.
+This proves the synthetic safety behavior and continuous human-support path. `rollback_rehearsal` must not be marked Passed until the final committed candidate is tied to the evidence record, both Administrators confirm the required production operations alert, and the staffed observation is complete. Resolving an incident never re-enables a stopped capability.
+
+The focused matrix was rerun against pushed current master `afe647f27007e624527afcb55c6688b7e7252b9d`: 47 tests and 301 assertions passed. It covered atomic final takeover, emergency instruction before transfer, 24/7 transfer without provider or queue claims, one automatic-stop incident with no re-enable after resolution, stale/expired/logout confirmation invalidation with no unintended write, rollback-safe records, and continuous human chat. The production `rollback_rehearsal` evidence was versioned with this result and remains Pending for both-Administrator alert receipt and staffed rollback observation.
 
 ## Provider and operations evidence state
 
