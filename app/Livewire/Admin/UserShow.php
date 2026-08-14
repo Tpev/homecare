@@ -28,9 +28,32 @@ class UserShow extends Component
 
     public string $transferReason = '';
 
+    public string $notificationEmail = '';
+
     public function mount(User $user): void
     {
         $this->user = $this->loadUser($user->id);
+        $this->notificationEmail = (string) ($this->user->notification_email ?? '');
+    }
+
+    public function saveNotificationEmail(): void
+    {
+        abort_unless(auth()->user()?->isAdministrator(), 403);
+        abort_unless($this->user->isAdministrator(), 404);
+
+        $this->notificationEmail = trim($this->notificationEmail);
+        $validated = $this->validate([
+            'notificationEmail' => ['nullable', 'email', 'max:255'],
+        ]);
+        $notificationEmail = Str::lower(trim((string) ($validated['notificationEmail'] ?? '')));
+
+        $this->user->forceFill([
+            'notification_email' => $notificationEmail !== '' ? $notificationEmail : null,
+        ])->save();
+
+        $this->user = $this->loadUser($this->user->id);
+        $this->notificationEmail = (string) ($this->user->notification_email ?? '');
+        session()->flash('status', 'Administrator notification email updated. Login and account-security email are unchanged.');
     }
 
     public function approveIdentityVerification(): void

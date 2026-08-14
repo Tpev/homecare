@@ -2,17 +2,17 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Livewire\Admin\UserShow as UserShowComponent;
-use App\Livewire\Admin\UsersIndex;
 use App\Livewire\Admin\CareRequestsIndex as CareRequestsIndexComponent;
 use App\Livewire\Admin\FunnelAnalytics as FunnelAnalyticsComponent;
+use App\Livewire\Admin\UserShow as UserShowComponent;
+use App\Livewire\Admin\UsersIndex;
 use App\Models\CareBooking;
 use App\Models\CaregiverIdentityVerification;
 use App\Models\CaregiverModerationLog;
+use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareReview;
-use App\Models\CaregiverProfile;
 use App\Models\Language;
 use App\Models\PageViewEvent;
 use App\Models\Skill;
@@ -20,6 +20,7 @@ use App\Models\User;
 use App\Services\Analytics\PageViewTracker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class AdminUsersAndFunnelTest extends TestCase
@@ -100,6 +101,65 @@ class AdminUsersAndFunnelTest extends TestCase
 
         $this->assertAuthenticatedAs($family);
         $this->get('/dashboard')->assertOk();
+    }
+
+    public function test_admin_can_set_a_separate_notification_email_for_an_administrator(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'test@test.com',
+            'role' => 'admin',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(UserShowComponent::class, ['user' => $admin])
+            ->assertSee('Administrator notifications')
+            ->set('notificationEmail', ' Admin-Alerts@Example.com ')
+            ->call('saveNotificationEmail')
+            ->assertHasNoErrors()
+            ->assertSee('Login and account-security email are unchanged.');
+
+        $admin->refresh();
+
+        $this->assertSame('test@test.com', $admin->email);
+        $this->assertSame('admin-alerts@example.com', $admin->notification_email);
+    }
+
+    public function test_notification_email_cannot_be_set_on_a_non_administrator(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $family = User::factory()->create(['role' => 'family']);
+
+        Livewire::actingAs($admin)
+            ->test(UserShowComponent::class, ['user' => $family])
+            ->assertDontSee('Administrator notifications')
+            ->set('notificationEmail', 'alerts@example.com')
+            ->call('saveNotificationEmail')
+            ->assertNotFound();
+
+        $this->assertNull($family->fresh()->notification_email);
+    }
+
+    public function test_non_administrator_cannot_change_an_administrators_notification_email(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'notification_email' => 'existing@example.com',
+        ]);
+        $family = User::factory()->create(['role' => 'family']);
+
+        $this->actingAs($family);
+        $component = app(UserShowComponent::class);
+        $component->mount($admin);
+        $component->notificationEmail = 'attacker@example.com';
+
+        try {
+            $component->saveNotificationEmail();
+            $this->fail('A non-Administrator changed an Administrator notification email.');
+        } catch (HttpException $exception) {
+            $this->assertSame(403, $exception->getStatusCode());
+        }
+
+        $this->assertSame('existing@example.com', $admin->fresh()->notification_email);
     }
 
     public function test_admin_can_manually_approve_caregiver_identity_verification(): void

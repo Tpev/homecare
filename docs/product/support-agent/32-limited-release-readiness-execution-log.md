@@ -22,7 +22,7 @@ Authenticated production inspection on August 14, 2026 established:
 - every AI role, capability, commit, and publication control off;
 - zero pilot grants;
 - 23 governed non-pricing KB entries published and the pricing entry held as Draft;
-- no unresolved AI Support incident or warning at the time of inspection;
+- two unresolved critical AI Support incidents now remain from the failed first operations-alert attempt; no customer interaction caused either incident;
 - Admin readiness `BLOCKED`, with 10 of 21 required checks passing and 11 open;
 - public and ordinary Family support remained human-only, with no user-visible AI marker.
 
@@ -211,6 +211,20 @@ The provider-project evidence was versioned to include these facts while remaini
 The first content-free operations-alert attempt used reference `202b8a84-f0e9-4fb5-87df-b88502a70c16`. It recorded all four expected administrator/channel delivery rows but two were Failed. Production automatically recorded `operations_alert_delivery` as Failed and opened two critical incidents: `Operations Notification Failed` and `Operations Alert Test Failed`. The current Administrator's in-app notifications page visibly contained the content-free operational-test notification, but both administrators' personal in-app and email confirmations remain open. Do not resolve either incident or mark delivery Passed until the failed channel is identified, corrected, and a fresh-reference retry succeeds on all four delivery rows.
 
 The readiness count remained 10 of 21: the provider-configuration check changed to Pass while the formerly passing no-open-incident check changed to Blocked. Both deployment guards remained off and zero grants remained.
+
+### Administrator alert-address remediation
+
+The failed email channel was traced to an Administrator account whose login identifier is intentionally not a deliverable mailbox. The login identifier must remain unchanged. The application now supports an optional operational notification email on full Administrator profiles, editable by either full Administrator in the existing Admin user-profile screen.
+
+Routing is deliberately narrow:
+
+- operational and marketplace notification mail sent through `MarketplaceEventNotification` uses the alternate address when a full Administrator has one;
+- in-app notifications remain attached to the same Administrator account;
+- sign-in identity, password-reset mail, and email-verification mail continue using the account login email;
+- non-Administrator accounts cannot use the alternate field to redirect marketplace mail;
+- a blank alternate address preserves the prior login-email behavior.
+
+Focused regression coverage proves the Administrator edit boundary, address normalization, unchanged login, marketplace-alert routing, account-security routing, and the non-Administrator restriction. The combined Admin, notification, and limited-release verification batch passed 26 tests and 168 assertions. This source change does not prove production delivery. After deployment, the alternate mailbox must be saved on the affected Administrator profile, a fresh-reference content-free alert must record all four expected dispatches without failure, and both Administrators must personally confirm email and in-app receipt before either incident is resolved or operations evidence is passed.
 
 These documentation facts are not a substitute for verifying the actual OpenAI project and production environment. The following remain unrecorded until server/API or account-owned evidence proves them:
 

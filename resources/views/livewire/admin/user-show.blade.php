@@ -44,6 +44,42 @@
         </div>
     </x-card>
 
+    @if($user->isAdministrator())
+        <x-card>
+            <x-slot:header>
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-900">Administrator notifications</h2>
+                    <p class="mt-1 text-sm text-slate-600">Send operational and marketplace alerts to a working mailbox without changing this Administrator's login.</p>
+                </div>
+            </x-slot:header>
+
+            <form wire:submit="saveNotificationEmail" class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
+                        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Login and account security</p>
+                        <p class="mt-2 font-semibold text-slate-900">{{ $user->email }}</p>
+                        <p class="mt-1 text-slate-600">Used for sign-in, password reset, and email verification.</p>
+                    </div>
+                    <div>
+                        <x-input
+                            type="email"
+                            label="Operational notification email"
+                            placeholder="admin-alerts@example.com"
+                            wire:model="notificationEmail"
+                            autocomplete="email"
+                        />
+                        <x-input-error :messages="$errors->get('notificationEmail')" class="mt-2" />
+                        <p class="mt-2 text-xs text-slate-500">Leave blank to send alerts to the login email.</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <x-button type="submit" color="blue" loading="saveNotificationEmail">Save notification email</x-button>
+                </div>
+            </form>
+        </x-card>
+    @endif
+
     <livewire:admin.ai-support.user-pilot-card :user="$user" :key="'ai-support-pilot-user-'.$user->id" />
 
     @if($caregiverProfile)

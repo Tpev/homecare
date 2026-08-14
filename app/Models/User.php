@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Notifications\Auth\LoLoCareResetPasswordNotification;
 use App\Notifications\Auth\LoLoCareVerifyEmailNotification;
+use App\Notifications\MarketplaceEventNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -59,6 +60,17 @@ class User extends Authenticatable
     public function sendEmailVerificationNotification(): void
     {
         $this->notify(new LoLoCareVerifyEmailNotification);
+    }
+
+    public function routeNotificationForMail($notification): string
+    {
+        if ($notification instanceof MarketplaceEventNotification
+            && $this->isAdministrator()
+            && filled($this->notification_email)) {
+            return trim((string) $this->notification_email);
+        }
+
+        return (string) $this->email;
     }
 
     public function isAdministrator(): bool
