@@ -254,6 +254,8 @@ The current official Admin API reference was checked on August 15 without access
 
 The normal project API key is not an Admin API credential, and neither key may be printed or recorded. The documented Admin API surface does not expose the model-improvement data-sharing opt-in state, so that fact still requires safe account-owned evidence rather than inference. No Admin API credential, intended project ID, or alert recipient set has yet been supplied; no provider account state was changed during this documentation check.
 
+The server-only route is now implemented as `php artisan ai-support:verify-provider-project`. It is read-only by default and refuses to send an Admin credential anywhere except the exact standard `https://api.openai.com/v1` destination. It requires an ephemeral `OPENAI_ADMIN_KEY`, an explicit non-secret intended project ID, and the configured production project key. It checks the exact active project, a unique redacted-key match across all enabled project keys, a content-free project-scoped models request, the project retention type, and an existing `$25` monthly email alert without printing credentials or recipient addresses. Optional alert creation is limited to `2500` cents, USD, monthly email delivery and requires unique valid ephemeral recipients plus the literal `CREATE-25-MONTHLY-SPEND-ALERT` confirmation. The implementation and readiness suites pass 17 tests and 81 assertions; the complete AI Support feature suite passes 87 tests and 678 assertions. This is implementation evidence only; no provider request was made and no production or provider state changed during local testing.
+
 These documentation facts are not a substitute for verifying the actual OpenAI project and production environment. The following remain unrecorded until server/API or account-owned evidence proves them:
 
 - dedicated project and project-scoped credential;
@@ -277,7 +279,7 @@ After the initial production records, readiness was `BLOCKED` at 9 of 21 checks 
 
 ## Work queue
 
-1. Use an ephemeral Admin API credential plus the non-secret intended project ID to verify the project/key match and retention type, then verify or create the `$25` monthly alert for the approved recipients; do not print either credential.
+1. Deploy the server-only verifier, then use an ephemeral Admin API credential plus the non-secret intended project ID to verify the project/key match and retention type. Verify the `$25` monthly alert in read-only mode first; create it with the explicit confirmation only if it is missing. Do not print either credential or recipient addresses.
 2. Supply safe account-owned evidence for the model-improvement sharing state and the destination/contract acknowledgement.
 3. Verify the remaining downstream-extinction and restore evidence while both deployment guards remain off.
 4. Record the remaining monitoring/cost and provider evidence in Admin only after each fact is observed.

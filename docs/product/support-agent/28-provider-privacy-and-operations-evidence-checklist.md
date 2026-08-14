@@ -45,6 +45,41 @@ The official Admin API reference checked on August 15, 2026 now documents server
 
 Use a separate, ephemeral `OPENAI_ADMIN_KEY` for these Administration endpoints. Do not store it in application configuration, pass it as a visible command argument, or substitute the production project key. Verify an existing alert before creating one to prevent duplicates, and require an explicit confirmation before the provider write. The documented Admin API surface does not expose the model-improvement data-sharing opt-in state; that setting still requires account-owned evidence and must remain Pending if none is supplied.
 
+### Production verifier runbook
+
+After deploying the verifier, run its read-only mode first. Enter the organization Admin API key only at the hidden prompt; do not add it to `.env`, command history, Admin evidence, or chat. The intended project ID is non-secret and is used to require an exact project match.
+
+```bash
+read -s -p "OpenAI Admin API key: " OPENAI_ADMIN_KEY
+printf '\n'
+export OPENAI_ADMIN_KEY
+read -r -p "Intended OpenAI project ID (proj_...): " AI_SUPPORT_PROVIDER_PROJECT_ID
+php artisan ai-support:verify-provider-project \
+  --project-id="$AI_SUPPORT_PROVIDER_PROJECT_ID"
+unset OPENAI_ADMIN_KEY AI_SUPPORT_PROVIDER_PROJECT_ID
+```
+
+Read-only mode retrieves the exact active project, matches the configured production key to exactly one redacted project-key record, makes a content-free `GET /models` request with the intended project header, observes the project retention type, and checks for an existing `$25` monthly email alert. It refuses any configured destination other than exactly `https://api.openai.com/v1`, never prints either credential or recipient addresses, and never changes provider state.
+
+If and only if read-only mode reports the alert as `MISSING`, run the confirmed creation mode with the approved recipients. Recipient input is hidden and ephemeral, and every supplied address must be valid and unique or the command fails before provider access. The command creates only a `2500`-cent USD monthly email alert, supplies an idempotency key, and re-lists alerts before claiming success.
+
+```bash
+read -s -p "OpenAI Admin API key: " OPENAI_ADMIN_KEY
+printf '\n'
+export OPENAI_ADMIN_KEY
+read -s -p "Comma-separated alert recipient emails: " AI_SUPPORT_SPEND_ALERT_RECIPIENTS
+printf '\n'
+export AI_SUPPORT_SPEND_ALERT_RECIPIENTS
+read -r -p "Intended OpenAI project ID (proj_...): " AI_SUPPORT_PROVIDER_PROJECT_ID
+php artisan ai-support:verify-provider-project \
+  --project-id="$AI_SUPPORT_PROVIDER_PROJECT_ID" \
+  --create-spend-alert \
+  --confirm=CREATE-25-MONTHLY-SPEND-ALERT
+unset OPENAI_ADMIN_KEY AI_SUPPORT_SPEND_ALERT_RECIPIENTS AI_SUPPORT_PROVIDER_PROJECT_ID
+```
+
+The verifier output is content-free operational evidence, but it does not alter the Admin readiness register. Record only the observed project match, retention type, alert status, date, and operator after reviewing the output. Keep model-improvement sharing Pending until separate account-owned evidence proves the project's actual setting.
+
 ## Data-use and retention checklist
 
 Record `provider_data_controls` only after verifying:
