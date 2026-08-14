@@ -126,6 +126,8 @@ A follow-up authenticated production inspection after the first remediation push
 
 A second authenticated check after the operator reported completing the server step produced the same result: production still served `app-CbFSqK5s.css`, the old `sm` navigation classes remained in the DOM, and the 829-to-625-pixel horizontal overflow remained. The deployed revision or cached production assets therefore still need correction before the accessibility recheck can pass.
 
+The subsequent deployment succeeded. Authenticated production served `app-C3CY0gjo.css`; the old `sm` navigation classes were absent, the new `md` classes were present, and a 640-by-400 viewport measured identical 625-pixel document/client widths with no horizontal overflow. This closes the known production reflow defect. The accessibility evidence remains Pending until a real screen-reader session and the five-person human study are complete.
+
 ### Contrast and confirmation-focus remediation
 
 A source and rendered-color audit found three small-text contrast failures in the support surface:
@@ -184,6 +186,16 @@ These documentation facts are not a substitute for inspecting the actual OpenAI 
 - actual destination/contract position;
 - current project retention-control and ZDR-request status;
 - both-Administrator email and in-app operations-alert receipt.
+
+## Production readiness evidence updates
+
+Authenticated production verification on August 14, 2026 established exactly two full Administrators, safe internal IDs `18` and `1`. The approved two-person operating model was recorded as Passed: either Administrator may independently claim incidents, human transfers, and evidence work. Alert delivery remains a separate gate and was not inferred from ownership.
+
+The requested first two Family pilot candidates were verified as production Family accounts using safe internal IDs `282` and `19`. A Pending evidence version records both IDs, confirms zero active or scheduled grants, and explicitly states that no grant was created. Planned 14-day dates and review ownership remain open.
+
+The accepted isolated rehearsal was recorded as Passed using runtime candidate `c409fe3`, its content-free result hash, complete browser/provider metrics, and verified temporary-database destruction. Deployed HEAD `827dd08` differs from that candidate only in `deploy.sh` and this documentation; runtime-relevant tracked paths are unchanged. The synthetic rollback/safety and engineering accessibility matrices were recorded as Pending, preserving the remaining both-admin alert, staffed rollback, real screen-reader, and older-adult human gates.
+
+After these records, production readiness remained correctly `BLOCKED` at 9 of 21 checks passing, 12 required checks open, zero open incidents, and zero open warnings.
 
 ## Work queue
 
