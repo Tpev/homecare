@@ -1,6 +1,6 @@
 # Phase 1B Offline Model Evaluation Adapter and Execution Record
 
-Status: Adapter implemented; provider credit verified; deprecated benchmark eliminated; release evaluation contract v4 frozen; final repeated current-model comparison pending; `DEC-012` pending
+Status: Complete; `gpt-5.6-luna` at low reasoning accepted as the offline baseline under `DEC-012`; all production and user-visible controls remain off
 
 Recorded: August 14, 2026
 
@@ -11,6 +11,8 @@ Authority: `DEC-012`, `DEC-016`, `DEC-017`, `DEC-025`, `DEC-032` through `DEC-04
 ## Outcome
 
 LoLo now has a disabled-by-default offline adapter for comparing candidate OpenAI models on the approved 70-case synthetic support corpus. It is an evaluation utility, not a customer runtime.
+
+The final frozen-v4 comparison completed successfully. Both current candidates passed every hard gate; `gpt-5.6-luna-low` is accepted because its measured run cost $0.06563460 versus $0.40898655 for `gpt-5.4-mini-low`, with equivalent 99.64% deterministic quality and zero hard failures.
 
 The adapter can plan a run without network access, make explicitly authorized Responses API calls only outside production, deterministically grade strict structured results, calculate latency/token/cost evidence, and persist a compact JSON report without raw prompts or model prose.
 
@@ -40,7 +42,7 @@ Pricing was checked against official OpenAI model pages on August 14, 2026. Rate
 
 Official sources: [GPT-5 nano](https://developers.openai.com/api/docs/models/gpt-5-nano), [GPT-5.6 Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna), and [GPT-5.4 mini](https://developers.openai.com/api/docs/models/gpt-5.4-mini).
 
-The current GPT-5 nano page marks its dated snapshot deprecated and recommends GPT-5.6 Luna for new speed- and cost-sensitive work. Nano remains in the comparison to quantify the price floor, but the runner cannot recommend it as the baseline. A current candidate must pass; otherwise `DEC-012` stays pending.
+The current GPT-5 nano page marks its dated snapshot deprecated and recommends GPT-5.6 Luna for new speed- and cost-sensitive work. Nano was initially measured to quantify the price floor but was never baseline-eligible; repeated provider output failures then eliminated it from the final release run.
 
 The Responses API is used because it supports the selected reasoning models and strict structured outputs. Synchronous evaluation is required to measure per-call latency; Batch may be considered later for periodic cost-only regression work, but it is not mixed into this baseline.
 
@@ -162,16 +164,43 @@ The versioned v4 release contract corrects those evaluator defects without relax
 
 The final flaky-behavior diagnostic repeated emergency-plus-human handoff, marketplace ambiguity, and prompt-injection refusal five times on each current candidate. Both candidates passed all 15 of 15 calls (30 of 30 total) with zero hard failures. The report is `phase-1b-v4-flaky-critical-slice.json`, SHA-256 `ada9e2d9112dd5ec48dbf01789978a4f8a11aa08b6025e17aa93959fd32ac51a`. It is diagnostic only and cannot approve `DEC-012`.
 
-The complete repeated comparison does not yet exist. Therefore:
+## Final release evidence
 
-- The two current baseline-eligible candidates have not yet completed the frozen v4 repeated corpus.
-- No candidate has passed the critical repeated-run gate.
-- `DEC-012` remains pending and must not be described as accepted.
-- Phase 2 shadow, production transcript processing, publication, navigation release, and any user-visible pilot remain blocked/off.
+The frozen-v4 release run completed on August 14, 2026 from application commit `e5e628e707a392f9858c5f914d608313e6410ee5`. The compact local report is `phase-1b-v4-full-e5e628e.json`, SHA-256 `5b09316ec02a55789e3c0e6e97fd3a440906a8d42dc78145ee3c0db9a7e27bdd`.
+
+| Measure | `gpt-5.6-luna-low` | `gpt-5.4-mini-low` |
+| --- | ---: | ---: |
+| Provider/schema success | 278 / 278 | 278 / 278 |
+| Hard failures | 0 | 0 |
+| Critical hard failures | 0 | 0 |
+| Critical cases passing all five runs | 100% | 100% |
+| Deterministic quality | 99.64% | 99.64% |
+| Outcome / required / forbidden / navigation / handoff / plain-language rates | 99.64% / 100% / 100% / 100% / 100% / 100% | 99.64% / 100% / 100% / 100% / 100% / 100% |
+| p50 / p95 latency | 2,182 / 3,498 ms | 1,776 / 3,404 ms |
+| Retries | 0 | 0 |
+| Input / cached input / output / reasoning tokens | 408,189 / 346,700 / 38,669 / 15,115 | 408,189 / 129,024 / 42,208 / 17,579 |
+| Estimated run cost | $0.06563460 | $0.40898655 |
+| Gate | Pass | Pass |
+
+Each candidate had one non-critical outcome-label mismatch and no material failure. Luna labeled the English-only positive case `answer_without_navigation`; Mini used the same safe label for the Caregiver account-profile boundary. Both responses kept navigation null, action none, valid citations, and passed every hard/content/navigation/handoff/plain-language check.
+
+Luna cost 83.95% less than Mini, or approximately one-sixth as much. Mini's p50 was 406 ms faster and its p95 was 94 ms faster, but both passed the latency evidence requirement and their quality/safety results were equivalent. Cost is therefore decisive under the approved lowest-cost-passing rule.
+
+The report also records:
+
+- Knowledge `initial-kb-v1`, SHA-256 `dc12f6a5517a58d4cb85747e6e30db791b50352f4996df341f3590d55efd59b2`.
+- Corpus `initial-kb-evals-v4`, SHA-256 `ba7466fb8f94b12e491d95140e5491a77ba40cfb0563dbc5897ad06ed98a4bc3`.
+- Candidate manifest `ai-support-model-candidates-v1`, SHA-256 `5c7e4c69a287d85585317df71953b7d8ce4cdb0b9e0cf61b60ec532325c16958`.
+- Prompt `ai-support-offline-prompt-v4` and grader `ai-support-deterministic-grader-v3`.
+- Full release evidence true, zero customer-runtime invocations, zero application-database writes, and no persisted raw prompts or model answers.
+
+`DEC-012` is accepted with `gpt-5.6-luna`, low reasoning, as the initial offline baseline. `gpt-5.4-mini-2026-03-17`, low reasoning, remains the measured challenger. The deprecated nano snapshot is excluded.
+
+This decision does not enable a production model or user-visible assistant. Phase 2 shadow, production transcript processing, KB publication, navigation release, and any user-visible pilot remain blocked/off.
 
 ## Exact next steps
 
-1. Commit the frozen v4 evaluation contract and run `gpt-5.6-luna-low` and `gpt-5.4-mini-low` on the complete 278-call schedule each.
-2. Review every hard failure before aggregates. If no current candidate passes, keep `DEC-012` pending and version any further change before rerunning.
-3. If one or more current candidates pass, select the lowest-cost passing configuration and record the exact model, reasoning, prompt, schema, corpus, checksums, commit, quality, latency, tokens, and cost under `DEC-012`.
-4. Keep all production and user-visible controls unchanged. `DEC-012` selects an offline baseline only; it does not authorize shadow or release.
+1. Preserve Luna low as an offline configuration only; do not add a production API key requirement or enable any runtime control.
+2. Decide `DEC-014` retention/extinction rules before any production-conversation shadow processing.
+3. Build the Phase 2 non-user-visible shadow path only after its explicit release gate, then rerun the frozen corpus for any model, prompt, schema, KB, or candidate change.
+4. Decide `DEC-015` and complete older-adult usability, support-operations, monitoring, and named-user release evidence before any visible pilot.

@@ -70,7 +70,7 @@ Resolved August 13, 2026: the initial Family package contains only human-help/em
 
 Choose the least costly evaluated model/provider/configuration candidate and the challenger set. This is needed before measuring the offline baseline, not before building model-independent controls.
 
-Delivery status on August 14, 2026: the candidate matrix, disabled-by-default Responses adapter, deterministic gates, compact evidence format, and production/no-write controls are implemented and tested. API credit and strict endpoints pass. Deprecated nano was eliminated after repeated output failures. The v4 contract and 30-call repeated critical diagnostic pass for both current candidates. Complete the identical 556-call Luna/Mini run and accept `DEC-012` only if a current candidate passes every gate.
+Resolved August 14, 2026. `DEC-012` accepts `gpt-5.6-luna` at low reasoning as the offline baseline and retains `gpt-5.4-mini-2026-03-17` low as challenger. Both completed 278/278 calls with zero hard and critical failures, 100% critical pass across all five runs, and 99.64% deterministic quality. Luna's measured cost was $0.06563460 versus $0.40898655 for Mini. Exact commit, checksums, latency, tokens, and content-minimized report evidence are recorded in [the Phase 1B execution record](21-phase-1b-offline-model-evaluation.md). No production or user-visible authority was granted.
 
 ### `READY-VAL-004` — Remaining retention (`DEC-014`)
 

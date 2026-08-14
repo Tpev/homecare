@@ -238,7 +238,7 @@ Only after Slices A-D pass:
 3. Accept `DEC-012` only from measured evidence.
 4. Keep Phase 2 shadow blocked until `DEC-014` and the remaining shadow gate are complete.
 
-Execution status on August 14, 2026: API credit was restored and all endpoints produced strict structured responses. Deprecated nano was eliminated after repeated provider output failures. Hard-failure review produced the frozen v4 evaluation contract, and both current candidates passed a 30-call repeated critical diagnostic. The final identical 556-call Luna/Mini comparison remains pending, so `DEC-012` remains pending. See [the Phase 1B adapter and execution record](21-phase-1b-offline-model-evaluation.md).
+Execution completed August 14, 2026. The frozen v4 run completed 556/556 current-candidate calls with zero hard failures and zero critical failures. Luna low and Mini low each achieved 99.64% deterministic quality and passed every critical case across five runs. `DEC-012` accepts Luna low because its measured cost was $0.06563460 versus $0.40898655 for Mini. Exact evidence is in [the Phase 1B adapter and execution record](21-phase-1b-offline-model-evaluation.md). This offline selection does not authorize shadow or user-visible behavior.
 
 ## Required deterministic tests
 

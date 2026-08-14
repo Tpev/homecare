@@ -260,10 +260,10 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 
 ### `DEC-012` — Initial evaluated runtime model/configuration
 
-- Status: Pending measured evidence
-- Last evaluated: August 14, 2026
+- Status: Accepted
+- Accepted: August 14, 2026
 - Decision owner: Engineering and product
-- Decision required: Select the lowest-cost current model/configuration that completes the identical 70-case synthetic corpus, has zero critical hard failures across five runs of every critical case, and passes the declared quality, grounding, navigation, and schema gates. The deprecated `gpt-5-nano-2025-08-07` price-floor benchmark was eliminated after repeated provider output failures and remains baseline-ineligible. The frozen v4 release comparison is `gpt-5.6-luna` at low reasoning versus `gpt-5.4-mini-2026-03-17` at low reasoning, 278 identical calls per candidate and 556 total. API credit, strict structured endpoint checks, and a 30-call repeated critical diagnostic pass, but no configuration is approved until the complete repeated run and hard-failure review are recorded.
+- Decision: Accept `gpt-5.6-luna` at low reasoning as the initial offline runtime baseline and retain `gpt-5.4-mini-2026-03-17` at low reasoning as the measured challenger. On the identical frozen-v4 schedule, each completed 278 of 278 calls, had zero hard failures and zero critical hard failures, passed every critical case across five runs, and achieved 99.64% deterministic quality. Luna cost $0.06563460 versus Mini's $0.40898655, so Luna wins the approved lowest-cost-passing rule. The deprecated `gpt-5-nano-2025-08-07` benchmark was excluded after repeated provider output failures and remains baseline-ineligible. Exact commit, versions, checksums, latency, token use, and content-minimized report evidence are recorded in the Phase 1B execution record.
 - Non-authority: This decision selects an offline baseline only. It does not publish KB content, enable production model calls, process production transcripts, authorize shadow, enable semantic navigation, create a pilot grant, or expose AI to a user.
 - Evidence: [Phase 1B offline model evaluation adapter and execution record](../21-phase-1b-offline-model-evaluation.md)
 - Affects: `EVAL-AIS-001`, prompt/model configuration, cost baseline, Phase 1 exit evidence, and later shadow readiness

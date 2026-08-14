@@ -164,7 +164,7 @@ Track the exact phase blockers in the [build-readiness ledger](14-build-readines
 
 | Baseline question | Status on August 13, 2026 |
 | --- | --- |
-| Initial evaluated serving model/configuration | Open: `DEC-012`; required before the offline model baseline, not before admin/KB foundation work |
+| Initial evaluated serving model/configuration | Accepted: `DEC-012`; `gpt-5.6-luna` at low reasoning is the offline baseline; no production runtime is authorized |
 | Draft-only versus confirmed publication | Resolved: `DEC-010` and `DEC-013`; draft in Phase 5, separately gated publication in Phase 6 |
 | Retention and redaction | Governing rule and principal data classes resolved in `DEC-024` through `DEC-031`; two remaining packages under `DEC-014` are required before production-data shadow |
 | Operational owner, staffed hours, and handoff SLO | Open: `DEC-015`; required before user-visible rollout |
