@@ -11,6 +11,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Settings extends Component
 {
+    private const HIDDEN_OPERATOR_CONTROLS = ['shadow_enabled'];
+
     public string $controlKey = 'master_enabled';
 
     public bool $desiredEnabled = false;
@@ -29,7 +31,7 @@ class Settings extends Component
     public function changeControl(AiSupportControlService $controls): void
     {
         $validated = $this->validate([
-            'controlKey' => ['required', Rule::in($controls->keys())],
+            'controlKey' => ['required', Rule::in($this->operatorControlKeys($controls))],
             'desiredEnabled' => ['boolean'],
             'controlReason' => ['required', 'string', 'min:5', 'max:500'],
             'impactConfirmed' => ['accepted'],
@@ -49,7 +51,7 @@ class Settings extends Component
 
     public function render(AiSupportControlService $controls): View
     {
-        $states = collect($controls->keys())->mapWithKeys(
+        $states = collect($this->operatorControlKeys($controls))->mapWithKeys(
             fn (string $key): array => [$key => $controls->state($key)]
         );
 
@@ -58,5 +60,11 @@ class Settings extends Component
             'runtimeAvailable' => (bool) config('ai_support.runtime_available', false),
             'providerEnabled' => (bool) config('ai_support.provider_enabled', false),
         ]);
+    }
+
+    /** @return list<string> */
+    private function operatorControlKeys(AiSupportControlService $controls): array
+    {
+        return array_values(array_diff($controls->keys(), self::HIDDEN_OPERATOR_CONTROLS));
     }
 }
