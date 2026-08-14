@@ -193,6 +193,23 @@ The remaining provider rows were versioned with their exact partial status:
 
 `downstream_extinction_restore` was also recorded as Pending. Primary legacy copilot destruction and its content-free evidence are preserved, while complete extinction across every derived destination and containing backup, plus a restore that reapplies deletion before access, remain unproved. These Pending records do not alter controls, grants, or the 10-of-21 readiness count.
 
+### Production prerequisite installation and first alert attempt
+
+The operator installed a new dedicated `AI_SUPPORT_SAFETY_IDENTIFIER_SECRET` without displaying it, explicitly forced both deployment guards off, cleared and rebuilt configuration cache, and ran the production read-only preflight. The preflight proved:
+
+- runtime guard off;
+- provider guard off;
+- only human-only stored control on;
+- zero non-revoked grants;
+- provider credential and separate safety-secret prerequisites present;
+- Luna low, 900-token ceiling, bounded retry, and current price version intact.
+
+The provider-project evidence was versioned to include these facts while remaining Pending for the intended dedicated-project match and the project's actual sharing restrictions.
+
+The first content-free operations-alert attempt used reference `202b8a84-f0e9-4fb5-87df-b88502a70c16`. It recorded all four expected administrator/channel delivery rows but two were Failed. Production automatically recorded `operations_alert_delivery` as Failed and opened two critical incidents: `Operations Notification Failed` and `Operations Alert Test Failed`. The current Administrator's in-app notifications page visibly contained the content-free operational-test notification, but both administrators' personal in-app and email confirmations remain open. Do not resolve either incident or mark delivery Passed until the failed channel is identified, corrected, and a fresh-reference retry succeeds on all four delivery rows.
+
+The readiness count remained 10 of 21: the provider-configuration check changed to Pass while the formerly passing no-open-incident check changed to Blocked. Both deployment guards remained off and zero grants remained.
+
 These documentation facts are not a substitute for verifying the actual OpenAI project and production environment. The following remain unrecorded until server/API or account-owned evidence proves them:
 
 - dedicated project and project-scoped credential;
