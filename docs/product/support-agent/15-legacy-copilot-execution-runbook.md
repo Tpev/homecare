@@ -2,7 +2,7 @@
 
 Status: Primary production destruction executed; derived-target and backup extinction closeout remains active
 
-Last updated: August 13, 2026
+Last updated: August 15, 2026
 
 Decision authority: `DEC-005` and `DEC-011`
 
@@ -175,3 +175,5 @@ The retained evidence contains only:
 It contains no message text, draft JSON, model payload, care details, user email, user name, or reversible copy of deleted content.
 
 Phase 0 destruction is not fully complete until the primary and derived targets are verified and the final containing backup is destroyed or reaches its recorded expiry under the restore-time deletion control.
+
+For final structured closeout, use the two-scope template and read-only validator in the [provider privacy and operations evidence checklist](28-provider-privacy-and-operations-evidence-checklist.md#structured-closeout-record). It deliberately separates the retired legacy copilot from current AI Support, requires every destination class and the isolated restore/re-deletion rehearsal, and refuses a future controlled expiry until expiry and absence are actually verified. The validator does not repeat primary destruction or mutate production.

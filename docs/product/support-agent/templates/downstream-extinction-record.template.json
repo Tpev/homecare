@@ -1,0 +1,148 @@
+{
+    "schema_version": "ai-support-downstream-extinction-v1",
+    "evidence_reference": "EXT-REPLACE-ME",
+    "release_commit": "REPLACE_WITH_FULL_40_CHARACTER_LOWERCASE_COMMIT",
+    "observed_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+    "operator_reference": "REPLACE WITH OPERATOR NAME OR SAFE REFERENCE",
+    "destinations": [
+        {
+            "scope": "retired_legacy_copilot",
+            "category": "primary_database",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-01"
+        },
+        {
+            "scope": "retired_legacy_copilot",
+            "category": "read_and_delayed_replicas",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-02"
+        },
+        {
+            "scope": "retired_legacy_copilot",
+            "category": "database_backups_and_snapshots",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-03"
+        },
+        {
+            "scope": "retired_legacy_copilot",
+            "category": "analytics_and_warehouse",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-04"
+        },
+        {
+            "scope": "retired_legacy_copilot",
+            "category": "search_and_vector_indexes",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-05"
+        },
+        {
+            "scope": "retired_legacy_copilot",
+            "category": "application_and_edge_caches",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-06"
+        },
+        {
+            "scope": "retired_legacy_copilot",
+            "category": "logs_and_error_monitoring",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-07"
+        },
+        {
+            "scope": "retired_legacy_copilot",
+            "category": "manual_exports_and_workstations",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-08"
+        },
+        {
+            "scope": "retired_legacy_copilot",
+            "category": "production_fixtures_and_clones",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-09"
+        },
+        {
+            "scope": "current_ai_support",
+            "category": "primary_database",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-10"
+        },
+        {
+            "scope": "current_ai_support",
+            "category": "read_and_delayed_replicas",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-11"
+        },
+        {
+            "scope": "current_ai_support",
+            "category": "database_backups_and_snapshots",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-12"
+        },
+        {
+            "scope": "current_ai_support",
+            "category": "analytics_and_warehouse",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-13"
+        },
+        {
+            "scope": "current_ai_support",
+            "category": "search_and_vector_indexes",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-14"
+        },
+        {
+            "scope": "current_ai_support",
+            "category": "application_and_edge_caches",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-15"
+        },
+        {
+            "scope": "current_ai_support",
+            "category": "logs_and_error_monitoring",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-16"
+        },
+        {
+            "scope": "current_ai_support",
+            "category": "manual_exports_and_workstations",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-17"
+        },
+        {
+            "scope": "current_ai_support",
+            "category": "production_fixtures_and_clones",
+            "status": "pending",
+            "checked_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+            "evidence_reference": "EVD-REPLACE-ME-18"
+        }
+    ],
+    "restore_redeletion_rehearsal": {
+        "rehearsal_reference": "RESTORE-REPLACE-ME",
+        "performed_at": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+        "environment": "isolated",
+        "checks": {
+            "restored_environment_inaccessible_before_redeletion": false,
+            "retirement_code_present_before_access": false,
+            "deletion_manifest_applied_before_access": false,
+            "target_zero_verified_before_access": false,
+            "preserved_domain_records_verified": false,
+            "human_support_available_after_release": false
+        }
+    }
+}

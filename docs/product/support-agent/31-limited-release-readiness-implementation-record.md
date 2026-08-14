@@ -31,6 +31,7 @@ This build adds evidence and operational controls. It does not authorize a pilot
 - Versioned Luna-low pricing and cached-input accounting based on the official catalog checked August 14, 2026.
 - The approved provider/privacy checklist, staff/rollback runbook, and five-person older-adult usability study kit.
 - Strict read-only, exact-commit validators and deliberately failing content-free templates for the witnessed safety/rollback drill and real five-person older-adult/accessibility record. They do not create evidence or replace human observation.
+- A strict two-scope downstream-extinction validator covering all 18 legacy/current destination combinations and the six-check isolated restore/re-deletion rehearsal. Pending backup expiry remains blocked and the validator never repeats destruction or writes evidence.
 
 ## Schema and deployment safety
 
@@ -58,7 +59,8 @@ The new provider safety secret is intentionally absent from source control. Prod
 | Readiness activation isolation | No activation, control, or grant action exists on the readiness page |
 | Plan-only rehearsal | No process, provider call, database mutation, or report write |
 | Human-evidence validator slice | 5 passed, 35 assertions |
-| Current AI Support feature slice after the August 15 addendum | 96 passed, 742 assertions |
+| Downstream-extinction validator slice | 3 passed, 20 assertions |
+| Current AI Support feature slice after the August 15 addendum | 99 passed, 762 assertions |
 
 ### Isolated combined rehearsal
 

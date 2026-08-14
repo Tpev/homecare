@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Process;
 use JsonException;
 
-abstract class ValidatesAiSupportHumanEvidenceRecord extends Command
+abstract class ValidatesAiSupportEvidenceRecord extends Command
 {
     private const MAX_RECORD_BYTES = 131_072;
 

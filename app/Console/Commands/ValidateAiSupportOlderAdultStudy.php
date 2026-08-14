@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Services\AiSupport\AiSupportHumanEvidenceValidator;
 
-class ValidateAiSupportOlderAdultStudy extends ValidatesAiSupportHumanEvidenceRecord
+class ValidateAiSupportOlderAdultStudy extends ValidatesAiSupportEvidenceRecord
 {
     protected $signature = 'ai-support:validate-older-adult-study
         {record : JSON record created from the approved content-free template}

@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Services\AiSupport\AiSupportHumanEvidenceValidator;
 
-class ValidateAiSupportSafetyRehearsal extends ValidatesAiSupportHumanEvidenceRecord
+class ValidateAiSupportSafetyRehearsal extends ValidatesAiSupportEvidenceRecord
 {
     protected $signature = 'ai-support:validate-safety-rehearsal
         {record : JSON record created from the approved content-free template}

@@ -175,6 +175,24 @@ Record `downstream_extinction_restore` only after the content-free evidence cove
 
 This item can reference the independent legacy extinction program, but it must distinguish current AI Support destinations from already destroyed legacy primary data.
 
+### Structured closeout record
+
+Copy [the pending downstream-extinction JSON template](templates/downstream-extinction-record.template.json) to a restricted working location. It requires both `retired_legacy_copilot` and `current_ai_support` across all nine categories: primary database, replicas, backups/snapshots, analytics/warehouse, search/vector indexes, caches, logs/error monitoring, manual exports/workstations, and production fixtures/clones. Use only content-free evidence references; do not add record IDs, user references, customer content, database names, credentials, excerpts, paths, or free-form notes.
+
+Each scoped destination may pass only as `not_present`, `verified_zero`, `destroyed`, or `expired_and_verified`. These statuses apply only to the in-scope legacy or current AI Support content classes, never to every record in a shared database, log service, or backup. A controlled future expiry is still Pending and must not be represented by a complete status until the expiry and absence are actually verified. Current AI Support primary-database evidence must be `verified_zero` for customer AI content before the pilot; the retired legacy primary database must be `verified_zero` or `destroyed`.
+
+The same record requires an isolated restore/re-deletion rehearsal proving that the restored environment remained inaccessible, retirement code and the deletion manifest were applied before access, target zero and protected-domain preservation were verified, and human support remained available after release.
+
+Validate the completed record against the exact candidate commit:
+
+```bash
+php artisan ai-support:validate-downstream-extinction \
+  /safe/path/downstream-extinction.json \
+  --expected-commit=<full-40-character-release-commit>
+```
+
+The shipped template deliberately fails. The command is read-only, verifies that the commit exists in the repository, rejects missing/extra/duplicate scope-category records and every Pending state, outputs only aggregate counts and a SHA-256 record reference, and writes no Admin evidence, application record, control, grant, or provider state. Passing structure validates the operator record; it does not inspect an external system or replace source-system evidence.
+
 ## Final preflight
 
 Run the read-only preflight at any time:
