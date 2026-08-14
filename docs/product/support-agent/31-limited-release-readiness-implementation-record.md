@@ -80,6 +80,12 @@ An earlier provider attempt failed TLS verification because local Windows PHP ha
 
 The report is content-free and retained locally under the private storage disk. It contains safe identifiers, aggregate metrics, grader codes, timings, costs, and hashes only. It contains no transcript, assembled prompt, model answer, credential, payment data, medical record, or production-derived fixture.
 
+### Exact deployed-commit repeat
+
+The rehearsal was repeated from clean deployed commit `003c7ccd09249be1fa6c03b731431c7126bb7778`. It passed the browser gate, all 56 provider cases with zero hard failures, all 27 extraction fields, the cost ceiling at `$0.01787196`, and verified temporary-database destruction. Its content-free result hash is `885cfc733fafa4aa8e2634a3d17d785c5b2404c998428868071f7d3a988cc421`. Provider latency was 3,173 ms P50 and 5,531 ms P95, so the performance warning remains open.
+
+Subsequent production and accessibility execution is tracked in the [limited-release readiness execution log](32-limited-release-readiness-execution-log.md).
+
 ## Gates intentionally still open
 
 The Admin result must remain `BLOCKED` until all required evidence is effective and there is a separate explicit release decision. Open work includes:
@@ -103,9 +109,9 @@ If the Admin readiness page or monitor has an application defect, roll back the 
 
 ## Next work
 
-1. Deploy the fail-closed readiness layer and verify the Admin page, empty evidence register, zero grants, and disabled controls.
+1. Deploy and production-retest the Family navigation reflow remediation recorded in the execution log.
 2. Configure the dedicated provider project/secret and record only content-free evidence.
 3. Run the production operations-alert receipt check and the staff rollback drill.
-4. Conduct the five-person older-adult study and accessibility checks.
+4. Conduct the five-person older-adult study and complete the remaining accessibility checks.
 5. Name the two planned Family users without granting access.
 6. Run the read-only preflight and return to Product for the explicit release decision.

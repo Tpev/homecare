@@ -52,6 +52,7 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 30. [Staff rehearsal and rollback runbook](29-staff-rehearsal-and-rollback-runbook.md)
 31. [Older-adult usability study kit](30-older-adult-usability-study-kit.md)
 32. [Limited-release readiness implementation record](31-limited-release-readiness-implementation-record.md)
+33. [Limited-release readiness execution log](32-limited-release-readiness-execution-log.md)
 
 Then consult the live registries:
 

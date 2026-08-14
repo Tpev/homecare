@@ -455,7 +455,7 @@ new class extends Component
                 </a>
             </div>
 
-            <div class="hidden min-w-0 flex-1 items-center gap-2 sm:ml-8 sm:mr-72 sm:flex">
+            <div class="hidden min-w-0 flex-1 items-center gap-2 md:ml-8 md:mr-72 md:flex">
                 @if ($isContentTeam && ! $isAdmin)
                     <div class="relative" x-data="{ open: false }">
                         <button type="button" @click="open = !open" class="inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('admin.content.*') ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#547067] hover:bg-[#F8F0E2] hover:text-[#23483F]' }}">
@@ -529,7 +529,7 @@ new class extends Component
                 @endif
             </div>
 
-            <div class="sm:hidden ml-auto flex items-center gap-2" @if ($isAdmin) wire:poll.10s.visible @endif>
+            <div class="ml-auto flex items-center gap-2 md:hidden" @if ($isAdmin) wire:poll.10s.visible @endif>
                 @if ($isAdmin)
                     <a
                         href="{{ route('admin.support.tickets') }}"
@@ -563,7 +563,7 @@ new class extends Component
             </div>
         </div>
 
-        <div class="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 items-center gap-2" x-data="{ accountOpen: false, supportOpen: false }">
+        <div class="absolute right-0 top-1/2 hidden -translate-y-1/2 items-center gap-2 md:flex" x-data="{ accountOpen: false, supportOpen: false }">
             @if ($user)
                 @if ($isAdmin)
                     <div class="relative" wire:poll.10s.visible>
@@ -760,7 +760,7 @@ new class extends Component
         x-cloak
         x-show="open"
         x-transition.opacity
-        class="max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-t border-[#E3D6C5]/80 bg-[rgba(255,253,250,0.98)] backdrop-blur sm:hidden"
+        class="max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-t border-[#E3D6C5]/80 bg-[rgba(255,253,250,0.98)] backdrop-blur md:hidden"
     >
         <div class="space-y-1 px-2 pb-3 pt-2">
             @if ($isContentTeam && ! $isAdmin)

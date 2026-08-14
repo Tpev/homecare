@@ -14,6 +14,34 @@ async function expectNoHorizontalOverflow(page: Page) {
 }
 
 test.describe('Mobile support chat', () => {
+    test('keeps the Family page and support chat reflowable at zoom-equivalent breakpoints', async ({ page }) => {
+        await loginAs(page, 'family');
+        await page.goto('/dashboard');
+
+        for (const size of [
+            { width: 640, height: 400 },
+            { width: 768, height: 480 },
+            { width: 1024, height: 640 },
+        ]) {
+            await page.setViewportSize(size);
+            await expectNoHorizontalOverflow(page);
+
+            const launcher = page.getByTestId('support-chat-launcher');
+            await expect(launcher).toBeVisible();
+            await launcher.click();
+
+            const panel = page.getByTestId('support-chat-panel');
+            await expect(panel).toBeVisible();
+            const panelBox = await panel.boundingBox();
+            expect(panelBox?.x ?? -1).toBeGreaterThanOrEqual(0);
+            expect((panelBox?.x ?? 0) + (panelBox?.width ?? 0)).toBeLessThanOrEqual(size.width + 1);
+            expect(panelBox?.height ?? size.height + 1).toBeLessThanOrEqual(size.height);
+            await expectNoHorizontalOverflow(page);
+
+            await page.getByRole('button', { name: 'Minimize support chat' }).click();
+        }
+    });
+
     test('keeps the launcher and sheet usable across required phone sizes', async ({ page }, testInfo) => {
         await page.setViewportSize(phoneSizes[0]);
         await loginAs(page, 'caregiverMobileVisual');
