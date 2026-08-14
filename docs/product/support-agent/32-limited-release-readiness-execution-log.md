@@ -42,6 +42,23 @@ The isolated rehearsal for deployed commit `003c7ccd09249be1fa6c03b731431c7126bb
 
 The 5,531 ms P95 remains a warning because it exceeds the five-second target. This run proves the exact commit's isolated release gate; it does not prove production provider configuration, actual alert receipt, rollback staffing, accessibility completion, or older-adult usability.
 
+### Reflow-remediation release candidate
+
+After the reflow remediation and its regression were committed, the complete isolated gate passed again from clean pushed commit `28f7fcc6ff8eeb11760799eb146ea7c529f9af8e`:
+
+| Metric | Result |
+| --- | --- |
+| Browser scenario | Pass |
+| Frozen provider cases | 56/56 pass; zero hard failures |
+| Structured extraction | 27/27 fields, 100% |
+| Input/cached/output tokens | 69,786 / 0 / 13,882 |
+| Estimated provider cost | `$0.0306156` |
+| Provider P50/P95 | 2,914 / 4,073 ms |
+| Temporary database | Verified destroyed |
+| Content-free result hash | `b8a6d21509d8e2412ca5dc1751b27e0a190d9711d44f7342efa1b0e1ef1a2a4f` |
+
+This exact-commit run is below the five-second P95 target. The earlier over-target observation remains historical evidence rather than being erased. Two preceding attempts on the same commit were rejected before model evaluation: the first correctly refused a missing rehearsal-only safety secret; the second failed the TLS connection after the bounded retry because local Windows PHP had no CA bundle configured. Both verified temporary-database destruction. The accepted run supplied Git's installed CA bundle explicitly and kept certificate verification enabled.
+
 ## Accessibility execution record
 
 ### Authenticated production observations
