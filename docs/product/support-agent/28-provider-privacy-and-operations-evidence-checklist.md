@@ -48,12 +48,13 @@ Use a separate, ephemeral `OPENAI_ADMIN_KEY` for these Administration endpoints.
 
 ### Production verifier runbook
 
-After deploying the verifier, run its read-only mode first. Enter the organization Admin API key only at the hidden prompt; do not add it to `.env`, command history, Admin evidence, or chat. The intended project ID is non-secret and is used to require an exact project match.
+After deploying the verifier, discover the active non-secret project IDs and names, select the intended dedicated AI Support project, and then run verification in read-only mode. Enter the organization Admin API key only at the hidden prompt; do not add it to `.env`, command history, Admin evidence, or chat. Project discovery never needs or prints the configured production project key.
 
 ```bash
 read -s -p "OpenAI Admin API key: " OPENAI_ADMIN_KEY
 printf '\n'
 export OPENAI_ADMIN_KEY
+php artisan ai-support:verify-provider-project --list-projects
 read -r -p "Intended OpenAI project ID (proj_...): " AI_SUPPORT_PROVIDER_PROJECT_ID
 php artisan ai-support:verify-provider-project \
   --project-id="$AI_SUPPORT_PROVIDER_PROJECT_ID"

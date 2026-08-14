@@ -56,6 +56,51 @@ class ProviderProjectEvidenceCommandTest extends TestCase
         Http::assertNotSent(fn (Request $request): bool => $request->method() === 'POST');
     }
 
+    public function test_project_discovery_lists_only_active_non_secret_projects_without_a_project_key(): void
+    {
+        config(['services.openai.api_key' => '']);
+        Http::fake([
+            'https://api.openai.com/v1/organization/projects*' => Http::response([
+                'object' => 'list',
+                'data' => [
+                    ['id' => 'proj_ai_support', 'name' => 'LoLo AI Support', 'status' => 'active'],
+                    ['id' => 'proj_archived', 'name' => 'Old project', 'status' => 'archived'],
+                ],
+                'has_more' => false,
+                'last_id' => 'proj_archived',
+            ]),
+        ]);
+
+        $this->artisan('ai-support:verify-provider-project', ['--list-projects' => true])
+            ->expectsTable(
+                ['Active project ID', 'Project name'],
+                [['proj_ai_support', 'LoLo AI Support']],
+            )
+            ->doesntExpectOutputToContain('proj_archived')
+            ->doesntExpectOutputToContain('synthetic-admin-key')
+            ->expectsOutputToContain('No credential was printed and no provider state was changed')
+            ->assertSuccessful();
+
+        Http::assertSentCount(1);
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+            && str_starts_with($request->url(), 'https://api.openai.com/v1/organization/projects?')
+            && $request->hasHeader('Authorization', 'Bearer synthetic-admin-key'));
+    }
+
+    public function test_project_discovery_cannot_be_combined_with_verification_or_mutation(): void
+    {
+        Http::fake();
+
+        $this->artisan('ai-support:verify-provider-project', [
+            '--list-projects' => true,
+            '--project-id' => 'proj_intended',
+            '--create-spend-alert' => true,
+        ])->expectsOutputToContain('Use --list-projects by itself')
+            ->assertFailed();
+
+        Http::assertNothingSent();
+    }
+
     public function test_read_only_verification_fails_closed_when_the_alert_is_missing(): void
     {
         $this->fakeProvider(alertExists: false);

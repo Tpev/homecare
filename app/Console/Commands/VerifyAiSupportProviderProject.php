@@ -18,6 +18,7 @@ class VerifyAiSupportProviderProject extends Command
 
     protected $signature = 'ai-support:verify-provider-project
         {--project-id= : Intended non-secret OpenAI project ID}
+        {--list-projects : List active non-secret project IDs and names without verifying or changing one}
         {--create-spend-alert : Create the missing $25 monthly email alert}
         {--confirm= : Must equal CREATE-25-MONTHLY-SPEND-ALERT for the provider write}';
 
@@ -26,9 +27,15 @@ class VerifyAiSupportProviderProject extends Command
     public function handle(): int
     {
         $projectId = trim((string) $this->option('project-id'));
+        $listProjects = (bool) $this->option('list-projects');
         $createAlert = (bool) $this->option('create-spend-alert');
-        if (! preg_match('/^proj_[A-Za-z0-9_-]+$/', $projectId)) {
-            $this->error('Provide the intended non-secret project ID with --project-id=proj_...');
+        if ($listProjects && ($projectId !== '' || $createAlert || trim((string) $this->option('confirm')) !== '')) {
+            $this->error('Use --list-projects by itself; it cannot verify a project or create an alert.');
+
+            return self::FAILURE;
+        }
+        if (! $listProjects && ! preg_match('/^proj_[A-Za-z0-9_-]+$/', $projectId)) {
+            $this->error('Provide --project-id=proj_..., or use --list-projects to discover active non-secret project IDs.');
 
             return self::FAILURE;
         }
@@ -44,9 +51,18 @@ class VerifyAiSupportProviderProject extends Command
         }
 
         $adminKey = trim((string) getenv('OPENAI_ADMIN_KEY'));
+        if ($adminKey === '') {
+            $this->error('An ephemeral OPENAI_ADMIN_KEY is required.');
+
+            return self::FAILURE;
+        }
+        if ($listProjects) {
+            return $this->listProjects($adminKey);
+        }
+
         $projectKey = trim((string) config('services.openai.api_key'));
-        if ($adminKey === '' || $projectKey === '') {
-            $this->error('An ephemeral OPENAI_ADMIN_KEY and the configured production project key are required.');
+        if ($projectKey === '') {
+            $this->error('The configured production project key is required.');
 
             return self::FAILURE;
         }
@@ -179,6 +195,34 @@ class VerifyAiSupportProviderProject extends Command
             && ! isset($parts['port'])
             && ! isset($parts['query'])
             && ! isset($parts['fragment']);
+    }
+
+    private function listProjects(string $adminKey): int
+    {
+        try {
+            $projects = collect($this->listAdminCollection($adminKey, 'organization/projects'))
+                ->filter(fn (array $project): bool => ($project['status'] ?? null) === 'active')
+                ->map(fn (array $project): array => [
+                    trim((string) ($project['id'] ?? '')),
+                    trim((string) ($project['name'] ?? '')) ?: '(unnamed)',
+                ])
+                ->filter(fn (array $project): bool => preg_match('/^proj_[A-Za-z0-9_-]+$/', $project[0]) === 1)
+                ->values()
+                ->all();
+            if ($projects === []) {
+                throw new RuntimeException('No active project record was returned.');
+            }
+
+            $this->table(['Active project ID', 'Project name'], $projects);
+            $this->info('Read-only project discovery completed. No credential was printed and no provider state was changed.');
+
+            return self::SUCCESS;
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->error('Provider project discovery failed safely: '.$exception->getMessage());
+
+            return self::FAILURE;
+        }
     }
 
     /** @return list<string> */
