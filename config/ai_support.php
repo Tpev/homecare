@@ -42,6 +42,7 @@ return [
     'pilot_daily_cost_stop_microunits' => 5_000_000,
     'pilot_daily_model_turn_limit' => 50,
     'provider_monthly_budget_alert_usd' => 25,
+    'provider_monthly_budget_alert_required' => false,
     'conversation_p95_target_ms' => 5_000,
     'tool_p95_target_ms' => 8_000,
     'performance_minimum_sample' => 20,

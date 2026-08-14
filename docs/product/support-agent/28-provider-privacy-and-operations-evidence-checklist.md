@@ -14,23 +14,34 @@ The Admin [Release readiness](/admin/ai-support/readiness) workspace is the cano
 
 ## Provider project checklist
 
-Record `provider_project_configuration` only after verifying:
+Record `provider_project_configuration` for the initial pilot only after verifying:
 
-- AI Support uses a dedicated OpenAI project rather than an unrestricted organization-wide key.
-- The server credential is restricted to the required Responses operation and is stored only as a server secret.
-- Model-improvement data sharing is not enabled for this project.
-- The credential does not appear in browser state, application logs, database content, Admin evidence, source control, or build artifacts.
+- The currently configured OpenAI API credential authenticates to the standard provider destination without being displayed.
+- The credential is stored only as a server secret and never enters browser state, database content, evidence, logs, source control, or build artifacts.
+- Exact dedicated-project identity and restriction evidence are recommended before expansion but deferred for the initial pilot under `DEC-068`.
 - `AI_SUPPORT_SAFETY_IDENTIFIER_SECRET` is a separate random secret of at least 32 characters and is not the API key or application key.
 - The release preflight reports the credential and safety-secret prerequisites as present without displaying either value.
 
 Safe evidence: project name or non-secret reference, checked date, operator, restriction summary, and source system/reference. Never paste the API key or safety secret.
+
+### Approved current-key route
+
+The initial pilot may use the currently configured `OPENAI_API_KEY`. Run the content-free standard-key check after deployment:
+
+```bash
+php artisan ai-support:verify-provider-project --current-key-only
+```
+
+This sends only `GET /v1/models` to the exact configured standard destination, prints no credential, changes no provider state, and does not require an Admin API key. A passing result proves that the configured credential authenticates. It does not prove exact project identity, current data-sharing settings, or provider retention settings; do not claim those facts from this mode. The `$25` provider alert is optional and is not checked or required.
+
+The documented Admin Audit Logs schema was also checked on August 15, 2026. Its organization and project update events do not expose the model-improvement sharing setting, so audit logs are not a substitute for account-owned evidence: <https://developers.openai.com/api/reference/resources/admin/subresources/organization/subresources/audit_logs/methods/list>.
 
 ### Server-only verification route
 
 The operator has directed that this release exercise must not connect to the OpenAI website. Use content-free production configuration checks and, when available, the provider Admin API or an account-owned export/receipt. Do not weaken the evidence claim to accommodate that constraint.
 
 - A successful standard API request proves that a credential authenticates to the configured destination. A project-scoped `sk-proj-` key shape is supporting evidence, not proof of the intended project identity.
-- Project identity requires a non-secret intended-project ID/name matched to provider-account evidence. If no Admin API credential or account-owned evidence is available, keep `provider_project_configuration` Pending.
+- Exact project identity requires a non-secret intended-project ID/name matched to provider-account evidence. Under `DEC-068`, that stronger identity evidence is deferred before expansion and does not prevent the current-key route from satisfying the initial-pilot credential item.
 - Confirming model-improvement sharing and project retention settings requires project-level account evidence. The documented default policy does not prove the project's current opt-in state.
 - Creating or verifying the `$25` monthly spend alert requires project-level account evidence. The application's `$25` configuration value alone does not prove that the provider alert exists.
 - Never paste an Admin API key, project API key, safety secret, full provider response, customer content, or prompt into the terminal transcript or readiness evidence.
@@ -46,7 +57,7 @@ The official Admin API reference checked on August 15, 2026 now documents server
 
 Use a separate, ephemeral `OPENAI_ADMIN_KEY` for these Administration endpoints. Do not store it in application configuration, pass it as a visible command argument, or substitute the production project key. Verify an existing alert before creating one to prevent duplicates, and require an explicit confirmation before the provider write. The documented Admin API surface does not expose the model-improvement data-sharing opt-in state; that setting still requires account-owned evidence and must remain Pending if none is supplied.
 
-### Production verifier runbook
+### Optional stronger Admin API runbook
 
 After deploying the verifier, discover the active non-secret project IDs and names, select the intended dedicated AI Support project, and then run verification in read-only mode. Enter the organization Admin API key only at the hidden prompt; do not add it to `.env`, command history, Admin evidence, or chat. Project discovery never needs or prints the configured production project key.
 
@@ -63,7 +74,7 @@ unset OPENAI_ADMIN_KEY AI_SUPPORT_PROVIDER_PROJECT_ID
 
 Read-only mode retrieves the exact active project, matches the configured production key to exactly one redacted project-key record, makes a content-free `GET /models` request with the intended project header, observes the project retention type and its effective organization type when inherited, and checks for an existing `$25` monthly email alert. It refuses any configured destination other than exactly `https://api.openai.com/v1`, never prints either credential or recipient addresses, and never changes provider state.
 
-If and only if read-only mode reports the alert as `MISSING`, run the confirmed creation mode with the approved recipients. Recipient input is hidden and ephemeral, and every supplied address must be valid and unique or the command fails before provider access. The command creates only a `2500`-cent USD monthly email alert, supplies an idempotency key, and re-lists alerts before claiming success.
+If the optional Admin mode reports the alert as `OPTIONAL - missing` and the operator later chooses to add the defense, run the confirmed creation mode with the approved recipients. Recipient input is hidden and ephemeral, and every supplied address must be valid and unique or the command fails before provider access. The command creates only a `2500`-cent USD monthly email alert, supplies an idempotency key, and re-lists alerts before claiming success.
 
 ```bash
 read -s -p "OpenAI Admin API key: " OPENAI_ADMIN_KEY
@@ -126,8 +137,9 @@ Record `cost_monitoring` after verifying:
 - $2 synthetic-rehearsal daily stop;
 - $5 two-user-pilot daily stop;
 - 50 model-assisted turns per pilot user per day;
-- $25 provider-project monthly billing alert;
 - five-second conversation and eight-second tool P95 monitors over at least 20 observations.
+
+The `$25` provider-project monthly billing alert remains recommended operational defense, but it is not required for the initial pilot under `DEC-068`.
 
 ## Operations alert evidence
 

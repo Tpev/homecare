@@ -647,6 +647,16 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Affects: Provider configuration, request contract, cost catalog, Admin readiness, monitoring, alert delivery, staff rehearsal, usability evidence, release order, and rollback
 - Detailed contract: [Limited-release readiness contract](../27-limited-release-readiness-contract.md)
 
+### `DEC-068` - Use the current API credential and defer the external $25 alert
+
+- Status: Accepted for the initial bounded pilot
+- Accepted: August 15, 2026
+- Decision owner: Product
+- Decision: Use the currently configured server-side OpenAI API user/project credential for the initial pilot instead of making a separate dedicated-project Admin API credential a prerequisite. Require a content-free authentication check at the exact standard destination, the existing separate safety-identifier secret, server-only credential handling, and all application cost/turn/latency stops. The external `$25` provider-project alert is recommended but not a release gate for this pilot. Exact Admin API project identity, sharing, and retention settings must not be inferred from standard-key authentication and remain separate evidence facts.
+- Rationale: Remove provider-account administration and the external billing alert from the critical path while preserving truthful evidence, application-enforced cost limits, fail-closed controls, and the ability to harden the provider project before expansion.
+- Affects: Provider credential evidence, cost-monitoring evidence, provider verification command, limited-release contract, and readiness guidance
+- Detailed contract: [Limited-release readiness contract](../27-limited-release-readiness-contract.md)
+
 ## Product decision status
 
 No remaining product interview blocks the approved initial build or the `DEC-067` readiness implementation. The interactive runtime is implemented and the readiness package is now the active engineering milestone. Privacy/provider evidence, representative older-adult usability, support/rollback rehearsal, named-user pilot approval, and the separately held pricing reconciliation remain release gates rather than unanswered product decisions.

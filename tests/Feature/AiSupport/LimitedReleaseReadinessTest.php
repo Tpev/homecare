@@ -39,6 +39,11 @@ class LimitedReleaseReadinessTest extends TestCase
             ->assertSee('BLOCKED')
             ->assertSee('cannot enable AI')
             ->assertDontSee('Enable AI pilot');
+
+        $definitions = app(AiSupportReadinessService::class)->definitions();
+        $this->assertSame('Configured provider credential', $definitions['provider_project_configuration']['label']);
+        $this->assertStringContainsString('not a gate', $definitions['cost_monitoring']['guidance']);
+        $this->assertFalse((bool) config('ai_support.provider_monthly_budget_alert_required'));
     }
 
     public function test_one_admin_can_version_content_free_readiness_evidence_end_to_end(): void

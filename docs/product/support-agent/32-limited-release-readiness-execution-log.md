@@ -258,12 +258,20 @@ The server-only route is now implemented as `php artisan ai-support:verify-provi
 
 An authenticated production re-audit immediately before deploying this verifier still showed the expected fail-closed state: 12 of 21 checks Passed, nine genuine gates open, zero incidents, zero warnings, both deployment guards off, only human-only on, and zero grants. The verifier had not yet been deployed or run at that observation point.
 
+### Current-key pilot simplification
+
+Product subsequently directed that the initial pilot use the currently configured OpenAI API user/project key and that the `$25` provider billing alert not be a hard gate. `DEC-068` records this bounded simplification. The new `--current-key-only` mode authenticates the configured credential through a content-free `GET /v1/models` request to the exact standard destination, without an Admin API key, project lookup, alert lookup, provider write, credential output, or customer content. A successful result may support the configured-credential evidence item, together with the already verified separate safety-identifier secret and server-only handling.
+
+This simplification does not turn an unsupported claim into evidence. A normal API key cannot read the account's model-improvement sharing or retention controls, so those facts remain unverified until separate account-owned evidence is available. The optional Admin API verifier remains available later. Application cost protections remain required: per-conversation warning/stop, rehearsal and pilot daily stops, per-user turn limit, and latency/tool monitoring. Both deployment guards remain off and no grant is authorized by this decision.
+
+The documented Admin Audit Logs schema was also checked on August 15, 2026; its organization and project update events do not expose a model-improvement sharing field, so it cannot close that evidence item. The current-key verifier/readiness batch passes 21 tests and 110 assertions, and the complete AI Support feature suite passes 91 tests and 707 assertions.
+
 These documentation facts are not a substitute for verifying the actual OpenAI project and production environment. The following remain unrecorded until server/API or account-owned evidence proves them:
 
 - dedicated project and project-scoped credential;
 - model-improvement sharing disabled;
 - production safety-identifier secret present and separate from all other secrets;
-- `$25` monthly project spend alert;
+- optional `$25` monthly project spend alert, deferred under `DEC-068`;
 - actual destination/contract position;
 - current project retention-control and ZDR-request status;
 
@@ -281,8 +289,8 @@ After the initial production records, readiness was `BLOCKED` at 9 of 21 checks 
 
 ## Work queue
 
-1. Deploy the server-only verifier, then use an ephemeral Admin API credential plus the non-secret intended project ID to verify the project/key match and retention type. Verify the `$25` monthly alert in read-only mode first; create it with the explicit confirmation only if it is missing. Do not print either credential or recipient addresses.
-2. Supply safe account-owned evidence for the model-improvement sharing state and the destination/contract acknowledgement.
+1. Deploy the current-key verifier and run `php artisan ai-support:verify-provider-project --current-key-only`; record only the facts it actually proves.
+2. Supply safe account-owned evidence for the model-improvement sharing/retention state and the destination/contract acknowledgement; the optional Admin API route may be used later.
 3. Verify the remaining downstream-extinction and restore evidence while both deployment guards remain off.
 4. Record the remaining monitoring/cost and provider evidence in Admin only after each fact is observed.
 5. Run the staffed human-takeover, emergency/24/7, automatic-stop, confirmation-invalidation, rollback, and continuous human-chat drill.

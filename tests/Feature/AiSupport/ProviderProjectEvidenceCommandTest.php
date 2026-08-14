@@ -56,6 +56,41 @@ class ProviderProjectEvidenceCommandTest extends TestCase
         Http::assertNotSent(fn (Request $request): bool => $request->method() === 'POST');
     }
 
+    public function test_current_key_only_authenticates_without_admin_key_project_lookup_or_alert_requirement(): void
+    {
+        putenv('OPENAI_ADMIN_KEY');
+        Http::fake([
+            'https://api.openai.com/v1/models' => Http::response(['object' => 'list', 'data' => []]),
+        ]);
+
+        $this->artisan('ai-support:verify-provider-project', ['--current-key-only' => true])
+            ->expectsOutputToContain('PASS - content-free request accepted')
+            ->expectsOutputToContain('OBSERVED - project-scoped key form')
+            ->expectsOutputToContain('DEFERRED - Admin API evidence not required for this pilot')
+            ->expectsOutputToContain('NOT VERIFIED - standard API keys cannot read these controls')
+            ->expectsOutputToContain('OPTIONAL - not checked or required for this pilot')
+            ->doesntExpectOutputToContain('sk-proj-synthetic-1234')
+            ->assertSuccessful();
+
+        Http::assertSentCount(1);
+        Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+            && $request->url() === 'https://api.openai.com/v1/models'
+            && $request->hasHeader('Authorization', 'Bearer sk-proj-synthetic-1234'));
+    }
+
+    public function test_current_key_only_cannot_be_combined_with_admin_or_alert_operations(): void
+    {
+        Http::fake();
+
+        $this->artisan('ai-support:verify-provider-project', [
+            '--current-key-only' => true,
+            '--project-id' => 'proj_intended',
+        ])->expectsOutputToContain('Use --current-key-only by itself')
+            ->assertFailed();
+
+        Http::assertNothingSent();
+    }
+
     public function test_project_discovery_lists_only_active_non_secret_projects_without_a_project_key(): void
     {
         config(['services.openai.api_key' => '']);
@@ -101,15 +136,15 @@ class ProviderProjectEvidenceCommandTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_read_only_verification_fails_closed_when_the_alert_is_missing(): void
+    public function test_read_only_verification_reports_optional_missing_alert_without_provider_write(): void
     {
         $this->fakeProvider(alertExists: false);
 
         $this->artisan('ai-support:verify-provider-project', ['--project-id' => 'proj_intended'])
             ->expectsOutputToContain('$25 monthly spend alert')
-            ->expectsOutputToContain('MISSING')
+            ->expectsOutputToContain('Optional $25 monthly email spend alert was not found')
             ->expectsOutputToContain('No provider state was changed')
-            ->assertFailed();
+            ->assertSuccessful();
 
         Http::assertNotSent(fn (Request $request): bool => $request->method() === 'POST');
     }

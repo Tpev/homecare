@@ -22,9 +22,9 @@ class AiSupportReadinessService
     {
         return [
             'provider_project_configuration' => [
-                'label' => 'Dedicated provider project and credential',
+                'label' => 'Configured provider credential',
                 'required' => true,
-                'guidance' => 'Record the dedicated OpenAI project, restricted service credential, and disabled data-sharing configuration without copying a secret.',
+                'guidance' => 'Record that the current server-only OpenAI API credential authenticates at the standard destination and uses the separate safety-identifier secret. Exact Admin API project identity is deferred for the initial pilot.',
             ],
             'provider_data_controls' => [
                 'label' => 'Provider no-training and retention controls',
@@ -59,7 +59,7 @@ class AiSupportReadinessService
             'cost_monitoring' => [
                 'label' => 'Cost and performance monitoring',
                 'required' => true,
-                'guidance' => 'Record the $25 project billing alert plus conversation, daily, turn, latency, and tool-action monitors.',
+                'guidance' => 'Record the conversation, daily, turn, latency, and tool-action monitors. An external $25 provider alert is recommended but not a gate for the initial pilot.',
             ],
             'operations_alert_delivery' => [
                 'label' => 'Operations alert delivery',

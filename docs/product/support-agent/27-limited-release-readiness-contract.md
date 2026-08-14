@@ -24,7 +24,7 @@ The following remain prohibited:
 
 ## 2. Provider and model contract
 
-Use a dedicated OpenAI project and a restricted server-side credential for AI Support. The credential must never enter browser state, database content, application logs, Admin evidence, or client bundles.
+For the initial bounded pilot, `DEC-068` accepts the existing server-side OpenAI API credential instead of requiring a separately administered dedicated-project credential. The credential must still never enter browser state, database content, application logs, Admin evidence, or client bundles. A dedicated restricted project credential remains recommended before expansion.
 
 The serving candidate remains `gpt-5.6-luna` with low reasoning while it passes the frozen gates. Use the Responses API with:
 
@@ -70,7 +70,7 @@ Retain the conservative conversation rules from `DEC-065`:
 - at $0.05, stop model work, preserve the safe draft, and transfer to human support;
 - staff-rehearsal hard stop at $2 per day;
 - two-user-pilot hard stop at $5 per day;
-- OpenAI project billing alert at $25 per month;
+- optional OpenAI project billing alert at $25 per month; it is recommended but not a release gate for the initial pilot under `DEC-068`;
 - no more than 50 model-assisted turns per pilot user per day, followed by human support;
 - five-second P95 conversational target and eight-second P95 tool-action target;
 - warn when a target fails across at least 20 measured turns.

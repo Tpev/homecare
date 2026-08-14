@@ -17,6 +17,7 @@ class VerifyAiSupportProviderProject extends Command
     private const ALERT_THRESHOLD_CENTS = 2500;
 
     protected $signature = 'ai-support:verify-provider-project
+        {--current-key-only : Authenticate the currently configured API key without Admin API access}
         {--project-id= : Intended non-secret OpenAI project ID}
         {--list-projects : List active non-secret project IDs and names without verifying or changing one}
         {--create-spend-alert : Create the missing $25 monthly email alert}
@@ -27,15 +28,21 @@ class VerifyAiSupportProviderProject extends Command
     public function handle(): int
     {
         $projectId = trim((string) $this->option('project-id'));
+        $currentKeyOnly = (bool) $this->option('current-key-only');
         $listProjects = (bool) $this->option('list-projects');
         $createAlert = (bool) $this->option('create-spend-alert');
+        if ($currentKeyOnly && ($projectId !== '' || $listProjects || $createAlert || trim((string) $this->option('confirm')) !== '')) {
+            $this->error('Use --current-key-only by itself; it does not use Admin API project or alert operations.');
+
+            return self::FAILURE;
+        }
         if ($listProjects && ($projectId !== '' || $createAlert || trim((string) $this->option('confirm')) !== '')) {
             $this->error('Use --list-projects by itself; it cannot verify a project or create an alert.');
 
             return self::FAILURE;
         }
-        if (! $listProjects && ! preg_match('/^proj_[A-Za-z0-9_-]+$/', $projectId)) {
-            $this->error('Provide --project-id=proj_..., or use --list-projects to discover active non-secret project IDs.');
+        if (! $currentKeyOnly && ! $listProjects && ! preg_match('/^proj_[A-Za-z0-9_-]+$/', $projectId)) {
+            $this->error('Provide --project-id=proj_..., use --list-projects, or use --current-key-only.');
 
             return self::FAILURE;
         }
@@ -43,6 +50,9 @@ class VerifyAiSupportProviderProject extends Command
             $this->error('Provider verification refused: the configured destination is not exactly https://api.openai.com/v1.');
 
             return self::FAILURE;
+        }
+        if ($currentKeyOnly) {
+            return $this->verifyCurrentKey();
         }
         if ($createAlert && (string) $this->option('confirm') !== self::ALERT_CONFIRMATION) {
             $this->error('Use --confirm='.self::ALERT_CONFIRMATION.' to create the provider alert.');
@@ -152,13 +162,13 @@ class VerifyAiSupportProviderProject extends Command
                     ['Intended project', 'PASS - active'],
                     ['Configured project key', 'PASS - unique redacted match and scoped request accepted'],
                     ['Project data retention', 'OBSERVED - '.$retentionEvidence],
-                    ['$25 monthly spend alert', 'MISSING'],
+                    ['$25 monthly spend alert', 'OPTIONAL - missing'],
                     ['Model-improvement sharing', 'NOT VERIFIED - no documented Admin API field'],
                 ]);
-                $this->error('MISSING: no $25 monthly email spend alert was found for the intended project.');
+                $this->warn('Optional $25 monthly email spend alert was not found for the intended project.');
                 $this->warn('Read-only verification completed. No provider state was changed.');
 
-                return self::FAILURE;
+                return self::SUCCESS;
             }
 
             $recipientCount = count((array) data_get($alert, 'notification_channel.recipients', []));
@@ -195,6 +205,41 @@ class VerifyAiSupportProviderProject extends Command
             && ! isset($parts['port'])
             && ! isset($parts['query'])
             && ! isset($parts['fragment']);
+    }
+
+    private function verifyCurrentKey(): int
+    {
+        $projectKey = trim((string) config('services.openai.api_key'));
+        if ($projectKey === '') {
+            $this->error('The currently configured OpenAI API key is required.');
+
+            return self::FAILURE;
+        }
+
+        try {
+            $response = $this->request($projectKey)->get('models');
+            $this->assertSuccessful($response, 'current-key content-free request');
+            $keyForm = str_starts_with($projectKey, 'sk-proj-')
+                ? 'OBSERVED - project-scoped key form'
+                : 'OBSERVED - standard user/service key form';
+            $this->table(['Check', 'Result'], [
+                ['Official destination', 'PASS'],
+                ['Configured API credential', 'PASS - content-free request accepted'],
+                ['Credential form', $keyForm],
+                ['Exact provider project identity', 'DEFERRED - Admin API evidence not required for this pilot'],
+                ['Data-sharing and retention settings', 'NOT VERIFIED - standard API keys cannot read these controls'],
+                ['$25 monthly provider alert', 'OPTIONAL - not checked or required for this pilot'],
+            ]);
+            $this->info('Current-key verification completed without printing the credential or changing provider state.');
+            $this->warn('Do not mark data-sharing or retention settings verified from this result.');
+
+            return self::SUCCESS;
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->error('Current-key verification failed safely: '.$exception->getMessage());
+
+            return self::FAILURE;
+        }
     }
 
     private function listProjects(string $adminKey): int
