@@ -23,7 +23,7 @@ Authenticated production inspection on August 14, 2026 established:
 - zero pilot grants;
 - 23 governed non-pricing KB entries published and the pricing entry held as Draft;
 - no unresolved AI Support incident or warning at the time of inspection;
-- Admin readiness `BLOCKED`, with 9 of 21 required checks passing and 12 open;
+- Admin readiness `BLOCKED`, with 10 of 21 required checks passing and 11 open;
 - public and ordinary Family support remained human-only, with no user-visible AI marker.
 
 ## Exact deployed-commit rehearsal
@@ -179,6 +179,8 @@ The credential used for the exact synthetic rehearsal was checked without displa
 
 The operator subsequently directed that this exercise must not connect to the OpenAI website. Project identity, project-level data-sharing controls, retention settings, and the `$25` alert must therefore be proved through content-free server/API evidence or an account-owned export/receipt. An ordinary successful model/API request, the key prefix, and LoLo's configured `$25` threshold are not sufficient substitutes. Any item unavailable through the approved route remains Pending rather than inferred.
 
+Provider deletion behavior was then recorded as Passed in production from application and test evidence. Both runtime and synthetic Responses requests set `store:false`; the client uses only the Responses endpoint and creates no provider conversations, files, vector stores, hosted tools, or background jobs. The focused tests assert `store:false` and the absence of background mode and provider tools. This evidence does not claim project identity, the current sharing opt-in state, a project alert, ZDR approval, or provider-side deletion beyond the documented endpoint behavior.
+
 These documentation facts are not a substitute for verifying the actual OpenAI project and production environment. The following remain unrecorded until server/API or account-owned evidence proves them:
 
 - dedicated project and project-scoped credential;
@@ -197,7 +199,7 @@ The requested first two Family pilot candidates were verified as production Fami
 
 The accepted isolated rehearsal was recorded as Passed using runtime candidate `c409fe3`, its content-free result hash, complete browser/provider metrics, and verified temporary-database destruction. Deployed HEAD `827dd08` differs from that candidate only in `deploy.sh` and this documentation; runtime-relevant tracked paths are unchanged. The synthetic rollback/safety and engineering accessibility matrices were recorded as Pending, preserving the remaining both-admin alert, staffed rollback, real screen-reader, and older-adult human gates.
 
-After these records, production readiness remained correctly `BLOCKED` at 9 of 21 checks passing, 12 required checks open, zero open incidents, and zero open warnings.
+After the initial production records, readiness was `BLOCKED` at 9 of 21 checks passing. Recording the independently proved provider-deletion behavior increased the authoritative state to 10 of 21 checks passing, 11 required checks open, zero open incidents, and zero open warnings.
 
 ## Work queue
 
