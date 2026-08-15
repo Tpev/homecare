@@ -657,6 +657,16 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Affects: Provider credential evidence, cost-monitoring evidence, provider verification command, limited-release contract, and readiness guidance
 - Detailed contract: [Limited-release readiness contract](../27-limited-release-readiness-contract.md)
 
+### `DEC-069` - Schedule the initial two-user Family pilot for August 15-29
+
+- Status: Accepted as the planned window; activation remains gated
+- Accepted: August 15, 2026
+- Decision owner: Product
+- Decision: Schedule the first exact two-user Family pilot to start August 15, 2026 and expire August 29, 2026. The prepared candidates remain production Family IDs `282` and `19`, with full Administrators `1` and `18` as reviewers under the approved either-admin operating model. Recording the schedule must not create a grant, turn on either deployment guard, or bypass any mandatory readiness evidence or the final explicit release decision.
+- Rationale: Fix the intended 14-day operating window now while preserving fail-closed release control and truthful evidence.
+- Affects: Pilot-user readiness evidence, execution tracker, final preflight, grant expiry, and release sequencing
+- Detailed contract: [Limited-release readiness contract](../27-limited-release-readiness-contract.md)
+
 ## Product decision status
 
 No remaining product interview blocks the approved initial build or the `DEC-067` readiness implementation. The interactive runtime is implemented and the readiness package is now the active engineering milestone. Privacy/provider evidence, representative older-adult usability, support/rollback rehearsal, named-user pilot approval, and the separately held pricing reconciliation remain release gates rather than unanswered product decisions.

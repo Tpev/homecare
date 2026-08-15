@@ -81,6 +81,15 @@ The reused browser session contained two earlier Livewire `503` messages and one
 
 The exact evidence, artifact checksums, and two Draft-only editorial findings are retained in the [Phase 1A governed content build record](20-phase-1a-content-build-record.md).
 
+## August 15 limited-release checkpoint
+
+- Standard production deployment completed at `25fcff94ebb6afd233cb62a0161fd885359e8b20`.
+- The configured OpenAI key authenticated through the exact standard destination using the content-free current-key verifier. Project-scoped key form was observed; exact project identity was deferred under `DEC-068`; sharing and retention settings were not inferred; the external `$25` alert was treated as optional.
+- The following read-only preflight remained `BLOCKED` at 12 of 21 checks passing, with zero incidents, both deployment guards off, only human-only enabled, and zero non-revoked grants.
+- Product scheduled the prepared two-Family-user pilot window to start August 15, 2026 and expire August 29, 2026. The candidates remain safe production IDs `282` and `19`; reviewers remain full Administrators `1` and `18`.
+- The first browser submission of the dated evidence made no change because the existing Admin session expired. A fresh login is required to record the evidence version.
+- The schedule is not activation: no grant has been created and the remaining provider, extinction/restore, staffed rollback, real screen-reader, and older-adult study gates still require evidence before an explicit release decision.
+
 ## Interactive deployment production audit
 
 The initial read-only portion was performed August 14, 2026 with an authenticated full-Administrator session followed by the dedicated production editorial Family test account. A later authorized Admin session performed only the governed KB lifecycle changes recorded in the [publication verification](26-production-kb-publication-and-settings-verification.md); it created no message, request, grant, control version, or assignment.
