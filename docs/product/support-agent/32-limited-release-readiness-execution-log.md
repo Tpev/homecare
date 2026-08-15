@@ -317,11 +317,13 @@ After the initial production records, readiness was `BLOCKED` at 9 of 21 checks 
 
 ## Work queue
 
-1. Supply safe account-owned evidence for the model-improvement sharing/retention state and the destination/contract acknowledgement; the optional Admin API route may be used later.
-2. Complete the two-scope downstream-extinction record from source-system evidence, run the read-only exact-commit validator, and perform the isolated restore/re-deletion rehearsal while both deployment guards remain off.
-3. Run the staffed human-takeover, emergency/24/7, automatic-stop, confirmation-invalidation, rollback, and continuous human-chat drill.
-4. Complete the remaining real screen-reader checks and five qualifying older-adult sessions using the approved study kit.
-5. Run the final read-only preflight and return for an explicit release decision. Only after that decision may the two exact grants be created and the minimum approved controls be enabled.
+1. Product chooses `KEEP OPTION A` or `APPROVE OPTION B` in the [accelerated two-user pilot decision](33-accelerated-two-user-pilot-decision.md). Option A remains authoritative until an explicit response.
+2. Under Option A, supply safe account-owned evidence for the model-improvement sharing/retention state and the destination/contract acknowledgement; the optional Admin API route may be used later.
+3. Under Option A, complete the two-scope downstream-extinction record from source-system evidence, run the read-only exact-commit validator, and perform the isolated restore/re-deletion rehearsal while both deployment guards remain off.
+4. Under Option A, run the staffed human-takeover, emergency/24/7, automatic-stop, confirmation-invalidation, rollback, and continuous human-chat drill.
+5. Under Option A, complete the remaining real screen-reader checks and five qualifying older-adult sessions using the approved study kit.
+6. Under an accepted Option B, implement and verify a distinct deferred-before-expansion state without turning any Pending item into a false Pass.
+7. Run the applicable final read-only preflight and return for a separate explicit release decision. Only after that decision may the two exact grants be created and the minimum approved controls be enabled.
 
 ## Explicitly prohibited shortcuts
 

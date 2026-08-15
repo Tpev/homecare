@@ -53,6 +53,7 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 31. [Older-adult usability study kit](30-older-adult-usability-study-kit.md)
 32. [Limited-release readiness implementation record](31-limited-release-readiness-implementation-record.md)
 33. [Limited-release readiness execution log](32-limited-release-readiness-execution-log.md)
+34. [Accelerated two-user pilot decision](33-accelerated-two-user-pilot-decision.md)
 
 Then consult the live registries:
 

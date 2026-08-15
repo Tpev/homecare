@@ -667,6 +667,17 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Affects: Pilot-user readiness evidence, execution tracker, final preflight, grant expiry, and release sequencing
 - Detailed contract: [Limited-release readiness contract](../27-limited-release-readiness-contract.md)
 
+### `DEC-070` - Accelerated two-user pilot with deferred expansion gates
+
+- Status: Proposed; not accepted; no production authority
+- Proposed: August 15, 2026
+- Decision owner: Product
+- Proposed decision: For exactly production Family IDs `282` and `19` through August 29, permit an initial pilot readiness policy that visibly defers the six remaining provider/source-system/human evidence items before expansion instead of falsely marking them Passed. Preserve exact-user scope, one-time publication only, all cost/safety/human controls, review of every interaction, immediate rollback, and a separate explicit release decision. A third user, Caregiver AI, recurring publication, pricing/payment behavior, or any other expansion remains blocked until the deferred evidence is complete.
+- Current state: Option A remains authoritative. No status, gate, grant, deployment guard, or stored control changes unless Product explicitly responds `APPROVE OPTION B` and the deferred-state implementation is completed and verified.
+- Rationale: Reconcile the requested August 15 start with truthful evidence and an explicit residual-risk decision rather than silently bypassing or mislabeling six mandatory checks.
+- Affects: Initial-pilot readiness semantics, Admin evidence status, preflight modes, expansion gates, release record, activation order, and rollback
+- Decision packet: [Accelerated two-user pilot decision](../33-accelerated-two-user-pilot-decision.md)
+
 ## Product decision status
 
-No remaining product interview blocks the approved initial build or the `DEC-067` readiness implementation. The interactive runtime is implemented and the readiness package is now the active engineering milestone. Privacy/provider evidence, representative older-adult usability, support/rollback rehearsal, named-user pilot approval, and the separately held pricing reconciliation remain release gates rather than unanswered product decisions.
+No remaining product interview blocks the approved build. The interactive runtime and readiness package are implemented. `DEC-070` is now an explicit open release-policy choice because Product requested an August 15 start while six accepted readiness checks remain open: retain those pre-pilot gates under Option A, or explicitly authorize implementation of the truthful deferred-before-expansion policy under Option B. Until that choice and the applicable final preflight/release decision, production AI remains unauthorized. The separately held pricing reconciliation remains outside this pilot.
