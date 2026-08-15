@@ -289,11 +289,17 @@ These documentation facts are not a substitute for verifying the actual OpenAI p
 
 Production was deployed through the standard script at full commit `25fcff94ebb6afd233cb62a0161fd885359e8b20`. The production-only `php artisan ai-support:verify-provider-project --current-key-only` run then Passed the exact standard provider destination and authenticated the configured credential with a content-free request. It observed project-scoped key form, deferred exact provider-project identity under `DEC-068`, did not verify data-sharing or retention controls, and correctly treated the external `$25` monthly alert as optional. The command printed no credential and changed no provider state.
 
-The immediately following read-only release preflight remained `BLOCKED` at 12 of 21 checks passing. It independently confirmed both deployment guards off, only human-only enabled, zero non-revoked grants, 23 governed non-pricing KB entries Published with the pricing hold intact, the bounded Luna-low configuration and separate safety secret present, the current price catalog, and zero unresolved incidents. Its configured-credential and cost summaries still reflected the older Pending evidence versions; the successful current-key result and `DEC-068` must be recorded as new content-free Admin evidence versions before those two checks can change.
+The immediately following read-only release preflight remained `BLOCKED` at 12 of 21 checks passing. It independently confirmed both deployment guards off, only human-only enabled, zero non-revoked grants, 23 governed non-pricing KB entries Published with the pricing hold intact, the bounded Luna-low configuration and separate safety secret present, the current price catalog, and zero unresolved incidents. Its configured-credential and cost summaries still reflected the older Pending evidence versions at that moment.
 
 Product selected August 15, 2026 as the planned start of the first two-user Family pilot. The exact 14-day window is `[2026-08-15, 2026-08-29)`: it starts August 15 and expires August 29. The prepared candidates remain production Family IDs `282` and `19`, with full Administrators `1` and `18` as reviewers under the approved either-admin operating model. Scheduling the window does not itself create a grant, enable either deployment guard, or authorize release while mandatory evidence checks remain Blocked.
 
-An authenticated browser audit reproduced the same 12-of-21 fail-closed state. The attempt to add the dated pilot evidence was rejected by the application after the existing Admin session expired and redirected to login; therefore no evidence version, grant, or control change was made by that attempt. The dated evidence must be resubmitted after a fresh Admin login.
+An authenticated browser audit reproduced the same 12-of-21 fail-closed state. The first attempt to add the dated pilot evidence was rejected after the existing Admin session expired and redirected to login; that attempt made no evidence, grant, or control change. After a fresh full-Administrator login, three separate content-free Passed evidence versions were successfully recorded:
+
+- configured provider credential, limited to the exact facts proved by the production current-key verifier and explicitly making no sharing/retention claim;
+- application cost, turn, and latency monitoring, with the external `$25` alert explicitly optional under `DEC-068` and the observed 5.118-second conversation P95 retained in the summary;
+- exact Family candidates `282` and `19`, reviewers `1` and `18`, and the August 15-29 planned window, explicitly confirming no grant was created.
+
+All three records expire August 29, 2026. The authoritative Admin state advanced to 15 of 21 checks passing with six required checks open, zero incidents, zero warnings, both deployment guards off, only human-only enabled, and zero non-revoked grants. The page confirmed each save changed no runtime control or pilot grant.
 
 Authenticated production verification on August 14, 2026 established exactly two full Administrators, safe internal IDs `18` and `1`. The approved two-person operating model was recorded as Passed: either Administrator may independently claim incidents, human transfers, and evidence work. Alert delivery remains a separate gate and was not inferred from ownership.
 
@@ -307,12 +313,11 @@ After the initial production records, readiness was `BLOCKED` at 9 of 21 checks 
 
 ## Work queue
 
-1. After a fresh Admin login, record the successful current-key result, the application cost/turn/latency controls under `DEC-068`, and the August 15-29 planned pilot window as separate content-free evidence versions. Do not create a grant.
-2. Supply safe account-owned evidence for the model-improvement sharing/retention state and the destination/contract acknowledgement; the optional Admin API route may be used later.
-3. Complete the two-scope downstream-extinction record from source-system evidence, run the read-only exact-commit validator, and perform the isolated restore/re-deletion rehearsal while both deployment guards remain off.
-4. Run the staffed human-takeover, emergency/24/7, automatic-stop, confirmation-invalidation, rollback, and continuous human-chat drill.
-5. Complete the remaining real screen-reader checks and five qualifying older-adult sessions using the approved study kit.
-6. Run the final read-only preflight and return for an explicit release decision. Only after that decision may the two exact grants be created and the minimum approved controls be enabled.
+1. Supply safe account-owned evidence for the model-improvement sharing/retention state and the destination/contract acknowledgement; the optional Admin API route may be used later.
+2. Complete the two-scope downstream-extinction record from source-system evidence, run the read-only exact-commit validator, and perform the isolated restore/re-deletion rehearsal while both deployment guards remain off.
+3. Run the staffed human-takeover, emergency/24/7, automatic-stop, confirmation-invalidation, rollback, and continuous human-chat drill.
+4. Complete the remaining real screen-reader checks and five qualifying older-adult sessions using the approved study kit.
+5. Run the final read-only preflight and return for an explicit release decision. Only after that decision may the two exact grants be created and the minimum approved controls be enabled.
 
 ## Explicitly prohibited shortcuts
 
