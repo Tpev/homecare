@@ -89,6 +89,8 @@ The exact evidence, artifact checksums, and two Draft-only editorial findings ar
 - Product scheduled the prepared two-Family-user pilot window to start August 15, 2026 and expire August 29, 2026. The candidates remain safe production IDs `282` and `19`; reviewers remain full Administrators `1` and `18`.
 - The first browser submission of the dated evidence made no change because the existing Admin session expired. After a fresh full-Administrator login, the configured credential, application cost controls, and exact pilot-user/window records were each recorded as Passed and set to expire August 29.
 - The authoritative Admin state is now 15 of 21 checks passing, six required checks open, zero incidents, zero warnings, both deployment guards off, only human-only enabled, and zero non-revoked grants.
+- Direct read-only profile checks reconfirmed Family IDs `282` and `19` as `NOT ENABLED`, blocked by the runtime deployment guard, with grant history `0`; no grant form was submitted.
+- The focused last-mile release path passes 22 tests and 123 assertions, including exact-user non-inheritance, expiry/revocation, higher-control denial, emergency/24/7 transfer, takeover precedence, confirmation invalidation, idempotent publication, and human fallback.
 - The schedule is not activation: no grant has been created and the remaining provider controls/contract, extinction/restore, staffed rollback, real screen-reader, and older-adult study gates still require evidence before an explicit release decision.
 
 ## Interactive deployment production audit
