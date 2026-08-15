@@ -35,7 +35,7 @@ class AiSupportReleasePreflight extends Command
         if ($this->option('json')) {
             $this->line(json_encode($snapshot, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
         } else {
-            $this->line('Scope: '.str($snapshot['scope'])->replace('_', ' ')->upper().' · policy '.$snapshot['policy_version']);
+            $this->line('Scope: '.str($snapshot['scope'])->replace('_', ' ')->upper().' | policy '.$snapshot['policy_version']);
             $this->table(
                 ['Check', 'Result', 'Detail'],
                 collect($snapshot['checks'])->map(fn (array $check): array => [
