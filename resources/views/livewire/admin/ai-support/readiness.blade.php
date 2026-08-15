@@ -4,16 +4,32 @@
             <a href="{{ route('admin.ai-support.index') }}" wire:navigate class="text-sm font-semibold text-emerald-700 hover:underline">&larr; AI Support overview</a>
             <h1 class="mt-3 text-3xl font-extrabold tracking-tight text-slate-950">Release readiness</h1>
             <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Evidence and incident visibility only. This page cannot enable AI, change a safety control, or create a pilot grant.</p>
+            <p class="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Initial two-user pilot · {{ $snapshot['policy_version'] }}</p>
         </div>
         <x-badge :text="$snapshot['state']" :color="$snapshot['ready'] ? 'green' : 'red'" />
     </div>
 
     @if(session('status'))<x-alert color="green">{{ session('status') }}</x-alert>@endif
     @if(! $snapshot['ready'])
-        <x-alert color="blue">Limited release remains blocked. {{ collect($snapshot['checks'])->where('passed', false)->count() }} required check(s) still need evidence or correction.</x-alert>
+        <x-alert color="blue">Initial pilot remains blocked. {{ collect($snapshot['checks'])->where('satisfied', false)->count() }} required check(s) still need evidence or correction.</x-alert>
+    @else
+        <x-alert color="green">Initial-pilot evidence is ready for a separate explicit release decision. This state does not enable AI, create a grant, or satisfy expansion readiness.</x-alert>
     @endif
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <x-alert color="yellow">Expansion readiness: <strong>{{ $expansionSnapshot['state'] }}</strong>. {{ collect($expansionSnapshot['checks'])->where('satisfied', false)->count() }} expansion check(s) remain blocking; deferred evidence is never treated as Passed.</x-alert>
+
+    @if($snapshot['release_decision'])
+        <x-alert :color="$snapshot['release_decision']['effective'] ? 'green' : 'yellow'">
+            Explicit initial-pilot release decision: <strong>{{ str($snapshot['release_decision']['status'])->upper() }}</strong>
+            · commit {{ $snapshot['release_decision']['release_commit'] }}
+            · expires {{ $snapshot['release_decision']['expires_at']->format('M j, Y g:i A') }}.
+            This record does not itself enable a control or create a grant.
+        </x-alert>
+    @else
+        <x-alert color="blue">No explicit initial-pilot release decision is recorded. Even a ready preflight cannot authorize activation by itself.</x-alert>
+    @endif
+
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <x-card>
             <p class="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Release decision</p>
             <p class="mt-2 text-xl font-extrabold {{ $snapshot['ready'] ? 'text-emerald-800' : 'text-rose-800' }}">{{ $snapshot['state'] }}</p>
@@ -21,6 +37,10 @@
         <x-card>
             <p class="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Passing checks</p>
             <p class="mt-2 text-3xl font-extrabold text-slate-950">{{ collect($snapshot['checks'])->where('passed', true)->count() }} / {{ count($snapshot['checks']) }}</p>
+        </x-card>
+        <x-card>
+            <p class="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Deferred before expansion</p>
+            <p class="mt-2 text-3xl font-extrabold text-amber-800">{{ $snapshot['deferred_count'] }}</p>
         </x-card>
         <x-card>
             <p class="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Open incidents</p>
@@ -36,10 +56,13 @@
         <x-slot:header><h2 class="text-lg font-semibold">Computed release checks</h2></x-slot:header>
         <div class="grid gap-3 md:grid-cols-2">
             @foreach($snapshot['checks'] as $check)
-                <div class="rounded-xl border p-4 {{ $check['passed'] ? 'border-emerald-200 bg-emerald-50/60' : 'border-rose-200 bg-rose-50/60' }}">
+                <div class="rounded-xl border p-4 {{ $check['state'] === 'pass' ? 'border-emerald-200 bg-emerald-50/60' : ($check['state'] === 'deferred' ? 'border-amber-200 bg-amber-50/60' : 'border-rose-200 bg-rose-50/60') }}">
                     <div class="flex items-start justify-between gap-3">
                         <p class="font-semibold text-slate-950">{{ $check['label'] }}</p>
-                        <x-badge :text="$check['passed'] ? 'PASS' : 'BLOCKED'" :color="$check['passed'] ? 'green' : 'red'" />
+                        <x-badge
+                            :text="$check['state'] === 'pass' ? 'PASS' : ($check['state'] === 'deferred' ? 'DEFERRED BEFORE EXPANSION' : 'BLOCKED')"
+                            :color="$check['state'] === 'pass' ? 'green' : ($check['state'] === 'deferred' ? 'yellow' : 'red')"
+                        />
                     </div>
                     <p class="mt-2 text-sm text-slate-700">{{ $check['detail'] }}</p>
                 </div>
@@ -80,9 +103,9 @@
                     <div class="flex items-start justify-between gap-3">
                         <div>
                             <p class="font-semibold text-slate-950">{{ $row['label'] }}</p>
-                            <p class="mt-1 text-xs text-slate-500">{{ $row['required'] ? 'Required' : 'Tracked, not release-blocking' }}</p>
+                            <p class="mt-1 text-xs text-slate-500">{{ $row['deferable_for_initial_pilot'] ? 'Required before expansion; DEC-070 deferral permitted for the exact initial pilot' : ($row['required'] ? 'Required' : 'Tracked, not release-blocking') }}</p>
                         </div>
-                        <x-badge :text="str($row['status'])->replace('_', ' ')->upper()" :color="$row['effective_pass'] ? 'green' : ($row['status'] === 'failed' ? 'red' : 'slate')" />
+                        <x-badge :text="$row['status'] === 'deferred' ? 'DEFERRED BEFORE EXPANSION' : str($row['status'])->replace('_', ' ')->upper()" :color="$row['effective_pass'] ? 'green' : ($row['status'] === 'failed' ? 'red' : ($row['effective_deferred'] ? 'yellow' : 'slate'))" />
                     </div>
                     <p class="mt-3 text-sm text-slate-700">{{ $row['summary'] ?: $row['guidance'] }}</p>
                     @if($row['recorded_by'])
@@ -105,10 +128,11 @@
                 </label>
                 <label class="text-sm font-semibold text-slate-800">Result
                     <select wire:model="evidenceStatus" class="mt-1 min-h-11 w-full rounded-xl border-slate-300 text-base">
-                        <option value="pending">Pending</option><option value="passed">Passed</option><option value="failed">Failed</option>
+                        <option value="pending">Pending</option><option value="passed">Passed</option><option value="failed">Failed</option><option value="deferred">Deferred before expansion (DEC-070 only)</option>
                     </select>
                 </label>
             </div>
+            @error('evidenceStatus')<p class="text-sm font-medium text-rose-700">{{ $message }}</p>@enderror
             <label class="block text-sm font-semibold text-slate-800">Content-free summary
                 <textarea wire:model="evidenceSummary" maxlength="500" rows="3" class="mt-1 w-full rounded-xl border-slate-300 text-base" placeholder="Result, scope, and safe evidence identifiers only"></textarea>
             </label>

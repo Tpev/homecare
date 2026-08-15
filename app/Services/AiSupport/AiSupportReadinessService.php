@@ -6,6 +6,7 @@ use App\Models\AiSupportAdminAuditEvent;
 use App\Models\AiSupportIncident;
 use App\Models\AiSupportPilotGrant;
 use App\Models\AiSupportReadinessEvidence;
+use App\Models\AiSupportReleaseDecision;
 use App\Models\KnowledgeBaseEntry;
 use App\Models\KnowledgeBaseVersion;
 use App\Models\User;
@@ -17,10 +18,14 @@ use Illuminate\Validation\ValidationException;
 
 class AiSupportReadinessService
 {
-    /** @return array<string,array{label:string,required:bool,guidance:string}> */
+    public const SCOPE_INITIAL_PILOT = 'initial_pilot';
+
+    public const SCOPE_EXPANSION = 'expansion';
+
+    /** @return array<string,array{label:string,required:bool,guidance:string,deferable_for_initial_pilot:bool}> */
     public function definitions(): array
     {
-        return [
+        $definitions = [
             'provider_project_configuration' => [
                 'label' => 'Configured provider credential',
                 'required' => true,
@@ -92,6 +97,30 @@ class AiSupportReadinessService
                 'guidance' => 'Record only safe internal user references, 14-day planned dates, and review ownership. Do not create grants here.',
             ],
         ];
+
+        $deferred = $this->initialPilotDeferredEvidenceKeys();
+
+        return collect($definitions)
+            ->map(fn (array $definition, string $key): array => [
+                ...$definition,
+                'deferable_for_initial_pilot' => in_array($key, $deferred, true),
+            ])
+            ->all();
+    }
+
+    /** @return list<string> */
+    public function initialPilotDeferredEvidenceKeys(): array
+    {
+        return array_values(array_filter(
+            (array) config('ai_support.initial_pilot.deferred_evidence_keys', []),
+            fn (mixed $key): bool => is_string($key) && $key !== '',
+        ));
+    }
+
+    /** @return list<string> */
+    public function supportedScopes(): array
+    {
+        return [self::SCOPE_INITIAL_PILOT, self::SCOPE_EXPANSION];
     }
 
     public function record(
@@ -114,8 +143,15 @@ class AiSupportReadinessService
             AiSupportReadinessEvidence::STATUS_PASSED,
             AiSupportReadinessEvidence::STATUS_FAILED,
             AiSupportReadinessEvidence::STATUS_PENDING,
+            AiSupportReadinessEvidence::STATUS_DEFERRED,
         ], true)) {
-            throw ValidationException::withMessages(['evidenceStatus' => 'Select Passed, Failed, or Pending.']);
+            throw ValidationException::withMessages(['evidenceStatus' => 'Select Passed, Failed, Pending, or Deferred before expansion.']);
+        }
+        if ($status === AiSupportReadinessEvidence::STATUS_DEFERRED
+            && ! in_array($evidenceKey, $this->initialPilotDeferredEvidenceKeys(), true)) {
+            throw ValidationException::withMessages([
+                'evidenceStatus' => 'Only the six DEC-070 items may be deferred before expansion.',
+            ]);
         }
         $summary = trim($summary);
         if (mb_strlen($summary) < 5 || mb_strlen($summary) > 500) {
@@ -178,12 +214,25 @@ class AiSupportReadinessService
         }, 3);
     }
 
-    /** @return array{ready:bool,state:string,checks:list<array{id:string,label:string,passed:bool,detail:string}>,evidence:array<string,array<string,mixed>>,open_incidents:int,open_warnings:int} */
-    public function snapshot(AiSupportControlService $controls): array
+    /** @return array{ready:bool,state:string,scope:string,policy_version:string,checks:list<array{id:string,label:string,passed:bool,satisfied:bool,state:string,detail:string}>,evidence:array<string,array<string,mixed>>,open_incidents:int,open_warnings:int,deferred_count:int,release_decision:array<string,mixed>|null} */
+    public function snapshot(AiSupportControlService $controls, string $scope = self::SCOPE_EXPANSION): array
     {
+        if (! in_array($scope, $this->supportedScopes(), true)) {
+            throw ValidationException::withMessages(['scope' => 'Select initial_pilot or expansion readiness scope.']);
+        }
+
         $checks = [];
-        $add = function (string $id, string $label, bool $passed, string $detail) use (&$checks): void {
-            $checks[] = compact('id', 'label', 'passed', 'detail');
+        $add = function (
+            string $id,
+            string $label,
+            bool $passed,
+            string $detail,
+            ?bool $satisfied = null,
+            ?string $state = null,
+        ) use (&$checks): void {
+            $satisfied ??= $passed;
+            $state ??= $passed ? 'pass' : 'blocked';
+            $checks[] = compact('id', 'label', 'passed', 'satisfied', 'state', 'detail');
         };
 
         $add('runtime_guard', 'Runtime deployment guard remains off', ! (bool) config('ai_support.runtime_available', false), (bool) config('ai_support.runtime_available', false) ? 'On' : 'Off');
@@ -200,6 +249,30 @@ class AiSupportReadinessService
 
         $nonRevokedGrants = AiSupportPilotGrant::query()->notRevoked()->count();
         $add('pilot_grants', 'No active or scheduled exact-user grant', $nonRevokedGrants === 0, $nonRevokedGrants.' non-revoked grant(s)');
+
+        if ($scope === self::SCOPE_INITIAL_PILOT) {
+            $approvedIds = collect((array) config('ai_support.initial_pilot.approved_user_ids', []))
+                ->map(fn (mixed $id): int => (int) $id)
+                ->filter(fn (int $id): bool => $id > 0)
+                ->unique()
+                ->sort()
+                ->values()
+                ->all();
+            $boundaryValid = (bool) config('ai_support.initial_pilot.enforced', true)
+                && $approvedIds === [19, 282]
+                && (string) config('ai_support.initial_pilot.approved_bundle_key') === 'family_support_v1'
+                && (int) config('ai_support.initial_pilot.maximum_non_revoked_grants') === 2
+                && (string) config('ai_support.initial_pilot.starts_on') === '2026-08-15'
+                && (string) config('ai_support.initial_pilot.expires_on') === '2026-08-29';
+            $add(
+                'initial_pilot_boundary',
+                'DEC-070 exact two-user boundary is configured',
+                $boundaryValid,
+                $boundaryValid
+                    ? 'Family IDs 19 and 282 only; family_support_v1; maximum 2; August 15-29'
+                    : 'The enforced DEC-070 exact-user, bundle, maximum, or date boundary does not match the accepted policy.',
+            );
+        }
 
         $published = KnowledgeBaseEntry::query()->active()->whereNotNull('published_version_id')->count();
         $held = KnowledgeBaseEntry::query()->active()->where('stable_id', 'KB-CARE-006')->with('workingVersion')->first();
@@ -237,11 +310,32 @@ class AiSupportReadinessService
 
         $currentEvidence = AiSupportReadinessEvidence::query()->current()->with('recordedBy')->get()->keyBy('evidence_key');
         $evidenceRows = [];
+        $deferredCount = 0;
         foreach ($this->definitions() as $key => $definition) {
             $record = $currentEvidence->get($key);
             $passed = $record?->isEffectivePass() ?? false;
+            $deferred = $scope === self::SCOPE_INITIAL_PILOT
+                && $definition['deferable_for_initial_pilot']
+                && ($record?->isEffectiveDeferred() ?? false);
             if ($definition['required']) {
-                $add('evidence.'.$key, $definition['label'], $passed, $record ? ucfirst($record->status).' - '.$record->summary : 'Not recorded');
+                if ($deferred) {
+                    $deferredCount++;
+                    $add(
+                        'evidence.'.$key,
+                        $definition['label'],
+                        false,
+                        'Deferred before expansion - '.$record->summary,
+                        true,
+                        'deferred',
+                    );
+                } else {
+                    $add(
+                        'evidence.'.$key,
+                        $definition['label'],
+                        $passed,
+                        $record ? ucfirst($record->status).' - '.$record->summary : 'Not recorded',
+                    );
+                }
             }
             $evidenceRows[$key] = [
                 ...$definition,
@@ -252,18 +346,44 @@ class AiSupportReadinessService
                 'expires_at' => $record?->expires_at,
                 'recorded_by' => $record?->recordedBy?->name,
                 'effective_pass' => $passed,
+                'effective_deferred' => $deferred,
+                'satisfies_scope' => $passed || $deferred || ! $definition['required'],
             ];
         }
 
-        $ready = collect($checks)->every(fn (array $check): bool => $check['passed']);
+        $ready = collect($checks)->every(fn (array $check): bool => $check['satisfied']);
+        $policyVersion = (string) config('ai_support.initial_pilot.policy_version', 'dec-070-initial-family-v1');
+        $releaseDecision = $scope === self::SCOPE_INITIAL_PILOT
+            ? AiSupportReleaseDecision::query()
+                ->current()
+                ->where('scope', self::SCOPE_INITIAL_PILOT)
+                ->latest('created_at')
+                ->first()
+            : null;
 
         return [
             'ready' => $ready,
-            'state' => $ready ? 'READY FOR EXPLICIT APPROVAL' : 'BLOCKED',
+            'state' => $ready
+                ? ($scope === self::SCOPE_INITIAL_PILOT
+                    ? 'READY FOR EXPLICIT INITIAL PILOT APPROVAL'
+                    : 'READY FOR EXPLICIT EXPANSION APPROVAL')
+                : 'BLOCKED',
+            'scope' => $scope,
+            'policy_version' => $policyVersion,
             'checks' => $checks,
             'evidence' => $evidenceRows,
             'open_incidents' => $openIncidents,
             'open_warnings' => $openWarnings,
+            'deferred_count' => $deferredCount,
+            'release_decision' => $releaseDecision ? [
+                'id' => $releaseDecision->id,
+                'status' => $releaseDecision->status,
+                'effective' => app(AiSupportInitialPilotReleaseService::class)->effectiveApproval()?->is($releaseDecision) ?? false,
+                'release_commit' => $releaseDecision->release_commit,
+                'snapshot_sha256' => $releaseDecision->snapshot_sha256,
+                'starts_at' => $releaseDecision->starts_at,
+                'expires_at' => $releaseDecision->expires_at,
+            ] : null,
         ];
     }
 }

@@ -93,6 +93,12 @@ The exact evidence, artifact checksums, and two Draft-only editorial findings ar
 - The focused last-mile release path passes 22 tests and 123 assertions, including exact-user non-inheritance, expiry/revocation, higher-control denial, emergency/24/7 transfer, takeover precedence, confirmation invalidation, idempotent publication, and human fallback.
 - The schedule is not activation: no grant has been created and the remaining provider controls/contract, extinction/restore, staffed rollback, real screen-reader, and older-adult study gates still require evidence before an explicit release decision.
 
+### Accepted Option B release-policy implementation
+
+Product accepted `DEC-070` Option B. The new package keeps the six unresolved items visibly Deferred rather than Passed, allows them to satisfy only the exact initial-pilot scope, and keeps expansion Blocked. It hard-enforces Family IDs `19` and `282`, bundle `family_support_v1`, maximum two expiring grants, the August 15-29 window, one-time commit/tool only, and a persisted exact-deployed-commit release decision before any grant or exposure-opening stored control.
+
+Deployment of this package still creates no grant, changes no stored control, leaves both deployment guards off, and performs no provider call. Production must run the bounded deferral command and both preflight scopes before Product makes the separate explicit release decision.
+
 ## Interactive deployment production audit
 
 The initial read-only portion was performed August 14, 2026 with an authenticated full-Administrator session followed by the dedicated production editorial Family test account. A later authorized Admin session performed only the governed KB lifecycle changes recorded in the [publication verification](26-production-kb-publication-and-settings-verification.md); it created no message, request, grant, control version, or assignment.

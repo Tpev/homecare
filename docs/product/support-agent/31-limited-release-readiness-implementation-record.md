@@ -97,9 +97,27 @@ Subsequent production and accessibility execution is tracked in the [limited-rel
 
 `ai-support:validate-safety-rehearsal` validates the exact-commit synthetic drill record only when all 14 required observations are true. `ai-support:validate-older-adult-study` validates exactly five coded non-team participants, recruitment minimums, the 27-of-30 unassisted threshold, universal comprehension/draft preservation, unassisted human transfer, and the complete accessibility matrix. Both reject unrecognized fields and make no application, readiness, control, grant, or provider write. Their templates remain Pending by construction and cannot pass until filled from real observation. Implementation and automated tests are not human evidence.
 
-## Gates intentionally still open
+### `DEC-070` truthful deferral and release-decision addendum
 
-The Admin result must remain `BLOCKED` until all required evidence is effective and there is a separate explicit release decision. Open work includes:
+Product accepted Option B on August 15. The implementation adds a fourth evidence status, `deferred`, that is valid only for the six named provider/source-system/human obligations. Initial-pilot checks show `DEFERRED BEFORE EXPANSION`, count them separately from Passed checks, and may treat them as satisfied only in `initial_pilot` scope. The default and explicit `expansion` scope continues to report them Blocked.
+
+The policy is enforced beyond presentation:
+
+- initial-pilot scope checks exact Family IDs `19` and `282`, bundle `family_support_v1`, maximum two grants, and August 15-29 dates;
+- the deferral command is plan-only by default, refuses Failed evidence, and changes no controls or grants;
+- the explicit release-decision command verifies green initial-pilot preflight and exact deployed `HEAD`, then stores the safe preflight hash, policy, users, dates, actor, reason, and commit without activation;
+- exposure-opening control changes and grant creation require an effective persisted decision;
+- grant creation denies all other users, bundles, no-expiry grants, durations over 14 days, and expiry after August 29;
+- control changes deny Caregiver, recurring commit/tool, shadow, and any other opening outside the exact initial-pilot set;
+- readiness Admin UI shows both initial and expansion outcomes and still contains no activation action.
+
+Focused coverage proves deferrals never become factual Passes, expansion remains blocked, non-deferrable evidence cannot be deferred, preflight and decision planning are read-only, approval cannot precede readiness, the decision itself mutates neither controls nor grants, and the exact release boundary is enforced.
+
+Final local verification on August 15, 2026 passed the focused limited-release readiness suite with 13 tests and 105 assertions, the complete AI Support feature suite with 101 tests and 813 assertions, PHP formatting and syntax checks, and the Vite production build. The build retained only the existing large-chunk advisory. These results validate the package implementation; they do not record production deferrals, create a release decision, grant access, or enable any control.
+
+## Gates intentionally still open before expansion
+
+Under `DEC-070`, these obligations remain visible and Blocked in expansion scope even when the exact initial-pilot scope is ready. Open work includes:
 
 - dedicated provider project/restricted credential and data-sharing evidence;
 - provider no-training, retention, destination/contract, deletion, and optional ZDR-request evidence;

@@ -17,6 +17,8 @@ class AiSupportReadinessEvidence extends Model
 
     public const STATUS_PENDING = 'pending';
 
+    public const STATUS_DEFERRED = 'deferred';
+
     public $incrementing = false;
 
     public $timestamps = false;
@@ -50,6 +52,12 @@ class AiSupportReadinessEvidence extends Model
     public function isEffectivePass(): bool
     {
         return $this->status === self::STATUS_PASSED
+            && ($this->expires_at === null || $this->expires_at->isFuture());
+    }
+
+    public function isEffectiveDeferred(): bool
+    {
+        return $this->status === self::STATUS_DEFERRED
             && ($this->expires_at === null || $this->expires_at->isFuture());
     }
 }

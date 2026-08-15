@@ -104,14 +104,18 @@ If any observation fails, preserve that failed record. Correct the product or pr
 
 ## Later pilot activation order
 
-This runbook does not authorize activation. After a separate explicit release approval:
+This runbook does not authorize activation. Under accepted `DEC-070`, first deploy the deferred-state/exact-boundary package, record only the six authorized deferrals, and prove `ai-support:release-preflight --scope=initial-pilot` is green while `--scope=expansion` remains Blocked. Then record the separate exact-commit release decision with `ai-support:approve-initial-pilot-release`.
+
+Only after that explicit release approval:
 
 1. Keep human-only on.
-2. Deploy runtime/provider guards through the normal deployment workflow.
-3. Enable only the required Family and one-time stored controls.
-4. Create exactly two future-dated 14-day grants.
+2. Create exactly two expiring grants for safe Family IDs `19` and `282` while both deployment guards remain off.
+3. Enable only the approved Family and one-time stored controls while human-only remains on.
+4. Deploy both runtime/provider guards through the normal deployment workflow.
 5. Prove every other user remains ineligible.
 6. Turn human-only off at the scheduled start.
+
+The application independently denies any other user, bundle, no-expiry grant, grant longer than 14 days, expiry after August 29, Caregiver control, recurring commit/tool control, or exposure-opening control without the effective release decision.
 
 ## Emergency rollback order
 

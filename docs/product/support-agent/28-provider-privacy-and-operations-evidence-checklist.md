@@ -195,10 +195,48 @@ The shipped template deliberately fails. The command is read-only, verifies that
 
 ## Final preflight
 
-Run the read-only preflight at any time:
+Expansion remains the fail-closed default:
 
 ```bash
 php artisan ai-support:release-preflight
 ```
 
-A non-zero result means at least one release gate remains blocked. The command never changes evidence, controls, grants, provider state, or customer data.
+After `DEC-070` is deployed, inspect the exact initial-pilot scope separately:
+
+```bash
+php artisan ai-support:release-preflight --scope=initial-pilot
+php artisan ai-support:release-preflight --scope=expansion
+```
+
+The initial-pilot command may report six `DEFERRED BEFORE EXPANSION` checks and still become ready. The expansion command must remain Blocked until each deferred obligation is replaced by real Passed evidence. Neither command changes evidence, controls, grants, provider state, or customer data.
+
+Record the six accepted deferrals only through the bounded command:
+
+```bash
+php artisan ai-support:record-option-b-deferrals
+
+php artisan ai-support:record-option-b-deferrals \
+  --apply \
+  --actor-email=<full-admin-email> \
+  --confirm=DEFER-SIX-GATES-BEFORE-EXPANSION
+```
+
+The first invocation is plan-only. The applying invocation refuses a Failed item, requires both guards off, fail-closed stored controls, and zero grants, and records only the six fixed `DEC-070` items as Deferred through August 29. It never marks an item Passed.
+
+When the initial-pilot preflight is green, the separate release decision remains plan-only unless `--approve` and the literal confirmation are supplied:
+
+```bash
+php artisan ai-support:approve-initial-pilot-release \
+  --actor-email=<full-admin-email> \
+  --release-commit=<deployed-40-character-commit> \
+  --reason="Exact two-user DEC-070 pilot after green initial-pilot preflight."
+
+php artisan ai-support:approve-initial-pilot-release \
+  --approve \
+  --actor-email=<full-admin-email> \
+  --release-commit=<deployed-40-character-commit> \
+  --reason="Exact two-user DEC-070 pilot after green initial-pilot preflight." \
+  --confirm=APPROVE-EXACT-TWO-USER-PILOT
+```
+
+Approval verifies that the supplied commit equals deployed `HEAD`, stores the content-free preflight hash and exact user/date boundary, and changes no control or grant. Grant and exposure-opening control services fail closed until this record is effective.

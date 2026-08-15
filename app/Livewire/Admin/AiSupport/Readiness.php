@@ -41,7 +41,7 @@ class Readiness extends Component
     {
         $validated = $this->validate([
             'evidenceKey' => ['required', Rule::in(array_keys($readiness->definitions()))],
-            'evidenceStatus' => ['required', Rule::in(['passed', 'failed', 'pending'])],
+            'evidenceStatus' => ['required', Rule::in(['passed', 'failed', 'pending', 'deferred'])],
             'evidenceSummary' => ['required', 'string', 'min:5', 'max:500'],
             'sourceReference' => ['nullable', 'string', 'max:500'],
             'evidenceObservedAt' => ['required', 'date'],
@@ -79,7 +79,8 @@ class Readiness extends Component
     public function render(AiSupportReadinessService $readiness, AiSupportControlService $controls): View
     {
         return view('livewire.admin.ai-support.readiness', [
-            'snapshot' => $readiness->snapshot($controls),
+            'snapshot' => $readiness->snapshot($controls, AiSupportReadinessService::SCOPE_INITIAL_PILOT),
+            'expansionSnapshot' => $readiness->snapshot($controls, AiSupportReadinessService::SCOPE_EXPANSION),
             'definitions' => $readiness->definitions(),
             'incidents' => AiSupportIncident::query()
                 ->where('status', AiSupportIncident::STATUS_OPEN)

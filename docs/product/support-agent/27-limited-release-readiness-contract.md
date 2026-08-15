@@ -174,16 +174,34 @@ Regular/recurring care may be recognized and explained, but automated recurring 
 
 Every pilot interaction and created request must later be reviewed and marked reviewed in Admin within 24 hours. Either administrator may own review. No expansion from two to at most five users occurs until the 14-day evidence is reviewed and every critical issue is closed.
 
+### `DEC-070` initial-pilot amendment
+
+Product accepted Option B on August 15, 2026. For the exact initial pilot only, the following six evidence items may use the distinct `Deferred before expansion` state: provider sharing/retention, provider destination/contract reference, downstream extinction/restore, staffed rollback observation, five-person older-adult study, and real screen-reader verification. A deferral is not a Pass and remains blocking in expansion scope.
+
+The amendment is valid only while all of these conditions hold:
+
+- the enforced policy version is `dec-070-initial-family-v1`;
+- the only approved users are Family IDs `19` and `282`;
+- the only bundle is `family_support_v1`;
+- at most two non-revoked grants exist;
+- every grant expires within 14 days and no later than August 29, 2026;
+- Caregiver AI, recurring commit/tool controls, pricing, payment behavior, and every other user remain off;
+- initial-pilot preflight is green with all six items visibly Deferred, while expansion preflight remains Blocked;
+- a separate exact-deployed-commit release decision is persisted before any grant or exposure-opening stored control;
+- both deployment guards remain off and zero grants exist while preflight and the release decision are recorded.
+
+The six deferred obligations must Pass before adding a third user or expanding role, capability, publication type, price/payment behavior, dates, or user scope.
+
 ## 10. Later activation and rollback order
 
 Only after explicit limited-release approval:
 
 1. Keep human-only on.
-2. Enable the runtime/provider deployment guards through the normal deployment workflow.
-3. Enable only the required Family and one-time stored controls.
-4. Create two future-dated exact-user grants.
+2. Record the exact two expiring grants while both deployment guards remain off.
+3. Enable only the required Family and one-time stored controls while human-only remains on.
+4. Enable the runtime/provider deployment guards through the normal deployment workflow.
 5. Prove every other user remains ineligible and sees existing human support.
-6. Turn human-only off at the scheduled pilot start.
+6. Turn human-only off last at the scheduled pilot start.
 
 For rollback:
 

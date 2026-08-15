@@ -669,15 +669,15 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 
 ### `DEC-070` - Accelerated two-user pilot with deferred expansion gates
 
-- Status: Proposed; not accepted; no production authority
-- Proposed: August 15, 2026
+- Status: Accepted; implementing behind disabled production controls
+- Accepted: August 15, 2026 through Product response `APPROVE OPTION B`
 - Decision owner: Product
-- Proposed decision: For exactly production Family IDs `282` and `19` through August 29, permit an initial pilot readiness policy that visibly defers the six remaining provider/source-system/human evidence items before expansion instead of falsely marking them Passed. Preserve exact-user scope, one-time publication only, all cost/safety/human controls, review of every interaction, immediate rollback, and a separate explicit release decision. A third user, Caregiver AI, recurring publication, pricing/payment behavior, or any other expansion remains blocked until the deferred evidence is complete.
-- Current state: Option A remains authoritative. No status, gate, grant, deployment guard, or stored control changes unless Product explicitly responds `APPROVE OPTION B` and the deferred-state implementation is completed and verified.
+- Decision: For exactly production Family IDs `282` and `19` through August 29, permit an initial pilot readiness policy that visibly defers the six remaining provider/source-system/human evidence items before expansion instead of falsely marking them Passed. Preserve exact-user scope, one-time publication only, all cost/safety/human controls, review of every interaction, immediate rollback, and a separate explicit release decision. A third user, Caregiver AI, recurring publication, pricing/payment behavior, or any other expansion remains blocked until the deferred evidence is complete.
+- Current state: Implementation may proceed, but no grant, deployment guard, stored control, or model call is authorized until the new initial-pilot preflight is green and a separate exact-commit release decision is recorded.
 - Rationale: Reconcile the requested August 15 start with truthful evidence and an explicit residual-risk decision rather than silently bypassing or mislabeling six mandatory checks.
 - Affects: Initial-pilot readiness semantics, Admin evidence status, preflight modes, expansion gates, release record, activation order, and rollback
 - Decision packet: [Accelerated two-user pilot decision](../33-accelerated-two-user-pilot-decision.md)
 
 ## Product decision status
 
-No remaining product interview blocks the approved build. The interactive runtime and readiness package are implemented. `DEC-070` is now an explicit open release-policy choice because Product requested an August 15 start while six accepted readiness checks remain open: retain those pre-pilot gates under Option A, or explicitly authorize implementation of the truthful deferred-before-expansion policy under Option B. Until that choice and the applicable final preflight/release decision, production AI remains unauthorized. The separately held pricing reconciliation remains outside this pilot.
+No remaining product interview blocks the approved build or the accepted `DEC-070` implementation. The remaining sequence is deploy the deferred-state/exact-boundary package, record only the six authorized deferrals, obtain a green initial-pilot preflight while expansion remains Blocked, and make the separate explicit exact-commit release decision. Until that final decision and ordered activation, production AI remains unauthorized. The separately held pricing reconciliation remains outside this pilot.

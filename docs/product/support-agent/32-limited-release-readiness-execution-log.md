@@ -315,15 +315,25 @@ The accepted isolated rehearsal was recorded as Passed using runtime candidate `
 
 After the initial production records, readiness was `BLOCKED` at 9 of 21 checks passing. Recording the independently proved provider-deletion behavior increased the authoritative state to 10 of 21 checks passing, 11 required checks open, zero open incidents, and zero open warnings.
 
+## Accepted Option B implementation checkpoint
+
+Product explicitly responded `APPROVE OPTION B`. The implementation introduces truthful deferred-before-expansion evidence, separate initial-pilot and expansion scopes, an exact two-user/date/bundle boundary, and a persisted exact-commit release decision. Deferred items retain `passed = false`; only their initial-pilot `satisfied` state changes. Expansion remains fail-closed by default.
+
+The six permitted deferred keys are provider data controls, provider destination/contract, downstream extinction/restore, staffed rollback, older-adult usability, and accessibility. No other evidence can be deferred. A Failed record cannot be converted into a deferral.
+
+The release boundary is enforced in the mutation services, not only documented: no grant or exposure-opening stored control is accepted without an effective explicit decision; only Family IDs `19` and `282`, `family_support_v1`, at most two grants, at most 14 days, and no later than August 29 are permitted. Caregiver, recurring commit/tool, no-expiry, out-of-window, out-of-user, and non-approved control openings are rejected.
+
+The final local verification for this checkpoint passed 13 focused tests with 105 assertions and the complete AI Support feature suite with 101 tests and 813 assertions. PHP syntax/format checks and the Vite production build also passed. This is implementation evidence only; production remains unchanged until deployment and the governed server commands below.
+
 ## Work queue
 
-1. Product chooses `KEEP OPTION A` or `APPROVE OPTION B` in the [accelerated two-user pilot decision](33-accelerated-two-user-pilot-decision.md). Option A remains authoritative until an explicit response.
-2. Under Option A, supply safe account-owned evidence for the model-improvement sharing/retention state and the destination/contract acknowledgement; the optional Admin API route may be used later.
-3. Under Option A, complete the two-scope downstream-extinction record from source-system evidence, run the read-only exact-commit validator, and perform the isolated restore/re-deletion rehearsal while both deployment guards remain off.
-4. Under Option A, run the staffed human-takeover, emergency/24/7, automatic-stop, confirmation-invalidation, rollback, and continuous human-chat drill.
-5. Under Option A, complete the remaining real screen-reader checks and five qualifying older-adult sessions using the approved study kit.
-6. Under an accepted Option B, implement and verify a distinct deferred-before-expansion state without turning any Pending item into a false Pass.
-7. Run the applicable final read-only preflight and return for a separate explicit release decision. Only after that decision may the two exact grants be created and the minimum approved controls be enabled.
+1. Deploy the accepted Option B package through `deploy.sh`; both deployment guards remain off by existing environment state.
+2. Run the plan-only deferral command, then apply it with the full-Administrator actor and literal confirmation.
+3. Run `ai-support:release-preflight --scope=initial-pilot` and separately confirm default/explicit expansion remains Blocked.
+4. Inspect the authenticated Admin readiness page for six amber deferrals, zero incidents/warnings/grants, both guards off, and no activation action.
+5. Return for the separate explicit release decision tied to deployed `HEAD`; recording it still changes no control or grant.
+6. After that decision only, create the two exact expiring grants, enable only approved Family/one-time controls, deploy both runtime guards, re-prove every other user ineligible, and turn human-only off last.
+7. Review every pilot interaction and complete all six deferred obligations before any expansion.
 
 ## Explicitly prohibited shortcuts
 

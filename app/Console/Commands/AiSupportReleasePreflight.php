@@ -9,14 +9,23 @@ use Throwable;
 
 class AiSupportReleasePreflight extends Command
 {
-    protected $signature = 'ai-support:release-preflight {--json : Emit the content-free snapshot as JSON}';
+    protected $signature = 'ai-support:release-preflight
+        {--scope=expansion : initial-pilot or expansion; expansion is the fail-closed default}
+        {--json : Emit the content-free snapshot as JSON}';
 
     protected $description = 'Read the fail-closed AI Support release gates without changing controls, grants, evidence, or data.';
 
     public function handle(AiSupportReadinessService $readiness, AiSupportControlService $controls): int
     {
+        $scope = str_replace('-', '_', strtolower(trim((string) $this->option('scope'))));
+        if (! in_array($scope, $readiness->supportedScopes(), true)) {
+            $this->error('Scope must be initial-pilot or expansion.');
+
+            return self::FAILURE;
+        }
+
         try {
-            $snapshot = $readiness->snapshot($controls);
+            $snapshot = $readiness->snapshot($controls, $scope);
         } catch (Throwable $exception) {
             $this->error('AI Support preflight could not be completed: '.$exception->getMessage());
 
@@ -26,11 +35,16 @@ class AiSupportReleasePreflight extends Command
         if ($this->option('json')) {
             $this->line(json_encode($snapshot, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
         } else {
+            $this->line('Scope: '.str($snapshot['scope'])->replace('_', ' ')->upper().' · policy '.$snapshot['policy_version']);
             $this->table(
                 ['Check', 'Result', 'Detail'],
                 collect($snapshot['checks'])->map(fn (array $check): array => [
                     $check['label'],
-                    $check['passed'] ? 'PASS' : 'BLOCKED',
+                    match ($check['state']) {
+                        'pass' => 'PASS',
+                        'deferred' => 'DEFERRED BEFORE EXPANSION',
+                        default => 'BLOCKED',
+                    },
                     $check['detail'],
                 ])->all(),
             );

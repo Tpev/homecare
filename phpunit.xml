@@ -32,6 +32,7 @@
         <env name="STRIPE_BYPASS" value="true"/>
         <env name="STRIPE_CURRENCY" value="usd"/>
         <env name="AI_SUPPORT_SAFETY_IDENTIFIER_SECRET" value="testing-only-ai-support-safety-identifier-secret"/>
+        <env name="AI_SUPPORT_INITIAL_PILOT_ENFORCED" value="false"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

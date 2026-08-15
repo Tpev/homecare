@@ -1,10 +1,12 @@
 # Accelerated Two-User Pilot Decision
 
-Status: Proposed; not accepted; no production authority
+Status: Option B accepted; implementation in progress behind disabled production controls
 
 Prepared: August 15, 2026
 
 Decision owner: Product
+
+Accepted: August 15, 2026 through the exact response `APPROVE OPTION B`
 
 ## Why this decision exists
 
@@ -23,7 +25,7 @@ Those checks cannot truthfully be marked Passed from code, automated tests, a st
 
 The two-user pilot remains scheduled for August 15-29 but does not activate until all six evidence items Pass and the final read-only preflight is green. No policy or readiness implementation changes.
 
-This is the current authorized state unless Product explicitly accepts Option B.
+This was the authoritative state until Product explicitly accepted Option B on August 15, 2026.
 
 ## Option B - Permit the bounded pilot and move unresolved evidence before expansion
 
@@ -54,7 +56,7 @@ If accepted, the accelerated pilot is still limited to all of the following:
 - the `$0.05` conversation, `$5` daily, 50-turn daily, latency, incident, and automatic-stop controls remain active;
 - any isolation, authorization, confirmation, duplicate, fabricated-success, emergency, handoff, privacy, or repeated-provider failure triggers immediate human-only rollback and grant revocation.
 
-## Required implementation if Option B is accepted
+## Required implementation under accepted Option B
 
 Do not overwrite Pending evidence with a false Passed result. Implement a distinct, visible `Deferred before expansion` state and an initial-pilot readiness policy that:
 
@@ -67,11 +69,16 @@ Do not overwrite Pending evidence with a false Passed result. Implement a distin
 
 After implementation, deploy through `deploy.sh`, run the read-only initial-pilot preflight, inspect both exact users again, record the explicit release decision, then create only the two expiring grants and enable only the minimum approved deployment/stored controls.
 
-## Decision response
+## Decision record
 
-Product must choose exactly one:
+Product responded `APPROVE OPTION B` on August 15, 2026. This accepts the bounded residual risk and authorizes implementation of the visible deferred-before-expansion policy. It is not the later explicit initial-pilot release decision and does not itself authorize a grant, control change, deployment-guard change, or model call.
 
-- `KEEP OPTION A` - retain all six pre-pilot gates; or
-- `APPROVE OPTION B` - accept the bounded residual risk and authorize implementation of the visible deferred-before-expansion policy.
+The implementation uses:
 
-Silence, the planned start date, documentation, tests, or a successful provider request is not Option B approval.
+- a distinct `deferred` evidence status, valid only for the six named `DEC-070` items;
+- separate `initial-pilot` and fail-closed-default `expansion` preflight scopes;
+- an enforced exact boundary of Family IDs `19` and `282`, bundle `family_support_v1`, maximum two non-revoked grants, and August 15-29 dates;
+- a persisted explicit release-decision record tied to the exact deployed commit and content-free preflight hash;
+- denial of any grant or exposure-opening control until that release decision exists and is effective;
+- denial of all non-approved users, Caregiver controls, recurring commit/tool controls, no-expiry grants, grants longer than 14 days, and grants beyond August 29;
+- no activation action on the readiness page or in either preflight/deferral command.

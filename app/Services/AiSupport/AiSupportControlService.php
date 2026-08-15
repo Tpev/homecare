@@ -66,6 +66,17 @@ class AiSupportControlService
             ]);
         }
 
+        $opensExposure = $controlKey === 'human_only' ? ! $enabled : $enabled;
+        if ($opensExposure && (bool) config('ai_support.initial_pilot.enforced', true)) {
+            app(AiSupportInitialPilotReleaseService::class)->assertEffectiveApproval();
+            if ($controlKey !== 'human_only'
+                && ! in_array($controlKey, (array) config('ai_support.initial_pilot.allowed_control_openings', []), true)) {
+                throw ValidationException::withMessages([
+                    'controlKey' => 'This control is outside the exact DEC-070 initial-pilot release boundary.',
+                ]);
+            }
+        }
+
         return DB::transaction(function () use ($actor, $controlKey, $enabled, $reason): AiSupportControlVersion {
             $current = AiSupportControlVersion::query()
                 ->where('control_key', $controlKey)

@@ -8,6 +8,7 @@ use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportPilotGrant;
 use App\Models\SupportTicket;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +32,34 @@ class AiSupportPilotGrantService
         $this->ensureManager($actor, $target, 'pilot_grant_denied');
         $bundle = $this->validatedBundle($target, $bundleKey);
         $reason = $this->validatedReason($reason, 'grantReason');
+
+        if ((bool) config('ai_support.initial_pilot.enforced', true)) {
+            $release = app(AiSupportInitialPilotReleaseService::class);
+            $release->assertEffectiveApproval();
+            if (! in_array((int) $target->id, $release->approvedUserIds(), true)) {
+                throw ValidationException::withMessages([
+                    'grant' => 'This user is outside the exact DEC-070 two-user pilot boundary.',
+                ]);
+            }
+            if ($bundleKey !== (string) config('ai_support.initial_pilot.approved_bundle_key')) {
+                throw ValidationException::withMessages([
+                    'grantBundleKey' => 'Only the DEC-070 Family pilot bundle may be granted.',
+                ]);
+            }
+            if (! $expiresAt) {
+                throw ValidationException::withMessages([
+                    'grantExpiresAt' => 'The DEC-070 initial pilot requires an expiry.',
+                ]);
+            }
+            $windowStart = CarbonImmutable::parse((string) config('ai_support.initial_pilot.starts_on'))->startOfDay();
+            $windowEnd = CarbonImmutable::parse((string) config('ai_support.initial_pilot.expires_on'))->endOfDay();
+            if ($startsAt->lessThan($windowStart) || $startsAt->greaterThan($windowEnd)) {
+                throw ValidationException::withMessages(['grantStartsAt' => 'Activation must remain inside the DEC-070 August 15-29 window.']);
+            }
+            if ($expiresAt->greaterThan($windowEnd) || $expiresAt->greaterThan($startsAt->copy()->addDays(14))) {
+                throw ValidationException::withMessages(['grantExpiresAt' => 'Expiry must be no more than 14 days after activation and no later than August 29.']);
+            }
+        }
 
         if (! Str::isUuid($requestKey)) {
             throw ValidationException::withMessages(['grantRequestKey' => 'Refresh the page and try again.']);
@@ -80,6 +109,15 @@ class AiSupportPilotGrantService
                 throw ValidationException::withMessages([
                     'grant' => 'This exact user already has an active or scheduled grant.',
                 ]);
+            }
+
+            if ((bool) config('ai_support.initial_pilot.enforced', true)) {
+                $nonRevoked = AiSupportPilotGrant::query()->notRevoked()->lockForUpdate()->count();
+                if ($nonRevoked >= (int) config('ai_support.initial_pilot.maximum_non_revoked_grants', 2)) {
+                    throw ValidationException::withMessages([
+                        'grant' => 'The DEC-070 two-user grant maximum has been reached.',
+                    ]);
+                }
             }
 
             $now = now();
