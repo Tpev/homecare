@@ -9,7 +9,6 @@ use App\Models\CaregiverProfile;
 use App\Models\FamilyAccount;
 use App\Models\User;
 use App\Services\FamilyAccounts\FamilyAccountContext;
-use Illuminate\Support\Str;
 use RuntimeException;
 use Stripe\ErrorObject;
 use Stripe\Event;
@@ -156,7 +155,7 @@ class StripeClient
                 'customer' => $customerId,
                 'success_url' => $successUrl,
                 'cancel_url' => $cancelUrl,
-                'integration_identifier' => 'family_billing_'.$this->integrationIdentifierSuffix(),
+                'payment_method_types' => ['card'],
                 'metadata' => [
                     'family_account_id' => (string) $account->id,
                     'family_user_id' => (string) $account->owner_user_id,
@@ -169,7 +168,7 @@ class StripeClient
                         'acting_user_id' => (string) $family->id,
                     ],
                 ],
-            ], $this->requestOptions('billing-setup:account-'.$account->id.':actor-'.$family->id.':'.(string) Str::uuid()));
+            ], $this->requestOptions('billing-setup:account-'.$account->id.':actor-'.$family->id.':'.(string) \Illuminate\Support\Str::uuid()));
         } catch (Throwable $e) {
             throw new PaymentException(
                 'Unable to open card setup right now. Please try again.',
@@ -293,14 +292,6 @@ class StripeClient
         }
 
         return app(FamilyAccountContext::class)->account($family);
-    }
-
-    private function integrationIdentifierSuffix(): string
-    {
-        return implode('', array_map(
-            static fn (): string => chr(random_int(97, 122)),
-            range(1, 8),
-        ));
     }
 
     /**
