@@ -9,6 +9,8 @@ class AiSupportMessageAction extends Model
 {
     public const TYPE_NAVIGATE = 'navigate';
 
+    public const TYPE_GUIDED_TASK = 'guided_task';
+
     public const TYPE_PATH_CHOICES = 'path_choices';
 
     public const TYPE_RECAP = 'recap';

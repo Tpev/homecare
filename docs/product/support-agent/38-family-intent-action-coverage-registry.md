@@ -1,6 +1,6 @@
 # Family Intent and AI Action Coverage Registry
 
-Status: Active baseline registry
+Status: Active coverage registry; payment-method guided slice implemented
 
 Established: August 17, 2026
 
@@ -17,7 +17,7 @@ This registry answers two separate questions for every likely Family-user intent
 
 It is deliberately broader than the current AI feature. It inventories the actual Family-facing application, then adds probable user needs and failure cases that may not yet have a complete product flow. A row marked as a product gap must not be mistaken for an AI implementation task until Product defines the underlying app behavior.
 
-Baseline source: production-oriented repository state at commit `7b72143f` plus the 23 published governed KB entries and held pricing entry. Re-audit this registry whenever a Family workflow, AI tool, governed KB entry, or authorization rule changes.
+Baseline source: production-oriented repository state audited August 17, 2026, plus the 23 published governed KB entries and held pricing entry. Payment-method rows include the guided-assistance Batch 1 source implementation; production availability remains controlled separately. Re-audit this registry whenever a Family workflow, AI tool, governed KB entry, or authorization rule changes.
 
 ## Status legend
 
@@ -56,8 +56,8 @@ This first pass contains **323 unique Family intents**.
 
 | Coverage dimension | Yes | Partial / assisted | No | Transfer |
 | --- | ---: | ---: | ---: | ---: |
-| AI can explain now | 71 | 43 | 209 | 0 |
-| AI can do now | 6 complete | 67 draft/navigation/partial-read | 208 | 42 |
+| AI can explain now | 75 | 43 | 205 | 0 |
+| AI can do now | 6 complete | 71 draft/navigation/guide/partial-read | 204 | 42 |
 
 The counts are intent-level inventory indicators, not quality scores. One implementation may cover several rows, and one row may require several KB entries, read contracts, tools, and failure tests. Update the counts when row statuses change.
 
@@ -259,13 +259,13 @@ The counts are intent-level inventory indicators, not quality scores. One implem
 | ID | Family intent | Product today | AI explain now | AI do now | Recommended target behavior |
 | --- | --- | --- | --- | --- | --- |
 | FAM-PAY-001 | Open Billing & Payments | UI | No | No | Add owner-aware navigation target |
-| FAM-PAY-002 | Understand who may manage the saved card | UI | Yes | Navigate | Keep owner-only rule; add direct billing navigation |
-| FAM-PAY-003 | See whether a card is on file | UI | No | No | Read only brand/last4/expiry for authorized owner/member scope |
-| FAM-PAY-004 | Add a first payment card | UI, owner only | No | No | Explain and navigate to Stripe-hosted setup; never collect card in chat |
-| FAM-PAY-005 | Replace or change the card on file | UI, owner only | No | No | Explain and navigate; never collect card in chat |
-| FAM-PAY-006 | Update an expiring or expired card | UI, owner only | No | No | Read safe expiry state and navigate to secure setup |
+| FAM-PAY-002 | Understand who may manage the saved card | UI | Yes | Guide / Read | Owner gets the secure guided flow; member gets only the owner boundary and no billing destination or card fact |
+| FAM-PAY-003 | See whether a card is on file | UI, owner only for details | Yes | Read / Guide | Deterministically read only brand, last4, expiry, readiness, and attention; offer the correct secure action without a model call |
+| FAM-PAY-004 | Add a first payment card | UI, owner only | Yes | Guide | Open Billing & Payments, focus/highlight Add card securely, preserve through Stripe, and verify current state before success |
+| FAM-PAY-005 | Replace or change the card on file | UI, owner only | Yes | Guide | Open Billing & Payments, focus/highlight Update card, preserve through Stripe, and verify current state before success |
+| FAM-PAY-006 | Update an expiring or expired card | UI, owner only | Yes | Guide | Read safe expiry attention, guide to secure setup, and never collect card data in chat |
 | FAM-PAY-007 | Remove the card on file | Gap | No | No | Define booking/hold consequences before product or AI work |
-| FAM-PAY-008 | Understand why a Family member cannot change the card | UI | Yes | Navigate | Keep owner-only explanation |
+| FAM-PAY-008 | Understand why a Family member cannot change the card | UI | Yes | Read | Deterministically explain the owner boundary without revealing card facts or an owner-only destination |
 | FAM-PAY-009 | Understand when payment is authorized and captured | UI | Partial | No | Reconcile authoritative product truth and code, then publish one answer |
 | FAM-PAY-010 | Understand whether publishing a request charges the card | UI | Yes | No | Keep covered |
 | FAM-PAY-011 | Understand an authorization hold versus a captured charge | UI | No | No | Add governed payment-state definitions using live state |

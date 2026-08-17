@@ -9,6 +9,7 @@
     $assignedFirstName = $ticket?->assignedAdmin?->name
         ? str($ticket->assignedAdmin->name)->before(' ')->value()
         : null;
+    $guidedTaskClient = $this->guidedTaskClient;
 @endphp
 
 <div
@@ -19,16 +20,42 @@
         userId: @js(auth()->id()),
         initialTicketId: @js($ticket?->id),
         initialUnreadCount: @js($unreadCount),
+        forceOpen: @js($openOnLoad),
+        initialGuidedTask: @js($guidedTaskClient),
     })"
+    data-guided-task='@json($guidedTaskClient)'
     x-on:support-chat-message-sent.window="messageSent($event.detail)"
     x-on:support-chat-send-failed.window="messageFailed($event.detail)"
     x-on:support-chat-conversation-reset.window="conversationReset()"
     x-on:support-chat-confirmation-failed.window="confirmationFailed($event.detail)"
+    x-on:support-chat-action-completed.window="actionCompleted()"
+    x-on:support-chat-guidance-failed.window="guidanceFailed($event.detail)"
+    x-on:support-chat-guidance-completed.window="guidanceCompleted()"
     x-on:keydown.window="handleKeydown($event)"
     x-on:online.window="wentOnline()"
     x-on:offline.window="wentOffline()"
     x-cloak
 >
+    @if ($guidedTaskClient)
+        <aside
+            x-show="! open"
+            data-testid="ai-guided-task-strip"
+            class="ai-guide-strip"
+            role="status"
+            aria-live="polite"
+        >
+            <div class="min-w-0 flex-1">
+                <p class="text-xs font-bold uppercase tracking-[0.12em] text-[#9C493A]">LoLo is guiding you</p>
+                <p class="mt-1 text-sm font-semibold leading-5 text-[#17313F]">{{ $guidedTaskClient['instruction'] }}</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+                <button type="button" x-on:click="showGuidedTarget()" class="ai-guide-strip-button">Show me</button>
+                <button type="button" wire:click="cancelGuidedTask('{{ $guidedTaskClient['id'] }}')" class="ai-guide-strip-button">Stop</button>
+                <button type="button" wire:click="transferToPerson" class="ai-guide-strip-button ai-guide-strip-button-primary">Talk to a person</button>
+            </div>
+        </aside>
+    @endif
+
     <div
         x-show="open && isMobile"
         x-transition.opacity.duration.150ms
@@ -201,6 +228,14 @@
                                                 >{{ $choice['label'] }}</button>
                                             @endforeach
                                         </div>
+                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_GUIDED_TASK && $actionActive)
+                                        <button
+                                            type="button"
+                                            wire:click="startGuidedTask('{{ $action->id }}')"
+                                            wire:loading.attr="disabled"
+                                            x-on:click="closeForNavigation()"
+                                            class="mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white disabled:opacity-60"
+                                        >{{ $actionPayload['label'] ?? 'Show me where' }}</button>
                                     @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_NAVIGATE && $actionActive)
                                         <a
                                             href="{{ $actionPayload['url'] }}"
@@ -360,6 +395,7 @@
                     @error('messageBody') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
                     @error('conversation') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
                     @error('confirmation') <p id="support-chat-confirmation-error" class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
+                    @error('guidedTask') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
                 </form>
             @endif
 

@@ -20,6 +20,7 @@ use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Models\User;
 use App\Services\AiSupport\AiSupportControlService;
+use App\Services\AiSupport\AiSupportGuidedTaskService;
 use App\Services\AiSupport\AiSupportPilotGrantService;
 use App\Services\AiSupport\AiSupportRecapService;
 use App\Services\AiSupport\AiSupportRequestDraftService;
@@ -417,6 +418,7 @@ class SeedE2eFixtures extends Command
         ], $draft->version);
 
         app(AiSupportRecapService::class)->issue($family, $ticket, $draft);
+        app(AiSupportGuidedTaskService::class)->offerPaymentMethod($family, $ticket);
         app(InteractiveKnowledgeBaseImportService::class)->apply($admin);
     }
 

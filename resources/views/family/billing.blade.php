@@ -27,8 +27,8 @@
 
         <x-card>
             <x-slot:header>
-                <div class="flex items-center justify-between gap-3">
-                    <h2 class="font-display text-lg font-semibold">Payment method</h2>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h2 class="min-w-0 font-display text-lg font-semibold">Payment method</h2>
                     @if ($billing['ready'])
                         <x-badge text="READY" color="green" />
                     @else
@@ -54,7 +54,12 @@
                 @if ($canManageBilling)
                     <form method="POST" action="{{ route('family.billing.checkout') }}">
                         @csrf
-                        <x-button color="blue" type="submit">
+                        <x-button
+                            color="blue"
+                            type="submit"
+                            data-ai-target="family.billing.manage_payment_method"
+                            data-testid="family-billing-manage-payment-method"
+                        >
                             {{ $billing['ready'] ? 'Update card' : 'Add card securely' }}
                         </x-button>
                     </form>

@@ -63,11 +63,16 @@ document.addEventListener('alpine:init', () => {
         userId,
         initialTicketId = null,
         initialUnreadCount = 0,
+        forceOpen = false,
+        initialGuidedTask = null,
     }) => ({
         actionInFlight: false,
         announcement: '',
         draft: '',
         initialUnreadCount,
+        guidedTask: initialGuidedTask,
+        guidedReportKey: '',
+        guidedTimer: null,
         isMobile: false,
         mediaQuery: null,
         online: window.navigator.onLine,
@@ -84,7 +89,8 @@ document.addEventListener('alpine:init', () => {
         visibilityHandler: null,
 
         init() {
-            this.open = readSession(this.openKey(), 'false') === 'true';
+            this.open = forceOpen || readSession(this.openKey(), 'false') === 'true';
+            if (forceOpen) writeSession(this.openKey(), 'true');
             this.draft = readSession(this.draftKey(), '') ?? '';
             this.mediaQuery = window.matchMedia('(max-width: 639px)');
             this.isMobile = this.mediaQuery.matches;
@@ -122,6 +128,7 @@ document.addEventListener('alpine:init', () => {
                     this.restoreScroll(this.initialUnreadCount > 0);
                     this.$wire.openPanel().catch(() => {});
                 }
+                this.initializeGuidance();
             });
 
             this.schedulePoll(this.open ? 5000 : 10000);
@@ -129,6 +136,8 @@ document.addEventListener('alpine:init', () => {
 
         destroy() {
             window.clearTimeout(this.pollTimer);
+            window.clearTimeout(this.guidedTimer);
+            this.clearGuidedHighlight();
             window.removeEventListener('popstate', this.popstateHandler);
             window.visualViewport?.removeEventListener('resize', this.viewportHandler);
             window.visualViewport?.removeEventListener('scroll', this.viewportHandler);
@@ -398,6 +407,101 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
+        actionCompleted() {
+            this.$nextTick(() => this.syncGuidedTask());
+        },
+
+        guidanceFailed(detail = {}) {
+            this.announcement = detail.message || 'The guided step could not continue.';
+            if (! this.open) this.showPanel();
+        },
+
+        guidanceCompleted() {
+            this.announcement = 'Your guided task is complete.';
+            if (! this.open) this.showPanel();
+        },
+
+        syncGuidedTask() {
+            let next = null;
+            try {
+                next = JSON.parse(this.$root.dataset.guidedTask || 'null');
+            } catch {
+                next = null;
+            }
+
+            if (next?.id !== this.guidedTask?.id) {
+                this.clearGuidedHighlight();
+                this.guidedReportKey = '';
+            }
+            this.guidedTask = next;
+            this.initializeGuidance();
+        },
+
+        initializeGuidance(attempt = 0) {
+            window.clearTimeout(this.guidedTimer);
+            if (! this.guidedTask?.id || ! this.guidedTask?.targetId) return;
+
+            const target = Array.from(document.querySelectorAll('[data-ai-target]'))
+                .find((element) => element.dataset.aiTarget === this.guidedTask.targetId);
+            if (! target) {
+                if (attempt < 30) {
+                    this.guidedTimer = window.setTimeout(() => this.initializeGuidance(attempt + 1), 100);
+                } else {
+                    this.reportGuidance('target_missing');
+                }
+
+                return;
+            }
+
+            const disabled = target.disabled
+                || target.getAttribute('aria-disabled') === 'true'
+                || target.closest('[aria-disabled="true"]');
+            if (disabled) {
+                this.reportGuidance('target_disabled');
+
+                return;
+            }
+
+            this.clearGuidedHighlight();
+            target.classList.add('ai-guide-target-highlight');
+            target.dataset.aiGuided = 'true';
+            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center', inline: 'nearest' });
+            window.setTimeout(() => {
+                try {
+                    target.focus({ preventScroll: true });
+                } catch {
+                    target.focus?.();
+                }
+            }, reducedMotion ? 0 : 220);
+            this.announcement = this.guidedTask.instruction || 'The control is highlighted.';
+            this.reportGuidance('arrived');
+        },
+
+        showGuidedTarget() {
+            this.initializeGuidance();
+        },
+
+        clearGuidedHighlight() {
+            document.querySelectorAll('[data-ai-guided="true"]').forEach((element) => {
+                element.classList.remove('ai-guide-target-highlight');
+                delete element.dataset.aiGuided;
+            });
+        },
+
+        reportGuidance(result) {
+            if (! this.guidedTask?.id) return;
+            const key = `${this.guidedTask.id}:${result}`;
+            if (this.guidedReportKey === key) return;
+
+            this.guidedReportKey = key;
+            this.$wire.guidedTaskArrived(this.guidedTask.id, result)
+                .catch(() => {
+                    this.guidedReportKey = '';
+                    this.announcement = 'The guided step could not be verified.';
+                });
+        },
+
         wentOffline() {
             this.online = false;
             if (this.pendingMessage?.status === 'sending') {
@@ -441,6 +545,7 @@ document.addEventListener('alpine:init', () => {
             try {
                 await this.$wire.refreshWidget(this.open);
                 this.$nextTick(() => {
+                    this.syncGuidedTask();
                     if (wasNearBottom) {
                         this.scrollToBottom();
                     } else if (this.$refs.messages) {

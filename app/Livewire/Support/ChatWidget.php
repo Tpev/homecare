@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Support;
 
+use App\Models\AiSupportGuidedTask;
 use App\Models\AiSupportMessageAction;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
+use App\Services\AiSupport\AiSupportGuidedTaskService;
 use App\Services\AiSupport\AiSupportHandoffService;
 use App\Services\AiSupport\AiSupportRecapService;
 use App\Services\AiSupport\AiSupportRequestDraftService;
@@ -33,6 +35,9 @@ class ChatWidget extends Component
 
     public int $messagesLimit = 40;
 
+    #[Locked]
+    public bool $openOnLoad = false;
+
     public function mount(?string $originRoute = null, ?string $originPath = null): void
     {
         $user = auth()->user();
@@ -41,6 +46,9 @@ class ChatWidget extends Component
         $this->originRoute = $originRoute;
         $this->originPath = $originPath;
         $this->ticketId = app(SupportChatService::class)->conversationFor($user)?->id;
+        $guidedTasks = app(AiSupportGuidedTaskService::class);
+        $openFromSession = (bool) session()->pull(AiSupportGuidedTaskService::SESSION_OPEN_CHAT_KEY, false);
+        $this->openOnLoad = $guidedTasks->claimCompletedResult($user) || $openFromSession;
     }
 
     public function openPanel(): void
@@ -69,6 +77,11 @@ class ChatWidget extends Component
 
         if ($panelOpen) {
             $ticket->markReadFor($user);
+        }
+
+        if (app(AiSupportGuidedTaskService::class)->claimCompletedResult($user)) {
+            $this->openOnLoad = true;
+            $this->dispatch('support-chat-guidance-completed');
         }
     }
 
@@ -169,6 +182,44 @@ class ChatWidget extends Component
         $ticket = $this->ticket;
         abort_unless($user && $ticket, 404);
         app(AiSupportHandoffService::class)->transfer($user, $ticket, 'user_requested');
+        $this->dispatch('support-chat-action-completed');
+    }
+
+    public function startGuidedTask(string $actionId): void
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+        abort_unless($user && $ticket, 404);
+
+        try {
+            $url = app(AiSupportGuidedTaskService::class)->startFromAction($user, $ticket, $actionId);
+            $this->resetValidation('guidedTask');
+            $this->redirect($url, navigate: true);
+        } catch (ValidationException $exception) {
+            $message = (string) collect($exception->errors())->flatten()->first();
+            $this->addError('guidedTask', $message);
+            $this->dispatch('support-chat-guidance-failed', message: $message);
+        }
+    }
+
+    public function guidedTaskArrived(string $taskId, string $result): void
+    {
+        $user = auth()->user();
+        abort_unless($user, 401);
+        $task = app(AiSupportGuidedTaskService::class)->reportArrival($user, $taskId, $result);
+        if ($task->state === AiSupportGuidedTask::STATE_FAILED) {
+            $this->dispatch(
+                'support-chat-guidance-failed',
+                message: 'I could not safely highlight that control. Open the chat for the next step.',
+            );
+        }
+    }
+
+    public function cancelGuidedTask(string $taskId): void
+    {
+        $user = auth()->user();
+        abort_unless($user, 401);
+        app(AiSupportGuidedTaskService::class)->cancel($user, $taskId);
         $this->dispatch('support-chat-action-completed');
     }
 
@@ -299,6 +350,23 @@ class ChatWidget extends Component
             ->get()
             ->filter(fn (SupportTicket $ticket): bool => $ticket->isUnreadFor($user))
             ->count();
+    }
+
+    public function getActiveGuidedTaskProperty(): ?AiSupportGuidedTask
+    {
+        $user = auth()->user();
+
+        return $user ? app(AiSupportGuidedTaskService::class)->foregroundFor($user) : null;
+    }
+
+    /** @return array{id:string,targetId:string,instruction:string,label:string,state:string}|null */
+    public function getGuidedTaskClientProperty(): ?array
+    {
+        $user = auth()->user();
+
+        return $user
+            ? app(AiSupportGuidedTaskService::class)->clientPayload($user, $this->activeGuidedTask)
+            : null;
     }
 
     public function render(): View

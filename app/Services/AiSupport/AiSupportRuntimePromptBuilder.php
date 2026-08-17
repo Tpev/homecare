@@ -11,6 +11,8 @@ class AiSupportRuntimePromptBuilder
 {
     public const VERSION = 'interactive-support-v4';
 
+    public function __construct(private readonly NavigationTargetRegistry $navigation) {}
+
     public function instructions(): string
     {
         return <<<'PROMPT'
@@ -66,9 +68,7 @@ PROMPT;
             'current_date' => now('America/New_York')->format('Y-m-d'),
             'timezone' => 'America/New_York (Eastern Time)',
             'actor' => ['id' => (string) $actor->id, 'role' => $actor->role],
-            'available_semantic_targets' => collect((array) config('ai_support.navigation_targets'))
-                ->filter(fn (array $target): bool => in_array($actor->role, (array) $target['roles'], true))
-                ->keys()->values()->all(),
+            'available_semantic_targets' => $this->navigation->idsFor($actor),
             'governed_knowledge' => $kb,
             'authorized_family_context' => $familyContext,
             'active_draft' => $draft ? [

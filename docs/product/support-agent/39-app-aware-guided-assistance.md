@@ -1,6 +1,6 @@
 # App-Aware Guided Assistance
 
-Status: Approved target experience and next implementation phase
+Status: Batch 1 implemented in source; Batch 2 is next
 
 Established: August 17, 2026
 
@@ -302,6 +302,49 @@ Batch 1 is complete when:
 - a failed, abandoned, or unverifiable update is never reported as successful;
 - the support conversation, typed draft, and human-transfer option remain available; and
 - navigation, arrival, completion, verification, cancellation, and failure cases have focused automated tests.
+
+## Batch 1 implementation record
+
+Implementation status: Complete in source on August 17, 2026. Production availability is unchanged by this batch and remains controlled through the existing Pilot/Everyone/Emergency stop setting.
+
+Delivered:
+
+- a reusable, short-lived, exact-user guided-task record with encrypted payloads, lifecycle state, expiry, cancellation, and deterministic result codes;
+- a narrow owner-authorized Family payment-method reader that returns only readiness, attention, brand, last four digits, and expiry;
+- deterministic add/change/status intent handling that bypasses the model and therefore adds no model cost for this workflow;
+- an owner-only semantic billing target whose client contract contains a stable target ID rather than a selector or coordinate;
+- **Add payment method** or **Update payment method** chat actions selected from fresh server state;
+- navigation to Billing & Payments, accessible focus and non-color-only highlight of the existing secure control, plus **Show me**, **Stop**, and **Talk to a person** controls;
+- task and typed-chat-draft continuity across page navigation, Livewire rendering, refresh, and the existing Stripe Checkout round trip;
+- authoritative post-return verification before a deterministic success message, with truthful recovery for cancellation, target failure, checkout failure, and unavailable verification;
+- immediate guided-task cancellation on human takeover, pilot revocation, relevant control stops, and logout; and
+- mobile reflow, 200 percent text, keyboard focus, reduced motion, missing-target, cross-user, expiry, cancellation, failure, handoff, payment-regression, and end-to-end browser coverage.
+
+Unchanged boundaries:
+
+- card number, CVC, payment-method token, Stripe customer ID, credentials, and unrestricted records never enter model input, guide payloads, chat, URLs, or compact interaction events;
+- Family members do not receive owner-only card facts or the billing-management destination;
+- the assistant does not click the secure control, fill payment credentials, or mutate the payment method;
+- existing Stripe, payment authorization, capture, fee, payout, and request-publication behavior is unchanged; and
+- this does not enable AI for any additional user or switch availability to Everyone.
+
+The next product implementation is Batch 2: add narrow Family readers and exact guide targets for requests/applicants, visits, submitted hours/payment attention, and care-receiver profiles, culminating in a truthful “What needs my attention?” overview.
+
+### Acceptance audit
+
+| Batch 1 requirement | Implementation evidence | Automated proof |
+| --- | --- | --- |
+| Authorized owner receives the correct Add/Update action | `FamilyPaymentMethodStatusReader` plus deterministic `offerPaymentMethod` mode selection | `GuidedPaymentMethodTest`: missing card, existing card, and current-card question cases |
+| Member receives no owner-only fact or destination | Owner check precedes billing read, task creation, target exposure, and prompt target listing | `GuidedPaymentMethodTest`: Family member boundary and target-registry assertions |
+| Action opens only the registered page and exposes no secret in the URL | Server resolves `family.billing.payment_method` to `family.billing.show`; client receives only the semantic target ID | `GuidedPaymentMethodTest`: exact redirect and encrypted/minimized stored state assertions |
+| Exact secure control is focused, highlighted, and described accessibly | `data-ai-target`, bounded exact-ID lookup, focus, outline/shadow, live announcement, and guide-strip instruction | Playwright guided payment-method scenario |
+| Livewire navigation, refresh, mobile, keyboard, 200 percent text, and reduced motion work | Server task survives navigation; client reacquires the semantic target after render/refresh; responsive/reduced-motion CSS and JS are explicit | Playwright guided payment-method scenario verifies refresh, 390px layout, 200 percent text, focus, minimum controls, draft retention, and reduced motion |
+| Missing or disabled target fails without substitution | Exact target matching has no selector/coordinate fallback; server records a failed task and truthful recovery message | `GuidedPaymentMethodTest`: separate missing-target and disabled-target cases |
+| Secrets never enter AI or guidance state | Reader allowlists brand/last4/expiry only; model is bypassed; task payload is encrypted and contains mode/instruction only; compact events contain IDs/result codes | `GuidedPaymentMethodTest`: no provider request, no hidden provider/customer identifiers, and no safe-card value in raw task attributes |
+| Success is verified server-side | Existing Stripe sync completes first; verifier re-reads current billing state; only then is deterministic success recorded | `GuidedPaymentMethodTest`: full bypass Checkout start/return/verification case; Playwright verifies returned card and chat result |
+| Failed, abandoned, or unverifiable outcome never says success | Recovery returns task to the exact billing step and uses explicit non-success copy | `GuidedPaymentMethodTest`: checkout cancellation, unavailable verification, target failure, and expiry cases |
+| Conversation, draft, and human transfer remain available | Existing persistent widget remains; guide adds Stop and Talk to a person; handoff cancels task without billing mutation | Playwright verifies draft continuity and guide controls; `GuidedPaymentMethodTest` verifies handoff cancellation |
+| Lifecycle events and regressions are covered | Offered, started, arrived, action-started, completed, cancelled, recovery, and target-failed outcomes use compact interaction events | Focused guided-task tests, full PHP application suite, production asset build, and four-scenario AI Support browser pack |
 
 ## Relationship to the coverage registry
 

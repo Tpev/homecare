@@ -1,8 +1,8 @@
 # Capability Registry
 
-Status: Current implementation registry; release disabled
+Status: Current implementation registry; availability controlled by Pilot/Everyone/Emergency stop
 
-Last updated: August 14, 2026
+Last updated: August 17, 2026
 
 Owner: Product
 
@@ -25,9 +25,9 @@ No status in this registry proves production deployment. The human support chat 
 | `SUP-ANSWER-001` | Answer approved product questions from the governed KB | Family, caregiver | A | Implemented; release disabled | Phase 3 | No general-knowledge product answers; role-scoped retrieval only |
 | `SUP-CONTEXT-001` | Explain the current page or status using authorized context | Family, caregiver | A | Implemented; release disabled | Phase 3 | Requires exact state source and KB applicability |
 | `NAV-SEMANTIC-001` | Navigate to an approved route and semantic target | Family, caregiver | B | Implemented; release disabled | Phase 4 | Registered routes only; no raw DOM selectors or coordinate clicking |
-| `FAM-STATE-001` | Read a normalized Family overview and targeted current states from authorized domain readers | Family | B/read | Approved next build | Guided assistance Batch 1-2 | No raw database/model access; unsupported domains remain explicitly unchecked |
-| `NAV-GUIDE-001` | Navigate to, focus, and accessibly highlight one registered UI control | Family first; caregiver later | B/guide | Approved next build | Guided assistance Batch 1 | Stable semantic UI targets only; no arbitrary selectors, coordinates, or autonomous clicking |
-| `TASK-VERIFY-001` | Verify guided-task completion against authoritative server state and continue the chat | Family first; caregiver later | B/read | Approved next build | Guided assistance Batch 1 | Client events are hints, not proof; success language is deterministic |
+| `FAM-STATE-001` | Read a normalized Family overview and targeted current states from authorized domain readers | Family | B/read | Payment-method targeted reader implemented; broader Family state next | Guided assistance Batch 1-2 | Owner-only safe brand/last4/expiry/readiness/attention implemented; no raw database/model access; unsupported domains remain explicitly unchecked |
+| `NAV-GUIDE-001` | Navigate to, focus, and accessibly highlight one registered UI control | Family first; caregiver later | B/guide | Payment-method target implemented | Guided assistance Batch 1 | Exact semantic target, accessible focus/highlight, refresh/redirect persistence, missing/disabled safe failure; no arbitrary selectors, coordinates, or autonomous clicking |
+| `TASK-VERIFY-001` | Verify guided-task completion against authoritative server state and continue the chat | Family first; caregiver later | B/read | Payment-method verifier implemented | Guided assistance Batch 1 | Stripe return is re-read server-side before deterministic success; abandoned, failed, and unverifiable results remain recoverable and never claim success |
 | `FORM-PREFILL-001` | Prefill allowlisted non-secret reversible form fields through a server draft | Family first; caregiver later | C | Approved later build | Guided assistance Batch 3 | User reviews/edits; normal validation and save remain authoritative |
 
 ## Initial family navigation candidates
@@ -39,7 +39,7 @@ No status in this registry proves production deployment. The human support chat 
 | `NAV-CARE-001` | Open regular care or care history | B | Candidate | Phase 4 | `family.care.index` / `family.care.history` |
 | `NAV-MESSAGE-001` | Open messages or an authorized conversation | B | Candidate | Phase 4 | `messages.index` / authorized `messages.show` |
 | `NAV-SUPPORT-001` | Open the Support Center or current support ticket | B | Candidate | Phase 4 | `support.index` / authorized ticket |
-| `NAV-BILLING-001` | Open family billing without changing payment details | B | Candidate | Later review | Owner/member presentation differs; no payment data in chat |
+| `NAV-BILLING-001` | Open Family billing and guide the owner to the secure payment-method control without changing payment details | B/guide | Payment-method slice implemented | Guided assistance Batch 1 | Owner-only exact target; member receives no destination; safe card summary may appear in chat but no full card data, token, customer ID, or credential |
 
 The implementation contract for these platform capabilities is [App-aware guided assistance](../39-app-aware-guided-assistance.md).
 
@@ -81,7 +81,7 @@ These remain explanation/navigation/handoff only until an approved capability ch
 
 | ID | Outcome | Class | State | Initial behavior |
 | --- | --- | --- | --- | --- |
-| `PAYMENT-METHOD-001` | Add, replace, or remove a payment method | E | Restricted | Owner-only navigation to structured billing flow; no card collection in chat |
+| `PAYMENT-METHOD-001` | Add, replace, or remove a payment method | E | Add/replace guide implemented; AI execution remains restricted | Owner uses the existing secure Stripe flow while the assistant guides and verifies; remove remains unsupported; no card collection or AI mutation |
 | `PAYMENT-DISPUTE-001` | Resolve a billing dispute, refund, or charge correction | E | Restricted | Human escalation or approved structured Support Center form |
 | `VISIT-APPROVE-001` | Approve hours and trigger payment capture | E | Restricted | Explain/open normal flow; no agent execution |
 | `CARE-HIRE-001` | Hire a caregiver and authorize expected payment | E | Restricted | Explain/open normal flow; no agent execution |

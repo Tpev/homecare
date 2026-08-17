@@ -3,6 +3,7 @@
 namespace App\Services\AiSupport;
 
 use App\Models\AiSupportActionPreview;
+use App\Models\AiSupportGuidedTask;
 use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportRequestDraft;
 use App\Models\MarketplaceNotificationDelivery;
@@ -91,6 +92,15 @@ class AiSupportHandoffService
                 ->whereNull('discarded_at')
                 ->whereNull('published_at')
                 ->update(['state' => AiSupportRequestDraft::STATE_TRANSFERRED, 'updated_at' => $message->created_at]);
+            AiSupportGuidedTask::query()
+                ->where('support_ticket_id', $locked->id)
+                ->whereIn('state', AiSupportGuidedTask::OPEN_STATES)
+                ->update([
+                    'state' => AiSupportGuidedTask::STATE_CANCELLED,
+                    'cancelled_at' => $message->created_at,
+                    'last_result_code' => 'human_handoff',
+                    'updated_at' => $message->created_at,
+                ]);
             SupportTicketActivity::query()->create([
                 'support_ticket_id' => $locked->id,
                 'actor_user_id' => $actor->id,

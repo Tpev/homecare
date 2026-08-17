@@ -5,6 +5,7 @@ namespace App\Services\AiSupport;
 use App\Models\AiSupportActionPreview;
 use App\Models\AiSupportAdminAuditEvent;
 use App\Models\AiSupportControlVersion;
+use App\Models\AiSupportGuidedTask;
 use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportPilotGrant;
 use App\Models\SupportTicket;
@@ -317,6 +318,14 @@ class AiSupportControlService
                 'invalidated_at' => $now,
                 'invalidation_reason' => 'control_stop',
             ]);
+        AiSupportGuidedTask::query()
+            ->whereIn('state', AiSupportGuidedTask::OPEN_STATES)
+            ->update([
+                'state' => AiSupportGuidedTask::STATE_CANCELLED,
+                'cancelled_at' => $now,
+                'last_result_code' => 'control_stop',
+                'updated_at' => $now,
+            ]);
 
         $stopsAllReplies = in_array($controlKey, [
             'master_enabled', 'user_visible_enabled', 'human_only',
@@ -396,6 +405,15 @@ class AiSupportControlService
                 'payload' => null,
                 'invalidated_at' => $now,
                 'invalidation_reason' => 'general_release_ended',
+            ]);
+        AiSupportGuidedTask::query()
+            ->whereIn('actor_user_id', $affectedUserIds)
+            ->whereIn('state', AiSupportGuidedTask::OPEN_STATES)
+            ->update([
+                'state' => AiSupportGuidedTask::STATE_CANCELLED,
+                'cancelled_at' => $now,
+                'last_result_code' => 'general_release_ended',
+                'updated_at' => $now,
             ]);
 
         SupportTicket::query()

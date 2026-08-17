@@ -4,7 +4,29 @@ import { expect, test, type Page } from '@playwright/test';
 import { loginAs } from '../helpers/auth';
 
 async function expectNoHorizontalOverflow(page: Page) {
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    const layout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+        offenders: [...document.querySelectorAll<HTMLElement>('body *')]
+            .filter((element) => {
+                const style = getComputedStyle(element);
+                const box = element.getBoundingClientRect();
+
+                return style.display !== 'none'
+                    && style.visibility !== 'hidden'
+                    && (box.left < -1 || box.right > document.documentElement.clientWidth + 1);
+            })
+            .slice(0, 8)
+            .map((element) => ({
+                className: element.className,
+                left: Math.round(element.getBoundingClientRect().left),
+                right: Math.round(element.getBoundingClientRect().right),
+                tag: element.tagName,
+                text: element.innerText?.slice(0, 80),
+            })),
+    }));
+
+    expect(layout.scrollWidth, JSON.stringify(layout)).toBeLessThanOrEqual(layout.clientWidth);
 }
 
 function expireActiveRecap(): void {
@@ -90,6 +112,60 @@ test.describe.serial('Interactive AI Support pilot', () => {
         await expect(page.getByText('Arthur E2E', { exact: true }).first()).toBeVisible();
     });
 
+    test('guides the Family owner to the exact card control and verifies the Stripe return', async ({ page }) => {
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await loginAs(page, 'familyAi');
+        await page.getByTestId('support-chat-launcher').click();
+
+        const panel = page.getByTestId('support-chat-panel');
+        const start = panel.getByRole('button', { name: 'Add payment method' });
+        const draft = 'Please keep this note while I update the card.';
+        await page.getByLabel('Message LoLo Support').fill(draft);
+        await expect(start).toBeVisible();
+        await start.click();
+
+        await expect(page).toHaveURL(/\/family\/billing$/);
+        const cardButton = page.getByTestId('family-billing-manage-payment-method');
+        const guide = page.getByTestId('ai-guided-task-strip');
+        await expect(page.getByLabel('Message LoLo Support')).toHaveValue(draft);
+        await expect(cardButton).toBeVisible();
+        await expect(cardButton).toHaveAttribute('data-ai-guided', 'true');
+        await expect(cardButton).toBeFocused();
+        await expect(guide).toContainText('Use the highlighted Add card securely button.');
+        await expect(guide.getByRole('button', { name: 'Show me' })).toBeVisible();
+        await expect(guide.getByRole('button', { name: 'Stop' })).toBeVisible();
+        await expect(guide.getByRole('button', { name: 'Talk to a person' })).toBeVisible();
+
+        await page.reload();
+        await expect(cardButton).toHaveAttribute('data-ai-guided', 'true');
+        await expect(cardButton).toBeFocused();
+        await expect(guide).toBeVisible();
+        await expect(page.getByLabel('Message LoLo Support')).toHaveValue(draft);
+
+        await page.setViewportSize({ width: 390, height: 844 });
+        await expectNoHorizontalOverflow(page);
+        const guideBox = await guide.boundingBox();
+        expect(guideBox?.x ?? -1).toBeGreaterThanOrEqual(0);
+        expect((guideBox?.x ?? 0) + (guideBox?.width ?? 0)).toBeLessThanOrEqual(391);
+        for (const button of await guide.getByRole('button').all()) {
+            expect((await button.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(43.9);
+        }
+
+        await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+        await expectNoHorizontalOverflow(page);
+        await expect(cardButton).toBeVisible();
+        await page.addStyleTag({ content: 'html { font-size: 16px !important; }' });
+
+        await cardButton.click();
+        await expect(page).toHaveURL(/\/family\/billing$/);
+        await expect(panel).toBeVisible();
+        await expect(page.getByLabel('Message LoLo Support')).toHaveValue(draft);
+        await expect(panel.getByText(/payment method ending in 4242 is now on file/i)).toBeVisible();
+        await expect(page.getByText('VISA ending in 4242')).toBeVisible();
+        await expect(page.getByTestId('ai-guided-task-strip')).toHaveCount(0);
+        await expect(cardButton).toHaveText('Update card');
+    });
+
     test('same-account Family member cannot see or inherit the exact-user AI conversation', async ({ page }) => {
         await loginAs(page, 'familyAiMember');
         await page.getByTestId('support-chat-launcher').click();
@@ -107,7 +183,7 @@ test.describe.serial('Interactive AI Support pilot', () => {
         await page.goto('/admin/ai-support');
 
         await expect(page.getByRole('heading', { name: 'AI Support' })).toBeVisible();
-        await expect(page.getByText('Pilot controls open')).toBeVisible();
+        await expect(page.getByText('Pilot only', { exact: true })).toBeVisible();
         await expect(page.getByText('12 working')).toBeVisible();
 
         await page.getByRole('link', { name: 'Knowledge base' }).click();

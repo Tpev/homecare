@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Models\AiSupportActionPreview;
+use App\Models\AiSupportGuidedTask;
 use App\Models\AiSupportMessageAction;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +46,15 @@ class InvalidateAiSupportConfirmationsOnLogout
                         'invalidation_reason' => 'actor_logged_out',
                     ])->save();
                 });
+            AiSupportGuidedTask::query()
+                ->where('actor_user_id', $userId)
+                ->whereIn('state', AiSupportGuidedTask::OPEN_STATES)
+                ->update([
+                    'state' => AiSupportGuidedTask::STATE_CANCELLED,
+                    'cancelled_at' => $now,
+                    'last_result_code' => 'actor_logged_out',
+                    'updated_at' => $now,
+                ]);
         }, 3);
     }
 }

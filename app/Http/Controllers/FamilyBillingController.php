@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\Payments\PaymentException;
+use App\Services\AiSupport\AiSupportGuidedTaskService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Payments\FamilyBillingService;
 use Illuminate\Http\RedirectResponse;
@@ -11,10 +12,25 @@ use Illuminate\View\View;
 
 class FamilyBillingController extends Controller
 {
-    public function show(Request $request, FamilyBillingService $billing): View|RedirectResponse
-    {
+    public function show(
+        Request $request,
+        FamilyBillingService $billing,
+        AiSupportGuidedTaskService $guidedTasks,
+    ): View|RedirectResponse {
         $user = auth()->user();
         abort_unless($user && $user->role === 'family', 403);
+
+        if ($request->query('checkout') === 'cancel') {
+            try {
+                $guidedTasks->paymentSetupCancelled($user);
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+
+            return redirect()
+                ->route('family.billing.show')
+                ->with('status', 'No payment-method changes were made.');
+        }
 
         $sessionId = trim((string) $request->query('checkout_session_id', ''));
         if ($sessionId !== '') {
@@ -22,9 +38,21 @@ class FamilyBillingController extends Controller
             try {
                 $billing->syncSetupCheckoutSession($user, $sessionId);
             } catch (PaymentException $e) {
+                try {
+                    $guidedTasks->paymentSetupFailed($user, 'secure_checkout_verification_failed');
+                } catch (\Throwable $guidedException) {
+                    report($guidedException);
+                }
+
                 return redirect()
                     ->route('family.billing.show')
                     ->withErrors(['billing' => $e->userMessage]);
+            }
+
+            try {
+                $guidedTasks->paymentSetupCompleted($user);
+            } catch (\Throwable $exception) {
+                report($exception);
             }
 
             return redirect()
@@ -39,8 +67,11 @@ class FamilyBillingController extends Controller
         ]);
     }
 
-    public function createCheckout(Request $request, FamilyBillingService $billing): RedirectResponse
-    {
+    public function createCheckout(
+        Request $request,
+        FamilyBillingService $billing,
+        AiSupportGuidedTaskService $guidedTasks,
+    ): RedirectResponse {
         $user = auth()->user();
         abort_unless($user && $user->role === 'family', 403);
         abort_unless(app(FamilyAccountContext::class)->isOwner($user), 403);
@@ -49,8 +80,19 @@ class FamilyBillingController extends Controller
         $cancelUrl = route('family.billing.show').'?checkout=cancel';
 
         try {
+            try {
+                $guidedTasks->markPaymentSetupStarted($user);
+            } catch (\Throwable $guidedException) {
+                report($guidedException);
+            }
             $url = $billing->createSetupCheckoutUrl($user, $successUrl, $cancelUrl);
         } catch (PaymentException $e) {
+            try {
+                $guidedTasks->paymentSetupFailed($user, 'secure_checkout_start_failed');
+            } catch (\Throwable $guidedException) {
+                report($guidedException);
+            }
+
             return back()->withErrors(['billing' => $e->userMessage]);
         }
 

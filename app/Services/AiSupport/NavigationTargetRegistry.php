@@ -3,11 +3,14 @@
 namespace App\Services\AiSupport;
 
 use App\Models\User;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Route;
 
 class NavigationTargetRegistry
 {
+    public function __construct(private readonly FamilyAccountContext $familyAccounts) {}
+
     public function has(string $targetId): bool
     {
         $definition = $this->definition($targetId);
@@ -15,7 +18,7 @@ class NavigationTargetRegistry
         return $definition !== null && Route::has((string) $definition['route']);
     }
 
-    /** @return array{route: string, roles: list<string>}|null */
+    /** @return array<string,mixed>|null */
     public function definition(string $targetId): ?array
     {
         $definition = ((array) config('ai_support.navigation_targets', []))[$targetId] ?? null;
@@ -29,7 +32,8 @@ class NavigationTargetRegistry
 
         return $definition !== null
             && Route::has((string) $definition['route'])
-            && in_array($user->role, (array) $definition['roles'], true);
+            && in_array($user->role, (array) $definition['roles'], true)
+            && (! ($definition['owner_only'] ?? false) || $this->familyAccounts->isOwner($user));
     }
 
     public function urlFor(User $user, string $targetId): string
@@ -45,5 +49,14 @@ class NavigationTargetRegistry
     public function ids(): array
     {
         return array_keys((array) config('ai_support.navigation_targets', []));
+    }
+
+    /** @return list<string> */
+    public function idsFor(User $user): array
+    {
+        return collect($this->ids())
+            ->filter(fn (string $id): bool => $this->allowedFor($user, $id))
+            ->values()
+            ->all();
     }
 }

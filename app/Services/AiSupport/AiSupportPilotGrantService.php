@@ -4,6 +4,7 @@ namespace App\Services\AiSupport;
 
 use App\Models\AiSupportActionPreview;
 use App\Models\AiSupportAdminAuditEvent;
+use App\Models\AiSupportGuidedTask;
 use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportPilotGrant;
 use App\Models\SupportTicket;
@@ -173,6 +174,15 @@ class AiSupportPilotGrantService
                     'payload' => null,
                     'invalidated_at' => $now,
                     'invalidation_reason' => 'pilot_grant_revoked',
+                ]);
+            AiSupportGuidedTask::query()
+                ->where('actor_user_id', $locked->user_id)
+                ->whereIn('state', AiSupportGuidedTask::OPEN_STATES)
+                ->update([
+                    'state' => AiSupportGuidedTask::STATE_CANCELLED,
+                    'cancelled_at' => $now,
+                    'last_result_code' => 'pilot_grant_revoked',
+                    'updated_at' => $now,
                 ]);
 
             AiSupportAdminAuditEvent::query()->create([

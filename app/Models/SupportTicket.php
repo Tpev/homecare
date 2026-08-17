@@ -224,6 +224,11 @@ class SupportTicket extends Model
         return $this->hasMany(AiSupportMessageAction::class);
     }
 
+    public function aiGuidedTasks(): HasMany
+    {
+        return $this->hasMany(AiSupportGuidedTask::class);
+    }
+
     public function isHumanOnly(): bool
     {
         return $this->responder_mode !== self::RESPONDER_MODE_AUTOMATED;

@@ -20,6 +20,7 @@ class AiSupportRuntimeService
         private readonly AiSupportFamilyContextService $familyContext,
         private readonly AiSupportRequestDraftService $drafts,
         private readonly AiSupportRecapService $recaps,
+        private readonly AiSupportGuidedTaskService $guidedTasks,
         private readonly AiSupportHandoffService $handoff,
         private readonly NavigationTargetRegistry $navigation,
         private readonly AiSupportRuntimePromptBuilder $prompt,
@@ -34,8 +35,7 @@ class AiSupportRuntimeService
         if (! $ticket || $ticket->responder_mode !== SupportTicket::RESPONDER_MODE_AUTOMATED) {
             return;
         }
-        if (! config('ai_support.provider_enabled', false)
-            || ! $this->eligibility->evaluate($actor, 'support_answers_v1', $ticket)->allowed) {
+        if (! $this->eligibility->evaluate($actor, 'support_answers_v1', $ticket)->allowed) {
             $this->handoff->transfer($actor, $ticket, 'capability_unavailable');
 
             return;
@@ -61,6 +61,23 @@ class AiSupportRuntimeService
         }
         if ($guard === 'human_requested') {
             $this->handoff->transfer($actor, $ticket, 'user_requested');
+
+            return;
+        }
+
+        if ($actor->role === 'family' && $this->guidedTasks->isPaymentMethodIntent($newestMessage)) {
+            try {
+                $this->guidedTasks->offerPaymentMethod($actor, $ticket);
+            } catch (Throwable $exception) {
+                report($exception);
+                $this->handoff->transfer($actor, $ticket, 'guided_payment_unavailable');
+            }
+
+            return;
+        }
+
+        if (! config('ai_support.provider_enabled', false)) {
+            $this->handoff->transfer($actor, $ticket, 'capability_unavailable');
 
             return;
         }

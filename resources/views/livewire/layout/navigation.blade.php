@@ -535,9 +535,9 @@ new class extends Component
                         href="{{ route('admin.support.tickets') }}"
                         wire:navigate
                         aria-label="{{ $supportUnread > 0 ? $supportUnread.' unread support tickets' : 'Support notifications' }}"
-                        class="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] text-[#23483F] shadow-sm hover:bg-[#F8F0E2]"
+                        class="relative inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] text-[#23483F] shadow-sm hover:bg-[#F8F0E2]"
                     >
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <svg class="h-[20px] w-[20px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9a6 6 0 00-12 0v.75a8.967 8.967 0 01-2.312 6.022 23.848 23.848 0 005.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                         </svg>
                         @if ($supportUnread > 0)
@@ -553,9 +553,9 @@ new class extends Component
                     :aria-expanded="open"
                     aria-controls="mobile-primary-navigation"
                     aria-label="Toggle navigation menu"
-                    class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] text-[#23483F] shadow-sm hover:bg-[#F8F0E2]"
+                    class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] text-[#23483F] shadow-sm hover:bg-[#F8F0E2]"
                 >
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                    <svg class="h-[24px] w-[24px]" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': !open}" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': !open, 'inline-flex': open}" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>

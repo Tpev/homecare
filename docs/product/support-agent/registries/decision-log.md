@@ -718,6 +718,7 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Authority boundary: The model receives no SQL, ORM, unrestricted database, raw DOM, arbitrary selector, coordinate, or autonomous-browser access. A client click is never sufficient proof of completion. Personalized facts and success claims require a fresh authorized reader or domain receipt. Payment credentials, passwords, tokens, bank details, and verification secrets never enter chat or prefill.
 - Initial vertical slice: Build the reusable guided-task foundation through the existing Family payment-method workflow without changing current payment, fee, authorization, or capture behavior. Then expand the same read/guide foundation to requests, visits, timesheets, and care profiles before adding further confirmed actions.
 - Cost rule: After intent recognition, use deterministic readers, navigation events, UI guidance, verifiers, and templated outcome messages wherever possible; do not run an autonomous model/browser loop.
+- Implementation: Batch 1 is implemented in source as a deterministic payment-method intent/status fast path, owner-only safe reader, reusable guided-task lifecycle, semantic target coordinator, accessible guide strip/highlight, existing Stripe-flow continuation, authoritative completion verifier, and focused PHP/browser coverage. It does not change payment, fee, authorization, capture, or production-availability behavior.
 - Detailed contract: [App-aware guided assistance](../39-app-aware-guided-assistance.md)
 
 ## Product decision status
