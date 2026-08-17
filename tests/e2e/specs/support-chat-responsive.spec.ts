@@ -170,6 +170,14 @@ test.describe('Mobile support chat', () => {
         await page.addStyleTag({ content: 'html { font-size: 16px !important; }' });
         await panel.getByRole('button', { name: 'Start a new conversation' }).click();
         await expect(panel.getByText(/How can we help/)).toBeVisible();
-        await expect(page.getByLabel('Message LoLo Support')).toBeVisible();
+        const composer = page.getByLabel('Message LoLo Support');
+        await expect(composer).toBeVisible();
+
+        await page.waitForTimeout(5_500);
+        await expect(panel.getByText(/How can we help/)).toBeVisible();
+        await composer.fill('A new question after the resolved conversation.');
+        await expect(page.getByTestId('support-chat-send')).toBeEnabled();
+        await page.getByTestId('support-chat-send').click();
+        await expect(panel.getByText('A new question after the resolved conversation.', { exact: true })).toBeVisible({ timeout: 15_000 });
     });
 });

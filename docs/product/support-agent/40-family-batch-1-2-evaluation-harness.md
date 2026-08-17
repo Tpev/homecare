@@ -33,6 +33,28 @@ The first complete run on August 17, 2026 passed:
 | Provider calls | 0 |
 | Production database writes | 0 |
 
+The same corpus/router inventory was then deployed through the normal production workflow at commit `0655b5b54e12ff8abffb6d00dcb81b723bd4a504`. Production `--plan` passed all 40 registry intents, 120 routing phrases, and 10 collision cases using zero provider calls and no database write.
+
+## Production browser QA record
+
+Authenticated production QA began August 17, 2026 with exact Family pilot user `19`. Before sending any Batch 1/2 intent, the audit confirmed:
+
+- Availability remained **Pilot only**;
+- exactly Family users `19` and `282` had active pilot access;
+- **Live for everyone** remained off; and
+- no care, payment, profile, message, request, timesheet, or availability record was changed.
+
+The first live journey found a blocking support-widget regression. After the existing chat had been resolved, **Start a new conversation** rendered the empty composer, but the background refresh reclaimed the resolved conversation before the first new message could be sent. The old ticket returned and Send became unavailable. Creating an ordinary Support Center ticket was verified not to be an AI-assistant path and was not accepted as a workaround.
+
+The correction adds an explicit server-owned “starting new conversation” state. Polling may still discover an active conversation normally, but after the user deliberately resets a resolved or closed chat it cannot reclaim the old ticket. The state clears only after the first new chat ticket is created. Regression proof now covers:
+
+- resolved and closed conversations;
+- a background refresh after reset;
+- first-message creation as a distinct new chat ticket; and
+- a real Playwright wait beyond the polling interval followed by an enabled Send action.
+
+The focused PHP regression passes 14 tests and 96 assertions, the exact Chromium resolved-chat browser test passes, and the production Vite build passes. Live Batch 1/2 intent journeys resume after this narrow correction is deployed; they are not marked passed from the blocked attempt.
+
 The corpus and runner follow the evaluation pattern in the official [OpenAI evaluation guidance](https://developers.openai.com/api/docs/guides/evals): freeze representative tasks, declare the expected outcome, run the same suite after changes, and track success separately from cost and latency. Batch 1/2 account reads and intent routing are deterministic, so this slice intentionally does not spend model tokens.
 
 ## What “passed” means

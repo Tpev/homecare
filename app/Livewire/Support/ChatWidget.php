@@ -38,6 +38,9 @@ class ChatWidget extends Component
     #[Locked]
     public bool $openOnLoad = false;
 
+    #[Locked]
+    public bool $startingNewConversation = false;
+
     public function mount(?string $originRoute = null, ?string $originPath = null): void
     {
         $user = auth()->user();
@@ -64,7 +67,7 @@ class ChatWidget extends Component
         $user = auth()->user();
         abort_unless($user && in_array($user->role, ['family', 'caregiver'], true), 403);
 
-        if (! $this->ticketId) {
+        if (! $this->ticketId && ! $this->startingNewConversation) {
             $this->ticketId = app(SupportChatService::class)->conversationFor($user)?->id;
         }
 
@@ -121,6 +124,7 @@ class ChatWidget extends Component
                     originPath: $this->originPath,
                 );
                 $this->ticketId = $ticket->id;
+                $this->startingNewConversation = false;
                 $shouldRunAssistant = $ticket->wasRecentlyCreated;
             }
 
@@ -273,6 +277,7 @@ class ChatWidget extends Component
         }
 
         $this->ticketId = null;
+        $this->startingNewConversation = true;
         unset($this->ticket);
         $this->messagesLimit = 40;
         $this->resetValidation();

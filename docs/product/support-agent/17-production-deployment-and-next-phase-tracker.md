@@ -12,7 +12,9 @@ AI Support is operating in **Pilot only** mode for the two exact Family users ap
 
 The repository now contains guided-assistance Batch 1 for saved payment methods and Batch 2 for Family overview, requests/applicants, visits/change requests, submitted hours/care-payment attention, profiles, messages, regular-care attention, and history. Production availability is independent of deployment and remains Pilot only unless an Administrator deliberately changes it.
 
-The new registry-driven [Family Batch 1-2 evaluation harness](40-family-batch-1-2-evaluation-harness.md) passes all 40 declared rows, 120 representative phrasings, 10 collision cases, and 29 isolated application tests with 355 assertions. The complete AI Support feature regression also passes 133 tests with 1,174 assertions. The harness makes zero provider calls and does not use production data. This source batch still requires the normal `deploy.sh` deployment before the command is available on the production server.
+The registry-driven [Family Batch 1-2 evaluation harness](40-family-batch-1-2-evaluation-harness.md) passes all 40 declared rows, 120 representative phrasings, 10 collision cases, and 29 isolated application tests with 355 assertions. The complete AI Support feature regression also passes 133 tests with 1,174 assertions. The harness makes zero provider calls and does not use production data. Commit `0655b5b54e12ff8abffb6d00dcb81b723bd4a504` is deployed and its production `--plan` inventory passes.
+
+Authenticated live QA reconfirmed Pilot only with exact Family users `19` and `282`, then found that background polling reclaimed a resolved chat immediately after **Start a new conversation**, blocking the first new message. A narrow server-owned reset-state correction and resolved/closed browser regressions now pass in source. Deploy that correction before resuming the live intent journeys; no Batch 1/2 journey is credited from the blocked attempt.
 
 Historical foundation and interactive evidence remain in the [interactive assistant implementation record](24-interactive-assistant-implementation-and-release-evidence.md) and [production deployment audit](25-production-interactive-deployment-audit.md). Historical readiness gates no longer control availability under `DEC-072`.
 
@@ -159,17 +161,16 @@ Full evidence and next actions: [production interactive assistant deployment aud
 | Phase 1 content/evaluation | Complete; offline Luna-low baseline accepted under `DEC-012` | 23 reviewed entries Published, held pricing entry Draft, 120 linked KB cases plus runtime corpora |
 | Phase 2 shadow | Skipped by `DEC-047` | No invisible processing of production conversations will be performed |
 | Two-user Family pilot | Active under `DEC-071` and simplified by `DEC-072` | Exact Family pilot only; Everyone remains off; Administrator can stop with Human Only |
-| Guided assistance Batches 1-2 | Implemented and mass regression passing in source | 40 declared Family rows; deploy through `deploy.sh`, then complete real-browser QA |
+| Guided assistance Batches 1-2 | Implemented; mass regression and production inventory passing | 40 declared Family rows; deploy the resolved-chat correction, then resume real-browser QA |
 | General availability | Off | Only an explicit Administrator Availability change selects Live for everyone |
 
 ## Agreed next-work order
 
-1. Run `php artisan ai-support:test-family-intents` in development/CI and require 40 of 40 before deployment.
-2. Deploy the Batch 1/2 mass-test harness through the normal `deploy.sh` flow; confirm the Availability page still shows Pilot only.
-3. On the normal no-dev production install, run `php artisan ai-support:test-family-intents --plan` to validate the deployed corpus/router inventory. Do not install development dependencies on production for the full PHPUnit suite.
-4. Exercise every Batch 1/2 guide destination in a real browser for owner/member authorization, mobile/reflow, keyboard/focus, refresh, missing/stale target recovery, and screen-reader behavior.
-5. Review actual two-user pilot interactions for wording or state failures and add every meaningful failure to the frozen corpus.
-6. Then begin Batch 3 safe prefill; do not relabel Batch 2 Guide rows as completed actions.
+1. Deploy the narrow resolved/closed-chat reset correction through the normal `deploy.sh` flow; confirm Availability remains Pilot only.
+2. Re-open the exact pilot Family browser session, start a new chat, and prove a first message remains sendable beyond the polling interval.
+3. Exercise every Batch 1/2 guide destination in a real browser for owner/member authorization, mobile/reflow, keyboard/focus, refresh, missing/stale target recovery, and screen-reader behavior.
+4. Review actual two-user pilot interactions for wording or state failures and add every meaningful failure to the frozen corpus.
+5. Then begin Batch 3 safe prefill; do not relabel Batch 2 Guide rows as completed actions.
 
 Continue tracking `OPS-EXT-001` as an operational data-retirement item without letting it reintroduce release-gate workflow.
 

@@ -337,7 +337,7 @@ class SupportChatWidgetTest extends TestCase
             'status' => SupportTicket::STATUS_CLOSED,
         ]);
 
-        Livewire::actingAs($family)
+        $component = Livewire::actingAs($family)
             ->test(ChatWidget::class, ['originRoute' => 'dashboard', 'originPath' => '/dashboard'])
             ->assertSet('ticketId', $ticket->id)
             ->assertSee('closed and read-only')
@@ -345,8 +345,44 @@ class SupportChatWidgetTest extends TestCase
             ->assertDontSee('Ask us a question')
             ->call('startNewConversation')
             ->assertSet('ticketId', null)
+            ->assertSet('startingNewConversation', true)
             ->assertDispatched('support-chat-conversation-reset')
             ->assertSee('How can we help?');
+
+        $component
+            ->call('refreshWidget', true)
+            ->assertSet('ticketId', null)
+            ->call('sendMessage', 'Please help me with a new question.', (string) Str::uuid())
+            ->assertSet('startingNewConversation', false)
+            ->assertDispatched('support-chat-message-sent');
+
+        $this->assertDatabaseCount('support_tickets', 2);
+        $this->assertNotSame($ticket->id, $component->get('ticketId'));
+    }
+
+    public function test_resolved_chat_reset_survives_polling_until_the_new_message_is_sent(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $ticket = $this->ticket($family, [
+            'source' => SupportTicket::SOURCE_CHAT_WIDGET,
+            'status' => SupportTicket::STATUS_RESOLVED,
+        ]);
+
+        $component = Livewire::actingAs($family)
+            ->test(ChatWidget::class, ['originRoute' => 'dashboard', 'originPath' => '/dashboard'])
+            ->assertSet('ticketId', $ticket->id)
+            ->assertSee('This conversation is resolved')
+            ->call('startNewConversation')
+            ->assertSet('ticketId', null)
+            ->assertSet('startingNewConversation', true)
+            ->call('refreshWidget', true)
+            ->assertSet('ticketId', null)
+            ->call('sendMessage', 'What needs my attention?', (string) Str::uuid())
+            ->assertSet('startingNewConversation', false)
+            ->assertDispatched('support-chat-message-sent');
+
+        $this->assertDatabaseCount('support_tickets', 2);
+        $this->assertNotSame($ticket->id, $component->get('ticketId'));
     }
 
     public function test_message_rate_limit_rejects_excess_without_creating_a_message(): void
