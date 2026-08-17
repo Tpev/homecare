@@ -272,6 +272,20 @@ Record input, cached input, output, tool calls, total latency, first-token laten
 
 Official OpenAI documentation recommends comparing representative tasks on task success, completeness, evidence, tokens, latency, cost, calls, turns, and retries. Follow that outcome-first rule: [OpenAI model guidance](https://developers.openai.com/api/docs/guides/latest-model).
 
+## Family Batch 1-2 mass regression
+
+The 40 Family registry rows implemented by guided-assistance Batches 1 and 2 have a dedicated deterministic runner:
+
+```bash
+php artisan ai-support:test-family-intents
+```
+
+It combines a frozen 120-phrase intent corpus, 10 near-neighbor collision cases, and the complete shared payment/read/guide application regression. Application tests run in a separate process with deployed configuration caches bypassed and SQLite `:memory:` forced, so the command never uses production account data. These deterministic handlers make zero provider calls.
+
+Use `--plan` to inventory or filter without starting tests, and `--output=...` to write a content-minimized JSON report. Full design, commands, interpretation, current results, and limitations are in the [Family Batch 1-2 evaluation harness](40-family-batch-1-2-evaluation-harness.md).
+
+This passing slice proves only the 40 declared Batch 1/2 rows. It does not upgrade Guide to completed action, cover the other 284 Family registry rows, or replace provider, real-browser, accessibility, and usability testing where those layers apply.
+
 ## Evaluation report
 
 Every candidate release report includes:

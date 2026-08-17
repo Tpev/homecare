@@ -19,6 +19,12 @@ It is deliberately broader than the current AI feature. It inventories the actua
 
 Baseline source: production-oriented repository state audited August 17, 2026, plus the 23 published governed KB entries and held pricing entry. Payment-method rows include Batch 1 and the request, visit, hours, profile, message, history, care-payment, and Family-overview rows include the Batch 2 source implementation. Production availability remains controlled separately. Re-audit this registry whenever a Family workflow, AI tool, governed KB entry, or authorization rule changes.
 
+## Automated coverage of implemented rows
+
+The registry is the 324-intent demand backlog. The machine-readable [Family Batch 1-2 evaluation harness](40-family-batch-1-2-evaluation-harness.md) currently covers the exact **40** rows changed by guided-assistance Batches 1 and 2: six Batch 1 saved-payment-method rows and 34 Batch 2 overview/read/guide rows.
+
+The August 17, 2026 baseline passed 40 of 40 intent mappings, 120 of 120 representative phrasings, 10 of 10 collision cases, and 29 application tests with 355 assertions. It uses an isolated in-memory database and makes zero provider calls. The other **284** registry rows are not implied to have mass-test coverage by that result. Guide coverage also remains distinct from completing the underlying domain action.
+
 ## Status legend
 
 ### Product today

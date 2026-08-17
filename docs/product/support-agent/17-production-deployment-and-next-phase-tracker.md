@@ -2,17 +2,19 @@
 
 Status: Active tracker
 
-Last updated: August 14, 2026
+Last updated: August 17, 2026
 
 Owner: Product and engineering
 
 ## Executive state
 
-The interactive AI Support implementation is deployed and failing closed. Human support remains the only customer-facing support behavior: both deployment guards are off, there is no active exact-user pilot grant, no published KB content, and no enabled user-visible AI control.
+AI Support is operating in **Pilot only** mode for the two exact Family users approved under `DEC-071`. The Administrator **Live for everyone** switch remains off. Human Only remains the immediate emergency-stop path, and human transfer remains available in the same support conversation.
 
-The production deployment is safe infrastructure, not an authorized intelligent-agent release. The interactive runtime/request path has deterministic, browser, accessibility, migration, cost, live Luna-low, and authenticated fail-closed production evidence. Product explicitly skipped production-conversation shadowing under `DEC-047`; no production model use or user-visible AI is thereby authorized.
+The repository now contains guided-assistance Batch 1 for saved payment methods and Batch 2 for Family overview, requests/applicants, visits/change requests, submitted hours/care-payment attention, profiles, messages, regular-care attention, and history. Production availability is independent of deployment and remains Pilot only unless an Administrator deliberately changes it.
 
-Evidence: [interactive assistant implementation and release evidence](24-interactive-assistant-implementation-and-release-evidence.md) and [production deployment audit](25-production-interactive-deployment-audit.md).
+The new registry-driven [Family Batch 1-2 evaluation harness](40-family-batch-1-2-evaluation-harness.md) passes all 40 declared rows, 120 representative phrasings, 10 collision cases, and 29 isolated application tests with 355 assertions. The complete AI Support feature regression also passes 133 tests with 1,174 assertions. The harness makes zero provider calls and does not use production data. This source batch still requires the normal `deploy.sh` deployment before the command is available on the production server.
+
+Historical foundation and interactive evidence remain in the [interactive assistant implementation record](24-interactive-assistant-implementation-and-release-evidence.md) and [production deployment audit](25-production-interactive-deployment-audit.md). Historical readiness gates no longer control availability under `DEC-072`.
 
 ## Deployment record
 
@@ -154,28 +156,32 @@ Full evidence and next actions: [production interactive assistant deployment aud
 | --- | --- | --- |
 | Phase 0 | Deployed; operational extinction tail open | Runtime retired and primary data destroyed; backup/derived extinction still tracked |
 | Phase 1 foundation | Deployed | Admin controls, exact-user grants, governed KB workspace, contracts, handoff, evidence, and retention foundations exist |
-| Phase 1 content/evaluation | Complete; offline Luna-low baseline accepted under `DEC-012` | 23 reviewed entries Published, held pricing entry Draft, 120 linked KB cases plus runtime corpora, zero hard/critical failures; runtime remains off |
+| Phase 1 content/evaluation | Complete; offline Luna-low baseline accepted under `DEC-012` | 23 reviewed entries Published, held pricing entry Draft, 120 linked KB cases plus runtime corpora |
 | Phase 2 shadow | Skipped by `DEC-047` | No invisible processing of production conversations will be performed |
-| Phase 3 grounded answers | Implemented with governed content Published behind disabled controls; release blocked | Requires provider/privacy, staff-account evidence, usability, monitoring, exact grants, and release approval |
-| Phases 4-6 | Implemented and deployed behind independent disabled controls; release blocked | Navigation, Family context/intake, drafts, recap, and one-time/recurring confirmed publication have evidence but no production authority |
+| Two-user Family pilot | Active under `DEC-071` and simplified by `DEC-072` | Exact Family pilot only; Everyone remains off; Administrator can stop with Human Only |
+| Guided assistance Batches 1-2 | Implemented and mass regression passing in source | 40 declared Family rows; deploy through `deploy.sh`, then complete real-browser QA |
+| General availability | Off | Only an explicit Administrator Availability change selects Live for everyone |
 
 ## Agreed next-work order
 
-1. Produce provider/retention, staff-account, human-handoff, monitoring, cost-stop, and rollback evidence; do not build shadow mode.
-2. Complete the five-person representative older-adult study and comprehension/accessibility gates.
-3. Continue tracking `OPS-EXT-001` without repeating primary destruction.
-4. Request an explicit release decision before activating the first two exact Family grants; enable recurring publication only after the one-time gate.
+1. Run `php artisan ai-support:test-family-intents` in development/CI and require 40 of 40 before deployment.
+2. Deploy the Batch 1/2 mass-test harness through the normal `deploy.sh` flow; confirm the Availability page still shows Pilot only.
+3. On the normal no-dev production install, run `php artisan ai-support:test-family-intents --plan` to validate the deployed corpus/router inventory. Do not install development dependencies on production for the full PHPUnit suite.
+4. Exercise every Batch 1/2 guide destination in a real browser for owner/member authorization, mobile/reflow, keyboard/focus, refresh, missing/stale target recovery, and screen-reader behavior.
+5. Review actual two-user pilot interactions for wording or state failures and add every meaningful failure to the frozen corpus.
+6. Then begin Batch 3 safe prefill; do not relabel Batch 2 Guide rows as completed actions.
 
-All product packages for the declared build are closed. The [readiness ledger](14-build-readiness-ledger.md) now tracks delivery evidence rather than product interviews.
+Continue tracking `OPS-EXT-001` as an operational data-retirement item without letting it reintroduce release-gate workflow.
 
 ## Next implementation milestone
 
-Deploy and operate the implemented `DEC-067` **limited-release operational and usability evidence** package without enabling a production user prematurely. The normative implementation boundary is [the limited-release readiness contract](27-limited-release-readiness-contract.md), and delivery evidence is in the [limited-release readiness implementation record](31-limited-release-readiness-implementation-record.md).
+Complete the **real-browser Batch 1/2 QA slice**, then design Batch 3 safe prefill against the 324-row Family registry.
 
 Required outcome:
 
-- Close the remaining production portions of `DEC-058`, `DEC-064`, `DEC-065`, and `DEC-066`.
-- Preserve zero production conversation processing until a visible named-user pilot release is explicitly approved.
-- Preserve zero user-visible model calls, zero active grants, disabled AI controls, and the `KB-CARE-006` pricing hold.
+- Every registered Batch 1/2 target is exercised through actual chat action, navigation, arrival, semantic focus/highlight, and safe recovery.
+- Pilot availability remains exactly two users; deployment does not switch Everyone on.
+- Browser findings become frozen regression cases before Batch 3.
+- Batch 3 starts with narrow reversible non-secret prefill and retains normal UI validation/save authority.
 
-The accepted product package authorizes engineering, not release. No production transcript processing, exact-user grant, or user-visible pilot is authorized by documentation alone.
+The [simplified availability contract](37-simplified-availability.md), [Family coverage registry](38-family-intent-action-coverage-registry.md), [guided-assistance contract](39-app-aware-guided-assistance.md), and [mass-test harness](40-family-batch-1-2-evaluation-harness.md) are the current operating documents. Older readiness packages are retained only as history.

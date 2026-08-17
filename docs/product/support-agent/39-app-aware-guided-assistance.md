@@ -1,6 +1,6 @@
 # App-Aware Guided Assistance
 
-Status: Batches 1 and 2 implemented in source; dedicated Batch 2 test round is next
+Status: Batches 1 and 2 implemented; registry-driven deterministic test round passes; browser/accessibility expansion remains
 
 Established: August 17, 2026
 
@@ -329,7 +329,7 @@ Unchanged boundaries:
 - existing Stripe, payment authorization, capture, fee, payout, and request-publication behavior is unchanged; and
 - this does not enable AI for any additional user or switch availability to Everyone.
 
-Batch 2 now adds narrow Family reads and exact guide targets for requests/applicants, visits and caregiver change requests, submitted hours/payment attention, care-receiver profiles, messages, and history, culminating in a truthful “What needs my attention?” overview. Batch 3 safe prefill is next after the dedicated Batch 2 test round.
+Batch 2 now adds narrow Family reads and exact guide targets for requests/applicants, visits and caregiver change requests, submitted hours/payment attention, care-receiver profiles, messages, and history, culminating in a truthful “What needs my attention?” overview. The registry-driven deterministic test round is complete. A real-browser/accessibility expansion remains before Batch 3 safe prefill.
 
 ### Acceptance audit
 
@@ -366,7 +366,7 @@ Batch 2 is complete in source when:
 
 ## Batch 2 implementation record
 
-Implementation status: Complete in source on August 17, 2026. Production availability is unchanged. The dedicated cross-browser, responsive, accessibility, regression, and production-pilot test round is the next work item.
+Implementation status: Complete in source on August 17, 2026. Production availability is unchanged. The registry-driven deterministic mass-test round is complete; real-browser, responsive, accessibility, stale-resource, and pilot inspection remain the next QA slice.
 
 Delivered:
 
@@ -406,12 +406,14 @@ Unchanged boundaries:
 
 Implementation verification completed on August 17, 2026:
 
-- the Batch 1 and Batch 2 focused suites passed 20 tests with 162 assertions;
-- the adjacent AI runtime-safety, human-transfer, request lifecycle, time-correction, and completed-extra-visit suites passed 91 tests with 660 assertions;
+- `php artisan ai-support:test-family-intents` passed all 40 declared registry intents, 120 representative phrasings, 10 near-neighbor collision cases, and 29 isolated application tests with 355 assertions;
+- the mass test exercised all 13 Batch 1 payment-method tests, all seven Batch 2 focused tests, five positive/changing-state matrix tests, and four runner/corpus tests;
+- the runner used in-memory SQLite, bypassed deployed configuration caches, made zero provider calls, wrote no production database record, and left availability and exact pilot grants unchanged;
+- the complete `tests/Feature/AiSupport` regression passed 133 tests with 1,174 assertions;
 - Pint, PHP syntax checks, Blade compilation, route caching, and the production Vite build passed; and
 - the deployment-facing availability setting and exact two-user pilot grants were not changed.
 
-The dedicated Batch 2 test round will extend this focused proof across real browser navigation for every target, mobile/reflow, keyboard and screen reader behavior, stale/deleted resources, member/owner variants, representative production pilot data, and the wider application regression suite.
+The [Family Batch 1-2 evaluation harness](40-family-batch-1-2-evaluation-harness.md) is now the repeatable regression command for these 40 rows. The next QA slice extends it across real browser navigation for every target, mobile/reflow, keyboard and screen-reader behavior, stale/deleted resources, member/owner variants, and representative pilot inspection.
 
 ## Relationship to the coverage registry
 

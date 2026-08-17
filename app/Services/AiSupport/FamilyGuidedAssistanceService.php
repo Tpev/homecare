@@ -54,27 +54,31 @@ class FamilyGuidedAssistanceService
             return self::INTENT_MESSAGES;
         }
 
-        if (preg_match('/\b(?:care\s+history|visit\s+history|past\s+visits?|previous\s+visits?|billing\s+history|payment\s+history|receipts?|past\s+charges?)\b/iu', $message)) {
+        if (preg_match('/\b(?:care\s+history|visit\s+history|past\s+visits?|previous\s+visits?|billing\s+history|payment\s+history|receipts?|past\s+charges?|previous\b.{0,32}\bcharges?)\b/iu', $message)) {
             return self::INTENT_HISTORY;
         }
 
-        if (preg_match('/\b(?:care\s*(?:receiver|recipient)\s+profile|care\s+profile|recipient\s+profile|receiver\s+profile)\b/iu', $message)) {
+        if (preg_match('/\b(?:care\s*(?:receiver|recipient)\s+profiles?|care\s+profiles?|recipient\s+profiles?|receiver\s+profiles?)\b/iu', $message)) {
             return self::INTENT_PROFILES;
+        }
+
+        if (preg_match('/\b(?:payment|charge|authorization)\b.{0,32}\b(?:error|fail|failed|failure|declined|problem|issue|attention|required|pending)\b|\b(?:error|fail|failed|declined)\b.{0,24}\b(?:payment|charge|authorization)\b|\bpending\s+charge\b/iu', $message)) {
+            return self::INTENT_PAYMENT_ATTENTION;
         }
 
         if (preg_match('/\b(?:timesheet|time\s*sheet|submitted\s+hours?|worked\s+hours?|approve\s+(?:the\s+)?hours?|review\s+(?:the\s+)?hours?|reported\s+hours?|time\s+correction)\b/iu', $message)) {
             return self::INTENT_TIMESHEETS;
         }
 
-        if (preg_match('/\b(?:payment|charge|authorization)\b.{0,32}\b(?:error|fail|failed|failure|declined|problem|issue|attention|required|pending)\b|\b(?:error|fail|failed|declined)\b.{0,24}\b(?:payment|charge|authorization)\b/iu', $message)) {
-            return self::INTENT_PAYMENT_ATTENTION;
+        if (preg_match('/\b(?:corrected\s+hours?|completed\s+extra\s+visit|extra\s+visit\s+report)\b/iu', $message)) {
+            return self::INTENT_TIMESHEETS;
         }
 
-        if (preg_match('/\b(?:next|upcoming|current|today(?:\'s)?|scheduled|live)\b.{0,28}\b(?:visit|caregiver)\b|\b(?:visit|caregiver)\b.{0,28}\b(?:next|upcoming|current|today|scheduled|coming|arriving|status)\b|\b(?:accept|approve|reject|decline|review)\b.{0,32}\b(?:visit\s+change|change\s+request|reschedule|cancellation)\b|\bcaregiver\b.{0,24}\b(?:change\s+request|reschedule|cancellation)\b/iu', $message)) {
+        if (preg_match('/\b(?:next|upcoming|current|today(?:\'s)?|scheduled|live)\b.{0,28}\b(?:visit|caregiver)\b|\b(?:visit|caregiver)\b.{0,28}\b(?:next|upcoming|current|today|scheduled|coming|arriving|status|happening)\b|\b(?:accept|approve|reject|decline|review|open|show)\b.{0,40}\b(?:visit\s+change|change\s+request|reschedule|cancellation)\b|\bcaregiver\b.{0,24}\b(?:change\s+request|reschedule|cancellation)\b|\bcare\s+scheduled\b/iu', $message)) {
             return self::INTENT_VISITS;
         }
 
-        if (preg_match('/\b(?:applicant|applicants|application|applications|caregiver\s+responses?|caregivers?\s+(?:applied|interested|respond|responded)|request\s+status|status\s+of\s+(?:my\s+)?request|open\s+requests?|show\s+(?:my\s+)?requests?)\b/iu', $message)) {
+        if (preg_match('/\b(?:applicant|applicants|application|applications|caregiver\s+responses?|caregivers?\s+(?:apply|applied|interested|respond|responded)|caregivers?\b.{0,12}\bapplied|request\s+status|status\s+of\s+(?:my\s+)?request|open\s+(?:care\s+)?requests?|show\s+(?:my\s+)?(?:care\s+)?requests?|care\s+request\s+stand)\b/iu', $message)) {
             return self::INTENT_REQUESTS;
         }
 
