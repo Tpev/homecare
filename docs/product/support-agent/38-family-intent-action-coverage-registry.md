@@ -43,11 +43,12 @@ Qualifiers such as `owner only`, `flagged`, or `held truth` narrow the base stat
 - **Yes** — the AI completes the action through a registered deterministic tool after required confirmation.
 - **Draft** — the AI can collect, save, modify, recap, and prepare the action, but commit still follows the declared confirmation rule.
 - **Navigate** — the AI can open a registered destination but cannot perform the action.
+- **Guide** — the AI can open the exact destination, focus/highlight the registered control, and verify the resulting application state; the user still performs the domain action in the normal UI.
 - **Read** — the AI can use narrowly authorized live data, without mutation.
 - **Transfer** — the AI can move the same conversation to human support.
 - **No** — the AI has no registered capability or tool for the action.
 
-`Navigate`, `Read`, `Draft`, and `Transfer` are intentionally not counted as `Yes` for a complete action.
+`Navigate`, `Guide`, `Read`, `Draft`, and `Transfer` are intentionally not counted as `Yes` for a complete action.
 
 ## Baseline coverage snapshot
 
@@ -64,6 +65,7 @@ The counts are intent-level inventory indicators, not quality scores. One implem
 
 - **Explain** — add governed, role-applicable knowledge.
 - **Navigate** — add a registered, authorization-aware destination.
+- **Guide** — navigate to an exact semantic control, highlight it accessibly, observe the product event, and verify the result against authoritative state.
 - **Read state** — retrieve the current user's authoritative state and explain it without guessing.
 - **Prepare** — collect or prefill data, show a recap, and let the user edit it.
 - **Confirm & execute** — perform a deterministic mutation only after an explicit recap and confirmation.
@@ -509,6 +511,8 @@ For every Family-facing product or AI change:
 5. split a row when its authorization, confirmation, or failure behavior differs materially.
 
 This registry is the portfolio tracker. Individual capability specifications remain the implementation authority for any new read or write tool.
+
+The reusable contract for live state, exact navigation, accessible highlighting, prefill, and completion verification is [App-aware guided assistance](39-app-aware-guided-assistance.md).
 
 ## 17. Repository audit basis
 

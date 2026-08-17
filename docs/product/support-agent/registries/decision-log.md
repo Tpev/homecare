@@ -709,6 +709,17 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Maintenance: Update the registry with every Family workflow, KB, navigation target, read contract, or write tool change. New write authority still requires an individual capability/tool contract and deterministic confirmation behavior.
 - Registry: [Family intent and AI action coverage registry](../38-family-intent-action-coverage-registry.md)
 
+### `DEC-074` - Make support app-aware and completion-aware
+
+- Status: Accepted
+- Accepted: August 17, 2026 through Product instruction
+- Decision owner: Product
+- Decision: The target support experience may read current, authorized user state through narrow domain readers; present an exact action button; navigate to a registered page and semantic control; focus and highlight that control accessibly; prefill allowlisted non-secret reversible values; observe product events; verify the result against authoritative server state; and continue the same support conversation with a truthful success, recovery, or human-transfer response.
+- Authority boundary: The model receives no SQL, ORM, unrestricted database, raw DOM, arbitrary selector, coordinate, or autonomous-browser access. A client click is never sufficient proof of completion. Personalized facts and success claims require a fresh authorized reader or domain receipt. Payment credentials, passwords, tokens, bank details, and verification secrets never enter chat or prefill.
+- Initial vertical slice: Build the reusable guided-task foundation through the existing Family payment-method workflow without changing current payment, fee, authorization, or capture behavior. Then expand the same read/guide foundation to requests, visits, timesheets, and care profiles before adding further confirmed actions.
+- Cost rule: After intent recognition, use deterministic readers, navigation events, UI guidance, verifiers, and templated outcome messages wherever possible; do not run an autonomous model/browser loop.
+- Detailed contract: [App-aware guided assistance](../39-app-aware-guided-assistance.md)
+
 ## Product decision status
 
-`DEC-072` is the current operating authority. Administrators choose Pilot only, Live for everyone, or Emergency stop from one Availability page. Historical readiness, evidence, preflight, and exact-commit decisions no longer gate operation. The two-user pilot remains the default after deployment until an Administrator selects Live for everyone. Role boundaries, emergency/24/7 handoff, explicit confirmation, human takeover, monitoring stops, and Human Only rollback remain enforced. `DEC-073` establishes the Family-intent coverage registry as the backlog and coverage source for the next product phases.
+`DEC-072` is the current operating authority. Administrators choose Pilot only, Live for everyone, or Emergency stop from one Availability page. Historical readiness, evidence, preflight, and exact-commit decisions no longer gate operation. The two-user pilot remains the default after deployment until an Administrator selects Live for everyone. Role boundaries, emergency/24/7 handoff, explicit confirmation, human takeover, monitoring stops, and Human Only rollback remain enforced. `DEC-073` establishes the Family-intent coverage registry as the backlog and coverage source. `DEC-074` establishes app-aware read, guide, prefill, and verified-completion behavior as the next implementation architecture, beginning with the Family payment-method vertical slice.

@@ -25,6 +25,10 @@ No status in this registry proves production deployment. The human support chat 
 | `SUP-ANSWER-001` | Answer approved product questions from the governed KB | Family, caregiver | A | Implemented; release disabled | Phase 3 | No general-knowledge product answers; role-scoped retrieval only |
 | `SUP-CONTEXT-001` | Explain the current page or status using authorized context | Family, caregiver | A | Implemented; release disabled | Phase 3 | Requires exact state source and KB applicability |
 | `NAV-SEMANTIC-001` | Navigate to an approved route and semantic target | Family, caregiver | B | Implemented; release disabled | Phase 4 | Registered routes only; no raw DOM selectors or coordinate clicking |
+| `FAM-STATE-001` | Read a normalized Family overview and targeted current states from authorized domain readers | Family | B/read | Approved next build | Guided assistance Batch 1-2 | No raw database/model access; unsupported domains remain explicitly unchecked |
+| `NAV-GUIDE-001` | Navigate to, focus, and accessibly highlight one registered UI control | Family first; caregiver later | B/guide | Approved next build | Guided assistance Batch 1 | Stable semantic UI targets only; no arbitrary selectors, coordinates, or autonomous clicking |
+| `TASK-VERIFY-001` | Verify guided-task completion against authoritative server state and continue the chat | Family first; caregiver later | B/read | Approved next build | Guided assistance Batch 1 | Client events are hints, not proof; success language is deterministic |
+| `FORM-PREFILL-001` | Prefill allowlisted non-secret reversible form fields through a server draft | Family first; caregiver later | C | Approved later build | Guided assistance Batch 3 | User reviews/edits; normal validation and save remain authoritative |
 
 ## Initial family navigation candidates
 
@@ -36,6 +40,8 @@ No status in this registry proves production deployment. The human support chat 
 | `NAV-MESSAGE-001` | Open messages or an authorized conversation | B | Candidate | Phase 4 | `messages.index` / authorized `messages.show` |
 | `NAV-SUPPORT-001` | Open the Support Center or current support ticket | B | Candidate | Phase 4 | `support.index` / authorized ticket |
 | `NAV-BILLING-001` | Open family billing without changing payment details | B | Candidate | Later review | Owner/member presentation differs; no payment data in chat |
+
+The implementation contract for these platform capabilities is [App-aware guided assistance](../39-app-aware-guided-assistance.md).
 
 ## Care-request capabilities
 

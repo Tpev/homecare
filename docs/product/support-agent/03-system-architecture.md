@@ -152,6 +152,8 @@ The client confirms navigation and target availability. If the target is missing
 
 The model never receives or emits arbitrary CSS selectors.
 
+Route navigation may also start a short-lived guided task. On the destination page, a client coordinator resolves the registered semantic UI target, scrolls it into view, focuses and highlights it accessibly, and reports arrival or a stable failure. Completion is never inferred from a click: the application verifies the expected domain result before the assistant says that the task worked. Registered forms may accept allowlisted non-secret prefill drafts, while card data, passwords, bank details, tokens, and verification secrets remain in their dedicated secure flows. See [App-aware guided assistance](39-app-aware-guided-assistance.md) for the interaction and implementation contract.
+
 ### Domain tool gateway
 
 Each tool wraps an existing application service or a new narrowly scoped application service. A tool contract includes:
