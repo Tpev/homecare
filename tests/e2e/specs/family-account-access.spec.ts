@@ -40,8 +40,7 @@ test.describe('Family account access', () => {
         await page.getByRole('button', { name: 'Keep access' }).click();
 
         await page.goto('/family/billing');
-        await expect(page.getByText('The family account owner manages the saved card.')).toBeVisible();
-        await expect(page.getByRole('button', { name: /Add card|Update card/ })).toHaveCount(0);
+        await expect(page.getByRole('button', { name: /Add card|Update card/ })).toBeVisible();
     });
 
     test('new-user invitation is private and pre-binds the invited email', async ({ page }, testInfo) => {

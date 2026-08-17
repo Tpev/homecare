@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\Payments\PaymentException;
 use App\Services\AiSupport\AiSupportGuidedTaskService;
-use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Payments\FamilyBillingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,7 +33,6 @@ class FamilyBillingController extends Controller
 
         $sessionId = trim((string) $request->query('checkout_session_id', ''));
         if ($sessionId !== '') {
-            abort_unless(app(FamilyAccountContext::class)->isOwner($user), 403);
             try {
                 $billing->syncSetupCheckoutSession($user, $sessionId);
             } catch (PaymentException $e) {
@@ -62,7 +60,6 @@ class FamilyBillingController extends Controller
 
         return view('family.billing', [
             'billing' => $billing->summaryFor($user),
-            'canManageBilling' => app(FamilyAccountContext::class)->isOwner($user),
             'publishableKey' => (string) config('services.stripe.publishable_key', ''),
         ]);
     }
@@ -74,7 +71,6 @@ class FamilyBillingController extends Controller
     ): RedirectResponse {
         $user = auth()->user();
         abort_unless($user && $user->role === 'family', 403);
-        abort_unless(app(FamilyAccountContext::class)->isOwner($user), 403);
 
         $successUrl = route('family.billing.show').'?checkout=success&checkout_session_id={CHECKOUT_SESSION_ID}';
         $cancelUrl = route('family.billing.show').'?checkout=cancel';

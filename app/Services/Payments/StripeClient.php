@@ -9,6 +9,7 @@ use App\Models\CaregiverProfile;
 use App\Models\FamilyAccount;
 use App\Models\User;
 use App\Services\FamilyAccounts\FamilyAccountContext;
+use Illuminate\Support\Str;
 use RuntimeException;
 use Stripe\ErrorObject;
 use Stripe\Event;
@@ -143,15 +144,11 @@ class StripeClient
     public function createFamilySetupCheckoutSession(User $family, string $successUrl, string $cancelUrl): string
     {
         $account = $this->familyAccount($family);
-        if (! app(FamilyAccountContext::class)->isOwner($family)) {
-            throw new PaymentException('Only the family account owner can change the payment method.');
-        }
+        $customerId = $this->ensureFamilyCustomer($family);
 
         if ($this->isBypass()) {
-            return $successUrl;
+            return str_replace('{CHECKOUT_SESSION_ID}', 'bypass-session-'.$account->id, $successUrl);
         }
-
-        $customerId = $this->ensureFamilyCustomer($family);
 
         try {
             $session = $this->client()->checkout->sessions->create([
@@ -159,7 +156,7 @@ class StripeClient
                 'customer' => $customerId,
                 'success_url' => $successUrl,
                 'cancel_url' => $cancelUrl,
-                'payment_method_types' => ['card'],
+                'integration_identifier' => 'family_billing_'.$this->integrationIdentifierSuffix(),
                 'metadata' => [
                     'family_account_id' => (string) $account->id,
                     'family_user_id' => (string) $account->owner_user_id,
@@ -172,7 +169,7 @@ class StripeClient
                         'acting_user_id' => (string) $family->id,
                     ],
                 ],
-            ], $this->requestOptions('billing-setup:account-'.$account->id.':actor-'.$family->id.':'.(string) \Illuminate\Support\Str::uuid()));
+            ], $this->requestOptions('billing-setup:account-'.$account->id.':actor-'.$family->id.':'.(string) Str::uuid()));
         } catch (Throwable $e) {
             throw new PaymentException(
                 'Unable to open card setup right now. Please try again.',
@@ -191,9 +188,6 @@ class StripeClient
     public function syncFamilySetupCheckoutSession(User $family, string $sessionId): void
     {
         $account = $this->familyAccount($family);
-        if (! app(FamilyAccountContext::class)->isOwner($family)) {
-            throw new PaymentException('Only the family account owner can change the payment method.');
-        }
 
         if ($sessionId === '') {
             return;
@@ -232,6 +226,10 @@ class StripeClient
         if ($customerId === '') {
             throw new PaymentException('Billing session did not return a customer.');
         }
+        $accountCustomerId = trim((string) $account->stripe_customer_id);
+        if ($accountCustomerId !== '' && ! hash_equals($accountCustomerId, $customerId)) {
+            throw new PaymentException('This billing session does not belong to your account.');
+        }
 
         if (! $account->stripe_customer_id) {
             $account->forceFill(['stripe_customer_id' => $customerId])->save();
@@ -244,6 +242,9 @@ class StripeClient
         if (is_string($setupIntent) && $setupIntent !== '') {
             $setupIntent = $this->client()->setupIntents->retrieve($setupIntent);
         }
+        if ((string) ($setupIntent->status ?? '') !== 'succeeded') {
+            throw new PaymentException('Card setup is not completed yet.');
+        }
 
         $paymentMethodId = (string) ($setupIntent->payment_method ?? '');
         if ($paymentMethodId === '') {
@@ -255,7 +256,7 @@ class StripeClient
                 'invoice_settings' => [
                     'default_payment_method' => $paymentMethodId,
                 ],
-            ], $this->requestOptions('billing-default-payment:account-'.$account->id.'-actor-'.$family->id.'-pm-'.$paymentMethodId));
+            ], $this->requestOptions('billing-default-payment:account-'.$account->id.'-session-'.$sessionId));
         } catch (Throwable $e) {
             throw new PaymentException('Unable to finalize card setup.', $e->getMessage());
         }
@@ -292,6 +293,14 @@ class StripeClient
         }
 
         return app(FamilyAccountContext::class)->account($family);
+    }
+
+    private function integrationIdentifierSuffix(): string
+    {
+        return implode('', array_map(
+            static fn (): string => chr(random_int(97, 122)),
+            range(1, 8),
+        ));
     }
 
     /**

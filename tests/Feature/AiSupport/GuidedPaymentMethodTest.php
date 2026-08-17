@@ -96,11 +96,11 @@ class GuidedPaymentMethodTest extends TestCase
         $this->assertDatabaseMissing('ai_support_interaction_events', ['event_type' => 'model_turn_completed']);
     }
 
-    public function test_family_member_is_told_the_owner_boundary_without_card_facts_or_destination(): void
+    public function test_family_member_gets_safe_card_details_and_the_update_destination(): void
     {
         [, $member] = $this->eligibleFamilyMember();
         $account = app(FamilyAccountContext::class)->account($member);
-        $account->forceFill(['stripe_customer_id' => 'cus_member_must_not_receive'])->save();
+        $account->forceFill(['stripe_customer_id' => 'cus_member_shared_billing'])->save();
         $ticket = $this->automatedTicket($member, 'Please change the credit card on file.');
         Http::fake();
 
@@ -108,16 +108,16 @@ class GuidedPaymentMethodTest extends TestCase
 
         Http::assertNothingSent();
         $message = $ticket->publicMessages()->reorder()->latest()->firstOrFail();
-        $this->assertStringContainsString('Only the Family Account owner', $message->body);
-        $this->assertStringNotContainsString('4242', $message->body);
-        $this->assertDatabaseCount('ai_support_guided_tasks', 0);
-        $this->assertDatabaseCount('ai_support_message_actions', 0);
+        $this->assertStringContainsString('ends in 4242', $message->body);
+        $this->assertStringNotContainsString('cus_member_shared_billing', $message->body);
+        $this->assertDatabaseCount('ai_support_guided_tasks', 1);
+        $this->assertDatabaseCount('ai_support_message_actions', 1);
         $this->assertDatabaseHas('ai_support_interaction_events', [
             'event_type' => 'payment_status_read',
-            'result_code' => 'owner_required',
+            'result_code' => 'ready',
         ]);
-        $this->assertFalse(app(NavigationTargetRegistry::class)->allowedFor($member, 'family.billing.payment_method'));
-        $this->assertNotContains('family.billing.payment_method', app(NavigationTargetRegistry::class)->idsFor($member));
+        $this->assertTrue(app(NavigationTargetRegistry::class)->allowedFor($member, 'family.billing.payment_method'));
+        $this->assertContains('family.billing.payment_method', app(NavigationTargetRegistry::class)->idsFor($member));
     }
 
     public function test_expired_guidance_cannot_navigate_or_create_a_foreground_task(): void
@@ -269,7 +269,7 @@ class GuidedPaymentMethodTest extends TestCase
             ->assertOk()
             ->assertSee('Billing method updated successfully.')
             ->assertSee('ending in 4242 is now on file')
-            ->assertSee('forceOpen: true', false)
+            ->assertSee('data-force-open="true"', false)
             ->assertDontSee('data-testid="ai-guided-task-strip"', false);
     }
 

@@ -51,21 +51,17 @@
                     </div>
                 @endif
 
-                @if ($canManageBilling)
-                    <form method="POST" action="{{ route('family.billing.checkout') }}">
-                        @csrf
-                        <x-button
-                            color="blue"
-                            type="submit"
-                            data-ai-target="family.billing.manage_payment_method"
-                            data-testid="family-billing-manage-payment-method"
-                        >
-                            {{ $billing['ready'] ? 'Update card' : 'Add card securely' }}
-                        </x-button>
-                    </form>
-                @else
-                    <p class="text-sm text-slate-600">The family account owner manages the saved card. You can still use it when booking and approving care.</p>
-                @endif
+                <form method="POST" action="{{ route('family.billing.checkout') }}">
+                    @csrf
+                    <x-button
+                        color="blue"
+                        type="submit"
+                        data-ai-target="family.billing.manage_payment_method"
+                        data-testid="family-billing-manage-payment-method"
+                    >
+                        {{ $billing['ready'] ? 'Update card' : 'Add card securely' }}
+                    </x-button>
+                </form>
             </div>
         </x-card>
 

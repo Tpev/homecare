@@ -31,10 +31,6 @@ class FamilyPaymentMethodStatusReader
             throw new AuthorizationException('An active Family Account is required.');
         }
 
-        if (! $this->familyAccounts->isOwner($actor)) {
-            return $this->normalized(false, 'owner_required', false, null);
-        }
-
         $summary = $this->billing->summaryFor($actor);
         $card = $this->safeCard((array) ($summary['card'] ?? []));
         $ready = (bool) ($summary['ready'] ?? false) && $card !== null;

@@ -157,7 +157,7 @@ class FamilyAccountSharingTest extends TestCase
         Notification::assertNotSentTo($member, MarketplaceEventNotification::class);
     }
 
-    public function test_billing_customer_is_shared_but_only_owner_can_change_card(): void
+    public function test_active_family_member_can_update_the_shared_payment_method(): void
     {
         config(['services.stripe.bypass' => true]);
         [$owner, $member] = $this->ownerAndMember();
@@ -170,14 +170,29 @@ class FamilyAccountSharingTest extends TestCase
         $this->assertSame($customerId, $owner->fresh()->stripe_customer_id);
         $this->assertTrue(app(FamilyBillingService::class)->summaryFor($member)['ready']);
 
-        try {
-            $stripe->createFamilySetupCheckoutSession($member, '/success', '/cancel');
-            $this->fail('A member changed the family payment method.');
-        } catch (PaymentException $exception) {
-            $this->assertStringContainsString('account owner', $exception->userMessage);
-        }
-
+        $this->assertSame('/success', $stripe->createFamilySetupCheckoutSession($member, '/success', '/cancel'));
+        $stripe->syncFamilySetupCheckoutSession($member, 'bypass-session-'.$account->id);
         $this->assertSame('/success', $stripe->createFamilySetupCheckoutSession($owner, '/success', '/cancel'));
+
+        $this->actingAs($member)
+            ->get(route('family.billing.show'))
+            ->assertOk()
+            ->assertSee('Update card')
+            ->assertSee('data-testid="family-billing-manage-payment-method"', false);
+
+        $checkout = $this->actingAs($member)->post(route('family.billing.checkout'));
+        $checkout->assertRedirect();
+        $this->actingAs($member)
+            ->get((string) $checkout->headers->get('Location'))
+            ->assertRedirect(route('family.billing.show'))
+            ->assertSessionHas('status', 'Billing method updated successfully.');
+
+        $membership = $account->activeMemberships()->where('user_id', $member->id)->firstOrFail();
+        app(FamilyAccountAccessService::class)->remove($owner, $membership);
+
+        $this->actingAs($member)
+            ->post(route('family.billing.checkout'))
+            ->assertForbidden();
     }
 
     public function test_shared_support_is_visible_with_per_member_reads_and_billing_support_is_private(): void

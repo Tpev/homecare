@@ -349,7 +349,6 @@ return [
         'family.billing.payment_method' => [
             'route' => 'family.billing.show',
             'roles' => ['family'],
-            'owner_only' => true,
             'client_target_id' => 'family.billing.manage_payment_method',
             'label' => 'Payment method',
             'instruction' => 'Use the highlighted payment-method button.',

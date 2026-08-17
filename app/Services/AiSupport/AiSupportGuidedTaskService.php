@@ -47,10 +47,10 @@ class AiSupportGuidedTaskService
         try {
             $status = $this->paymentStatus->read($actor);
         } catch (PaymentException) {
-            $canManage = $this->familyAccounts->isOwner($actor);
+            $canManage = $this->familyAccounts->membershipFor($actor, false) !== null;
             $facts = [
                 'can_manage' => $canManage,
-                'attention' => $canManage ? 'unavailable' : 'owner_required',
+                'attention' => $canManage ? 'unavailable' : 'access_required',
                 'ready' => false,
                 'card' => null,
             ];
@@ -66,14 +66,14 @@ class AiSupportGuidedTaskService
                 $locked = $this->lockedAutomatedTicket($actor, $ticket);
                 $message = $this->createAutomatedMessage(
                     $locked,
-                    'Only the Family Account owner can add or change the saved payment method. I have not opened or changed any billing information.',
+                    'An active Family Account membership is required to add or change the saved payment method. I have not opened or changed any billing information.',
                 );
                 $this->events->record($locked, 'payment_status_read', [
                     'support_ticket_message_id' => $message->id,
                     'capability_id' => 'family_context_v1',
                     'tool_id' => 'family-payment-status',
                     'tool_version' => 'v1',
-                    'result_code' => 'owner_required',
+                    'result_code' => 'access_required',
                 ], $actor);
             }, 3);
 
