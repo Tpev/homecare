@@ -1,6 +1,8 @@
 # Limited-Release Readiness Contract
 
-Status: Approved; implementing behind disabled production controls
+Status: Historical; operating gates superseded by `DEC-072`
+
+> Retained for traceability. Current operation is defined in [Simplified AI Support availability](37-simplified-availability.md).
 
 Approved: August 14, 2026
 

@@ -171,7 +171,7 @@ new class extends Component
                         'active' => request()->routeIs('admin.ai-support.activity.*'),
                     ],
                     [
-                        'label' => 'Settings',
+                        'label' => 'Availability',
                         'href' => route('admin.ai-support.settings'),
                         'active' => request()->routeIs('admin.ai-support.settings'),
                     ],

@@ -6,8 +6,8 @@
                 <p class="mt-1 text-xs text-slate-500">Exact user #{{ $targetUser->id }} only · never inherited by account members</p>
             </div>
             <x-badge
-                :text="$currentGrant ? strtoupper($currentGrant->status()) : 'NOT ENABLED'"
-                :color="$currentGrant?->status() === 'active' ? 'green' : ($currentGrant ? 'blue' : 'slate')"
+                :text="$generalReleaseEnabled ? 'GENERAL RELEASE' : ($currentGrant ? strtoupper($currentGrant->status()) : 'NOT ENABLED')"
+                :color="$generalReleaseEnabled || $currentGrant?->status() === 'active' ? 'green' : ($currentGrant ? 'blue' : 'slate')"
             />
         </div>
     </x-slot:header>
@@ -17,6 +17,10 @@
             <div class="rounded-xl border border-slate-200 p-3"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Role</p><p class="mt-1 font-semibold text-slate-900">{{ str($targetUser->role)->headline() }}</p></div>
             <div class="rounded-xl border border-slate-200 p-3 sm:col-span-2"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Effective eligibility</p><p class="mt-1 font-semibold {{ $eligibility->allowed ? 'text-emerald-700' : 'text-slate-900' }}">{{ $eligibility->allowed ? 'Eligible' : str($eligibility->reasonCode)->replace('_', ' ')->headline() }}</p></div>
         </div>
+
+        @if($generalReleaseEnabled)
+            <x-alert color="green">This user is eligible through general release. A pilot grant is not required. Existing pilot grants are kept in case you switch back to pilot-only mode.</x-alert>
+        @endif
 
         @if($currentGrant)
             <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
@@ -39,7 +43,7 @@
                     <x-button type="submit" color="red" class="min-h-11 justify-center">Disable AI pilot</x-button>
                 </form>
             @endif
-        @elseif(in_array($targetUser->role, config('ai_support.supported_roles', []), true) && auth()->user()->canManageAiSupportPilot())
+        @elseif(! $generalReleaseEnabled && in_array($targetUser->role, config('ai_support.supported_roles', []), true) && auth()->user()->canManageAiSupportPilot())
             <form wire:submit="enablePilot" class="space-y-4 rounded-xl border border-slate-200 p-4">
                 <div><h3 class="font-bold text-slate-950">Enable AI pilot for {{ $targetUser->name }}?</h3><p class="mt-1 text-sm text-slate-600">This stores access for this user ID only. Global, role, capability, safety, and human-only controls still apply.</p></div>
                 <label class="block text-sm font-semibold text-slate-800">Pilot bundle
@@ -67,7 +71,6 @@
                 </label>
                 @error('grantReason')<p class="text-sm font-medium text-rose-700">{{ $message }}</p>@enderror
                 @error('grant')<p class="text-sm font-medium text-rose-700">{{ $message }}</p>@enderror
-                @error('releaseDecision')<p class="text-sm font-medium text-rose-700">{{ $message }}</p>@enderror
                 <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">This grant may remain blocked while the deployment guard or a higher-level control is off. It never turns those controls on.</div>
                 <label class="flex items-start gap-3 text-sm text-slate-800"><input wire:model="grantImpactConfirmed" type="checkbox" class="mt-1 rounded border-slate-300"> <span>I confirm the named user, dates, bundle, and exact-user-only scope.</span></label>
                 @error('grantImpactConfirmed')<p class="text-sm font-medium text-rose-700">{{ $message }}</p>@enderror

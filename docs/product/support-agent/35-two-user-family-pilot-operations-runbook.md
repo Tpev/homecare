@@ -1,6 +1,8 @@
 # Two-User Family Pilot Operations Runbook
 
-Status: Working operating procedure derived from accepted `DEC-070` and `DEC-071`; grants no new release authority
+Status: Historical procedure superseded by `DEC-072`
+
+> Current operation is defined in [Simplified AI Support availability](37-simplified-availability.md). Do not run this document's readiness, exact-commit approval, or expansion-gate sequence.
 
 Effective: August 17-29, 2026
 
@@ -14,7 +16,7 @@ The live pilot remains limited to:
 - bundle `family_support_v1`;
 - non-pricing support answers, registered navigation, authorized Family context, care intake, private draft, recap, confirmed one-time publication, and 24/7 human transfer;
 - one-time commit and one-time publication tool only;
-- current exact-commit release decision on `5c20f4167f1199ca5b4248a7b3516dfa3998b91b` through August 29;
+- current exact-commit release decision on `0dcb433d1ecb574e14804a37f5d5bc2da1d1b901` through August 29;
 - the existing canonical human-support conversation, with either Administrator able to take over;
 - no Caregiver AI, recurring publication, pricing/payment behavior, third user, or general release.
 
@@ -30,7 +32,7 @@ One Administrator performs and records these content-free checks:
    - no scheduled or additional grant exists;
    - governed KB has no paused or overdue published entry.
 2. Open `/admin/ai-support/readiness`:
-   - explicit release decision remains `APPROVED · EFFECTIVE` on `5c20f416...`;
+   - explicit release decision remains `APPROVED · EFFECTIVE` on `0dcb433d...`;
    - open incidents and open warnings equal zero;
    - the six expansion obligations remain Deferred, not falsely Passed.
 3. Open users `19`, `282`, one non-pilot Family user, and one Caregiver spot check:
@@ -97,7 +99,7 @@ Use human ownership when the user asks for a person, the assistant reaches an em
 - Return: use **Return deliberately** only after the issue is understood, no incident or unsafe state remains, the exact user is still eligible, and the reason is content-free.
 - Never make the user repeat information already available in the canonical conversation.
 
-The production ticket `#28` proves the basic public-Admin-reply takeover and deliberate-return path. It does not replace the full synthetic 14-observation safety rehearsal.
+The production ticket `#28` proves the basic public-Admin-reply takeover and deliberate-return path. The separate exact-commit staffed record `SR-20260817-0DCB433D` now proves the full 14-observation synthetic safety rehearsal, including completed-receipt preservation during takeover and rollback.
 
 ## Cost and performance limits
 
@@ -160,12 +162,11 @@ Before a third user or any capability expansion, complete and pass:
 1. provider no-training and effective-retention account evidence;
 2. provider destination/contract reference;
 3. downstream extinction inventory and isolated restore/re-deletion rehearsal;
-4. the complete synthetic 14-observation human-takeover/rollback record;
-5. the five-person non-team older-adult study with correction/retest where needed;
-6. a real screen-reader session.
+4. the five-person non-team older-adult study with correction/retest where needed;
+5. a real screen-reader session.
 
 The current pilot, a clean day, or a successful ticket does not convert any of these obligations to Passed.
 
 ## Repository handling
 
-This runbook is prepared locally with the activation record. Do not deploy a documentation commit while the release decision is bound to production commit `5c20f416...`; a later deployment must either retain that exact commit or be followed by a fresh exact-commit preflight and release decision before user-visible automation resumes.
+This runbook is prepared locally with the activation record. Do not deploy a documentation commit while the release decision is bound to production commit `0dcb433d...`; a later deployment must either retain that exact commit or be followed by a fresh exact-commit preflight and release decision before user-visible automation resumes.

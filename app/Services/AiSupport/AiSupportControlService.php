@@ -6,6 +6,7 @@ use App\Models\AiSupportActionPreview;
 use App\Models\AiSupportAdminAuditEvent;
 use App\Models\AiSupportControlVersion;
 use App\Models\AiSupportMessageAction;
+use App\Models\AiSupportPilotGrant;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Models\User;
@@ -49,6 +50,42 @@ class AiSupportControlService
         return $this->state($controlKey)['enabled'];
     }
 
+    public function enableForEveryone(User $actor): void
+    {
+        $reason = 'Enable AI Support for every supported Family and Caregiver user.';
+
+        foreach ((array) config('ai_support.general_release_controls', []) as $controlKey) {
+            $this->set($actor, (string) $controlKey, true, $reason);
+        }
+
+        $this->set($actor, 'general_release_enabled', true, $reason);
+        $this->set($actor, 'human_only', false, $reason);
+    }
+
+    public function usePilotOnly(User $actor): void
+    {
+        if (! $this->enabled('general_release_enabled')) {
+            return;
+        }
+
+        $this->set(
+            $actor,
+            'general_release_enabled',
+            false,
+            'Limit AI Support to users with an active pilot grant.',
+        );
+    }
+
+    public function stopAllAutomation(User $actor): void
+    {
+        $this->set($actor, 'human_only', true, 'Stop AI Support automation and keep human chat available.');
+    }
+
+    public function resumeAutomation(User $actor): void
+    {
+        $this->set($actor, 'human_only', false, 'Resume the selected AI Support availability mode.');
+    }
+
     public function set(User $actor, string $controlKey, bool $enabled, string $reason): AiSupportControlVersion
     {
         if (! $actor->canManageAiSupportControls()) {
@@ -64,17 +101,6 @@ class AiSupportControlService
             throw ValidationException::withMessages([
                 'controlKey' => 'Shadow mode is intentionally disabled under DEC-047.',
             ]);
-        }
-
-        $opensExposure = $controlKey === 'human_only' ? ! $enabled : $enabled;
-        if ($opensExposure && (bool) config('ai_support.initial_pilot.enforced', true)) {
-            app(AiSupportInitialPilotReleaseService::class)->assertEffectiveApproval();
-            if ($controlKey !== 'human_only'
-                && ! in_array($controlKey, (array) config('ai_support.initial_pilot.allowed_control_openings', []), true)) {
-                throw ValidationException::withMessages([
-                    'controlKey' => 'This control is outside the exact DEC-070 initial-pilot release boundary.',
-                ]);
-            }
         }
 
         return DB::transaction(function () use ($actor, $controlKey, $enabled, $reason): AiSupportControlVersion {
@@ -263,6 +289,14 @@ class AiSupportControlService
 
     private function applyStopSideEffects(string $controlKey, bool $enabled, $now): void
     {
+        if ($controlKey === 'general_release_enabled') {
+            if (! $enabled) {
+                $this->returnNonPilotConversationsToHuman($now);
+            }
+
+            return;
+        }
+
         $isStop = $controlKey === 'human_only' ? $enabled : ! $enabled;
         if (! $isStop) {
             return;
@@ -313,6 +347,76 @@ class AiSupportControlService
                     'responder_mode' => SupportTicket::RESPONDER_MODE_HUMAN_ONLY,
                     'transferred_to_human_at' => $now,
                     'handoff_reason_code' => 'control_stop',
+                    'last_public_message_at' => $message->created_at,
+                    'last_public_message_sender_id' => null,
+                    'opener_last_read_at' => null,
+                    'admin_last_read_at' => null,
+                ])->save();
+            });
+    }
+
+    private function returnNonPilotConversationsToHuman($now): void
+    {
+        $pilotUserIds = AiSupportPilotGrant::query()
+            ->effectiveAt()
+            ->pluck('user_id')
+            ->filter()
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+
+        $affectedUserIds = SupportTicket::query()
+            ->where('responder_mode', SupportTicket::RESPONDER_MODE_AUTOMATED)
+            ->whereNotIn('status', [SupportTicket::STATUS_CLOSED])
+            ->when($pilotUserIds !== [], fn ($query) => $query->whereNotIn('opener_user_id', $pilotUserIds))
+            ->pluck('opener_user_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($affectedUserIds === []) {
+            return;
+        }
+
+        AiSupportActionPreview::query()
+            ->whereIn('actor_user_id', $affectedUserIds)
+            ->whereNull('content_deleted_at')
+            ->update([
+                'preview_payload' => null,
+                'invalidated_at' => $now,
+                'invalidation_reason' => 'general_release_ended',
+                'content_deleted_at' => $now,
+            ]);
+        AiSupportMessageAction::query()
+            ->whereIn('actor_user_id', $affectedUserIds)
+            ->where('action_type', '!=', AiSupportMessageAction::TYPE_RECEIPT)
+            ->whereNull('consumed_at')
+            ->whereNull('invalidated_at')
+            ->update([
+                'payload' => null,
+                'invalidated_at' => $now,
+                'invalidation_reason' => 'general_release_ended',
+            ]);
+
+        SupportTicket::query()
+            ->whereIn('opener_user_id', $affectedUserIds)
+            ->where('responder_mode', SupportTicket::RESPONDER_MODE_AUTOMATED)
+            ->whereNotIn('status', [SupportTicket::STATUS_CLOSED])
+            ->orderBy('id')
+            ->get()
+            ->each(function (SupportTicket $ticket) use ($now): void {
+                $message = SupportTicketMessage::query()->create([
+                    'support_ticket_id' => $ticket->id,
+                    'sender_user_id' => null,
+                    'kind' => SupportTicketMessage::KIND_PUBLIC,
+                    'responder_type' => SupportTicketMessage::RESPONDER_SYSTEM,
+                    'body' => 'This conversation is now with LoLo Support. You can keep using this chat.',
+                    'client_message_id' => (string) Str::uuid(),
+                ]);
+                $ticket->forceFill([
+                    'responder_mode' => SupportTicket::RESPONDER_MODE_HUMAN_ONLY,
+                    'transferred_to_human_at' => $now,
+                    'handoff_reason_code' => 'general_release_ended',
                     'last_public_message_at' => $message->created_at,
                     'last_public_message_sender_id' => null,
                     'opener_last_read_at' => null,

@@ -92,7 +92,7 @@ class AiSupportIncidentService
                     body: $critical
                         ? 'AI Support stopped a capability. Review the incident in Admin before restoring it.'
                         : 'AI Support monitoring detected a warning. Review it in Admin.',
-                    url: route('admin.ai-support.readiness'),
+                    url: route('admin.ai-support.index'),
                     payload: ['ai_support_incident_id' => $incident->id, 'reason_code' => $reasonCode],
                     subject: null,
                     dedupeKey: 'ai-support-incident-'.$incident->id,

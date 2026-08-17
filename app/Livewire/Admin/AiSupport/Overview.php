@@ -27,6 +27,7 @@ class Overview extends Component
             'providerEnabled' => (bool) config('ai_support.provider_enabled', false),
             'masterState' => $controls->state('master_enabled'),
             'visibleState' => $controls->state('user_visible_enabled'),
+            'generalReleaseState' => $controls->state('general_release_enabled'),
             'humanOnlyState' => $controls->state('human_only'),
             'activeGrants' => AiSupportPilotGrant::query()->effectiveAt()->count(),
             'scheduledGrants' => AiSupportPilotGrant::query()

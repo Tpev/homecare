@@ -1,12 +1,12 @@
 # LoLo Intelligent Support Agent Documentation
 
-Status: Active program documentation; exact two-user Family limited release active, expansion blocked
+Status: Active program documentation; simple Pilot / Everyone / Emergency-stop availability model
 
 Established: August 13, 2026
 
 Program owner: Product
 
-Required reviewers: Engineering, support operations, design/accessibility, security/privacy
+Operating model: Either full Administrator may operate AI Support alone; no second-person release approval is required
 
 ## Purpose
 
@@ -27,7 +27,7 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 5. [Knowledge-base governance](04-knowledge-base-governance.md)
 6. [Safety, privacy, and human escalation](05-safety-privacy-and-escalation.md)
 7. [Evaluation and testing](06-evaluation-and-testing.md)
-8. [Rollout and release gates](07-rollout-and-release-gates.md)
+8. [Historical rollout and release gates](07-rollout-and-release-gates.md)
 9. [Observability, operations, and cost](08-observability-operations-and-cost.md)
 10. [GPT-5.6 Sol working agreement](09-gpt-5-6-sol-working-agreement.md)
 11. [Legacy copilot retirement and data destruction](10-legacy-copilot-retirement-and-data-destruction.md)
@@ -57,6 +57,9 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 35. [Initial two-user Family pilot activation record](34-initial-two-user-family-pilot-activation-record.md)
 36. [Two-user Family pilot operations runbook](35-two-user-family-pilot-operations-runbook.md)
 37. [Original objective completion audit and expansion work queue](36-original-objective-completion-audit.md)
+38. [Simplified AI Support availability](37-simplified-availability.md)
+
+For current operations, read item 38 before the historical limited-release records in items 28–37. `DEC-072` supersedes their approval, evidence, exact-commit, and expansion gates while retaining the implemented safety behavior.
 
 Then consult the live registries:
 
@@ -124,19 +127,18 @@ Every normative document, capability, decision, KB entry, and release checklist 
 
 No agent capability is complete unless LoLo can follow this chain in both directions:
 
-> User need -> capability ID -> risk class -> approved sources -> navigation/tools -> safety controls -> evaluation cases -> release evidence -> production metrics
+> User need -> capability ID -> approved sources -> navigation/tools -> safety controls -> tests -> production metrics
 
-Every implementation pull request must name the affected capability IDs and evaluation IDs. Every production failure that changes expected behavior must add or update an evaluation case.
+Every material implementation change must name the affected capability and tests. Every production failure that changes expected behavior must add or update a regression case.
 
 ## Documentation change process
 
-1. Open or update a decision-log entry for any material product, safety, data, model, or autonomy change.
-2. Identify every affected capability, source, risk, tool, and evaluation.
-3. Update the normative documents before or in the same change as implementation.
-4. Obtain the reviewers required by the change's risk class.
-5. Run the complete affected evaluation slice plus all critical regressions.
-6. Attach release evidence using the release-readiness template.
-7. After release, record the exact prompt, model, KB, tool-schema, and capability versions used.
+1. Record a short decision for a material product, safety, data, model, or autonomy change.
+2. Update the affected capability, source, tool, and tests with the implementation.
+3. Run the affected tests and critical safety regressions.
+4. Deploy through the normal `deploy.sh` process and monitor the result.
+
+No separate readiness approval, evidence package, exact-commit decision, or release checklist is required to change between Pilot and Everyone modes.
 
 Material changes include model or provider changes, prompt-policy changes, new tools, new writable fields, new user roles, confirmation changes, KB-source changes, and any change to human escalation.
 
@@ -145,8 +147,8 @@ Material changes include model or provider changes, prompt-policy changes, new t
 A capability is ready for engineering only when:
 
 - Its capability card has no unresolved safety or authorization question.
-- Required domain sources and owners are named.
-- Its risk class and confirmation behavior are approved.
+- Required domain sources are named.
+- Its confirmation and human-transfer behavior are clear.
 - Tool inputs, outputs, errors, and idempotency behavior are specified.
 - Evaluation cases exist before implementation begins.
 - Admin visibility, human takeover, and metrics are defined.
@@ -156,11 +158,9 @@ A capability is ready for engineering only when:
 
 A capability is done only when:
 
-- Deterministic tests and agent evaluations pass the declared gates.
-- Mobile and accessibility behavior is verified.
-- The support team has reviewed the handoff experience.
+- Affected deterministic tests and agent evaluations pass.
+- Relevant mobile and accessibility behavior is verified.
 - Event logging and cost attribution work end to end.
-- The release checklist is approved.
 - Production monitoring and kill switches are active.
 - The capability registry reflects its actual release state.
 

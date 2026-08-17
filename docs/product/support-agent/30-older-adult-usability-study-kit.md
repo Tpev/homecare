@@ -2,13 +2,13 @@
 
 Status: Approved protocol; participant evidence open
 
-Last updated: August 15, 2026
+Last updated: August 17, 2026
 
 Owner: Product, design/accessibility, or either full administrator
 
 ## Release gate
 
-The first named-user pilot remains blocked until five representative non-team older adults complete this protocol with synthetic accounts and data.
+The exact two-user Family pilot is active under the accepted `DEC-070` deferral. Adding a third user or expanding role, capability, publication type, pricing/payment behavior, dates, or user scope remains blocked until five representative non-team older adults complete this protocol with synthetic accounts and data and the resulting evidence Passes.
 
 Passing requires:
 

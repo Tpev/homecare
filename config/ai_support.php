@@ -49,15 +49,37 @@ return [
     'draft_retention_days' => 7,
     'confirmation_validity_minutes' => 30,
 
-    'policy_version' => 'ai-support-eligibility-v1',
+    'policy_version' => 'ai-support-availability-v2',
     'context_contract_version' => 'support-context-v1',
     'event_contract_version' => 'support-event-v1',
     'navigation_contract_version' => 'support-navigation-v1',
     'confirmation_contract_version' => 'support-confirmation-v1',
 
     'default_grant_days' => 14,
+    'pilot' => [
+        'maximum_active_users' => 2,
+    ],
+    'general_release_controls' => [
+        'master_enabled',
+        'user_visible_enabled',
+        'role.family',
+        'role.caregiver',
+        'capability.support_answers_v1',
+        'capability.semantic_navigation_v1',
+        'capability.family_context_v1',
+        'capability.care_intake_v1',
+        'capability.care_request_draft_v1',
+        'capability.care_request_recap_v1',
+        'capability.care_request_publish_v1',
+        'capability.care_24h_handoff_v1',
+        'commit.one_time',
+        'commit.recurring',
+        'tool.care-request.publish.one-time',
+        'tool.care-request.publish.recurring',
+    ],
     'initial_pilot' => [
-        'enforced' => filter_var(env('AI_SUPPORT_INITIAL_PILOT_ENFORCED', true), FILTER_VALIDATE_BOOL),
+        // Historical DEC-070 data remains readable but no longer gates operation.
+        'enforced' => false,
         'policy_version' => 'dec-070-initial-family-v1',
         'approved_user_ids' => [282, 19],
         'approved_bundle_key' => 'family_support_v1',
@@ -129,6 +151,7 @@ return [
     'controls' => [
         'master_enabled' => false,
         'user_visible_enabled' => false,
+        'general_release_enabled' => false,
         'shadow_enabled' => false,
         'human_only' => true,
         'role.family' => false,

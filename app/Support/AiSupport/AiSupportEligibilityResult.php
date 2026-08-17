@@ -19,7 +19,7 @@ final readonly class AiSupportEligibilityResult
     }
 
     /** @param array<string, int|string|null> $evidence */
-    public static function allow(string $grantId, array $evidence = []): self
+    public static function allow(?string $grantId = null, array $evidence = []): self
     {
         return new self(true, 'eligible', $grantId, $evidence);
     }

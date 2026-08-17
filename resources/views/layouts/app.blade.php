@@ -54,7 +54,7 @@
                 <div class="border-b border-rose-300 bg-rose-700 text-white">
                     <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
                         <strong>{{ $openAiSupportIncidentCount }} unresolved AI Support incident{{ $openAiSupportIncidentCount === 1 ? '' : 's' }}. Affected capabilities remain stopped.</strong>
-                        <a href="{{ route('admin.ai-support.readiness') }}" class="font-semibold underline underline-offset-2">Review release readiness</a>
+                        <a href="{{ route('admin.ai-support.index') }}" class="font-semibold underline underline-offset-2">Open AI Support</a>
                     </div>
                 </div>
             @endif

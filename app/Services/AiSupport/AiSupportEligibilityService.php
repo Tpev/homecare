@@ -42,21 +42,34 @@ class AiSupportEligibilityService
                 return AiSupportEligibilityResult::deny('human_only_mode', $evidence);
             }
 
+            $generalRelease = $this->controls->state('general_release_enabled');
+            $evidence['general_release_version'] = $generalRelease['version_id'];
+            $evidence['availability_mode'] = $generalRelease['enabled'] ? 'everyone' : 'pilot';
+
             $roleControl = $this->controls->state('role.'.$user->role);
             $evidence['role_control_version'] = $roleControl['version_id'];
             if (! $roleControl['enabled']) {
                 return AiSupportEligibilityResult::deny('role_not_released', $evidence);
             }
 
-            $grant = AiSupportPilotGrant::query()
-                ->where('user_id', $user->id)
-                ->effectiveAt()
-                ->latest('starts_at')
-                ->get()
-                ->first(fn (AiSupportPilotGrant $candidate): bool => $candidate->includesCapability($capabilityId));
+            $grant = null;
+            if ($generalRelease['enabled']) {
+                $bundle = collect((array) config('ai_support.bundles', []))
+                    ->first(fn (array $candidate): bool => in_array($user->role, (array) ($candidate['roles'] ?? []), true));
+                if (! $bundle || ! in_array($capabilityId, (array) ($bundle['capabilities'] ?? []), true)) {
+                    return AiSupportEligibilityResult::deny('capability_not_available_for_role', $evidence);
+                }
+            } else {
+                $grant = AiSupportPilotGrant::query()
+                    ->where('user_id', $user->id)
+                    ->effectiveAt()
+                    ->latest('starts_at')
+                    ->get()
+                    ->first(fn (AiSupportPilotGrant $candidate): bool => $candidate->includesCapability($capabilityId));
 
-            if (! $grant) {
-                return AiSupportEligibilityResult::deny('no_active_exact_user_grant', $evidence);
+                if (! $grant) {
+                    return AiSupportEligibilityResult::deny('no_active_exact_user_grant', $evidence);
+                }
             }
 
             $capabilityControl = $this->controls->state('capability.'.$capabilityId);
@@ -84,7 +97,7 @@ class AiSupportEligibilityService
 
             $evidence['policy_version'] = (string) config('ai_support.policy_version');
 
-            return AiSupportEligibilityResult::allow($grant->id, $evidence);
+            return AiSupportEligibilityResult::allow($grant?->id, $evidence);
         } catch (Throwable) {
             return AiSupportEligibilityResult::deny('eligibility_store_unavailable');
         }

@@ -4,6 +4,7 @@ namespace App\Livewire\Admin\AiSupport;
 
 use App\Models\AiSupportPilotGrant;
 use App\Models\User;
+use App\Services\AiSupport\AiSupportControlService;
 use App\Services\AiSupport\AiSupportEligibilityService;
 use App\Services\AiSupport\AiSupportPilotGrantService;
 use Carbon\CarbonImmutable;
@@ -115,7 +116,7 @@ class UserPilotCard extends Component
             ->first();
     }
 
-    public function render(AiSupportEligibilityService $eligibility): View
+    public function render(AiSupportEligibilityService $eligibility, AiSupportControlService $controls): View
     {
         $history = AiSupportPilotGrant::query()
             ->with(['grantedBy:id,name', 'revokedBy:id,name'])
@@ -129,6 +130,7 @@ class UserPilotCard extends Component
             'currentGrant' => $this->currentGrant,
             'history' => $history,
             'eligibility' => $eligibility->evaluate($this->targetUser),
+            'generalReleaseEnabled' => $controls->enabled('general_release_enabled'),
             'bundles' => collect((array) config('ai_support.bundles', []))
                 ->filter(fn (array $bundle): bool => in_array($this->targetUser->role, (array) $bundle['roles'], true)),
         ]);

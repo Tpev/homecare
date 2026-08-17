@@ -53,7 +53,7 @@ class TestAiSupportOperationsAlert extends Command
             eventKey: MarketplaceEvent::SUPPORT_TICKET_REPLY,
             title: 'AI Support operational test',
             body: 'This is a content-free AI Support alert test. No customer action is required.',
-            url: route('admin.ai-support.readiness'),
+            url: route('admin.ai-support.index'),
             payload: ['test_reference' => $reference],
             dedupeKey: $dedupeKey,
             channelOverrides: [
@@ -97,7 +97,7 @@ class TestAiSupportOperationsAlert extends Command
         }
 
         $this->info($summary);
-        $this->line('After both administrators confirm receipt, record this evidence item as Passed in Admin Release readiness.');
+        $this->line('Confirm that both administrators received the email and in-app alert.');
 
         return self::SUCCESS;
     }

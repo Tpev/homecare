@@ -6,7 +6,6 @@ use App\Livewire\Admin\AiSupport\Readiness;
 use App\Models\AiSupportIncident;
 use App\Models\AiSupportInteractionEvent;
 use App\Models\AiSupportReadinessEvidence;
-use App\Models\AiSupportReleaseDecision;
 use App\Models\KnowledgeBaseEntry;
 use App\Models\KnowledgeBaseVersion;
 use App\Models\MarketplaceNotificationDelivery;
@@ -14,7 +13,6 @@ use App\Models\User;
 use App\Services\AiSupport\AiSupportControlService;
 use App\Services\AiSupport\AiSupportHealthMonitorService;
 use App\Services\AiSupport\AiSupportIncidentService;
-use App\Services\AiSupport\AiSupportInitialPilotReleaseService;
 use App\Services\AiSupport\AiSupportOpenAiClient;
 use App\Services\AiSupport\AiSupportPilotGrantService;
 use App\Services\AiSupport\AiSupportReadinessService;
@@ -25,7 +23,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -36,7 +33,7 @@ class LimitedReleaseReadinessTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_readiness_is_admin_only_blocked_and_has_no_activation_action(): void
+    public function test_legacy_readiness_url_is_admin_only_and_redirects_to_simple_availability(): void
     {
         $family = User::factory()->create(['role' => 'family']);
         $admin = User::factory()->create(['role' => 'admin']);
@@ -44,11 +41,7 @@ class LimitedReleaseReadinessTest extends TestCase
         $this->actingAs($family)->get(route('admin.ai-support.readiness'))->assertForbidden();
         $this->actingAs($admin)
             ->get(route('admin.ai-support.readiness'))
-            ->assertOk()
-            ->assertSee('Release readiness')
-            ->assertSee('BLOCKED')
-            ->assertSee('cannot enable AI')
-            ->assertDontSee('Enable AI pilot');
+            ->assertRedirect(route('admin.ai-support.settings'));
 
         $definitions = app(AiSupportReadinessService::class)->definitions();
         $this->assertSame('Configured provider credential', $definitions['provider_project_configuration']['label']);
@@ -397,111 +390,20 @@ class LimitedReleaseReadinessTest extends TestCase
             ->assertHasErrors(['evidenceStatus']);
     }
 
-    public function test_initial_pilot_requires_ready_preflight_explicit_decision_and_exact_release_boundary(): void
+    public function test_legacy_evidence_and_release_decisions_do_not_gate_controls_or_two_user_pilot(): void
     {
         CarbonImmutable::setTestNow('2026-08-15 10:00:00');
 
         try {
-            config([
-                'ai_support.initial_pilot.enforced' => true,
-                'services.openai.api_key' => 'sk-proj-synthetic-test-key',
-            ]);
-            $admin = User::factory()->create(['id' => 1, 'role' => 'admin', 'email' => 'release-admin@example.com']);
-            $familyOne = User::factory()->create(['id' => 19, 'role' => 'family']);
-            $familyTwo = User::factory()->create(['id' => 282, 'role' => 'family']);
-            $outsideFamily = User::factory()->create(['id' => 300, 'role' => 'family']);
-            $this->seedReadyKnowledge($admin);
-            $this->recordRequiredPassedEvidence($admin);
-
-            $this->artisan('ai-support:record-option-b-deferrals', [
-                '--apply' => true,
-                '--actor-email' => $admin->email,
-                '--confirm' => 'DEFER-SIX-GATES-BEFORE-EXPANSION',
-            ])->assertSuccessful();
-
-            $this->artisan('ai-support:release-preflight', ['--scope' => 'initial-pilot'])
-                ->expectsOutputToContain('READY FOR EXPLICIT INITIAL PILOT APPROVAL')
-                ->expectsOutputToContain('DEFERRED BEFORE EXPANSION')
-                ->assertSuccessful();
-            $this->artisan('ai-support:release-preflight', ['--scope' => 'expansion'])
-                ->expectsOutputToContain('BLOCKED')
-                ->assertFailed();
-
-            try {
-                app(AiSupportControlService::class)->set($admin, 'master_enabled', true, 'Must wait for explicit release approval');
-                $this->fail('Expected release-decision gating.');
-            } catch (ValidationException $exception) {
-                $this->assertArrayHasKey('releaseDecision', $exception->errors());
-            }
-
-            $commit = trim(Process::path(base_path())->run(['git', 'rev-parse', 'HEAD'])->output());
-            $this->artisan('ai-support:approve-initial-pilot-release', [
-                '--actor-email' => $admin->email,
-                '--release-commit' => $commit,
-                '--reason' => 'Approve the exact two-user DEC-070 pilot after the green read-only preflight.',
-            ])->expectsOutputToContain('Plan only')
-                ->assertSuccessful();
-            $this->assertDatabaseCount('ai_support_release_decisions', 0);
-
-            $this->artisan('ai-support:approve-initial-pilot-release', [
-                '--approve' => true,
-                '--actor-email' => $admin->email,
-                '--release-commit' => $commit,
-                '--reason' => 'Approve the exact two-user DEC-070 pilot after the green read-only preflight.',
-                '--confirm' => 'APPROVE-EXACT-TWO-USER-PILOT',
-            ])->expectsOutputToContain('Explicit initial-pilot release decision recorded')
-                ->expectsOutputToContain('No control, grant, provider, or application state was changed')
-                ->assertSuccessful();
-
-            $decision = AiSupportReleaseDecision::query()->sole();
-            $this->assertTrue($decision->isEffective());
-            $this->assertSame([19, 282], $decision->approved_user_ids);
-            $this->assertSame($decision->id, app(AiSupportInitialPilotReleaseService::class)->effectiveApproval()?->id);
-            Process::fake(fn () => Process::result(errorOutput: 'git process unavailable to the web user', exitCode: 1));
-            $this->assertSame($decision->id, app(AiSupportInitialPilotReleaseService::class)->effectiveApproval()?->id);
-            Process::assertNothingRan();
-            $this->assertDatabaseCount('ai_support_pilot_grants', 0);
-            $this->assertDatabaseCount('ai_support_control_versions', 0);
-
+            $admin = User::factory()->create(['role' => 'admin']);
+            $familyOne = User::factory()->create(['role' => 'family']);
+            $familyTwo = User::factory()->create(['role' => 'family']);
+            $familyThree = User::factory()->create(['role' => 'family']);
             $controls = app(AiSupportControlService::class);
-            $controls->set($admin, 'master_enabled', true, 'Open only the explicitly approved two-user pilot');
-            try {
-                $controls->set($admin, 'role.caregiver', true, 'Must remain outside initial-pilot scope');
-                $this->fail('Expected out-of-scope control denial.');
-            } catch (ValidationException $exception) {
-                $this->assertArrayHasKey('controlKey', $exception->errors());
-            }
+            $controls->set($admin, 'master_enabled', true, 'Open the simple two-user pilot without readiness paperwork');
+            $controls->set($admin, 'role.caregiver', true, 'Role controls no longer require a release decision');
 
             $grants = app(AiSupportPilotGrantService::class);
-            try {
-                $grants->grant(
-                    $admin,
-                    $outsideFamily,
-                    'family_support_v1',
-                    CarbonImmutable::now(),
-                    CarbonImmutable::now()->addDay(),
-                    'Must remain outside exact scope',
-                    (string) Str::uuid(),
-                );
-                $this->fail('Expected exact-user boundary denial.');
-            } catch (ValidationException $exception) {
-                $this->assertArrayHasKey('grant', $exception->errors());
-            }
-            try {
-                $grants->grant(
-                    $admin,
-                    $familyOne,
-                    'family_support_v1',
-                    CarbonImmutable::now(),
-                    CarbonImmutable::now()->addDays(14)->addMinute(),
-                    'Must remain inside fourteen days',
-                    (string) Str::uuid(),
-                );
-                $this->fail('Expected 14-day boundary denial.');
-            } catch (ValidationException $exception) {
-                $this->assertArrayHasKey('grantExpiresAt', $exception->errors());
-            }
-
             foreach ([$familyOne, $familyTwo] as $family) {
                 $grants->grant(
                     $admin,
@@ -509,19 +411,29 @@ class LimitedReleaseReadinessTest extends TestCase
                     'family_support_v1',
                     CarbonImmutable::now(),
                     CarbonImmutable::now()->addDays(14),
-                    'Exact DEC-070 initial pilot grant',
+                    'Simple two-user pilot grant',
                     (string) Str::uuid(),
                 );
             }
             $this->assertDatabaseCount('ai_support_pilot_grants', 2);
+            $this->assertDatabaseCount('ai_support_release_decisions', 0);
 
-            $decision->forceFill(['release_commit' => str_repeat('a', 40)])->save();
-            $this->assertNull(app(AiSupportInitialPilotReleaseService::class)->effectiveApproval());
             try {
-                $controls->set($admin, 'user_visible_enabled', true, 'A later deployment must require a new exact-commit decision');
-                $this->fail('Expected stale exact-commit decision denial.');
+                $grants->grant(
+                    $admin,
+                    $familyThree,
+                    'family_support_v1',
+                    CarbonImmutable::now(),
+                    CarbonImmutable::now()->addDays(14),
+                    'A third pilot user must not fit',
+                    (string) Str::uuid(),
+                );
+                $this->fail('Expected the two-user pilot limit.');
             } catch (ValidationException $exception) {
-                $this->assertArrayHasKey('releaseDecision', $exception->errors());
+                $this->assertSame(
+                    ['The two-user pilot is full. Revoke one pilot user before adding another.'],
+                    $exception->errors()['grant'],
+                );
             }
         } finally {
             CarbonImmutable::setTestNow();

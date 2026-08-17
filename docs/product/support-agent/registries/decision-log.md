@@ -684,10 +684,21 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Accepted: August 17, 2026 through Product instruction `START TWO-USER PILOT`
 - Decision owner: Product
 - Decision: Activate the bounded `DEC-070` initial pilot for production Family IDs `19` and `282` only, using bundle `family_support_v1` and expiring no later than August 29, 2026. Open only the approved Family, non-pricing, one-time-publication controls; keep Caregiver AI, recurring publication, pricing/payment behavior, and every non-granted user unavailable. Preserve exact-commit approval, both deployment guards, the existing human-support conversation, either-Administrator takeover, application cost/turn/latency stops, and immediate rollback authority.
-- Execution: Deployed commit `5c20f4167f1199ca5b4248a7b3516dfa3998b91b` retained an effective explicit release decision; exact grants were recorded for IDs `19` and `282`; the approved stored controls and both deployment guards were opened in the documented order; Human Only was removed last after green health and boundary checks. A content-free user-facing smoke test succeeded as support ticket `#28`.
-- Expansion boundary: The six `DEC-070` deferred items remain unresolved and continue to block a third user, Caregiver AI, recurring publication, or any other expansion. Activation does not convert a deferred item to Passed.
+- Execution: The first activation on `5c20f4167f1199ca5b4248a7b3516dfa3998b91b` was contained after the staffed rollback rehearsal found completed-receipt payload invalidation. Exact corrective commit `0dcb433d1ecb574e14804a37f5d5bc2da1d1b901` passed record `SR-20260817-0DCB433D` at `14 / 14`, was deployed, and received fresh explicit decision `334025a1-78f2-4290-9d72-df7f3ef5268f`. Exact grants for IDs `19` and `282`, the approved stored controls, and both deployment guards were reopened in order; Human Only was removed last after green health, exact-decision, cohort, incident, warning, and non-pilot boundary checks. The earlier content-free user-facing smoke test remains support ticket `#28`.
+- Expansion boundary: The five remaining `DEC-070` deferred items remain unresolved and continue to block a third user, Caregiver AI, recurring publication, or any other expansion. The staffed human-takeover and rollback item is now Passed; activation does not convert another deferred item to Passed.
 - Evidence: [Initial two-user Family pilot activation record](../34-initial-two-user-family-pilot-activation-record.md)
+
+### `DEC-072` - Replace release gates with simple availability
+
+- Status: Accepted
+- Accepted: August 17, 2026 through Product instruction to simplify and ship
+- Decision owner: Product
+- Decision: AI Support has only three operating states: Pilot only for at most two exact users, Live for everyone through one Administrator switch, and Emergency stop through Human Only. Release-readiness evidence, preflight commands, expansion checklists, approval phrases, and exact-commit release decisions no longer authorize or block these states. Retain existing records as history, not gates. The Everyone switch supports both Family and Caregiver roles through their separate approved bundles and does not grant Family request capabilities to Caregivers.
+- Safety retained: Runtime/provider configuration, authorization, role-capability isolation, emergency/medical and 24/7 transfer, deterministic recap and explicit confirmation, human takeover, cost/runtime stops, Admin visibility, and immediate Human Only rollback.
+- Deployment: General availability defaults Off, so deployment preserves the current two-user pilot. No migration, preflight, or release reapproval is required. An Administrator can subsequently select Live for everyone from the Availability page.
+- Supersedes: The operating gates in `DEC-063`, `DEC-064`, `DEC-066`, `DEC-067`, `DEC-070`, and `DEC-071`; their implemented safety behavior and historical evidence remain valid.
+- Detailed contract: [Simplified AI Support availability](../37-simplified-availability.md)
 
 ## Product decision status
 
-The exact two-user Family pilot authorized by `DEC-071` is active for production IDs `19` and `282` through August 29, 2026. Expansion remains blocked by the six visible `DEC-070` deferred obligations. Caregiver AI, recurring publication, pricing/payment behavior, and every non-granted user remain outside the release. The separately held pricing reconciliation remains outside this pilot.
+`DEC-072` is the current operating authority. Administrators choose Pilot only, Live for everyone, or Emergency stop from one Availability page. Historical readiness, evidence, preflight, and exact-commit decisions no longer gate operation. The two-user pilot remains the default after deployment until an Administrator selects Live for everyone. Role boundaries, emergency/24/7 handoff, explicit confirmation, human takeover, monitoring stops, and Human Only rollback remain enforced.

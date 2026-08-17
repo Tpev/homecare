@@ -2,69 +2,67 @@
 
 namespace App\Livewire\Admin\AiSupport;
 
+use App\Models\AiSupportPilotGrant;
 use App\Services\AiSupport\AiSupportControlService;
 use Illuminate\Contracts\View\View;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class Settings extends Component
 {
-    private const HIDDEN_OPERATOR_CONTROLS = ['shadow_enabled'];
-
-    public string $controlKey = 'master_enabled';
-
-    public bool $desiredEnabled = false;
-
-    public string $controlReason = '';
-
-    public bool $impactConfirmed = false;
-
-    public string $confirmationText = '';
-
     public function mount(): void
     {
         abort_unless(auth()->user()?->canManageAiSupportControls(), 403);
     }
 
-    public function changeControl(AiSupportControlService $controls): void
+    public function enableForEveryone(AiSupportControlService $controls): void
     {
-        $validated = $this->validate([
-            'controlKey' => ['required', Rule::in($this->operatorControlKeys($controls))],
-            'desiredEnabled' => ['boolean'],
-            'controlReason' => ['required', 'string', 'min:5', 'max:500'],
-            'impactConfirmed' => ['accepted'],
-            'confirmationText' => ['required', Rule::in(['APPLY'])],
-        ]);
+        $controls->enableForEveryone(auth()->user());
+        session()->flash('status', 'AI Support is now available to every supported Family and Caregiver user.');
+    }
 
-        $controls->set(
-            auth()->user(),
-            $validated['controlKey'],
-            (bool) $validated['desiredEnabled'],
-            $validated['controlReason'],
-        );
+    public function usePilotOnly(AiSupportControlService $controls): void
+    {
+        $controls->usePilotOnly(auth()->user());
+        session()->flash('status', 'AI Support is now limited to the two active pilot users.');
+    }
 
-        $this->reset(['controlReason', 'impactConfirmed', 'confirmationText']);
-        session()->flash('status', 'AI support control version recorded. Every higher-level control and an exact-user grant still apply.');
+    public function stopAllAutomation(AiSupportControlService $controls): void
+    {
+        $controls->stopAllAutomation(auth()->user());
+        session()->flash('status', 'AI automation stopped. Human chat remains available.');
+    }
+
+    public function resumeAutomation(AiSupportControlService $controls): void
+    {
+        $controls->resumeAutomation(auth()->user());
+        session()->flash('status', 'AI automation resumed in the selected availability mode.');
     }
 
     public function render(AiSupportControlService $controls): View
     {
-        $states = collect($this->operatorControlKeys($controls))->mapWithKeys(
-            fn (string $key): array => [$key => $controls->state($key)]
-        );
+        $runtimeAvailable = (bool) config('ai_support.runtime_available', false);
+        $providerEnabled = (bool) config('ai_support.provider_enabled', false);
+        $masterState = $controls->state('master_enabled');
+        $visibleState = $controls->state('user_visible_enabled');
+        $generalReleaseState = $controls->state('general_release_enabled');
+        $humanOnlyState = $controls->state('human_only');
+
+        $mode = match (true) {
+            $humanOnlyState['enabled'] => 'Emergency stop',
+            ! $runtimeAvailable || ! $providerEnabled || ! $masterState['enabled'] || ! $visibleState['enabled'] => 'Unavailable',
+            $generalReleaseState['enabled'] => 'Live for everyone',
+            default => 'Pilot only',
+        };
 
         return view('livewire.admin.ai-support.settings', [
-            'states' => $states,
-            'runtimeAvailable' => (bool) config('ai_support.runtime_available', false),
-            'providerEnabled' => (bool) config('ai_support.provider_enabled', false),
+            'runtimeAvailable' => $runtimeAvailable,
+            'providerEnabled' => $providerEnabled,
+            'generalReleaseState' => $generalReleaseState,
+            'humanOnlyState' => $humanOnlyState,
+            'mode' => $mode,
+            'activeGrants' => AiSupportPilotGrant::query()->effectiveAt()->count(),
         ]);
-    }
-
-    /** @return list<string> */
-    private function operatorControlKeys(AiSupportControlService $controls): array
-    {
-        return array_values(array_diff($controls->keys(), self::HIDDEN_OPERATOR_CONTROLS));
     }
 }

@@ -2,6 +2,8 @@
 
 Status: Limited release active; activation and initial smoke evidence complete
 
+> Historical activation record: `DEC-072` superseded the exact-commit and expansion gates. The two named users remain the Pilot-only cohort, but this record no longer authorizes or blocks current operation.
+
 Activated: August 17, 2026
 
 Decision owner: Product
@@ -16,10 +18,10 @@ This record captures the ordered production activation and first content-free us
 
 | Anchor | Recorded value |
 | --- | --- |
-| Deployed and approved commit | `5c20f4167f1199ca5b4248a7b3516dfa3998b91b` |
-| Explicit release-decision reference | `53c42b78-a304-414f-81d4-9773b801e2bf` |
-| Release snapshot SHA-256 | `43e0e430270a7d932671d7f29904b902ee789b0a0f209ec6911abd975b17d9b2` |
-| Initial-pilot preflight at approval | `READY`; 16 Passed, 6 Deferred before expansion, 0 Blocking |
+| Deployed and approved commit | `0dcb433d1ecb574e14804a37f5d5bc2da1d1b901` |
+| Explicit release-decision reference | `334025a1-78f2-4290-9d72-df7f3ef5268f` |
+| Release snapshot SHA-256 | `12a9f397edf6cdb320cf2d5417538c9f1a430f6eb263fed4d90f1ff6effd14c0` |
+| Initial-pilot preflight at approval | `READY`; 17 Passed, 5 Deferred before expansion, 0 Blocking |
 | Release-decision state after guard deployment and activation | `APPROVED · EFFECTIVE` |
 | Decision expiry | August 29, 2026 11:59 PM |
 
@@ -61,6 +63,14 @@ The activation preserved a fail-closed boundary at every intermediate step:
 8. With both guards on, both exact grants were still blocked only by Human Only. The release decision remained effective and the cohort remained exactly two.
 9. Human Only was turned off last using the content-free reason `Start approved DEC-070 exact two-user Family pilot after green deployment and health audit.`
 
+### Corrective exact-commit reactivation on August 17
+
+The receipt-preservation safety finding discovered after the first activation was contained by turning Human Only on, revoking both grants, and closing every exposure-opening stored control before deploying a correction. Exact commit `0dcb433d1ecb574e14804a37f5d5bc2da1d1b901` then passed the complete `14 / 14` staffed synthetic safety record `SR-20260817-0DCB433D`, including preservation of completed receipts during takeover and rollback.
+
+Production deployed that exact commit with both deployment guards off. Admin recorded the corrected rehearsal as `Passed`, and the fresh read-only preflight returned `17` Passed, `5` Deferred before expansion, and `0` Blocking. The separate release decision has reference `334025a1-78f2-4290-9d72-df7f3ef5268f` and snapshot SHA-256 `12a9f397edf6cdb320cf2d5417538c9f1a430f6eb263fed4d90f1ff6effd14c0`.
+
+Reactivation repeated the complete ordered sequence: exact expiring grants for users `19` and `282`; only the thirteen approved Family and one-time stored controls; both deployment guards through `deploy.sh`; a green health result with zero failed operations notifications and no daily cost stop; exact-decision, incident, warning, and cohort checks; and Human Only off last. Post-reactivation Admin evidence showed `Pilot controls open`, exactly two active grants, users `19` and `282` Eligible, non-pilot Family user `392` denied for `No Active Exact User Grant`, Caregiver user `399` denied for `Role Not Released`, and zero open incidents or warnings.
+
 ## Post-activation boundary verification
 
 The production Admin UI then showed:
@@ -73,7 +83,7 @@ The production Admin UI then showed:
 | Family user `282` | `Eligible` |
 | Non-pilot Family user `392` | `NOT ENABLED`; `No Active Exact User Grant`; grant history `0` |
 | Caregiver user `399` | `NOT ENABLED`; `Role Not Released`; grant history `0` |
-| Release decision | `APPROVED · EFFECTIVE` on commit `5c20f416...` |
+| Release decision | `APPROVED · EFFECTIVE` on commit `0dcb433d...` |
 | Incidents and warnings | `0` and `0` |
 
 This verifies the exact-user and role boundaries after the final control change. It does not replace daily monitoring or review of every pilot interaction.
