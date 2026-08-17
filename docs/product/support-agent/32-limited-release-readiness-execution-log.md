@@ -325,6 +325,12 @@ The release boundary is enforced in the mutation services, not only documented: 
 
 The final local verification for this checkpoint passed 13 focused tests with 105 assertions and the complete AI Support feature suite with 101 tests and 813 assertions. PHP syntax/format checks and the Vite production build also passed. This is implementation evidence only; production remains unchanged until deployment and the governed server commands below.
 
+### August 17 activation stop and exact-commit hotfix
+
+After Product explicitly authorized `START TWO-USER PILOT`, the immediate pre-mutation audit reconfirmed approved commit `ef027044e0e9e9ab7305b9f27e417c9fd79101ec`, both deployment guards off, human-only on, zero grants, zero incidents, and the exact IDs `19` and `282`. The first exact-user grant form was prepared with an August 29 expiry. Its server call returned without persisting a grant because the web request treated the release decision as ineffective. Full reloads and the pilot index continued to show zero grants; no stored control changed and no user became eligible.
+
+The decision was effective in CLI but amber in Admin, establishing that the web runtime could not verify current `HEAD` through the subprocess-only resolver. Activation stopped before any grant or control mutation. The resulting hotfix uses validated read-only Git metadata first, retains subprocess fallback, makes effectiveness explicit in Admin, and surfaces the hidden `releaseDecision` validation error. Its complete AI Support regression passes 101 tests and 815 assertions. Deployment of the hotfix changes the exact commit, so the old decision must remain ineffective and a new green preflight plus separate exact-commit decision is required before retrying either grant.
+
 ## Work queue
 
 1. Deploy the accepted Option B package through `deploy.sh`; both deployment guards remain off by existing environment state.

@@ -20,10 +20,12 @@
 
     @if($snapshot['release_decision'])
         <x-alert :color="$snapshot['release_decision']['effective'] ? 'green' : 'yellow'">
-            Explicit initial-pilot release decision: <strong>{{ str($snapshot['release_decision']['status'])->upper() }}</strong>
+            Explicit initial-pilot release decision:
+            <strong>{{ str($snapshot['release_decision']['status'])->upper() }} · {{ $snapshot['release_decision']['effective'] ? 'EFFECTIVE' : 'INEFFECTIVE' }}</strong>
             · commit {{ $snapshot['release_decision']['release_commit'] }}
             · expires {{ $snapshot['release_decision']['expires_at']->format('M j, Y g:i A') }}.
             This record does not itself enable a control or create a grant.
+            @if(! $snapshot['release_decision']['effective']) Activation remains denied until the web process verifies this exact deployed commit. @endif
         </x-alert>
     @else
         <x-alert color="blue">No explicit initial-pilot release decision is recorded. Even a ready preflight cannot authorize activation by itself.</x-alert>

@@ -457,6 +457,9 @@ class LimitedReleaseReadinessTest extends TestCase
             $this->assertTrue($decision->isEffective());
             $this->assertSame([19, 282], $decision->approved_user_ids);
             $this->assertSame($decision->id, app(AiSupportInitialPilotReleaseService::class)->effectiveApproval()?->id);
+            Process::fake(fn () => Process::result(errorOutput: 'git process unavailable to the web user', exitCode: 1));
+            $this->assertSame($decision->id, app(AiSupportInitialPilotReleaseService::class)->effectiveApproval()?->id);
+            Process::assertNothingRan();
             $this->assertDatabaseCount('ai_support_pilot_grants', 0);
             $this->assertDatabaseCount('ai_support_control_versions', 0);
 

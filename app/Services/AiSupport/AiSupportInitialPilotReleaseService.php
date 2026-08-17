@@ -186,6 +186,11 @@ class AiSupportInitialPilotReleaseService
 
     private function currentReleaseCommit(): ?string
     {
+        $metadataCommit = $this->releaseCommitFromGitMetadata();
+        if ($metadataCommit) {
+            return $metadataCommit;
+        }
+
         $head = Process::path(base_path())->timeout(10)->run(['git', 'rev-parse', 'HEAD']);
 
         if (! $head->successful()) {
@@ -195,5 +200,78 @@ class AiSupportInitialPilotReleaseService
         $commit = strtolower(trim($head->output()));
 
         return preg_match('/\A[0-9a-f]{40}\z/', $commit) === 1 ? $commit : null;
+    }
+
+    private function releaseCommitFromGitMetadata(): ?string
+    {
+        $gitPath = base_path('.git');
+        if (is_file($gitPath)) {
+            $pointer = trim((string) @file_get_contents($gitPath));
+            if (! str_starts_with($pointer, 'gitdir:')) {
+                return null;
+            }
+
+            $gitDirectory = trim(substr($pointer, strlen('gitdir:')));
+            if (! $this->isAbsolutePath($gitDirectory)) {
+                $gitDirectory = base_path($gitDirectory);
+            }
+        } else {
+            $gitDirectory = $gitPath;
+        }
+
+        if (! is_dir($gitDirectory)) {
+            return null;
+        }
+
+        $head = trim((string) @file_get_contents($gitDirectory.DIRECTORY_SEPARATOR.'HEAD'));
+        if ($this->isCommitHash($head)) {
+            return strtolower($head);
+        }
+        if (! str_starts_with($head, 'ref:')) {
+            return null;
+        }
+
+        $reference = trim(substr($head, strlen('ref:')));
+        if (! str_starts_with($reference, 'refs/')
+            || str_contains($reference, '..')
+            || preg_match('/\Arefs\/[A-Za-z0-9._\/-]+\z/', $reference) !== 1) {
+            return null;
+        }
+
+        $looseReference = $gitDirectory.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $reference);
+        $commit = trim((string) @file_get_contents($looseReference));
+        if ($this->isCommitHash($commit)) {
+            return strtolower($commit);
+        }
+
+        $packedReferences = @file($gitDirectory.DIRECTORY_SEPARATOR.'packed-refs', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (! is_array($packedReferences)) {
+            return null;
+        }
+
+        foreach ($packedReferences as $line) {
+            if (str_starts_with($line, '#') || str_starts_with($line, '^')) {
+                continue;
+            }
+
+            [$packedCommit, $packedReference] = array_pad(preg_split('/\s+/', trim($line), 2) ?: [], 2, null);
+            if ($packedReference === $reference && is_string($packedCommit) && $this->isCommitHash($packedCommit)) {
+                return strtolower($packedCommit);
+            }
+        }
+
+        return null;
+    }
+
+    private function isCommitHash(string $value): bool
+    {
+        return preg_match('/\A[0-9a-f]{40}\z/i', $value) === 1;
+    }
+
+    private function isAbsolutePath(string $path): bool
+    {
+        return str_starts_with($path, '/')
+            || str_starts_with($path, '\\')
+            || preg_match('/\A[A-Za-z]:[\\\\\/]/', $path) === 1;
     }
 }

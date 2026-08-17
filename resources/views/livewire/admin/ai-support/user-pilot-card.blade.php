@@ -67,6 +67,7 @@
                 </label>
                 @error('grantReason')<p class="text-sm font-medium text-rose-700">{{ $message }}</p>@enderror
                 @error('grant')<p class="text-sm font-medium text-rose-700">{{ $message }}</p>@enderror
+                @error('releaseDecision')<p class="text-sm font-medium text-rose-700">{{ $message }}</p>@enderror
                 <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">This grant may remain blocked while the deployment guard or a higher-level control is off. It never turns those controls on.</div>
                 <label class="flex items-start gap-3 text-sm text-slate-800"><input wire:model="grantImpactConfirmed" type="checkbox" class="mt-1 rounded border-slate-300"> <span>I confirm the named user, dates, bundle, and exact-user-only scope.</span></label>
                 @error('grantImpactConfirmed')<p class="text-sm font-medium text-rose-700">{{ $message }}</p>@enderror

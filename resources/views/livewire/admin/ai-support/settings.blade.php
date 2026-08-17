@@ -9,6 +9,7 @@
     @if(! $runtimeAvailable)<x-alert color="blue">The deployment runtime guard is off. Stored control changes cannot expose customer AI.</x-alert>@endif
     @if(! $providerEnabled)<x-alert color="blue">The provider deployment guard is off. Stored controls cannot cause a model call.</x-alert>@endif
     @error('controlKey')<x-alert color="red">{{ $message }}</x-alert>@enderror
+    @error('releaseDecision')<x-alert color="red">{{ $message }}</x-alert>@enderror
 
     <x-card>
         <x-slot:header><h2 class="text-lg font-semibold">Current control versions</h2></x-slot:header>

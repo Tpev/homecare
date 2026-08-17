@@ -115,6 +115,14 @@ Focused coverage proves deferrals never become factual Passes, expansion remains
 
 Final local verification on August 15, 2026 passed the focused limited-release readiness suite with 13 tests and 105 assertions, the complete AI Support feature suite with 101 tests and 813 assertions, PHP formatting and syntax checks, and the Vite production build. The build retained only the existing large-chunk advisory. These results validate the package implementation; they do not record production deferrals, create a release decision, grant access, or enable any control.
 
+### August 17 web-process exact-commit verification hardening
+
+The first authorized pilot-grant attempt failed closed with zero persisted grants because the CLI-created decision was not effective in the PHP web request. The decision record was present and tied to deployed commit `ef027044e0e9e9ab7305b9f27e417c9fd79101ec`, but the web path could not resolve current `HEAD` through its runtime Git subprocess. The Admin banner correctly rendered the ineffective state in amber, although its text did not name that state and the grant form did not render the `releaseDecision` validation key.
+
+The hardened resolver now reads the deployed commit directly from validated `.git/HEAD`, loose-ref, or exact packed-ref metadata before using the Git subprocess fallback. It supports normal repositories and Git worktree pointer files, validates every commit as a 40-character hexadecimal hash, validates symbolic refs, and never executes a hook or changes repository state. Admin now labels decisions `EFFECTIVE` or `INEFFECTIVE`, explains that an ineffective record denies activation, and renders the same release-decision error on both grant and control forms.
+
+The failed attempts made no grant, control, provider, or application write. Focused verification passes 13 tests with 107 assertions, including a forced unavailable-Git-process case that still resolves the exact metadata commit without invoking a subprocess. The complete AI Support feature suite passes 101 tests with 815 assertions.
+
 ## Gates intentionally still open before expansion
 
 Under `DEC-070`, these obligations remain visible and Blocked in expansion scope even when the exact initial-pilot scope is ready. Open work includes:
