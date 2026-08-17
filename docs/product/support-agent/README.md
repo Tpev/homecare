@@ -58,8 +58,9 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 36. [Two-user Family pilot operations runbook](35-two-user-family-pilot-operations-runbook.md)
 37. [Original objective completion audit and expansion work queue](36-original-objective-completion-audit.md)
 38. [Simplified AI Support availability](37-simplified-availability.md)
+39. [Family intent and AI action coverage registry](38-family-intent-action-coverage-registry.md)
 
-For current operations, read item 38 before the historical limited-release records in items 28–37. `DEC-072` supersedes their approval, evidence, exact-commit, and expansion gates while retaining the implemented safety behavior.
+For current operations, read item 38 before the historical limited-release records in items 28–37. `DEC-072` supersedes their approval, evidence, exact-commit, and expansion gates while retaining the implemented safety behavior. Use item 39 as the portfolio tracker for Family-user information and action coverage.
 
 Then consult the live registries:
 

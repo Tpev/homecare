@@ -699,6 +699,16 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Supersedes: The operating gates in `DEC-063`, `DEC-064`, `DEC-066`, `DEC-067`, `DEC-070`, and `DEC-071`; their implemented safety behavior and historical evidence remain valid.
 - Detailed contract: [Simplified AI Support availability](../37-simplified-availability.md)
 
+### `DEC-073` - Track Family information and action coverage separately
+
+- Status: Accepted
+- Accepted: August 17, 2026 through Product instruction
+- Decision owner: Product
+- Decision: Maintain an exhaustive Family-intent registry that separately records whether the product supports the intent, whether AI can explain it accurately, and whether AI can perform it. Navigation, authorized reads, drafts, and human transfers must not be mislabeled as completed actions. The registry includes both existing UI workflows and probable product gaps.
+- Rationale: “The AI knows about it” and “the AI can safely do it” are materially different coverage states. A single checklist would hide missing live context, missing tools, and missing underlying product behavior.
+- Maintenance: Update the registry with every Family workflow, KB, navigation target, read contract, or write tool change. New write authority still requires an individual capability/tool contract and deterministic confirmation behavior.
+- Registry: [Family intent and AI action coverage registry](../38-family-intent-action-coverage-registry.md)
+
 ## Product decision status
 
-`DEC-072` is the current operating authority. Administrators choose Pilot only, Live for everyone, or Emergency stop from one Availability page. Historical readiness, evidence, preflight, and exact-commit decisions no longer gate operation. The two-user pilot remains the default after deployment until an Administrator selects Live for everyone. Role boundaries, emergency/24/7 handoff, explicit confirmation, human takeover, monitoring stops, and Human Only rollback remain enforced.
+`DEC-072` is the current operating authority. Administrators choose Pilot only, Live for everyone, or Emergency stop from one Availability page. Historical readiness, evidence, preflight, and exact-commit decisions no longer gate operation. The two-user pilot remains the default after deployment until an Administrator selects Live for everyone. Role boundaries, emergency/24/7 handoff, explicit confirmation, human takeover, monitoring stops, and Human Only rollback remain enforced. `DEC-073` establishes the Family-intent coverage registry as the backlog and coverage source for the next product phases.

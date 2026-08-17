@@ -10,6 +10,8 @@ Owner: Product
 
 This is the portfolio view, not a substitute for full capability specifications. Every capability promoted beyond **Candidate** needs a document created from the [capability template](../templates/capability-spec-template.md).
 
+The exhaustive Family-user demand side is tracked separately in the [Family intent and AI action coverage registry](../38-family-intent-action-coverage-registry.md). That registry distinguishes product support, AI explanation, navigation/read/draft assistance, and complete AI execution.
+
 No status in this registry proves production deployment. The human support chat is the only existing platform baseline for this program. Legacy AI copilot behavior does not confer implementation or release status on any new capability.
 
 ## Platform capabilities
