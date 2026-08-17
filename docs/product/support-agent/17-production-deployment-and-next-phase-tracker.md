@@ -14,7 +14,9 @@ The repository now contains guided-assistance Batch 1 for saved payment methods 
 
 The registry-driven [Family Batch 1-2 evaluation harness](40-family-batch-1-2-evaluation-harness.md) passes all 40 declared rows, 120 representative phrasings, 10 collision cases, and 29 isolated application tests with 355 assertions. The complete AI Support feature regression also passes 133 tests with 1,174 assertions. The harness makes zero provider calls and does not use production data. Commit `0655b5b54e12ff8abffb6d00dcb81b723bd4a504` is deployed and its production `--plan` inventory passes.
 
-Authenticated live QA reconfirmed Pilot only with exact Family users `19` and `282`, then found that background polling reclaimed a resolved chat immediately after **Start a new conversation**, blocking the first new message. A narrow server-owned reset-state correction and resolved/closed browser regressions now pass in source. Deploy that correction before resuming the live intent journeys; no Batch 1/2 journey is credited from the blocked attempt.
+Authenticated live QA reconfirmed Pilot only with exact Family users `19` and `282`, then found that background polling reclaimed a resolved chat immediately after **Start a new conversation**, blocking the first new message. The server-owned reset-state correction was deployed and verified beyond the polling interval; no Batch 1/2 journey is credited from the original blocked attempt.
+
+After deployment, the reset remained stable beyond polling and the live Family overview answer returned current-state guide buttons. The first new-ticket response then exposed a split Alpine state and four null pending-message errors; subsequent visible typing could leave Send disabled until reload. The grouped client correction now passes a two-message/no-reload Chromium regression with zero page errors. A natural “yes do it” follow-up to Billing guidance also transferred safely to human because it was not linked to the latest action; keep that conversational gap separate from any authority to auto-confirm a write.
 
 Historical foundation and interactive evidence remain in the [interactive assistant implementation record](24-interactive-assistant-implementation-and-release-evidence.md) and [production deployment audit](25-production-interactive-deployment-audit.md). Historical readiness gates no longer control availability under `DEC-072`.
 
@@ -166,11 +168,13 @@ Full evidence and next actions: [production interactive assistant deployment aud
 
 ## Agreed next-work order
 
-1. Deploy the narrow resolved/closed-chat reset correction through the normal `deploy.sh` flow; confirm Availability remains Pilot only.
-2. Re-open the exact pilot Family browser session, start a new chat, and prove a first message remains sendable beyond the polling interval.
-3. Exercise every Batch 1/2 guide destination in a real browser for owner/member authorization, mobile/reflow, keyboard/focus, refresh, missing/stale target recovery, and screen-reader behavior.
-4. Review actual two-user pilot interactions for wording or state failures and add every meaningful failure to the frozen corpus.
-5. Then begin Batch 3 safe prefill; do not relabel Batch 2 Guide rows as completed actions.
+1. Deploy the grouped stable-Alpine and null-safe pending-message correction through the normal `deploy.sh` flow; confirm Availability remains Pilot only.
+2. Deliberately return the current pilot conversation from human ownership to automation, or use a fresh eligible pilot chat; do not bypass takeover ownership.
+3. Prove two consecutive production messages work without reload and with a clean application console.
+4. Exercise every Batch 1/2 guide destination in a real browser for member authorization, mobile/reflow, keyboard/focus, refresh, missing/stale target recovery, and screen-reader behavior.
+5. Add a bounded affirmative-follow-up design that can re-offer or launch the latest Read/Guide action but can never confirm a care, payment, timesheet, or other write from “yes.”
+6. Review actual two-user pilot interactions for wording or state failures and add every meaningful failure to the frozen corpus.
+7. Then begin Batch 3 safe prefill; do not relabel Batch 2 Guide rows as completed actions.
 
 Continue tracking `OPS-EXT-001` as an operational data-retirement item without letting it reintroduce release-gate workflow.
 

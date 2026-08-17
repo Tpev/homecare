@@ -149,6 +149,8 @@ test.describe('Mobile support chat', () => {
     });
 
     test('supports long history, resolved state, large text, and a new conversation', async ({ page }) => {
+        const pageErrors: string[] = [];
+        page.on('pageerror', (error) => pageErrors.push(error.message));
         await page.setViewportSize({ width: 430, height: 932 });
         await loginAs(page, 'caregiverMarketplace');
         await page.goto('/profile');
@@ -179,5 +181,13 @@ test.describe('Mobile support chat', () => {
         await expect(page.getByTestId('support-chat-send')).toBeEnabled();
         await page.getByTestId('support-chat-send').click();
         await expect(panel.getByText('A new question after the resolved conversation.', { exact: true })).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByTestId('support-chat-pending-message')).toHaveCount(0, { timeout: 15_000 });
+
+        await composer.fill('A second question without refreshing the page.');
+        await expect(page.getByTestId('support-chat-send')).toBeEnabled();
+        await page.getByTestId('support-chat-send').click();
+        await expect(panel.getByText('A second question without refreshing the page.', { exact: true })).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByTestId('support-chat-pending-message')).toHaveCount(0, { timeout: 15_000 });
+        expect(pageErrors).toEqual([]);
     });
 });

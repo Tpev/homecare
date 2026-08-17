@@ -16,13 +16,11 @@
     wire:key="support-chat-widget-{{ auth()->id() }}"
     data-testid="support-chat-widget"
     class="support-chat-root"
-    x-data="supportChatWidget({
-        userId: @js(auth()->id()),
-        initialTicketId: @js($ticket?->id),
-        initialUnreadCount: @js($unreadCount),
-        forceOpen: @js($openOnLoad),
-        initialGuidedTask: @js($guidedTaskClient),
-    })"
+    x-data="supportChatWidget()"
+    data-support-chat-user-id="{{ auth()->id() }}"
+    data-initial-ticket-id="{{ $ticket?->id }}"
+    data-initial-unread-count="{{ $unreadCount }}"
+    data-force-open="{{ $openOnLoad ? 'true' : 'false' }}"
     data-guided-task='@json($guidedTaskClient)'
     x-on:support-chat-message-sent.window="messageSent($event.detail)"
     x-on:support-chat-send-failed.window="messageFailed($event.detail)"
@@ -323,12 +321,12 @@
 
             <template x-if="pendingMessage">
                 <div class="mt-3 flex justify-end" data-testid="support-chat-pending-message">
-                    <article class="support-chat-bubble support-chat-bubble-user" x-bind:class="pendingMessage.status === 'failed' ? 'support-chat-bubble-failed' : ''">
-                        <p class="support-chat-message-text" x-text="pendingMessage.body"></p>
+                    <article class="support-chat-bubble support-chat-bubble-user" x-bind:class="pendingMessage?.status === 'failed' ? 'support-chat-bubble-failed' : ''">
+                        <p class="support-chat-message-text" x-text="pendingMessage?.body ?? ''"></p>
                         <div class="mt-1.5 flex items-center justify-between gap-3 text-[11px] text-[#DDEEEA]">
-                            <span x-text="pendingMessage.status === 'failed' ? 'Not sent' : 'Sending…'"></span>
+                            <span x-text="pendingMessage?.status === 'failed' ? 'Not sent' : 'Sending…'"></span>
                             <button
-                                x-show="pendingMessage.status === 'failed'"
+                                x-show="pendingMessage?.status === 'failed'"
                                 type="button"
                                 class="min-h-11 rounded-lg px-2 font-bold underline underline-offset-2"
                                 aria-label="Try sending this support message again"

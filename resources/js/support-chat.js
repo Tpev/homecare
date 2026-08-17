@@ -59,18 +59,12 @@ const newClientMessageId = () => {
 };
 
 document.addEventListener('alpine:init', () => {
-    window.Alpine.data('supportChatWidget', ({
-        userId,
-        initialTicketId = null,
-        initialUnreadCount = 0,
-        forceOpen = false,
-        initialGuidedTask = null,
-    }) => ({
+    window.Alpine.data('supportChatWidget', () => ({
         actionInFlight: false,
         announcement: '',
         draft: '',
-        initialUnreadCount,
-        guidedTask: initialGuidedTask,
+        initialUnreadCount: 0,
+        guidedTask: null,
         guidedReportKey: '',
         guidedTimer: null,
         isMobile: false,
@@ -83,12 +77,22 @@ document.addEventListener('alpine:init', () => {
         sendError: '',
         sending: false,
         shouldStickToBottom: true,
-        ticketId: initialTicketId,
-        userId,
+        ticketId: null,
+        userId: null,
         viewportHandler: null,
         visibilityHandler: null,
 
         init() {
+            this.userId = Number.parseInt(this.$root.dataset.supportChatUserId ?? '', 10) || null;
+            this.ticketId = Number.parseInt(this.$root.dataset.initialTicketId ?? '', 10) || null;
+            this.initialUnreadCount = Number.parseInt(this.$root.dataset.initialUnreadCount ?? '', 10) || 0;
+            const forceOpen = this.$root.dataset.forceOpen === 'true';
+            try {
+                this.guidedTask = JSON.parse(this.$root.dataset.guidedTask || 'null');
+            } catch {
+                this.guidedTask = null;
+            }
+
             this.open = forceOpen || readSession(this.openKey(), 'false') === 'true';
             if (forceOpen) writeSession(this.openKey(), 'true');
             this.draft = readSession(this.draftKey(), '') ?? '';
@@ -419,6 +423,7 @@ document.addEventListener('alpine:init', () => {
         guidanceCompleted() {
             this.announcement = 'Your guided task is complete.';
             if (! this.open) this.showPanel();
+            this.$nextTick(() => this.syncGuidedTask());
         },
 
         syncGuidedTask() {

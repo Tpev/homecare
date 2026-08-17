@@ -53,7 +53,19 @@ The correction adds an explicit server-owned “starting new conversation” sta
 - first-message creation as a distinct new chat ticket; and
 - a real Playwright wait beyond the polling interval followed by an enabled Send action.
 
-The focused PHP regression passes 14 tests and 96 assertions, the exact Chromium resolved-chat browser test passes, and the production Vite build passes. Live Batch 1/2 intent journeys resume after this narrow correction is deployed; they are not marked passed from the blocked attempt.
+The focused PHP regression passes 14 tests and 96 assertions, the exact Chromium resolved-chat browser test passes, and the production Vite build passes. The blocked attempt itself is not counted as a passed intent journey.
+
+The deployed correction was then verified in production: after **Start a new conversation**, the composer remained usable beyond the polling interval, retained its draft, and sent the Family overview question. The deterministic answer read current account state and returned three guide buttons without changing care data.
+
+That first new-ticket send exposed a second client defect. Livewire changed the dynamic root Alpine initializer when the new ticket ID appeared, leaving the visible composer bound to an old state object. Four null pending-message expressions also reached the console. The answer rendered, but later visible typing could leave Send disabled until a page reload. The grouped source correction now:
+
+- keeps the root `x-data` expression stable while reading initial server values from data attributes;
+- preserves Livewire updates to the guided-task payload without recreating the Alpine component;
+- makes every pending-message expression null-safe;
+- re-synchronizes guidance after a completed guided task; and
+- proves two consecutive messages after a resolved-chat reset, beyond the polling interval, with no page error and no reload.
+
+After a safe reload, a payment-method question received the expected unavailable-state answer and Billing guide. A later natural affirmative, “yes do it,” was not connected to that existing button and safely transferred the conversation to human support. This is a real conversational-usability gap, not a safety failure: human ownership correctly stopped further automation. Affirmative follow-up handling must be added without auto-confirming a care, payment, timesheet, or other write. Further live intent testing requires the current ticket to be deliberately returned to automation by an Administrator or a fresh eligible pilot chat.
 
 The corpus and runner follow the evaluation pattern in the official [OpenAI evaluation guidance](https://developers.openai.com/api/docs/guides/evals): freeze representative tasks, declare the expected outcome, run the same suite after changes, and track success separately from cost and latency. Batch 1/2 account reads and intent routing are deterministic, so this slice intentionally does not spend model tokens.
 
