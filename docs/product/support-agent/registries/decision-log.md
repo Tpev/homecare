@@ -678,6 +678,16 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 - Affects: Initial-pilot readiness semantics, Admin evidence status, preflight modes, expansion gates, release record, activation order, and rollback
 - Decision packet: [Accelerated two-user pilot decision](../33-accelerated-two-user-pilot-decision.md)
 
+### `DEC-071` - Activate the exact two-user Family pilot
+
+- Status: Accepted and activated
+- Accepted: August 17, 2026 through Product instruction `START TWO-USER PILOT`
+- Decision owner: Product
+- Decision: Activate the bounded `DEC-070` initial pilot for production Family IDs `19` and `282` only, using bundle `family_support_v1` and expiring no later than August 29, 2026. Open only the approved Family, non-pricing, one-time-publication controls; keep Caregiver AI, recurring publication, pricing/payment behavior, and every non-granted user unavailable. Preserve exact-commit approval, both deployment guards, the existing human-support conversation, either-Administrator takeover, application cost/turn/latency stops, and immediate rollback authority.
+- Execution: Deployed commit `5c20f4167f1199ca5b4248a7b3516dfa3998b91b` retained an effective explicit release decision; exact grants were recorded for IDs `19` and `282`; the approved stored controls and both deployment guards were opened in the documented order; Human Only was removed last after green health and boundary checks. A content-free user-facing smoke test succeeded as support ticket `#28`.
+- Expansion boundary: The six `DEC-070` deferred items remain unresolved and continue to block a third user, Caregiver AI, recurring publication, or any other expansion. Activation does not convert a deferred item to Passed.
+- Evidence: [Initial two-user Family pilot activation record](../34-initial-two-user-family-pilot-activation-record.md)
+
 ## Product decision status
 
-No remaining product interview blocks the approved build or the accepted `DEC-070` implementation. The remaining sequence is deploy the deferred-state/exact-boundary package, record only the six authorized deferrals, obtain a green initial-pilot preflight while expansion remains Blocked, and make the separate explicit exact-commit release decision. Until that final decision and ordered activation, production AI remains unauthorized. The separately held pricing reconciliation remains outside this pilot.
+The exact two-user Family pilot authorized by `DEC-071` is active for production IDs `19` and `282` through August 29, 2026. Expansion remains blocked by the six visible `DEC-070` deferred obligations. Caregiver AI, recurring publication, pricing/payment behavior, and every non-granted user remain outside the release. The separately held pricing reconciliation remains outside this pilot.

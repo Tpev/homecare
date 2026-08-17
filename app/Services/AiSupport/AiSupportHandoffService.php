@@ -78,6 +78,7 @@ class AiSupportHandoffService
                 ]);
             AiSupportMessageAction::query()
                 ->where('support_ticket_id', $locked->id)
+                ->where('action_type', '!=', AiSupportMessageAction::TYPE_RECEIPT)
                 ->whereNull('consumed_at')
                 ->whereNull('invalidated_at')
                 ->update([

@@ -275,6 +275,7 @@ class AiSupportControlService
             'content_deleted_at' => $now,
         ]);
         AiSupportMessageAction::query()
+            ->where('action_type', '!=', AiSupportMessageAction::TYPE_RECEIPT)
             ->whereNull('consumed_at')
             ->whereNull('invalidated_at')
             ->update([

@@ -1,6 +1,6 @@
 # LoLo Intelligent Support Agent Documentation
 
-Status: Active program documentation; production runtime fail-closed, governed non-pricing content published, limited release disabled
+Status: Active program documentation; exact two-user Family limited release active, expansion blocked
 
 Established: August 13, 2026
 
@@ -54,6 +54,9 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 32. [Limited-release readiness implementation record](31-limited-release-readiness-implementation-record.md)
 33. [Limited-release readiness execution log](32-limited-release-readiness-execution-log.md)
 34. [Accelerated two-user pilot decision](33-accelerated-two-user-pilot-decision.md)
+35. [Initial two-user Family pilot activation record](34-initial-two-user-family-pilot-activation-record.md)
+36. [Two-user Family pilot operations runbook](35-two-user-family-pilot-operations-runbook.md)
+37. [Original objective completion audit and expansion work queue](36-original-objective-completion-audit.md)
 
 Then consult the live registries:
 

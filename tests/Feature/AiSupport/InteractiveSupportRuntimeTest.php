@@ -222,6 +222,26 @@ class InteractiveSupportRuntimeTest extends TestCase
             'entity_id' => $request->id,
         ]);
         $this->assertDatabaseCount('funnel_events', 1);
+
+        $receipt = AiSupportMessageAction::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->where('action_type', AiSupportMessageAction::TYPE_RECEIPT)
+            ->sole();
+        $receiptPayload = $receipt->payload;
+
+        app(AiSupportHandoffService::class)->transfer($family, $ticket, 'user_requested');
+        $this->assertNull($receipt->fresh()->invalidated_at);
+        $this->assertSame($receiptPayload, $receipt->fresh()->payload);
+
+        app(AiSupportControlService::class)->systemStop(
+            'capability.support_answers_v1',
+            'synthetic_receipt_preservation_stop',
+            'Verify a completed receipt survives automatic rollback.',
+        );
+        $this->assertNull($receipt->fresh()->invalidated_at);
+        $this->assertSame($receiptPayload, $receipt->fresh()->payload);
+        $this->assertDatabaseHas('care_requests', ['id' => $request->id]);
+        $this->assertDatabaseHas('ai_support_confirmed_action_evidence', ['id' => $request->ai_support_action_evidence_id]);
     }
 
     public function test_stale_tab_expired_confirmation_and_cross_account_draft_access_fail_closed(): void
