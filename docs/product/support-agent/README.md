@@ -61,8 +61,9 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 39. [Family intent and AI action coverage registry](38-family-intent-action-coverage-registry.md)
 40. [App-aware guided assistance](39-app-aware-guided-assistance.md)
 41. [Family Batch 1-2 evaluation harness](40-family-batch-1-2-evaluation-harness.md)
+42. [Batch 1-2 production pilot audit and corrective release](41-batch-1-2-production-pilot-audit.md)
 
-For current operations, read item 38 before the historical limited-release records in items 28–37. `DEC-072` supersedes their approval, evidence, exact-commit, and expansion gates while retaining the implemented safety behavior. Use item 39 as the portfolio tracker for Family-user information and action coverage, item 40 as the implementation contract for reading live state, navigating, highlighting, prefilling, and verifying completion, and item 41 to mass-test the exact 40 Batch 1/2 intent rows.
+For current operations, read item 38 before the historical limited-release records in items 28–37. `DEC-072` supersedes their approval, evidence, exact-commit, and expansion gates while retaining the implemented safety behavior. Use item 39 as the portfolio tracker for Family-user information and action coverage, item 40 as the implementation contract for reading live state, navigating, highlighting, prefilling, and verifying completion, item 41 to mass-test the exact 40 Batch 1/2 intent rows, and item 42 for the latest production pilot findings and deploy/recheck list.
 
 Then consult the live registries:
 

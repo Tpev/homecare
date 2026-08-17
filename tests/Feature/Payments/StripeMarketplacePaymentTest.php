@@ -14,6 +14,7 @@ use App\Models\CareRequestApplication;
 use App\Models\User;
 use App\Notifications\MarketplaceEventNotification;
 use App\Services\Payments\BookingPaymentService;
+use App\Services\Payments\FamilyBillingService;
 use App\Services\Payments\StripeClient;
 use App\Services\RegularCare\CarePlanHealthService;
 use App\Support\MarketplaceEvent;
@@ -377,6 +378,23 @@ class StripeMarketplacePaymentTest extends TestCase
             ->assertOk()
             ->assertSee('Add card securely')
             ->assertSee('type="submit"', false);
+    }
+
+    public function test_family_billing_page_stays_available_when_saved_card_lookup_fails(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $billing = $this->mock(FamilyBillingService::class);
+        $billing->shouldReceive('summaryFor')
+            ->once()
+            ->withArgs(fn (User $actor): bool => $actor->is($family))
+            ->andThrow(new PaymentException('Unable to load billing method right now.', 'provider detail'));
+
+        $this->actingAs($family)
+            ->get(route('family.billing.show'))
+            ->assertOk()
+            ->assertSee('We could not check the saved card right now.')
+            ->assertSee('Add or update card securely')
+            ->assertSee('data-ai-target="family.billing.manage_payment_method"', false);
     }
 
     public function test_caregiver_connect_onboarding_bypass_sets_connect_ready(): void

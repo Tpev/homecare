@@ -57,7 +57,7 @@
         </div>
     </section>
 
-    <section class="grid grid-cols-1 gap-5 xl:grid-cols-12">
+    <section data-ai-target="family.regular_care" tabindex="-1" class="grid grid-cols-1 gap-5 outline-none xl:grid-cols-12">
         <div class="space-y-5 xl:col-span-8">
             <x-card>
                 <x-slot:header>

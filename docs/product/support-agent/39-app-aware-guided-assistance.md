@@ -1,6 +1,6 @@
 # App-Aware Guided Assistance
 
-Status: Batches 1 and 2 implemented; registry-driven deterministic test round passes; browser/accessibility expansion remains
+Status: Batches 1 and 2 implemented; deterministic and production-pilot browser rounds completed; corrective deploy and screen-reader session remain
 
 Established: August 17, 2026
 
@@ -228,7 +228,7 @@ The guided architecture is deliberately inexpensive:
 - navigate, highlight, prefill, and verify without a model call;
 - use templated arrival, success, and common failure messages;
 - call the model again only for a genuinely new or ambiguous user request;
-- never run an autonomous planning loop or continuous browser observer.
+- never run an autonomous planning loop or continuously observe the page to infer domain-action completion. A bounded semantic-target observer may reacquire the one exact server-issued target after Livewire replaces it; it has no authority to choose or click another control.
 
 Database reads, Livewire events, and deterministic templates should handle most steps after intent recognition.
 
@@ -293,7 +293,7 @@ Reuse the platform components with separate Caregiver readers and semantic targe
 Batch 1 is complete when:
 
 - an authorized Family user can ask to add or change a payment method and receive the correct button for current state;
-- an unauthorized member receives no owner-only fact or destination;
+- an active Family Account member receives only the same safe card summary and registered secure destination authorized by the shared billing workflow;
 - clicking the action opens the correct page without exposing secrets in the URL;
 - the exact secure control is focused, visibly highlighted, and described accessibly;
 - the guide works after Livewire navigation, refresh, mobile layout, keyboard use, and reduced-motion mode;
@@ -311,9 +311,9 @@ Implementation status: Complete in source on August 17, 2026. Production availab
 Delivered:
 
 - a reusable, short-lived, exact-user guided-task record with encrypted payloads, lifecycle state, expiry, cancellation, and deterministic result codes;
-- a narrow owner-authorized Family payment-method reader that returns only readiness, attention, brand, last four digits, and expiry;
+- a narrow active-member-authorized Family payment-method reader that returns only readiness, attention, brand, last four digits, and expiry;
 - deterministic add/change/status intent handling that bypasses the model and therefore adds no model cost for this workflow;
-- an owner-only semantic billing target whose client contract contains a stable target ID rather than a selector or coordinate;
+- a Family-account-authorized semantic billing target whose client contract contains a stable target ID rather than a selector or coordinate;
 - **Add payment method** or **Update payment method** chat actions selected from fresh server state;
 - navigation to Billing & Payments, accessible focus and non-color-only highlight of the existing secure control, plus **Show me**, **Stop**, and **Talk to a person** controls;
 - task and typed-chat-draft continuity across page navigation, Livewire rendering, refresh, and the existing Stripe Checkout round trip;
@@ -324,19 +324,19 @@ Delivered:
 Unchanged boundaries:
 
 - card number, CVC, payment-method token, Stripe customer ID, credentials, and unrestricted records never enter model input, guide payloads, chat, URLs, or compact interaction events;
-- Family members do not receive owner-only card facts or the billing-management destination;
+- only active Family Account members receive safe shared-card facts and the registered billing-management destination;
 - the assistant does not click the secure control, fill payment credentials, or mutate the payment method;
 - existing Stripe, payment authorization, capture, fee, payout, and request-publication behavior is unchanged; and
 - this does not enable AI for any additional user or switch availability to Everyone.
 
-Batch 2 now adds narrow Family reads and exact guide targets for requests/applicants, visits and caregiver change requests, submitted hours/payment attention, care-receiver profiles, messages, and history, culminating in a truthful “What needs my attention?” overview. The registry-driven deterministic test round is complete. A real-browser/accessibility expansion remains before Batch 3 safe prefill.
+Batch 2 now adds narrow Family reads and exact guide targets for requests/applicants, visits and caregiver change requests, submitted hours/payment attention, care-receiver profiles, messages, history, and regular-care plan status, culminating in a truthful “What needs my attention?” overview. The registry-driven deterministic and representative production-browser rounds are complete. The corrective deploy/recheck and real screen-reader session remain before Batch 3 safe prefill.
 
 ### Acceptance audit
 
 | Batch 1 requirement | Implementation evidence | Automated proof |
 | --- | --- | --- |
 | Authorized owner receives the correct Add/Update action | `FamilyPaymentMethodStatusReader` plus deterministic `offerPaymentMethod` mode selection | `GuidedPaymentMethodTest`: missing card, existing card, and current-card question cases |
-| Member receives no owner-only fact or destination | Owner check precedes billing read, task creation, target exposure, and prompt target listing | `GuidedPaymentMethodTest`: Family member boundary and target-registry assertions |
+| Active member receives only safe shared-billing facts and destination | Family membership is resolved server-side before the allowlisted card summary, task creation, and target exposure | `GuidedPaymentMethodTest`: Family member safe-card and target-registry assertions |
 | Action opens only the registered page and exposes no secret in the URL | Server resolves `family.billing.payment_method` to `family.billing.show`; client receives only the semantic target ID | `GuidedPaymentMethodTest`: exact redirect and encrypted/minimized stored state assertions |
 | Exact secure control is focused, highlighted, and described accessibly | `data-ai-target`, bounded exact-ID lookup, focus, outline/shadow, live announcement, and guide-strip instruction | Playwright guided payment-method scenario |
 | Livewire navigation, refresh, mobile, keyboard, 200 percent text, and reduced motion work | Server task survives navigation; client reacquires the semantic target after render/refresh; responsive/reduced-motion CSS and JS are explicit | Playwright guided payment-method scenario verifies refresh, 390px layout, 200 percent text, focus, minimum controls, draft retention, and reduced motion |
@@ -352,7 +352,7 @@ Batch 2 now adds narrow Family reads and exact guide targets for requests/applic
 Batch 2 is complete in source when:
 
 - an eligible Family owner or member can ask what needs attention and receive a current, deterministic summary across the supported Family domains;
-- saved payment-method attention is owner-only, while care-payment actions remain available according to the normal Family-account permissions;
+- saved payment-method attention and care-payment actions follow the normal active Family-account permissions;
 - request status and caregiver-response claims come from the current authorized request/application records;
 - next/current visit status and pending caregiver change requests come from current authorized bookings;
 - submitted hours, time corrections, care-payment recovery, and completed-extra-visit attention use the same unresolved-action source as the Family dashboard;
@@ -373,7 +373,7 @@ Delivered:
 - a deterministic Family intent router for **What needs my attention?**, requests/applicants, current or next visits, caregiver visit-change requests, submitted hours/timesheets, care-payment failures, care-receiver profiles, messages, and history;
 - a normalized Family assistance service that derives the authenticated Family Account server-side and produces simple English directly from current application state without sending those account facts to the model;
 - reuse of `FamilyActionInboxBuilder` as the canonical unresolved-action source for payment attention, time corrections, completed extra visits, live visits, unapproved timesheets, applicants, and now caregiver-requested visit changes;
-- owner-only saved-payment-method attention in the overview using the Batch 1 safe card reader, including missing, expiring, expired, ready, and unavailable states without exposing card or provider secrets;
+- active-member saved-payment-method attention in the overview using the Batch 1 safe card reader, including missing, expiring, expired, ready, and unavailable states without exposing card or provider secrets;
 - request lifecycle and applicant reads, current/next booking reads, submitted-duration and approval-state reads, draft/ready profile reads with the first missing required step, user-specific unread conversation reads, and completed-history availability reads;
 - up to six outcome-labelled guide buttons on one assistant message, with one foreground task and clean invalidation of unused sibling buttons when the user chooses a step;
 - additive guided-task resource references and resource resolvers for care requests, care plans, care-receiver profiles, and conversations, all re-authorized against the active Family Account when offered, started, and rendered;
@@ -387,7 +387,7 @@ Unchanged boundaries:
 - A highlighted button remains part of the normal application workflow. Except for the separately verified Batch 1 payment-method flow, Batch 2 does not claim that a later domain action succeeded merely because the user reached or clicked the control.
 - The model receives no ORM, SQL, generic database tool, raw record dump, payment secret, care note dump, arbitrary URL, or browser selector.
 - Continuous Coverage management, notification-state reads, full historical amount aggregation, named-record natural-language resolution, form prefill, and confirmed domain execution remain later coverage.
-- Family members still receive no owner-only saved-card fact or payment-method-management destination.
+- users outside the active Family Account receive no saved-card fact or payment-method-management destination.
 - No AI availability control, pilot grant, care/payment rule, or existing domain behavior changes in this batch.
 
 ### Batch 2 focused acceptance audit
@@ -406,14 +406,14 @@ Unchanged boundaries:
 
 Implementation verification completed on August 17, 2026:
 
-- `php artisan ai-support:test-family-intents` passed all 40 declared registry intents, 120 representative phrasings, 10 near-neighbor collision cases, and 29 isolated application tests with 355 assertions;
+- `php artisan ai-support:test-family-intents` passed all 40 declared registry intents, 121 representative phrasings, 10 near-neighbor collision cases, and 30 isolated application tests with 367 assertions;
 - the mass test exercised all 13 Batch 1 payment-method tests, all seven Batch 2 focused tests, five positive/changing-state matrix tests, and four runner/corpus tests;
 - the runner used in-memory SQLite, bypassed deployed configuration caches, made zero provider calls, wrote no production database record, and left availability and exact pilot grants unchanged;
-- the complete `tests/Feature/AiSupport` regression passed 133 tests with 1,174 assertions;
+- the complete `tests/Feature/AiSupport` regression passed 134 tests with 1,186 assertions;
 - Pint, PHP syntax checks, Blade compilation, route caching, and the production Vite build passed; and
 - the deployment-facing availability setting and exact two-user pilot grants were not changed.
 
-The [Family Batch 1-2 evaluation harness](40-family-batch-1-2-evaluation-harness.md) is now the repeatable regression command for these 40 rows. The next QA slice extends it across real browser navigation for every target, mobile/reflow, keyboard and screen-reader behavior, stale/deleted resources, member/owner variants, and representative pilot inspection.
+The [Family Batch 1-2 evaluation harness](40-family-batch-1-2-evaluation-harness.md) is now the repeatable regression command for these 40 rows. The August 18 production-pilot round is recorded in [Batch 1-2 production pilot audit and corrective release](41-batch-1-2-production-pilot-audit.md). The remaining browser work is the post-deploy correction recheck, a real screen-reader session, the second pilot member variant, and destructive-state simulations confined to isolated test data.
 
 ## Relationship to the coverage registry
 

@@ -269,6 +269,13 @@ return [
             'label' => 'Regular care',
             'instruction' => 'Review the highlighted regular-care item that needs attention.',
         ],
+        'family.regular_care' => [
+            'route' => 'family.care.index',
+            'roles' => ['family'],
+            'client_target_id' => 'family.regular_care',
+            'label' => 'Regular care',
+            'instruction' => 'Use the highlighted Regular care area to review plans and upcoming visits.',
+        ],
         'family.care_profiles' => [
             'route' => 'family.care-profiles.index',
             'roles' => ['family'],

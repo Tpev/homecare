@@ -23,7 +23,7 @@ Baseline source: production-oriented repository state audited August 17, 2026, p
 
 The registry is the 324-intent demand backlog. The machine-readable [Family Batch 1-2 evaluation harness](40-family-batch-1-2-evaluation-harness.md) currently covers the exact **40** rows changed by guided-assistance Batches 1 and 2: six Batch 1 saved-payment-method rows and 34 Batch 2 overview/read/guide rows.
 
-The August 17, 2026 baseline passed 40 of 40 intent mappings, 120 of 120 representative phrasings, 10 of 10 collision cases, and 29 application tests with 355 assertions. It uses an isolated in-memory database and makes zero provider calls. The other **284** registry rows are not implied to have mass-test coverage by that result. Guide coverage also remains distinct from completing the underlying domain action.
+The August 18, 2026 corrective baseline passed 40 of 40 intent mappings, 121 of 121 representative phrasings, 10 of 10 collision cases, and 30 application tests with 367 assertions. It uses an isolated in-memory database and makes zero provider calls. The other **284** registry rows are not implied to have mass-test coverage by that result. Guide coverage also remains distinct from completing the underlying domain action.
 
 ## Status legend
 
@@ -142,7 +142,7 @@ The counts are intent-level inventory indicators, not quality scores. One implem
 | FAM-ACCESS-011 | Decline or defer joining a Family Account | UI | No | No | Explain and navigate |
 | FAM-ACCESS-012 | Remove a Family member | UI, owner only | Partial | Navigate | Show impact recap; confirm & execute |
 | FAM-ACCESS-013 | Leave a Family Account as a non-owner member | UI | Partial | Navigate | Show loss-of-access recap; confirm & execute |
-| FAM-ACCESS-014 | Understand why a member cannot change the saved card | UI | Yes | Navigate | Keep owner-only explanation; navigate to owner/contact path |
+| FAM-ACCESS-014 | Understand whether a Family member may change the shared saved card | UI | Yes | Read / Guide | Explain that active Family Account members share billing access; read safe card state and guide to the secure control |
 | FAM-ACCESS-015 | Understand whose name is recorded for shared-account actions | UI | Yes | No | Keep covered |
 | FAM-ACCESS-016 | Transfer Family Account ownership | Gap / Human | Partial | Transfer | Define product workflow; human only until implemented |
 | FAM-ACCESS-017 | Close the entire Family Account | Gap / Human | No | Transfer | Human only with impact review |
@@ -266,13 +266,13 @@ The counts are intent-level inventory indicators, not quality scores. One implem
 | ID | Family intent | Product today | AI explain now | AI do now | Recommended target behavior |
 | --- | --- | --- | --- | --- | --- |
 | FAM-PAY-001 | Open Billing & Payments | UI | No | No | Add owner-aware navigation target |
-| FAM-PAY-002 | Understand who may manage the saved card | UI | Yes | Guide / Read | Owner gets the secure guided flow; member gets only the owner boundary and no billing destination or card fact |
+| FAM-PAY-002 | Understand who may manage the saved card | UI | Yes | Guide / Read | Active Family Account members get the secure guided flow and only safe shared-card facts |
 | FAM-PAY-003 | See whether a card is on file | UI, owner only for details | Yes | Read / Guide | Deterministically read only brand, last4, expiry, readiness, and attention; offer the correct secure action without a model call |
 | FAM-PAY-004 | Add a first payment card | UI, owner only | Yes | Guide | Open Billing & Payments, focus/highlight Add card securely, preserve through Stripe, and verify current state before success |
 | FAM-PAY-005 | Replace or change the card on file | UI, owner only | Yes | Guide | Open Billing & Payments, focus/highlight Update card, preserve through Stripe, and verify current state before success |
 | FAM-PAY-006 | Update an expiring or expired card | UI, owner only | Yes | Guide | Read safe expiry attention, guide to secure setup, and never collect card data in chat |
 | FAM-PAY-007 | Remove the card on file | Gap | No | No | Define booking/hold consequences before product or AI work |
-| FAM-PAY-008 | Understand why a Family member cannot change the card | UI | Yes | Read | Deterministically explain the owner boundary without revealing card facts or an owner-only destination |
+| FAM-PAY-008 | Understand whether a Family member may change the shared card | UI | Yes | Read / Guide | Deterministically explain shared Family billing access, return only safe card facts, and guide to the secure control |
 | FAM-PAY-009 | Understand when payment is authorized and captured | UI | Partial | No | Reconcile authoritative product truth and code, then publish one answer |
 | FAM-PAY-010 | Understand whether publishing a request charges the card | UI | Yes | No | Keep covered |
 | FAM-PAY-011 | Understand an authorization hold versus a captured charge | UI | No | No | Add governed payment-state definitions using live state |

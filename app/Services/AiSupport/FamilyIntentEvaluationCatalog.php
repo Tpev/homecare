@@ -57,6 +57,7 @@ class FamilyIntentEvaluationCatalog
             FamilyGuidedAssistanceService::INTENT_PROFILES,
             FamilyGuidedAssistanceService::INTENT_MESSAGES,
             FamilyGuidedAssistanceService::INTENT_HISTORY,
+            FamilyGuidedAssistanceService::INTENT_REGULAR_CARE,
         ];
 
         foreach ($cases as $case) {

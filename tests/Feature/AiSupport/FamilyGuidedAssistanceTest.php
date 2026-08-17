@@ -46,7 +46,11 @@ class FamilyGuidedAssistanceTest extends TestCase
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_MESSAGES, $service->intentFor('Can I message my caregiver?'));
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_PAYMENT_ATTENTION, $service->intentFor('What does this payment error message mean?'));
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_HISTORY, $service->intentFor('Show my past visit receipts'));
+        $this->assertSame(FamilyGuidedAssistanceService::INTENT_REQUESTS, $service->intentFor('What is the status of my care request?'));
+        $this->assertSame(FamilyGuidedAssistanceService::INTENT_REGULAR_CARE, $service->intentFor('When is my next regular care visit?'));
+        $this->assertSame(FamilyGuidedAssistanceService::INTENT_REGULAR_CARE, $service->intentFor('Show me my regular care plan.'));
         $this->assertNull($service->intentFor('I want to create a one-time care request.'));
+        $this->assertNull($service->intentFor('I want to create a regular care request.'));
     }
 
     public function test_attention_overview_reads_authoritative_account_data_and_offers_exact_actions_without_model_call(): void
@@ -218,6 +222,29 @@ class FamilyGuidedAssistanceTest extends TestCase
         $this->assertDatabaseCount('care_bookings', 0);
         $this->assertDatabaseCount('care_recipient_profiles', 0);
         $this->assertDatabaseMissing('ai_support_interaction_events', ['event_type' => 'model_turn_completed']);
+    }
+
+    public function test_empty_regular_care_answer_guides_to_the_regular_care_page(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        Http::fake();
+
+        $ticket = $this->automatedTicket($family, 'Show me my regular care plan.');
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $ticket->description);
+
+        $task = AiSupportGuidedTask::query()->where('support_ticket_id', $ticket->id)->sole();
+        $this->assertSame('family.regular_care', $task->navigation_target_id);
+        $this->assertStringContainsString('do not have a regular care plan yet', $ticket->publicMessages()->reorder()->latest()->firstOrFail()->body);
+        $this->assertSame(
+            route('family.care.index'),
+            app(NavigationTargetRegistry::class)->urlFor($family, $task->navigation_target_id),
+        );
+
+        $this->actingAs($family)
+            ->get(route('family.care.index'))
+            ->assertOk()
+            ->assertSee('data-ai-target="family.regular_care"', false);
+        Http::assertNothingSent();
     }
 
     public function test_regular_care_attention_guides_to_the_plan_instead_of_its_system_request(): void

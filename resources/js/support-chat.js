@@ -66,6 +66,7 @@ document.addEventListener('alpine:init', () => {
         initialUnreadCount: 0,
         guidedTask: null,
         guidedReportKey: '',
+        guidedObserver: null,
         guidedTimer: null,
         isMobile: false,
         mediaQuery: null,
@@ -123,6 +124,22 @@ document.addEventListener('alpine:init', () => {
             this.visibilityHandler = () => this.schedulePoll(250);
             document.addEventListener('visibilitychange', this.visibilityHandler);
 
+            this.guidedObserver = new MutationObserver(() => {
+                if (! this.guidedTask?.id || ! this.guidedTask?.targetId) return;
+
+                const target = Array.from(document.querySelectorAll('[data-ai-target]'))
+                    .find((element) => element.dataset.aiTarget === this.guidedTask.targetId);
+                if (! target || (target.dataset.aiGuided === 'true' && target.classList.contains('ai-guide-target-highlight'))) return;
+
+                this.$nextTick(() => this.initializeGuidance());
+            });
+            this.guidedObserver.observe(document.body, {
+                attributes: true,
+                attributeFilter: ['class', 'data-ai-guided'],
+                childList: true,
+                subtree: true,
+            });
+
             this.$nextTick(() => {
                 this.updateVisualViewport();
                 this.resizeComposer();
@@ -141,6 +158,7 @@ document.addEventListener('alpine:init', () => {
         destroy() {
             window.clearTimeout(this.pollTimer);
             window.clearTimeout(this.guidedTimer);
+            this.guidedObserver?.disconnect();
             this.clearGuidedHighlight();
             window.removeEventListener('popstate', this.popstateHandler);
             window.visualViewport?.removeEventListener('resize', this.viewportHandler);

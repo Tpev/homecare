@@ -35,6 +35,8 @@ The first complete run on August 17, 2026 passed:
 
 The same corpus/router inventory was then deployed through the normal production workflow at commit `0655b5b54e12ff8abffb6d00dcb81b723bd4a504`. Production `--plan` passed all 40 registry intents, 120 routing phrases, and 10 collision cases using zero provider calls and no database write.
 
+The corrective run on August 18, 2026 expanded the same 40-row corpus to 121 phrases. It passed 121 of 121 phrases, 10 of 10 collision cases, 40 of 40 registry intents, and 30 application tests with 367 assertions. It continued to use isolated in-memory SQLite, made zero provider calls, and made zero production writes. The new cases lock natural “status of my care request” wording and dedicated regular-care status/plan routing.
+
 ## Production browser QA record
 
 Authenticated production QA began August 17, 2026 with exact Family pilot user `19`. Before sending any Batch 1/2 intent, the audit confirmed:
@@ -109,7 +111,7 @@ The catalog validator fails if an ID is missing, duplicated, malformed, has fewe
 
 ### 1. Language routing and collision protection
 
-`FamilyIntentCoverageTest` checks all 120 phrasings and the 10 near-neighbor cases. The collision set protects existing or later flows such as request creation, passwords, refunds, Family invitations, account deletion, caregiver browsing, medical help, human transfer, general product information, and notification settings.
+`FamilyIntentCoverageTest` checks all 121 phrasings and the 10 near-neighbor cases. The collision set protects existing or later flows such as request creation, passwords, refunds, Family invitations, account deletion, caregiver browsing, medical help, human transfer, general product information, and notification settings.
 
 The mass corpus found real natural-language gaps during its first implementation. The deterministic router was expanded to understand plural care profiles, ordinary applicant wording, natural request-status phrasing, pending charge wording, failed time-correction payments, scheduled-care wording, visit-change decisions, corrected hours, completed extra visits, and regular-care history. The expected cases were not weakened to hide those misses.
 
@@ -118,7 +120,7 @@ The mass corpus found real natural-language gaps during its first implementation
 `GuidedPaymentMethodTest` verifies:
 
 - missing, existing, and queried saved-card state;
-- owner/member boundaries with no member-visible card fact or owner-only destination;
+- active-member shared billing authorization with only safe card facts and the registered secure destination;
 - exact registered billing navigation and accessible semantic target;
 - expired task denial;
 - server-authorized arrival, missing-target, and disabled-target results;
@@ -205,7 +207,7 @@ If the shared runtime regression fails, no selected intent is reported as passed
 - It does not prove that Batch 2 performs the user's domain action. Batch 2 opens and highlights the normal application control; the user still performs the action. Batch 1 separately verifies the payment-method result after the normal secure flow.
 - It does not replace the existing 56-case provider evaluation for request intake and drafting.
 - It does not make a stochastic model-quality claim because the Batch 1/2 fast paths under test do not call the model.
-- It does not replace Playwright browser checks, real mobile/browser inspection, or a screen-reader session. The next QA slice should mass-drive every registered target in a real browser and cover mobile reflow, keyboard/focus, refresh, stale/deleted resources, owner/member variants, and guide recovery.
+- It does not replace Playwright browser checks, real mobile/browser inspection, or a screen-reader session. The production pilot has now covered representative overview, request, visit, hours, profile, messages, history, payment-attention, refresh, mobile reflow, keyboard focus, and guide recovery journeys. A real screen-reader session, the second pilot member variant, and isolated stale/deleted-resource browser simulations remain.
 - It does not inspect or mutate production pilot data and does not switch availability to Everyone.
 
 ## Maintenance rule

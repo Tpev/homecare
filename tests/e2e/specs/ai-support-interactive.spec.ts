@@ -136,6 +136,15 @@ test.describe.serial('Interactive AI Support pilot', () => {
         await expect(guide.getByRole('button', { name: 'Stop' })).toBeVisible();
         await expect(guide.getByRole('button', { name: 'Talk to a person' })).toBeVisible();
 
+        await cardButton.evaluate((element) => element.replaceWith(element.cloneNode(true)));
+        await expect(page.getByTestId('family-billing-manage-payment-method')).toHaveAttribute('data-ai-guided', 'true');
+        await expect(page.getByTestId('family-billing-manage-payment-method')).toBeFocused();
+        await page.getByTestId('family-billing-manage-payment-method').evaluate((element) => {
+            element.classList.remove('ai-guide-target-highlight');
+            delete element.dataset.aiGuided;
+        });
+        await expect(page.getByTestId('family-billing-manage-payment-method')).toHaveClass(/ai-guide-target-highlight/);
+
         await page.reload();
         await expect(cardButton).toHaveAttribute('data-ai-guided', 'true');
         await expect(cardButton).toBeFocused();

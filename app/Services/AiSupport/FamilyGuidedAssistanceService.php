@@ -5,6 +5,7 @@ namespace App\Services\AiSupport;
 use App\Exceptions\Payments\PaymentException;
 use App\Models\AiSupportGuidedTask;
 use App\Models\CareBooking;
+use App\Models\CarePlan;
 use App\Models\CareRecipientProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
@@ -33,6 +34,8 @@ class FamilyGuidedAssistanceService
     public const INTENT_MESSAGES = 'family_messages';
 
     public const INTENT_HISTORY = 'family_care_history';
+
+    public const INTENT_REGULAR_CARE = 'family_regular_care';
 
     public function __construct(
         private readonly FamilyAccountContext $familyAccounts,
@@ -74,11 +77,15 @@ class FamilyGuidedAssistanceService
             return self::INTENT_TIMESHEETS;
         }
 
+        if (preg_match('/\b(?:next|upcoming)\b.{0,28}\b(?:regular|weekly|recurring)\s+care\b|\b(?:when|where|show|open|view|check|manage|review|do\s+i\s+have)\b.{0,36}\b(?:regular|weekly|recurring)\s+care(?:\s+(?:plan|schedule|visit))?\b|\b(?:regular|weekly|recurring)\s+care\s+(?:plan|schedule|status)\b/iu', $message)) {
+            return self::INTENT_REGULAR_CARE;
+        }
+
         if (preg_match('/\b(?:next|upcoming|current|today(?:\'s)?|scheduled|live)\b.{0,28}\b(?:visit|caregiver)\b|\b(?:visit|caregiver)\b.{0,28}\b(?:next|upcoming|current|today|scheduled|coming|arriving|status|happening)\b|\b(?:accept|approve|reject|decline|review|open|show)\b.{0,40}\b(?:visit\s+change|change\s+request|reschedule|cancellation)\b|\bcaregiver\b.{0,24}\b(?:change\s+request|reschedule|cancellation)\b|\bcare\s+scheduled\b/iu', $message)) {
             return self::INTENT_VISITS;
         }
 
-        if (preg_match('/\b(?:applicant|applicants|application|applications|caregiver\s+responses?|caregivers?\s+(?:apply|applied|interested|respond|responded)|caregivers?\b.{0,12}\bapplied|request\s+status|status\s+of\s+(?:my\s+)?request|open\s+(?:care\s+)?requests?|show\s+(?:my\s+)?(?:care\s+)?requests?|care\s+request\s+stand)\b/iu', $message)) {
+        if (preg_match('/\b(?:applicant|applicants|application|applications|caregiver\s+responses?|caregivers?\s+(?:apply|applied|interested|respond|responded)|caregivers?\b.{0,12}\bapplied|request\s+status|status\s+of\s+(?:my\s+)?(?:care\s+)?request|open\s+(?:care\s+)?requests?|show\s+(?:my\s+)?(?:care\s+)?requests?|care\s+request\s+stand)\b/iu', $message)) {
             return self::INTENT_REQUESTS;
         }
 
@@ -99,6 +106,7 @@ class FamilyGuidedAssistanceService
             self::INTENT_PROFILES => $this->profiles($actor),
             self::INTENT_MESSAGES => $this->messages($actor),
             self::INTENT_HISTORY => $this->history($actor),
+            self::INTENT_REGULAR_CARE => $this->regularCare($actor),
             default => throw new \InvalidArgumentException('Unsupported Family assistance intent.'),
         };
 
@@ -249,7 +257,7 @@ class FamilyGuidedAssistanceService
         $lifecycle = CareRequestProgress::familyLifecycleStage($request);
         $target = $this->requestTarget($request);
         $pending = $this->pendingApplicants($request);
-        $message = $request->title.': '.$lifecycle['title'].'. '.$lifecycle['body'];
+        $message = $request->title.': '.$this->sentence((string) $lifecycle['title']).' '.ltrim((string) $lifecycle['body']);
         if ($pending > 0) {
             $message .= ' '.$pending.' caregiver'.($pending === 1 ? ' is' : 's are').' waiting for review.';
         }
@@ -322,7 +330,7 @@ class FamilyGuidedAssistanceService
                 : 'Review the exact submitted hours in the app before approving or requesting help.';
 
             return [
-                $this->actionSummary($item).' '.$instruction,
+                $this->sentence($this->actionSummary($item)).' '.$instruction,
                 [$this->guideForAction($item)],
                 'hours_need_attention',
             ];
@@ -479,6 +487,67 @@ class FamilyGuidedAssistanceService
         ];
     }
 
+    /** @return array{string,list<array<string,mixed>>,string} */
+    private function regularCare(User $actor): array
+    {
+        $plans = CarePlan::query()
+            ->forFamilyAccount($this->familyAccounts->account($actor))
+            ->with(['caregiver:id,name', 'nextBooking:id,care_plan_id,status,scheduled_start_at,scheduled_end_at'])
+            ->orderByRaw("CASE WHEN status IN ('active', 'payment_attention', 'paused', 'pending_caregiver', 'countered') THEN 0 ELSE 1 END")
+            ->latest('updated_at')
+            ->get();
+
+        if ($plans->isEmpty()) {
+            return [
+                'You do not have a regular care plan yet. After you complete and approve a visit, the Regular care page shows caregivers you can book on a repeating schedule.',
+                [$this->guide(AiSupportGuidedTask::TYPE_FAMILY_VISIT, 'family.regular_care', 'Open regular care')],
+                'regular_care_empty',
+            ];
+        }
+
+        $plan = $plans->first();
+        $booking = $plans
+            ->pluck('nextBooking')
+            ->filter()
+            ->filter(fn (CareBooking $candidate): bool => in_array($candidate->status, [
+                CareBooking::STATUS_IN_PROGRESS,
+                CareBooking::STATUS_PAUSED,
+            ], true) || ($candidate->status === CareBooking::STATUS_SCHEDULED
+                && $candidate->scheduled_start_at?->gte(now()->subHours(2))))
+            ->sortBy('scheduled_start_at')
+            ->first();
+        if ($booking) {
+            $plan = $plans->firstWhere('id', $booking->care_plan_id) ?: $plan;
+            $caregiver = trim((string) $plan->caregiver?->name) ?: 'Your caregiver';
+
+            return [
+                $caregiver.' has your next regular care visit '.$this->bookingTime($booking).'.',
+                [$this->guide(
+                    AiSupportGuidedTask::TYPE_FAMILY_VISIT,
+                    'family.regular_care.attention',
+                    'Open regular care plan',
+                    'care_plan',
+                    (int) $plan->id,
+                )],
+                'regular_care_upcoming',
+            ];
+        }
+
+        $status = str_replace('_', ' ', (string) $plan->status);
+
+        return [
+            $plan->title.' is '.$status.'. I did not find an upcoming regular care visit on this plan right now.',
+            [$this->guide(
+                AiSupportGuidedTask::TYPE_FAMILY_VISIT,
+                'family.regular_care.attention',
+                'Open regular care plan',
+                'care_plan',
+                (int) $plan->id,
+            )],
+            'regular_care_'.$plan->status,
+        ];
+    }
+
     private function requestsFor(User $actor): Collection
     {
         return CareRequest::query()
@@ -585,6 +654,13 @@ class FamilyGuidedAssistanceService
         $subject = trim((string) ($item['subject'] ?? ''));
 
         return $subject !== '' ? $summary.' — '.$subject : $summary;
+    }
+
+    private function sentence(string $value): string
+    {
+        $value = trim($value);
+
+        return preg_match('/[.!?]\z/u', $value) === 1 ? $value : $value.'.';
     }
 
     /** @param array<string,mixed> $item @return array<string,mixed> */

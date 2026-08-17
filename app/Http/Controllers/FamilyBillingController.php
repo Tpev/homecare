@@ -58,8 +58,22 @@ class FamilyBillingController extends Controller
                 ->with('status', 'Billing method updated successfully.');
         }
 
+        $billingUnavailable = false;
+        try {
+            $summary = $billing->summaryFor($user);
+        } catch (PaymentException $exception) {
+            report($exception);
+            $billingUnavailable = true;
+            $summary = [
+                'ready' => false,
+                'customer_id' => null,
+                'card' => null,
+            ];
+        }
+
         return view('family.billing', [
-            'billing' => $billing->summaryFor($user),
+            'billing' => $summary,
+            'billingUnavailable' => $billingUnavailable,
             'publishableKey' => (string) config('services.stripe.publishable_key', ''),
         ]);
     }

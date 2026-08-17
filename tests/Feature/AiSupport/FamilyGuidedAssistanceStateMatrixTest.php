@@ -41,6 +41,7 @@ class FamilyGuidedAssistanceStateMatrixTest extends TestCase
         $this->assertSame('family.request.overview', $task->navigation_target_id);
         $this->assertSame($request->id, (int) $task->resource_id);
         $this->assertStringContainsString('Morning companionship', $message);
+        $this->assertStringNotContainsString('..', $message);
 
         CareRequestApplication::query()->create([
             'care_request_id' => $request->id,

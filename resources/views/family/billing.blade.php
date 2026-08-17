@@ -1,4 +1,6 @@
 <x-app-layout>
+    @php($billingUnavailable = $billingUnavailable ?? false)
+
     <x-slot name="header">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -29,7 +31,9 @@
             <x-slot:header>
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <h2 class="min-w-0 font-display text-lg font-semibold">Payment method</h2>
-                    @if ($billing['ready'])
+                    @if ($billingUnavailable)
+                        <x-badge text="CHECK UNAVAILABLE" color="amber" />
+                    @elseif ($billing['ready'])
                         <x-badge text="READY" color="green" />
                     @else
                         <x-badge text="SETUP NEEDED" color="amber" />
@@ -38,7 +42,11 @@
             </x-slot:header>
 
             <div class="space-y-4">
-                @if ($billing['ready'] && $billing['card'])
+                @if ($billingUnavailable)
+                    <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900" role="alert">
+                        We could not check the saved card right now. You can still use the secure button below to add or update it.
+                    </div>
+                @elseif ($billing['ready'] && $billing['card'])
                     <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
                         <p class="font-semibold">
                             {{ strtoupper($billing['card']['brand']) }} ending in {{ $billing['card']['last4'] }}
@@ -59,7 +67,7 @@
                         data-ai-target="family.billing.manage_payment_method"
                         data-testid="family-billing-manage-payment-method"
                     >
-                        {{ $billing['ready'] ? 'Update card' : 'Add card securely' }}
+                        {{ $billingUnavailable ? 'Add or update card securely' : ($billing['ready'] ? 'Update card' : 'Add card securely') }}
                     </x-button>
                 </form>
             </div>

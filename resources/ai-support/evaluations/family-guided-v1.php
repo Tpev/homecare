@@ -18,13 +18,13 @@ $case = static fn (
 
 return [
     'version' => 'family-guided-evals-v1',
-    'frozen_on' => '2026-08-17',
+    'frozen_on' => '2026-08-18',
     'cases' => [
         $case('FAM-PAY-002', 1, 'payments', 'family_payment_method', [
             'Who is allowed to change the saved payment method?',
-            "Why can't I update the card on file?",
+            'Can I update the card as a Family member?',
             'Can a Family member replace the credit card?',
-        ], 'GuidedPaymentMethodTest::test_family_member_is_told_the_owner_boundary_without_card_facts_or_destination'),
+        ], 'GuidedPaymentMethodTest::test_family_member_gets_safe_card_details_and_the_update_destination'),
         $case('FAM-PAY-003', 1, 'payments', 'family_payment_method', [
             'Do I have a card on file?',
             'Which credit card is currently saved?',
@@ -46,10 +46,10 @@ return [
             'Help me update an expired credit card.',
         ], 'GuidedPaymentMethodTest::test_existing_stripe_checkout_flow_verifies_completion_before_success_message'),
         $case('FAM-PAY-008', 1, 'payments', 'family_payment_method', [
-            "Why can't a Family member change the card?",
-            "Why can't I replace the saved payment method?",
+            'Why can a Family member change the card?',
+            'Can I replace the shared saved payment method?',
             'Can someone other than the owner update the credit card?',
-        ], 'GuidedPaymentMethodTest::test_family_member_is_told_the_owner_boundary_without_card_facts_or_destination'),
+        ], 'GuidedPaymentMethodTest::test_family_member_gets_safe_card_details_and_the_update_destination'),
 
         $case('FAM-START-017', 2, 'orientation', 'family_overview', [
             'What needs my attention?',
@@ -75,6 +75,7 @@ return [
 
         $case('FAM-REQUEST-034', 2, 'requests', 'family_requests', [
             'What is the status of my request?',
+            'What is the status of my care request?',
             'Show my open care requests.',
             'Where does my care request stand?',
         ], 'FamilyGuidedAssistanceStateMatrixTest::test_request_and_applicant_states_return_authorized_exact_destinations'),
@@ -186,10 +187,10 @@ return [
             'Check my account for a pending regular-care action.',
             'Is everything okay with my regular care?',
         ], 'FamilyGuidedAssistanceTest::test_regular_care_attention_guides_to_the_plan_instead_of_its_system_request'),
-        $case('FAM-REGULAR-009', 2, 'regular_care', 'family_visits', [
+        $case('FAM-REGULAR-009', 2, 'regular_care', 'family_regular_care', [
             'When is my next regular care visit?',
             'Show the upcoming visit for regular care.',
-            'Is a regular caregiver scheduled next?',
+            'Is my next regular care visit scheduled?',
         ], 'FamilyGuidedAssistanceStateMatrixTest::test_time_correction_and_regular_care_attention_use_their_authorized_resources'),
         $case('FAM-REGULAR-013', 2, 'regular_care', 'family_timesheets', [
             "Review the caregiver's reported hours for an extra visit.",
