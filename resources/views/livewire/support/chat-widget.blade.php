@@ -234,7 +234,7 @@
                                             wire:click="startGuidedTask('{{ $action->id }}')"
                                             wire:loading.attr="disabled"
                                             x-on:click="closeForNavigation()"
-                                            class="mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white disabled:opacity-60"
+                                            class="mr-2 mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white disabled:opacity-60"
                                         >{{ $actionPayload['label'] ?? 'Show me where' }}</button>
                                     @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_NAVIGATE && $actionActive)
                                         <a

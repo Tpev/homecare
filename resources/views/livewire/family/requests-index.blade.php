@@ -14,7 +14,7 @@
             })->sortBy(fn ($request) => optional($request->booking?->scheduled_start_at)->timestamp ?? PHP_INT_MAX)->values();
         @endphp
 
-        <section class="rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm sm:p-6">
+        <section data-ai-target="family.care_requests" tabindex="-1" class="rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm outline-none sm:p-6">
             <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
                 <div>
                     <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#C96B55]">Care</p>

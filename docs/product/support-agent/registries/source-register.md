@@ -1,8 +1,8 @@
 # Source Register
 
-Status: Draft registry
+Status: Active registry
 
-Last updated: August 14, 2026
+Last updated: August 17, 2026
 
 Owner: Product content
 
@@ -27,6 +27,7 @@ The source register names documents and application contracts that may support c
 | `SRC-CODE-CAREGIVER-WORK-INBOX-001` | Current Caregiver Work Inbox component, builder, invitation-response service boundary, view, semantic target registry, and tests | Repository evidence pinned to a release commit | Descriptive current behavior; not independent policy authority | Caregiver-only filters, opportunity/application/visit presentation, current-state labels, and separation between navigation and work-response mutations | Engineering/product |
 | `SRC-CODE-CAREGIVER-VISITS-001` | Current Caregiver My visits component, visit-timeline service, booking states, view, semantic target registry, and tests | Repository evidence pinned to a release commit | Descriptive current behavior; not independent policy authority | Caregiver-only visit types, filters, timeline/status presentation, and separation between generic navigation and visit mutations | Engineering/product |
 | `SRC-CODE-AI-INTERACTIVE-001` | [Interactive assistant implementation and release evidence](../24-interactive-assistant-implementation-and-release-evidence.md) plus current AI Support runtime, draft, recap, publication, UI, evaluation, and browser tests | Repository evidence to pin to the release commit | Descriptive implementation and test evidence; does not itself authorize production release | Exact-user runtime, role isolation, care intake/context, encrypted drafts, deterministic recap, confirmed publication, handoff, cost, and release evidence | Engineering/product/security |
+| `SRC-CODE-AI-GUIDE-001` | [App-aware guided assistance](../39-app-aware-guided-assistance.md), current Family action-inbox builder, guided-task/resource registry, deterministic Family assistance service, semantic UI targets, and focused tests | Repository evidence to pin to the release commit | Descriptive current implementation; production availability is controlled separately | Safe payment-method state, Family overview, requests/applicants, visits/change requests, submitted hours/care-payment attention, profile readiness/missing steps, unread messages, history, exact navigation, and accessible highlighting | Engineering/product/security |
 | `SRC-PROD-AI-AUDIT-001` | [Production interactive assistant deployment audit](../25-production-interactive-deployment-audit.md) | Authenticated production evidence, checked August 14, 2026 | Descriptive deployed-state evidence; does not itself authorize limited release | Fail-closed controls, exact-user grant count, governed Draft inventory/import, validation/evaluation links, audit events, human fallback, and mobile fit | Engineering/product/security |
 | `SRC-PROD-AI-PUBLICATION-001` | [Production KB publication and Settings verification](../26-production-kb-publication-and-settings-verification.md) | Authenticated production mutation and follow-up evidence, checked August 14, 2026 | Descriptive governed-publication evidence; does not itself authorize customer AI | Shadow-control removal, 23 non-pricing publications, held pricing Draft, activity evidence, and unchanged fail-closed state | Engineering/product/security |
 | `SRC-CODE-COPILOT-001` | Current `App\Services\AiCopilot`, `AiRequestCopilot`, models, and tests | Legacy retirement inventory | Not a product or implementation authority | Identify every removal and `DEC-011` destruction target while protecting ordinary domain records | Engineering |

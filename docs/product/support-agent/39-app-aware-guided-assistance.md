@@ -1,6 +1,6 @@
 # App-Aware Guided Assistance
 
-Status: Batch 1 implemented in source; Batch 2 is next
+Status: Batches 1 and 2 implemented in source; dedicated Batch 2 test round is next
 
 Established: August 17, 2026
 
@@ -94,7 +94,8 @@ The model never receives SQL access, an ORM, arbitrary model names, or a generic
 - `family_visit_status_v1`
 - `family_timesheet_status_v1`
 - `family_care_profile_status_v1`
-- later, applicant, regular-care, Continuous Coverage, messages, notifications, and history readers.
+- applicant, regular-care attention, messages, and history readers;
+- later, broader regular-care, Continuous Coverage, and notification readers.
 
 Every reader must:
 
@@ -328,7 +329,7 @@ Unchanged boundaries:
 - existing Stripe, payment authorization, capture, fee, payout, and request-publication behavior is unchanged; and
 - this does not enable AI for any additional user or switch availability to Everyone.
 
-The next product implementation is Batch 2: add narrow Family readers and exact guide targets for requests/applicants, visits, submitted hours/payment attention, and care-receiver profiles, culminating in a truthful “What needs my attention?” overview.
+Batch 2 now adds narrow Family reads and exact guide targets for requests/applicants, visits and caregiver change requests, submitted hours/payment attention, care-receiver profiles, messages, and history, culminating in a truthful “What needs my attention?” overview. Batch 3 safe prefill is next after the dedicated Batch 2 test round.
 
 ### Acceptance audit
 
@@ -345,6 +346,72 @@ The next product implementation is Batch 2: add narrow Family readers and exact 
 | Failed, abandoned, or unverifiable outcome never says success | Recovery returns task to the exact billing step and uses explicit non-success copy | `GuidedPaymentMethodTest`: checkout cancellation, unavailable verification, target failure, and expiry cases |
 | Conversation, draft, and human transfer remain available | Existing persistent widget remains; guide adds Stop and Talk to a person; handoff cancels task without billing mutation | Playwright verifies draft continuity and guide controls; `GuidedPaymentMethodTest` verifies handoff cancellation |
 | Lifecycle events and regressions are covered | Offered, started, arrived, action-started, completed, cancelled, recovery, and target-failed outcomes use compact interaction events | Focused guided-task tests, full PHP application suite, production asset build, and four-scenario AI Support browser pack |
+
+## Batch 2 acceptance criteria
+
+Batch 2 is complete in source when:
+
+- an eligible Family owner or member can ask what needs attention and receive a current, deterministic summary across the supported Family domains;
+- saved payment-method attention is owner-only, while care-payment actions remain available according to the normal Family-account permissions;
+- request status and caregiver-response claims come from the current authorized request/application records;
+- next/current visit status and pending caregiver change requests come from current authorized bookings;
+- submitted hours, time corrections, care-payment recovery, and completed-extra-visit attention use the same unresolved-action source as the Family dashboard;
+- care-receiver profile responses distinguish missing, draft, and ready state and identify the first required missing step;
+- unread/recent conversations and completed-care history are read only within the active Family Account;
+- every button resolves a registered target and an authorized resource on the server, with no model-provided route, record ID, selector, or coordinate;
+- the destination exposes the exact stable semantic target and the existing guide coordinator focuses and highlights it accessibly;
+- wrong-account, expired, missing, and disabled targets fail closed and never reveal whether another Family's record exists;
+- these reads, responses, navigation actions, and highlights do not mutate requests, bookings, hours, profiles, messages, or payments; and
+- the new deterministic intents do not consume a model call or expand production availability beyond the existing pilot users.
+
+## Batch 2 implementation record
+
+Implementation status: Complete in source on August 17, 2026. Production availability is unchanged. The dedicated cross-browser, responsive, accessibility, regression, and production-pilot test round is the next work item.
+
+Delivered:
+
+- a deterministic Family intent router for **What needs my attention?**, requests/applicants, current or next visits, caregiver visit-change requests, submitted hours/timesheets, care-payment failures, care-receiver profiles, messages, and history;
+- a normalized Family assistance service that derives the authenticated Family Account server-side and produces simple English directly from current application state without sending those account facts to the model;
+- reuse of `FamilyActionInboxBuilder` as the canonical unresolved-action source for payment attention, time corrections, completed extra visits, live visits, unapproved timesheets, applicants, and now caregiver-requested visit changes;
+- owner-only saved-payment-method attention in the overview using the Batch 1 safe card reader, including missing, expiring, expired, ready, and unavailable states without exposing card or provider secrets;
+- request lifecycle and applicant reads, current/next booking reads, submitted-duration and approval-state reads, draft/ready profile reads with the first missing required step, user-specific unread conversation reads, and completed-history availability reads;
+- up to six outcome-labelled guide buttons on one assistant message, with one foreground task and clean invalidation of unused sibling buttons when the user chooses a step;
+- additive guided-task resource references and resource resolvers for care requests, care plans, care-receiver profiles, and conversations, all re-authorized against the active Family Account when offered, started, and rendered;
+- exact registered destinations and stable semantic UI targets for Care, request overview, caregiver replies, visit status, visit-change decisions, timesheets, care-payment recovery, regular-care attention, care profiles and their missing step, message inbox/thread, and Care history;
+- deterministic, content-free `family_account_status_read` and guided-task lifecycle events; and
+- focused automated coverage for intent boundaries, no-model execution, authoritative overview composition, cross-account denial, resource-bound URLs, read-only behavior, visit-change attention, exact profile steps, semantic page targets, and the complete Batch 1 payment regression suite.
+
+Unchanged boundaries:
+
+- Batch 2 reads and guides; it does not approve hours, accept/reject a visit change, send messages, edit profiles, retry payments, or perform another domain mutation for the user.
+- A highlighted button remains part of the normal application workflow. Except for the separately verified Batch 1 payment-method flow, Batch 2 does not claim that a later domain action succeeded merely because the user reached or clicked the control.
+- The model receives no ORM, SQL, generic database tool, raw record dump, payment secret, care note dump, arbitrary URL, or browser selector.
+- Continuous Coverage management, notification-state reads, full historical amount aggregation, named-record natural-language resolution, form prefill, and confirmed domain execution remain later coverage.
+- Family members still receive no owner-only saved-card fact or payment-method-management destination.
+- No AI availability control, pilot grant, care/payment rule, or existing domain behavior changes in this batch.
+
+### Batch 2 focused acceptance audit
+
+| Batch 2 requirement | Implementation evidence | Focused automated proof |
+| --- | --- | --- |
+| Truthful “What needs my attention?” | Supported-domain overview combines safe payment-method state, canonical unresolved care actions, draft profiles, and unread conversations | `FamilyGuidedAssistanceTest`: four-domain attention composition and no-provider assertion |
+| Requests and applicants | Family-scoped lifecycle read plus applied/shortlisted counts and exact Applicants target | Intent, overview, route-binding, and rendered target assertions |
+| Visits and visit issues | Current/next booking selection plus pending caregiver change requests from the canonical booking | Scheduled/live selection coverage and dedicated caregiver-change test |
+| Submitted hours and payment recovery | Canonical action inbox plus latest submitted-timesheet fallback, normalized duration/status copy, and exact Timesheet/Payment targets | Submitted-hours resource route, unchanged booking state, and payment regression assertions |
+| Care-receiver profiles | Active-account list distinguishes none/draft/ready and maps the first missing required field to steps 1, 4, or 5 | Missing-profile and draft-profile overview assertions; dynamic profile resource authorization |
+| Messages and history | User-specific read timestamps identify unread threads; completed booking count/latest record powers history copy | Empty and unread cases plus rendered Inbox/History target assertions |
+| Server-authorized resources | Registry resolves only account-owned request, plan, profile, or conversation IDs and rechecks on navigation/render | Explicit other-Family denial and exact resource URL assertions |
+| Exact accessible target | Stable `data-ai-target` markers cover every Batch 2 destination and reuse the bounded guide coordinator | Rendered semantic-target assertions across static and record pages |
+| Read-only and inexpensive | Deterministic path bypasses provider and creates only support messages, guide tasks/actions, and compact events | No HTTP request, no model event, and unchanged request/booking/profile assertions |
+
+Implementation verification completed on August 17, 2026:
+
+- the Batch 1 and Batch 2 focused suites passed 20 tests with 162 assertions;
+- the adjacent AI runtime-safety, human-transfer, request lifecycle, time-correction, and completed-extra-visit suites passed 91 tests with 660 assertions;
+- Pint, PHP syntax checks, Blade compilation, route caching, and the production Vite build passed; and
+- the deployment-facing availability setting and exact two-user pilot grants were not changed.
+
+The dedicated Batch 2 test round will extend this focused proof across real browser navigation for every target, mobile/reflow, keyboard and screen reader behavior, stale/deleted resources, member/owner variants, representative production pilot data, and the wider application regression suite.
 
 ## Relationship to the coverage registry
 

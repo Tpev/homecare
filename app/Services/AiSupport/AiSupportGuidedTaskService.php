@@ -10,6 +10,7 @@ use App\Models\SupportTicketMessage;
 use App\Models\User;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -144,6 +145,109 @@ class AiSupportGuidedTaskService
         }, 3);
     }
 
+    /**
+     * Store a deterministic Family-account read result and up to six authorized guide buttons.
+     *
+     * @param  list<array{task_type:string,target_id:string,label:string,instruction?:string,resource_type?:string|null,resource_id?:int|null}>  $guides
+     * @return Collection<int,AiSupportGuidedTask>
+     */
+    public function offerFamilyReadResult(
+        User $actor,
+        SupportTicket $ticket,
+        string $messageBody,
+        string $intent,
+        string $resultCode,
+        array $guides = [],
+    ): Collection {
+        $this->authorizeAutomation($actor, $ticket);
+        $guides = array_slice($guides, 0, 6);
+
+        foreach ($guides as $guide) {
+            $resource = [
+                'resource_type' => $guide['resource_type'] ?? null,
+                'resource_id' => $guide['resource_id'] ?? null,
+            ];
+            if (! $this->navigation->allowedFor($actor, (string) $guide['target_id'], $resource)) {
+                throw new AuthorizationException('The guided destination is not authorized for this Family account.');
+            }
+        }
+
+        return DB::transaction(function () use ($actor, $ticket, $messageBody, $intent, $resultCode, $guides): Collection {
+            $locked = $this->lockedAutomatedTicket($actor, $ticket);
+            $now = now();
+            $this->cancelActorTasks($actor, 'superseded_by_new_task', $now);
+            AiSupportMessageAction::query()
+                ->where('actor_user_id', $actor->id)
+                ->where('action_type', AiSupportMessageAction::TYPE_GUIDED_TASK)
+                ->whereNull('consumed_at')
+                ->whereNull('invalidated_at')
+                ->update([
+                    'invalidated_at' => $now,
+                    'invalidation_reason' => 'superseded_by_new_task',
+                ]);
+
+            $message = $this->createAutomatedMessage($locked, $messageBody);
+            $tasks = collect();
+
+            foreach ($guides as $guide) {
+                $definition = $this->navigation->definition((string) $guide['target_id']) ?? [];
+                $task = AiSupportGuidedTask::query()->create([
+                    'support_ticket_id' => $locked->id,
+                    'actor_user_id' => $actor->id,
+                    'family_account_id' => $this->familyAccounts->account($actor)->id,
+                    'task_type' => (string) $guide['task_type'],
+                    'state' => AiSupportGuidedTask::STATE_OFFERED,
+                    'navigation_target_id' => (string) $guide['target_id'],
+                    'resource_type' => $guide['resource_type'] ?? null,
+                    'resource_id' => $guide['resource_id'] ?? null,
+                    'payload' => [
+                        'instruction' => (string) ($guide['instruction'] ?? $definition['instruction'] ?? 'Use the highlighted section.'),
+                        'checked_at' => $now->toIso8601String(),
+                    ],
+                    'initial_state_hash' => hash('sha256', json_encode([
+                        'intent' => $intent,
+                        'result' => $resultCode,
+                        'target' => $guide['target_id'],
+                        'resource_type' => $guide['resource_type'] ?? null,
+                        'resource_id' => $guide['resource_id'] ?? null,
+                        'checked_at' => $now->getTimestamp(),
+                    ], JSON_THROW_ON_ERROR)),
+                    'last_result_code' => $resultCode,
+                    'expires_at' => $now->copy()->addMinutes((int) config('ai_support.guided_task_validity_minutes', 60)),
+                ]);
+                AiSupportMessageAction::query()->create([
+                    'id' => (string) Str::uuid(),
+                    'support_ticket_message_id' => $message->id,
+                    'support_ticket_id' => $locked->id,
+                    'actor_user_id' => $actor->id,
+                    'action_type' => AiSupportMessageAction::TYPE_GUIDED_TASK,
+                    'payload' => [
+                        'guided_task_id' => $task->id,
+                        'label' => (string) $guide['label'],
+                    ],
+                    'expires_at' => $task->expires_at,
+                ]);
+                $this->events->record($locked, 'guided_task_offered', [
+                    'support_ticket_message_id' => $message->id,
+                    'capability_id' => 'semantic_navigation_v1',
+                    'navigation_target_id' => $task->navigation_target_id,
+                    'result_code' => $resultCode,
+                ], $actor);
+                $tasks->push($task);
+            }
+
+            $this->events->record($locked, 'family_account_status_read', [
+                'support_ticket_message_id' => $message->id,
+                'capability_id' => 'family_context_v1',
+                'tool_id' => 'family-account-overview',
+                'tool_version' => 'v1',
+                'result_code' => $intent,
+            ], $actor);
+
+            return $tasks;
+        }, 3);
+    }
+
     public function startFromAction(User $actor, SupportTicket $ticket, string $actionId): string
     {
         $this->authorizeAutomation($actor, $ticket);
@@ -190,6 +294,16 @@ class AiSupportGuidedTaskService
                 'version' => $task->version + 1,
             ])->save();
             $action->forceFill(['consumed_at' => $now])->save();
+            AiSupportMessageAction::query()
+                ->where('actor_user_id', $actor->id)
+                ->where('action_type', AiSupportMessageAction::TYPE_GUIDED_TASK)
+                ->where('id', '!=', $action->id)
+                ->whereNull('consumed_at')
+                ->whereNull('invalidated_at')
+                ->update([
+                    'invalidated_at' => $now,
+                    'invalidation_reason' => 'sibling_task_started',
+                ]);
             session()->put(self::SESSION_TASK_KEY, $task->id);
             $this->events->record($lockedTicket, 'guided_task_started', [
                 'capability_id' => 'semantic_navigation_v1',
@@ -197,7 +311,10 @@ class AiSupportGuidedTaskService
                 'result_code' => 'navigation_started',
             ], $actor);
 
-            return $this->navigation->urlFor($actor, $task->navigation_target_id);
+            return $this->navigation->urlFor($actor, $task->navigation_target_id, [
+                'resource_type' => $task->resource_type,
+                'resource_id' => $task->resource_id,
+            ]);
         }, 3);
     }
 
@@ -247,7 +364,10 @@ class AiSupportGuidedTaskService
 
         $definition = $this->navigation->definition($task->navigation_target_id);
         $clientTarget = trim((string) ($definition['client_target_id'] ?? ''));
-        if (! $definition || $clientTarget === '' || ! $this->navigation->allowedFor($actor, $task->navigation_target_id)) {
+        if (! $definition || $clientTarget === '' || ! $this->navigation->allowedFor($actor, $task->navigation_target_id, [
+            'resource_type' => $task->resource_type,
+            'resource_id' => $task->resource_id,
+        ])) {
             return null;
         }
 
@@ -308,12 +428,13 @@ class AiSupportGuidedTaskService
                 'last_result_code' => $result,
                 'version' => $task->version + 1,
             ])->save();
-            $message = $this->createAutomatedMessage(
-                $lockedTicket,
-                $result === 'target_disabled'
-                    ? 'I opened Billing & Payments, but the payment-method button is not available right now. I have not changed anything. You can ask to talk to a person.'
-                    : 'I opened Billing & Payments, but I could not safely find the exact payment-method button. I have not changed anything. You can ask to talk to a person.',
-            );
+            $paymentTask = $task->task_type === AiSupportGuidedTask::TYPE_PAYMENT_METHOD;
+            $message = $this->createAutomatedMessage($lockedTicket, match (true) {
+                $paymentTask && $result === 'target_disabled' => 'I opened Billing & Payments, but the payment-method button is not available right now. I have not changed anything. You can ask to talk to a person.',
+                $paymentTask => 'I opened Billing & Payments, but I could not safely find the exact payment-method button. I have not changed anything. You can ask to talk to a person.',
+                $result === 'target_disabled' => 'I opened the right page, but the exact section is not available right now. I have not changed anything. Ask me to check again or talk to a person.',
+                default => 'I opened the right page, but I could not safely find the exact section to highlight. I have not changed anything. Ask me to check again or talk to a person.',
+            });
             $this->events->record($lockedTicket, 'guided_target_failed', [
                 'support_ticket_message_id' => $message->id,
                 'capability_id' => 'semantic_navigation_v1',

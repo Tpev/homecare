@@ -62,6 +62,8 @@
     >
         <div class="overflow-hidden rounded-[28px] border border-[#DED6CA] bg-[rgba(255,252,248,0.97)] shadow-lg shadow-[#0F3D3E]/10 grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-9rem)] sm:min-h-[72vh]">
             <aside
+                data-ai-target="family.messages.inbox"
+                tabindex="-1"
                 x-show="!mobileThreadOpen || isDesktop"
                 x-transition.opacity
                 class="lg:col-span-4 xl:col-span-3 border-r border-[#DED6CA] bg-[rgba(245,241,235,0.65)]"
@@ -107,6 +109,7 @@
             </aside>
 
             <section
+                @if ($active) data-ai-target="family.messages.conversation" tabindex="-1" @endif
                 x-show="mobileThreadOpen || isDesktop"
                 x-transition.opacity
                 class="lg:col-span-8 xl:col-span-9 flex flex-col min-h-[calc(100vh-9rem)] sm:min-h-[72vh]"

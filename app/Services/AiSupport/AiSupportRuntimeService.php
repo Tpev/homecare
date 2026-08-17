@@ -21,6 +21,7 @@ class AiSupportRuntimeService
         private readonly AiSupportRequestDraftService $drafts,
         private readonly AiSupportRecapService $recaps,
         private readonly AiSupportGuidedTaskService $guidedTasks,
+        private readonly FamilyGuidedAssistanceService $familyGuidance,
         private readonly AiSupportHandoffService $handoff,
         private readonly NavigationTargetRegistry $navigation,
         private readonly AiSupportRuntimePromptBuilder $prompt,
@@ -71,6 +72,20 @@ class AiSupportRuntimeService
             } catch (Throwable $exception) {
                 report($exception);
                 $this->handoff->transfer($actor, $ticket, 'guided_payment_unavailable');
+            }
+
+            return;
+        }
+
+        $familyIntent = $actor->role === 'family'
+            ? $this->familyGuidance->intentFor($newestMessage)
+            : null;
+        if ($familyIntent !== null) {
+            try {
+                $this->familyGuidance->respond($actor, $ticket, $familyIntent);
+            } catch (Throwable $exception) {
+                report($exception);
+                $this->handoff->transfer($actor, $ticket, 'family_status_unavailable');
             }
 
             return;

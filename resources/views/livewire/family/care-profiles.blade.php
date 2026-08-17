@@ -1,6 +1,6 @@
 <div class="hc-page py-8 sm:py-12">
     <div class="mx-auto max-w-4xl space-y-6">
-        <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <header data-ai-target="family.care_profiles" tabindex="-1" class="flex flex-col gap-4 outline-none sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <p class="text-xs font-bold uppercase tracking-[0.18em] text-[#B95745]">Care profiles</p>
                 <h1 class="mt-2 font-display text-3xl font-semibold text-[#17313F]" tabindex="-1">People receiving care</h1>

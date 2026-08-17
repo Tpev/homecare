@@ -2,6 +2,10 @@
 
 namespace App\Services\AiSupport;
 
+use App\Models\CarePlan;
+use App\Models\CareRecipientProfile;
+use App\Models\CareRequest;
+use App\Models\CareRequestConversation;
 use App\Models\User;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -26,23 +30,45 @@ class NavigationTargetRegistry
         return is_array($definition) ? $definition : null;
     }
 
-    public function allowedFor(User $user, string $targetId): bool
+    /** @param array{resource_type?:string|null,resource_id?:int|string|null} $resource */
+    public function allowedFor(User $user, string $targetId, array $resource = []): bool
     {
         $definition = $this->definition($targetId);
 
-        return $definition !== null
+        if (! ($definition !== null
             && Route::has((string) $definition['route'])
             && in_array($user->role, (array) $definition['roles'], true)
-            && (! ($definition['owner_only'] ?? false) || $this->familyAccounts->isOwner($user));
+            && (! ($definition['owner_only'] ?? false) || $this->familyAccounts->isOwner($user)))) {
+            return false;
+        }
+
+        $expectedType = trim((string) ($definition['resource_type'] ?? ''));
+        if ($expectedType === '') {
+            return true;
+        }
+
+        $resourceType = trim((string) ($resource['resource_type'] ?? ''));
+        $resourceId = (int) ($resource['resource_id'] ?? 0);
+
+        return $resourceType === $expectedType
+            && $resourceId > 0
+            && $this->canAccessResource($user, $resourceType, $resourceId);
     }
 
-    public function urlFor(User $user, string $targetId): string
+    /** @param array{resource_type?:string|null,resource_id?:int|string|null} $resource */
+    public function urlFor(User $user, string $targetId, array $resource = []): string
     {
-        if (! $this->allowedFor($user, $targetId)) {
+        if (! $this->allowedFor($user, $targetId, $resource)) {
             throw new AuthorizationException('The navigation target is not registered for this user.');
         }
 
-        return route((string) $this->definition($targetId)['route']);
+        $definition = $this->definition($targetId);
+        $parameters = (array) ($definition['query'] ?? []);
+        if (isset($definition['resource_type'])) {
+            $parameters[(string) $definition['route_parameter']] = (int) $resource['resource_id'];
+        }
+
+        return route((string) $definition['route'], $parameters);
     }
 
     /** @return list<string> */
@@ -55,8 +81,35 @@ class NavigationTargetRegistry
     public function idsFor(User $user): array
     {
         return collect($this->ids())
-            ->filter(fn (string $id): bool => $this->allowedFor($user, $id))
+            ->filter(function (string $id) use ($user): bool {
+                $definition = $this->definition($id);
+
+                return ! isset($definition['resource_type']) && $this->allowedFor($user, $id);
+            })
             ->values()
             ->all();
+    }
+
+    private function canAccessResource(User $user, string $resourceType, int $resourceId): bool
+    {
+        if ($user->role !== 'family') {
+            return false;
+        }
+
+        $account = $this->familyAccounts->membershipFor($user, false)?->familyAccount;
+        if (! $account) {
+            return false;
+        }
+
+        return match ($resourceType) {
+            'care_request' => CareRequest::query()
+                ->forFamilyAccount($account)
+                ->whereKey($resourceId)
+                ->exists(),
+            'care_plan' => CarePlan::query()->forFamilyAccount($account)->whereKey($resourceId)->exists(),
+            'care_profile' => CareRecipientProfile::query()->forFamilyAccount($account)->whereKey($resourceId)->exists(),
+            'conversation' => CareRequestConversation::query()->forUser($user)->whereKey($resourceId)->exists(),
+            default => false,
+        };
     }
 }

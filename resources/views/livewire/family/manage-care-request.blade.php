@@ -308,7 +308,7 @@
 
     @if ($needsPaymentAuthorization)
         <x-alert color="amber">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div data-ai-target="family.request.payment_attention" tabindex="-1" class="flex flex-col gap-3 outline-none sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <p class="font-semibold">Card authorization needs attention.</p>
                     <p class="text-sm">{{ $payment->last_error ?: 'Confirm the card authorization before the visit is financially protected.' }}</p>
@@ -350,7 +350,11 @@
             </div>
 
             <div class="grid grid-cols-1 gap-3">
-                <div class="rounded-[1.4rem] border border-[#D8E1D7] bg-[#F2F8F4] p-4">
+                <div
+                    @if ($activeTab === 'overview') data-ai-target="family.request.overview" tabindex="-1"
+                    @elseif ($activeTab === 'applicants' && ! $showApplicationList) data-ai-target="family.request.applicants" tabindex="-1" @endif
+                    class="rounded-[1.4rem] border border-[#D8E1D7] bg-[#F2F8F4] p-4 outline-none"
+                >
                     <p class="text-xs uppercase tracking-[0.12em] text-emerald-700">{{ $lifecycleStage['eyebrow'] }}</p>
                     <p class="mt-1 font-display text-xl font-semibold text-[#17313F]">{{ $lifecycleStage['title'] }}</p>
                     <p class="mt-1 text-sm text-[#607080]">{{ $lifecycleStage['body'] }}</p>
@@ -397,7 +401,7 @@
                             </x-button>
                         </div>
                     @elseif ($timesheetNeedsReview)
-                        <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                        <div data-ai-target="family.request.timesheet" tabindex="-1" class="mt-4 grid grid-cols-1 gap-3 outline-none sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                             <div class="rounded-2xl border border-emerald-200 bg-white px-4 py-3">
                                 <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Submitted hours</p>
                                 <p class="mt-1 text-2xl font-semibold text-[#17313F]">{{ $workedLabel }}</p>
@@ -650,7 +654,7 @@
     @if ($activeTab === 'applicants' && $showApplicationList)
         <x-card>
             <x-slot:header>
-                <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div data-ai-target="family.request.applicants" tabindex="-1" class="flex flex-col gap-2 outline-none sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <p class="hc-brand-kicker">
                             @if ($isWaitingForCaregivers)
@@ -1035,7 +1039,7 @@
                 </div>
             </x-card>
         @else
-            <section id="visit-section" class="space-y-5 rounded-3xl border border-[#D8E1D7] bg-white p-4 shadow-sm sm:p-5">
+            <section id="visit-section" data-ai-target="family.request.visit" tabindex="-1" class="space-y-5 rounded-3xl border border-[#D8E1D7] bg-white p-4 shadow-sm outline-none sm:p-5">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                         <p class="hc-brand-kicker">{{ $visitPanelEyebrow }}</p>
@@ -1168,6 +1172,44 @@
                             </details>
                         </aside>
                     </div>
+
+                    @php
+                        $pendingCaregiverChanges = $booking->changeRequests->filter(
+                            fn ($change) => $change->status === \App\Models\CareBookingChangeRequest::STATUS_PENDING
+                                && $change->requester?->role === 'caregiver'
+                        );
+                    @endphp
+                    @if ($pendingCaregiverChanges->isNotEmpty())
+                        <section
+                            data-ai-target="family.request.visit_issue"
+                            tabindex="-1"
+                            class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950 outline-none"
+                            aria-labelledby="pending-caregiver-change-heading"
+                        >
+                            <h3 id="pending-caregiver-change-heading" class="font-display text-lg font-semibold">Caregiver requested a visit change</h3>
+                            <p class="mt-1">Your current visit schedule stays in place until you accept a change.</p>
+                            <div class="mt-3 space-y-3">
+                                @foreach ($pendingCaregiverChanges as $change)
+                                    <div class="rounded-xl border border-amber-200 bg-white px-3 py-3">
+                                        <p class="font-semibold">{{ ucfirst(str_replace('_', ' ', (string) $change->type)) }}</p>
+                                        <p class="mt-1 text-amber-900">{{ $change->reason }}</p>
+                                        @if ($change->proposed_start_at)
+                                            <p class="mt-1 text-xs text-amber-800">
+                                                Proposed: {{ $change->proposed_start_at->format('M d, Y g:i A') }}
+                                                @if ($change->proposed_end_at)
+                                                    to {{ $change->proposed_end_at->format('g:i A') }}
+                                                @endif
+                                            </p>
+                                        @endif
+                                        <div class="mt-3 flex flex-wrap gap-2">
+                                            <x-button color="green" light wire:click="resolveChangeRequest({{ $change->id }}, 'accept')">Accept change</x-button>
+                                            <x-button color="red" light wire:click="resolveChangeRequest({{ $change->id }}, 'reject')">Keep current schedule</x-button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </section>
+                    @endif
                 @else
                 <div class="grid grid-cols-1 gap-3 xl:grid-cols-4">
                     <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
@@ -1208,14 +1250,14 @@
 
                 @if (! $timesheetNeedsReview && ! $isFinalVisitRecord)
                     @if (! $payment)
-                        <div class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                        <div data-ai-target="family.request.payment_attention" tabindex="-1" class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 outline-none">
                             Payment authorization is not ready yet.
                             <button type="button" wire:click="startPaymentAuthorization" class="font-semibold underline underline-offset-2">Confirm card authorization</button>
                             or update your card in
                             <a href="{{ route('family.billing.show') }}" wire:navigate class="font-medium underline underline-offset-2">Billing & Payments</a>.
                         </div>
                     @else
-                        <div class="rounded-xl border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-xs text-[#4B5B6B]">
+                        <div @if ($payment->last_error) data-ai-target="family.request.payment_attention" tabindex="-1" @endif class="rounded-xl border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-xs text-[#4B5B6B] outline-none">
                             Payment status: <span class="font-semibold text-[#17313F]">{{ strtoupper($payment->status) }}</span>
                             @if ($payment->amount_authorized_cents)
                                 - Authorized ${{ number_format($payment->amount_authorized_cents / 100, 2) }}
@@ -1280,7 +1322,7 @@
 
                         @if (($booking->timesheet_submitted_at || $booking->worked_minutes) && ! $timesheetNeedsReview)
                             @if ($isFinalVisitRecord)
-                                <div class="rounded-2xl border border-[#CFE1D8] bg-[#F6FBF8] p-4">
+                                <div data-ai-target="family.request.timesheet" tabindex="-1" class="rounded-2xl border border-[#CFE1D8] bg-[#F6FBF8] p-4 outline-none">
                                     <p class="text-xs uppercase tracking-[0.12em] text-emerald-700">Visit receipt</p>
                                     <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
                                         <div class="rounded-xl border border-[#D8E1D7] bg-white px-3 py-2">
@@ -1308,7 +1350,7 @@
                                     </div>
                                 </div>
                             @else
-                                <div class="grid grid-cols-1 gap-3 rounded-lg border border-[#E4DDD3] bg-[#F7F2EA] p-3 md:grid-cols-3">
+                                <div data-ai-target="family.request.timesheet" tabindex="-1" class="grid grid-cols-1 gap-3 rounded-lg border border-[#E4DDD3] bg-[#F7F2EA] p-3 outline-none md:grid-cols-3">
                                     <div>
                                         <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Worked time</p>
                                         <p class="mt-1 text-base font-semibold text-[#17313F]">{{ $workedLabel }}</p>
@@ -1430,7 +1472,10 @@
                                         <p class="font-medium text-[#17313F]">Change requests</p>
                                         <div class="mt-3 space-y-2">
                                             @foreach ($booking->changeRequests as $change)
-                                                <div class="rounded-md border border-[#E4DDD3] bg-white px-3 py-2">
+                                                <div
+                                                    @if ($change->status === 'pending' && $change->requester?->role === 'caregiver') data-ai-target="family.request.visit_issue" tabindex="-1" @endif
+                                                    class="rounded-md border border-[#E4DDD3] bg-white px-3 py-2 outline-none"
+                                                >
                                                     <p class="font-medium">{{ strtoupper($change->type) }} - {{ strtoupper($change->status) }}</p>
                                                     <p class="text-[#607080]">{{ $change->reason }}</p>
                                                     @if ($change->proposed_start_at)
@@ -1460,7 +1505,10 @@
                         <summary class="cursor-pointer font-medium text-[#17313F]">Change requests</summary>
                         <div class="mt-3 space-y-2">
                             @foreach ($booking->changeRequests as $change)
-                                <div class="rounded-md border border-[#E4DDD3] px-3 py-2">
+                                <div
+                                    @if ($change->status === 'pending' && $change->requester?->role === 'caregiver') data-ai-target="family.request.visit_issue" tabindex="-1" @endif
+                                    class="rounded-md border border-[#E4DDD3] px-3 py-2 outline-none"
+                                >
                                     <p class="font-medium">{{ strtoupper($change->type) }} - {{ strtoupper($change->status) }}</p>
                                     <p class="text-[#607080]">{{ $change->reason }}</p>
                                 </div>

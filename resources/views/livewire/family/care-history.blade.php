@@ -20,7 +20,7 @@
         ];
     @endphp
 
-    <section class="relative overflow-hidden rounded-3xl bg-[#23483F] p-5 text-white shadow-sm sm:p-7">
+    <section data-ai-target="family.care_history" tabindex="-1" class="relative overflow-hidden rounded-3xl bg-[#23483F] p-5 text-white shadow-sm outline-none sm:p-7">
         <div class="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-[#7C5DDC]/20 blur-3xl"></div>
         <div class="pointer-events-none absolute -bottom-24 -left-10 h-56 w-56 rounded-full bg-[#C96B55]/20 blur-3xl"></div>
         <div class="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">

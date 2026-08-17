@@ -19,7 +19,7 @@
         $isEnded = in_array($plan->status, [\App\Models\CarePlan::STATUS_ENDED, \App\Models\CarePlan::STATUS_CANCELLED], true);
     @endphp
 
-    <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <header data-ai-target="family.regular_care.attention" tabindex="-1" class="flex flex-col gap-4 outline-none sm:flex-row sm:items-start sm:justify-between">
         <div>
             <a href="{{ route('family.care.index') }}" wire:navigate class="text-lg font-semibold text-[#0F5B52] underline underline-offset-4">Back to your care</a>
             <h1 class="mt-3 font-display text-3xl font-semibold leading-tight text-[#17313F]">Regular care with {{ $plan->caregiver?->name }}</h1>

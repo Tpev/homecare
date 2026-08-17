@@ -14,7 +14,9 @@
 
     <section
         id="time-correction-review-{{ $correction->id }}"
-        class="scroll-mt-24 rounded-3xl border-2 p-4 sm:p-5 {{ $statusTone }}"
+        data-ai-target="{{ $correction->status === \App\Models\CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED ? 'family.request.payment_attention' : 'family.request.timesheet' }}"
+        tabindex="-1"
+        class="scroll-mt-24 rounded-3xl border-2 p-4 outline-none sm:p-5 {{ $statusTone }}"
         aria-labelledby="family-time-correction-heading"
         aria-live="polite"
         x-data

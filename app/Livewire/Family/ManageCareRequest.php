@@ -130,7 +130,7 @@ class ManageCareRequest extends Component
                 'booking.taskChecks',
                 'booking.events.actor:id,name',
                 'booking.incidents.reporter:id,name',
-                'booking.changeRequests.requester:id,name',
+                'booking.changeRequests.requester:id,name,role',
                 'booking.reviews.reviewer:id,name',
                 'invitations' => fn ($query) => $query->with(['caregiver:id,name']),
                 'applications' => fn ($query) => $query->with([
@@ -1679,7 +1679,7 @@ class ManageCareRequest extends Component
             'booking.taskChecks',
             'booking.events.actor:id,name',
             'booking.incidents.reporter:id,name',
-            'booking.changeRequests.requester:id,name',
+            'booking.changeRequests.requester:id,name,role',
             'booking.reviews.reviewer:id,name',
             'invitations' => fn ($query) => $query->with(['caregiver:id,name']),
             'applications' => fn ($query) => $query->with([
@@ -1708,7 +1708,7 @@ class ManageCareRequest extends Component
                 'booking.taskChecks',
                 'booking.events.actor:id,name',
                 'booking.incidents.reporter:id,name',
-                'booking.changeRequests.requester:id,name',
+                'booking.changeRequests.requester:id,name,role',
                 'booking.reviews.reviewer:id,name',
                 'invitations' => fn ($query) => $query->with(['caregiver:id,name']),
                 'applications' => fn ($query) => $query->with([

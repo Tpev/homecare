@@ -13,6 +13,18 @@ class AiSupportGuidedTask extends Model
 
     public const TYPE_PAYMENT_METHOD = 'family_payment_method';
 
+    public const TYPE_FAMILY_REQUEST = 'family_request';
+
+    public const TYPE_FAMILY_VISIT = 'family_visit';
+
+    public const TYPE_FAMILY_TIMESHEET = 'family_timesheet';
+
+    public const TYPE_FAMILY_CARE_PROFILE = 'family_care_profile';
+
+    public const TYPE_FAMILY_MESSAGE = 'family_message';
+
+    public const TYPE_FAMILY_HISTORY = 'family_history';
+
     public const STATE_OFFERED = 'offered';
 
     public const STATE_NAVIGATING = 'navigating';
@@ -48,7 +60,7 @@ class AiSupportGuidedTask extends Model
 
     protected $fillable = [
         'id', 'support_ticket_id', 'actor_user_id', 'family_account_id',
-        'task_type', 'state', 'navigation_target_id', 'payload',
+        'task_type', 'state', 'navigation_target_id', 'resource_type', 'resource_id', 'payload',
         'initial_state_hash', 'result_state_hash', 'last_result_code', 'version',
         'started_at', 'arrived_at', 'in_progress_at', 'completed_at',
         'presented_at', 'cancelled_at', 'expires_at',

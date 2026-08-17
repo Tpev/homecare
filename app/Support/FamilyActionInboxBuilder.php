@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\CareBooking;
+use App\Models\CareBookingChangeRequest;
 use App\Models\CareBookingPayment;
 use App\Models\CareBookingTimeCorrection;
 use App\Models\CarePlan;
@@ -47,6 +48,7 @@ class FamilyActionInboxBuilder
 
         foreach ($paymentBookings as $booking) {
             $requestId = (int) $booking->care_request_id;
+            $planId = (int) $booking->care_plan_id;
             $items->push([
                 'key' => 'booking-payment-'.$booking->id,
                 'type' => 'payment',
@@ -57,9 +59,18 @@ class FamilyActionInboxBuilder
                 'body' => $booking->payment?->last_error ?: 'Confirm or replace your card for this visit.',
                 'meta' => $this->bookingDateTimeLabel($booking),
                 'label' => 'Fix payment',
-                'href' => $requestId > 0
-                    ? route('family.requests.show', $requestId)
-                    : route('family.billing.show'),
+                'navigation_target_id' => $planId > 0
+                    ? 'family.regular_care.attention'
+                    : ($requestId > 0
+                    ? 'family.request.payment_attention'
+                    : 'family.billing.payment_method'),
+                'resource_type' => $planId > 0 ? 'care_plan' : ($requestId > 0 ? 'care_request' : null),
+                'resource_id' => $planId > 0 ? $planId : ($requestId > 0 ? $requestId : null),
+                'href' => $planId > 0
+                    ? route('family.care.show', $planId)
+                    : ($requestId > 0
+                        ? route('family.requests.show', $requestId)
+                        : route('family.billing.show')),
                 'tone' => 'amber',
                 'caregiver' => $booking->caregiver,
                 'occurred_at' => $booking->payment?->updated_at ?: $booking->updated_at,
@@ -94,9 +105,10 @@ class FamilyActionInboxBuilder
                 'body' => $plan->nextBooking?->payment?->last_error ?: $plan->last_error ?: 'Confirm or replace your card for the next visit.',
                 'meta' => $plan->nextBooking ? $this->bookingDateTimeLabel($plan->nextBooking) : null,
                 'label' => 'Fix payment',
-                'href' => $plan->nextBooking?->care_request_id
-                    ? route('family.requests.show', $plan->nextBooking->care_request_id)
-                    : route('family.care.show', $plan->id),
+                'navigation_target_id' => 'family.regular_care.attention',
+                'resource_type' => 'care_plan',
+                'resource_id' => (int) $plan->id,
+                'href' => route('family.care.show', $plan->id),
                 'tone' => 'amber',
                 'caregiver' => $plan->caregiver,
                 'occurred_at' => $plan->updated_at,
@@ -143,6 +155,11 @@ class FamilyActionInboxBuilder
                     ? 'Your approval is saved. Confirm payment to finish.'
                     : 'Review the exact hours before any payment is made.',
                 'label' => $paymentAction ? 'Confirm payment' : 'Review hours',
+                'navigation_target_id' => $paymentAction
+                    ? 'family.request.payment_attention'
+                    : 'family.request.timesheet',
+                'resource_type' => 'care_request',
+                'resource_id' => (int) $booking->care_request_id,
                 'href' => route('family.requests.show', [
                     'careRequest' => $booking->care_request_id,
                     'tab' => 'shift',
@@ -197,6 +214,9 @@ class FamilyActionInboxBuilder
                     ? 'Your approval is saved. Confirm payment to finish.'
                     : 'This does not change the regular schedule. Review before payment.',
                 'label' => $paymentAction ? 'Confirm payment' : 'Review visit',
+                'navigation_target_id' => 'family.regular_care.attention',
+                'resource_type' => 'care_plan',
+                'resource_id' => (int) $report->care_plan_id,
                 'href' => route('family.care.show', [
                     'carePlan' => $report->care_plan_id,
                     'extra_visit' => $report->id,
@@ -207,9 +227,60 @@ class FamilyActionInboxBuilder
             ]);
         }
 
+        $visitChanges = CareBookingChangeRequest::query()
+            ->with([
+                'requester:id,name,role',
+                'booking:id,care_request_id,care_plan_id,scheduled_start_at,scheduled_end_at,family_account_id',
+                'booking.careRequest:id,title',
+                'booking.carePlan:id,title',
+            ])
+            ->where('status', CareBookingChangeRequest::STATUS_PENDING)
+            ->whereHas('requester', fn ($query) => $query->where('role', 'caregiver'))
+            ->whereHas('booking', fn ($query) => $query->forFamilyAccount($account))
+            ->orderBy('created_at')
+            ->get();
+
+        foreach ($visitChanges as $change) {
+            $booking = $change->booking;
+            if (! $booking || (! $booking->care_request_id && ! $booking->care_plan_id)) {
+                continue;
+            }
+
+            $regularCare = (int) $booking->care_plan_id > 0;
+
+            $items->push([
+                'key' => 'visit-change-'.$change->id,
+                'type' => 'visit_change',
+                'priority' => 18,
+                'eyebrow' => 'Visit change needs your review',
+                'title' => $change->type === CareBookingChangeRequest::TYPE_CANCEL
+                    ? 'Caregiver requested a visit cancellation'
+                    : 'Caregiver proposed a new visit time',
+                'subject' => $booking->careRequest?->title ?: $booking->carePlan?->title ?: 'Upcoming care visit',
+                'body' => $change->type === CareBookingChangeRequest::TYPE_RESCHEDULE
+                    ? $this->bookingDateTimeLabel($booking)
+                    : 'Review the request before the schedule changes.',
+                'meta' => 'The current visit stays scheduled until you decide.',
+                'label' => 'Review visit change',
+                'navigation_target_id' => $regularCare ? 'family.regular_care.attention' : 'family.request.visit_issue',
+                'resource_type' => $regularCare ? 'care_plan' : 'care_request',
+                'resource_id' => $regularCare ? (int) $booking->care_plan_id : (int) $booking->care_request_id,
+                'href' => $regularCare
+                    ? route('family.care.show', $booking->care_plan_id)
+                    : route('family.requests.show', [
+                        'careRequest' => $booking->care_request_id,
+                        'tab' => 'shift',
+                    ]),
+                'tone' => 'amber',
+                'caregiver' => $change->requester,
+                'occurred_at' => $change->created_at,
+            ]);
+        }
+
         $bookingActions = CareBooking::query()
             ->with([
                 'careRequest:id,title',
+                'carePlan:id,title',
                 'caregiver:id,name',
                 'caregiver.caregiverProfile:id,user_id,profile_photo_path',
             ])
@@ -229,11 +300,12 @@ class FamilyActionInboxBuilder
             ->get();
 
         foreach ($bookingActions as $booking) {
-            if (! $booking->care_request_id) {
+            if (! $booking->care_request_id && ! $booking->care_plan_id) {
                 continue;
             }
 
             $isLive = in_array($booking->status, [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED], true);
+            $regularCare = (int) $booking->care_plan_id > 0;
             $items->push([
                 'key' => 'booking-'.$booking->id,
                 'type' => $isLive ? 'live_visit' : 'timesheet',
@@ -242,11 +314,18 @@ class FamilyActionInboxBuilder
                 'title' => $isLive
                     ? ($booking->status === CareBooking::STATUS_PAUSED ? 'Visit is paused' : 'Care is happening now')
                     : 'Approve '.$this->possessiveName($booking->caregiver?->name).' visit hours',
-                'subject' => $booking->careRequest?->title ?: 'Care visit',
+                'subject' => $booking->careRequest?->title ?: $booking->carePlan?->title ?: 'Care visit',
                 'body' => $isLive ? $this->bookingDateTimeLabel($booking) : 'The caregiver submitted their timesheet.',
                 'meta' => $isLive ? 'Open the visit for tracking, messages, or support.' : $this->bookingDateTimeLabel($booking),
                 'label' => $isLive ? 'Open visit' : 'Review hours',
-                'href' => route('family.requests.show', $booking->care_request_id),
+                'navigation_target_id' => $regularCare
+                    ? 'family.regular_care.attention'
+                    : ($isLive ? 'family.request.visit' : 'family.request.timesheet'),
+                'resource_type' => $regularCare ? 'care_plan' : 'care_request',
+                'resource_id' => $regularCare ? (int) $booking->care_plan_id : (int) $booking->care_request_id,
+                'href' => $regularCare
+                    ? route('family.care.show', $booking->care_plan_id)
+                    : route('family.requests.show', $booking->care_request_id),
                 'tone' => 'green',
                 'caregiver' => $booking->caregiver,
                 'occurred_at' => $booking->completed_at ?: $booking->updated_at,
@@ -283,6 +362,9 @@ class FamilyActionInboxBuilder
                 'body' => 'Compare profiles, message caregivers, and choose the right fit.',
                 'meta' => null,
                 'label' => $count === 1 ? 'Review caregiver' : 'Review caregivers',
+                'navigation_target_id' => 'family.request.applicants',
+                'resource_type' => 'care_request',
+                'resource_id' => (int) $request->id,
                 'href' => route('family.requests.show', ['careRequest' => $request->id, 'tab' => 'applicants']),
                 'tone' => 'blue',
                 'caregiver' => null,

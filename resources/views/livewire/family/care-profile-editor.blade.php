@@ -28,7 +28,7 @@
             @if ($step === 5)<p class="mt-3 text-center text-sm font-semibold text-[#17313F]">Preview: what caregivers will see</p>@endif
         </nav>
 
-        <form wire:submit="{{ $step === 5 ? 'saveReady' : 'continue' }}" class="space-y-5">
+        <form data-ai-target="family.care_profile.editor" tabindex="-1" wire:submit="{{ $step === 5 ? 'saveReady' : 'continue' }}" class="space-y-5 outline-none">
             @if ($step === 1)
                 <section class="rounded-2xl border border-[#DCCFBE] bg-white p-5 shadow-sm" aria-labelledby="about-step">
                     <h2 id="about-step" class="font-display text-2xl font-semibold text-[#17313F]">About the person</h2>

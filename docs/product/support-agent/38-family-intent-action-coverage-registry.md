@@ -1,6 +1,6 @@
 # Family Intent and AI Action Coverage Registry
 
-Status: Active coverage registry; payment-method guided slice implemented
+Status: Active coverage registry; Family read-and-guide Batch 2 implemented in source
 
 Established: August 17, 2026
 
@@ -17,7 +17,7 @@ This registry answers two separate questions for every likely Family-user intent
 
 It is deliberately broader than the current AI feature. It inventories the actual Family-facing application, then adds probable user needs and failure cases that may not yet have a complete product flow. A row marked as a product gap must not be mistaken for an AI implementation task until Product defines the underlying app behavior.
 
-Baseline source: production-oriented repository state audited August 17, 2026, plus the 23 published governed KB entries and held pricing entry. Payment-method rows include the guided-assistance Batch 1 source implementation; production availability remains controlled separately. Re-audit this registry whenever a Family workflow, AI tool, governed KB entry, or authorization rule changes.
+Baseline source: production-oriented repository state audited August 17, 2026, plus the 23 published governed KB entries and held pricing entry. Payment-method rows include Batch 1 and the request, visit, hours, profile, message, history, care-payment, and Family-overview rows include the Batch 2 source implementation. Production availability remains controlled separately. Re-audit this registry whenever a Family workflow, AI tool, governed KB entry, or authorization rule changes.
 
 ## Status legend
 
@@ -52,12 +52,12 @@ Qualifiers such as `owner only`, `flagged`, or `held truth` narrow the base stat
 
 ## Baseline coverage snapshot
 
-This first pass contains **323 unique Family intents**.
+This registry contains **324 unique Family intents**.
 
 | Coverage dimension | Yes | Partial / assisted | No | Transfer |
 | --- | ---: | ---: | ---: | ---: |
-| AI can explain now | 75 | 43 | 205 | 0 |
-| AI can do now | 6 complete | 71 draft/navigation/guide/partial-read | 204 | 42 |
+| AI can explain now | 86 | 62 | 176 | 0 |
+| AI can do now | 6 complete | 100 draft/navigation/guide/partial-read | 176 | 42 |
 
 The counts are intent-level inventory indicators, not quality scores. One implementation may cover several rows, and one row may require several KB entries, read contracts, tools, and failure tests. Update the counts when row statuses change.
 
@@ -92,6 +92,7 @@ The counts are intent-level inventory indicators, not quality scores. One implem
 | FAM-START-014 | Ask to use the assistant in another language | Human | Yes | Transfer | English-only explanation; no translation claim |
 | FAM-START-015 | Ask to speak to a person | Human | Yes | Transfer | Keep covered in the same conversation |
 | FAM-START-016 | Understand what the AI can and cannot do | Partial UI | Partial | No | Publish a concise capability/help entry generated from this registry |
+| FAM-START-017 | Ask what currently needs attention across the Family Account | UI | Yes | Read / Guide | Deterministically check supported payment-method, care-payment, request, applicant, visit-change, submitted-hours, profile, and unread-message states; show up to six exact actions |
 
 ## 2. Login, identity, personal account, and security
 
@@ -148,9 +149,9 @@ The counts are intent-level inventory indicators, not quality scores. One implem
 | ID | Family intent | Product today | AI explain now | AI do now | Recommended target behavior |
 | --- | --- | --- | --- | --- | --- |
 | FAM-PROFILE-001 | Understand what a care-receiver profile is and who sees it | UI | Partial | No | Add governed visibility and purpose explanation |
-| FAM-PROFILE-002 | View care-receiver profiles | UI | No | No | Add navigation and authorized list read |
-| FAM-PROFILE-003 | Create a care-receiver profile | UI | No | No | Prepare section-by-section; recap; confirm & save |
-| FAM-PROFILE-004 | Save a profile and finish later | UI | No | No | Explain draft state; provide safe save action |
+| FAM-PROFILE-002 | View care-receiver profiles | UI | Yes | Read / Guide | Read active profile readiness and open the exact profile area |
+| FAM-PROFILE-003 | Create a care-receiver profile | UI | Partial | Guide | Open and highlight the profile editor; preparation and saving remain Batch 3-4 work |
+| FAM-PROFILE-004 | Save a profile and finish later | UI | Yes | Read / Guide | Explain authoritative draft state and open the first missing required step |
 | FAM-PROFILE-005 | Mark a profile ready for care requests | UI | No | No | Validate, recap sharing, confirm & execute |
 | FAM-PROFILE-006 | Select who receives care and whether it is the Family user | UI | Partial | Draft | Keep selection inside request draft; add profile-edit support |
 | FAM-PROFILE-007 | Edit preferred name, full name, relationship, DOB, or pronouns | UI | No | No | Prepare sensitive changes; explicit recap and confirmation |
@@ -211,8 +212,8 @@ The counts are intent-level inventory indicators, not quality scores. One implem
 | FAM-REQUEST-031 | Understand what happens after publication | UI | Yes | Navigate | Keep authoritative receipt and View request action |
 | FAM-REQUEST-032 | Understand whether publication hired a caregiver | UI | Yes | No | Keep “live is not hired” explanation |
 | FAM-REQUEST-033 | Understand whether publication charged or authorized the card | UI | Yes | No | Keep governed no-charge-at-publication explanation |
-| FAM-REQUEST-034 | See current request status | UI | Partial | Navigate | Add authorized request-state read |
-| FAM-REQUEST-035 | See whether caregivers viewed or applied | UI | No | Navigate | Add authoritative applicant/status read; never infer views |
+| FAM-REQUEST-034 | See current request status | UI | Yes | Read / Guide | Read the current lifecycle and open the exact request tab |
+| FAM-REQUEST-035 | See whether caregivers viewed or applied | UI | Partial | Read / Guide | Read authoritative applicant counts and guide to replies; never claim caregiver views |
 | FAM-REQUEST-036 | Edit a live request's recipient, tasks, date, time, duration, address, or notes | Gap / Partial UI | No | No | Define edit/version/notification behavior; then prepare + confirm |
 | FAM-REQUEST-037 | Change a live one-time request into regular care or vice versa | Gap | No | No | Define replace-versus-edit behavior before AI work |
 | FAM-REQUEST-038 | Withdraw an open request | UI | Partial | No | Read impact; confirm & execute |
@@ -240,11 +241,11 @@ The counts are intent-level inventory indicators, not quality scores. One implem
 | FAM-MATCH-010 | Reinvite a caregiver | UI | No | No | Read prior invitation state then confirm & execute |
 | FAM-MATCH-011 | See invitation status | UI | No | No | Add authoritative invitation-state read |
 | FAM-MATCH-012 | Cancel a caregiver invitation | Partial UI | No | No | Define supported cancellation state and confirm & execute |
-| FAM-MATCH-013 | See caregivers who applied or replied | UI | No | Navigate | Add authoritative applicant list read |
+| FAM-MATCH-013 | See caregivers who applied or replied | UI | Yes | Read / Guide | Read pending applied/shortlisted counts and open the exact applicant area |
 | FAM-MATCH-014 | Compare applicants | UI | No | No | Summarize only authorized comparable fields; user decides |
 | FAM-MATCH-015 | Shortlist or save an applicant for later | UI | No | No | Confirm & execute low-risk state change |
 | FAM-MATCH-016 | Reject or mark “not this caregiver” | UI | No | No | Explain impact then confirm & execute |
-| FAM-MATCH-017 | Start or open a conversation with an applicant | UI | No | No | Navigate to the correct existing/request-bound conversation |
+| FAM-MATCH-017 | Start or open a conversation with an applicant | UI | Partial | Read / Guide | Open the newest/unread authorized existing conversation; creating a new conversation remains normal UI work |
 | FAM-MATCH-018 | Send a message to an applicant or hired caregiver | UI | No | No | Prepare message; user reviews and explicitly sends |
 | FAM-MATCH-019 | Understand whether a message was delivered or read | Partial UI | No | No | Read only authoritative delivery state; never infer reading |
 | FAM-MATCH-020 | Hire a caregiver who applied | UI | No | No | Read eligibility/payment prerequisites; recap; confirm & execute |
@@ -269,16 +270,16 @@ The counts are intent-level inventory indicators, not quality scores. One implem
 | FAM-PAY-009 | Understand when payment is authorized and captured | UI | Partial | No | Reconcile authoritative product truth and code, then publish one answer |
 | FAM-PAY-010 | Understand whether publishing a request charges the card | UI | Yes | No | Keep covered |
 | FAM-PAY-011 | Understand an authorization hold versus a captured charge | UI | No | No | Add governed payment-state definitions using live state |
-| FAM-PAY-012 | Understand a pending payment | UI | No | No | Read live payment state and explain next action |
-| FAM-PAY-013 | Understand why card authorization failed | UI | No | No | Read safe failure code; explain; open retry or billing |
-| FAM-PAY-014 | Retry a failed card authorization | UI | No | No | Navigate or confirm retry through existing secure payment flow |
+| FAM-PAY-012 | Understand a pending payment | UI | Partial | Read / Guide | Read whether Family action is required and open the exact care-payment recovery area |
+| FAM-PAY-013 | Understand why card authorization failed | UI | Partial | Read / Guide | State the safe normalized attention status and open retry; detailed provider causes remain structured UI/human territory |
+| FAM-PAY-014 | Retry a failed card authorization | UI | Partial | Guide | Highlight the existing secure recovery action; the user completes it in the normal UI |
 | FAM-PAY-015 | Complete bank/card authentication or action-required flow | UI | No | No | Navigate to provider-hosted authentication; never emulate in chat |
-| FAM-PAY-016 | Understand why payment capture failed after approving care | Partial UI | No | No | Read safe failure state; explain and open recovery |
-| FAM-PAY-017 | Retry payment for a time correction | UI | No | No | Read state; navigate/confirm through existing secure flow |
-| FAM-PAY-018 | Retry payment for a completed extra visit | UI | No | No | Read state; navigate/confirm through existing secure flow |
-| FAM-PAY-019 | View payment history | UI | No | No | Register Care history payment-filter navigation |
+| FAM-PAY-016 | Understand why payment capture failed after approving care | Partial UI | Partial | Read / Guide | Read normalized payment attention and open the exact recovery control |
+| FAM-PAY-017 | Retry payment for a time correction | UI | Partial | Guide | Open and highlight the correction payment-recovery step |
+| FAM-PAY-018 | Retry payment for a completed extra visit | UI | Partial | Guide | Open and highlight the regular-care attention area |
+| FAM-PAY-019 | View payment history | UI | Yes | Read / Guide | Read whether history exists and open highlighted Care history |
 | FAM-PAY-020 | View the amount authorized, captured, refunded, and net paid | UI | No | No | Read authoritative amounts and explain labels |
-| FAM-PAY-021 | Understand a payment failure shown in Care history | UI | No | No | Read safe current failure and recommend exact next action |
+| FAM-PAY-021 | Understand a payment failure shown in Care history | UI | Partial | Read / Guide | Read current care-payment attention and recommend the exact recovery page |
 | FAM-PAY-022 | Request a refund | Human | No | Transfer | Prepare reason and booking reference; human only |
 | FAM-PAY-023 | Understand refund status or amount | UI / Human | No | No | Read authoritative refund state; transfer exceptions |
 | FAM-PAY-024 | Dispute a charge or submitted hours | UI / Human | No | No | Prepare dispute; explicit submission; human review |
@@ -295,32 +296,32 @@ The counts are intent-level inventory indicators, not quality scores. One implem
 
 | ID | Family intent | Product today | AI explain now | AI do now | Recommended target behavior |
 | --- | --- | --- | --- | --- | --- |
-| FAM-VISIT-001 | View the next scheduled visit | UI | Partial | Navigate | Add authorized next-visit read and exact navigation |
+| FAM-VISIT-001 | View the next scheduled visit | UI | Yes | Read / Guide | Read the next/current authorized booking and open its exact visit area |
 | FAM-VISIT-002 | View visit date, time, duration, location, tasks, and instructions | UI | No | No | Add authorized booking read with field-level privacy |
-| FAM-VISIT-003 | Understand the current visit status | UI | Partial | Navigate | Add governed status definitions plus live state |
+| FAM-VISIT-003 | Understand the current visit status | UI | Yes | Read / Guide | Explain the normalized live/scheduled status and open the visit |
 | FAM-VISIT-004 | Message the hired caregiver before or during a visit | UI | No | No | Navigate or prepare message; explicit send |
 | FAM-VISIT-005 | Request a reschedule | UI | No | No | Prepare change request; recap; explicit send |
 | FAM-VISIT-006 | Request a visit cancellation | UI | No | No | Explain policy/impact; recap; confirm & execute or send request |
 | FAM-VISIT-007 | Cancel a scheduled visit directly when allowed | UI | No | No | Read eligibility/impact; confirm & execute |
 | FAM-VISIT-008 | Understand late-cancellation consequences | Partial UI | No | No | Add authoritative policy explanation before confirmation |
-| FAM-VISIT-009 | Review a caregiver's schedule-change request | UI | No | No | Read proposed/current values; recap difference |
-| FAM-VISIT-010 | Accept a caregiver's change request | UI | No | No | Confirm & execute after difference recap |
-| FAM-VISIT-011 | Reject a caregiver's change request | UI | No | No | Confirm & execute; preserve original schedule |
+| FAM-VISIT-009 | Review a caregiver's schedule-change request | UI | Partial | Read / Guide | Detect the pending caregiver request and highlight the exact decision card; full current/proposed recap remains |
+| FAM-VISIT-010 | Accept a caregiver's change request | UI | Partial | Guide | Highlight the normal Accept/Reject decision card; the user performs the decision in the app |
+| FAM-VISIT-011 | Reject a caregiver's change request | UI | Partial | Guide | Highlight the normal Accept/Reject decision card; the user performs the decision in the app |
 | FAM-VISIT-012 | Understand caregiver check-in or check-out state | UI | No | No | Add authorized live-state read |
 | FAM-VISIT-013 | Report that a caregiver is late | Human / Partial UI | No | No | Prepare support contact; distinguish late from no-show |
 | FAM-VISIT-014 | Mark a caregiver as no-show | UI | No | No | Read eligibility and consequences; explicit confirmation |
 | FAM-VISIT-015 | Report a safety incident during or after care | UI / Human | No | No | Prepare structured incident; urgent safety rule; human review |
 | FAM-VISIT-016 | Create a support ticket about the visit | UI | Partial | Transfer | Prefer same support conversation with booking context |
 | FAM-VISIT-017 | Tell the app that the visit ended | UI | No | No | Read booking state; confirm & execute |
-| FAM-VISIT-018 | Understand what a timesheet or submitted-hours review is | UI | No | No | Add governed explanation |
+| FAM-VISIT-018 | Understand what a timesheet or submitted-hours review is | UI | Partial | Read / Guide | Read whether submitted hours need attention and open the exact hours area |
 | FAM-VISIT-019 | Review caregiver-submitted start, end, duration, tasks, and notes | UI | No | No | Read authoritative submission and present concise recap |
-| FAM-VISIT-020 | Approve submitted hours and payment | UI | No | No | Recap hours and amount; explicit confirm & execute |
+| FAM-VISIT-020 | Approve submitted hours and payment | UI | Partial | Guide | Read the submitted duration and highlight the normal review/approval area; AI execution remains restricted |
 | FAM-VISIT-021 | Question submitted hours | UI | No | No | Prepare dispute/change request; explicit submission |
 | FAM-VISIT-022 | Ask caregiver to correct submitted time | UI | No | No | Prepare reason and proposed correction; explicit send |
-| FAM-VISIT-023 | Review a caregiver-submitted time correction | UI | No | No | Read original/proposed time and amount difference |
+| FAM-VISIT-023 | Review a caregiver-submitted time correction | UI | Partial | Read / Guide | Detect pending correction attention and open the exact review section; full difference recap remains later work |
 | FAM-VISIT-024 | Approve a time correction and payment | UI | No | No | Two-step recap and explicit confirm & execute |
 | FAM-VISIT-025 | Request changes to a time correction | UI | No | No | Prepare request; explicit send |
-| FAM-VISIT-026 | Continue payment after a correction requires card action | UI | No | No | Read state and navigate to secure payment step |
+| FAM-VISIT-026 | Continue payment after a correction requires card action | UI | Partial | Guide | Read the payment-action-required state and highlight the secure continuation control |
 | FAM-VISIT-027 | Escalate a time correction to LoLo | UI / Human | No | Transfer | Transfer with booking/correction context |
 | FAM-VISIT-028 | Open a dispute after care | UI / Human | No | No | Prepare dispute, show effect, explicit submit; human review |
 | FAM-VISIT-029 | Understand dispute status | UI / Human | No | No | Read authoritative case status and next action |
@@ -335,7 +336,7 @@ The counts are intent-level inventory indicators, not quality scores. One implem
 
 | ID | Family intent | Product today | AI explain now | AI do now | Recommended target behavior |
 | --- | --- | --- | --- | --- | --- |
-| FAM-REGULAR-001 | View active, paused, pending, or ended regular-care plans | UI | Partial | No | Add registered navigation and authorized plan-state read |
+| FAM-REGULAR-001 | View active, paused, pending, or ended regular-care plans | UI | Partial | Read / Guide | Batch 2 guides exact regular-care attention; complete plan-list status coverage remains |
 | FAM-REGULAR-002 | Set up regular care with a known caregiver | UI | Partial | No | Prepare offer, schedule, notes; recap; confirm & send |
 | FAM-REGULAR-003 | Choose weekly days, per-day times, durations, start, and end | UI | Yes | Draft | Reuse request drafting rules where product semantics match |
 | FAM-REGULAR-004 | Reuse care details and tasks from a prior request | UI | Yes | Partial read | Require explicit reuse and visible recap |
@@ -343,22 +344,22 @@ The counts are intent-level inventory indicators, not quality scores. One implem
 | FAM-REGULAR-006 | Understand why a payment method is required | UI | Partial | No | Publish reconciled billing explanation and navigate |
 | FAM-REGULAR-007 | Understand a caregiver counteroffer | UI | No | No | Read original and countered schedule/terms |
 | FAM-REGULAR-008 | Accept a caregiver counteroffer | UI | No | No | Difference recap; explicit confirmation |
-| FAM-REGULAR-009 | View the next regular-care visit | UI | No | No | Add authorized plan/booking read |
+| FAM-REGULAR-009 | View the next regular-care visit | UI | Yes | Read / Guide | Read the next plan booking and open the highlighted regular-care page |
 | FAM-REGULAR-010 | View later generated visits | UI | No | No | Add authorized read and navigation |
 | FAM-REGULAR-011 | Skip one upcoming regular-care visit | UI | No | No | Explain late window; explicit confirm & execute |
 | FAM-REGULAR-012 | Add one extra future visit | UI | No | No | Prepare date/time/duration; recap; confirm & send |
-| FAM-REGULAR-013 | Review a caregiver-reported completed extra visit | UI | No | No | Read exact visit, hours, notes, and amount |
+| FAM-REGULAR-013 | Review a caregiver-reported completed extra visit | UI | Partial | Read / Guide | Detect the pending report and open the exact regular-care attention area; complete field recap remains |
 | FAM-REGULAR-014 | Approve and pay a completed extra visit | UI | No | No | Recap; explicit confirm & execute |
 | FAM-REGULAR-015 | Request changes to a completed extra visit | UI | No | No | Prepare and explicitly send correction request |
 | FAM-REGULAR-016 | Dispute a completed extra visit | UI / Human | No | No | Prepare dispute; explicit submit; human review |
-| FAM-REGULAR-017 | Retry payment for a completed extra visit | UI | No | No | Read state and navigate/confirm secure retry |
+| FAM-REGULAR-017 | Retry payment for a completed extra visit | UI | Partial | Guide | Highlight the existing secure retry area; normal UI performs payment |
 | FAM-REGULAR-018 | Escalate a completed extra visit to LoLo | UI / Human | No | Transfer | Transfer with exact visit context |
 | FAM-REGULAR-019 | Request a future schedule change | UI | No | No | Prepare old/new schedule comparison; explicit send |
 | FAM-REGULAR-020 | Pause regular care with or without a return date | UI | No | No | Show cancelled-visit impact; confirm & execute |
 | FAM-REGULAR-021 | Resume paused regular care | UI | No | No | Read next generated visit; confirm & execute |
 | FAM-REGULAR-022 | End regular care | UI | No | No | Show next-visit choice and future impact; confirm & execute |
 | FAM-REGULAR-023 | End regular care and cancel the next visit | UI | No | No | Strong impact recap; confirm & execute |
-| FAM-REGULAR-024 | View regular-care history and payments | UI | No | No | Navigate to filtered Care history and read safe summary |
+| FAM-REGULAR-024 | View regular-care history and payments | UI | Partial | Read / Guide | Open Care history and read the available completed-visit summary; plan filter preselection remains |
 | FAM-REGULAR-025 | Message the regular caregiver | UI | No | No | Navigate or prepare message; explicit send |
 | FAM-REGULAR-026 | Replace the caregiver on a regular-care plan | Gap / Human | No | Transfer | Define replacement workflow; human until implemented |
 
@@ -399,8 +400,8 @@ Continuous Coverage exists behind a product middleware flag. The current AI poli
 
 | ID | Family intent | Product today | AI explain now | AI do now | Recommended target behavior |
 | --- | --- | --- | --- | --- | --- |
-| FAM-COMMS-001 | Open the Family message inbox | UI | No | No | Add registered navigation target |
-| FAM-COMMS-002 | Find the conversation for a request, applicant, or hired caregiver | UI | No | No | Read authorized conversation index and navigate exactly |
+| FAM-COMMS-001 | Open the Family message inbox | UI | Yes | Guide | Open and highlight the authorized message inbox |
+| FAM-COMMS-002 | Find the conversation for a request, applicant, or hired caregiver | UI | Partial | Read / Guide | Read unread/recent authorized conversations and open the exact thread; named-request resolution remains later work |
 | FAM-COMMS-003 | Send a message | UI | No | No | Prepare message; user reviews and explicitly sends |
 | FAM-COMMS-004 | Understand why a message cannot be sent | Partial UI | No | No | Read conversation/request state and explain |
 | FAM-COMMS-005 | Report harassment, abuse, or unsafe messaging | Human | No | Transfer | Safety-first transfer with preserved conversation |
@@ -421,10 +422,10 @@ Continuous Coverage exists behind a product middleware flag. The current AI poli
 
 | ID | Family intent | Product today | AI explain now | AI do now | Recommended target behavior |
 | --- | --- | --- | --- | --- | --- |
-| FAM-HISTORY-001 | Open Care history | UI | No | No | Add registered navigation target |
+| FAM-HISTORY-001 | Open Care history | UI | Yes | Read / Guide | Read whether completed history exists and open highlighted Care history |
 | FAM-HISTORY-002 | Search history by booking, caregiver, recipient, or title | UI | No | No | Navigate with filters; later authorized search read |
 | FAM-HISTORY-003 | Filter by date, status, payment state, recipient, caregiver, or regular-care plan | UI | No | No | Navigate with safe filters |
-| FAM-HISTORY-004 | Understand history summary totals | UI | No | No | Read authoritative aggregation and define labels |
+| FAM-HISTORY-004 | Understand history summary totals | UI | Partial | Read / Guide | Read completed-visit count and latest record; full money/hour aggregation explanation remains |
 | FAM-HISTORY-005 | View a past visit record | UI | No | No | Navigate to exact authorized record |
 | FAM-HISTORY-006 | View tasks, event timeline, incidents, change requests, and reviews | UI | No | No | Read exact record with privacy minimization |
 | FAM-HISTORY-007 | View captured, refunded, and net paid amounts | UI | No | No | Read authoritative values and explain |
