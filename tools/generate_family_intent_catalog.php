@@ -13,6 +13,7 @@ $registryPath = $root.'/docs/product/support-agent/38-family-intent-action-cover
 $outputPath = $root.'/resources/ai-support/intents/family-v1.php';
 $guidedPath = $root.'/resources/ai-support/evaluations/family-guided-v1.php';
 $operationsPath = $root.'/resources/ai-support/knowledge-base/family-operations-v1.php';
+$paymentTimePath = $root.'/resources/ai-support/knowledge-base/payment-time-v1.php';
 
 $markdown = file_get_contents($registryPath);
 if ($markdown === false) {
@@ -21,6 +22,7 @@ if ($markdown === false) {
 
 $guided = require $guidedPath;
 $operations = require $operationsPath;
+$paymentTime = require $paymentTimePath;
 
 $guidedByIntent = [];
 foreach ((array) ($guided['cases'] ?? []) as $case) {
@@ -29,7 +31,11 @@ foreach ((array) ($guided['cases'] ?? []) as $case) {
 
 $knowledgeByIntent = [];
 $targetsByIntent = [];
-foreach (array_merge((array) ($operations['entries'] ?? []), (array) ($operations['revisions'] ?? [])) as $definition) {
+foreach (array_merge(
+    (array) ($operations['entries'] ?? []),
+    (array) ($operations['revisions'] ?? []),
+    (array) ($paymentTime['entries'] ?? []),
+) as $definition) {
     foreach ((array) ($definition['intent_ids'] ?? []) as $intentId) {
         $knowledgeByIntent[$intentId][] = (string) $definition['stable_id'];
         $targetsByIntent[$intentId] = array_values(array_unique(array_merge(
@@ -57,11 +63,12 @@ $domainNames = [
 
 $handlerContracts = [
     'family_payment_method' => ['family_payment_method_status_v1', 'family.billing.payment_method', 'family_payment_method_v1', 'family_payment_method_v1'],
+    'family_pricing' => [null, null, null, null],
     'family_overview' => ['family_attention_v1', 'family.dashboard', 'family_attention_v1', 'authoritative_family_state_v1'],
     'family_requests' => ['family_requests_v1', 'family.care_requests', 'family_request_v1', 'authoritative_family_state_v1'],
     'family_visits' => ['family_visits_v1', 'family.care_requests', 'family_visit_v1', 'authoritative_family_state_v1'],
-    'family_timesheets' => ['family_timesheets_v1', 'family.care_requests', 'family_timesheet_v1', 'authoritative_family_state_v1'],
-    'family_payment_attention' => ['family_payment_attention_v1', 'family.care_requests', 'family_payment_attention_v1', 'authoritative_family_state_v1'],
+    'family_timesheets' => ['family_payment_time_v1', 'family.care_requests', 'family_timesheet_v1', 'authoritative_family_state_v1'],
+    'family_payment_attention' => ['family_payment_time_v1', 'family.care_requests', 'family_payment_attention_v1', 'authoritative_family_state_v1'],
     'family_care_profiles' => ['family_care_profiles_v1', 'family.care_profiles', 'family_care_profile_v1', 'authoritative_family_state_v1'],
     'family_messages' => ['family_messages_v1', 'family.messages', 'family_message_v1', 'authoritative_family_state_v1'],
     'family_care_history' => ['family_care_history_v1', 'family.care_history', 'family_history_v1', 'authoritative_family_state_v1'],
@@ -85,6 +92,8 @@ $preparationByIntent = [
     'FAM-VISIT-021' => 'submitted_hours_correction_v1', 'FAM-VISIT-022' => 'submitted_hours_correction_v1',
     'FAM-VISIT-025' => 'submitted_hours_correction_v1', 'FAM-VISIT-028' => 'submitted_hours_correction_v1',
     'FAM-PAY-024' => 'submitted_hours_correction_v1', 'FAM-REGULAR-016' => 'submitted_hours_correction_v1',
+    'FAM-PAY-022' => 'support_intake_v1', 'FAM-PAY-025' => 'support_intake_v1',
+    'FAM-PAY-027' => 'support_intake_v1', 'FAM-PAY-031' => 'support_intake_v1',
     'FAM-SUPPORT-004' => 'support_intake_v1', 'FAM-SUPPORT-008' => 'support_intake_v1',
     'FAM-SUPPORT-009' => 'support_intake_v1', 'FAM-SUPPORT-010' => 'support_intake_v1',
     'FAM-SUPPORT-011' => 'support_intake_v1', 'FAM-SUPPORT-012' => 'support_intake_v1',
@@ -167,10 +176,8 @@ foreach ($matches as $match) {
         $targetStages[] = 'Prepare';
     }
 
-    $isHeld = in_array($intentId, ['FAM-PAY-028', 'FAM-PAY-029'], true);
     $human = in_array('Human', $currentStages, true) ? 'SUP-HANDOFF-001' : null;
     $unsupported = match (true) {
-        $isHeld => 'Pricing and fee answers are held. Do not quote or calculate them; offer human support.',
         str_contains($product, 'Restricted') => 'Deny the private or security-sensitive request without revealing protected data.',
         str_contains($product, 'Gap') => 'Say that LoLo does not currently support this action; do not invent behavior. Offer the valid UI alternative or a person.',
         $human !== null => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
@@ -185,7 +192,6 @@ foreach ($matches as $match) {
     };
 
     $rollout = match (true) {
-        $isHeld => 'backlog',
         $handler !== null || $tool !== null || $prefill !== null || isset($knowledgeByIntent[$intentId]) => 'pilot',
         default => 'backlog',
     };
@@ -245,8 +251,8 @@ if (count($rows) !== 324 || count(array_unique(array_column($rows, 'intent_id'))
 }
 
 $mapped = array_filter($rows, static fn (array $row): bool => $row['kb_stable_ids'] !== []);
-if (count($mapped) !== 190) {
-    throw new RuntimeException('Expected exactly 190 Wave 1 KB-mapped intents; found '.count($mapped).'.');
+if (count($mapped) !== 197) {
+    throw new RuntimeException('Expected exactly 197 Batch 4 KB-mapped intents; found '.count($mapped).'.');
 }
 
 $manifest = [

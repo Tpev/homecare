@@ -25,6 +25,7 @@ class AiSupportRuntimeService
         private readonly FamilyIntentResolver $familyIntents,
         private readonly FamilyIntentCatalog $familyIntentCatalog,
         private readonly FamilyIntentJourneyService $familyJourneys,
+        private readonly AiSupportPricingTruth $pricing,
         private readonly AiSupportHandoffService $handoff,
         private readonly NavigationTargetRegistry $navigation,
         private readonly AiSupportRuntimePromptBuilder $prompt,
@@ -70,6 +71,19 @@ class AiSupportRuntimeService
         }
 
         if ($actor->role === 'family' && $this->guidedTasks->handleContextualReply($actor, $ticket, $newestMessage)) {
+            return;
+        }
+
+        if (in_array($actor->role, ['family', 'caregiver'], true)
+            && $this->pricing->isPricingQuestion($newestMessage)
+            && $this->knowledge->forIntent(
+                $actor,
+                'support_answers_v1',
+                ['KB-B4-PRICE-001'],
+                'active',
+            )->isNotEmpty()) {
+            $this->automatedMessage($ticket, $this->pricing->answer($actor->role, $newestMessage));
+
             return;
         }
 
@@ -255,7 +269,7 @@ class AiSupportRuntimeService
                 $this->controls->systemStop(
                     'capability.support_answers_v1',
                     'unsafe_model_claim',
-                    'Automatic stop after a fabricated-success, pricing-hold, or support-time claim.',
+                    'Automatic stop after a fabricated-success or support-time claim.',
                 );
 
                 return;
@@ -422,7 +436,7 @@ class AiSupportRuntimeService
     private function unsafeSuccessOrHeldClaim(string $message): bool
     {
         return (bool) preg_match(
-            '/(?:\bI (?:created|published|submitted|changed|updated|hired|authorized|charged)\b|\$\s*\d|\b30 dollars? per hour\b|\bqueue position is\b|\breply (?:in|within) \d+\b)/i',
+            '/(?:\bI (?:created|published|submitted|changed|updated|hired|authorized|charged)\b|\bqueue position is\b|\breply (?:in|within) \d+\b)/i',
             $message,
         );
     }

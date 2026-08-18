@@ -6,7 +6,7 @@ return [
     'version' => 'family-intents-v1',
     'generated_on' => '2026-08-18',
     'source' => 'docs/product/support-agent/38-family-intent-action-coverage-registry.md',
-    'source_sha256' => 'ebdff6edcb69abcd430861a493f96d31d01325af7b08762d1b7c9b1d579361c5',
+    'source_sha256' => 'cf18d6693f7aca11bc629f78bbd8a1c99d2d3a536e63a1e1d8ace55d92f7e2cd',
     'records' => [
         0 => [
             'intent_id' => 'FAM-START-001',
@@ -11360,18 +11360,27 @@ return [
                     0 => 'pls help me open Billing & paymnts',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-001',
+                1 => 'KB-B4-PAY-002',
             ],
             'contracts' => [
                 'reader' => null,
@@ -11386,10 +11395,10 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Add owner-aware navigation target',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Guide',
+                'target_behavior' => 'Open the secure Billing & Payments target and preserve chat through the return flow',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -11455,6 +11464,7 @@ return [
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-002',
                 1 => 'KB-FAM-004',
+                2 => 'KB-B4-PAY-002',
             ],
             'contracts' => [
                 'reader' => 'family_payment_method_status_v1',
@@ -11538,6 +11548,7 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-001',
+                1 => 'KB-B4-PAY-002',
             ],
             'contracts' => [
                 'reader' => 'family_payment_method_status_v1',
@@ -11619,6 +11630,7 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-001',
+                1 => 'KB-B4-PAY-002',
             ],
             'contracts' => [
                 'reader' => 'family_payment_method_status_v1',
@@ -11700,6 +11712,7 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-001',
+                1 => 'KB-B4-PAY-002',
             ],
             'contracts' => [
                 'reader' => 'family_payment_method_status_v1',
@@ -11781,6 +11794,7 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-001',
+                1 => 'KB-B4-PAY-002',
             ],
             'contracts' => [
                 'reader' => 'family_payment_method_status_v1',
@@ -11822,7 +11836,7 @@ return [
         159 => [
             'intent_id' => 'FAM-PAY-007',
             'domain' => 'payments',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -11840,21 +11854,32 @@ return [
                     0 => 'pls help me remove the card on file',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
+                    4 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B4-PAY-002',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'family.billing.payment_method',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -11864,9 +11889,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'Gap',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Define booking/hold consequences before product or AI work',
+                'explain' => 'Yes',
+                'action' => 'Guide',
+                'target_behavior' => 'Explain that chat cannot remove the card; open Billing & Payments or transfer when the current UI has no valid removal control',
                 'unsupported_behavior' => 'Say that LoLo does not currently support this action; do not invent behavior. Offer the valid UI alternative or a person.',
             ],
             'never_in_chat' => [
@@ -11886,7 +11911,7 @@ return [
                 2 => 'EVAL-FAM-PAY-007-DENIED',
                 3 => 'EVAL-FAM-PAY-007-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         160 => [
             'intent_id' => 'FAM-PAY-008',
@@ -11933,6 +11958,7 @@ return [
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-002',
                 1 => 'KB-FAM-004',
+                2 => 'KB-B4-PAY-002',
             ],
             'contracts' => [
                 'reader' => 'family_payment_method_status_v1',
@@ -11993,20 +12019,29 @@ return [
                     0 => 'pls help me undrstand when paymnt is authorized and captured',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-003',
+                1 => 'KB-B4-PAY-001',
             ],
             'contracts' => [
                 'reader' => null,
@@ -12021,9 +12056,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
-                'action' => 'No',
-                'target_behavior' => 'Reconcile authoritative product truth and code, then publish one answer',
+                'explain' => 'Yes',
+                'action' => 'Read / Guide',
+                'target_behavior' => 'Explain the approved lifecycle, then use the current authorized visit state for a specific case',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -12080,6 +12115,7 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-003',
+                1 => 'KB-B4-PAY-001',
             ],
             'contracts' => [
                 'reader' => null,
@@ -12139,23 +12175,35 @@ return [
                     0 => 'pls help me undrstand an authorization hold versus a captured charge',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-004',
+                1 => 'KB-B4-PAY-001',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_history',
+                    1 => 'family.care_requests',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -12165,10 +12213,10 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Add governed payment-state definitions using live state',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Read / Guide',
+                'target_behavior' => 'Explain the governed distinction and label the current Family-visible payment state',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -12234,11 +12282,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-005',
+                1 => 'KB-B4-PAY-003',
             ],
             'contracts' => [
-                'reader' => 'family_payment_attention_v1',
+                'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.payment_attention',
                 ],
                 'guided_task' => 'family_payment_attention_v1',
                 'prefill' => null,
@@ -12312,16 +12362,17 @@ return [
                     2 => 'Read',
                     3 => 'Navigate',
                     4 => 'Guide',
-                    5 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-006',
+                1 => 'KB-B4-PAY-004',
             ],
             'contracts' => [
-                'reader' => 'family_payment_attention_v1',
+                'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.payment_attention',
                 ],
                 'guided_task' => 'family_payment_attention_v1',
                 'prefill' => null,
@@ -12331,9 +12382,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
+                'explain' => 'Yes',
                 'action' => 'Read / Guide',
-                'target_behavior' => 'State the safe normalized attention status and open retry; detailed provider causes remain structured UI/human territory',
+                'target_behavior' => 'State a safe normalized reason when possible, never raw provider text, and open the exact retry control',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -12398,11 +12449,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-006',
+                1 => 'KB-B4-PAY-005',
             ],
             'contracts' => [
-                'reader' => 'family_payment_attention_v1',
+                'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.payment_attention',
                 ],
                 'guided_task' => 'family_payment_attention_v1',
                 'prefill' => null,
@@ -12457,24 +12510,34 @@ return [
                     0 => 'pls help me complete bank/card authentication or action-required flow',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Navigate',
+                    1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
+                    4 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-005',
+                1 => 'KB-B4-PAY-003',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.payment_attention',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -12484,10 +12547,10 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Navigate to provider-hosted authentication; never emulate in chat',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Guide / Verify',
+                'target_behavior' => 'Navigate to the secure application/provider flow and verify the resulting LoLo payment state',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -12553,11 +12616,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-007',
+                1 => 'KB-B4-PAY-004',
             ],
             'contracts' => [
-                'reader' => 'family_payment_attention_v1',
+                'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.payment_attention',
                 ],
                 'guided_task' => 'family_payment_attention_v1',
                 'prefill' => null,
@@ -12567,9 +12632,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'Partial UI',
-                'explain' => 'Partial',
+                'explain' => 'Yes',
                 'action' => 'Read / Guide',
-                'target_behavior' => 'Read normalized payment attention and open the exact recovery control',
+                'target_behavior' => 'Read the normalized safe reason and open the exact visit recovery control',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -12634,11 +12699,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-007',
+                1 => 'KB-B4-PAY-006',
             ],
             'contracts' => [
-                'reader' => 'family_payment_attention_v1',
+                'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.payment_attention',
                 ],
                 'guided_task' => 'family_payment_attention_v1',
                 'prefill' => null,
@@ -12714,11 +12781,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-007',
+                1 => 'KB-B4-PAY-006',
             ],
             'contracts' => [
-                'reader' => 'family_payment_attention_v1',
+                'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.payment_attention',
                 ],
                 'guided_task' => 'family_payment_attention_v1',
                 'prefill' => null,
@@ -12796,6 +12865,7 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-008',
+                1 => 'KB-B4-PAY-007',
             ],
             'contracts' => [
                 'reader' => 'family_care_history_v1',
@@ -12855,39 +12925,49 @@ return [
                     0 => 'pls help me view the amount authorized, captured, refunded, and net paid',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-004',
                 1 => 'KB-FOP-PAY-008',
+                2 => 'KB-B4-PAY-007',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
                 ],
-                'guided_task' => null,
+                'guided_task' => 'family_history_v1',
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Read authoritative amounts and explain labels',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Read / Guide',
+                'target_behavior' => 'Read authoritative Family-visible amounts and explain each label',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -12953,11 +13033,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-005',
+                1 => 'KB-B4-PAY-004',
             ],
             'contracts' => [
-                'reader' => 'family_payment_attention_v1',
+                'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.payment_attention',
                 ],
                 'guided_task' => 'family_payment_attention_v1',
                 'prefill' => null,
@@ -12967,9 +13049,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
+                'explain' => 'Yes',
                 'action' => 'Read / Guide',
-                'target_behavior' => 'Read current care-payment attention and recommend the exact recovery page',
+                'target_behavior' => 'Read the current normalized failure reason and recommend the exact recovery page',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -13018,24 +13100,27 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Human',
+                    1 => 'Prepare',
+                    2 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Human',
-                    2 => 'Prepare',
+                    1 => 'Prepare',
+                    2 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-009',
+                1 => 'KB-B4-PAY-008',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'support.center',
+                    1 => 'family.care_history',
                 ],
                 'guided_task' => null,
-                'prefill' => null,
+                'prefill' => 'support_intake_v1',
                 'tool' => null,
                 'verifier' => null,
                 'human_transfer' => 'SUP-HANDOFF-001',
@@ -13087,39 +13172,51 @@ return [
                     0 => 'pls help me undrstand refund status or amount',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Human',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Human',
+                    1 => 'Explain',
                     2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-009',
+                1 => 'KB-B4-PAY-008',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
-                    0 => 'support.center',
+                    0 => 'family.care_history',
+                    1 => 'support.center',
                 ],
-                'guided_task' => null,
+                'guided_task' => 'family_history_v1',
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'UI / Human',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Read authoritative refund state; transfer exceptions',
+                'explain' => 'Yes',
+                'action' => 'Read / Guide',
+                'target_behavior' => 'Read the authoritative refund state and amount; transfer exceptions',
                 'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
@@ -13179,11 +13276,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-009',
+                1 => 'KB-B4-PAY-009',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'support.center',
+                    1 => 'family.care_history',
                 ],
                 'guided_task' => null,
                 'prefill' => 'submitted_hours_correction_v1',
@@ -13244,24 +13343,28 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Human',
+                    1 => 'Prepare',
+                    2 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Human',
-                    2 => 'Read',
+                    1 => 'Prepare',
+                    2 => 'Human',
+                    3 => 'Read',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-009',
+                1 => 'KB-B4-PAY-009',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'support.center',
+                    1 => 'family.care_history',
                 ],
                 'guided_task' => null,
-                'prefill' => null,
+                'prefill' => 'support_intake_v1',
                 'tool' => null,
                 'verifier' => null,
                 'human_transfer' => 'SUP-HANDOFF-001',
@@ -13313,37 +13416,46 @@ return [
                     0 => 'pls help me get a receipt',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Navigate',
+                    1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-008',
+                1 => 'KB-B4-PAY-010',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
                 ],
-                'guided_task' => null,
+                'guided_task' => 'family_history_v1',
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Navigate to exact receipt; later offer safe PDF/email action',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Guide',
+                'target_behavior' => 'Navigate to the exact Family-visible care and payment record; never invent a document action',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -13367,7 +13479,7 @@ return [
         179 => [
             'intent_id' => 'FAM-PAY-027',
             'domain' => 'payments',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -13385,36 +13497,48 @@ return [
                     0 => 'pls help me get an invoice or tax document',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Human',
+                    1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
+                    4 => 'Prepare',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Human',
+                    1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
+                    4 => 'Prepare',
+                    5 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B4-PAY-010',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'family.care_history',
                 ],
                 'guided_task' => null,
-                'prefill' => null,
+                'prefill' => 'support_intake_v1',
                 'tool' => null,
                 'verifier' => null,
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Gap / Human',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Define product availability before AI answer',
+                'explain' => 'Yes',
+                'action' => 'Guide / Transfer',
+                'target_behavior' => 'Explain current availability and transfer rather than promise a document',
                 'unsupported_behavior' => 'Say that LoLo does not currently support this action; do not invent behavior. Offer the valid UI alternative or a person.',
             ],
             'never_in_chat' => [
@@ -13434,7 +13558,7 @@ return [
                 2 => 'EVAL-FAM-PAY-027-DENIED',
                 3 => 'EVAL-FAM-PAY-027-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         180 => [
             'intent_id' => 'FAM-PAY-028',
@@ -13462,12 +13586,15 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B4-PRICE-001',
             ],
             'contracts' => [
                 'reader' => null,
@@ -13480,11 +13607,11 @@ return [
                 'human_transfer' => null,
             ],
             'disposition' => [
-                'product' => 'Gap / held truth',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Reconcile pricing/payment truth before publishing answer',
-                'unsupported_behavior' => 'Pricing and fee answers are held. Do not quote or calculate them; offer human support.',
+                'product' => 'Approved pricing truth',
+                'explain' => 'Yes',
+                'action' => 'Explain',
+                'target_behavior' => 'State $30/hour Family, $27/hour caregiver, and $3/hour LoLo; do not add other charges without later governed policy',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -13503,7 +13630,7 @@ return [
                 2 => 'EVAL-FAM-PAY-028-DENIED',
                 3 => 'EVAL-FAM-PAY-028-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         181 => [
             'intent_id' => 'FAM-PAY-029',
@@ -13531,12 +13658,15 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B4-PRICE-001',
             ],
             'contracts' => [
                 'reader' => null,
@@ -13549,11 +13679,11 @@ return [
                 'human_transfer' => null,
             ],
             'disposition' => [
-                'product' => 'UI / held truth',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Release governed $30/hour truth only after separate reconciliation decision',
-                'unsupported_behavior' => 'Pricing and fee answers are held. Do not quote or calculate them; offer human support.',
+                'product' => 'Approved pricing truth',
+                'explain' => 'Yes',
+                'action' => 'Explain / Calculate',
+                'target_behavior' => 'State $30/hour Family, $27/hour caregiver, and $3/hour LoLo; calculate only from an explicit duration',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -13572,12 +13702,12 @@ return [
                 2 => 'EVAL-FAM-PAY-029-DENIED',
                 3 => 'EVAL-FAM-PAY-029-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         182 => [
             'intent_id' => 'FAM-PAY-030',
             'domain' => 'payments',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -13606,10 +13736,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B4-PAY-011',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'family.care_history',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -13641,12 +13773,12 @@ return [
                 2 => 'EVAL-FAM-PAY-030-DENIED',
                 3 => 'EVAL-FAM-PAY-030-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         183 => [
             'intent_id' => 'FAM-PAY-031',
             'domain' => 'payments',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -13670,21 +13802,25 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Human',
+                    1 => 'Prepare',
+                    2 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Human',
+                    1 => 'Prepare',
+                    2 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B4-PAY-011',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'family.care_history',
                 ],
                 'guided_task' => null,
-                'prefill' => null,
+                'prefill' => 'support_intake_v1',
                 'tool' => null,
                 'verifier' => null,
                 'human_transfer' => 'SUP-HANDOFF-001',
@@ -13713,12 +13849,12 @@ return [
                 2 => 'EVAL-FAM-PAY-031-DENIED',
                 3 => 'EVAL-FAM-PAY-031-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         184 => [
             'intent_id' => 'FAM-PAY-032',
             'domain' => 'payments',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -13751,10 +13887,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B4-PAY-011',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'family.care_history',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -13786,7 +13924,7 @@ return [
                 2 => 'EVAL-FAM-PAY-032-DENIED',
                 3 => 'EVAL-FAM-PAY-032-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         185 => [
             'intent_id' => 'FAM-VISIT-001',
@@ -15116,11 +15254,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-VIS-007',
+                1 => 'KB-B4-TIME-001',
             ],
             'contracts' => [
-                'reader' => 'family_timesheets_v1',
+                'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.timesheet',
                 ],
                 'guided_task' => 'family_timesheet_v1',
                 'prefill' => null,
@@ -15130,7 +15270,7 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
+                'explain' => 'Yes',
                 'action' => 'Read / Guide',
                 'target_behavior' => 'Read whether submitted hours need attention and open the exact hours area',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
@@ -15175,37 +15315,49 @@ return [
                     0 => 'pls help me review caregivr-submitted start, end, duration, tasks, and notes',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Read',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-VIS-007',
+                1 => 'KB-B4-TIME-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.timesheet',
                 ],
-                'guided_task' => null,
+                'guided_task' => 'family_timesheet_v1',
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Read authoritative submission and present concise recap',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Read / Guide',
+                'target_behavior' => 'Read the authoritative submission and present a concise recap',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -15269,11 +15421,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-VIS-008',
+                1 => 'KB-B4-TIME-002',
             ],
             'contracts' => [
-                'reader' => 'family_timesheets_v1',
+                'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.timesheet',
                 ],
                 'guided_task' => 'family_timesheet_v1',
                 'prefill' => null,
@@ -15342,11 +15496,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-VIS-009',
+                1 => 'KB-B4-TIME-003',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.timesheet',
                 ],
                 'guided_task' => null,
                 'prefill' => 'submitted_hours_correction_v1',
@@ -15415,11 +15571,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-VIS-009',
+                1 => 'KB-B4-TIME-003',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.timesheet',
                 ],
                 'guided_task' => null,
                 'prefill' => 'submitted_hours_correction_v1',
@@ -15497,11 +15655,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-VIS-009',
+                1 => 'KB-B4-TIME-004',
             ],
             'contracts' => [
-                'reader' => 'family_timesheets_v1',
+                'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.timesheet',
                 ],
                 'guided_task' => 'family_timesheet_v1',
                 'prefill' => null,
@@ -15511,9 +15671,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
+                'explain' => 'Yes',
                 'action' => 'Read / Guide',
-                'target_behavior' => 'Detect pending correction attention and open the exact review section; full difference recap remains later work',
+                'target_behavior' => 'Recap original versus proposed hours and open the exact review section',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -15569,11 +15729,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-VIS-008',
+                1 => 'KB-B4-TIME-004',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.timesheet',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -15642,11 +15804,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-VIS-009',
+                1 => 'KB-B4-TIME-005',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.timesheet',
                 ],
                 'guided_task' => null,
                 'prefill' => 'submitted_hours_correction_v1',
@@ -15723,11 +15887,15 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-005',
+                1 => 'KB-B4-PAY-006',
+                2 => 'KB-B4-TIME-005',
             ],
             'contracts' => [
-                'reader' => 'family_timesheets_v1',
+                'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.payment_attention',
+                    2 => 'family.request.timesheet',
                 ],
                 'guided_task' => 'family_timesheet_v1',
                 'prefill' => null,
@@ -15798,12 +15966,14 @@ return [
             'kb_stable_ids' => [
                 0 => 'KB-FOP-VIS-006',
                 1 => 'KB-FOP-VIS-009',
+                2 => 'KB-B4-TIME-006',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'support.center',
                     1 => 'family.care_requests',
+                    2 => 'family.request.timesheet',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -15876,12 +16046,14 @@ return [
             'kb_stable_ids' => [
                 0 => 'KB-FOP-VIS-006',
                 1 => 'KB-FOP-VIS-009',
+                2 => 'KB-B4-TIME-006',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'support.center',
                     1 => 'family.care_requests',
+                    2 => 'family.request.timesheet',
                 ],
                 'guided_task' => null,
                 'prefill' => 'submitted_hours_correction_v1',
@@ -15936,27 +16108,38 @@ return [
                     0 => 'pls help me undrstand dispute status',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Human',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Human',
+                    1 => 'Explain',
                     2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-VIS-009',
+                1 => 'KB-B4-TIME-006',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.timesheet',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -15966,9 +16149,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI / Human',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Read authoritative case status and next action',
+                'explain' => 'Yes',
+                'action' => 'Read / Guide',
+                'target_behavior' => 'Read the authoritative case status and next action without promising an outcome or time',
                 'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
@@ -16303,24 +16486,37 @@ return [
                     0 => 'pls help me undrstand whether approving hours triggers paymnt',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-003',
                 1 => 'KB-FOP-VIS-008',
+                2 => 'KB-B4-PAY-001',
+                3 => 'KB-B4-TIME-002',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.timesheet',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -16330,10 +16526,10 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Publish reconciled authoritative payment explanation',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Read / Guide',
+                'target_behavior' => 'Explain the approved lifecycle and use current authorized visit/payment state for a specific case',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -17373,7 +17569,7 @@ return [
                 0 => 'KB-FOP-REG-003',
             ],
             'contracts' => [
-                'reader' => 'family_timesheets_v1',
+                'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
                     1 => 'family.regular_care',
@@ -17675,7 +17871,7 @@ return [
                 1 => 'KB-FOP-REG-003',
             ],
             'contracts' => [
-                'reader' => 'family_payment_attention_v1',
+                'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
                     1 => 'family.regular_care',

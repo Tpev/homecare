@@ -17,15 +17,15 @@ This registry answers two separate questions for every likely Family-user intent
 
 It is deliberately broader than the current AI feature. It inventories the actual Family-facing application, then adds probable user needs and failure cases that may not yet have a complete product flow. A row marked as a product gap must not be mistaken for an AI implementation task until Product defines the underlying app behavior.
 
-Baseline source: production-oriented repository state audited August 18, 2026, the governed KB inventory including Family Operations Wave 1, and the Batch 3 operating layer. Payment-method rows include Batch 1; request, visit, hours, profile, message, history, care-payment, and Family-overview rows include Batch 2; every row now has an executable disposition; and five reversible preparation families are implemented in Batch 3. Production availability remains controlled separately. Re-audit this registry whenever a Family workflow, AI tool, governed KB entry, or authorization rule changes.
+Baseline source: production-oriented repository state audited August 18, 2026, the governed KB inventory including Family Operations Wave 1 and the Batch 4 payment/time package, and the Batch 3 operating layer. Payment-method rows include Batch 1; request, visit, hours, profile, message, history, care-payment, and Family-overview rows include Batch 2; every row has an executable disposition; five reversible preparation families are implemented in Batch 3; and pricing/payment/submitted-hours knowledge plus normalized reads are implemented in Batch 4 source. Production availability remains controlled separately. Re-audit this registry whenever a Family workflow, AI tool, governed KB entry, or authorization rule changes.
 
 The phased implementation and testing sequence for moving this portfolio from explanation/navigation to verified task completion is defined in the [Family chat operator master coverage and delivery plan](44-family-chat-operator-master-plan.md).
 
 ## Automated coverage of implemented rows
 
-The registry is the human-readable source for the generated 324-intent executable catalog. The [Family Batch 1–3 evaluation harness](40-family-batch-1-2-evaluation-harness.md) validates **324 / 324** catalog records, **190 / 190** explicit Wave 1 KB mappings, and **1,296** phrase definitions. Its deep runtime regression continues to cover the exact **40** read/guide rows implemented in Batches 1 and 2, plus the reusable Batch 3 task, verifier, preparation, start-card, security, and Admin contracts.
+The registry is the human-readable source for the generated 324-intent executable catalog. The [Family Batch 1–4 evaluation harness](40-family-batch-1-2-evaluation-harness.md) validates **324 / 324** catalog records, **197 / 197** explicit KB mappings, and **1,296** phrase definitions. Its deep runtime regression covers the exact **40** read/guide rows implemented in Batches 1 and 2, the reusable Batch 3 task, verifier, preparation, start-card, security, and Admin contracts, and the Batch 4 payment/time reader, knowledge, pricing, and recovery paths.
 
-The August 18, 2026 Batch 3 baseline passed 324 of 324 catalog records, 190 of 190 KB mappings, 122 of 122 implemented routing phrases, 10 of 10 collision cases, and 41 isolated application tests with 1,862 assertions. It uses an isolated in-memory database and makes zero provider calls. Catalog validation is not a claim that all 324 intents can execute a domain action: each record's current stages and rollout state remain authoritative. Guide and preparation coverage remain distinct from completion.
+The August 18, 2026 Batch 4 source baseline validates 324 of 324 catalog records, 197 of 197 KB mappings, 45 of 45 deep runtime intents, 137 of 137 representative phrases, and 10 of 10 collision cases. The isolated mass harness passes 64 application tests with 2,107 assertions; the complete AI Support suite passes 156 tests with 2,916 assertions; and 100 wider payment/time/regular-care tests pass with 623 assertions. The Batch 4 package adds 18 governed entries, 90 linked KB evaluations, exact pricing calculations for both roles, safe normalized payment reasons, and submitted-hours differences with zero provider calls on deterministic paths. Catalog validation is not a claim that all 324 intents can execute a domain action: each record's current stages and rollout state remain authoritative. Guide and preparation coverage remain distinct from completion.
 
 ## Status legend
 
@@ -269,35 +269,35 @@ Batch 3 adds an executable operational view without rewriting these baseline inv
 
 | ID | Family intent | Product today | AI explain now | AI do now | Recommended target behavior |
 | --- | --- | --- | --- | --- | --- |
-| FAM-PAY-001 | Open Billing & Payments | UI | No | No | Add owner-aware navigation target |
+| FAM-PAY-001 | Open Billing & Payments | UI | Yes | Guide | Open the secure Billing & Payments target and preserve chat through the return flow |
 | FAM-PAY-002 | Understand who may manage the saved card | UI | Yes | Guide / Read | Active Family Account members get the secure guided flow and only safe shared-card facts |
 | FAM-PAY-003 | See whether a card is on file | UI, owner only for details | Yes | Read / Guide | Deterministically read only brand, last4, expiry, readiness, and attention; offer the correct secure action without a model call |
 | FAM-PAY-004 | Add a first payment card | UI, owner only | Yes | Guide | Open Billing & Payments, focus/highlight Add card securely, preserve through Stripe, and verify current state before success |
 | FAM-PAY-005 | Replace or change the card on file | UI, owner only | Yes | Guide | Open Billing & Payments, focus/highlight Update card, preserve through Stripe, and verify current state before success |
 | FAM-PAY-006 | Update an expiring or expired card | UI, owner only | Yes | Guide | Read safe expiry attention, guide to secure setup, and never collect card data in chat |
-| FAM-PAY-007 | Remove the card on file | Gap | No | No | Define booking/hold consequences before product or AI work |
+| FAM-PAY-007 | Remove the card on file | Gap | Yes | Guide | Explain that chat cannot remove the card; open Billing & Payments or transfer when the current UI has no valid removal control |
 | FAM-PAY-008 | Understand whether a Family member may change the shared card | UI | Yes | Read / Guide | Deterministically explain shared Family billing access, return only safe card facts, and guide to the secure control |
-| FAM-PAY-009 | Understand when payment is authorized and captured | UI | Partial | No | Reconcile authoritative product truth and code, then publish one answer |
+| FAM-PAY-009 | Understand when payment is authorized and captured | UI | Yes | Read / Guide | Explain the approved lifecycle, then use the current authorized visit state for a specific case |
 | FAM-PAY-010 | Understand whether publishing a request charges the card | UI | Yes | No | Keep covered |
-| FAM-PAY-011 | Understand an authorization hold versus a captured charge | UI | No | No | Add governed payment-state definitions using live state |
+| FAM-PAY-011 | Understand an authorization hold versus a captured charge | UI | Yes | Read / Guide | Explain the governed distinction and label the current Family-visible payment state |
 | FAM-PAY-012 | Understand a pending payment | UI | Partial | Read / Guide | Read whether Family action is required and open the exact care-payment recovery area |
-| FAM-PAY-013 | Understand why card authorization failed | UI | Partial | Read / Guide | State the safe normalized attention status and open retry; detailed provider causes remain structured UI/human territory |
+| FAM-PAY-013 | Understand why card authorization failed | UI | Yes | Read / Guide | State a safe normalized reason when possible, never raw provider text, and open the exact retry control |
 | FAM-PAY-014 | Retry a failed card authorization | UI | Partial | Guide | Highlight the existing secure recovery action; the user completes it in the normal UI |
-| FAM-PAY-015 | Complete bank/card authentication or action-required flow | UI | No | No | Navigate to provider-hosted authentication; never emulate in chat |
-| FAM-PAY-016 | Understand why payment capture failed after approving care | Partial UI | Partial | Read / Guide | Read normalized payment attention and open the exact recovery control |
+| FAM-PAY-015 | Complete bank/card authentication or action-required flow | UI | Yes | Guide / Verify | Navigate to the secure application/provider flow and verify the resulting LoLo payment state |
+| FAM-PAY-016 | Understand why payment capture failed after approving care | Partial UI | Yes | Read / Guide | Read the normalized safe reason and open the exact visit recovery control |
 | FAM-PAY-017 | Retry payment for a time correction | UI | Partial | Guide | Open and highlight the correction payment-recovery step |
 | FAM-PAY-018 | Retry payment for a completed extra visit | UI | Partial | Guide | Open and highlight the regular-care attention area |
 | FAM-PAY-019 | View payment history | UI | Yes | Read / Guide | Read whether history exists and open highlighted Care history |
-| FAM-PAY-020 | View the amount authorized, captured, refunded, and net paid | UI | No | No | Read authoritative amounts and explain labels |
-| FAM-PAY-021 | Understand a payment failure shown in Care history | UI | Partial | Read / Guide | Read current care-payment attention and recommend the exact recovery page |
+| FAM-PAY-020 | View the amount authorized, captured, refunded, and net paid | UI | Yes | Read / Guide | Read authoritative Family-visible amounts and explain each label |
+| FAM-PAY-021 | Understand a payment failure shown in Care history | UI | Yes | Read / Guide | Read the current normalized failure reason and recommend the exact recovery page |
 | FAM-PAY-022 | Request a refund | Human | No | Transfer | Prepare reason and booking reference; human only |
-| FAM-PAY-023 | Understand refund status or amount | UI / Human | No | No | Read authoritative refund state; transfer exceptions |
+| FAM-PAY-023 | Understand refund status or amount | UI / Human | Yes | Read / Guide | Read the authoritative refund state and amount; transfer exceptions |
 | FAM-PAY-024 | Dispute a charge or submitted hours | UI / Human | No | No | Prepare dispute; explicit submission; human review |
 | FAM-PAY-025 | Understand a duplicate or unfamiliar charge | Human | No | Transfer | Read matching authorized records if safe, then human |
-| FAM-PAY-026 | Get a receipt | UI | No | No | Navigate to exact receipt; later offer safe PDF/email action |
-| FAM-PAY-027 | Get an invoice or tax document | Gap / Human | No | No | Define product availability before AI answer |
-| FAM-PAY-028 | Understand taxes, fees, tips, mileage, holiday charges, or surcharges | Gap / held truth | No | No | Reconcile pricing/payment truth before publishing answer |
-| FAM-PAY-029 | Ask the hourly price or estimated total | UI / held truth | No | No | Release governed $30/hour truth only after separate reconciliation decision |
+| FAM-PAY-026 | Get a receipt | UI | Yes | Guide | Navigate to the exact Family-visible care and payment record; never invent a document action |
+| FAM-PAY-027 | Get an invoice or tax document | Gap / Human | Yes | Guide / Transfer | Explain current availability and transfer rather than promise a document |
+| FAM-PAY-028 | Understand taxes, fees, tips, mileage, holiday charges, or surcharges | Approved pricing truth | Yes | Explain | State $30/hour Family, $27/hour caregiver, and $3/hour LoLo; do not add other charges without later governed policy |
+| FAM-PAY-029 | Ask the hourly price or estimated total | Approved pricing truth | Yes | Explain / Calculate | State $30/hour Family, $27/hour caregiver, and $3/hour LoLo; calculate only from an explicit duration |
 | FAM-PAY-030 | Apply a coupon, credit, or promo code | Gap | No | No | Product gap; never invent discounts |
 | FAM-PAY-031 | Change billing owner or use a different person's card | Gap / Human | No | No | Define authorization and account model; human until then |
 | FAM-PAY-032 | Understand whether caregiver payout has happened | Human / restricted | No | No | Do not expose caregiver payout details; explain Family-visible state only |
@@ -323,23 +323,23 @@ Batch 3 adds an executable operational view without rewriting these baseline inv
 | FAM-VISIT-015 | Report a safety incident during or after care | UI / Human | No | No | Prepare structured incident; urgent safety rule; human review |
 | FAM-VISIT-016 | Create a support ticket about the visit | UI | Partial | Transfer | Prefer same support conversation with booking context |
 | FAM-VISIT-017 | Tell the app that the visit ended | UI | No | No | Read booking state; confirm & execute |
-| FAM-VISIT-018 | Understand what a timesheet or submitted-hours review is | UI | Partial | Read / Guide | Read whether submitted hours need attention and open the exact hours area |
-| FAM-VISIT-019 | Review caregiver-submitted start, end, duration, tasks, and notes | UI | No | No | Read authoritative submission and present concise recap |
+| FAM-VISIT-018 | Understand what a timesheet or submitted-hours review is | UI | Yes | Read / Guide | Read whether submitted hours need attention and open the exact hours area |
+| FAM-VISIT-019 | Review caregiver-submitted start, end, duration, tasks, and notes | UI | Yes | Read / Guide | Read the authoritative submission and present a concise recap |
 | FAM-VISIT-020 | Approve submitted hours and payment | UI | Partial | Guide | Read the submitted duration and highlight the normal review/approval area; AI execution remains restricted |
 | FAM-VISIT-021 | Question submitted hours | UI | No | No | Prepare dispute/change request; explicit submission |
 | FAM-VISIT-022 | Ask caregiver to correct submitted time | UI | No | No | Prepare reason and proposed correction; explicit send |
-| FAM-VISIT-023 | Review a caregiver-submitted time correction | UI | Partial | Read / Guide | Detect pending correction attention and open the exact review section; full difference recap remains later work |
+| FAM-VISIT-023 | Review a caregiver-submitted time correction | UI | Yes | Read / Guide | Recap original versus proposed hours and open the exact review section |
 | FAM-VISIT-024 | Approve a time correction and payment | UI | No | No | Two-step recap and explicit confirm & execute |
 | FAM-VISIT-025 | Request changes to a time correction | UI | No | No | Prepare request; explicit send |
 | FAM-VISIT-026 | Continue payment after a correction requires card action | UI | Partial | Guide | Read the payment-action-required state and highlight the secure continuation control |
 | FAM-VISIT-027 | Escalate a time correction to LoLo | UI / Human | No | Transfer | Transfer with booking/correction context |
 | FAM-VISIT-028 | Open a dispute after care | UI / Human | No | No | Prepare dispute, show effect, explicit submit; human review |
-| FAM-VISIT-029 | Understand dispute status | UI / Human | No | No | Read authoritative case status and next action |
+| FAM-VISIT-029 | Understand dispute status | UI / Human | Yes | Read / Guide | Read the authoritative case status and next action without promising an outcome or time |
 | FAM-VISIT-030 | Leave a star rating and review | UI | No | No | Prepare text, user selects rating and explicitly submits |
 | FAM-VISIT-031 | Edit or remove a submitted review | Gap / Human | No | No | Define moderation/edit policy before AI work |
 | FAM-VISIT-032 | Book the same caregiver again | UI | No | No | Prepare one-time invite with new schedule; confirm & send |
 | FAM-VISIT-033 | Turn a successful visit into regular care | UI | Partial | No | Prepare recurring offer; recap; confirm & send |
-| FAM-VISIT-034 | Understand whether approving hours triggers payment | UI | No | No | Publish reconciled authoritative payment explanation |
+| FAM-VISIT-034 | Understand whether approving hours triggers payment | UI | Yes | Read / Guide | Explain the approved lifecycle and use current authorized visit/payment state for a specific case |
 | FAM-VISIT-035 | Correct a completed visit record | Human | No | Transfer | Human only with audit preservation |
 
 ## 9. Regular care plans and extra visits
@@ -546,7 +546,7 @@ The baseline inventory was derived from:
 - personal profile, email-verification, password-reset, password-change, and account-deletion screens;
 - current Family domain actions exposed by `ManageCareRequest`, `RegularCareShow`, `ContinuousCoverageShow`, and their services;
 - `config/ai_support.php`, the current Family AI bundle, registered navigation targets, and registered write tools;
-- the 23 published governed KB entries plus the held pricing entry in `resources/ai-support/knowledge-base`;
+- the production governed KB entries plus the source-defined Batch 4 payment/time package in `resources/ai-support/knowledge-base`;
 - current AI context, drafting, recap, confirmation, publication, safety-transfer, and human-takeover services.
 
 “Probable” rows that have no complete current UI were added from the failure and recovery paths implied by those workflows: expired links, card failures, unfamiliar charges, refunds, record corrections, ownership changes, privacy requests, exports, security incidents, and unsupported mutations.

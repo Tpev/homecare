@@ -41,6 +41,7 @@ class FamilyGuidedAssistanceService
         private readonly FamilyAccountContext $familyAccounts,
         private readonly FamilyActionInboxBuilder $actions,
         private readonly FamilyPaymentMethodStatusReader $paymentStatus,
+        private readonly FamilyPaymentTimeStateReader $paymentTime,
         private readonly NavigationTargetRegistry $navigation,
         private readonly AiSupportGuidedTaskService $guidedTasks,
     ) {}
@@ -57,7 +58,7 @@ class FamilyGuidedAssistanceService
             return self::INTENT_MESSAGES;
         }
 
-        if (preg_match('/\b(?:care\s+history|visit\s+history|past\s+visits?|previous\s+visits?|billing\s+history|payment\s+history|receipts?|past\s+charges?|previous\b.{0,32}\bcharges?)\b/iu', $message)) {
+        if (preg_match('/\b(?:care\s+history|visit\s+history|past\s+visits?|previous\s+visits?|billing\s+history|payment\s+history|receipts?|past\s+charges?|previous\b.{0,32}\bcharges?|refunded|refund(?:ed)?\s+(?:status|amount)|authorized\s+amount|captured\s+amount|net\s+(?:paid|charge))\b/iu', $message)) {
             return self::INTENT_HISTORY;
         }
 
@@ -69,7 +70,7 @@ class FamilyGuidedAssistanceService
             return self::INTENT_PAYMENT_ATTENTION;
         }
 
-        if (preg_match('/\b(?:timesheet|time\s*sheet|submitted\s+hours?|worked\s+hours?|approve\s+(?:the\s+)?hours?|review\s+(?:the\s+)?hours?|reported\s+hours?|time\s+correction)\b/iu', $message)) {
+        if (preg_match('/\b(?:timesheet|time\s*sheet|submitted\s+hours?|worked\s+hours?|approve\s+(?:the\s+)?hours?|review\s+(?:the\s+)?hours?|reported\s+hours?|time\s+correction)\b|\bcaregiver\b.{0,24}\b(?:submit|submitted)\b.{0,24}\b(?:time|duration|start|end)\b|\b(?:time|duration|start|end)\b.{0,40}\bcaregiver\b.{0,24}\b(?:submit|submitted)\b/iu', $message)) {
             return self::INTENT_TIMESHEETS;
         }
 
@@ -105,7 +106,7 @@ class FamilyGuidedAssistanceService
             self::INTENT_PAYMENT_ATTENTION => $this->paymentAttention($actor, $actionItems),
             self::INTENT_PROFILES => $this->profiles($actor),
             self::INTENT_MESSAGES => $this->messages($actor),
-            self::INTENT_HISTORY => $this->history($actor),
+            self::INTENT_HISTORY => $this->history($actor, $stableIntentId),
             self::INTENT_REGULAR_CARE => $this->regularCare($actor),
             default => throw new \InvalidArgumentException('Unsupported Family assistance intent.'),
         };
@@ -319,6 +320,54 @@ class FamilyGuidedAssistanceService
     /** @return array{string,list<array<string,mixed>>,string} */
     private function timesheets(User $actor, Collection $actionItems): array
     {
+        $state = $this->paymentTime->latestSubmittedHours($actor);
+        if ($state) {
+            $message = $state['caregiver_name'].' submitted hours for the visit: '.$this->duration((int) $state['worked_minutes']).' for '.$state['subject'].'.';
+            if ($state['started_at'] && $state['completed_at']) {
+                $message .= ' Recorded time: '.$this->clockTime($state['started_at']).' to '.$this->clockTime($state['completed_at']).'.';
+            }
+            if ((int) $state['expected_minutes'] > 0 && (int) $state['difference_minutes'] !== 0) {
+                $difference = abs((int) $state['difference_minutes']);
+                $message .= ' That is '.$this->duration($difference).' '.((int) $state['difference_minutes'] > 0 ? 'longer' : 'shorter').' than scheduled.';
+            }
+            $tasks = collect((array) $state['tasks']);
+            if ($tasks->isNotEmpty()) {
+                $completed = $tasks->where('completed', true)->count();
+                $message .= ' Tasks marked complete: '.$completed.' of '.$tasks->count().'.';
+                $labels = $tasks->take(3)->map(fn (array $task): string => $task['label'].($task['completed'] ? ' — done' : ' — not marked done'))->implode('; ');
+                if ($labels !== '') {
+                    $message .= ' '.$labels.'.';
+                }
+            }
+            if ($state['correction']) {
+                $correction = $state['correction'];
+                $message .= ' Latest correction: '.$correction['status_label'].'. Proposed time is '.$this->duration((int) $correction['proposed_worked_minutes']);
+                if ((int) $correction['difference_minutes'] !== 0) {
+                    $message .= ', '.$this->duration(abs((int) $correction['difference_minutes'])).((int) $correction['difference_minutes'] > 0 ? ' more' : ' less').' than the original';
+                }
+                if ((int) $correction['family_charge_cents'] > 0) {
+                    $message .= ', with a Family charge of '.$this->money((int) $correction['family_charge_cents']);
+                }
+                $message .= '.';
+            }
+            $message .= $state['family_confirmed']
+                ? ' These hours were already confirmed.'
+                : ' Review the exact record before approving or requesting a change.';
+            $target = $state['target'];
+
+            return [
+                $message,
+                [$this->guide(
+                    AiSupportGuidedTask::TYPE_FAMILY_TIMESHEET,
+                    $target['target_id'],
+                    $target['label'],
+                    $target['resource_type'],
+                    (int) $target['resource_id'],
+                )],
+                $state['correction'] ? 'correction_read' : ($state['family_confirmed'] ? 'hours_confirmed' : 'hours_need_attention'),
+            ];
+        }
+
         $item = $actionItems->first(fn (array $candidate): bool => in_array(
             $candidate['type'],
             ['time_correction', 'timesheet', 'completed_extra_visit'],
@@ -367,6 +416,30 @@ class FamilyGuidedAssistanceService
     /** @return array{string,list<array<string,mixed>>,string} */
     private function paymentAttention(User $actor, Collection $actionItems): array
     {
+        $state = $this->paymentTime->latestPaymentAttention($actor);
+        if ($state) {
+            $amounts = (array) $state['amounts'];
+            $amount = match (true) {
+                (int) $amounts['additional_pending_cents'] > 0 => ' The additional amount needing attention is '.$this->money((int) $amounts['additional_pending_cents']).'.',
+                (int) $amounts['authorized_cents'] > 0 => ' The authorized amount is '.$this->money((int) $amounts['authorized_cents']).'.',
+                (int) $amounts['captured_cents'] > 0 => ' The captured amount is '.$this->money((int) $amounts['captured_cents']).'.',
+                default => '',
+            };
+            $target = $state['target'];
+
+            return [
+                $state['subject'].': This care payment needs attention. '.$state['reason'].$amount.' '.$state['recovery'],
+                [$this->guide(
+                    AiSupportGuidedTask::TYPE_FAMILY_TIMESHEET,
+                    $target['target_id'],
+                    $target['label'],
+                    $target['resource_type'],
+                    (int) $target['resource_id'],
+                )],
+                'payment_'.$state['reason_code'],
+            ];
+        }
+
         $items = $actionItems->filter(fn (array $item): bool => $item['type'] === 'payment'
             || $item['navigation_target_id'] === 'family.request.payment_attention'
             || str_contains(mb_strtolower((string) $item['title']), 'payment'))
@@ -469,8 +542,31 @@ class FamilyGuidedAssistanceService
     }
 
     /** @return array{string,list<array<string,mixed>>,string} */
-    private function history(User $actor): array
+    private function history(User $actor, ?string $stableIntentId = null): array
     {
+        if (in_array($stableIntentId, ['FAM-PAY-020', 'FAM-PAY-023', 'FAM-PAY-026'], true)) {
+            $payment = $this->paymentTime->latestPaymentRecord($actor);
+            if (! $payment) {
+                return [
+                    'I did not find a Family-visible care payment record yet.',
+                    [$this->guide(AiSupportGuidedTask::TYPE_FAMILY_HISTORY, 'family.care_history', 'Open care history')],
+                    'payment_history_empty',
+                ];
+            }
+            $message = $payment['subject'].': payment status is '.str_replace('_', ' ', $payment['status']).'. '
+                .'Authorized '.$this->money((int) $payment['authorized_cents']).'; captured '.$this->money((int) $payment['captured_cents'])
+                .'; refunded '.$this->money((int) $payment['refunded_cents']).'; net paid '.$this->money((int) $payment['net_paid_cents']).'.';
+            if ($stableIntentId === 'FAM-PAY-026') {
+                $message .= ' Open Care history for the exact visit and receipt information currently available.';
+            }
+
+            return [
+                $message,
+                [$this->guide(AiSupportGuidedTask::TYPE_FAMILY_HISTORY, 'family.care_history', 'Open care history')],
+                'payment_history_read',
+            ];
+        }
+
         $query = CareBooking::query()
             ->forFamilyAccount($this->familyAccounts->account($actor))
             ->whereIn('status', [CareBooking::STATUS_COMPLETED, CareBooking::STATUS_REVIEWED]);
@@ -729,6 +825,28 @@ class FamilyGuidedAssistanceService
         }
 
         return 'on '.$booking->scheduled_start_at->format('l, F j').' at '.$booking->scheduled_start_at->format('g:i A');
+    }
+
+    private function duration(int $minutes): string
+    {
+        $minutes = max(0, $minutes);
+        $hours = intdiv($minutes, 60);
+        $remaining = $minutes % 60;
+
+        return collect([
+            $hours > 0 ? $hours.' hr'.($hours === 1 ? '' : 's') : null,
+            $remaining > 0 ? $remaining.' min' : null,
+        ])->filter()->implode(' ') ?: '0 min';
+    }
+
+    private function clockTime(string $isoTime): string
+    {
+        return \Illuminate\Support\Carbon::parse($isoTime)->timezone('America/New_York')->format('g:i A');
+    }
+
+    private function money(int $cents): string
+    {
+        return '$'.number_format(max(0, $cents) / 100, 2);
     }
 
     private function caregiverName(CareRequestConversation $conversation): string

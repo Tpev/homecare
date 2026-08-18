@@ -10,14 +10,16 @@ class FamilyIntentEvaluationCatalog
 
     public const HANDLER_PAYMENT_METHOD = 'family_payment_method';
 
+    public const HANDLER_PRICING = 'family_pricing';
+
     private const EXPECTED_INTENT_IDS = [
         'FAM-PAY-002', 'FAM-PAY-003', 'FAM-PAY-004', 'FAM-PAY-005', 'FAM-PAY-006', 'FAM-PAY-008',
         'FAM-START-017',
         'FAM-PROFILE-002', 'FAM-PROFILE-003', 'FAM-PROFILE-004',
         'FAM-REQUEST-034', 'FAM-REQUEST-035',
         'FAM-MATCH-013', 'FAM-MATCH-017',
-        'FAM-PAY-012', 'FAM-PAY-013', 'FAM-PAY-014', 'FAM-PAY-016', 'FAM-PAY-017', 'FAM-PAY-018', 'FAM-PAY-019', 'FAM-PAY-021',
-        'FAM-VISIT-001', 'FAM-VISIT-003', 'FAM-VISIT-009', 'FAM-VISIT-010', 'FAM-VISIT-011', 'FAM-VISIT-018', 'FAM-VISIT-020', 'FAM-VISIT-023', 'FAM-VISIT-026',
+        'FAM-PAY-012', 'FAM-PAY-013', 'FAM-PAY-014', 'FAM-PAY-016', 'FAM-PAY-017', 'FAM-PAY-018', 'FAM-PAY-019', 'FAM-PAY-020', 'FAM-PAY-021', 'FAM-PAY-023', 'FAM-PAY-026', 'FAM-PAY-029',
+        'FAM-VISIT-001', 'FAM-VISIT-003', 'FAM-VISIT-009', 'FAM-VISIT-010', 'FAM-VISIT-011', 'FAM-VISIT-018', 'FAM-VISIT-019', 'FAM-VISIT-020', 'FAM-VISIT-023', 'FAM-VISIT-026',
         'FAM-REGULAR-001', 'FAM-REGULAR-009', 'FAM-REGULAR-013', 'FAM-REGULAR-017', 'FAM-REGULAR-024',
         'FAM-COMMS-001', 'FAM-COMMS-002',
         'FAM-HISTORY-001', 'FAM-HISTORY-004',
@@ -26,6 +28,7 @@ class FamilyIntentEvaluationCatalog
     public function __construct(
         private readonly AiSupportGuidedTaskService $guidedTasks,
         private readonly FamilyGuidedAssistanceService $familyGuidance,
+        private readonly AiSupportPricingTruth $pricing,
     ) {}
 
     /** @return array{version:string,frozen_on:string,cases:list<array<string,mixed>>,negative_cases:list<array<string,string>>} */
@@ -44,11 +47,12 @@ class FamilyIntentEvaluationCatalog
         sort($expected);
 
         if ($ids !== $expected || count($ids) !== count(array_unique($ids))) {
-            throw new DomainException('Family intent evaluation must cover each of the 40 Batch 1/2 registry IDs exactly once.');
+            throw new DomainException('Family intent evaluation must cover each of the 45 Batch 1/2/4 registry IDs exactly once.');
         }
 
         $handlers = [
             self::HANDLER_PAYMENT_METHOD,
+            self::HANDLER_PRICING,
             FamilyGuidedAssistanceService::INTENT_OVERVIEW,
             FamilyGuidedAssistanceService::INTENT_REQUESTS,
             FamilyGuidedAssistanceService::INTENT_VISITS,
@@ -62,7 +66,7 @@ class FamilyIntentEvaluationCatalog
 
         foreach ($cases as $case) {
             $phrases = array_values(array_filter((array) ($case['phrases'] ?? []), fn (mixed $phrase): bool => trim((string) $phrase) !== ''));
-            if (! in_array($case['batch'] ?? null, [1, 2], true)
+            if (! in_array($case['batch'] ?? null, [1, 2, 4], true)
                 || ! preg_match('/^[a-z][a-z_]+$/', (string) ($case['domain'] ?? ''))
                 || ! in_array($case['handler'] ?? null, $handlers, true)
                 || count($phrases) < 3
@@ -100,6 +104,10 @@ class FamilyIntentEvaluationCatalog
     {
         if ($this->guidedTasks->isPaymentMethodIntent($message)) {
             return self::HANDLER_PAYMENT_METHOD;
+        }
+
+        if ($this->pricing->isPricingQuestion($message)) {
+            return self::HANDLER_PRICING;
         }
 
         return $this->familyGuidance->intentFor($message);

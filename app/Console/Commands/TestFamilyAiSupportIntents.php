@@ -14,7 +14,7 @@ class TestFamilyAiSupportIntents extends Command
 {
     protected $signature = 'ai-support:test-family-intents
         {--plan : Validate and display the selected corpus without running application tests}
-        {--batch=* : Optional Batch number (1 or 2)}
+        {--batch=* : Optional Batch number (1, 2, or 4)}
         {--domain=* : Optional exact domain such as payments, visits, or profiles}
         {--intent=* : Optional exact registry intent ID}
         {--output= : Optional content-minimized JSON report path on the local storage disk}';
@@ -38,7 +38,7 @@ class TestFamilyAiSupportIntents extends Command
         $this->table(['Property', 'Value'], [
             ['Executable catalog', $fullManifest['version']],
             ['Catalog registry intents', count($fullManifest['records']).' / 324'],
-            ['Explicit Wave 1 KB mappings', $fullCatalog->coverageSummary()['kb_mapped'].' / 190'],
+            ['Explicit Batch 4 KB mappings', $fullCatalog->coverageSummary()['kb_mapped'].' / 197'],
             ['Catalog phrase definitions', $fullPhraseCount],
             ['Runtime corpus', $manifest['version']],
             ['Frozen on', $manifest['frozen_on']],
@@ -69,7 +69,7 @@ class TestFamilyAiSupportIntents extends Command
         $this->table(['Result', 'Value'], [
             ['Routing phrases', $routing['passed_phrases'].' / '.$routing['total_phrases'].' passed'],
             ['Executable catalog', count($fullManifest['records']).' / 324 valid'],
-            ['Explicit KB mappings', $fullCatalog->coverageSummary()['kb_mapped'].' / 190 valid'],
+            ['Explicit KB mappings', $fullCatalog->coverageSummary()['kb_mapped'].' / 197 valid'],
             ['Collision cases', $routing['passed_negative_cases'].' / '.$routing['total_negative_cases'].' passed'],
             ['Application regression', $runtime['passed'] ? 'PASS' : 'FAIL'],
             ['Registry intents', $report['summary']['passed_intents'].' / '.$report['summary']['selected_intents'].' passed'],
@@ -91,7 +91,7 @@ class TestFamilyAiSupportIntents extends Command
         }
 
         if ($passed) {
-            $this->info('Family Batch 1-3 intent evaluation passed. No provider or production database was used.');
+            $this->info('Family Batch 1-4 intent evaluation passed. No provider or production database was used.');
         }
 
         return $passed ? self::SUCCESS : self::FAILURE;
@@ -113,8 +113,8 @@ class TestFamilyAiSupportIntents extends Command
             (array) $this->option('intent'),
         ))));
 
-        if (array_diff($batches, [1, 2]) !== []) {
-            throw new \InvalidArgumentException('Batch filters must be 1 or 2.');
+        if (array_diff($batches, [1, 2, 4]) !== []) {
+            throw new \InvalidArgumentException('Batch filters must be 1, 2, or 4.');
         }
 
         $knownDomains = array_values(array_unique(array_column($cases, 'domain')));
@@ -126,7 +126,7 @@ class TestFamilyAiSupportIntents extends Command
         $knownIntents = array_column($cases, 'intent_id');
         $unknownIntents = array_diff($intents, $knownIntents);
         if ($unknownIntents !== []) {
-            throw new \InvalidArgumentException('Unknown Batch 1/2 intent: '.implode(', ', $unknownIntents).'.');
+            throw new \InvalidArgumentException('Unknown Batch 1/2/4 intent: '.implode(', ', $unknownIntents).'.');
         }
 
         $selected = array_values(array_filter($cases, static function (array $case) use ($batches, $domains, $intents): bool {
@@ -136,7 +136,7 @@ class TestFamilyAiSupportIntents extends Command
         }));
 
         if ($selected === []) {
-            throw new \InvalidArgumentException('The supplied filters select no Batch 1/2 Family intents.');
+            throw new \InvalidArgumentException('The supplied filters select no Batch 1/2/4 Family intents.');
         }
 
         return $selected;
@@ -163,7 +163,7 @@ class TestFamilyAiSupportIntents extends Command
                     $passedPhrases++;
                 } else {
                     $failedIntentIds[] = $case['intent_id'];
-                    $failures[] = $case['intent_id'].' routed to '.($actual ?? 'no Batch 1/2 handler').' instead of '.$case['handler'].'.';
+                    $failures[] = $case['intent_id'].' routed to '.($actual ?? 'no deep runtime handler').' instead of '.$case['handler'].'.';
                 }
             }
         }
@@ -197,6 +197,8 @@ class TestFamilyAiSupportIntents extends Command
             'tests/Feature/AiSupport/FamilyGuidedAssistanceTest.php',
             'tests/Feature/AiSupport/FamilyGuidedAssistanceStateMatrixTest.php',
             'tests/Feature/AiSupport/Batch3FamilyOperatingLayerTest.php',
+            'tests/Feature/AiSupport/PaymentTimeKnowledgeContentTest.php',
+            'tests/Feature/AiSupport/InteractiveSupportRuntimeTest.php',
         ];
         if (! class_exists('PHPUnit\\Framework\\TestCase')) {
             $error = 'The full Family intent regression requires Composer development dependencies. Run it in the development/CI workspace; use --plan on a no-dev production install.';

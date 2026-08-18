@@ -1,12 +1,12 @@
-# Family Batch 1–3 Evaluation Harness
+# Family Batch 1–4 Evaluation Harness
 
-Status: Expanded for Batch 3 and passing in source
+Status: Expanded for Batch 4 and passing in source
 
 Established: August 17, 2026
 
 Owner: Product and Engineering
 
-Scope: All 324 executable Family intent dispositions, 190 explicit KB mappings, and deep runtime coverage for the 40 Batch 1–2 read/guide rows plus Batch 3 operating-layer contracts
+Scope: All 324 executable Family intent dispositions, 197 explicit KB mappings, and deep runtime coverage for 45 Batch 1, 2, and 4 rows plus Batch 3 operating-layer contracts
 
 ## Outcome
 
@@ -39,12 +39,14 @@ The first corrective run on August 18, 2026 expanded the same 40-row corpus to 1
 
 The task-navigation correction later that day expanded the corpus to 122 phrases with the exact pilot wording **“Hi, I want to use another credit card.”** The full runner passed 122 of 122 phrases, 10 of 10 collision cases, all 40 intents, and 32 application tests with 376 assertions. The deterministic payment-specific regression also proves that the exact phrase and its “I’m the account owner” follow-up create the authorized **Update payment method** action with zero provider calls.
 
-Batch 3 expands the same command into two complementary layers:
+Batch 3 expanded the same command into two complementary layers:
 
-- structural validation of all **324 / 324** executable intent records, **190 / 190** explicit Wave 1 KB mappings, and **1,296** phrase definitions; and
-- deep isolated application regression for the 40 implemented Batch 1–2 vertical intents plus universal task, verifier, preparation, state-aware home, authorization, retention, and Admin reporting contracts.
+- structural validation of all **324 / 324** executable intent records, **197 / 197** explicit KB mappings, and **1,296** phrase definitions; and
+- deep isolated application regression for the implemented vertical intents plus universal task, verifier, preparation, state-aware home, authorization, retention, and Admin reporting contracts.
 
 The August 18 Batch 3 run passed 122 of 122 implemented routing phrases, 10 of 10 collisions, and 42 application tests with 1,867 assertions. It made zero provider calls and used no production database.
+
+Batch 4 expands the current deep corpus to 45 intents and 137 phrases, adds the 18-entry/90-evaluation payment-time package, and includes exact Family/Caregiver pricing, normalized failure reasons, Family-visible payment totals/refunds, submitted-hours differences, and resource-authorized recovery paths. The current isolated runner passes 137 of 137 phrases, 10 of 10 collisions, all 45 intents, and 64 application tests with 2,107 assertions. The complete AI Support suite passes 156 tests with 2,916 assertions, and the wider payment/time/regular-care regression passes 100 tests with 623 assertions. No provider or production database is used.
 
 ## Production browser QA record
 
@@ -120,7 +122,7 @@ The catalog validator fails if an ID is missing, duplicated, malformed, has fewe
 
 ### 1. Language routing and collision protection
 
-`FamilyIntentCoverageTest` checks all 122 implemented phrasings and the 10 near-neighbor cases. `Batch3FamilyOperatingLayerTest` validates all 324 catalog records, 190 explicit mappings, five preparation families, contextual task recovery, verifier truthfulness, state-aware home, security boundaries, and Admin coverage. The collision set protects existing or later flows such as request creation, passwords, refunds, Family invitations, account deletion, caregiver browsing, medical help, human transfer, general product information, and notification settings.
+`FamilyIntentCoverageTest` checks all 137 implemented phrasings and the 10 near-neighbor cases. `Batch3FamilyOperatingLayerTest` validates all 324 catalog records, 197 explicit mappings, five preparation families, contextual task recovery, verifier truthfulness, state-aware home, security boundaries, and Admin coverage. `PaymentTimeKnowledgeContentTest` and the payment/time runtime cases validate 18 entries, 90 evaluations, normalized failure/amount/hour reads, and exact Family/Caregiver pricing without provider calls. The collision set protects existing or later flows such as request creation, passwords, refund execution, Family invitations, account deletion, caregiver browsing, medical help, human transfer, general product information, and notification settings.
 
 The mass corpus found real natural-language gaps during its first implementation. The deterministic router was expanded to understand plural care profiles, ordinary applicant wording, natural request-status phrasing, pending charge wording, failed time-correction payments, scheduled-care wording, visit-change decisions, corrected hours, completed extra visits, and regular-care history. The expected cases were not weakened to hide those misses.
 

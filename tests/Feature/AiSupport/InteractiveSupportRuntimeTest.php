@@ -16,6 +16,7 @@ use App\Services\AiSupport\AiSupportPilotGrantService;
 use App\Services\AiSupport\AiSupportRecapService;
 use App\Services\AiSupport\AiSupportRequestDraftService;
 use App\Services\AiSupport\AiSupportRuntimeService;
+use App\Services\AiSupport\PaymentTimeKnowledgeBaseImportService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Support\SupportChatService;
 use Carbon\CarbonImmutable;
@@ -479,6 +480,43 @@ class InteractiveSupportRuntimeTest extends TestCase
         $this->assertSame('caregiver.work_inbox', $action->payload['target_id']);
         $this->assertDatabaseCount('ai_support_request_drafts', 0);
         $this->assertDatabaseCount('care_requests', 0);
+    }
+
+    public function test_published_pricing_kb_uses_exact_family_and_caregiver_math_without_provider_calls(): void
+    {
+        [$admin, $family] = $this->eligibleFamily();
+        app(PaymentTimeKnowledgeBaseImportService::class)->publishPackage($admin, 'Publish exact pricing test knowledge.');
+        Http::fake();
+        $familyTicket = $this->automatedTicket($family);
+
+        app(AiSupportRuntimeService::class)->respond($family, $familyTicket, 'What would 2.5 hours cost?');
+
+        $familyAnswer = $familyTicket->publicMessages()->latest()->firstOrFail()->body;
+        $this->assertStringContainsString('Family total is $75.00', $familyAnswer);
+        $this->assertStringContainsString('caregiver earnings are $67.50', $familyAnswer);
+        $this->assertStringContainsString('platform portion is $7.50', $familyAnswer);
+        Http::assertNothingSent();
+
+        [, $caregiver] = $this->eligibleCaregiver();
+        $caregiverTicket = SupportTicket::query()->create([
+            'opener_user_id' => $caregiver->id,
+            'source' => SupportTicket::SOURCE_CHAT_WIDGET,
+            'responder_mode' => SupportTicket::RESPONDER_MODE_AUTOMATED,
+            'category' => 'general',
+            'status' => SupportTicket::STATUS_OPEN,
+            'priority' => 'normal',
+            'subject' => 'Caregiver pricing',
+            'description' => 'What do I earn for two hours?',
+            'initial_client_message_id' => (string) Str::uuid(),
+        ]);
+
+        app(AiSupportRuntimeService::class)->respond($caregiver, $caregiverTicket, 'What do I earn for 2 hours?');
+
+        $caregiverAnswer = $caregiverTicket->publicMessages()->latest()->firstOrFail()->body;
+        $this->assertStringContainsString('caregiver earnings are $54.00', $caregiverAnswer);
+        $this->assertStringContainsString('Family total is $60.00', $caregiverAnswer);
+        $this->assertStringContainsString('platform portion is $6.00', $caregiverAnswer);
+        Http::assertNothingSent();
     }
 
     public function test_expired_confirmation_cannot_write_and_one_step_renewal_preserves_the_draft(): void

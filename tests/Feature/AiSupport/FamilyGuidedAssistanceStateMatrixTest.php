@@ -90,7 +90,7 @@ class FamilyGuidedAssistanceStateMatrixTest extends TestCase
         ])->save();
         [, $hoursTask, $hoursMessage] = $this->respond($family, 'Show the caregiver submitted hours.');
         $this->assertSame('family.request.timesheet', $hoursTask->navigation_target_id);
-        $this->assertStringContainsString('visit hours', $hoursMessage);
+        $this->assertStringContainsString('submitted hours', $hoursMessage);
         $this->assertSame(105, $booking->fresh()->worked_minutes);
         $this->assertNull($booking->fresh()->family_confirmed_at);
         Http::assertNothingSent();
@@ -133,6 +133,87 @@ class FamilyGuidedAssistanceStateMatrixTest extends TestCase
         $this->assertSame('provider_internal_decline_code_do_not_echo', $payment->fresh()->last_error);
         Http::assertNothingSent();
         $this->assertDatabaseMissing('ai_support_interaction_events', ['event_type' => 'model_turn_completed']);
+    }
+
+    public function test_payment_failure_reason_is_normalized_and_submitted_hours_include_authoritative_differences(): void
+    {
+        $family = $this->eligibleFamily();
+        $account = app(FamilyAccountContext::class)->account($family);
+        $caregiver = User::factory()->create(['role' => 'caregiver', 'name' => 'Morgan Care']);
+        $request = $this->request($family, ['title' => 'Monday support', 'status' => CareRequest::STATUS_FILLED]);
+        $booking = $this->booking($family, $caregiver, $request, [
+            'status' => CareBooking::STATUS_COMPLETED,
+            'started_at' => now()->subHours(3),
+            'completed_at' => now()->subHour(),
+            'timesheet_submitted_at' => now()->subMinutes(50),
+            'expected_minutes' => 90,
+            'worked_minutes' => 120,
+        ]);
+        CareBookingPayment::query()->create([
+            'care_booking_id' => $booking->id,
+            'family_account_id' => $account->id,
+            'family_user_id' => $family->id,
+            'initiated_by_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBookingPayment::STATUS_FAILED,
+            'currency' => 'usd',
+            'amount_authorized_cents' => 6000,
+            'last_error' => 'Stripe says card_declined after internal attempt pi_secret_should_not_echo',
+        ]);
+        Http::fake();
+
+        [, $paymentTask, $paymentMessage] = $this->respond($family, 'Why did my payment fail?');
+        $this->assertSame('family.request.payment_attention', $paymentTask->navigation_target_id);
+        $this->assertStringContainsString('card provider declined this payment attempt', $paymentMessage);
+        $this->assertStringContainsString('$60.00', $paymentMessage);
+        $this->assertStringNotContainsString('pi_secret_should_not_echo', $paymentMessage);
+
+        [, $hoursTask, $hoursMessage] = $this->respond($family, 'Review the submitted hours.');
+        $this->assertSame('family.request.timesheet', $hoursTask->navigation_target_id);
+        $this->assertStringContainsString('submitted hours for the visit: 2 hrs', $hoursMessage);
+        $this->assertStringContainsString('30 min longer than scheduled', $hoursMessage);
+        $this->assertNull($booking->fresh()->family_confirmed_at);
+        $this->assertSame(CareBookingPayment::STATUS_FAILED, $booking->fresh()->payment->status);
+        Http::assertNothingSent();
+    }
+
+    public function test_payment_history_returns_exact_family_visible_amounts(): void
+    {
+        $family = $this->eligibleFamily();
+        $account = app(FamilyAccountContext::class)->account($family);
+        $caregiver = User::factory()->create(['role' => 'caregiver', 'name' => 'Riley Care']);
+        $request = $this->request($family, ['title' => 'Refunded visit', 'status' => CareRequest::STATUS_FILLED]);
+        $booking = $this->booking($family, $caregiver, $request, [
+            'status' => CareBooking::STATUS_REVIEWED,
+            'completed_at' => now()->subHours(2),
+            'timesheet_submitted_at' => now()->subHours(2),
+            'worked_minutes' => 180,
+            'family_confirmed_at' => now()->subHour(),
+        ]);
+        CareBookingPayment::query()->create([
+            'care_booking_id' => $booking->id,
+            'family_account_id' => $account->id,
+            'family_user_id' => $family->id,
+            'initiated_by_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBookingPayment::STATUS_PARTIALLY_REFUNDED,
+            'currency' => 'usd',
+            'amount_authorized_cents' => 9000,
+            'amount_captured_cents' => 9000,
+            'amount_refunded_cents' => 3000,
+            'captured_at' => now()->subHour(),
+        ]);
+        Http::fake();
+
+        [, $task, $message] = $this->respond($family, 'What is the refund status and amount?');
+
+        $this->assertSame('family.care_history', $task->navigation_target_id);
+        $this->assertStringContainsString('Authorized $90.00', $message);
+        $this->assertStringContainsString('captured $90.00', $message);
+        $this->assertStringContainsString('refunded $30.00', $message);
+        $this->assertStringContainsString('net paid $60.00', $message);
+        $this->assertSame(CareBookingPayment::STATUS_PARTIALLY_REFUNDED, $booking->fresh()->payment->status);
+        Http::assertNothingSent();
     }
 
     public function test_profile_message_and_history_positive_states_are_read_only_and_exactly_guided(): void

@@ -131,11 +131,31 @@ return [
             'Open billing history for past care.',
             'Where can I find past charges?',
         ], 'FamilyGuidedAssistanceStateMatrixTest::test_profile_message_and_history_positive_states_are_read_only_and_exactly_guided'),
+        $case('FAM-PAY-020', 4, 'payments', 'family_care_history', [
+            'Show the authorized captured refunded and net paid amounts.',
+            'What captured amount and refund are in my care history?',
+            'Explain the net paid amount for my latest care payment.',
+        ], 'FamilyGuidedAssistanceStateMatrixTest::test_payment_history_returns_exact_family_visible_amounts'),
         $case('FAM-PAY-021', 2, 'payments', 'family_payment_attention', [
             'Why did my care payment fail?',
             'Explain the failed charge for a visit.',
             'What does this payment error mean?',
         ], 'FamilyGuidedAssistanceStateMatrixTest::test_care_payment_failure_is_read_without_exposing_provider_details_or_mutating_payment'),
+        $case('FAM-PAY-023', 4, 'payments', 'family_care_history', [
+            'What is the refund status and amount?',
+            'Show the refunded amount for my latest care payment.',
+            'How much of the care charge was refunded?',
+        ], 'FamilyGuidedAssistanceStateMatrixTest::test_payment_history_returns_exact_family_visible_amounts'),
+        $case('FAM-PAY-026', 4, 'payments', 'family_care_history', [
+            'Where is my receipt for the care payment?',
+            'Open the receipt for my latest care visit.',
+            'Show my care payment receipt.',
+        ], 'FamilyGuidedAssistanceStateMatrixTest::test_payment_history_returns_exact_family_visible_amounts'),
+        $case('FAM-PAY-029', 4, 'payments', 'family_pricing', [
+            'How much does care cost per hour?',
+            'What would 2.5 hours cost?',
+            'What is the Family price and caregiver rate?',
+        ], 'InteractiveSupportRuntimeTest::test_published_pricing_kb_uses_exact_family_and_caregiver_math_without_provider_calls'),
 
         $case('FAM-VISIT-001', 2, 'visits', 'family_visits', [
             'When is my next visit?',
@@ -167,6 +187,11 @@ return [
             'Do I have a timesheet to review?',
             'Show the caregiver reported hours.',
         ], 'FamilyGuidedAssistanceTest::test_submitted_hours_guide_uses_authorized_resource_route_and_rejects_another_family_record'),
+        $case('FAM-VISIT-019', 4, 'visits', 'family_timesheets', [
+            'Show the submitted hours start end and duration.',
+            'Review the tasks and notes with the caregiver submitted hours.',
+            'What exact time and duration did the caregiver submit?',
+        ], 'FamilyGuidedAssistanceStateMatrixTest::test_payment_failure_reason_is_normalized_and_submitted_hours_include_authoritative_differences'),
         $case('FAM-VISIT-020', 2, 'visits', 'family_timesheets', [
             'Help me approve the submitted hours.',
             'Where do I review the caregiver timesheet?',

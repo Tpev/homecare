@@ -23,6 +23,7 @@ class FamilyIntentJourneyService
         private readonly AiSupportGuidedTaskService $guidedTasks,
         private readonly AiSupportPreparationService $preparations,
         private readonly AiSupportHandoffService $handoff,
+        private readonly AiSupportPricingTruth $pricing,
         private readonly NavigationTargetRegistry $navigation,
         private readonly FamilyAccountContext $familyAccounts,
         private readonly AiSupportEventRecorder $events,
@@ -49,24 +50,23 @@ class FamilyIntentJourneyService
         }
 
         $unsupported = (string) data_get($record, 'disposition.unsupported_behavior', 'This exact action is not available in chat.');
-        $held = in_array($intentId, ['FAM-PAY-028', 'FAM-PAY-029'], true);
         $versions = $this->knowledge->forIntent(
             $actor,
             'support_answers_v1',
             (array) $record['kb_stable_ids'],
             'active',
         );
-        if ($held || $versions->isEmpty()) {
-            $body = $held
-                ? 'I cannot quote or calculate prices or fees in chat right now. I can help with the secure payment page or transfer you to a person.'
-                : $unsupported;
+        if ($versions->isEmpty()) {
+            $body = $unsupported;
             $this->automatedMessage($ticket, Str::limit($body, 900, ''));
-            $this->record($ticket, 'intent_failed', $intentId, $held ? 'pricing_held' : 'unsupported_or_unpublished', $actor, $source);
+            $this->record($ticket, 'intent_failed', $intentId, 'unsupported_or_unpublished', $actor, $source);
 
             return;
         }
 
-        $answer = trim((string) $versions->first()->answer_body);
+        $answer = $intentId === 'FAM-PAY-029'
+            ? $this->pricing->familyAnswer($message)
+            : trim((string) $versions->first()->answer_body);
         $destination = collect((array) data_get($record, 'contracts.destinations', []))
             ->first(fn (string $target): bool => $this->navigation->allowedFor($actor, $target));
         if ($destination) {

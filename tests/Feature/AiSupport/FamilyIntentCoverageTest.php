@@ -14,7 +14,7 @@ class FamilyIntentCoverageTest extends TestCase
             '--batch' => [1],
             '--domain' => ['payments'],
         ])
-            ->expectsOutputToContain('6 / 40')
+            ->expectsOutputToContain('6 / 45')
             ->expectsOutputToContain('Routing precheck: PASS')
             ->expectsOutputToContain('No test database, provider call, production write, or report write occurred')
             ->assertSuccessful();
@@ -26,18 +26,18 @@ class FamilyIntentCoverageTest extends TestCase
             '--plan' => true,
             '--intent' => ['FAM-NOT-REAL-999'],
         ])
-            ->expectsOutputToContain('Unknown Batch 1/2 intent')
+            ->expectsOutputToContain('Unknown Batch 1/2/4 intent')
             ->assertFailed();
     }
 
-    public function test_every_batch_one_and_two_registry_intent_has_three_routing_phrases_and_runtime_evidence(): void
+    public function test_every_deep_runtime_intent_has_three_routing_phrases_and_runtime_evidence(): void
     {
         $catalog = app(FamilyIntentEvaluationCatalog::class);
         $manifest = $catalog->manifest();
 
         $this->assertSame(FamilyIntentEvaluationCatalog::VERSION, $manifest['version']);
-        $this->assertCount(40, $manifest['cases']);
-        $this->assertGreaterThanOrEqual(120, array_sum(array_map(
+        $this->assertCount(45, $manifest['cases']);
+        $this->assertGreaterThanOrEqual(135, array_sum(array_map(
             static fn (array $case): int => count($case['phrases']),
             $manifest['cases'],
         )));
@@ -53,14 +53,14 @@ class FamilyIntentCoverageTest extends TestCase
         }
     }
 
-    public function test_nearby_unsupported_intents_do_not_collide_with_batch_one_or_two(): void
+    public function test_nearby_unsupported_intents_do_not_collide_with_deep_runtime_handlers(): void
     {
         $catalog = app(FamilyIntentEvaluationCatalog::class);
 
         foreach ($catalog->manifest()['negative_cases'] as $case) {
             $this->assertNull(
                 $catalog->classify($case['message']),
-                $case['id'].' was incorrectly captured by Batch 1/2: '.$case['message'],
+                $case['id'].' was incorrectly captured by a deep runtime handler: '.$case['message'],
             );
         }
     }
