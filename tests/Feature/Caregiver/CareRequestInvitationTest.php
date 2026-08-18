@@ -122,6 +122,29 @@ class CareRequestInvitationTest extends TestCase
         $this->assertDatabaseCount('care_request_invitations', 0);
     }
 
+    public function test_past_one_time_request_is_not_offered_even_when_its_status_is_open(): void
+    {
+        [$family, $caregiver, $request] = $this->seedContext();
+        $profile = CaregiverProfile::query()->where('user_id', $caregiver->id)->firstOrFail();
+        $request->update([
+            'requested_start_at' => now()->subDays(2)->setTime(12, 0),
+            'requested_end_at' => now()->subDays(2)->setTime(19, 0),
+        ]);
+
+        Livewire::withQueryParams(['careRequest' => $request->id])
+            ->actingAs($family)
+            ->test(ShowCaregiver::class, ['slug' => $profile->slug])
+            ->assertSet('contextCareRequestId', null)
+            ->call('openInviteModal')
+            ->assertSet('familyRequestOptions', [])
+            ->assertSee('Click here to create a new request.')
+            ->set('selectedCareRequestId', $request->id)
+            ->call('sendInvite')
+            ->assertHasErrors('selectedCareRequestId');
+
+        $this->assertDatabaseCount('care_request_invitations', 0);
+    }
+
     public function test_caregiver_can_accept_invitation_and_conversation_is_created(): void
     {
         [$family, $caregiver, $request] = $this->seedContext();

@@ -71,6 +71,15 @@ class CareRequestInvitationService
                 );
             }
 
+            $oneTimeEndsAt = $lockedRequest->requested_end_at ?? $lockedRequest->requested_start_at;
+            if ($lockedRequest->request_type === CareRequest::TYPE_ONE_TIME
+                && (! $oneTimeEndsAt || $oneTimeEndsAt->isPast())) {
+                return new CareRequestInvitationResult(
+                    self::STATE_REQUEST_UNAVAILABLE,
+                    'This one-time care request is in the past.'
+                );
+            }
+
             $application = CareRequestApplication::query()
                 ->where('care_request_id', $lockedRequest->id)
                 ->where('caregiver_user_id', $caregiver->id)

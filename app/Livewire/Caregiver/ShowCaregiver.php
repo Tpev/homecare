@@ -169,6 +169,19 @@ class ShowCaregiver extends Component
         $this->familyRequestOptions = CareRequest::query()
             ->forFamilyAccount(app(FamilyAccountContext::class)->account($user))
             ->where('status', CareRequest::STATUS_OPEN)
+            ->where(function ($query): void {
+                $query->where('request_type', '!=', CareRequest::TYPE_ONE_TIME)
+                    ->orWhere(function ($oneTime): void {
+                        $oneTime->where('request_type', CareRequest::TYPE_ONE_TIME)
+                            ->where(function ($schedule): void {
+                                $schedule->where('requested_end_at', '>', now())
+                                    ->orWhere(function ($withoutEnd): void {
+                                        $withoutEnd->whereNull('requested_end_at')
+                                            ->where('requested_start_at', '>', now());
+                                    });
+                            });
+                    });
+            })
             ->whereDoesntHave(
                 'applications',
                 fn ($query) => $query->where('status', CareRequestApplication::STATUS_HIRED),
@@ -206,6 +219,19 @@ class ShowCaregiver extends Component
             ->whereKey($contextId)
             ->forFamilyAccount(app(FamilyAccountContext::class)->account($user))
             ->where('status', CareRequest::STATUS_OPEN)
+            ->where(function ($query): void {
+                $query->where('request_type', '!=', CareRequest::TYPE_ONE_TIME)
+                    ->orWhere(function ($oneTime): void {
+                        $oneTime->where('request_type', CareRequest::TYPE_ONE_TIME)
+                            ->where(function ($schedule): void {
+                                $schedule->where('requested_end_at', '>', now())
+                                    ->orWhere(function ($withoutEnd): void {
+                                        $withoutEnd->whereNull('requested_end_at')
+                                            ->where('requested_start_at', '>', now());
+                                    });
+                            });
+                    });
+            })
             ->first();
 
         if (! $request) {
