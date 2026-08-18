@@ -6,10 +6,10 @@ use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Caregiver\InvitationsIndex;
 use App\Livewire\Caregiver\ShowCaregiver;
 use App\Models\CareBooking;
+use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestInvitation;
-use App\Models\CaregiverProfile;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
@@ -74,6 +74,26 @@ class CareRequestInvitationTest extends TestCase
             'caregiver_user_id' => $caregiver->id,
             'status' => CareRequestInvitation::STATUS_PENDING,
             'message' => 'We think you are a strong fit for this request.',
+        ]);
+    }
+
+    public function test_only_open_request_is_selected_server_side_before_invitation_is_sent(): void
+    {
+        [$family, $caregiver, $request] = $this->seedContext();
+        $profile = CaregiverProfile::query()->where('user_id', $caregiver->id)->firstOrFail();
+
+        Livewire::actingAs($family)
+            ->test(ShowCaregiver::class, ['slug' => $profile->slug])
+            ->call('openInviteModal')
+            ->assertSet('selectedCareRequestId', $request->id)
+            ->call('sendInvite')
+            ->assertHasNoErrors('selectedCareRequestId');
+
+        $this->assertDatabaseHas('care_request_invitations', [
+            'care_request_id' => $request->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestInvitation::STATUS_PENDING,
         ]);
     }
 

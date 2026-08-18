@@ -239,8 +239,8 @@
                 @else
                     <x-native-select-field
                         label="Select request"
-                        wire:model="selectedCareRequestId"
-                        :options="$familyRequestOptions"
+                        wire:model.live="selectedCareRequestId"
+                        :options="array_merge([['label' => 'Choose a request', 'value' => '']], $familyRequestOptions)"
                     />
                     @error('selectedCareRequestId') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
@@ -256,7 +256,7 @@
             <x-slot:footer>
                 <div class="flex items-center justify-between">
                     <x-button color="slate" light wire:click="$set('showInviteModal', false)">Cancel</x-button>
-                    <x-button color="blue" wire:click="sendInvite" wire:loading.attr="disabled" wire:target="sendInvite" :disabled="!$contextRequestSummary && count($familyRequestOptions)===0">
+                    <x-button color="blue" wire:click="sendInvite" wire:loading.attr="disabled" wire:target="sendInvite" :disabled="!$contextRequestSummary && (count($familyRequestOptions)===0 || !$selectedCareRequestId)">
                         <span wire:loading.remove wire:target="sendInvite">Send invitation</span>
                         <span wire:loading wire:target="sendInvite">Sending…</span>
                     </x-button>
@@ -265,4 +265,3 @@
         </x-card>
     @endif
 </div>
-

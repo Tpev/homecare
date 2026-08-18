@@ -54,12 +54,24 @@ class ShowCaregiver extends Component
     public function openInviteModal(): void
     {
         abort_unless(auth()->user()?->role === 'family', 403);
+        $this->resetValidation(['selectedCareRequestId', 'inviteMessage']);
+
         if ($this->contextCareRequestId) {
             $this->selectedCareRequestId = $this->contextCareRequestId;
             $this->inviteMessage = 'Hi '.str($this->caregiver->user?->name)->before(' ').', we would like to invite you to review “'.$this->contextRequestSummary['title'].'”.';
             $this->inviteIsReinvite = (bool) ($this->contextRelationship['can_reinvite'] ?? false);
         } else {
             $this->loadFamilyRequestOptions();
+
+            $requestIds = collect($this->familyRequestOptions)
+                ->pluck('value')
+                ->map(fn ($id): int => (int) $id);
+
+            if ($requestIds->count() === 1) {
+                $this->selectedCareRequestId = $requestIds->first();
+            } elseif (! $requestIds->contains($this->selectedCareRequestId)) {
+                $this->selectedCareRequestId = null;
+            }
         }
         $this->showInviteModal = true;
     }
