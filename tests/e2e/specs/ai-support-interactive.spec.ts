@@ -68,7 +68,7 @@ test.describe.serial('Interactive AI Support pilot', () => {
         const panel = page.getByTestId('support-chat-panel');
         await expect(panel).toBeVisible();
         await expect(panel.getByText('AI assistant - You can ask for a person anytime')).toBeVisible();
-        await expect(panel.getByRole('button', { name: 'Talk to a person' })).toBeVisible();
+        await expect(panel.getByRole('button', { name: 'Human help' })).toBeVisible();
 
         const recap = panel.getByRole('region', { name: 'Care request recap' });
         await expect(recap).toBeVisible();

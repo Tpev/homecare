@@ -121,16 +121,26 @@
                     </div>
                 </div>
             </div>
-            <button
-                type="button"
-                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white"
-                aria-label="Minimize support chat"
-                x-on:click="minimize()"
-            >
-                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" d="M6 12h12" />
-                </svg>
-            </button>
+            <div class="flex shrink-0 items-center gap-1">
+                @if ($assistantActive)
+                    <button
+                        type="button"
+                        wire:click="transferToPerson"
+                        wire:loading.attr="disabled"
+                        class="inline-flex min-h-11 items-center rounded-xl px-2.5 text-xs font-bold text-white underline decoration-white/50 underline-offset-2 transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white disabled:opacity-60"
+                    >Human help</button>
+                @endif
+                <button
+                    type="button"
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white"
+                    aria-label="Minimize support chat"
+                    x-on:click="minimize()"
+                >
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" d="M6 12h12" />
+                    </svg>
+                </button>
+            </div>
         </header>
 
         <div
@@ -160,22 +170,12 @@
                 </div>
             @else
                 <div class="space-y-3">
-                    @if ($assistantActive)
-                        <div class="flex justify-center">
-                            <button
-                                type="button"
-                                wire:click="transferToPerson"
-                                wire:loading.attr="disabled"
-                                class="inline-flex min-h-11 items-center rounded-xl border border-[#B9D7CF] bg-white px-4 text-sm font-semibold text-[#0F5B52] shadow-sm disabled:opacity-60"
-                            >Talk to a person</button>
-                        </div>
-                    @endif
                     <p class="support-chat-time-separator">{{ $ticket->created_at?->format('M j, g:i A') }}</p>
                     <div class="flex justify-end">
                         <article class="support-chat-bubble support-chat-bubble-user">
                             <p class="support-chat-message-text">{{ $ticket->description }}</p>
                             <p class="mt-1.5 text-[11px] text-[#DDEEEA]">
-                                {{ (int) $ticket->opener_user_id === (int) auth()->id() ? 'You' : ($ticket->opener?->name ?: 'Family') }} &middot; Sent
+                                {{ (int) $ticket->opener_user_id === (int) auth()->id() ? 'You' : ($ticket->opener?->name ?: 'Family') }} &middot; {{ $ticket->created_at?->format('g:i A') }}
                             </p>
                         </article>
                     </div>
@@ -201,9 +201,9 @@
                                 <p class="support-chat-message-text">{{ $message->body }}</p>
                                 <p class="mt-1.5 text-[11px] {{ $fromSupport ? 'text-[#626B73]' : 'text-[#DDEEEA]' }}">
                                     @if ($fromSupport)
-                                        {{ $message->responder_type === \App\Models\SupportTicketMessage::RESPONDER_AUTOMATED ? 'LoLo Support assistant' : ($message->sender?->name ?: 'LoLo Support') }} &middot; Support
+                                        {{ $message->responder_type === \App\Models\SupportTicketMessage::RESPONDER_AUTOMATED ? 'LoLo' : (str((string) ($message->sender?->name ?: 'LoLo Support'))->before(' ')->value()) }} &middot; {{ $message->created_at?->format('g:i A') }}
                                     @elseif ($mine)
-                                        You &middot; Sent
+                                        You &middot; {{ $message->created_at?->format('g:i A') }}
                                     @else
                                         {{ $message->sender?->name ?: 'Family' }}
                                     @endif
@@ -232,14 +232,14 @@
                                             wire:click="startGuidedTask('{{ $action->id }}')"
                                             wire:loading.attr="disabled"
                                             x-on:click="closeForNavigation()"
-                                            class="mr-2 mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white disabled:opacity-60"
+                                            class="support-chat-action mr-2 mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white disabled:opacity-60"
                                         >{{ $actionPayload['label'] ?? 'Show me where' }}</button>
                                     @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_NAVIGATE && $actionActive)
                                         <a
                                             href="{{ $actionPayload['url'] }}"
                                             wire:navigate
                                             x-on:click="closeForNavigation()"
-                                            class="mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white"
+                                            class="support-chat-action mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white"
                                         >{{ $actionPayload['label'] ?? 'Open page' }}</a>
                                     @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_RECAP && ! $action->invalidated_at && ! $action->consumed_at)
                                         @php $recap = (array) ($actionPayload['recap'] ?? []); @endphp
@@ -300,7 +300,7 @@
                                             href="{{ $actionPayload['url'] }}"
                                             wire:navigate
                                             x-on:click="closeForNavigation()"
-                                            class="mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white"
+                                            class="support-chat-action mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white"
                                         >View request</a>
                                     @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_RECAP && $action->invalidation_reason === 'actor_logged_out')
                                         <button
@@ -338,6 +338,15 @@
             </template>
         </div>
 
+        <div x-show="newMessagesBelow" x-transition.opacity class="support-chat-new-message-layer">
+            <button
+                type="button"
+                data-testid="support-chat-new-message"
+                class="support-chat-new-message"
+                x-on:click="scrollToBottom(true)"
+            >New message <span aria-hidden="true">&darr;</span></button>
+        </div>
+
         <div class="support-chat-composer-wrap">
             <div x-show="! online" class="mb-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
                 You're offline. We'll send when you reconnect.
@@ -364,6 +373,10 @@
                             x-ref="composer"
                             x-model="draft"
                             x-on:input="draftChanged()"
+                            x-on:click="rememberComposerSelection()"
+                            x-on:select="rememberComposerSelection()"
+                            x-on:keyup="rememberComposerSelection()"
+                            x-on:keydown.enter="handleComposerEnter($event)"
                             rows="1"
                             maxlength="3000"
                             enterkeyhint="send"
@@ -376,11 +389,15 @@
                             data-testid="support-chat-send"
                             class="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-xl bg-[#23483F] px-3 text-sm font-semibold text-white transition hover:bg-[#173F35] focus:outline-none focus:ring-2 focus:ring-[#0F5B52] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             x-bind:disabled="sending || ! draft.trim()"
-                            aria-label="Send message to LoLo Support"
+                            x-bind:aria-label="sending ? 'Sending message to LoLo Support' : 'Send message to LoLo Support'"
                         >
-                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <svg x-show="! sending" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m4 4 16 8-16 8 3-8-3-8Z" />
                                 <path stroke-linecap="round" d="M7 12h13" />
+                            </svg>
+                            <svg x-show="sending" class="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <circle class="opacity-30" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" />
+                                <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
                             </svg>
                             <span class="sr-only" x-text="sending ? 'Sending' : 'Send'"></span>
                         </button>
@@ -397,9 +414,9 @@
                 </form>
             @endif
 
-            <div class="mt-2 flex flex-col gap-1 border-t border-[#E7DED2] pt-2 text-[11px] leading-4 text-[#626B73]">
+            <div class="mt-2 flex items-center justify-between gap-3 border-t border-[#E7DED2] pt-1 text-[11px] leading-4 text-[#626B73]">
                 <a href="{{ route('support.index') }}" wire:navigate x-on:click="closeForNavigation()" class="inline-flex min-h-11 items-center font-semibold text-[#0F5B52] underline underline-offset-2">Open Support Center</a>
-                <p>LoLo Support is not an emergency service. If someone is in immediate danger, call 911.</p>
+                <p class="text-right">Emergency? Call 911.</p>
             </div>
         </div>
 

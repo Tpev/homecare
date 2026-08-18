@@ -452,6 +452,35 @@
         background: rgba(255, 253, 249, 0.99);
     }
 
+    .support-chat-new-message-layer {
+        position: relative;
+        z-index: 3;
+        height: 0;
+        pointer-events: none;
+    }
+
+    .support-chat-new-message {
+        position: absolute;
+        bottom: 0.55rem;
+        left: 50%;
+        display: inline-flex;
+        min-height: 2.75rem;
+        transform: translateX(-50%);
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        white-space: nowrap;
+        border: 1px solid rgba(15, 91, 82, 0.22);
+        border-radius: 999px;
+        padding: 0.55rem 1rem;
+        background: #fffdf9;
+        color: #0f5b52;
+        font-size: 0.8rem;
+        font-weight: 800;
+        box-shadow: 0 8px 24px rgba(15, 61, 62, 0.2);
+        pointer-events: auto;
+    }
+
     .support-chat-composer {
         display: block;
         width: 100%;
@@ -486,18 +515,18 @@
 
     .support-chat-panel {
         right: 0;
-        bottom: var(--support-chat-keyboard-inset, 0px);
+        top: var(--support-chat-viewport-offset, 0px);
+        bottom: auto;
         left: 0;
         width: 100%;
-        height: min(
-            92dvh,
-            calc(var(--support-chat-viewport-height, 100dvh) - max(0.75rem, env(safe-area-inset-top)))
-        );
-        max-height: calc(var(--support-chat-viewport-height, 100dvh) - max(0.75rem, env(safe-area-inset-top)));
-        border-right: 0;
-        border-bottom: 0;
-        border-left: 0;
-        border-radius: 1.6rem 1.6rem 0 0;
+        height: var(--support-chat-viewport-height, 100dvh);
+        max-height: var(--support-chat-viewport-height, 100dvh);
+        border: 0;
+        border-radius: 0;
+    }
+
+    .support-chat-header {
+        padding-top: max(0.85rem, env(safe-area-inset-top));
     }
 
     .support-chat-messages {
@@ -506,6 +535,12 @@
 
     .support-chat-bubble {
         max-width: 90%;
+    }
+
+    .support-chat-action {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
     }
 }
 

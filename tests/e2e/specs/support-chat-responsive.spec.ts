@@ -65,8 +65,13 @@ test.describe('Mobile support chat', () => {
             await expect(page.getByRole('button', { name: 'Minimize support chat' })).toHaveAccessibleName('Minimize support chat');
             const panelBox = await panel.boundingBox();
             expect(panelBox?.x ?? -1).toBeGreaterThanOrEqual(0);
+            expect(panelBox?.y ?? -1).toBeLessThanOrEqual(1);
             expect((panelBox?.x ?? 0) + (panelBox?.width ?? 0)).toBeLessThanOrEqual(size.width + 1);
             expect(panelBox?.height ?? size.height + 1).toBeLessThanOrEqual(size.height);
+            expect(panelBox?.height ?? 0).toBeGreaterThanOrEqual(size.height - 1);
+
+            const messagesBox = await page.getByTestId('support-chat-messages').boundingBox();
+            expect(messagesBox?.height ?? 0).toBeGreaterThan(size.height * 0.45);
 
             const composer = page.getByLabel('Message LoLo Support');
             const send = page.getByTestId('support-chat-send');
@@ -148,6 +153,21 @@ test.describe('Mobile support chat', () => {
         await expectNoHorizontalOverflow(page);
     });
 
+    test('keeps focus and the cursor while typing across a background refresh', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await loginAs(page, 'caregiverMobileVisual');
+        await page.goto('/profile');
+        await page.getByTestId('support-chat-launcher').click();
+
+        const composer = page.getByLabel('Message LoLo Support');
+        await composer.focus();
+        await composer.pressSequentially('Focus stays while I keep typing.', { delay: 225 });
+
+        await expect(composer).toBeFocused();
+        await expect(composer).toHaveValue('Focus stays while I keep typing.');
+        expect(await composer.evaluate((element: HTMLTextAreaElement) => element.selectionStart)).toBe(32);
+    });
+
     test('supports long history, resolved state, large text, and a new conversation', async ({ page }) => {
         const pageErrors: string[] = [];
         page.on('pageerror', (error) => pageErrors.push(error.message));
@@ -165,6 +185,15 @@ test.describe('Mobile support chat', () => {
         await panel.getByRole('button', { name: 'Load earlier messages' }).click();
         await expect(panel.getByText('E2E oldest mobile support message')).toBeVisible();
 
+        const messages = page.getByTestId('support-chat-messages');
+        await messages.evaluate((element) => { element.scrollTop = 0; });
+        await page.getByRole('button', { name: 'Minimize support chat' }).click();
+        await expect(panel).toBeHidden();
+        await page.getByTestId('support-chat-launcher').click();
+        await expect.poll(() => messages.evaluate((element) => (
+            element.scrollHeight - element.scrollTop - element.clientHeight
+        ))).toBeLessThan(4);
+
         await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
         await expectNoHorizontalOverflow(page);
         await expect(panel.getByRole('button', { name: 'Start a new conversation' })).toBeVisible();
@@ -177,10 +206,13 @@ test.describe('Mobile support chat', () => {
 
         await page.waitForTimeout(5_500);
         await expect(panel.getByText(/How can we help/)).toBeVisible();
-        await composer.fill('A new question after the resolved conversation.');
+        await composer.fill('A new question after');
+        await composer.press('Shift+Enter');
+        await composer.pressSequentially('the resolved conversation.');
+        await expect(composer).toHaveValue('A new question after\nthe resolved conversation.');
         await expect(page.getByTestId('support-chat-send')).toBeEnabled();
-        await page.getByTestId('support-chat-send').click();
-        await expect(panel.getByText('A new question after the resolved conversation.', { exact: true })).toBeVisible({ timeout: 15_000 });
+        await composer.press('Enter');
+        await expect(panel.getByText('A new question after\nthe resolved conversation.', { exact: true })).toBeVisible({ timeout: 15_000 });
         await expect(page.getByTestId('support-chat-pending-message')).toHaveCount(0, { timeout: 15_000 });
 
         await composer.fill('A second question without refreshing the page.');

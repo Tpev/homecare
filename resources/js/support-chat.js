@@ -62,6 +62,8 @@ document.addEventListener('alpine:init', () => {
     window.Alpine.data('supportChatWidget', () => ({
         actionInFlight: false,
         announcement: '',
+        composerSelectionEnd: null,
+        composerSelectionStart: null,
         draft: '',
         initialUnreadCount: 0,
         guidedTask: null,
@@ -70,6 +72,7 @@ document.addEventListener('alpine:init', () => {
         guidedTimer: null,
         isMobile: false,
         mediaQuery: null,
+        newMessagesBelow: false,
         online: window.navigator.onLine,
         open: false,
         pendingMessage: null,
@@ -146,8 +149,12 @@ document.addEventListener('alpine:init', () => {
                 if (this.open) {
                     this.applyScrollLock();
                     this.prepareHistoryState();
-                    this.restoreScroll(this.initialUnreadCount > 0);
-                    this.$wire.openPanel().catch(() => {});
+                    this.restoreScroll(this.isMobile || this.initialUnreadCount > 0);
+                    this.$wire.openPanel()
+                        .then(() => {
+                            if (this.isMobile) this.$nextTick(() => this.scrollToBottom());
+                        })
+                        .catch(() => {});
                 }
                 this.initializeGuidance();
             });
@@ -192,13 +199,17 @@ document.addEventListener('alpine:init', () => {
             this.announcement = 'Support chat opened.';
 
             this.$nextTick(() => {
-                this.restoreScroll(this.initialUnreadCount > 0);
+                this.restoreScroll(this.isMobile || this.initialUnreadCount > 0);
                 this.$refs.composer?.focus({ preventScroll: true });
             });
 
             this.$wire.openPanel()
                 .then(() => {
                     this.initialUnreadCount = 0;
+                    this.$nextTick(() => {
+                        if (this.isMobile) this.scrollToBottom();
+                        this.restoreComposerFocusIfLost();
+                    });
                 })
                 .catch(() => {});
             this.schedulePoll(5000);
@@ -221,7 +232,11 @@ document.addEventListener('alpine:init', () => {
                 window.history.replaceState(state, '', window.location.href);
             }
 
-            this.closeImmediately(false, false);
+            // Keep the clicked link mounted until Livewire/native navigation has
+            // consumed the click. The next page reads the closed session state.
+            writeSession(this.openKey(), 'false');
+            this.rememberScroll();
+            this.unlockPageScroll();
         },
 
         closeImmediately(fromPopstate = false, restoreFocus = true) {
@@ -295,7 +310,28 @@ document.addEventListener('alpine:init', () => {
         draftChanged() {
             writeSession(this.draftKey(), this.draft);
             this.sendError = '';
+            this.rememberComposerSelection();
             this.resizeComposer();
+        },
+
+        rememberComposerSelection() {
+            const composer = this.$refs.composer;
+            if (! composer) return;
+
+            this.composerSelectionStart = composer.selectionStart;
+            this.composerSelectionEnd = composer.selectionEnd;
+        },
+
+        restoreComposerFocusIfLost() {
+            const composer = this.$refs.composer;
+            const focusWasLost = document.activeElement === document.body
+                || document.activeElement === document.documentElement;
+            if (! composer || ! focusWasLost) return;
+
+            composer.focus({ preventScroll: true });
+            if (this.composerSelectionStart !== null && this.composerSelectionEnd !== null) {
+                composer.setSelectionRange(this.composerSelectionStart, this.composerSelectionEnd);
+            }
         },
 
         resizeComposer() {
@@ -304,6 +340,13 @@ document.addEventListener('alpine:init', () => {
 
             composer.style.height = 'auto';
             composer.style.height = `${Math.min(112, Math.max(44, composer.scrollHeight))}px`;
+        },
+
+        handleComposerEnter(event) {
+            if (event.isComposing || event.shiftKey) return;
+
+            event.preventDefault();
+            this.sendMessage();
         },
 
         sendMessage() {
@@ -414,6 +457,7 @@ document.addEventListener('alpine:init', () => {
             this.announcement = 'New support conversation ready.';
             this.$nextTick(() => {
                 this.resizeComposer();
+                this.scrollToBottom();
                 this.$refs.composer?.focus({ preventScroll: true });
             });
         },
@@ -560,7 +604,11 @@ document.addEventListener('alpine:init', () => {
             }
 
             const messageArea = this.$refs.messages;
+            const composer = this.$refs.composer;
+            const composerWasFocused = document.activeElement === composer;
+            if (composerWasFocused) this.rememberComposerSelection();
             const previousScrollTop = messageArea?.scrollTop ?? 0;
+            const previousScrollHeight = messageArea?.scrollHeight ?? 0;
             const wasNearBottom = messageArea
                 ? messageArea.scrollHeight - messageArea.scrollTop - messageArea.clientHeight < 72
                 : true;
@@ -569,10 +617,15 @@ document.addEventListener('alpine:init', () => {
                 await this.$wire.refreshWidget(this.open);
                 this.$nextTick(() => {
                     this.syncGuidedTask();
+                    if (composerWasFocused) this.restoreComposerFocusIfLost();
                     if (wasNearBottom) {
                         this.scrollToBottom();
                     } else if (this.$refs.messages) {
                         this.$refs.messages.scrollTop = previousScrollTop;
+                        if (this.$refs.messages.scrollHeight > previousScrollHeight + 1) {
+                            this.newMessagesBelow = true;
+                            this.announcement = 'A new support message arrived below.';
+                        }
                     }
                 });
             } catch {
@@ -587,6 +640,7 @@ document.addEventListener('alpine:init', () => {
             if (! messageArea) return;
 
             this.shouldStickToBottom = messageArea.scrollHeight - messageArea.scrollTop - messageArea.clientHeight < 72;
+            if (this.shouldStickToBottom) this.newMessagesBelow = false;
             writeSession(this.scrollKey(), String(messageArea.scrollTop));
         },
 
@@ -604,12 +658,21 @@ document.addEventListener('alpine:init', () => {
             messageArea.scrollTop = stored;
         },
 
-        scrollToBottom() {
+        scrollToBottom(smooth = false) {
             const messageArea = this.$refs.messages;
             if (! messageArea) return;
 
-            messageArea.scrollTop = messageArea.scrollHeight;
+            if (smooth && 'scrollTo' in messageArea) {
+                const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                messageArea.scrollTo({
+                    top: messageArea.scrollHeight,
+                    behavior: reducedMotion ? 'auto' : 'smooth',
+                });
+            } else {
+                messageArea.scrollTop = messageArea.scrollHeight;
+            }
             this.shouldStickToBottom = true;
+            this.newMessagesBelow = false;
             writeSession(this.scrollKey(), String(messageArea.scrollTop));
         },
 

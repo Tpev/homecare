@@ -1,8 +1,8 @@
 # LoLo In-App Support Chat Product and Engineering Specification
 
-Status: Proposed
+Status: Released; mobile interaction polish updated August 18, 2026
 
-Date: August 12, 2026
+Date: August 12, 2026; updated August 18, 2026
 
 Audience: Product, design, engineering, operations, support
 
@@ -82,7 +82,7 @@ The widget has three states:
 
 1. **Closed launcher**: a bottom-right circular or rounded-square button labeled for screen readers as **Chat with LoLo Support**.
 2. **Open panel**: a compact conversation window on desktop.
-3. **Mobile sheet**: a near-full-screen bottom sheet on small screens so the keyboard and message composer remain usable.
+3. **Mobile chat**: a full available-visual-viewport conversation on small screens so the keyboard, newest message, and composer remain usable.
 
 The closed launcher shows an unread badge when support has replied. It should not obscure primary page actions, mobile navigation, cookie controls, or booking controls.
 
@@ -204,7 +204,7 @@ On viewports below the application breakpoint:
 - Use a launcher at least 52 by 52 px with a 44 by 44 px minimum interactive area.
 - Keep the launcher 16 px from the viewport edge, plus `env(safe-area-inset-right)` and `env(safe-area-inset-bottom)` where applicable.
 - Position it above persistent mobile navigation, cookie controls, and page actions instead of covering them.
-- Open as a bottom sheet that uses the available visual viewport. It may be near-full-screen, but must retain enough surrounding context to feel dismissible.
+- Open as a full available-visual-viewport chat. The persistent branded header, clear minimize control, and browser-back dismissal keep it understandable and dismissible.
 - Use dynamic viewport units such as `dvh` with a safe fallback; do not rely on `100vh` alone on mobile browsers.
 - Respect top and bottom safe-area insets on devices with a notch, Dynamic Island, or home indicator.
 - Keep the header and composer fixed while only the message history scrolls.
@@ -215,7 +215,10 @@ On viewports below the application breakpoint:
 - Keep the send button reachable with one hand and at least 44 by 44 px.
 - Provide an obvious minimize control in the header and support the browser back action as a dismissal action when feasible.
 - Preserve the user's unsent draft while minimized, rotating the phone, or navigating with Livewire.
-- Restore the user's previous scroll position when reopening the same conversation.
+- Reopen at the newest message on mobile. Desktop may restore the user's previous reading position.
+- When a refresh adds a message while the user is reading earlier history, preserve that reading position and show a clear **New message** control.
+- Preserve textarea focus and the current cursor position across the five-second conversation refresh.
+- Send with Enter and insert a new line with Shift+Enter; composition/IME input must not be submitted prematurely.
 - Avoid horizontal scrolling at 320 px and wider, including with long unbroken text and large accessibility font settings.
 - Recalculate the layout after orientation changes and keyboard open/close events without jumping the message history.
 
@@ -513,6 +516,10 @@ Suggested initial product targets:
 19. The launcher and sheet do not cover persistent navigation or critical page actions.
 20. Minimizing, reopening, rotating the phone, and Livewire navigation preserve the active conversation and unsent draft.
 21. Long messages, 200% text sizing, and error messages do not introduce horizontal scrolling or inaccessible controls.
+22. Opening or reopening on mobile positions the conversation at the newest message.
+23. The five-second refresh does not remove focus or move the cursor while the user is typing.
+24. Enter sends, Shift+Enter creates a new line, and the send control shows a visible pending state.
+25. A user reading older messages gets a **New message** control instead of being pulled away from their reading position.
 
 ### 15.1 Required mobile QA matrix
 
