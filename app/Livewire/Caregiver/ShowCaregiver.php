@@ -4,6 +4,7 @@ namespace App\Livewire\Caregiver;
 
 use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
+use App\Models\CareRequestApplication;
 use App\Models\FamilyCaregiverFavorite;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Marketplace\CaregiverInvitationDiscoveryService;
@@ -168,9 +169,28 @@ class ShowCaregiver extends Component
         $this->familyRequestOptions = CareRequest::query()
             ->forFamilyAccount(app(FamilyAccountContext::class)->account($user))
             ->where('status', CareRequest::STATUS_OPEN)
+            ->whereDoesntHave(
+                'applications',
+                fn ($query) => $query->where('status', CareRequestApplication::STATUS_HIRED),
+            )
             ->latest('created_at')
-            ->get(['id', 'title'])
-            ->map(fn (CareRequest $request) => ['label' => $request->title, 'value' => $request->id])
+            ->get(['id', 'title', 'request_type', 'requested_start_at', 'requested_end_at'])
+            ->map(function (CareRequest $request): array {
+                $label = $request->title;
+
+                if ($request->request_type === CareRequest::TYPE_ONE_TIME && $request->requested_start_at) {
+                    $end = $request->requested_end_at
+                        ? ($request->requested_start_at->isSameDay($request->requested_end_at)
+                            ? $request->requested_end_at->format('g:i A')
+                            : $request->requested_end_at->format('D, M j · g:i A'))
+                        : null;
+                    $schedule = $request->requested_start_at->format('D, M j · g:i A')
+                        .($end ? '–'.$end : '');
+                    $label = $schedule.' — '.$label;
+                }
+
+                return ['label' => $label, 'value' => $request->id];
+            })
             ->all();
     }
 

@@ -6,8 +6,8 @@ use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestInvitation;
 use App\Models\User;
-use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
+use App\Services\Notifications\MarketplaceNotificationService;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -90,6 +90,16 @@ class CareRequestInvitationService
                     self::STATE_REPLIED,
                     $caregiver->name.' already replied to this request. Open their reply instead of sending another invitation.',
                     application: $application,
+                );
+            }
+
+            if (CareRequestApplication::query()
+                ->where('care_request_id', $lockedRequest->id)
+                ->where('status', CareRequestApplication::STATUS_HIRED)
+                ->exists()) {
+                return new CareRequestInvitationResult(
+                    self::STATE_REQUEST_UNAVAILABLE,
+                    'This care request already has a hired caregiver.'
                 );
             }
 

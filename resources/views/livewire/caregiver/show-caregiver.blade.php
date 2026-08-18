@@ -233,8 +233,8 @@
                     @error('inviteMessage') <p class="text-sm text-red-600" role="alert">{{ $message }}</p> @enderror
                 @elseif (count($familyRequestOptions) === 0)
                     <x-alert color="yellow">
-                        You need an open request first.
-                        <a href="{{ route('family.requests.create') }}" wire:navigate class="underline">Create one now</a>.
+                        No care request is available for a new invitation.
+                        <a href="{{ route('family.requests.create') }}" wire:navigate class="font-semibold underline">Click here to create a new request.</a>
                     </x-alert>
                 @else
                     <x-native-select-field

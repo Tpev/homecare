@@ -81,10 +81,13 @@ class CareRequestInvitationTest extends TestCase
     {
         [$family, $caregiver, $request] = $this->seedContext();
         $profile = CaregiverProfile::query()->where('user_id', $caregiver->id)->firstOrFail();
+        $expectedLabel = $request->requested_start_at->format('D, M j · g:i A')
+            .'–'.$request->requested_end_at->format('g:i A').' — '.$request->title;
 
         Livewire::actingAs($family)
             ->test(ShowCaregiver::class, ['slug' => $profile->slug])
             ->call('openInviteModal')
+            ->assertSet('familyRequestOptions.0.label', $expectedLabel)
             ->assertSet('selectedCareRequestId', $request->id)
             ->call('sendInvite')
             ->assertHasNoErrors('selectedCareRequestId');
@@ -95,6 +98,28 @@ class CareRequestInvitationTest extends TestCase
             'caregiver_user_id' => $caregiver->id,
             'status' => CareRequestInvitation::STATUS_PENDING,
         ]);
+    }
+
+    public function test_request_with_hired_caregiver_is_not_offered_for_another_invitation(): void
+    {
+        [$family, $caregiver, $request] = $this->seedContext();
+        $profile = CaregiverProfile::query()->where('user_id', $caregiver->id)->firstOrFail();
+        CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 27,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ShowCaregiver::class, ['slug' => $profile->slug])
+            ->call('openInviteModal')
+            ->assertSet('familyRequestOptions', [])
+            ->assertSet('selectedCareRequestId', null)
+            ->assertSee('No care request is available for a new invitation.')
+            ->assertSee('Click here to create a new request.');
+
+        $this->assertDatabaseCount('care_request_invitations', 0);
     }
 
     public function test_caregiver_can_accept_invitation_and_conversation_is_created(): void
