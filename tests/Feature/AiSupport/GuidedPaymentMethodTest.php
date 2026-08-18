@@ -76,6 +76,44 @@ class GuidedPaymentMethodTest extends TestCase
         $this->assertStringNotContainsString('4242', json_encode($task->getAttributes(), JSON_THROW_ON_ERROR));
     }
 
+    public function test_owner_wanting_to_use_another_credit_card_gets_the_update_action_without_a_model_call(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $account = app(FamilyAccountContext::class)->account($family);
+        $account->forceFill(['stripe_customer_id' => 'cus_another_card_intent'])->save();
+        $ticket = $this->automatedTicket($family, 'Hi, I want to use another credit card.');
+        Http::fake();
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $ticket->description);
+
+        Http::assertNothingSent();
+        $this->assertSame(
+            'Update payment method',
+            AiSupportMessageAction::query()->where('action_type', AiSupportMessageAction::TYPE_GUIDED_TASK)->sole()->payload['label'],
+        );
+        $this->assertSame('family.billing.payment_method', AiSupportGuidedTask::query()->sole()->navigation_target_id);
+        $this->assertDatabaseMissing('ai_support_interaction_events', ['event_type' => 'model_turn_completed']);
+    }
+
+    public function test_owner_follow_up_recovers_a_recent_payment_request_into_guidance_without_a_model_call(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $account = app(FamilyAccountContext::class)->account($family);
+        $account->forceFill(['stripe_customer_id' => 'cus_payment_follow_up'])->save();
+        $ticket = $this->automatedTicket($family, 'Hi, I want to use another credit card.');
+        Http::fake();
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, "I'm the account owner. Please take me there.");
+
+        Http::assertNothingSent();
+        $this->assertSame(
+            'Update payment method',
+            AiSupportMessageAction::query()->where('action_type', AiSupportMessageAction::TYPE_GUIDED_TASK)->sole()->payload['label'],
+        );
+        $this->assertSame('family.billing.payment_method', AiSupportGuidedTask::query()->sole()->navigation_target_id);
+        $this->assertDatabaseMissing('ai_support_interaction_events', ['event_type' => 'model_turn_completed']);
+    }
+
     public function test_owner_can_ask_which_card_is_on_file_without_sending_account_state_to_the_model(): void
     {
         [, $family] = $this->eligibleFamily();

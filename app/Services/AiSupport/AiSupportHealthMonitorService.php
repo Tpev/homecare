@@ -89,7 +89,7 @@ class AiSupportHealthMonitorService
         }
 
         $dailyCost = (int) AiSupportInteractionEvent::query()
-            ->where('occurred_at', '>=', now('UTC')->startOfDay())
+            ->where('occurred_at', '>=', now()->startOfDay())
             ->sum('cost_microunits');
         $dailyCostStopped = $dailyCost >= (int) config('ai_support.pilot_daily_cost_stop_microunits', 5_000_000);
         if ($dailyCostStopped) {

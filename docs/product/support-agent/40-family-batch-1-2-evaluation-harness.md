@@ -35,7 +35,9 @@ The first complete run on August 17, 2026 passed:
 
 The same corpus/router inventory was then deployed through the normal production workflow at commit `0655b5b54e12ff8abffb6d00dcb81b723bd4a504`. Production `--plan` passed all 40 registry intents, 120 routing phrases, and 10 collision cases using zero provider calls and no database write.
 
-The corrective run on August 18, 2026 expanded the same 40-row corpus to 121 phrases. It passed 121 of 121 phrases, 10 of 10 collision cases, 40 of 40 registry intents, and 30 application tests with 367 assertions. It continued to use isolated in-memory SQLite, made zero provider calls, and made zero production writes. The new cases lock natural “status of my care request” wording and dedicated regular-care status/plan routing.
+The first corrective run on August 18, 2026 expanded the same 40-row corpus to 121 phrases. It passed 121 of 121 phrases, 10 of 10 collision cases, 40 of 40 registry intents, and 30 application tests with 367 assertions. It continued to use isolated in-memory SQLite, made zero provider calls, and made zero production writes. Those cases lock natural “status of my care request” wording and dedicated regular-care status/plan routing.
+
+The task-navigation correction later that day expanded the corpus to 122 phrases with the exact pilot wording **“Hi, I want to use another credit card.”** The full runner passed 122 of 122 phrases, 10 of 10 collision cases, all 40 intents, and 32 application tests with 376 assertions. The deterministic payment-specific regression also proves that the exact phrase and its “I’m the account owner” follow-up create the authorized **Update payment method** action with zero provider calls.
 
 ## Production browser QA record
 
@@ -111,7 +113,7 @@ The catalog validator fails if an ID is missing, duplicated, malformed, has fewe
 
 ### 1. Language routing and collision protection
 
-`FamilyIntentCoverageTest` checks all 121 phrasings and the 10 near-neighbor cases. The collision set protects existing or later flows such as request creation, passwords, refunds, Family invitations, account deletion, caregiver browsing, medical help, human transfer, general product information, and notification settings.
+`FamilyIntentCoverageTest` checks all 122 phrasings and the 10 near-neighbor cases. The collision set protects existing or later flows such as request creation, passwords, refunds, Family invitations, account deletion, caregiver browsing, medical help, human transfer, general product information, and notification settings.
 
 The mass corpus found real natural-language gaps during its first implementation. The deterministic router was expanded to understand plural care profiles, ordinary applicant wording, natural request-status phrasing, pending charge wording, failed time-correction payments, scheduled-care wording, visit-change decisions, corrected hours, completed extra visits, and regular-care history. The expected cases were not weakened to hide those misses.
 

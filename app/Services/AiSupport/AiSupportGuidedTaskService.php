@@ -35,9 +35,34 @@ class AiSupportGuidedTaskService
         $message = mb_strtolower(trim($message));
 
         return preg_match(
-            '/(?:\b(?:add|change|update|replace|switch|new)\b.{0,48}\b(?:credit\s+card|card(?:\s+on\s+file)?|payment\s+method)\b|\b(?:credit\s+card|card(?:\s+on\s+file)?|payment\s+method)\b.{0,48}\b(?:add|change|update|replace|switch|new)\b|\b(?:credit\s+card|card(?:\s+on\s+file)?|payment\s+method)\b.{0,24}\b(?:expired|expiring)\b|\b(?:do\s+i\s+have|is\s+there)\b.{0,40}\b(?:credit\s+card|card|payment\s+method)\b(?:.{0,20}\bon\s+file\b)?|\b(?:what|which)\b.{0,24}\b(?:credit\s+card|card|payment\s+method)\b.{0,20}\b(?:on\s+file|saved|current)\b)/iu',
+            '/(?:\b(?:add|change|update|replace|switch|new)\b.{0,48}\b(?:credit\s+card|card(?:\s+on\s+file)?|payment\s+method)\b|\b(?:use|pay\s+with|switch\s+to)\b.{0,32}\b(?:another|different|new|other)\b.{0,16}\b(?:credit\s+card|card|payment\s+method)\b|\b(?:another|different|other)\b.{0,16}\b(?:credit\s+card|card|payment\s+method)\b|\b(?:credit\s+card|card(?:\s+on\s+file)?|payment\s+method)\b.{0,48}\b(?:add|change|update|replace|switch|new)\b|\b(?:credit\s+card|card(?:\s+on\s+file)?|payment\s+method)\b.{0,24}\b(?:expired|expiring)\b|\b(?:do\s+i\s+have|is\s+there)\b.{0,40}\b(?:credit\s+card|card|payment\s+method)\b(?:.{0,20}\bon\s+file\b)?|\b(?:what|which)\b.{0,24}\b(?:credit\s+card|card|payment\s+method)\b.{0,20}\b(?:on\s+file|saved|current)\b)/iu',
             $message,
         ) === 1;
+    }
+
+    public function shouldOfferPaymentMethod(User $actor, SupportTicket $ticket, string $message): bool
+    {
+        if ($this->isPaymentMethodIntent($message)) {
+            return true;
+        }
+
+        if (preg_match(
+            '/\b(?:i(?:\s+am|\'m)\s+(?:the\s+)?(?:(?:family\s+)?account\s+)?owner|i(?:\s+am|\'m)\s+(?:an?\s+)?(?:active\s+)?family\s+member|yes(?:\s+please)?|go\s+ahead|please\s+(?:do\s+it|show\s+me|take\s+me|open\s+it)|(?:show|take)\s+me\s+(?:there|where)|open\s+(?:it|that|the\s+page))\b/iu',
+            trim($message),
+        ) !== 1) {
+            return false;
+        }
+
+        $priorUserMessages = $ticket->publicMessages()
+            ->where('sender_user_id', $actor->id)
+            ->latest('created_at')
+            ->limit(8)
+            ->pluck('body')
+            ->prepend((string) $ticket->description);
+
+        return $priorUserMessages->contains(
+            fn (mixed $prior): bool => $this->isPaymentMethodIntent((string) $prior),
+        );
     }
 
     public function offerPaymentMethod(User $actor, SupportTicket $ticket): ?AiSupportGuidedTask

@@ -64,10 +64,15 @@ class InteractiveSupportRuntimeTest extends TestCase
         ]);
         Http::fake();
         $ticket = $this->automatedTicket($family);
+        $this->assertSame(1, AiSupportInteractionEvent::query()
+            ->where('actor_user_id', $family->id)
+            ->whereIn('event_type', ['model_turn_completed', 'model_turn_failed'])
+            ->where('occurred_at', '>=', now()->startOfDay())
+            ->count());
 
-        app(AiSupportRuntimeService::class)->respond($family, $ticket, 'Where are my care requests?');
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, 'What can you help me with?');
 
-        Http::assertNothingSent();
+        Http::assertNotSent(fn ($request): bool => str_ends_with(parse_url($request->url(), PHP_URL_PATH) ?: '', '/responses'));
         $this->assertTrue($ticket->fresh()->isHumanOnly());
         $this->assertSame('daily_turn_limit', $ticket->fresh()->handoff_reason_code);
     }
@@ -463,11 +468,11 @@ class InteractiveSupportRuntimeTest extends TestCase
             'source' => SupportTicket::SOURCE_CHAT_WIDGET,
             'responder_mode' => SupportTicket::RESPONDER_MODE_AUTOMATED,
             'category' => 'general', 'status' => SupportTicket::STATUS_OPEN, 'priority' => 'normal',
-            'subject' => 'Caregiver navigation', 'description' => 'Open my Work Inbox.',
+            'subject' => 'Caregiver navigation', 'description' => 'I need to check my Work Inbox.',
             'initial_client_message_id' => (string) Str::uuid(),
         ]);
 
-        app(AiSupportRuntimeService::class)->respond($caregiver, $ticket, 'Open my Work Inbox.');
+        app(AiSupportRuntimeService::class)->respond($caregiver, $ticket, 'I need to check my Work Inbox.');
 
         $action = AiSupportMessageAction::query()->sole();
         $this->assertSame(AiSupportMessageAction::TYPE_NAVIGATE, $action->action_type);

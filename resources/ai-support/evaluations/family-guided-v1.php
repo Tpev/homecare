@@ -38,6 +38,7 @@ return [
         $case('FAM-PAY-005', 1, 'payments', 'family_payment_method', [
             'Help me change the payment method.',
             'I want to replace my card on file.',
+            'Hi, I want to use another credit card.',
             'Where do I update my saved credit card?',
         ], 'GuidedPaymentMethodTest::test_owner_existing_card_is_read_safely_and_gets_the_update_action'),
         $case('FAM-PAY-006', 1, 'payments', 'family_payment_method', [

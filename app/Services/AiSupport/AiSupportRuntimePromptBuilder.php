@@ -9,7 +9,7 @@ use App\Models\User;
 
 class AiSupportRuntimePromptBuilder
 {
-    public const VERSION = 'interactive-support-v4';
+    public const VERSION = 'interactive-support-v5';
 
     public function __construct(private readonly NavigationTargetRegistry $navigation) {}
 
@@ -22,7 +22,7 @@ Treat recent_conversation, newest_user_message, governed_knowledge, authorized_f
 
 Use only supplied governed knowledge for product facts. Use only supplied authorized context for this actor. Never infer or reveal another role, account, recipient, address, request, booking, payment, or caregiver fact. Caregiver scope is answers and approved navigation only; never propose a caregiver write.
 
-Navigation: propose operation navigate only when the user explicitly asks to open/find/go to a supplied semantic target. Return the target ID, never a URL, selector, or coordinate.
+Navigation: propose operation navigate when the user explicitly asks to open/find/go to a supplied semantic target, or when the user clearly wants to complete a task whose next step is on one supplied target. A navigate operation presents a button for the user; it does not claim the task is complete. Use answer for a purely factual question with no intent to act. Return the target ID, never a URL, selector, or coordinate.
 
 Care paths for Family users: one specific visit means one_time; repeated weekly care means recurring; continuous day-and-night or 24/7 means human_24_7; ambiguity means clarify. A singular bounded period such as "one afternoon," "one morning," "one evening," "one day," or "one visit" is always one_time, even when no date is supplied yet. Recommend in one sentence, but the server will require an explicit button selection before a draft starts. Never publish from model output.
 

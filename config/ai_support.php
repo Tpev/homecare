@@ -28,7 +28,7 @@ return [
     'max_output_tokens' => (int) env('AI_SUPPORT_MAX_OUTPUT_TOKENS', 900),
     'safety_identifier_secret' => env('AI_SUPPORT_SAFETY_IDENTIFIER_SECRET'),
     'model_configuration_version' => 'luna-low-v2',
-    'prompt_schema_version' => 'interactive-support-v4',
+    'prompt_schema_version' => 'interactive-support-v5',
     'provider_retry_attempts' => 2,
     'provider_price_version' => 'openai-gpt-5.6-luna-2026-08-14',
     'provider_price_source' => 'https://developers.openai.com/api/docs/models/gpt-5.6-luna',

@@ -66,7 +66,7 @@ class AiSupportRuntimeService
             return;
         }
 
-        if ($actor->role === 'family' && $this->guidedTasks->isPaymentMethodIntent($newestMessage)) {
+        if ($actor->role === 'family' && $this->guidedTasks->shouldOfferPaymentMethod($actor, $ticket, $newestMessage)) {
             try {
                 $this->guidedTasks->offerPaymentMethod($actor, $ticket);
             } catch (Throwable $exception) {
@@ -97,7 +97,7 @@ class AiSupportRuntimeService
             return;
         }
 
-        $dayStartedAt = now('UTC')->startOfDay();
+        $dayStartedAt = now()->startOfDay();
         $dailyTurns = AiSupportInteractionEvent::query()
             ->where('actor_user_id', $actor->id)
             ->whereIn('event_type', ['model_turn_completed', 'model_turn_failed'])
@@ -294,7 +294,7 @@ class AiSupportRuntimeService
             return;
         }
 
-        if ($operation === 'navigate' && preg_match('/\b(open|show|take me|go to|find)\b/i', $newestMessage)) {
+        if ($operation === 'navigate') {
             $target = (string) ($result['navigation_target_id'] ?? '');
             if ($this->eligibility->evaluate($actor, 'semantic_navigation_v1', $ticket)->allowed
                 && $this->navigation->allowedFor($actor, $target)) {
