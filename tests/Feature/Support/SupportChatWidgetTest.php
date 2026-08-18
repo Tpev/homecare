@@ -6,7 +6,9 @@ use App\Livewire\Admin\SupportTicketShow;
 use App\Livewire\Admin\SupportTicketsQueue;
 use App\Livewire\Support\ChatWidget;
 use App\Mail\Ops\SupportTicketCreatedOpsAlertMail;
+use App\Models\AiSupportMessageAction;
 use App\Models\SupportTicket;
+use App\Models\SupportTicketMessage;
 use App\Models\User;
 use App\Notifications\MarketplaceEventNotification;
 use App\Services\FamilyAccounts\FamilyAccountAccessService;
@@ -428,6 +430,34 @@ class SupportChatWidgetTest extends TestCase
             ->test(ChatWidget::class, ['originRoute' => 'profile', 'originPath' => '/profile'])
             ->assertSee($body)
             ->assertDontSee($body, false);
+    }
+
+    public function test_historical_chat_action_without_url_does_not_break_page_rendering(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $ticket = $this->ticket($family, ['source' => SupportTicket::SOURCE_CHAT_WIDGET]);
+        $message = SupportTicketMessage::query()->create([
+            'support_ticket_id' => $ticket->id,
+            'kind' => SupportTicketMessage::KIND_PUBLIC,
+            'responder_type' => SupportTicketMessage::RESPONDER_AUTOMATED,
+            'body' => 'The profile was saved and checked.',
+            'client_message_id' => (string) Str::uuid(),
+        ]);
+
+        AiSupportMessageAction::query()->create([
+            'id' => (string) Str::uuid(),
+            'support_ticket_message_id' => $message->id,
+            'support_ticket_id' => $ticket->id,
+            'actor_user_id' => $family->id,
+            'action_type' => AiSupportMessageAction::TYPE_DOMAIN_RECEIPT,
+            'payload' => ['label' => 'View profile'],
+        ]);
+
+        $this->actingAs($family)
+            ->get(route('profile'))
+            ->assertOk()
+            ->assertSee('The profile was saved and checked.')
+            ->assertDontSee('View profile');
     }
 
     private function ticket(User $opener, array $overrides = []): SupportTicket

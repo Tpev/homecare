@@ -269,7 +269,7 @@
                                                 >Check again</button>
                                             @endif
                                         </div>
-                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_NAVIGATE && $actionActive)
+                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_NAVIGATE && $actionActive && filled($actionPayload['url'] ?? null))
                                         <a
                                             href="{{ $actionPayload['url'] }}"
                                             wire:navigate
@@ -386,14 +386,14 @@
                                                 @endif
                                             </div>
                                         </section>
-                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_DOMAIN_RECEIPT)
+                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_DOMAIN_RECEIPT && filled($actionPayload['url'] ?? null))
                                         <a
                                             href="{{ $actionPayload['url'] }}"
                                             wire:navigate
                                             x-on:click="closeForNavigation()"
                                             class="support-chat-action mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white"
                                         >{{ $actionPayload['label'] ?? 'View details' }}</a>
-                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_RECEIPT)
+                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_RECEIPT && filled($actionPayload['url'] ?? null))
                                         <a
                                             href="{{ $actionPayload['url'] }}"
                                             wire:navigate
