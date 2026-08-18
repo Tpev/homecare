@@ -39,7 +39,7 @@ No status in this registry proves production deployment. The human support chat 
 | `NAV-CARE-001` | Open regular care or care history | B | Implemented in source | Guided assistance Batch 2 | Authorized regular-care attention and Care-history targets |
 | `NAV-MESSAGE-001` | Open messages or an authorized conversation | B | Implemented in source | Guided assistance Batch 2 | Account-scoped inbox and exact conversation target |
 | `NAV-SUPPORT-001` | Open the Support Center or current support ticket | B | Candidate | Phase 4 | `support.index` / authorized ticket |
-| `NAV-BILLING-001` | Open Family billing and guide the owner to the secure payment-method control without changing payment details | B/guide | Payment-method slice implemented | Guided assistance Batch 1 | Owner-only exact target; member receives no destination; safe card summary may appear in chat but no full card data, token, customer ID, or credential |
+| `NAV-BILLING-001` | Open Family billing and guide an active Family member to the secure payment-method control without changing payment details | B/guide | Payment-method slice implemented | Guided assistance Batch 1 | Active-member exact target; safe card summary may appear in chat but no full card data, token, customer ID, or credential |
 
 The implementation contract for these platform capabilities is [App-aware guided assistance](../39-app-aware-guided-assistance.md).
 

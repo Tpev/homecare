@@ -1,6 +1,6 @@
 # Family Chat Operator Master Coverage and Delivery Plan
 
-Status: Active master plan; Batches 1 and 2 are implemented, later batches are planned
+Status: Active master plan; Batches 1 and 2 and Family Operations KB Wave 1 are implemented in source
 
 Audited: August 18, 2026
 
@@ -38,13 +38,16 @@ The following verification passed on August 18, 2026:
 
 | Verification | Result |
 | --- | ---: |
-| Complete AI Support feature suite | 136 tests / 1,196 assertions passed |
+| Complete AI Support feature suite | 139 tests / 1,277 assertions passed |
 | Batch 1-2 registry inventory | 40 / 40 intents |
 | Batch 1-2 representative phrases | 122 |
 | Near-neighbor routing collisions | 10 / 10 protected |
 | Provider calls made by the Batch 1-2 plan | 0 |
 | Initial KB evaluations | 60 |
 | Interactive KB evaluations | 60 |
+| Family Operations KB Wave 1 | 50 new entries + 1 corrective revision |
+| Family Operations intent mapping | 217 links / 190 unique Family intents |
+| Family Operations KB evaluations | 255 |
 | Interactive request/provider cases | 56 |
 
 ## Current capability inventory
@@ -125,7 +128,7 @@ The current implementation is not yet a general Family-account operator:
 | Workstream | Current position | Target | Delivery state |
 | --- | --- | --- | --- |
 | Intent portfolio | 324 documented rows; 40 in the executable mass corpus | All 324 have a machine-readable disposition and every implemented row has evidence links | Next: Batch 3A |
-| Governed knowledge | 24 definitions; 23 documented Published and one pricing Draft held | Stable domain packs mapped explicitly to every Explain-capable intent | Active gap; delivered with each batch |
+| Governed knowledge | 24 existing definitions plus 50 Wave 1 definitions in source; production publication pending | Stable domain packs mapped explicitly to every Explain-capable intent | Wave 1 implemented; deploy/publish next |
 | Intent resolution | Safety/payment fast paths, nine broad Family state handlers, bounded model fallback | Deterministic active-task routing plus bounded catalog classification and clarification | Next: Batch 3A |
 | Authorized reads | Overview plus payment, requests, visits, hours, profiles, messages, history, and regular care | Narrow normalized readers for every state-dependent supported intent | Expands Batches 4-9 |
 | Navigation and guidance | 24 Family destinations; 19 exact highlights | Every guided intent has a resource-authorized target, one-step instruction, and recovery behavior | Foundation complete; coverage expands by domain |
@@ -134,14 +137,14 @@ The current implementation is not yet a general Family-account operator:
 | Authoritative verification | Care-request publication and saved payment method | Every complete journey has a domain receipt or fresh state verifier | Interface in 3A; expands by domain |
 | Human support | Atomic same-conversation transfer, Admin alert, context summary | Human terminal path for every judgment/exception intent with no repetition | Implemented; refine with domain context |
 | Older-adult UI | Mobile full-screen chat, focus preservation, action cards, guide highlight | State-aware start, universal follow-ups, no-repeat recovery, progress, resume, and verified closure | Next: Batch 3A |
-| Evaluation | 40 intents, 122 phrases, 10 collisions, 136 feature tests | Per-intent routing plus multi-turn outcome, state, browser, and usability coverage | Expands with every batch |
+| Evaluation | 40 runtime intents, 122 phrases, 10 collisions, 255 Wave 1 KB cases, 139 feature tests | Per-intent routing plus multi-turn outcome, state, browser, and usability coverage | Expands with every batch |
 | Admin visibility | KB lifecycle, support transcripts, compact events, Pilot/Everyone control | Intent coverage, unmatched requests, repeated loops, task funnel, and recovery reporting | Next: Batch 3A |
 
 ## Knowledge-base audit
 
 ### Current governed inventory
 
-There are 24 governed source definitions. The documented production lifecycle has 23 Published entries and one validated Draft held outside retrieval.
+There are 24 previously governed source definitions. The documented production lifecycle has 23 Published entries and one validated Draft held outside retrieval. Family Operations KB Wave 1 now adds 50 new source definitions and one corrective version of an existing definition; production counts change only after deployment and the explicit package-publication command in [document 45](45-family-operations-kb-wave-1.md).
 
 | Package | Entries | Current scope |
 | --- | ---: | --- |
@@ -149,6 +152,7 @@ There are 24 governed source definitions. The documented production lifecycle ha
 | Family orientation | 5 | Dashboard, requests, new request, Family access, Account Settings |
 | Caregiver orientation | 4 | Dashboard/onboarding, Work Inbox, visits, Account Settings |
 | Interactive Family care requests | 12 | Care-path choice, required request information, 24/7 transfer, safety, draft/confirmation/publication behavior |
+| Family Operations Wave 1 | 50 new + 1 revision | Payments, requests/applicants, visits/hours, profiles/access, messages/notifications, regular care, and history |
 
 The interactive pricing definition `KB-CARE-006` contains the approved business statement that care is $30 per hour, but it remains intentionally held because the repository still records an unresolved pricing/payment implementation reconciliation. Until that conflict is resolved, runtime instructions correctly forbid price quotation and calculation. This must be resolved as product-and-code truth, not by publishing the KB entry alone.
 
@@ -170,7 +174,7 @@ The KB lifecycle and Admin UI are implemented; the missing work is breadth and m
 
 New knowledge must be authored as stable product facts or task playbooks, not one long article and not one entry per wording variant. One entry may support several intent IDs. Every covered intent maps explicitly to one or more KB stable IDs in the executable intent catalog.
 
-The expected expansion is approximately 50 to 75 additional entries across the domain packs below. The final count is determined by distinct product truths, permissions, failure behavior, and review cadence rather than by a quota.
+The first 50-entry expansion is implemented in source and maps 190 unique Family intents. Remaining gaps are login/security, Continuous Coverage, complaints/privacy, exceptional handling, deeper domain edge cases, and any product truth held for reconciliation. Final breadth remains determined by distinct truths, permissions, failure behavior, and review cadence rather than a quota.
 
 ## Definition of an AI-owned journey
 

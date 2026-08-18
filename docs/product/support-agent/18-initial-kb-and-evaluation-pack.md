@@ -433,6 +433,8 @@ Accepted under `DEC-040`. The definition may become a governed draft and evaluat
 
 ## Accepted entry definition: `KB-FAM-004`
 
+> Current correction (August 18, 2026): this historical initial definition's owner-only payment-method statement is superseded by `DEC-075` and the corrective version in Family Operations KB Wave 1. The current product allows an active Family member to use the secure shared payment-method flow. Invitation, removal of other members, ownership, and closure remain owner-only. See [document 45](45-family-operations-kb-wave-1.md).
+
 ### Approved definition
 
 - Title: **Family access and permissions**

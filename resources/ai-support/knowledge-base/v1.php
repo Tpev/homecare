@@ -380,7 +380,7 @@ return [
             'KB-FAM-004',
             'product_fact',
             'Family access and permissions',
-            "Family access lets trusted people help manage care using their own LoLo login. The Account owner can invite or remove Family members and manage the family payment method. Family members can help with day-to-day care, including scheduling care and approving care-related charges using the family's saved payment method, but they cannot manage invitations, remove someone else's access, or change the payment method. I can take you to Family access.",
+            "Family access lets trusted people help manage care using their own LoLo login. The Account owner manages invitations, access removal, ownership, and account closure. Active Family members can help with day-to-day care, including scheduling care, approving care-related charges, and using the current secure shared payment-method flow. They cannot manage invitations, remove someone else's access, transfer ownership, or close the Family Account. I can take you to Family access.",
             'Family access',
             ['family'],
             'family.access',
@@ -388,14 +388,15 @@ return [
                 'The only user-facing roles are Account owner and Family member.',
                 'Each person uses their own login and actions remain attributed to the signed-in person.',
                 'Active members share authorized Family care information and may perform day-to-day care actions, including disclosed charge-related actions.',
-                'Only the Account owner manages invitations, access removal, and the family payment method.',
+                'Only the Account owner manages invitations, access removal, ownership, and Family Account closure.',
+                'The current secure shared payment-method flow is available to active Family Account members.',
                 'A non-owner member can leave, and private invitations expire after seven days.',
             ],
             [
                 'That the current user or a named person has a role or active access without fresh account-scoped membership context.',
                 'Any name, email, invitation state, payment method, billing history, care record, or action not proven by authoritative context.',
-                'That a Family member can invite or remove people, change the payment method, transfer ownership, or close the account.',
-                'That the assistant may perform an invitation, access, ownership, leaving, closure, or payment-method mutation.',
+                'That a Family member can invite or remove people, transfer ownership, or close the account.',
+                'That the assistant itself may perform an invitation, access, ownership, leaving, closure, or payment-credential mutation.',
             ],
             [
                 'navigate:family.access',
@@ -403,7 +404,7 @@ return [
             [
                 'Membership or owner status cannot be resolved safely.',
                 'The user requests an ownership transfer or asks for a person.',
-                'The user asks the assistant to invite, remove, leave, close, or change payment information.',
+                'The user asks the assistant to perform an unsupported invitation, removal, ownership, leaving, closure, or payment mutation.',
             ],
             [
                 'How can my daughter help manage care?',
@@ -424,9 +425,10 @@ return [
             ],
             $review90,
             [
-                $source('SRC-AI-DECISIONS-001', 'Intelligent Support decision log', 'Family access explanation, financial disclosure, privacy, and no-mutation boundary.', 'DEC-032, DEC-041'),
+                $source('SRC-AI-DECISIONS-001', 'Intelligent Support decision log', 'Family access explanation, financial disclosure, privacy, and no-mutation boundary.', 'DEC-041, DEC-074, DEC-075'),
                 $source('SRC-FAMILY-ACCESS-001', 'Family account access specification', 'Owner/member capabilities, financial disclosure, invitation/removal/leave behavior, and security requirements.', 'Access model and managing access'),
-                $source('SRC-CODE-FAMILY-ACCESS-001', 'Current Family access implementation', 'Current role labels, owner/member controls, seven-day invitations, account-scoped access, and target.', 'FamilyAccess, membership services, and view'),
+                $source('SRC-CODE-FAMILY-ACCESS-001', 'Current Family access implementation', 'Current role labels, owner/member controls, seven-day invitations, account-scoped access, and target.', 'FamilyAccess, membership services, billing flow, and view'),
+                $source('SRC-CODE-AI-GUIDE-001', 'Current app-aware guided assistance implementation', 'Active Family members receive only safe shared-card facts and the registered secure payment-method destination.', 'Guided payment-method implementation and tests'),
             ],
         ),
         $entry(

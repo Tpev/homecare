@@ -82,8 +82,8 @@ The interface has only two labels. The user does not select one while inviting.
 
 | User-facing label | Who receives it | Capabilities |
 | --- | --- | --- |
-| Account owner | The existing account holder | All care actions, payment-method management, invitations, removals, and account closure |
-| Family member | Anyone invited by the owner | All day-to-day care actions, including actions that may charge the saved family payment method |
+| Account owner | The existing account holder | All care actions, secure payment-method management, invitations, removals, ownership, and account closure |
+| Family member | Anyone invited by the owner | All day-to-day care actions, including the current secure shared payment-method flow and actions that may charge it |
 
 A family member can:
 
@@ -95,6 +95,7 @@ A family member can:
 - Read and send messages
 - Approve hours, request changes, report a problem, and leave reviews
 - View billing history and the saved-card summary
+- Add or replace the Family payment method through the current secure structured flow
 - Open and reply to support requests about shared care
 - Change their own profile, password, and notification preferences
 - Leave the family care account
@@ -103,7 +104,6 @@ A family member cannot:
 
 - Add, resend, or cancel invitations
 - Remove another person's access
-- Change or remove the saved payment method
 - Transfer or close the family care account
 
 The owner sees the same operational experience as a family member, plus the owner-only controls.
@@ -114,7 +114,7 @@ Invited family members can take operational actions that create or approve charg
 
 Owner invitation disclosure:
 
-> This person will be able to schedule care and approve care-related charges using your family's saved payment method. Only you can change the payment method or invite other people.
+> This person will be able to schedule care, use the secure shared payment-method flow, and approve care-related charges. Only you can invite or remove people, transfer ownership, or close the Family Account.
 
 Invite acceptance disclosure:
 
@@ -348,8 +348,9 @@ Notification links must authorize membership again when opened. A notification m
 
 Billing belongs to the Family Account, with one Stripe customer and one saved payment-method set.
 
-- The owner can add, replace, or remove payment methods.
-- Members can view the card brand and last four digits.
+- Every active Family member can add or replace the payment method through the current secure structured flow.
+- Members can view only the safe card brand, last four digits, and expiration summary.
+- Removing a saved payment method without replacement remains subject to the current billing UI and support boundaries.
 - Members can take disclosed care actions that authorize or capture charges.
 - Every payment-affecting action records the acting user.
 - Stripe metadata includes both `family_account_id` and the acting `user_id` when available.
@@ -613,7 +614,7 @@ Do not attempt destructive down migrations during an emergency rollback.
 | Member was removed while a page was open | Stop the action and show “Your access to this family account has ended.” |
 | Another member already completed an action | Name the completed action and refresh the current state |
 | Owner attempts to remove themselves | Explain that LoLo Support can help transfer ownership |
-| Payment method is missing | Preserve the care action and guide the owner to add a family payment method |
+| Payment method is missing | Preserve the care action and guide the active Family member to add a Family payment method through the secure flow |
 | Invitation email delivery fails | Keep the invitation pending, show a retry action, and alert support after repeated failure |
 
 Errors never expose whether an unrelated email has a LoLo account before authentication.
@@ -677,7 +678,7 @@ Errors never expose whether an unrelated email has a LoLo account before authent
 ### Billing
 
 - Existing Stripe customers map to exactly one Family Account.
-- Only the owner can change the payment method.
+- Every active Family member can use the current secure shared payment-method flow; invitation, removal, ownership, and closure controls remain owner-only.
 - Members can perform disclosed care actions using the saved family payment method.
 - Every such action records the member and account IDs.
 - Payment totals and ledger relationships are unchanged by migration.

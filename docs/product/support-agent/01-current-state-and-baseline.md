@@ -104,7 +104,7 @@ The agent program must preserve these existing product boundaries:
 
 Notable inherited rules include:
 
-- Active family members may perform day-to-day shared-care actions, but only owners manage payment methods and family invitations.
+- Active Family members may perform day-to-day shared-care actions and use the current secure shared payment-method flow; only owners manage invitations, removal of other members, ownership, and closure.
 - Actual acting users must be attributed on sensitive care and payment-related actions.
 - Existing policies and `FamilyAccountContext` are the authorization boundary.
 - Payment actions must say exactly what will happen.
