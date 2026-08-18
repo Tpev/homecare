@@ -17,15 +17,15 @@ This registry answers two separate questions for every likely Family-user intent
 
 It is deliberately broader than the current AI feature. It inventories the actual Family-facing application, then adds probable user needs and failure cases that may not yet have a complete product flow. A row marked as a product gap must not be mistaken for an AI implementation task until Product defines the underlying app behavior.
 
-Baseline source: production-oriented repository state audited August 18, 2026, the governed KB inventory including Family Operations Wave 1 and the Batch 4 payment/time package, and the Batch 3 operating layer. Payment-method rows include Batch 1; request, visit, hours, profile, message, history, care-payment, and Family-overview rows include Batch 2; every row has an executable disposition; five reversible preparation families are implemented in Batch 3; and pricing/payment/submitted-hours knowledge plus normalized reads are implemented in Batch 4 source. Production availability remains controlled separately. Re-audit this registry whenever a Family workflow, AI tool, governed KB entry, or authorization rule changes.
+Baseline source: production-oriented repository state audited August 18, 2026, the governed KB inventory including Family Operations Wave 1, the Batch 4 payment/time package, the Batch 5 profile/request package, and the Family operating layer. Payment-method rows include Batch 1; request, visit, hours, profile, message, history, care-payment, and Family-overview rows include Batch 2; every row has an executable disposition; five reversible preparation families are implemented in Batch 3; pricing/payment/submitted-hours knowledge plus normalized reads are implemented in Batch 4; and care-profile plus request-lifecycle reads and confirmed actions are implemented in Batch 5 source. Production availability remains controlled separately. Re-audit this registry whenever a Family workflow, AI tool, governed KB entry, or authorization rule changes.
 
 The phased implementation and testing sequence for moving this portfolio from explanation/navigation to verified task completion is defined in the [Family chat operator master coverage and delivery plan](44-family-chat-operator-master-plan.md).
 
 ## Automated coverage of implemented rows
 
-The registry is the human-readable source for the generated 324-intent executable catalog. The [Family Batch 1–4 evaluation harness](40-family-batch-1-2-evaluation-harness.md) validates **324 / 324** catalog records, **197 / 197** explicit KB mappings, and **1,296** phrase definitions. Its deep runtime regression covers the exact **40** read/guide rows implemented in Batches 1 and 2, the reusable Batch 3 task, verifier, preparation, start-card, security, and Admin contracts, and the Batch 4 payment/time reader, knowledge, pricing, and recovery paths.
+The registry is the human-readable source for the generated 324-intent executable catalog. The [Family Batch 1–5 evaluation harness](40-family-batch-1-2-evaluation-harness.md) validates **324 / 324** catalog records, **230 / 230** explicit KB mappings, and **1,296** phrase definitions. Its regression covers the deterministic read/guide rows implemented in Batches 1 and 2, the reusable Batch 3 task, verifier, preparation, start-card, security, and Admin contracts, the Batch 4 payment/time reader, knowledge, pricing, and recovery paths, and the Batch 5 profile/request knowledge, state, preparation, confirmation, execution, verification, and recovery paths.
 
-The August 18, 2026 Batch 4.1 baseline validates 324 of 324 catalog records, 197 of 197 KB mappings, 45 of 45 deep runtime intents, 137 of 137 representative phrases, and 10 of 10 collision cases. The isolated mass harness passes 64 application tests with 2,107 assertions; the complete AI Support suite passes 159 tests with 2,943 assertions; and 100 wider payment/time/regular-care tests pass with 623 assertions. The Batch 4 package adds 18 governed entries, 90 linked KB evaluations, exact pricing calculations for both roles, safe normalized payment reasons, and submitted-hours differences with zero provider calls on deterministic paths. Batch 4.1 adds regression coverage for composite payment questions, ordinary submitted-hours phrasing, correction preparation, profile-name extraction, reversible discard, exact payment re-checking, and Admin transfer counts. Catalog validation is not a claim that all 324 intents can execute a domain action: each record's current stages and rollout state remain authoritative. Guide and preparation coverage remain distinct from completion.
+The August 18, 2026 Batch 5 baseline validates 324 of 324 catalog records, 230 of 230 KB mappings, 137 of 137 established representative phrases, 63 of 63 Batch 5 lifecycle phrases, and 10 of 10 collision cases. The isolated mass harness passes 82 application tests with 2,308 assertions, and the complete AI Support suite passes 174 tests with 3,117 assertions. Batch 5 adds 20 governed entries, 100 linked evaluations, all 71 care-profile/request mappings, authorized profile/request state, multi-turn profile drafting, recap-confirm-execute-verification, request reuse/replacement/copy/withdrawal, stale and denied recovery, and exact-pilot-only activation. Deterministic paths make no provider call unless bounded profile-language interpretation is actually required. Catalog validation is not a claim that all 324 intents can execute a domain action: each record's current stages and rollout state remain authoritative. Guide, preparation, confirmed execution, and verified completion remain distinct coverage levels.
 
 ## Status legend
 
@@ -158,32 +158,32 @@ Batch 3 adds an executable operational view without rewriting these baseline inv
 
 | ID | Family intent | Product today | AI explain now | AI do now | Recommended target behavior |
 | --- | --- | --- | --- | --- | --- |
-| FAM-PROFILE-001 | Understand what a care-receiver profile is and who sees it | UI | Partial | No | Add governed visibility and purpose explanation |
+| FAM-PROFILE-001 | Understand what a care-receiver profile is and who sees it | UI | Yes | No | Governed purpose and candidate-versus-assigned visibility explanation |
 | FAM-PROFILE-002 | View care-receiver profiles | UI | Yes | Read / Guide | Read active profile readiness and open the exact profile area |
-| FAM-PROFILE-003 | Create a care-receiver profile | UI | Partial | Guide | Open and highlight the profile editor; preparation and saving remain Batch 3-4 work |
-| FAM-PROFILE-004 | Save a profile and finish later | UI | Yes | Read / Guide | Explain authoritative draft state and open the first missing required step |
-| FAM-PROFILE-005 | Mark a profile ready for care requests | UI | No | No | Validate, recap sharing, confirm & execute |
-| FAM-PROFILE-006 | Select who receives care and whether it is the Family user | UI | Partial | Draft | Keep selection inside request draft; add profile-edit support |
-| FAM-PROFILE-007 | Edit preferred name, full name, relationship, DOB, or pronouns | UI | No | No | Prepare sensitive changes; explicit recap and confirmation |
-| FAM-PROFILE-008 | Edit description, interests, comforts, or good-visit notes | UI | No | No | Prepare and confirm changes |
-| FAM-PROFILE-009 | Edit communication preferences and communication notes | UI | No | No | Prepare and confirm changes |
-| FAM-PROFILE-010 | Edit everyday health or memory context for non-medical care | UI | No | No | Prepare carefully; medical boundary; confirm changes |
-| FAM-PROFILE-011 | Edit mobility information | UI | No | No | Prepare and confirm changes |
-| FAM-PROFILE-012 | Edit routine, food, allergies, personal-care, or overnight preferences | UI | No | No | Prepare and confirm changes |
-| FAM-PROFILE-013 | Edit safety notes and caregiver-quality preferences | UI | No | No | Prepare and confirm changes; transfer urgent risk |
-| FAM-PROFILE-014 | Add or change an additional contact | UI | No | No | Prepare and confirm; prevent cross-account disclosure |
-| FAM-PROFILE-015 | Preview what candidate caregivers see before care is confirmed | UI | No | No | Read authoritative sharing preview |
-| FAM-PROFILE-016 | Preview what the hired caregiver sees after confirmation | UI | No | No | Read authoritative sharing preview |
-| FAM-PROFILE-017 | Apply profile changes to current care | UI | No | No | Show affected care/booking recap; confirm & execute |
-| FAM-PROFILE-018 | Save profile changes without changing current care | UI | No | No | Confirm profile-only scope and execute |
-| FAM-PROFILE-019 | Choose or change the default care-receiver profile | UI | No | No | Read current default then confirm & execute |
-| FAM-PROFILE-020 | Archive a care-receiver profile | UI | No | No | Show use/dependency impact; confirm & execute |
-| FAM-PROFILE-021 | Restore an archived care-receiver profile | UI | No | No | Read state then confirm & execute |
+| FAM-PROFILE-003 | Create a care-receiver profile | UI | Yes | Yes | Collect a private chat draft, recap every proposed field, confirm, save, and verify |
+| FAM-PROFILE-004 | Save a profile and finish later | UI | Yes | Yes | Show exact draft readiness, recap, confirm, save, and verify |
+| FAM-PROFILE-005 | Mark a profile ready for care requests | UI | Yes | Yes | Validate readiness, recap caregiver sharing, confirm, execute, and verify |
+| FAM-PROFILE-006 | Select who receives care and whether it is the Family user | UI | Yes | Draft | Keep selection inside the private request draft and visible recap |
+| FAM-PROFILE-007 | Edit preferred name, full name, relationship, DOB, or pronouns | UI | Yes | Yes | Prepare authorized fields; explicit recap, confirmation, and verification |
+| FAM-PROFILE-008 | Edit description, interests, comforts, or good-visit notes | UI | Yes | Yes | Prepare, recap, confirm, and verify profile-only changes |
+| FAM-PROFILE-009 | Edit communication preferences and communication notes | UI | Yes | Yes | Prepare, recap, confirm, and verify profile-only changes |
+| FAM-PROFILE-010 | Edit everyday health or memory context for non-medical care | UI | Yes | Yes | Prepare non-medical context; enforce medical boundary; confirm and verify |
+| FAM-PROFILE-011 | Edit mobility information | UI | Yes | Yes | Prepare, recap, confirm, and verify mobility changes |
+| FAM-PROFILE-012 | Edit routine, food, allergies, personal-care, or overnight preferences | UI | Yes | Yes | Prepare, recap, confirm, and verify profile-only changes |
+| FAM-PROFILE-013 | Edit safety notes and caregiver-quality preferences | UI | Yes | Yes | Prepare and confirm non-emergency context; transfer urgent risk |
+| FAM-PROFILE-014 | Add or change an additional contact | UI | Yes | Yes | Prepare and confirm authorized contact fields; prevent cross-account disclosure |
+| FAM-PROFILE-015 | Preview what candidate caregivers see before care is confirmed | UI | Yes | Read / Guide | Read authoritative candidate snapshot and offer exact profile review |
+| FAM-PROFILE-016 | Preview what the hired caregiver sees after confirmation | UI | Yes | Read / Guide | Read authoritative assigned snapshot and offer exact profile review |
+| FAM-PROFILE-017 | Apply profile changes to current care | UI | Yes | Transfer | Explain that saved profile changes do not silently alter active care; transfer for reviewed current-care changes |
+| FAM-PROFILE-018 | Save profile changes without changing current care | UI | Yes | Yes | Confirm profile-only scope, execute, and verify |
+| FAM-PROFILE-019 | Choose or change the default care-receiver profile | UI | Yes | Yes | Read current default then recap, confirm, execute, and verify |
+| FAM-PROFILE-020 | Archive a care-receiver profile | UI | Yes | Yes | Show dependency/default impact; confirm, execute, and verify |
+| FAM-PROFILE-021 | Restore an archived care-receiver profile | UI | Yes | Yes | Read archived state then recap, confirm, execute, and verify |
 | FAM-PROFILE-022 | Use a saved care profile in a new request | UI | Yes | Draft | Keep authorized proposal and visible recap |
 | FAM-PROFILE-023 | Change the saved profile proposed by the AI | UI | Yes | Draft | Keep user-controlled modification |
 | FAM-PROFILE-024 | Use or change the saved household address and home-access notes | UI | Yes | Draft | Keep authorized proposal and visible recap |
-| FAM-PROFILE-025 | Correct a care profile the user no longer has permission to edit | Human | No | Transfer | Human only |
-| FAM-PROFILE-026 | Delete a care profile permanently | Gap | No | No | Define retention/dependency behavior before AI work |
+| FAM-PROFILE-025 | Correct a care profile the user no longer has permission to edit | Human | Yes | Transfer | Explain the permission boundary and transfer without exposing another account |
+| FAM-PROFILE-026 | Delete a care profile permanently | Human | Yes | Transfer | Permanent deletion remains human-only after dependency review |
 
 ## 5. Care-request creation, editing, and publication
 
@@ -194,10 +194,10 @@ Batch 3 adds an executable operational view without rewriting these baseline inv
 | FAM-REQUEST-003 | Understand what information is required for regular care | UI | Yes | Draft | Keep covered |
 | FAM-REQUEST-004 | Choose care for self versus someone else | UI | Yes | Draft | Keep covered |
 | FAM-REQUEST-005 | Select an existing care-receiver profile | UI | Yes | Draft | Keep covered |
-| FAM-REQUEST-006 | Create a simple care profile while creating a request | UI | Partial | No | Prepare profile plus request; separate confirmations if persisted |
+| FAM-REQUEST-006 | Create a simple care profile while creating a request | UI | Yes | Yes | Prepare and confirm the profile first, then continue the private request draft |
 | FAM-REQUEST-007 | Choose one or more non-medical care tasks | UI | Yes | Draft | Keep covered |
-| FAM-REQUEST-008 | Add task-specific notes | UI | Partial | Draft | Add clearer governed examples and limits |
-| FAM-REQUEST-009 | Describe additional instructions | UI | Partial | Draft | Keep bounded extraction and recap |
+| FAM-REQUEST-008 | Add task-specific notes | UI | Yes | Draft | Use governed examples, bounded extraction, and visible recap |
+| FAM-REQUEST-009 | Describe additional instructions | UI | Yes | Draft | Keep bounded extraction and visible recap |
 | FAM-REQUEST-010 | Choose a one-time date | UI | Yes | Draft | Keep strict future-date validation |
 | FAM-REQUEST-011 | Choose a one-time start time | UI | Yes | Draft | Keep Eastern Time disclosure and no guessing |
 | FAM-REQUEST-012 | Choose a one-time duration | UI | Yes | Draft | Keep 1–12 hours in 30-minute increments |
@@ -207,8 +207,8 @@ Batch 3 adds an executable operational view without rewriting these baseline inv
 | FAM-REQUEST-016 | Choose ongoing care or a recurring end date | UI | Yes | Draft | Keep covered |
 | FAM-REQUEST-017 | Enter or reuse the care address | UI | Yes | Draft | Keep authorized household proposal and validation |
 | FAM-REQUEST-018 | Change reused address or home-access notes | UI | Yes | Draft | Keep visible modification and recap |
-| FAM-REQUEST-019 | Choose how quickly caregivers should respond | UI | Partial | Draft | Add governed explanation of preference versus promise |
-| FAM-REQUEST-020 | Reuse the last request | UI | Yes | Partial read / Draft | Require explicit “same as last time”; expand context if needed |
+| FAM-REQUEST-019 | Choose how quickly caregivers should respond | UI | Yes | Draft | Explain that this is a preference, never a guarantee |
+| FAM-REQUEST-020 | Reuse the last request | UI | Yes | Draft | Copy authorized reusable details into a private draft and require a fresh schedule/recap |
 | FAM-REQUEST-021 | Start from saved profiles instead of the last request | UI | Yes | Draft | Keep covered |
 | FAM-REQUEST-022 | Understand whether the chat draft is live | UI | Yes | Draft | Keep clear private-draft explanation |
 | FAM-REQUEST-023 | Resume a saved chat draft | UI | Yes | Draft | Keep seven-day resume behavior |
@@ -223,13 +223,13 @@ Batch 3 adds an executable operational view without rewriting these baseline inv
 | FAM-REQUEST-032 | Understand whether publication hired a caregiver | UI | Yes | No | Keep “live is not hired” explanation |
 | FAM-REQUEST-033 | Understand whether publication charged or authorized the card | UI | Yes | No | Keep governed no-charge-at-publication explanation |
 | FAM-REQUEST-034 | See current request status | UI | Yes | Read / Guide | Read the current lifecycle and open the exact request tab |
-| FAM-REQUEST-035 | See whether caregivers viewed or applied | UI | Partial | Read / Guide | Read authoritative applicant counts and guide to replies; never claim caregiver views |
-| FAM-REQUEST-036 | Edit a live request's recipient, tasks, date, time, duration, address, or notes | Gap / Partial UI | No | No | Define edit/version/notification behavior; then prepare + confirm |
-| FAM-REQUEST-037 | Change a live one-time request into regular care or vice versa | Gap | No | No | Define replace-versus-edit behavior before AI work |
-| FAM-REQUEST-038 | Withdraw an open request | UI | Partial | No | Read impact; confirm & execute |
-| FAM-REQUEST-039 | Restore or reopen a withdrawn or expired request | Gap | No | No | Define product behavior; otherwise offer create-from-copy |
-| FAM-REQUEST-040 | Duplicate a request | Partial UI | Partial | Draft | Use explicit previous-request copy with new schedule recap |
-| FAM-REQUEST-041 | Understand why request publication failed validation | UI | Partial | Draft | Explain exact field error and reopen affected section |
+| FAM-REQUEST-035 | See whether caregivers viewed or applied | UI | Yes | Read / Guide | Read authoritative applicant counts and guide to replies; never claim caregiver views |
+| FAM-REQUEST-036 | Edit a live request's recipient, tasks, date, time, duration, address, or notes | Replacement workflow | Yes | Draft | Create a reviewed replacement draft; never silently mutate the live request |
+| FAM-REQUEST-037 | Change a live one-time request into regular care or vice versa | Replacement workflow | Yes | Draft | Create a reviewed replacement draft with the requested type; keep the original unchanged |
+| FAM-REQUEST-038 | Withdraw an open request | UI | Yes | Yes | Read impact; recap, confirm, execute, notify affected caregivers, and verify |
+| FAM-REQUEST-039 | Restore or reopen a withdrawn or expired request | Copy workflow | Yes | Draft | Never reopen; create a fresh private copy with a new schedule and confirmation |
+| FAM-REQUEST-040 | Duplicate a request | UI | Yes | Draft | Copy authorized reusable details, clear stale schedule fields, and show source disclosure |
+| FAM-REQUEST-041 | Understand why request publication failed validation | UI | Yes | Draft / Guide | Explain the exact field error and continue from that field without restarting |
 | FAM-REQUEST-042 | Understand why an AI confirmation failed or became stale | UI | Yes | Yes | Explain and reload fresh recap |
 | FAM-REQUEST-043 | Avoid creating a duplicate request after retrying | UI | Yes | Yes | Keep idempotent reconciliation and authoritative receipt |
 | FAM-REQUEST-044 | Ask for a guaranteed caregiver response or response time | Gap | Yes | No | Explain preference is not a guarantee; no availability promise |

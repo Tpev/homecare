@@ -132,6 +132,102 @@ class AiSupportRequestDraftService
         }, 3);
     }
 
+    public function startFromRequest(
+        User $actor,
+        SupportTicket $ticket,
+        CareRequest $source,
+        string $copyMode = 'duplicate',
+        ?string $replacementType = null,
+    ): AiSupportRequestDraft {
+        $this->authorize($actor, $ticket);
+        $account = $this->families->account($actor);
+        $source = CareRequest::query()->forFamilyAccount($account)
+            ->with(['recipient', 'tasks'])
+            ->findOrFail($source->id);
+        if (! in_array($copyMode, ['duplicate', 'reuse', 'expired_copy', 'withdrawn_copy', 'replacement'], true)) {
+            throw ValidationException::withMessages(['draft' => 'This request copy type is not supported.']);
+        }
+        $requestType = $replacementType ?: $source->request_type;
+        if (! in_array($requestType, [CareRequest::TYPE_ONE_TIME, CareRequest::TYPE_RECURRING], true)) {
+            throw ValidationException::withMessages(['draft' => 'Choose one-time care or regular care for the new request.']);
+        }
+
+        $draft = $this->start($actor, $ticket, $requestType);
+        $patch = [
+            'patch_fields' => [
+                'recipient_is_requester', 'recipient_profile_id', 'recipient_full_name',
+                'recipient_relationship', 'task_ids', 'task_notes', 'address_line1',
+                'address_line2', 'city', 'state', 'zip', 'additional_info',
+                'home_access_notes', 'preferred_response_hours',
+            ],
+            'recipient_is_requester' => (bool) ($source->recipient?->recipient_is_requester ?? false),
+            'recipient_profile_id' => $source->recipient?->care_recipient_profile_id,
+            'recipient_full_name' => (string) ($source->recipient?->full_name ?? ''),
+            'recipient_relationship' => (string) ($source->recipient?->relationship_to_family ?? ''),
+            'task_ids' => $source->tasks->pluck('id')->map(fn ($id): int => (int) $id)->all(),
+            'task_notes' => $source->tasks->map(fn ($task): array => [
+                'task_id' => (int) $task->id,
+                'note' => (string) ($task->pivot?->task_note ?? ''),
+            ])->values()->all(),
+            'address_line1' => (string) $source->address_line1,
+            'address_line2' => (string) $source->address_line2,
+            'city' => (string) $source->city,
+            'state' => (string) $source->state,
+            'zip' => (string) $source->zip,
+            'additional_info' => (string) $source->additional_info,
+            'home_access_notes' => (string) $source->home_access_notes,
+            'preferred_response_hours' => (int) ($source->preferred_response_hours ?: 12),
+        ];
+
+        if ($requestType === CareRequest::TYPE_RECURRING && $source->request_type === CareRequest::TYPE_RECURRING) {
+            $schedule = collect($source->recurringScheduleSlots())->map(function (array $slot): array {
+                $start = CarbonImmutable::createFromFormat('!H:i', (string) $slot['start_time'], 'America/New_York');
+                $end = CarbonImmutable::createFromFormat('!H:i', (string) $slot['end_time'], 'America/New_York');
+                if ($end->lessThanOrEqualTo($start)) {
+                    $end = $end->addDay();
+                }
+
+                return [
+                    'day' => (int) $slot['day'],
+                    'start_time' => (string) $slot['start_time'],
+                    'duration_minutes' => (int) $start->diffInMinutes($end),
+                ];
+            })->values()->all();
+            $patch['patch_fields'][] = 'recurring_days';
+            $patch['patch_fields'][] = 'recurring_schedule';
+            $patch['recurring_days'] = collect($schedule)->pluck('day')->unique()->values()->all();
+            $patch['recurring_schedule'] = $schedule;
+        }
+
+        $draft = $this->applyPatch($actor, $ticket, $patch, $draft->version);
+        $payload = (array) $draft->payload;
+        $payload['_source_request'] = [
+            'id' => (int) $source->id,
+            'mode' => $copyMode,
+            'original_status' => (string) $source->status,
+            'original_remains_unchanged' => true,
+        ];
+        $payload['_provenance']['source_request'] = 'authorized_explicit_copy';
+        $draft->forceFill([
+            'payload' => $payload,
+            'material_hash' => $this->materialHash($payload),
+            'version' => $draft->version + 1,
+            'state' => AiSupportRequestDraft::STATE_COLLECTING,
+            'ready_at' => null,
+            'last_error_code' => $requestType === CareRequest::TYPE_ONE_TIME
+                ? 'missing_requested_start_date'
+                : 'missing_recurring_starts_on',
+        ])->save();
+        $this->invalidateConfirmations($ticket, 'request_copy_started');
+        $this->events->record($ticket, 'request_copy_started', [
+            'capability_id' => 'care_request_draft_v1',
+            'result_code' => $copyMode,
+            'safe_metadata' => ['source_request_id' => (string) $source->id],
+        ], $actor);
+
+        return $draft->fresh();
+    }
+
     /** @param array<string,mixed> $patch */
     public function applyPatch(
         User $actor,
@@ -395,6 +491,9 @@ class AiSupportRequestDraftService
             'provenance' => (array) ($payload['_provenance'] ?? []),
             'schedule_adjustment' => filled($payload['_recurring_start_adjusted_from'] ?? null)
                 ? 'The start date moved from '.$payload['_recurring_start_adjusted_from'].' to '.$payload['recurring_starts_on'].' so it matches a selected weekday.'
+                : null,
+            'source_disclosure' => filled(data_get($payload, '_source_request.id'))
+                ? 'This is a new request copied from request #'.data_get($payload, '_source_request.id').'. The original stays unchanged. You must review a fresh schedule before publishing.'
                 : null,
             'disclosure' => 'The request will become live and eligible caregivers can see it. No caregiver will be hired, and no payment will be authorized.',
         ];

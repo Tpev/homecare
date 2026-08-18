@@ -1,12 +1,12 @@
-# Family Batch 1–4 Evaluation Harness
+# Family Batch 1–5 Evaluation Harness
 
-Status: Expanded for Batch 4 and passing in source
+Status: Expanded for Batch 5 and passing in source
 
 Established: August 17, 2026
 
 Owner: Product and Engineering
 
-Scope: All 324 executable Family intent dispositions, 197 explicit KB mappings, and deep runtime coverage for 45 Batch 1, 2, and 4 rows plus Batch 3 operating-layer contracts
+Scope: All 324 executable Family intent dispositions, 230 explicit KB mappings, the established 45-intent read/guide/payment corpus, 21 Batch 5 lifecycle intents, and Batch 3 operating-layer contracts
 
 ## Outcome
 
@@ -41,12 +41,20 @@ The task-navigation correction later that day expanded the corpus to 122 phrases
 
 Batch 3 expanded the same command into two complementary layers:
 
-- structural validation of all **324 / 324** executable intent records, **197 / 197** explicit KB mappings, and **1,296** phrase definitions; and
+- structural validation of all **324 / 324** executable intent records, the current explicit KB mappings, and **1,296** phrase definitions; and
 - deep isolated application regression for the implemented vertical intents plus universal task, verifier, preparation, state-aware home, authorization, retention, and Admin reporting contracts.
 
 The August 18 Batch 3 run passed 122 of 122 implemented routing phrases, 10 of 10 collisions, and 42 application tests with 1,867 assertions. It made zero provider calls and used no production database.
 
 Batch 4 expands the current deep corpus to 45 intents and 137 phrases, adds the 18-entry/90-evaluation payment-time package, and includes exact Family/Caregiver pricing, normalized failure reasons, Family-visible payment totals/refunds, submitted-hours differences, and resource-authorized recovery paths. The current isolated runner passes 137 of 137 phrases, 10 of 10 collisions, all 45 intents, and 64 application tests with 2,107 assertions. After the Batch 4.1 production-audit corrections, the complete AI Support suite passes 159 tests with 2,943 assertions, and the wider payment/time/regular-care regression passes 100 tests with 623 assertions. No provider or production database is used.
+
+Batch 5 adds a separate 21-intent/63-phrase lifecycle corpus, the 20-entry/100-evaluation profile-request package, all 71 care-profile/request mappings, and deterministic contracts for authorized state, multi-turn profile preparation, recap renewal, confirmed profile actions, request reuse/copy/replacement/withdrawal, stale and cross-account denial, and exact-pilot-only activation. The combined isolated runner passes 137 of 137 established phrases, 63 of 63 Batch 5 phrases, 10 of 10 collisions, 324 of 324 catalog records, 230 of 230 explicit KB mappings, and 82 application tests with 2,308 assertions. The complete AI Support suite passes 174 tests with 3,117 assertions. The deterministic mass runner makes no provider call and uses no production database.
+
+Use `--batch=5` for a fast inventory plan or focused lifecycle selection:
+
+```bash
+php artisan ai-support:test-family-intents --plan --batch=5
+```
 
 ## Production browser QA record
 
@@ -122,7 +130,7 @@ The catalog validator fails if an ID is missing, duplicated, malformed, has fewe
 
 ### 1. Language routing and collision protection
 
-`FamilyIntentCoverageTest` checks all 137 implemented phrasings and the 10 near-neighbor cases. `Batch3FamilyOperatingLayerTest` validates all 324 catalog records, 197 explicit mappings, five preparation families, contextual task recovery, verifier truthfulness, state-aware home, security boundaries, and Admin coverage. `PaymentTimeKnowledgeContentTest` and the payment/time runtime cases validate 18 entries, 90 evaluations, normalized failure/amount/hour reads, and exact Family/Caregiver pricing without provider calls. The collision set protects existing or later flows such as request creation, passwords, refund execution, Family invitations, account deletion, caregiver browsing, medical help, human transfer, general product information, and notification settings.
+`FamilyIntentCoverageTest` checks all 137 established phrasings and the 10 near-neighbor cases. `Batch5FamilyLifecycleTest` checks 63 lifecycle phrasings plus authorized reads, multi-turn profile changes, recap/renewal/confirmation, verified domain actions, wrong-account and stale-state denial, request copy/withdrawal boundaries, permanent-deletion transfer, and exact-pilot activation. `Batch3FamilyOperatingLayerTest` validates all 324 catalog records, 230 explicit mappings, five preparation families, contextual task recovery, verifier truthfulness, state-aware home, security boundaries, and Admin coverage. `PaymentTimeKnowledgeContentTest` validates 18 entries and 90 payment/time evaluations; `ProfileRequestKnowledgeContentTest` validates 20 entries, 100 profile/request evaluations, and all 71 profile/request mappings. The collision set protects request creation, applicant status, passwords, refund execution, Family invitations, account deletion, caregiver browsing, medical help, human transfer, general product information, and notification settings.
 
 The mass corpus found real natural-language gaps during its first implementation. The deterministic router was expanded to understand plural care profiles, ordinary applicant wording, natural request-status phrasing, pending charge wording, failed time-correction payments, scheduled-care wording, visit-change decisions, corrected hours, completed extra visits, and regular-care history. The expected cases were not weakened to hide those misses.
 
@@ -231,19 +239,19 @@ If the shared runtime regression fails, no selected intent is reported as passed
 - It structurally validates all 324 Family registry rows, but deep end-to-end domain behavior remains limited to implemented stages. A valid backlog disposition is not executable action coverage.
 - It does not prove that Batch 2 performs the user's domain action. Batch 2 opens and highlights the normal application control; the user still performs the action. Batch 1 separately verifies the payment-method result after the normal secure flow.
 - It does not replace the existing 56-case provider evaluation for request intake and drafting.
-- It does not make a stochastic model-quality claim because the Batch 1/2 fast paths under test do not call the model.
+- It does not make a stochastic model-quality claim. The deterministic mass paths do not call the provider; the bounded Batch 5 profile patch is covered separately with a strict fake response and the existing provider-evaluation framework.
 - It does not replace Playwright browser checks, real mobile/browser inspection, or a screen-reader session. The production pilot has now covered representative overview, request, visit, hours, profile, messages, history, payment-attention, refresh, mobile reflow, keyboard focus, and guide recovery journeys. A real screen-reader session, the second pilot member variant, and isolated stale/deleted-resource browser simulations remain.
 - It does not inspect or mutate production pilot data and does not switch availability to Everyone.
 
 ## Maintenance rule
 
-Whenever a Batch 1/2 phrase, handler, state reader, authorization rule, navigation target, semantic UI marker, verifier, or registry status changes:
+Whenever a Family phrase, handler, state reader, authorization rule, navigation target, semantic UI marker, preparation, confirmed tool, verifier, or registry status changes:
 
 1. update the frozen case or add a new registry case;
 2. add at least three representative phrasings and one nearby collision when relevant;
 3. name focused runtime evidence;
 4. run the complete command;
 5. fix the implementation or consciously update the declared product behavior; and
-6. update the coverage registry and this record if the 40-intent scope changes.
+6. update the coverage registry and this record when the implemented scope or counts change.
 
-New Batch 4+ capabilities must join this runner only after their expected authority is explicit. A prefill, confirmed write, or verified completion must never inherit a passing Read/Guide result as proof of its stronger behavior. The generated catalog must be regenerated after any source-registry edit or the application deliberately fails closed.
+New capabilities must join this runner only after their expected authority is explicit. A prefill, confirmed write, or verified completion must never inherit a passing Read/Guide result as proof of its stronger behavior. The generated catalog must be regenerated after any source-registry edit or the application deliberately fails closed.

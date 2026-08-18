@@ -175,6 +175,37 @@ test.describe.serial('Interactive AI Support pilot', () => {
         await expect(cardButton).toHaveText('Update card');
     });
 
+    test('creates and verifies a care profile from a mobile-friendly chat recap', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await loginAs(page, 'familyAi');
+        await page.getByTestId('support-chat-launcher').click();
+
+        const panel = page.getByTestId('support-chat-panel');
+        const composer = page.getByLabel('Message LoLo Support');
+        await composer.fill('Create a care receiver profile for Maria Browser.');
+        await composer.press('Enter');
+
+        const recap = panel.getByRole('region', { name: 'Action recap' }).last();
+        await expect(recap).toBeVisible();
+        await expect(recap.getByRole('heading', { name: 'Review new care receiver profile' })).toBeVisible();
+        await expect(recap.getByText('Maria Browser', { exact: true })).toBeVisible();
+        await expect(recap.getByText(/does not silently change any live request/i)).toBeVisible();
+        await expectNoHorizontalOverflow(page);
+
+        const confirm = recap.getByRole('button', { name: 'Confirm and save' });
+        const modify = recap.getByRole('button', { name: 'Modify something' });
+        expect((await confirm.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(43.9);
+        expect((await modify.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(43.9);
+        await confirm.click();
+
+        await expect(panel.getByText(/profile was saved and checked/i)).toBeVisible();
+        const receipt = panel.getByRole('link', { name: 'View care profiles' }).last();
+        await expect(receipt).toBeVisible();
+        await receipt.click();
+        await expect(page).toHaveURL(/\/family\/care-profiles$/);
+        await expect(page.getByText('Maria Browser', { exact: true }).first()).toBeVisible();
+    });
+
     test('same-account Family member cannot see or inherit the exact-user AI conversation', async ({ page }) => {
         await loginAs(page, 'familyAiMember');
         await page.getByTestId('support-chat-launcher').click();
@@ -207,8 +238,10 @@ test.describe.serial('Interactive AI Support pilot', () => {
 
         await expect(page.getByRole('heading', { name: 'AI support pilot request fixture' })).toBeVisible();
         await expect(page.getByRole('heading', { name: 'AI evidence' })).toBeVisible();
-        await expect(page.getByText('Confirmed action receipt')).toBeVisible();
-        await expect(page.getByText(/care-request-\d+.*care_request_live/)).toBeVisible();
+        const requestReceipt = page.getByTestId('ai-confirmed-action-receipt')
+            .filter({ hasText: /care-request-\d+.*care_request_live/ });
+        await expect(requestReceipt.getByText('Confirmed action receipt')).toBeVisible();
+        await expect(requestReceipt.getByText(/care-request-\d+.*care_request_live/)).toBeVisible();
         await expect(page.getByText(/State published/)).toBeVisible();
     });
 });

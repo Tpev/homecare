@@ -19,6 +19,7 @@ use App\Services\AiSupport\AiSupportPreparationService;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Booking\CareBookingTimeCorrectionService;
 use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
+use App\Services\CareRequests\CareRequestLifecycleService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Marketplace\CaregiverInvitationDiscoveryService;
 use App\Services\Marketplace\CareRequestInvitationService;
@@ -238,98 +239,13 @@ class ManageCareRequest extends Component
 
     public function withdrawRequest(): void
     {
-        if (! in_array($this->requestItem->status, [CareRequest::STATUS_DRAFT, CareRequest::STATUS_OPEN], true)) {
-            session()->flash('status', 'Only draft or open requests can be withdrawn here.');
-
-            return;
+        try {
+            app(CareRequestLifecycleService::class)->withdraw(auth()->user(), $this->requestItem);
+            $this->refreshRequestItem(preferLifecyclePrimary: true);
+            session()->flash('status', 'Request withdrawn. Caregivers can no longer apply.');
+        } catch (ValidationException $exception) {
+            session()->flash('status', (string) collect($exception->errors())->flatten()->first());
         }
-
-        if ($this->requestItem->booking) {
-            session()->flash('status', 'This request already has a visit. Use the visit help tools to cancel or change it.');
-
-            return;
-        }
-
-        $affectedCaregiverIds = DB::transaction(function () {
-            $request = CareRequest::query()
-                ->whereKey($this->requestItem->id)
-                ->lockForUpdate()
-                ->firstOrFail();
-
-            if (! in_array($request->status, [CareRequest::STATUS_DRAFT, CareRequest::STATUS_OPEN], true)) {
-                return collect();
-            }
-
-            if ($request->booking()->exists()) {
-                return collect();
-            }
-
-            $activeApplications = $request->applications()
-                ->whereIn('status', [
-                    CareRequestApplication::STATUS_APPLIED,
-                    CareRequestApplication::STATUS_SHORTLISTED,
-                ])
-                ->get(['id', 'caregiver_user_id']);
-
-            $pendingInvitations = $request->invitations()
-                ->where('status', CareRequestInvitation::STATUS_PENDING)
-                ->get(['id', 'caregiver_user_id']);
-
-            if ($activeApplications->isNotEmpty()) {
-                $request->applications()
-                    ->whereKey($activeApplications->pluck('id')->all())
-                    ->update(['status' => CareRequestApplication::STATUS_NOT_SELECTED]);
-            }
-
-            if ($pendingInvitations->isNotEmpty()) {
-                $request->invitations()
-                    ->whereKey($pendingInvitations->pluck('id')->all())
-                    ->update([
-                        'status' => CareRequestInvitation::STATUS_CANCELLED,
-                        'expires_at' => now(),
-                    ]);
-            }
-
-            $request->update(['status' => CareRequest::STATUS_CANCELLED]);
-
-            return $activeApplications
-                ->pluck('caregiver_user_id')
-                ->merge($pendingInvitations->pluck('caregiver_user_id'))
-                ->filter()
-                ->unique()
-                ->values();
-        });
-
-        $this->refreshRequestItem(preferLifecyclePrimary: true);
-
-        if ($this->requestItem->status !== CareRequest::STATUS_CANCELLED) {
-            session()->flash('status', 'This request could not be withdrawn. Please refresh and try again.');
-
-            return;
-        }
-
-        if ($affectedCaregiverIds->isNotEmpty()) {
-            $caregivers = User::query()
-                ->whereIn('id', $affectedCaregiverIds->all())
-                ->get();
-
-            app(MarketplaceNotificationService::class)->notify(
-                recipients: $caregivers,
-                eventKey: MarketplaceEvent::CARE_REQUEST_WITHDRAWN,
-                title: 'Care request withdrawn',
-                body: 'A family withdrew a request you were following. No action is needed.',
-                url: route('caregiver.work-inbox.index'),
-                payload: ['care_request_id' => $this->requestItem->id],
-                subject: $this->requestItem,
-                dedupeKey: 'care-request-withdrawn:request-'.$this->requestItem->id
-            );
-        }
-
-        FunnelTracker::track('care_request_withdrawn', auth()->user(), $this->requestItem, [
-            'affected_caregivers' => $affectedCaregiverIds->count(),
-        ]);
-
-        session()->flash('status', 'Request withdrawn. Caregivers can no longer apply.');
     }
 
     public function hire(int $applicationId): void

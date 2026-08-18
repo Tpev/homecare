@@ -15,6 +15,7 @@ use App\Services\AiSupport\AiSupportRequestDraftService;
 use App\Services\AiSupport\AiSupportRuntimeService;
 use App\Services\AiSupport\FamilyAssistantHomeService;
 use App\Services\AiSupport\FamilyIntentJourneyService;
+use App\Services\AiSupport\FamilyLifecycleActionService;
 use App\Services\Support\SupportChatService;
 use App\Services\Support\SupportTicketMessagingService;
 use Illuminate\Contracts\View\View;
@@ -317,6 +318,36 @@ class ChatWidget extends Component
         app(AiSupportRecapService::class)->renew($user, $ticket, $actionId);
         $this->resetValidation();
         $this->dispatch('support-chat-action-completed');
+    }
+
+    public function confirmDomainAction(string $actionId): void
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+        abort_unless($user && $ticket, 404);
+        try {
+            app(FamilyLifecycleActionService::class)->confirm($user, $ticket, $actionId);
+            $this->resetValidation();
+            $this->dispatch('support-chat-action-completed');
+        } catch (ValidationException $exception) {
+            $message = (string) collect($exception->errors())->flatten()->first();
+            $this->addError('confirmation', $message);
+            $this->dispatch('support-chat-confirmation-failed', actionId: $actionId, message: $message);
+        }
+    }
+
+    public function renewDomainAction(string $actionId): void
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+        abort_unless($user && $ticket, 404);
+        try {
+            app(FamilyLifecycleActionService::class)->renew($user, $ticket, $actionId);
+            $this->resetValidation();
+            $this->dispatch('support-chat-action-completed');
+        } catch (ValidationException $exception) {
+            $this->addError('confirmation', (string) collect($exception->errors())->flatten()->first());
+        }
     }
 
     public function discardCareRequestDraft(): void

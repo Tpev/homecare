@@ -151,4 +151,4 @@ Final source verification on August 18, 2026:
 
 The combined release, migration, KB publication, and authenticated pilot-browser review were completed. The review found several ordinary-language and continuation defects rather than a release-boundary problem. Those findings and their regression coverage are recorded in [Production Audit Corrections — Batch 4.1](48-production-audit-corrections-batch-4-1.md).
 
-After the normal deployment and quick two-pilot-user verification of Batch 4.1, the next implementation batch is Batch 5: care profiles and request lifecycle.
+Batch 5 was subsequently implemented and verified in source. See [Care Profiles and Request Lifecycle — Batch 5](49-care-profiles-request-lifecycle-batch-5.md) for its current deployment and pilot procedure.

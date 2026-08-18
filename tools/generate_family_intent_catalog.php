@@ -14,6 +14,7 @@ $outputPath = $root.'/resources/ai-support/intents/family-v1.php';
 $guidedPath = $root.'/resources/ai-support/evaluations/family-guided-v1.php';
 $operationsPath = $root.'/resources/ai-support/knowledge-base/family-operations-v1.php';
 $paymentTimePath = $root.'/resources/ai-support/knowledge-base/payment-time-v1.php';
+$profileRequestPath = $root.'/resources/ai-support/knowledge-base/profile-request-v1.php';
 
 $markdown = file_get_contents($registryPath);
 if ($markdown === false) {
@@ -23,6 +24,7 @@ if ($markdown === false) {
 $guided = require $guidedPath;
 $operations = require $operationsPath;
 $paymentTime = require $paymentTimePath;
+$profileRequest = require $profileRequestPath;
 
 $guidedByIntent = [];
 foreach ((array) ($guided['cases'] ?? []) as $case) {
@@ -35,6 +37,7 @@ foreach (array_merge(
     (array) ($operations['entries'] ?? []),
     (array) ($operations['revisions'] ?? []),
     (array) ($paymentTime['entries'] ?? []),
+    (array) ($profileRequest['entries'] ?? []),
 ) as $definition) {
     foreach ((array) ($definition['intent_ids'] ?? []) as $intentId) {
         $knowledgeByIntent[$intentId][] = (string) $definition['stable_id'];
@@ -76,14 +79,15 @@ $handlerContracts = [
 ];
 
 $preparationByIntent = [
-    'FAM-PROFILE-003' => 'care_profile_v1',
-    'FAM-PROFILE-007' => 'care_profile_v1', 'FAM-PROFILE-008' => 'care_profile_v1',
-    'FAM-PROFILE-009' => 'care_profile_v1', 'FAM-PROFILE-010' => 'care_profile_v1',
-    'FAM-PROFILE-011' => 'care_profile_v1', 'FAM-PROFILE-012' => 'care_profile_v1',
-    'FAM-PROFILE-013' => 'care_profile_v1', 'FAM-PROFILE-014' => 'care_profile_v1',
-    'FAM-PROFILE-018' => 'care_profile_v1',
+    'FAM-PROFILE-003' => 'care_profile_v1', 'FAM-PROFILE-004' => 'care_profile_v1',
+    'FAM-PROFILE-005' => 'care_profile_v1', 'FAM-PROFILE-007' => 'care_profile_v1',
+    'FAM-PROFILE-008' => 'care_profile_v1', 'FAM-PROFILE-009' => 'care_profile_v1',
+    'FAM-PROFILE-010' => 'care_profile_v1', 'FAM-PROFILE-011' => 'care_profile_v1',
+    'FAM-PROFILE-012' => 'care_profile_v1', 'FAM-PROFILE-013' => 'care_profile_v1',
+    'FAM-PROFILE-014' => 'care_profile_v1', 'FAM-PROFILE-018' => 'care_profile_v1',
     'FAM-REQUEST-006' => 'care_profile_v1',
     'FAM-REQUEST-020' => 'care_request_reuse_v1', 'FAM-REQUEST-036' => 'care_request_reuse_v1',
+    'FAM-REQUEST-037' => 'care_request_reuse_v1', 'FAM-REQUEST-039' => 'care_request_reuse_v1',
     'FAM-REQUEST-040' => 'care_request_reuse_v1', 'FAM-REGULAR-004' => 'care_request_reuse_v1',
     'FAM-HISTORY-013' => 'care_request_reuse_v1',
     'FAM-MATCH-008' => 'caregiver_message_v1', 'FAM-MATCH-018' => 'caregiver_message_v1',
@@ -164,10 +168,18 @@ foreach ($matches as $match) {
     }
 
     $tool = match ($intentId) {
+        'FAM-PROFILE-003', 'FAM-PROFILE-004', 'FAM-PROFILE-007', 'FAM-PROFILE-008',
+        'FAM-PROFILE-009', 'FAM-PROFILE-010', 'FAM-PROFILE-011', 'FAM-PROFILE-012',
+        'FAM-PROFILE-013', 'FAM-PROFILE-014', 'FAM-PROFILE-018', 'FAM-REQUEST-006' => 'family-profile.save-draft:v1',
+        'FAM-PROFILE-005' => 'family-profile.make-ready:v1',
+        'FAM-PROFILE-019' => 'family-profile.make-default:v1',
+        'FAM-PROFILE-020' => 'family-profile.archive:v1',
+        'FAM-PROFILE-021' => 'family-profile.restore:v1',
         'FAM-REQUEST-024' => 'care_request_draft_discard_v1',
         'FAM-REQUEST-028' => 'care-request.publish.one-time:v1',
         'FAM-REQUEST-029' => 'care-request.publish.recurring:v1',
         'FAM-REQUEST-030' => 'care_request_recap_renew_v1',
+        'FAM-REQUEST-038' => 'care-request.withdraw:v1',
         default => null,
     };
     $prefill = $preparationByIntent[$intentId] ?? (stripos($action, 'Draft') !== false ? 'care_request_chat_draft_v1' : null);
@@ -251,8 +263,8 @@ if (count($rows) !== 324 || count(array_unique(array_column($rows, 'intent_id'))
 }
 
 $mapped = array_filter($rows, static fn (array $row): bool => $row['kb_stable_ids'] !== []);
-if (count($mapped) !== 197) {
-    throw new RuntimeException('Expected exactly 197 Batch 4 KB-mapped intents; found '.count($mapped).'.');
+if (count($mapped) !== 230) {
+    throw new RuntimeException('Expected exactly 230 Batch 5 KB-mapped intents; found '.count($mapped).'.');
 }
 
 $manifest = [

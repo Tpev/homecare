@@ -308,6 +308,9 @@
                                                 @if (filled($recap['schedule_adjustment'] ?? null))
                                                     <div class="rounded-xl bg-amber-50 p-2 text-amber-900"><dt class="font-semibold">Start-date adjustment</dt><dd>{{ $recap['schedule_adjustment'] }}</dd></div>
                                                 @endif
+                                                @if (filled($recap['source_disclosure'] ?? null))
+                                                    <div class="rounded-xl bg-blue-50 p-2 text-blue-950"><dt class="font-semibold">Copied request</dt><dd>{{ $recap['source_disclosure'] }}</dd></div>
+                                                @endif
                                                 <div><dt class="font-semibold">Address</dt><dd>{{ $recap['address'] ?? '' }}</dd></div>
                                                 @if (filled($recap['additional_info'] ?? null))
                                                     <div><dt class="font-semibold">Additional instructions</dt><dd>{{ $recap['additional_info'] }}</dd></div>
@@ -344,6 +347,52 @@
                                                 >Discard this draft</button>
                                             </div>
                                         </section>
+                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_DOMAIN_RECAP && ! $action->invalidated_at && ! $action->consumed_at)
+                                        <section
+                                            data-support-chat-recap="{{ $action->id }}"
+                                            tabindex="-1"
+                                            class="mt-3 space-y-3 rounded-2xl border border-[#C8DDD7] bg-white p-4 text-sm text-[#17313F] outline-none focus:ring-2 focus:ring-[#0F5B52] focus:ring-offset-2"
+                                            aria-label="Action recap"
+                                        >
+                                            <h3 class="font-display text-lg font-bold">{{ $actionPayload['title'] ?? 'Review this action' }}</h3>
+                                            <dl class="space-y-2">
+                                                @foreach((array) ($actionPayload['fields'] ?? []) as $field)
+                                                    <div><dt class="font-semibold">{{ $field['label'] ?? '' }}</dt><dd class="whitespace-pre-line break-words">{{ $field['value'] ?? '' }}</dd></div>
+                                                @endforeach
+                                            </dl>
+                                            <p class="rounded-xl bg-[#F2F8F6] p-3 font-medium">{{ $actionPayload['summary'] ?? '' }}</p>
+                                            <div class="grid gap-2">
+                                                @if ($actionActive)
+                                                    <button
+                                                        type="button"
+                                                        wire:click="confirmDomainAction('{{ $action->id }}')"
+                                                        wire:loading.attr="disabled"
+                                                        class="min-h-11 rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white disabled:opacity-60"
+                                                    >{{ $actionPayload['confirm_label'] ?? 'Confirm' }}</button>
+                                                @elseif ($action->expires_at?->isPast())
+                                                    <button
+                                                        type="button"
+                                                        wire:click="renewDomainAction('{{ $action->id }}')"
+                                                        wire:loading.attr="disabled"
+                                                        class="min-h-11 rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white disabled:opacity-60"
+                                                    >Review current details again</button>
+                                                @endif
+                                                @if (filled($actionPayload['preparation_id'] ?? null))
+                                                    <button
+                                                        type="button"
+                                                        x-on:click="draft = 'I want to change '; $nextTick(() => { $refs.composer?.focus(); autoResize(); })"
+                                                        class="min-h-11 rounded-xl border border-[#0F5B52] px-4 text-sm font-semibold text-[#0F5B52]"
+                                                    >Modify something</button>
+                                                @endif
+                                            </div>
+                                        </section>
+                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_DOMAIN_RECEIPT)
+                                        <a
+                                            href="{{ $actionPayload['url'] }}"
+                                            wire:navigate
+                                            x-on:click="closeForNavigation()"
+                                            class="support-chat-action mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white"
+                                        >{{ $actionPayload['label'] ?? 'View details' }}</a>
                                     @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_RECEIPT)
                                         <a
                                             href="{{ $actionPayload['url'] }}"

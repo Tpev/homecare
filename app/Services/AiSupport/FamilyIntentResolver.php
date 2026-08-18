@@ -18,6 +18,17 @@ class FamilyIntentResolver
     /** @return array{status:string,intent_id:?string,candidate_ids:list<string>,confidence:float,source:string} */
     public function resolve(string $message): array
     {
+        $batchFiveIntent = $this->batchFiveIntent($message);
+        if ($batchFiveIntent !== null) {
+            return [
+                'status' => self::STATUS_RECOGNIZED,
+                'intent_id' => $batchFiveIntent,
+                'candidate_ids' => [$batchFiveIntent],
+                'confidence' => 1.0,
+                'source' => 'deterministic_batch5',
+            ];
+        }
+
         $preparationIntent = $this->preparationIntent($message);
         if ($preparationIntent !== null) {
             return [
@@ -140,6 +151,21 @@ class FamilyIntentResolver
     private function preparationIntent(string $message): ?string
     {
         $value = $this->normalize($message);
+        if (preg_match('/\barchive\b.*\bprofile\b|\bprofile\b.*\barchive\b/', $value)) {
+            return 'FAM-PROFILE-020';
+        }
+        if (preg_match('/\brestore\b.*\bprofile\b|\bprofile\b.*\brestore\b/', $value)) {
+            return 'FAM-PROFILE-021';
+        }
+        if (preg_match('/\b(?:make|set|change|choose)\b.*\bdefault\b.*\bprofile\b|\bdefault\b.*\bprofile\b/', $value)) {
+            return 'FAM-PROFILE-019';
+        }
+        if (preg_match('/\b(?:withdraw|cancel)\b.*\brequest\b/', $value)) {
+            return 'FAM-REQUEST-038';
+        }
+        if (preg_match('/\b(?:reopen|restore|fresh copy)\b.*\b(?:expired|withdrawn|cancelled)?\s*request\b/', $value)) {
+            return 'FAM-REQUEST-039';
+        }
         $prepareVerb = preg_match('/\b(?:prepare|draft|write|send|create|copy|duplicate|reuse|update|change|correct|question|dispute)\b/', $value) === 1;
         if (! $prepareVerb) {
             return null;
@@ -175,6 +201,81 @@ class FamilyIntentResolver
                 str_contains($value, 'complaint') => 'FAM-SUPPORT-011',
                 default => 'FAM-SUPPORT-008',
             };
+        }
+
+        return null;
+    }
+
+    private function batchFiveIntent(string $message): ?string
+    {
+        $value = $this->normalize($message);
+
+        if (preg_match('/\b(?:delete|remove)\b.*\bprofile\b.*\b(?:permanent|permanently|forever)\b|\b(?:permanent|permanently)\b.*\b(?:delete|remove)\b.*\bprofile\b/', $value)) {
+            return 'FAM-PROFILE-026';
+        }
+        if (preg_match('/\b(?:fresh\s+copy|reopen|restore)\b.*\b(?:expired|withdrawn|cancelled)\b.*\brequest\b|\b(?:expired|withdrawn|cancelled)\b.*\brequest\b.*\b(?:copy|reopen|restore)\b/', $value)) {
+            return 'FAM-REQUEST-039';
+        }
+        if (preg_match('/\b(?:change|turn|convert)\b.*\b(?:one[- ]?time|regular|recurring|type)\b.*\brequest\b|\brequest\b.*\b(?:one[- ]?time|regular|recurring)\b.*\b(?:change|convert)\b/', $value)) {
+            return 'FAM-REQUEST-037';
+        }
+        if (preg_match('/\b(?:edit|update|change)\b.*\b(?:live|open|published)\b.*\brequest\b|\b(?:edit|update|change)\b.*\b(?:date|time|duration|task|recipient|address|note)s?\b.*\b(?:live|open|published)?\s*request\b/', $value)) {
+            return 'FAM-REQUEST-036';
+        }
+        if (preg_match('/\b(?:withdraw|cancel|take\s+down)\b.*\b(?:open|published)?\s*(?:care\s+)?request\b/', $value)) {
+            return 'FAM-REQUEST-038';
+        }
+        if (preg_match('/\b(?:reuse|same\s+(?:request\s+)?as\s+last|same\s+as\s+last|last\s+request)\b/', $value)) {
+            return 'FAM-REQUEST-020';
+        }
+        if (preg_match('/\b(?:duplicate|copy|make\s+another)\b.*\brequest\b|\brequest\b.*\b(?:duplicate|copy)\b/', $value)) {
+            return 'FAM-REQUEST-040';
+        }
+        if (preg_match('/\b(?:status|stand|where\s+does)\b.*\brequest\b|\brequest\b.*\b(?:status|stand)\b/', $value)) {
+            return 'FAM-REQUEST-034';
+        }
+        if (preg_match('/\b(?:caregiver\s+responses?|applicants?|applied|applications?)\b.*\brequest\b|\b(?:did|any|how\s+many|show)\b.*\b(?:caregivers?\s+)?(?:apply|applied|applicants?|responses?)\b.*\brequest\b/', $value)) {
+            return 'FAM-REQUEST-035';
+        }
+
+        if (preg_match('/\b(?:mark|make|set|complete)\b.*\bprofile\b.*\bready\b|\bprofile\b.*\b(?:complete|ready)\b/', $value)) {
+            return 'FAM-PROFILE-005';
+        }
+        if (preg_match('/\b(?:restore|bring\s+back)\b.*\b(?:archived\s+)?(?:care\s+(?:receiver|recipient)\s+)?profile\b/', $value)) {
+            return 'FAM-PROFILE-021';
+        }
+        if (preg_match('/\b(?:archive|hide)\b.*\bprofile\b/', $value)) {
+            return 'FAM-PROFILE-020';
+        }
+        if (preg_match('/\b(?:default)\b.*\bprofile\b|\bprofile\b.*\bdefault\b/', $value)) {
+            return 'FAM-PROFILE-019';
+        }
+        if (preg_match('/\b(?:additional|extra|emergency)\s+contact\b|\bcontact\b.*\b(?:profile|phone|email)\b/', $value)) {
+            return 'FAM-PROFILE-014';
+        }
+        if (preg_match('/\b(?:safety|caregiver\s+qualit|caregiver\s+should\s+(?:do|avoid)|do\s+and\s+avoid)\w*\b/', $value)) {
+            return 'FAM-PROFILE-013';
+        }
+        if (preg_match('/\b(?:routine|food|allerg|personal\s+care|overnight)\w*\b.*\b(?:profile|note|preference)s?\b|\b(?:edit|update|change)\b.*\b(?:routine|food|allerg|overnight)\w*\b/', $value)) {
+            return 'FAM-PROFILE-012';
+        }
+        if (preg_match('/\b(?:mobility|walker|wheelchair|cane|transfer)\w*\b.*\b(?:profile|note|information)\w*\b|\bprofile\b.*\b(?:walker|wheelchair|cane|transfer)\w*\b|\b(?:edit|update|change|correct)\b.*\bmobility\b/', $value)) {
+            return 'FAM-PROFILE-011';
+        }
+        if (preg_match('/\b(?:everyday\s+health|health\s+context|memory\s+context|everyday\s+memory)\b/', $value)) {
+            return 'FAM-PROFILE-010';
+        }
+        if (preg_match('/\bcommunicat\w*\b.*\b(?:profile|note|preference|caregiver)\w*\b|\b(?:edit|update|change)\b.*\bcommunicat\w*\b/', $value)) {
+            return 'FAM-PROFILE-009';
+        }
+        if (preg_match('/\b(?:description|interest|comfort|good\s+visit)\w*\b.*\b(?:profile|note)s?\b|\b(?:edit|update|change)\b.*\b(?:description|interest|comfort|good\s+visit)\w*\b/', $value)) {
+            return 'FAM-PROFILE-008';
+        }
+        if (preg_match('/\b(?:preferred\s+name|full\s+name|date\s+of\s+birth|dob|pronoun|relationship)\w*\b.*\bprofile\b|\b(?:edit|update|change|correct)\b.*\b(?:preferred\s+name|full\s+name|date\s+of\s+birth|dob|pronoun|relationship)\w*\b/', $value)) {
+            return 'FAM-PROFILE-007';
+        }
+        if (preg_match('/\bcreate\b.*\b(?:care\s+(?:receiver|recipient)\s+)?profile\b|\bmake\b.*\bnew\b.*\bprofile\b|\badd\b.*\bcare\s+(?:receiver|recipient)\s+profile\b/', $value)) {
+            return 'FAM-PROFILE-003';
         }
 
         return null;

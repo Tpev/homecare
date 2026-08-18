@@ -27,6 +27,7 @@ class FamilyIntentJourneyService
         private readonly NavigationTargetRegistry $navigation,
         private readonly FamilyAccountContext $familyAccounts,
         private readonly AiSupportEventRecorder $events,
+        private readonly FamilyLifecycleActionService $familyLifecycle,
     ) {}
 
     /** @param array<string,mixed> $record */
@@ -34,6 +35,10 @@ class FamilyIntentJourneyService
     {
         $intentId = (string) $record['intent_id'];
         $this->record($ticket, 'intent_recognized', $intentId, 'recognized', $actor, $source);
+
+        if ($this->familyLifecycle->respond($actor, $ticket, $record, $message)) {
+            return;
+        }
 
         $prefill = (string) data_get($record, 'contracts.prefill', '');
         if (in_array($prefill, array_keys(app(AiSupportPreparationContractRegistry::class)->all()), true)) {

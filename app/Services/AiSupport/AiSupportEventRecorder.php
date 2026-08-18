@@ -22,6 +22,7 @@ class AiSupportEventRecorder
         'policy_result', 'validation_result', 'route_contract_version', 'confirmation_reference',
         'cached_input_tokens', 'provider_price_version', 'intent_id', 'resolution_source',
         'task_state', 'verifier_id', 'preparation_contract_id', 'repetition_count',
+        'source_request_id',
     ];
 
     /** @param array<string, mixed> $fields */

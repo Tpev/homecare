@@ -205,6 +205,28 @@ class CareRecipientProfileService
         return $clean;
     }
 
+    /** @return list<string> */
+    public function writableFields(): array
+    {
+        return self::WRITABLE_FIELDS;
+    }
+
+    /** @param array<string,mixed> $patch @return array<string,mixed> */
+    public function mergedData(?CareRecipientProfile $profile, array $patch): array
+    {
+        $unknown = array_diff(array_keys($patch), self::WRITABLE_FIELDS);
+        if ($unknown !== []) {
+            throw ValidationException::withMessages(['profile' => 'One proposed profile field is not supported.']);
+        }
+
+        $base = [];
+        foreach (self::WRITABLE_FIELDS as $field) {
+            $base[$field] = $profile?->getAttribute($field);
+        }
+
+        return $this->clean(array_replace($base, $patch));
+    }
+
     private function changeArchiveState(User $actor, CareRecipientProfile $profile, bool $archive): CareRecipientProfile
     {
         $account = $this->familyAccounts->account($actor);

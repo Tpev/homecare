@@ -357,7 +357,11 @@ class SeedE2eFixtures extends Command
             'capability.family_context_v1', 'capability.care_intake_v1',
             'capability.care_request_draft_v1', 'capability.care_request_recap_v1',
             'capability.care_request_publish_v1', 'capability.care_24h_handoff_v1',
+            'capability.family_lifecycle_action_v1',
             'commit.one_time', 'tool.care-request.publish.one-time',
+            'tool.family-profile.save-draft', 'tool.family-profile.make-ready',
+            'tool.family-profile.make-default', 'tool.family-profile.archive',
+            'tool.family-profile.restore', 'tool.care-request.withdraw',
         ] as $control) {
             $controls->set($admin, $control, true, 'Isolated Playwright AI Support fixture');
         }

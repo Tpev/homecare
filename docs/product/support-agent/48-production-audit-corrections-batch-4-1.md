@@ -65,4 +65,4 @@ No new migration, KB import, or publication command is required for Batch 4.1. A
 6. on a failed-payment guide, send `I did it` before and after the actionable state is resolved; and
 7. transfer one conversation to a person and confirm the Admin transfer count increases once.
 
-Keep Availability on **Pilot only**. The next product implementation is Batch 5: care profiles and request lifecycle.
+Keep Availability on **Pilot only**. Batch 5 was subsequently implemented and verified in source; continue with its [deployment and two-user pilot procedure](49-care-profiles-request-lifecycle-batch-5.md).

@@ -23,6 +23,10 @@ class AiSupportMessageAction extends Model
 
     public const TYPE_INTENT_CHOICES = 'intent_choices';
 
+    public const TYPE_DOMAIN_RECAP = 'domain_recap';
+
+    public const TYPE_DOMAIN_RECEIPT = 'domain_receipt';
+
     public $incrementing = false;
 
     protected $keyType = 'string';

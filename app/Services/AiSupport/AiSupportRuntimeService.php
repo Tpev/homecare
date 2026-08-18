@@ -25,6 +25,7 @@ class AiSupportRuntimeService
         private readonly FamilyIntentResolver $familyIntents,
         private readonly FamilyIntentCatalog $familyIntentCatalog,
         private readonly FamilyIntentJourneyService $familyJourneys,
+        private readonly FamilyLifecycleActionService $familyLifecycle,
         private readonly AiSupportPricingTruth $pricing,
         private readonly AiSupportHandoffService $handoff,
         private readonly NavigationTargetRegistry $navigation,
@@ -113,6 +114,26 @@ class AiSupportRuntimeService
                 'capability_id' => 'support_answers_v1',
                 'result_code' => 'unmatched',
             ], $actor);
+        }
+
+        if ($actor->role === 'family' && $intentRecord !== null
+            && $this->familyLifecycle->respond($actor, $ticket, $intentRecord, $newestMessage)) {
+            $this->recordRecognizedIntent($ticket, $actor, $intentRecord, (string) ($intentResolution['source'] ?? 'family_lifecycle'));
+
+            return;
+        }
+
+        if ($actor->role === 'family' && ($intentRecord['intent_id'] ?? null) === 'FAM-PROFILE-026'
+            && data_get($intentRecord, 'contracts.human_transfer') === 'SUP-HANDOFF-001') {
+            $this->familyJourneys->respond(
+                $actor,
+                $ticket,
+                $intentRecord,
+                $newestMessage,
+                (string) $intentResolution['source'],
+            );
+
+            return;
         }
 
         if ($preparationRequested) {
@@ -216,9 +237,12 @@ class AiSupportRuntimeService
         if ($draft && ! $draft->isUsable()) {
             $draft = null;
         }
+        $profileDraft = $actor->role === 'family'
+            ? $this->familyLifecycle->activeProfileContext($actor, $ticket)
+            : null;
 
         $familyContext = null;
-        $careRelevant = $draft !== null || preg_match('/\b(care|caregiver|request|visit|weekly|recurring|regular|one[- ]time|recipient|address|schedule)\b/i', $newestMessage);
+        $careRelevant = $draft !== null || $profileDraft !== null || preg_match('/\b(care|caregiver|request|visit|weekly|recurring|regular|one[- ]time|recipient|profile|address|schedule)\b/i', $newestMessage);
         if ($actor->role === 'family' && $careRelevant
             && $this->eligibility->evaluate($actor, 'family_context_v1', $ticket)->allowed) {
             $familyContext = $this->familyContext->read(
@@ -231,7 +255,7 @@ class AiSupportRuntimeService
         try {
             $provider = $this->client->respond(
                 $this->prompt->instructions(),
-                $this->prompt->input($actor, $ticket, $newestMessage, $knowledge, $familyContext, $draft),
+                $this->prompt->input($actor, $ticket, $newestMessage, $knowledge, $familyContext, $draft, $profileDraft),
                 (int) $actor->id,
             );
             $result = $provider['result'];
@@ -342,6 +366,18 @@ class AiSupportRuntimeService
             } else {
                 $this->recaps->issue($actor, $ticket, $updated);
             }
+
+            return;
+        }
+
+        if ($operation === 'profile_patch' && $actor->role === 'family'
+            && $this->eligibility->evaluate($actor, 'family_lifecycle_action_v1', $ticket)->allowed) {
+            $this->familyLifecycle->applyProfilePatch(
+                $actor,
+                $ticket,
+                (array) $result['profile_patch'],
+                (int) data_get($this->familyLifecycle->activeProfileContext($actor, $ticket), 'version'),
+            );
 
             return;
         }

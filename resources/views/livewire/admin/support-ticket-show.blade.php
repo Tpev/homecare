@@ -503,7 +503,7 @@
                     @endforeach
 
                     @foreach ($this->aiConfirmedActions as $confirmed)
-                        <div class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-950">
+                        <div data-testid="ai-confirmed-action-receipt" class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-950">
                             <p class="font-bold">Confirmed action receipt</p>
                             <p class="mt-1">{{ $confirmed->receipt_reference }} &middot; {{ $confirmed->outcome_code }}</p>
                             <p class="mt-1">{{ $confirmed->tool_id }} {{ $confirmed->tool_version }} &middot; {{ $confirmed->committed_at?->format('M j, Y g:i A') }}</p>

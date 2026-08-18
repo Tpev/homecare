@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\AiSupport\Batch5FamilyIntentEvaluationCatalog;
 use App\Services\AiSupport\FamilyIntentCatalog;
 use App\Services\AiSupport\FamilyIntentEvaluationCatalog;
 use Illuminate\Console\Command;
@@ -14,19 +15,20 @@ class TestFamilyAiSupportIntents extends Command
 {
     protected $signature = 'ai-support:test-family-intents
         {--plan : Validate and display the selected corpus without running application tests}
-        {--batch=* : Optional Batch number (1, 2, or 4)}
+        {--batch=* : Optional Batch number (1, 2, 4, or 5)}
         {--domain=* : Optional exact domain such as payments, visits, or profiles}
         {--intent=* : Optional exact registry intent ID}
         {--output= : Optional content-minimized JSON report path on the local storage disk}';
 
     protected $description = 'Validate all 324 Family intents and mass-test implemented Family journeys in isolated SQLite.';
 
-    public function handle(FamilyIntentEvaluationCatalog $catalog, FamilyIntentCatalog $fullCatalog): int
+    public function handle(FamilyIntentEvaluationCatalog $catalog, FamilyIntentCatalog $fullCatalog, Batch5FamilyIntentEvaluationCatalog $batch5Catalog): int
     {
         try {
             $manifest = $catalog->manifest();
             $fullManifest = $fullCatalog->manifest();
             $cases = $this->selectedCases($manifest['cases']);
+            $batch5Manifest = $batch5Catalog->manifest();
         } catch (Throwable $exception) {
             $this->error($exception->getMessage());
 
@@ -38,45 +40,49 @@ class TestFamilyAiSupportIntents extends Command
         $this->table(['Property', 'Value'], [
             ['Executable catalog', $fullManifest['version']],
             ['Catalog registry intents', count($fullManifest['records']).' / 324'],
-            ['Explicit Batch 4 KB mappings', $fullCatalog->coverageSummary()['kb_mapped'].' / 197'],
+            ['Explicit Batch 5 KB mappings', $fullCatalog->coverageSummary()['kb_mapped'].' / 230'],
             ['Catalog phrase definitions', $fullPhraseCount],
             ['Runtime corpus', $manifest['version']],
             ['Frozen on', $manifest['frozen_on']],
             ['Implemented runtime intents', count($cases).' / '.count($manifest['cases'])],
             ['Implemented routing phrases', $phraseCount],
+            ['Batch 5 lifecycle intents', count($batch5Manifest['cases']).' / 21'],
             ['Near-neighbor collision cases', count($manifest['negative_cases'])],
             ['Provider calls', '0'],
             ['Database', 'isolated SQLite :memory:'],
         ]);
 
         $routing = $this->evaluateRouting($catalog, $cases, $manifest['negative_cases']);
+        $batch5Routing = $batch5Catalog->evaluate();
         if ($this->option('plan')) {
-            $this->line('Routing precheck: '.($routing['passed'] ? 'PASS' : 'FAIL'));
-            foreach ($routing['failures'] as $failure) {
+            $routingPassed = $routing['passed'] && $batch5Routing['passed'];
+            $this->line('Routing precheck: '.($routingPassed ? 'PASS' : 'FAIL'));
+            foreach ([...$routing['failures'], ...$batch5Routing['failures']] as $failure) {
                 $this->error($failure);
             }
             $this->warn('Plan only. All 324 catalog records were validated. No test database, provider call, production write, or report write occurred.');
 
-            return $routing['passed'] ? self::SUCCESS : self::FAILURE;
+            return $routingPassed ? self::SUCCESS : self::FAILURE;
         }
 
         $this->newLine();
         $this->info('Running the full Family operating-layer application regression in an isolated test process...');
         $runtime = $this->runIsolatedApplicationTests();
-        $passed = $routing['passed'] && $runtime['passed'];
+        $passed = $routing['passed'] && $batch5Routing['passed'] && $runtime['passed'];
 
         $report = $this->report($manifest, $cases, $routing, $runtime, $passed);
         $this->table(['Result', 'Value'], [
             ['Routing phrases', $routing['passed_phrases'].' / '.$routing['total_phrases'].' passed'],
+            ['Batch 5 routing phrases', $batch5Routing['passed_phrases'].' / '.$batch5Routing['total_phrases'].' passed'],
             ['Executable catalog', count($fullManifest['records']).' / 324 valid'],
-            ['Explicit KB mappings', $fullCatalog->coverageSummary()['kb_mapped'].' / 197 valid'],
+            ['Explicit KB mappings', $fullCatalog->coverageSummary()['kb_mapped'].' / 230 valid'],
             ['Collision cases', $routing['passed_negative_cases'].' / '.$routing['total_negative_cases'].' passed'],
             ['Application regression', $runtime['passed'] ? 'PASS' : 'FAIL'],
             ['Registry intents', $report['summary']['passed_intents'].' / '.$report['summary']['selected_intents'].' passed'],
             ['Overall', $passed ? 'PASS' : 'FAIL'],
         ]);
 
-        foreach ($routing['failures'] as $failure) {
+        foreach ([...$routing['failures'], ...$batch5Routing['failures']] as $failure) {
             $this->error($failure);
         }
 
@@ -91,7 +97,7 @@ class TestFamilyAiSupportIntents extends Command
         }
 
         if ($passed) {
-            $this->info('Family Batch 1-4 intent evaluation passed. No provider or production database was used.');
+            $this->info('Family Batch 1-5 intent evaluation passed. No provider or production database was used.');
         }
 
         return $passed ? self::SUCCESS : self::FAILURE;
@@ -113,8 +119,12 @@ class TestFamilyAiSupportIntents extends Command
             (array) $this->option('intent'),
         ))));
 
-        if (array_diff($batches, [1, 2, 4]) !== []) {
-            throw new \InvalidArgumentException('Batch filters must be 1, 2, or 4.');
+        if (array_diff($batches, [1, 2, 4, 5]) !== []) {
+            throw new \InvalidArgumentException('Batch filters must be 1, 2, 4, or 5.');
+        }
+        $legacyBatches = array_values(array_diff($batches, [5]));
+        if ($batches !== [] && $legacyBatches === []) {
+            return [];
         }
 
         $knownDomains = array_values(array_unique(array_column($cases, 'domain')));
@@ -129,13 +139,13 @@ class TestFamilyAiSupportIntents extends Command
             throw new \InvalidArgumentException('Unknown Batch 1/2/4 intent: '.implode(', ', $unknownIntents).'.');
         }
 
-        $selected = array_values(array_filter($cases, static function (array $case) use ($batches, $domains, $intents): bool {
-            return ($batches === [] || in_array((int) $case['batch'], $batches, true))
+        $selected = array_values(array_filter($cases, static function (array $case) use ($legacyBatches, $domains, $intents): bool {
+            return ($legacyBatches === [] || in_array((int) $case['batch'], $legacyBatches, true))
                 && ($domains === [] || in_array($case['domain'], $domains, true))
                 && ($intents === [] || in_array($case['intent_id'], $intents, true));
         }));
 
-        if ($selected === []) {
+        if ($selected === [] && $batches === []) {
             throw new \InvalidArgumentException('The supplied filters select no Batch 1/2/4 Family intents.');
         }
 
@@ -199,6 +209,8 @@ class TestFamilyAiSupportIntents extends Command
             'tests/Feature/AiSupport/Batch3FamilyOperatingLayerTest.php',
             'tests/Feature/AiSupport/PaymentTimeKnowledgeContentTest.php',
             'tests/Feature/AiSupport/InteractiveSupportRuntimeTest.php',
+            'tests/Feature/AiSupport/ProfileRequestKnowledgeContentTest.php',
+            'tests/Feature/AiSupport/Batch5FamilyLifecycleTest.php',
         ];
         if (! class_exists('PHPUnit\\Framework\\TestCase')) {
             $error = 'The full Family intent regression requires Composer development dependencies. Run it in the development/CI workspace; use --plan on a no-dev production install.';

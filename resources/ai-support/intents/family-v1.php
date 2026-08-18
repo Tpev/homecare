@@ -6,7 +6,7 @@ return [
     'version' => 'family-intents-v1',
     'generated_on' => '2026-08-18',
     'source' => 'docs/product/support-agent/38-family-intent-action-coverage-registry.md',
-    'source_sha256' => '83b84ff12f124b44a191a0ed0bcf449cb65744e297ab1f5d48bb7df16e818ac5',
+    'source_sha256' => 'c60c93020d3042ca331ce173fab1f3ea7c6a30cc06432f88f1b5cb0ee441bac0',
     'records' => [
         0 => [
             'intent_id' => 'FAM-START-001',
@@ -4251,6 +4251,7 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-001',
+                1 => 'KB-B5-PROFILE-001',
             ],
             'contracts' => [
                 'reader' => null,
@@ -4265,9 +4266,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
+                'explain' => 'Yes',
                 'action' => 'No',
-                'target_behavior' => 'Add governed visibility and purpose explanation',
+                'target_behavior' => 'Governed purpose and candidate-versus-assigned visibility explanation',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -4333,6 +4334,7 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-002',
+                1 => 'KB-B5-PROFILE-001',
             ],
             'contracts' => [
                 'reader' => 'family_care_profiles_v1',
@@ -4392,46 +4394,46 @@ return [
                     0 => 'pls help me create a care-receiver profl',
                 ],
                 'follow_ups' => [
-                    0 => 'take me there',
-                    1 => 'I cannot find it',
-                    2 => 'I did it',
+                    0 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
-                    2 => 'Navigate',
-                    3 => 'Guide',
-                    4 => 'Prepare',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
-                    2 => 'Navigate',
-                    3 => 'Guide',
-                    4 => 'Prepare',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-002',
+                1 => 'KB-B5-PROFILE-002',
             ],
             'contracts' => [
                 'reader' => 'family_care_profiles_v1',
                 'destinations' => [
                     0 => 'family.care_profiles',
+                    1 => 'family.care_profile.review',
                 ],
                 'guided_task' => 'family_care_profile_v1',
                 'prefill' => 'care_profile_v1',
-                'tool' => null,
+                'tool' => 'family-profile.save-draft:v1',
                 'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
-                'action' => 'Guide',
-                'target_behavior' => 'Open and highlight the profile editor; preparation and saving remain Batch 3-4 work',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Collect a private chat draft, recap every proposed field, confirm, save, and verify',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -4474,46 +4476,47 @@ return [
                     0 => 'pls help me save a profl and finish later',
                 ],
                 'follow_ups' => [
-                    0 => 'take me there',
-                    1 => 'I cannot find it',
-                    2 => 'I did it',
+                    0 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
-                    2 => 'Read',
-                    3 => 'Navigate',
-                    4 => 'Guide',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
-                    2 => 'Read',
-                    3 => 'Navigate',
-                    4 => 'Guide',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
+                    5 => 'Read',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-002',
+                1 => 'KB-B5-PROFILE-002',
             ],
             'contracts' => [
                 'reader' => 'family_care_profiles_v1',
                 'destinations' => [
                     0 => 'family.care_profiles',
+                    1 => 'family.care_profile.review',
                 ],
                 'guided_task' => 'family_care_profile_v1',
-                'prefill' => null,
-                'tool' => null,
+                'prefill' => 'care_profile_v1',
+                'tool' => 'family-profile.save-draft:v1',
                 'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
                 'explain' => 'Yes',
-                'action' => 'Read / Guide',
-                'target_behavior' => 'Explain authoritative draft state and open the first missing required step',
+                'action' => 'Yes',
+                'target_behavior' => 'Show exact draft readiness, recap, confirm, save, and verify',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -4561,32 +4564,42 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Execute',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
+                    5 => 'Read',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-002',
+                1 => 'KB-B5-PROFILE-002',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_profiles',
+                    1 => 'family.care_profile.review',
                 ],
                 'guided_task' => null,
-                'prefill' => null,
-                'tool' => null,
+                'prefill' => 'care_profile_v1',
+                'tool' => 'family-profile.make-ready:v1',
                 'verifier' => null,
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Validate, recap sharing, confirm & execute',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Validate readiness, recap caregiver sharing, confirm, execute, and verify',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -4644,11 +4657,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-003',
+                1 => 'KB-B5-PROFILE-003',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_profiles',
+                    1 => 'family.care_profile.identity',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -4658,9 +4673,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
+                'explain' => 'Yes',
                 'action' => 'Draft',
-                'target_behavior' => 'Keep selection inside request draft; add profile-edit support',
+                'target_behavior' => 'Keep selection inside the private request draft and visible recap',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -4708,34 +4723,41 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
-                    2 => 'Execute',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-003',
+                1 => 'KB-B5-PROFILE-003',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_profiles',
+                    1 => 'family.care_profile.identity',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_profile_v1',
-                'tool' => null,
+                'tool' => 'family-profile.save-draft:v1',
                 'verifier' => null,
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Prepare sensitive changes; explicit recap and confirmation',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Prepare authorized fields; explicit recap, confirmation, and verification',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -4782,16 +4804,22 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
-                    2 => 'Execute',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-004',
+                1 => 'KB-B5-PROFILE-004',
             ],
             'contracts' => [
                 'reader' => null,
@@ -4800,16 +4828,16 @@ return [
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_profile_v1',
-                'tool' => null,
+                'tool' => 'family-profile.save-draft:v1',
                 'verifier' => null,
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Prepare and confirm changes',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Prepare, recap, confirm, and verify profile-only changes',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -4856,16 +4884,22 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
-                    2 => 'Execute',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-004',
+                1 => 'KB-B5-PROFILE-004',
             ],
             'contracts' => [
                 'reader' => null,
@@ -4874,16 +4908,16 @@ return [
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_profile_v1',
-                'tool' => null,
+                'tool' => 'family-profile.save-draft:v1',
                 'verifier' => null,
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Prepare and confirm changes',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Prepare, recap, confirm, and verify profile-only changes',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -4930,16 +4964,22 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
-                    2 => 'Execute',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-004',
+                1 => 'KB-B5-PROFILE-004',
             ],
             'contracts' => [
                 'reader' => null,
@@ -4948,16 +4988,16 @@ return [
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_profile_v1',
-                'tool' => null,
+                'tool' => 'family-profile.save-draft:v1',
                 'verifier' => null,
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Prepare carefully; medical boundary; confirm changes',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Prepare non-medical context; enforce medical boundary; confirm and verify',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -5004,16 +5044,22 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
-                    2 => 'Execute',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-004',
+                1 => 'KB-B5-PROFILE-004',
             ],
             'contracts' => [
                 'reader' => null,
@@ -5022,16 +5068,16 @@ return [
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_profile_v1',
-                'tool' => null,
+                'tool' => 'family-profile.save-draft:v1',
                 'verifier' => null,
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Prepare and confirm changes',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Prepare, recap, confirm, and verify mobility changes',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -5078,16 +5124,22 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
-                    2 => 'Execute',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-004',
+                1 => 'KB-B5-PROFILE-004',
             ],
             'contracts' => [
                 'reader' => null,
@@ -5096,16 +5148,16 @@ return [
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_profile_v1',
-                'tool' => null,
+                'tool' => 'family-profile.save-draft:v1',
                 'verifier' => null,
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Prepare and confirm changes',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Prepare, recap, confirm, and verify profile-only changes',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -5152,35 +5204,42 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
-                    2 => 'Execute',
-                    3 => 'Human',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
+                    5 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-004',
+                1 => 'KB-B5-PROFILE-005',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_profiles',
+                    1 => 'family.care_profile.contact',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_profile_v1',
-                'tool' => null,
+                'tool' => 'family-profile.save-draft:v1',
                 'verifier' => null,
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Prepare and confirm changes; transfer urgent risk',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Prepare and confirm non-emergency context; transfer urgent risk',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -5227,34 +5286,41 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
-                    2 => 'Execute',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-005',
+                1 => 'KB-B5-PROFILE-005',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_profiles',
+                    1 => 'family.care_profile.contact',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_profile_v1',
-                'tool' => null,
+                'tool' => 'family-profile.save-draft:v1',
                 'verifier' => null,
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Prepare and confirm; prevent cross-account disclosure',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Prepare and confirm authorized contact fields; prevent cross-account disclosure',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -5296,19 +5362,29 @@ return [
                     0 => 'pls help me preview what candidate caregivrs see before care is confirmed',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Read',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-001',
+                1 => 'KB-B5-PROFILE-001',
             ],
             'contracts' => [
                 'reader' => null,
@@ -5323,10 +5399,10 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Read authoritative sharing preview',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Read / Guide',
+                'target_behavior' => 'Read authoritative candidate snapshot and offer exact profile review',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -5368,19 +5444,29 @@ return [
                     0 => 'pls help me preview what the hired caregivr sees after confirmation',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Read',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-001',
+                1 => 'KB-B5-PROFILE-001',
             ],
             'contracts' => [
                 'reader' => null,
@@ -5395,10 +5481,10 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Read authoritative sharing preview',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Read / Guide',
+                'target_behavior' => 'Read authoritative assigned snapshot and offer exact profile review',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -5440,37 +5526,43 @@ return [
                     0 => 'pls help me apply profl changes to current care',
                 ],
                 'follow_ups' => [
+                    0 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Execute',
+                    1 => 'Explain',
+                    2 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-006',
+                1 => 'KB-B5-PROFILE-006',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_profiles',
+                    1 => 'family.care_profile.review',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
                 'verifier' => null,
-                'human_transfer' => null,
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Show affected care/booking recap; confirm & execute',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Transfer',
+                'target_behavior' => 'Explain that saved profile changes do not silently alter active care; transfer for reviewed current-care changes',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -5517,34 +5609,41 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
-                    2 => 'Execute',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-006',
+                1 => 'KB-B5-PROFILE-006',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_profiles',
+                    1 => 'family.care_profile.review',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_profile_v1',
-                'tool' => null,
+                'tool' => 'family-profile.save-draft:v1',
                 'verifier' => null,
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Confirm profile-only scope and execute',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Confirm profile-only scope, execute, and verify',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -5591,15 +5690,21 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Execute',
+                    3 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Read',
+                    1 => 'Explain',
                     2 => 'Execute',
+                    3 => 'Verify',
+                    4 => 'Read',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-007',
+                1 => 'KB-B5-PROFILE-007',
             ],
             'contracts' => [
                 'reader' => null,
@@ -5608,16 +5713,16 @@ return [
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
+                'tool' => 'family-profile.make-default:v1',
                 'verifier' => null,
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Read current default then confirm & execute',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Read current default then recap, confirm, execute, and verify',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -5664,14 +5769,20 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Execute',
+                    3 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Execute',
+                    1 => 'Explain',
+                    2 => 'Execute',
+                    3 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-007',
+                1 => 'KB-B5-PROFILE-008',
             ],
             'contracts' => [
                 'reader' => null,
@@ -5680,16 +5791,16 @@ return [
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
+                'tool' => 'family-profile.archive:v1',
                 'verifier' => null,
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Show use/dependency impact; confirm & execute',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Show dependency/default impact; confirm, execute, and verify',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -5736,15 +5847,21 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Execute',
+                    3 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Read',
+                    1 => 'Explain',
                     2 => 'Execute',
+                    3 => 'Verify',
+                    4 => 'Read',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-007',
+                1 => 'KB-B5-PROFILE-008',
             ],
             'contracts' => [
                 'reader' => null,
@@ -5753,16 +5870,16 @@ return [
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
+                'tool' => 'family-profile.restore:v1',
                 'verifier' => null,
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Read state then confirm & execute',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Read archived state then recap, confirm, execute, and verify',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -5820,11 +5937,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-008',
+                1 => 'KB-B5-PROFILE-007',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.new_care_request',
+                    1 => 'family.care_profiles',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -5895,11 +6014,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-008',
+                1 => 'KB-B5-PROFILE-007',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.new_care_request',
+                    1 => 'family.care_profiles',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -5970,6 +6091,7 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-008',
+                1 => 'KB-B5-PROFILE-009',
             ],
             'contracts' => [
                 'reader' => null,
@@ -6011,7 +6133,7 @@ return [
         81 => [
             'intent_id' => 'FAM-PROFILE-025',
             'domain' => 'care_profiles',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -6035,18 +6157,22 @@ return [
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Human',
+                    1 => 'Explain',
+                    2 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Human',
+                    1 => 'Explain',
+                    2 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-PROFILE-001',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'family.care_profiles',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -6056,9 +6182,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'Human',
-                'explain' => 'No',
+                'explain' => 'Yes',
                 'action' => 'Transfer',
-                'target_behavior' => 'Human only',
+                'target_behavior' => 'Explain the permission boundary and transfer without exposing another account',
                 'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
@@ -6078,12 +6204,12 @@ return [
                 2 => 'EVAL-FAM-PROFILE-025-DENIED',
                 3 => 'EVAL-FAM-PROFILE-025-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         82 => [
             'intent_id' => 'FAM-PROFILE-026',
             'domain' => 'care_profiles',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -6101,34 +6227,41 @@ return [
                     0 => 'pls help me delete a care profl permanently',
                 ],
                 'follow_ups' => [
+                    0 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-PROFILE-008',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'family.care_profiles',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
                 'verifier' => null,
-                'human_transfer' => null,
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
-                'product' => 'Gap',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Define retention/dependency behavior before AI work',
-                'unsupported_behavior' => 'Say that LoLo does not currently support this action; do not invent behavior. Offer the valid UI alternative or a person.',
+                'product' => 'Human',
+                'explain' => 'Yes',
+                'action' => 'Transfer',
+                'target_behavior' => 'Permanent deletion remains human-only after dependency review',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -6147,12 +6280,12 @@ return [
                 2 => 'EVAL-FAM-PROFILE-026-DENIED',
                 3 => 'EVAL-FAM-PROFILE-026-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         83 => [
             'intent_id' => 'FAM-REQUEST-001',
             'domain' => 'care_requests',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -6186,10 +6319,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-001',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -6221,7 +6356,7 @@ return [
                 2 => 'EVAL-FAM-REQUEST-001-DENIED',
                 3 => 'EVAL-FAM-REQUEST-001-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         84 => [
             'intent_id' => 'FAM-REQUEST-002',
@@ -6260,10 +6395,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-001',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -6334,10 +6471,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-001',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -6408,10 +6547,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-001',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -6482,10 +6623,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-001',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -6540,6 +6683,7 @@ return [
                     0 => 'pls help me create a simple care profl while creating a requst',
                 ],
                 'follow_ups' => [
+                    0 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -6547,31 +6691,36 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Prepare',
                     3 => 'Execute',
+                    4 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_profile_v1',
-                'tool' => null,
-                'verifier' => null,
+                'tool' => 'family-profile.save-draft:v1',
+                'verifier' => 'care_request_draft_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
-                'action' => 'No',
-                'target_behavior' => 'Prepare profile plus request; separate confirmations if persisted',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Prepare and confirm the profile first, then continue the private request draft',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -6630,10 +6779,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-002',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -6704,10 +6855,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-002',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -6717,9 +6870,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
+                'explain' => 'Yes',
                 'action' => 'Draft',
-                'target_behavior' => 'Add clearer governed examples and limits',
+                'target_behavior' => 'Use governed examples, bounded extraction, and visible recap',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -6778,10 +6931,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-002',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -6791,9 +6946,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
+                'explain' => 'Yes',
                 'action' => 'Draft',
-                'target_behavior' => 'Keep bounded extraction and recap',
+                'target_behavior' => 'Keep bounded extraction and visible recap',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -6852,10 +7007,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-002',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -6926,10 +7083,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-002',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -7000,10 +7159,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-002',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -7074,10 +7235,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-002',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -7148,10 +7311,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-002',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -7222,10 +7387,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-002',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -7296,10 +7463,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-002',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -7371,6 +7540,7 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-008',
+                1 => 'KB-B5-REQUEST-002',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
@@ -7447,6 +7617,7 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-008',
+                1 => 'KB-B5-REQUEST-002',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
@@ -7522,10 +7693,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-002',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -7535,9 +7708,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
+                'explain' => 'Yes',
                 'action' => 'Draft',
-                'target_behavior' => 'Add governed explanation of preference versus promise',
+                'target_behavior' => 'Explain that this is a preference, never a guarantee',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -7587,18 +7760,17 @@ return [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
-                    2 => 'Read',
-                    3 => 'Prepare',
+                    2 => 'Prepare',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
-                    2 => 'Read',
-                    3 => 'Prepare',
+                    2 => 'Prepare',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-008',
+                1 => 'KB-B5-REQUEST-004',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
@@ -7614,8 +7786,8 @@ return [
             'disposition' => [
                 'product' => 'UI',
                 'explain' => 'Yes',
-                'action' => 'Partial read / Draft',
-                'target_behavior' => 'Require explicit “same as last time”; expand context if needed',
+                'action' => 'Draft',
+                'target_behavior' => 'Copy authorized reusable details into a private draft and require a fresh schedule/recap',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -7675,6 +7847,7 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PRO-008',
+                1 => 'KB-B5-REQUEST-004',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
@@ -7750,10 +7923,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-003',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -7824,10 +7999,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-003',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -7864,7 +8041,7 @@ return [
         106 => [
             'intent_id' => 'FAM-REQUEST-024',
             'domain' => 'care_requests',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -7900,10 +8077,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-003',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -7974,10 +8153,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-003',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -8048,10 +8229,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-003',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -8122,10 +8305,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-003',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -8162,7 +8347,7 @@ return [
         110 => [
             'intent_id' => 'FAM-REQUEST-028',
             'domain' => 'care_requests',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -8198,10 +8383,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-003',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -8238,7 +8425,7 @@ return [
         111 => [
             'intent_id' => 'FAM-REQUEST-029',
             'domain' => 'care_requests',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -8274,10 +8461,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-003',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -8314,7 +8503,7 @@ return [
         112 => [
             'intent_id' => 'FAM-REQUEST-030',
             'domain' => 'care_requests',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -8350,10 +8539,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-003',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -8425,11 +8616,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-REQ-002',
+                1 => 'KB-B5-REQUEST-005',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.overview',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -8498,11 +8691,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-REQ-002',
+                1 => 'KB-B5-REQUEST-005',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.overview',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -8571,11 +8766,13 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-003',
+                1 => 'KB-B5-REQUEST-005',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.overview',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -8654,11 +8851,14 @@ return [
             'kb_stable_ids' => [
                 0 => 'KB-FOP-REQ-001',
                 1 => 'KB-FOP-REQ-002',
+                2 => 'KB-B5-REQUEST-006',
             ],
             'contracts' => [
                 'reader' => 'family_requests_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.overview',
+                    2 => 'family.request.applicants',
                 ],
                 'guided_task' => 'family_request_v1',
                 'prefill' => null,
@@ -8737,11 +8937,14 @@ return [
             'kb_stable_ids' => [
                 0 => 'KB-FOP-REQ-001',
                 1 => 'KB-FOP-REQ-003',
+                2 => 'KB-B5-REQUEST-006',
             ],
             'contracts' => [
                 'reader' => 'family_requests_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.overview',
+                    2 => 'family.request.applicants',
                 ],
                 'guided_task' => 'family_request_v1',
                 'prefill' => null,
@@ -8751,7 +8954,7 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
+                'explain' => 'Yes',
                 'action' => 'Read / Guide',
                 'target_behavior' => 'Read authoritative applicant counts and guide to replies; never claim caregiver views',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
@@ -8796,39 +8999,44 @@ return [
                     0 => 'pls help me edit a live requst\'s recipient, tasks, date, time, duration, address, or notes',
                 ],
                 'follow_ups' => [
+                    0 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
+                    1 => 'Explain',
+                    2 => 'Prepare',
                 ],
                 'target' => [
                     0 => 'Understand',
-                    1 => 'Prepare',
-                    2 => 'Execute',
+                    1 => 'Explain',
+                    2 => 'Prepare',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-REQ-008',
+                1 => 'KB-B5-REQUEST-008',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_request_context_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.new_care_request',
+                    2 => 'family.request.overview',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_reuse_v1',
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'care_request_draft_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
-                'product' => 'Gap / Partial UI',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Define edit/version/notification behavior; then prepare + confirm',
-                'unsupported_behavior' => 'Say that LoLo does not currently support this action; do not invent behavior. Offer the valid UI alternative or a person.',
+                'product' => 'Replacement workflow',
+                'explain' => 'Yes',
+                'action' => 'Draft',
+                'target_behavior' => 'Create a reviewed replacement draft; never silently mutate the live request',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -8852,7 +9060,7 @@ return [
         119 => [
             'intent_id' => 'FAM-REQUEST-037',
             'domain' => 'care_requests',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -8870,34 +9078,42 @@ return [
                     0 => 'pls help me change a live one-time requst into regular care or vice versa',
                 ],
                 'follow_ups' => [
+                    0 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Prepare',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Prepare',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-008',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
+                    1 => 'family.request.overview',
                 ],
                 'guided_task' => null,
-                'prefill' => null,
+                'prefill' => 'care_request_reuse_v1',
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'care_request_draft_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
-                'product' => 'Gap',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Define replace-versus-edit behavior before AI work',
-                'unsupported_behavior' => 'Say that LoLo does not currently support this action; do not invent behavior. Offer the valid UI alternative or a person.',
+                'product' => 'Replacement workflow',
+                'explain' => 'Yes',
+                'action' => 'Draft',
+                'target_behavior' => 'Create a reviewed replacement draft with the requested type; keep the original unchanged',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -8916,7 +9132,7 @@ return [
                 2 => 'EVAL-FAM-REQUEST-037-DENIED',
                 3 => 'EVAL-FAM-REQUEST-037-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         120 => [
             'intent_id' => 'FAM-REQUEST-038',
@@ -8939,39 +9155,45 @@ return [
                     0 => 'pls help me withdraw an open requst',
                 ],
                 'follow_ups' => [
+                    0 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Execute',
+                    3 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
-                    2 => 'Read',
-                    3 => 'Execute',
+                    2 => 'Execute',
+                    3 => 'Verify',
+                    4 => 'Read',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-REQ-008',
+                1 => 'KB-B5-REQUEST-009',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_request_context_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.request.overview',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
-                'verifier' => null,
+                'tool' => 'care-request.withdraw:v1',
+                'verifier' => 'care_request_draft_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
-                'action' => 'No',
-                'target_behavior' => 'Read impact; confirm & execute',
+                'explain' => 'Yes',
+                'action' => 'Yes',
+                'target_behavior' => 'Read impact; recap, confirm, execute, notify affected caregivers, and verify',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -9014,36 +9236,45 @@ return [
                     0 => 'pls help me restore or reopen a withdrawn or expired requst',
                 ],
                 'follow_ups' => [
+                    0 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Prepare',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Prepare',
+                    3 => 'Execute',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-REQ-009',
+                1 => 'KB-B5-REQUEST-010',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_request_context_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.new_care_request',
+                    2 => 'family.request.overview',
                 ],
                 'guided_task' => null,
-                'prefill' => null,
+                'prefill' => 'care_request_reuse_v1',
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'care_request_draft_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
-                'product' => 'Gap',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Define product behavior; otherwise offer create-from-copy',
-                'unsupported_behavior' => 'Say that LoLo does not currently support this action; do not invent behavior. Offer the valid UI alternative or a person.',
+                'product' => 'Copy workflow',
+                'explain' => 'Yes',
+                'action' => 'Draft',
+                'target_behavior' => 'Never reopen; create a fresh private copy with a new schedule and confirmation',
+                'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -9103,11 +9334,13 @@ return [
             'kb_stable_ids' => [
                 0 => 'KB-FOP-REQ-008',
                 1 => 'KB-FOP-REQ-009',
+                2 => 'KB-B5-REQUEST-004',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
+                    1 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_reuse_v1',
@@ -9116,10 +9349,10 @@ return [
                 'human_transfer' => null,
             ],
             'disposition' => [
-                'product' => 'Partial UI',
-                'explain' => 'Partial',
+                'product' => 'UI',
+                'explain' => 'Yes',
                 'action' => 'Draft',
-                'target_behavior' => 'Use explicit previous-request copy with new schedule recap',
+                'target_behavior' => 'Copy authorized reusable details, clear stale schedule fields, and show source disclosure',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -9162,26 +9395,34 @@ return [
                     0 => 'pls help me undrstand why requst publication failed validation',
                 ],
                 'follow_ups' => [
-                    0 => 'I did it',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
-                    2 => 'Prepare',
+                    2 => 'Navigate',
+                    3 => 'Guide',
+                    4 => 'Prepare',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
-                    2 => 'Prepare',
+                    2 => 'Navigate',
+                    3 => 'Guide',
+                    4 => 'Prepare',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-007',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -9191,9 +9432,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
-                'action' => 'Draft',
-                'target_behavior' => 'Explain exact field error and reopen affected section',
+                'explain' => 'Yes',
+                'action' => 'Draft / Guide',
+                'target_behavior' => 'Explain the exact field error and continue from that field without restarting',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -9218,7 +9459,7 @@ return [
         124 => [
             'intent_id' => 'FAM-REQUEST-042',
             'domain' => 'care_requests',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -9254,10 +9495,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-007',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -9289,12 +9532,12 @@ return [
                 2 => 'EVAL-FAM-REQUEST-042-DENIED',
                 3 => 'EVAL-FAM-REQUEST-042-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         125 => [
             'intent_id' => 'FAM-REQUEST-043',
             'domain' => 'care_requests',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -9330,10 +9573,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-005',
             ],
             'contracts' => [
                 'reader' => 'family_request_context_v1',
                 'destinations' => [
+                    0 => 'family.request.overview',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -9365,7 +9610,7 @@ return [
                 2 => 'EVAL-FAM-REQUEST-043-DENIED',
                 3 => 'EVAL-FAM-REQUEST-043-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         126 => [
             'intent_id' => 'FAM-REQUEST-044',
@@ -9402,11 +9647,17 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-REQ-010',
+                1 => 'KB-B5-REQUEST-006',
+                2 => 'KB-B5-REQUEST-011',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
                     0 => 'support.center',
+                    1 => 'family.care_requests',
+                    2 => 'family.request.overview',
+                    3 => 'family.request.applicants',
+                    4 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -9443,7 +9694,7 @@ return [
         127 => [
             'intent_id' => 'FAM-REQUEST-045',
             'domain' => 'care_requests',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -9477,10 +9728,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B5-REQUEST-011',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -9512,7 +9765,7 @@ return [
                 2 => 'EVAL-FAM-REQUEST-045-DENIED',
                 3 => 'EVAL-FAM-REQUEST-045-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         128 => [
             'intent_id' => 'FAM-MATCH-001',
