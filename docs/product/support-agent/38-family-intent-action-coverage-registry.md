@@ -19,6 +19,8 @@ It is deliberately broader than the current AI feature. It inventories the actua
 
 Baseline source: production-oriented repository state audited August 17, 2026, plus the 23 published governed KB entries and held pricing entry. Payment-method rows include Batch 1 and the request, visit, hours, profile, message, history, care-payment, and Family-overview rows include the Batch 2 source implementation. Production availability remains controlled separately. Re-audit this registry whenever a Family workflow, AI tool, governed KB entry, or authorization rule changes.
 
+The phased implementation and testing sequence for moving this portfolio from explanation/navigation to verified task completion is defined in the [Family chat operator master coverage and delivery plan](44-family-chat-operator-master-plan.md).
+
 ## Automated coverage of implemented rows
 
 The registry is the 324-intent demand backlog. The machine-readable [Family Batch 1-2 evaluation harness](40-family-batch-1-2-evaluation-harness.md) currently covers the exact **40** rows changed by guided-assistance Batches 1 and 2: six Batch 1 saved-payment-method rows and 34 Batch 2 overview/read/guide rows.

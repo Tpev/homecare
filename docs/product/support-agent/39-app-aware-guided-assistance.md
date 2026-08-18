@@ -249,6 +249,8 @@ Database reads, Livewire events, and deterministic templates should handle most 
 
 ## Next implementation sequence
 
+The sequence below is the original platform-level progression. The [Family chat operator master coverage and delivery plan](44-family-chat-operator-master-plan.md) now refines it into Batch 3A operating-layer work, Batch 3B safe preparation, domain delivery Batches 4 through 9, and later Caregiver adaptation. Where later-batch numbering differs, the master plan is the current delivery authority; the Read, Guide, Prefill, Confirm, and Verify contracts in this document remain normative.
+
 ### Batch 1 - guided-assistance foundation and payment-method vertical slice
 
 Build the reusable guided-task record, expanded semantic target registry, client guide coordinator, deterministic arrival/completion messages, and server verifier. Prove the complete loop on the payment-method workflow:

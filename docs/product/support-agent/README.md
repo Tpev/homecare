@@ -64,8 +64,9 @@ Anyone planning or implementing this program, including GPT-5.6 Sol, must read t
 42. [Batch 1-2 production pilot audit and corrective release](41-batch-1-2-production-pilot-audit.md)
 43. [Mobile support-chat UX polish](42-mobile-support-chat-ux-polish.md)
 44. [Task-first navigation and payment guidance correction](43-task-first-navigation-and-payment-guidance-correction.md)
+45. [Family chat operator master coverage and delivery plan](44-family-chat-operator-master-plan.md)
 
-For current operations, read item 38 before the historical limited-release records in items 28–37. `DEC-072` supersedes their approval, evidence, exact-commit, and expansion gates while retaining the implemented safety behavior. Use item 39 as the portfolio tracker for Family-user information and action coverage, item 40 as the implementation contract for reading live state, navigating, highlighting, prefilling, and verifying completion, item 41 to mass-test the exact 40 Batch 1/2 intent rows, item 42 for the latest production pilot findings and deploy/recheck list, item 43 for the current mobile chat interaction contract and regression coverage, and item 44 for the task-first navigation correction prompted by the live “another credit card” pilot conversation.
+For current operations, read item 38 before the historical limited-release records in items 28–37. `DEC-072` supersedes their approval, evidence, exact-commit, and expansion gates while retaining the implemented safety behavior. Use item 39 as the portfolio tracker for Family-user information and action coverage, item 40 as the implementation contract for reading live state, navigating, highlighting, prefilling, and verifying completion, item 41 to mass-test the exact 40 Batch 1/2 intent rows, item 42 for the latest production pilot findings and deploy/recheck list, item 43 for the current mobile chat interaction contract and regression coverage, item 44 for the task-first navigation correction prompted by the live “another credit card” pilot conversation, and item 45 as the master plan for turning the full Family intent portfolio into an end-to-end chat operating layer.
 
 Then consult the live registries:
 
