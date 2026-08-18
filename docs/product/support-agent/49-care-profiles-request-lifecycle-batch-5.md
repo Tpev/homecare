@@ -1,6 +1,6 @@
 # Care Profiles and Request Lifecycle — Batch 5
 
-Status: Implemented and verified in source; awaiting normal production deployment, KB publication, and exact two-user pilot activation
+Status: Deployed, published, and active for the exact two-user pilot; authenticated production smoke completed; three audit corrections verified in source and awaiting the normal deployment
 
 Approved: August 18, 2026
 
@@ -108,12 +108,12 @@ There is no generic SQL, ORM, arbitrary URL, selector, browser-control, or unres
 
 Completed locally on August 18, 2026:
 
-- Batch 5 lifecycle contract: **12 tests / 57 assertions**;
+- Batch 5 lifecycle contract: **13 tests / 60 assertions** after the production routing correction;
 - Batch 5 knowledge package: **3 tests / 112 assertions**;
-- Family Batch 1–5 mass harness: **82 tests / 2,308 assertions**;
-- complete AI Support feature suite: **174 tests / 3,117 assertions**;
+- Family Batch 1–5 mass harness: **83 tests / 2,311 assertions**;
+- complete AI Support feature suite: **175 tests / 3,120 assertions**;
 - executable catalog: **324 / 324** records and **230 / 230** explicit KB mappings;
-- deterministic routing: **137 / 137** existing phrases plus **63 / 63** Batch 5 lifecycle phrases;
+- deterministic routing: **137 / 137** existing phrases plus **64 / 64** Batch 5 lifecycle phrases;
 - nearby collision protection: **10 / 10**;
 - profile/request KB evaluations: **100 / 100** structurally validated;
 - interactive Chromium suite: **5 / 5** scenarios, including the mobile profile recap, confirmation, receipt, and Admin audit;
@@ -122,6 +122,39 @@ Completed locally on August 18, 2026:
 - provider calls and production database writes during the deterministic mass test: **0**.
 
 The focused Batch 5 tests include multi-turn model extraction, wrong-account denial, stale profile revision, expired recap renewal, duplicate/idempotent behavior, request-with-visit denial, withdrawn/expired copy behavior, permanent-deletion transfer, and exact-pilot-only activation.
+
+## Authenticated production pilot audit — August 18, 2026
+
+Production showed **Pilot only**, exactly two active Family grants, and 111 published KB entries plus one unrelated draft. `KB-B5-PROFILE-001` was directly inspected as Published. The content-free activity log showed successful Batch 5 capability-extension events for both pilot users. **Live for everyone remained off.**
+
+The `peverelli.t@gmail.com` pilot then completed a fresh authenticated Family journey after the previous human-only test ticket was resolved:
+
+- the assistant correctly read that the account had no active care receiver profile;
+- **Open care receiver profiles** navigated to `/family/care-profiles`, kept the chat state, displayed the guidance strip, and applied the visible four-pixel target outline;
+- the assistant created the synthetic `Batch Five Test Profile` only after recap and confirmation;
+- **Modify something** let the user change the proposed name before confirmation;
+- mobility and routine details supplied in two separate messages were accumulated into one recap, confirmed, saved, re-read, and reported as verified;
+- the profile was marked ready only after its own explicit recap and confirmation;
+- at 390 × 844 the chat occupied the full viewport, reopened at the newest message, retained focus while typing character by character, and rendered the request action at full mobile width; and
+- the assistant read request `#9` as **Caregiver selected**, explained that its selected caregiver moves changes into the visit or regular-care workflow, and opened the exact request page with a guidance strip.
+
+The smoke test found three real defects:
+
+1. **Modify something** called an undefined `autoResize` helper after correctly prefilling the composer.
+2. Guidance telemetry called `.catch()` on a Livewire result that can be `undefined`, producing a browser error after otherwise-correct navigation.
+3. `Archive the Batch Five Test Profile now that the pilot test is complete.` was incorrectly treated as a make-ready request because the incidental word `complete` outranked the explicit verb `archive`.
+
+No incorrect lifecycle recap was confirmed. The archive recap was stopped and the synthetic profile remains isolated from active requests and visits until the corrected archive journey is verified after deployment.
+
+The correction replaces the missing resize call with the existing composer state handler, safely normalizes the Livewire result through `Promise.resolve`, and gives explicit archive/restore/default verbs priority over readiness wording. Regression coverage includes the exact production archive sentence. The corrected source passes:
+
+- the production frontend build;
+- the focused profile and exact-control Chromium journeys;
+- **41 tests / 249 assertions** across the chat widget, guided payment method, and Batch 5 lifecycle suites;
+- **13 / 13 tests and 60 assertions** in the focused Batch 5 lifecycle contract; and
+- the isolated Batch 1–5 mass harness with **83 tests / 2,311 assertions**, **64 / 64** Batch 5 phrases, **324 / 324** catalog records, **230 / 230** mappings, and **10 / 10** collision cases.
+
+After the correction commit is deployed, the short production recheck is: click **Modify something** with no console error, open an exact guided request with no telemetry error, repeat the exact archive sentence, confirm that the recap says **Archive**, confirm it, and verify the synthetic profile is archived. Pilot-only and exactly two grants must remain unchanged.
 
 ## Production deployment
 

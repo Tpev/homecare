@@ -113,6 +113,8 @@ test.describe.serial('Interactive AI Support pilot', () => {
     });
 
     test('guides the Family owner to the exact card control and verifies the Stripe return', async ({ page }) => {
+        const pageErrors: string[] = [];
+        page.on('pageerror', (error) => pageErrors.push(error.message));
         await page.emulateMedia({ reducedMotion: 'reduce' });
         await loginAs(page, 'familyAi');
         await page.getByTestId('support-chat-launcher').click();
@@ -135,6 +137,7 @@ test.describe.serial('Interactive AI Support pilot', () => {
         await expect(guide.getByRole('button', { name: 'Show me' })).toBeVisible();
         await expect(guide.getByRole('button', { name: 'Stop' })).toBeVisible();
         await expect(guide.getByRole('button', { name: 'Talk to a person' })).toBeVisible();
+        expect(pageErrors).toEqual([]);
 
         await cardButton.evaluate((element) => element.replaceWith(element.cloneNode(true)));
         await expect(page.getByTestId('family-billing-manage-payment-method')).toHaveAttribute('data-ai-guided', 'true');
@@ -173,9 +176,12 @@ test.describe.serial('Interactive AI Support pilot', () => {
         await expect(page.getByText('VISA ending in 4242')).toBeVisible();
         await expect(page.getByTestId('ai-guided-task-strip')).toHaveCount(0);
         await expect(cardButton).toHaveText('Update card');
+        expect(pageErrors.filter((error) => error !== 'Could not find Livewire component in DOM tree')).toEqual([]);
     });
 
     test('creates and verifies a care profile from a mobile-friendly chat recap', async ({ page }) => {
+        const pageErrors: string[] = [];
+        page.on('pageerror', (error) => pageErrors.push(error.message));
         await page.setViewportSize({ width: 390, height: 844 });
         await loginAs(page, 'familyAi');
         await page.getByTestId('support-chat-launcher').click();
@@ -196,6 +202,9 @@ test.describe.serial('Interactive AI Support pilot', () => {
         const modify = recap.getByRole('button', { name: 'Modify something' });
         expect((await confirm.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(43.9);
         expect((await modify.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(43.9);
+        await modify.click();
+        await expect(composer).toHaveValue('I want to change ');
+        await expect(composer).toBeFocused();
         await confirm.click();
 
         await expect(panel.getByText(/profile was saved and checked/i)).toBeVisible();
@@ -204,6 +213,7 @@ test.describe.serial('Interactive AI Support pilot', () => {
         await receipt.click();
         await expect(page).toHaveURL(/\/family\/care-profiles$/);
         await expect(page.getByText('Maria Browser', { exact: true }).first()).toBeVisible();
+        expect(pageErrors).toEqual([]);
     });
 
     test('same-account Family member cannot see or inherit the exact-user AI conversation', async ({ page }) => {

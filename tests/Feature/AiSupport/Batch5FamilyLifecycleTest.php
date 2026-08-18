@@ -146,6 +146,23 @@ class Batch5FamilyLifecycleTest extends TestCase
         $this->assertSame(0, AiSupportConfirmedActionEvidence::query()->count());
     }
 
+    public function test_explicit_archive_wins_over_incidental_complete_wording(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $profile = app(CareRecipientProfileService::class)->saveDraft($family, null, [
+            'preferred_name' => 'Batch Five Test Profile', 'about_them' => 'Synthetic pilot profile.',
+        ]);
+        $message = 'Archive the Batch Five Test Profile now that the pilot test is complete.';
+        $ticket = $this->ticket($family, $message);
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $message);
+
+        $action = AiSupportMessageAction::query()->where('action_type', AiSupportMessageAction::TYPE_DOMAIN_RECAP)->sole();
+        $this->assertSame('family-profile.archive', data_get($action->payload, 'tool_id'));
+        $this->assertStringContainsString('Archive', (string) data_get($action->payload, 'title'));
+        $this->assertFalse($profile->fresh()->isArchived());
+    }
+
     public function test_open_request_withdrawal_has_recap_confirmation_receipt_and_authoritative_status(): void
     {
         [, $family] = $this->eligibleFamily();

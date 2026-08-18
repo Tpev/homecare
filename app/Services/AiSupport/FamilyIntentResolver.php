@@ -238,9 +238,6 @@ class FamilyIntentResolver
             return 'FAM-REQUEST-035';
         }
 
-        if (preg_match('/\b(?:mark|make|set|complete)\b.*\bprofile\b.*\bready\b|\bprofile\b.*\b(?:complete|ready)\b/', $value)) {
-            return 'FAM-PROFILE-005';
-        }
         if (preg_match('/\b(?:restore|bring\s+back)\b.*\b(?:archived\s+)?(?:care\s+(?:receiver|recipient)\s+)?profile\b/', $value)) {
             return 'FAM-PROFILE-021';
         }
@@ -249,6 +246,9 @@ class FamilyIntentResolver
         }
         if (preg_match('/\b(?:default)\b.*\bprofile\b|\bprofile\b.*\bdefault\b/', $value)) {
             return 'FAM-PROFILE-019';
+        }
+        if (preg_match('/\b(?:mark|make|set|complete)\b.*\bprofile\b.*\bready\b|\bprofile\b.*\b(?:complete|ready)\b/', $value)) {
+            return 'FAM-PROFILE-005';
         }
         if (preg_match('/\b(?:additional|extra|emergency)\s+contact\b|\bcontact\b.*\b(?:profile|phone|email)\b/', $value)) {
             return 'FAM-PROFILE-014';

@@ -321,7 +321,7 @@
                                             <div class="grid gap-2">
                                                 <button
                                                     type="button"
-                                                    x-on:click="draft = 'I want to change '; $nextTick(() => { $refs.composer?.focus(); autoResize(); })"
+                                                    x-on:click="draft = 'I want to change '; $nextTick(() => { draftChanged(); $refs.composer?.focus(); })"
                                                     class="min-h-11 rounded-xl border border-[#0F5B52] px-4 text-sm font-semibold text-[#0F5B52]"
                                                 >Modify something</button>
                                                 @if (($actionPayload['can_confirm'] ?? false) && $actionActive)
@@ -380,7 +380,7 @@
                                                 @if (filled($actionPayload['preparation_id'] ?? null))
                                                     <button
                                                         type="button"
-                                                        x-on:click="draft = 'I want to change '; $nextTick(() => { $refs.composer?.focus(); autoResize(); })"
+                                                        x-on:click="draft = 'I want to change '; $nextTick(() => { draftChanged(); $refs.composer?.focus(); })"
                                                         class="min-h-11 rounded-xl border border-[#0F5B52] px-4 text-sm font-semibold text-[#0F5B52]"
                                                     >Modify something</button>
                                                 @endif

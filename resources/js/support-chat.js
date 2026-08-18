@@ -562,7 +562,7 @@ document.addEventListener('alpine:init', () => {
             if (this.guidedReportKey === key) return;
 
             this.guidedReportKey = key;
-            this.$wire.guidedTaskArrived(this.guidedTask.id, result)
+            Promise.resolve(this.$wire.guidedTaskArrived(this.guidedTask.id, result))
                 .catch(() => {
                     this.guidedReportKey = '';
                     this.announcement = 'The guided step could not be verified.';
