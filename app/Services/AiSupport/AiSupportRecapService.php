@@ -141,8 +141,11 @@ class AiSupportRecapService
             fn (array $preview): array => $this->publisher->publish($actor, $ticket, $preview),
         );
         $careRequest = CareRequest::query()->findOrFail($confirmed->domain_reference_id);
+        $intentId = $careRequest->request_type === CareRequest::TYPE_ONE_TIME
+            ? 'FAM-REQUEST-028'
+            : 'FAM-REQUEST-029';
 
-        DB::transaction(function () use ($actor, $ticket, $action, $confirmed, $careRequest): void {
+        DB::transaction(function () use ($actor, $ticket, $action, $confirmed, $careRequest, $intentId): void {
             $lockedAction = AiSupportMessageAction::query()->lockForUpdate()->findOrFail($action->id);
             if ($lockedAction->consumed_at) {
                 return;
@@ -179,6 +182,23 @@ class AiSupportRecapService
                 'tool_id' => $confirmed->tool_id,
                 'tool_version' => $confirmed->tool_version,
                 'result_code' => 'care_request_live',
+            ], $actor);
+            $this->events->record($ticket, 'intent_confirmed', [
+                'capability_id' => 'care_request_publish_v1',
+                'tool_id' => $confirmed->tool_id,
+                'tool_version' => $confirmed->tool_version,
+                'result_code' => 'explicit_confirmation_committed',
+                'safe_metadata' => ['intent_id' => $intentId],
+            ], $actor);
+            $this->events->record($ticket, 'intent_completed', [
+                'capability_id' => 'care_request_publish_v1',
+                'tool_id' => $confirmed->tool_id,
+                'tool_version' => $confirmed->tool_version,
+                'result_code' => 'authoritative_receipt_created',
+                'safe_metadata' => [
+                    'intent_id' => $intentId,
+                    'verifier_id' => 'care_request_receipt_v1',
+                ],
             ], $actor);
         }, 3);
 

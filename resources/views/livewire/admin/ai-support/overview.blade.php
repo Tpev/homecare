@@ -57,4 +57,56 @@
             <li class="rounded-xl border border-slate-200 p-4"><strong>Role appropriate.</strong> Caregivers receive Caregiver help; Family request creation remains Family-only.</li>
         </ul>
     </x-card>
+
+    <x-card>
+        <x-slot:header>
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div><h2 class="text-lg font-semibold">Family intent coverage</h2><p class="mt-1 text-sm text-slate-600">Executable coverage and compact outcomes. No chat text is stored here.</p></div>
+                <label class="block text-sm font-semibold text-slate-700">Find an intent<input type="search" wire:model.live.debounce.250ms="intentSearch" class="mt-1 min-h-11 w-full rounded-xl border-slate-300 sm:w-72" placeholder="ID, domain, task, or KB"></label>
+            </div>
+        </x-slot:header>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold uppercase text-slate-500">Catalog</p><p class="mt-1 text-2xl font-extrabold">{{ $intentCoverage['total'] }}</p></div>
+            <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold uppercase text-slate-500">KB mapped</p><p class="mt-1 text-2xl font-extrabold">{{ $intentCoverage['kb_mapped'] }}</p></div>
+            <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold uppercase text-slate-500">Pilot behavior</p><p class="mt-1 text-2xl font-extrabold">{{ $intentCoverage['pilot'] }}</p></div>
+            <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold uppercase text-slate-500">Prepare</p><p class="mt-1 text-2xl font-extrabold">{{ $intentCoverage['prepare'] }}</p></div>
+            <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold uppercase text-slate-500">Backlog</p><p class="mt-1 text-2xl font-extrabold">{{ $intentCoverage['backlog'] }}</p></div>
+        </div>
+        <div class="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+            <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+                <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th class="px-3 py-3">Intent</th><th class="px-3 py-3">Current stages</th><th class="px-3 py-3">KB</th><th class="px-3 py-3">State</th></tr></thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    @forelse($intentRecords as $record)
+                        <tr>
+                            <td class="max-w-md px-3 py-3 align-top"><p class="font-mono text-xs font-bold text-emerald-800">{{ $record['intent_id'] }}</p><p class="mt-1 font-semibold text-slate-900">{{ $record['intent'] }}</p><p class="mt-1 text-xs text-slate-500">{{ str($record['domain'])->headline() }}</p></td>
+                            <td class="px-3 py-3 align-top"><div class="flex max-w-sm flex-wrap gap-1">@foreach((array) data_get($record, 'capability_stages.current', []) as $stage)<span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">{{ $stage }}</span>@endforeach</div></td>
+                            <td class="max-w-sm px-3 py-3 align-top text-xs text-slate-600">{{ implode(', ', (array) $record['kb_stable_ids']) ?: 'Not mapped' }}</td>
+                            <td class="px-3 py-3 align-top"><span class="rounded-full px-2 py-1 text-xs font-bold {{ $record['rollout_state'] === 'pilot' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900' }}">{{ str($record['rollout_state'])->headline() }}</span></td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="4" class="px-3 py-8 text-center text-slate-500">No matching intent.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </x-card>
+
+    <x-card>
+        <x-slot:header><h2 class="text-lg font-semibold">Recent Family intent outcomes</h2></x-slot:header>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            @foreach(['intent_unmatched' => 'Unmatched', 'intent_looped' => 'Repeated loops', 'intent_failed' => 'Failures', 'intent_transferred' => 'Transfers'] as $type => $label)
+                <div class="rounded-xl border border-slate-200 p-3"><p class="text-xs font-bold uppercase text-slate-500">{{ $label }}</p><p class="mt-1 text-2xl font-extrabold">{{ (int) ($intentOutcomeCounts[$type] ?? 0) }}</p></div>
+            @endforeach
+        </div>
+        <div class="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200">
+            @forelse($recentIntentOutcomes as $event)
+                <div class="flex flex-col gap-1 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                    <div><span class="font-semibold text-slate-900">{{ str($event->event_type)->replace('_', ' ')->headline() }}</span><span class="ml-2 font-mono text-xs text-slate-500">{{ data_get($event->safe_metadata, 'intent_id', 'unmatched') }}</span></div>
+                    <div class="text-xs text-slate-500">{{ $event->result_code }} · {{ $event->occurred_at?->diffForHumans() }}</div>
+                </div>
+            @empty
+                <p class="px-4 py-6 text-sm text-slate-500">No unmatched, looped, failed, recovered, or transferred intent outcomes in the last 30 days.</p>
+            @endforelse
+        </div>
+    </x-card>
 </div>

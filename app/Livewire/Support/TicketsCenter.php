@@ -5,6 +5,7 @@ namespace App\Livewire\Support;
 use App\Models\CareBooking;
 use App\Models\CareRequest;
 use App\Models\SupportTicket;
+use App\Services\AiSupport\AiSupportPreparationService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -25,6 +26,30 @@ class TicketsCenter extends Component
     public ?int $care_request_id = null;
 
     public ?int $care_booking_id = null;
+
+    public bool $aiPrepared = false;
+
+    public function mount(): void
+    {
+        $user = auth()->user();
+        if (! $user || $user->role !== 'family') {
+            return;
+        }
+        $prepared = app(AiSupportPreparationService::class)->consume($user, 'support_intake_v1');
+        $this->subject = (string) ($prepared['subject'] ?? $this->subject);
+        $this->description = (string) ($prepared['description'] ?? $this->description);
+        $category = (string) ($prepared['category'] ?? 'general');
+        if (in_array($category, ['general', 'dispute', 'incident', 'cancellation', 'billing', 'time_correction'], true)) {
+            $this->category = $category;
+        }
+        if (($prepared['resource_type'] ?? null) === 'care_request') {
+            $this->care_request_id = (int) ($prepared['resource_id'] ?? 0) ?: null;
+        }
+        if (($prepared['resource_type'] ?? null) === 'care_booking') {
+            $this->care_booking_id = (int) ($prepared['resource_id'] ?? 0) ?: null;
+        }
+        $this->aiPrepared = $prepared !== [];
+    }
 
     public function createTicket(): void
     {

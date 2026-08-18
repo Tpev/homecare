@@ -19,6 +19,10 @@ class AiSupportMessageAction extends Model
 
     public const TYPE_RENEW_RECAP = 'renew_recap';
 
+    public const TYPE_PREPARATION = 'preparation';
+
+    public const TYPE_INTENT_CHOICES = 'intent_choices';
+
     public $incrementing = false;
 
     protected $keyType = 'string';

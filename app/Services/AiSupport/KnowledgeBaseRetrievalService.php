@@ -8,6 +8,30 @@ use Illuminate\Support\Collection;
 
 class KnowledgeBaseRetrievalService
 {
+    /**
+     * Resolve only the published, applicable KB versions explicitly linked to an intent.
+     *
+     * @param  list<string>  $stableIds
+     * @return Collection<int, KnowledgeBaseVersion>
+     */
+    public function forIntent(
+        User $user,
+        string $capabilityId,
+        array $stableIds,
+        ?string $membershipState = null,
+        ?string $routeTargetId = null,
+    ): Collection {
+        $stableIds = array_values(array_unique(array_filter(array_map('strval', $stableIds))));
+        if ($stableIds === []) {
+            return collect();
+        }
+
+        return $this->applicable($user, $capabilityId, $membershipState, $routeTargetId)
+            ->filter(fn (KnowledgeBaseVersion $version): bool => in_array($version->entry?->stable_id, $stableIds, true))
+            ->sortBy(fn (KnowledgeBaseVersion $version): int => array_search($version->entry?->stable_id, $stableIds, true))
+            ->values();
+    }
+
     /** @return Collection<int, KnowledgeBaseVersion> */
     public function relevant(
         User $user,

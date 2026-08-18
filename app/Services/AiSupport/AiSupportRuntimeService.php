@@ -22,6 +22,9 @@ class AiSupportRuntimeService
         private readonly AiSupportRecapService $recaps,
         private readonly AiSupportGuidedTaskService $guidedTasks,
         private readonly FamilyGuidedAssistanceService $familyGuidance,
+        private readonly FamilyIntentResolver $familyIntents,
+        private readonly FamilyIntentCatalog $familyIntentCatalog,
+        private readonly FamilyIntentJourneyService $familyJourneys,
         private readonly AiSupportHandoffService $handoff,
         private readonly NavigationTargetRegistry $navigation,
         private readonly AiSupportRuntimePromptBuilder $prompt,
@@ -66,9 +69,54 @@ class AiSupportRuntimeService
             return;
         }
 
-        if ($actor->role === 'family' && $this->guidedTasks->shouldOfferPaymentMethod($actor, $ticket, $newestMessage)) {
+        if ($actor->role === 'family' && $this->guidedTasks->handleContextualReply($actor, $ticket, $newestMessage)) {
+            return;
+        }
+
+        $intentResolution = $actor->role === 'family'
+            ? $this->familyIntents->resolve($newestMessage)
+            : null;
+        $intentRecord = $intentResolution && $intentResolution['intent_id']
+            ? $this->familyIntentCatalog->find($intentResolution['intent_id'])
+            : null;
+        $paymentFastPath = $actor->role === 'family'
+            && $this->guidedTasks->shouldOfferPaymentMethod($actor, $ticket, $newestMessage);
+        $familyIntent = $actor->role === 'family'
+            ? $this->familyGuidance->intentFor($newestMessage)
+            : null;
+        $preparationRequested = $intentRecord !== null
+            && in_array((string) data_get($intentRecord, 'contracts.prefill', ''), array_keys(app(AiSupportPreparationContractRegistry::class)->all()), true)
+            && preg_match('/\b(?:prepare|draft|write|send|create|copy|duplicate|reuse|update|change|correct|correction|dispute)\b/i', $newestMessage) === 1;
+
+        if ($actor->role === 'family' && ! $paymentFastPath && $familyIntent === null
+            && ($intentResolution['status'] ?? null) === FamilyIntentResolver::STATUS_CLARIFY) {
+            $this->familyJourneys->clarify($actor, $ticket, $intentResolution['candidate_ids']);
+
+            return;
+        }
+        if ($actor->role === 'family' && ($intentResolution['status'] ?? null) === FamilyIntentResolver::STATUS_UNMATCHED) {
+            $this->events->record($ticket, 'intent_unmatched', [
+                'capability_id' => 'support_answers_v1',
+                'result_code' => 'unmatched',
+            ], $actor);
+        }
+
+        if ($preparationRequested) {
+            $this->familyJourneys->respond(
+                $actor,
+                $ticket,
+                $intentRecord,
+                $newestMessage,
+                (string) $intentResolution['source'],
+            );
+
+            return;
+        }
+
+        if ($paymentFastPath) {
             try {
-                $this->guidedTasks->offerPaymentMethod($actor, $ticket);
+                $this->recordRecognizedIntent($ticket, $actor, $intentRecord, (string) ($intentResolution['source'] ?? 'payment_fast_path'));
+                $this->guidedTasks->offerPaymentMethod($actor, $ticket, $intentRecord['intent_id'] ?? null);
             } catch (Throwable $exception) {
                 report($exception);
                 $this->handoff->transfer($actor, $ticket, 'guided_payment_unavailable');
@@ -77,18 +125,35 @@ class AiSupportRuntimeService
             return;
         }
 
-        $familyIntent = $actor->role === 'family'
-            ? $this->familyGuidance->intentFor($newestMessage)
-            : null;
         if ($familyIntent !== null) {
             try {
-                $this->familyGuidance->respond($actor, $ticket, $familyIntent);
+                $this->recordRecognizedIntent($ticket, $actor, $intentRecord, (string) ($intentResolution['source'] ?? 'family_state_fast_path'));
+                $this->familyGuidance->respond($actor, $ticket, $familyIntent, $intentRecord['intent_id'] ?? null);
             } catch (Throwable $exception) {
                 report($exception);
                 $this->handoff->transfer($actor, $ticket, 'family_status_unavailable');
             }
 
             return;
+        }
+
+        if ($intentRecord !== null) {
+            $stages = (array) data_get($intentRecord, 'capability_stages.current', []);
+            $handledDeterministically = $preparationRequested
+                || in_array('Human', $stages, true)
+                || (! in_array('Prepare', $stages, true) && ! in_array('Execute', $stages, true));
+            if ($handledDeterministically) {
+                $this->familyJourneys->respond(
+                    $actor,
+                    $ticket,
+                    $intentRecord,
+                    $newestMessage,
+                    (string) $intentResolution['source'],
+                );
+
+                return;
+            }
+            $this->recordRecognizedIntent($ticket, $actor, $intentRecord, (string) $intentResolution['source']);
         }
 
         if (! config('ai_support.provider_enabled', false)) {
@@ -127,7 +192,9 @@ class AiSupportRuntimeService
             return;
         }
 
-        $knowledge = $this->knowledge->relevant($actor, 'support_answers_v1', $newestMessage, 'active');
+        $knowledge = $intentRecord && (array) $intentRecord['kb_stable_ids'] !== []
+            ? $this->knowledge->forIntent($actor, 'support_answers_v1', (array) $intentRecord['kb_stable_ids'], 'active')
+            : $this->knowledge->relevant($actor, 'support_answers_v1', $newestMessage, 'active');
         $draft = AiSupportRequestDraft::query()
             ->where('support_ticket_id', $ticket->id)
             ->where('actor_user_id', $actor->id)
@@ -403,5 +470,21 @@ class AiSupportRuntimeService
             'support.center' => 'Open Support Center',
             default => 'Open page',
         };
+    }
+
+    /** @param array<string,mixed>|null $record */
+    private function recordRecognizedIntent(SupportTicket $ticket, User $actor, ?array $record, string $source): void
+    {
+        if (! $record) {
+            return;
+        }
+        $this->events->record($ticket, 'intent_recognized', [
+            'capability_id' => 'support_answers_v1',
+            'result_code' => 'recognized',
+            'safe_metadata' => [
+                'intent_id' => (string) $record['intent_id'],
+                'resolution_source' => $source,
+            ],
+        ], $actor);
     }
 }

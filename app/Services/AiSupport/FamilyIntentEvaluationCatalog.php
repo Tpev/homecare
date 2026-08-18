@@ -104,4 +104,58 @@ class FamilyIntentEvaluationCatalog
 
         return $this->familyGuidance->intentFor($message);
     }
+
+    public function intentIdFor(string $message): ?string
+    {
+        $handler = $this->classify($message);
+        if ($handler === null) {
+            return null;
+        }
+
+        $messageTokens = $this->tokens($message);
+        $ranked = collect($this->cases())
+            ->where('handler', $handler)
+            ->map(function (array $case) use ($message, $messageTokens): array {
+                $score = collect((array) $case['phrases'])
+                    ->map(fn (string $phrase): float => $this->phraseScore($message, $messageTokens, $phrase))
+                    ->max() ?? 0.0;
+
+                return ['intent_id' => (string) $case['intent_id'], 'score' => $score];
+            })
+            ->sortByDesc('score')
+            ->values();
+
+        return $ranked->first()['intent_id'] ?? null;
+    }
+
+    /** @param list<string> $messageTokens */
+    private function phraseScore(string $message, array $messageTokens, string $phrase): float
+    {
+        $normalizedMessage = $this->normalize($message);
+        $normalizedPhrase = $this->normalize($phrase);
+        if ($normalizedMessage === $normalizedPhrase) {
+            return 10.0;
+        }
+
+        $phraseTokens = $this->tokens($phrase);
+        $intersection = count(array_intersect($messageTokens, $phraseTokens));
+        $union = max(1, count(array_unique(array_merge($messageTokens, $phraseTokens))));
+
+        return ($intersection / max(1, count($phraseTokens))) + ($intersection / $union);
+    }
+
+    /** @return list<string> */
+    private function tokens(string $value): array
+    {
+        $stop = ['a', 'an', 'and', 'are', 'can', 'do', 'for', 'help', 'i', 'is', 'it', 'me', 'my', 'of', 'please', 'the', 'to', 'with'];
+
+        return collect(preg_split('/[^a-z0-9]+/', $this->normalize($value)) ?: [])
+            ->filter(fn (string $token): bool => mb_strlen($token) >= 2 && ! in_array($token, $stop, true))
+            ->unique()->values()->all();
+    }
+
+    private function normalize(string $value): string
+    {
+        return trim((string) preg_replace('/\s+/', ' ', mb_strtolower($value)));
+    }
 }

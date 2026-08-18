@@ -10,6 +10,7 @@
         ? str($ticket->assignedAdmin->name)->before(' ')->value()
         : null;
     $guidedTaskClient = $this->guidedTaskClient;
+    $startExperience = $ticket ? null : $this->startExperience;
 @endphp
 
 <div
@@ -29,6 +30,7 @@
     x-on:support-chat-action-completed.window="actionCompleted()"
     x-on:support-chat-guidance-failed.window="guidanceFailed($event.detail)"
     x-on:support-chat-guidance-completed.window="guidanceCompleted()"
+    x-on:support-chat-focus-composer.window="$nextTick(() => $refs.composer?.focus())"
     x-on:keydown.window="handleKeydown($event)"
     x-on:online.window="wentOnline()"
     x-on:offline.window="wentOffline()"
@@ -158,7 +160,7 @@
             @endif
 
             @if (! $ticket)
-                <div class="mx-auto flex min-h-full max-w-xs flex-col items-center justify-center px-3 py-8 text-center">
+                <div class="mx-auto flex min-h-full w-full max-w-sm flex-col items-center justify-center px-3 py-6 text-center">
                     <span class="flex h-14 w-14 items-center justify-center rounded-full bg-[#E7F2EE] text-[#0F5B52]" aria-hidden="true">
                         <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 18.5 4 20l1.15-3.45A8 8 0 1 1 7.5 18.5Z" />
@@ -166,7 +168,21 @@
                         </svg>
                     </span>
                     <h3 class="mt-4 font-display text-xl font-semibold text-[#17313F]">Hi {{ $firstName }}. How can we help?</h3>
-                    <p class="mt-2 text-sm leading-6 text-[#68727D]">Send your question and a LoLo support team member will reply here.</p>
+                    <p class="mt-2 text-sm leading-6 text-[#68727D]">{{ $startExperience ? 'Choose one, or ask in your own words.' : 'Send your question and a LoLo support team member will reply here.' }}</p>
+                    @if($startExperience)
+                        @if((array) ($startExperience['personalized'] ?? []))
+                            <div class="mt-5 w-full space-y-2" aria-label="Suggested next steps">
+                                @foreach((array) $startExperience['personalized'] as $suggestion)
+                                    <button type="button" wire:click="chooseStartAction(@js($suggestion['message']))" wire:loading.attr="disabled" class="min-h-12 w-full rounded-xl bg-[#23483F] px-4 text-left text-base font-semibold text-white disabled:opacity-60">{{ $suggestion['label'] }}</button>
+                                @endforeach
+                            </div>
+                        @endif
+                        <div class="mt-4 grid w-full grid-cols-2 gap-2" aria-label="Ways LoLo can help">
+                            @foreach((array) ($startExperience['general'] ?? []) as $choice)
+                                <button type="button" wire:click="chooseStartAction(@js($choice['message'] ?? ''))" wire:loading.attr="disabled" class="min-h-12 rounded-xl border border-[#C8D8D3] bg-white px-3 text-left text-sm font-semibold text-[#17313F] disabled:opacity-60">{{ $choice['label'] }}</button>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             @else
                 <div class="space-y-3">
@@ -226,14 +242,33 @@
                                                 >{{ $choice['label'] }}</button>
                                             @endforeach
                                         </div>
+                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_INTENT_CHOICES && $actionActive)
+                                        <div class="mt-3 grid gap-2" aria-label="Choose what you need help with">
+                                            @foreach ((array) ($actionPayload['choices'] ?? []) as $choice)
+                                                <button type="button" wire:click="chooseIntent('{{ $action->id }}', '{{ $choice['id'] }}')" wire:loading.attr="disabled" class="min-h-12 rounded-xl bg-[#23483F] px-4 text-left text-sm font-semibold text-white disabled:opacity-60">{{ $choice['label'] }}</button>
+                                            @endforeach
+                                        </div>
                                     @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_GUIDED_TASK && $actionActive)
-                                        <button
-                                            type="button"
-                                            wire:click="startGuidedTask('{{ $action->id }}')"
-                                            wire:loading.attr="disabled"
-                                            x-on:click="closeForNavigation()"
-                                            class="support-chat-action mr-2 mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white disabled:opacity-60"
-                                        >{{ $actionPayload['label'] ?? 'Show me where' }}</button>
+                                        <div class="mt-3 space-y-2" aria-label="Guided task actions">
+                                            @if(filled($actionPayload['progress'] ?? null))
+                                                <p class="text-xs font-semibold text-[#526474]">{{ $actionPayload['progress'] }}</p>
+                                            @endif
+                                            <button
+                                                type="button"
+                                                wire:click="startGuidedTask('{{ $action->id }}')"
+                                                wire:loading.attr="disabled"
+                                                x-on:click="closeForNavigation()"
+                                                class="support-chat-action inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white disabled:opacity-60"
+                                            >{{ $actionPayload['label'] ?? 'Show me where' }}</button>
+                                            @if(($actionPayload['secondary_action'] ?? null) === 'check_again')
+                                                <button
+                                                    type="button"
+                                                    wire:click="checkGuidedTask('{{ $actionPayload['guided_task_id'] }}')"
+                                                    wire:loading.attr="disabled"
+                                                    class="min-h-11 w-full rounded-xl border border-[#0F5B52] px-4 text-sm font-semibold text-[#0F5B52] disabled:opacity-60"
+                                                >Check again</button>
+                                            @endif
+                                        </div>
                                     @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_NAVIGATE && $actionActive)
                                         <a
                                             href="{{ $actionPayload['url'] }}"
@@ -241,6 +276,20 @@
                                             x-on:click="closeForNavigation()"
                                             class="support-chat-action mt-3 inline-flex min-h-11 items-center rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white"
                                         >{{ $actionPayload['label'] ?? 'Open page' }}</a>
+                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_PREPARATION && $actionActive)
+                                        <section class="mt-3 rounded-2xl border border-[#C8DDD7] bg-white p-4 text-sm text-[#17313F]" aria-label="Prepared editable details">
+                                            <h3 class="font-display text-base font-bold">{{ $actionPayload['title'] ?? 'Prepared details' }}</h3>
+                                            <dl class="mt-2 space-y-2">
+                                                @foreach((array) ($actionPayload['visible_fields'] ?? []) as $field)
+                                                    <div><dt class="font-semibold">{{ $field['label'] }}</dt><dd class="whitespace-pre-line break-words">{{ $field['value'] }}</dd></div>
+                                                @endforeach
+                                            </dl>
+                                            <p class="mt-3 rounded-xl bg-amber-50 p-2 text-xs font-semibold text-amber-950">Not saved or sent. You can edit every value in the app.</p>
+                                            <div class="mt-3 grid gap-2">
+                                                <button type="button" wire:click="openPreparation('{{ $action->id }}')" wire:loading.attr="disabled" x-on:click="closeForNavigation()" class="min-h-11 rounded-xl bg-[#23483F] px-4 text-sm font-semibold text-white disabled:opacity-60">{{ $actionPayload['label'] ?? 'Review in the app' }}</button>
+                                                <button type="button" wire:click="cancelPreparation('{{ $actionPayload['preparation_id'] }}')" class="min-h-11 rounded-xl border border-[#0F5B52] px-4 text-sm font-semibold text-[#0F5B52]">Discard prepared details</button>
+                                            </div>
+                                        </section>
                                     @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_RECAP && ! $action->invalidated_at && ! $action->consumed_at)
                                         @php $recap = (array) ($actionPayload['recap'] ?? []); @endphp
                                         <section
@@ -411,6 +460,8 @@
                     @error('conversation') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
                     @error('confirmation') <p id="support-chat-confirmation-error" class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
                     @error('guidedTask') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
+                    @error('preparation') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
+                    @error('intent') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
                 </form>
             @endif
 

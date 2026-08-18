@@ -2,10 +2,12 @@
 
 namespace App\Livewire\Admin\AiSupport;
 
+use App\Models\AiSupportInteractionEvent;
 use App\Models\AiSupportPilotGrant;
 use App\Models\KnowledgeBaseEntry;
 use App\Models\KnowledgeBaseVersion;
 use App\Services\AiSupport\AiSupportControlService;
+use App\Services\AiSupport\FamilyIntentCatalog;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -13,14 +15,33 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Overview extends Component
 {
+    public string $intentSearch = '';
+
     public function mount(): void
     {
         abort_unless(auth()->user()?->canViewAiSupportPilot(), 403);
     }
 
-    public function render(AiSupportControlService $controls): View
+    public function render(AiSupportControlService $controls, FamilyIntentCatalog $intentCatalog): View
     {
         $now = now();
+        $intentRecords = collect($intentCatalog->records());
+        $search = mb_strtolower(trim($this->intentSearch));
+        $visibleIntentRecords = $intentRecords
+            ->when($search !== '', fn ($records) => $records->filter(fn (array $record): bool => str_contains(mb_strtolower(implode(' ', [
+                $record['intent_id'], $record['domain'], $record['intent'], implode(' ', (array) $record['kb_stable_ids']),
+            ])), $search)))
+            ->values();
+        $outcomeTypes = [
+            'intent_unmatched', 'intent_looped', 'intent_failed', 'intent_verification_failed',
+            'intent_recovery_offered', 'guided_action_recovery', 'intent_transferred', 'handoff_completed',
+        ];
+        $recentOutcomes = AiSupportInteractionEvent::query()
+            ->whereIn('event_type', $outcomeTypes)
+            ->where('occurred_at', '>=', now()->subDays(30))
+            ->latest('occurred_at')
+            ->limit(500)
+            ->get();
 
         return view('livewire.admin.ai-support.overview', [
             'runtimeAvailable' => (bool) config('ai_support.runtime_available', false),
@@ -59,6 +80,16 @@ class Overview extends Component
                 ->active()
                 ->whereHas('workingVersion', fn ($version) => $version->whereDate('review_by', '<', today()))
                 ->count(),
+            'intentCoverage' => $intentCatalog->coverageSummary(),
+            'intentDomains' => $intentRecords->groupBy('domain')->map(fn ($records, string $domain): array => [
+                'domain' => $domain,
+                'total' => $records->count(),
+                'mapped' => $records->filter(fn (array $record): bool => (array) $record['kb_stable_ids'] !== [])->count(),
+                'pilot' => $records->where('rollout_state', 'pilot')->count(),
+            ])->values(),
+            'intentRecords' => $visibleIntentRecords,
+            'recentIntentOutcomes' => $recentOutcomes->take(30),
+            'intentOutcomeCounts' => $recentOutcomes->countBy('event_type'),
         ]);
     }
 }

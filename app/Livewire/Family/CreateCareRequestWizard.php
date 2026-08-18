@@ -7,6 +7,7 @@ use App\Models\CareRequest;
 use App\Models\CareTask;
 use App\Models\FamilyHouseholdProfile;
 use App\Models\FamilyRecipientProfile;
+use App\Services\AiSupport\AiSupportPreparationService;
 use App\Services\CareRecipientProfiles\CareRecipientProfileService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Support\FamilyQuickRequestDraft;
@@ -41,6 +42,8 @@ class CreateCareRequestWizard extends Component
     public array $lastRequestSummary = [];
 
     public bool $prefillApplied = false;
+
+    public bool $aiPrepared = false;
 
     public bool $savedProfilesApplied = false;
 
@@ -232,6 +235,31 @@ class CreateCareRequestWizard extends Component
                 'request_type' => (string) $lastRequest->request_type,
                 'recipient' => (string) ($lastRequest->recipient?->full_name ?? 'Care recipient'),
             ];
+        }
+
+        $prepared = app(AiSupportPreparationService::class)->consume($user, 'care_request_reuse_v1');
+        $map = [
+            'recipient_profile_id' => 'selected_care_recipient_profile_id', 'recipient_name' => 'recipient_full_name',
+            'additional_info' => 'additional_info', 'address_line1' => 'address_line1', 'address_line2' => 'address_line2',
+            'city' => 'city', 'state' => 'state', 'postal_code' => 'zip', 'home_access_notes' => 'home_access_notes',
+            'request_type' => 'request_type',
+        ];
+        foreach ($prepared as $key => $value) {
+            if (isset($map[$key]) && (is_scalar($value) || $value === null)) {
+                $property = $map[$key];
+                $this->{$property} = $key === 'recipient_profile_id' ? ((int) $value ?: null) : (string) $value;
+            }
+        }
+        if (is_array($prepared['task_ids'] ?? null)) {
+            $this->selectedTasks = array_map('intval', $prepared['task_ids']);
+        }
+        if (is_array($prepared['task_notes'] ?? null)) {
+            $this->taskNotes = $prepared['task_notes'];
+        }
+        if ($prepared !== []) {
+            $this->aiPrepared = true;
+            $this->prefillApplied = true;
+            $this->modeChosen = true;
         }
     }
 

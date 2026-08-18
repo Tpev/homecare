@@ -1,6 +1,6 @@
 # Family Chat Operator Master Coverage and Delivery Plan
 
-Status: Active master plan; Batches 1 and 2 and Family Operations KB Wave 1 are implemented in source
+Status: Active master plan; Batches 1 through 3 implemented; Batch 4 is next
 
 Audited: August 18, 2026
 
@@ -31,14 +31,14 @@ This plan reconciles the source repository rather than treating previous summari
 - both governed knowledge packages and their evaluation catalogs;
 - runtime intent routing, authorized Family context, guided tasks, semantic navigation, request drafting, confirmation, publication, and human handoff;
 - Admin knowledge creation, editing, validation, review, publication, pause, versioning, withdrawal, and deletion;
-- the Batch 1-2 mass-evaluation corpus and the complete AI Support feature suite; and
+- the Batch 1–3 executable catalog, mass-evaluation corpus, preparation contracts, and complete AI Support feature suite; and
 - the mobile and task-first corrections recorded in documents 42 and 43.
 
 The following verification passed on August 18, 2026:
 
 | Verification | Result |
 | --- | ---: |
-| Complete AI Support feature suite | 139 tests / 1,277 assertions passed |
+| Complete AI Support feature suite | 149 tests / 2,768 assertions passed |
 | Batch 1-2 registry inventory | 40 / 40 intents |
 | Batch 1-2 representative phrases | 122 |
 | Near-neighbor routing collisions | 10 / 10 protected |
@@ -49,6 +49,10 @@ The following verification passed on August 18, 2026:
 | Family Operations intent mapping | 217 links / 190 unique Family intents |
 | Family Operations KB evaluations | 255 |
 | Interactive request/provider cases | 56 |
+| Executable Family intent catalog | 324 / 324 |
+| Explicit Wave 1 KB mappings | 190 / 190 |
+| Catalog phrase definitions | 1,296 |
+| Batch 3 isolated operating-layer assertions | 1,491 |
 
 ## Current capability inventory
 
@@ -65,7 +69,7 @@ The registry contains 324 unique Family intents.
 
 Information coverage is also incomplete: 86 intents have a governed or otherwise approved explanation, 62 have partial explanation, and 176 have no approved answer.
 
-The 40-intent Batch 1-2 harness is a verified implemented slice, not a claim that all 324 intents are understood or handled.
+All 324 intents now have an executable disposition, but the 40-intent Batch 1–2 deep runtime slice remains the verified domain read/guide subset. A valid backlog or human disposition is not a claim that the assistant executes that intent.
 
 ### Coverage by Family domain
 
@@ -108,43 +112,42 @@ The current implementation already has the correct foundations to expand rather 
 - a mobile full-screen conversation, latest-message behavior, focus preservation, and a persistent human-help action; and
 - compact event, cost, action, and handoff evidence visible through existing support and Admin surfaces.
 
-### Current runtime limitations
+### Current runtime limitations after Batch 3
 
-The current implementation is not yet a general Family-account operator:
+The operating layer is implemented, but domain breadth is still incomplete:
 
-- deterministic routing recognizes only nine broad Family state areas plus saved-payment-method help;
-- KB retrieval is term-frequency matching, which will not scale safely to hundreds of close intents without explicit intent-to-KB mapping;
+- all 324 intents are cataloged, while only the high-confidence handlers and explicitly prepared paths have deep runtime authority;
+- known intents use explicit KB mappings, but many rows still lack governed knowledge or authorized live-state readers;
 - the model may answer, choose a care path, patch a care-request draft, propose an allowlisted navigation target, or transfer, but it cannot invoke general Family tools;
 - only care-request publication has a registered confirmed domain write;
 - Batch 2 guidance does not approve hours, accept or reject a visit change, send a message, edit a profile, retry a care payment, or mutate another domain record;
 - authoritative completion verification is complete for care-request publication and the saved-payment-method journey, not for every highlighted control;
-- follow-up recovery such as “yes,” “take me there,” or “I am the owner” is corrected for the payment journey but is not yet a universal active-task behavior;
-- there is no state-aware chat start screen with simple personalized task choices;
-- no generic prefill contract exists for Family forms outside the care-request draft; and
-- the mass harness covers 40 intents, leaving 284 registry rows without equivalent executable evaluation coverage.
+- the five preparation contracts fill existing forms but deliberately do not save, send, approve, dispute, publish, or submit;
+- support for payment/time recovery, hiring, visit changes, regular care, Family administration, Continuous Coverage, and exceptional outcomes still needs domain-specific readers, targets, verifiers, and narrow tools; and
+- pricing remains held until product and payment-code truth are reconciled.
 
 ### Master execution board
 
 | Workstream | Current position | Target | Delivery state |
 | --- | --- | --- | --- |
-| Intent portfolio | 324 documented rows; 40 in the executable mass corpus | All 324 have a machine-readable disposition and every implemented row has evidence links | Next: Batch 3A |
-| Governed knowledge | 24 existing definitions plus 50 Wave 1 definitions in source; production publication pending | Stable domain packs mapped explicitly to every Explain-capable intent | Wave 1 implemented; deploy/publish next |
-| Intent resolution | Safety/payment fast paths, nine broad Family state handlers, bounded model fallback | Deterministic active-task routing plus bounded catalog classification and clarification | Next: Batch 3A |
+| Intent portfolio | 324 / 324 executable dispositions; 40 deep read/guide runtime rows | Every implemented row retains evidence and rollout state | Batch 3 complete; expand by domain |
+| Governed knowledge | Family Operations Wave 1 published; 190 explicit catalog mappings | Stable domain packs mapped explicitly to every Explain-capable intent | Wave 1 complete; Batch 4 pack next |
+| Intent resolution | Layered safety, active task, deterministic prep/handlers, catalog classification, bounded fallback | Add high-confidence domain handlers only with authority/evidence | Batch 3 complete |
 | Authorized reads | Overview plus payment, requests, visits, hours, profiles, messages, history, and regular care | Narrow normalized readers for every state-dependent supported intent | Expands Batches 4-9 |
 | Navigation and guidance | 24 Family destinations; 19 exact highlights | Every guided intent has a resource-authorized target, one-step instruction, and recovery behavior | Foundation complete; coverage expands by domain |
-| Preparation/prefill | Care-request chat draft only | Versioned non-secret prefill contracts for supported Family forms | Next: Batch 3B |
+| Preparation/prefill | Five reversible Batch 3 contracts plus care-request chat draft | Add domain contracts only for supported existing forms | Batch 3 complete; expand by domain |
 | Confirmed execution | Two request-publication tools | Narrow confirmed tools for appropriate existing domain services | Expands Batches 4-8 |
-| Authoritative verification | Care-request publication and saved payment method | Every complete journey has a domain receipt or fresh state verifier | Interface in 3A; expands by domain |
+| Authoritative verification | Generic registry; request receipt and saved payment method proven; unavailable verifier is explicit | Every complete journey has a domain receipt or fresh state verifier | Interface complete; expands by domain |
 | Human support | Atomic same-conversation transfer, Admin alert, context summary | Human terminal path for every judgment/exception intent with no repetition | Implemented; refine with domain context |
-| Older-adult UI | Mobile full-screen chat, focus preservation, action cards, guide highlight | State-aware start, universal follow-ups, no-repeat recovery, progress, resume, and verified closure | Next: Batch 3A |
-| Evaluation | 40 runtime intents, 122 phrases, 10 collisions, 255 Wave 1 KB cases, 139 feature tests | Per-intent routing plus multi-turn outcome, state, browser, and usability coverage | Expands with every batch |
-| Admin visibility | KB lifecycle, support transcripts, compact events, Pilot/Everyone control | Intent coverage, unmatched requests, repeated loops, task funnel, and recovery reporting | Next: Batch 3A |
+| Older-adult UI | State-aware start, mobile chat, universal contextual follow-ups, action progress, recovery, and guide highlight | Complete more domain journeys without adding cognitive load | Batch 3 complete; usability expands by domain |
+| Evaluation | 324 catalog rows, 190 mappings, 1,296 phrases, 40 deep runtime intents, 122 routes, 10 collisions | Per-intent multi-turn, state, browser, and usability coverage | Batch 3 complete; expands every batch |
+| Admin visibility | KB lifecycle, transcripts, Availability, searchable 324-intent catalog, and compact outcome summary | Add useful domain funnel detail without transcript duplication | Batch 3 complete; refine by domain |
 
 ## Knowledge-base audit
 
 ### Current governed inventory
 
-There are 24 previously governed source definitions. The documented production lifecycle has 23 Published entries and one validated Draft held outside retrieval. Family Operations KB Wave 1 now adds 50 new source definitions and one corrective version of an existing definition; production counts change only after deployment and the explicit package-publication command in [document 45](45-family-operations-kb-wave-1.md).
+Family Operations KB Wave 1 has been published in production and its 190 covered intent rows are explicitly mapped by the Batch 3 catalog. The held pricing entry remains outside retrieval. See [document 45](45-family-operations-kb-wave-1.md) for package scope and publication verification.
 
 | Package | Entries | Current scope |
 | --- | ---: | --- |
@@ -286,7 +289,7 @@ The model never constructs or directly invokes an unrestricted database mutation
 
 ## Delivery roadmap
 
-### Completed foundation — Batches 0 through 2
+### Completed foundation — Batches 0 through 3
 
 - governed KB lifecycle and Admin control plane;
 - Pilot/Everyone/Emergency-stop availability;
@@ -294,9 +297,16 @@ The model never constructs or directly invokes an unrestricted database mutation
 - saved-payment-method read, secure guidance, and verified completion;
 - Family overview and read/guide coverage for requests, applicants, visits, submitted hours, payment attention, profiles, messages, history, and regular care;
 - mobile chat polish and task-first payment correction; and
-- the 40-intent mass harness plus runtime safety regression.
+- the 40-intent deep runtime harness plus runtime safety regression;
+- the executable 324-intent catalog and 190 explicit Wave 1 mappings;
+- state-aware Family start choices and universal active-task continuation/recovery;
+- generic authoritative verifier and content-free intent telemetry contracts;
+- searchable Admin intent coverage and outcome reporting; and
+- five reversible preparation contracts for profile, request reuse, caregiver message, submitted-hours correction/dispute, and support intake.
 
 ### Batch 3A — Family operating layer
+
+Implementation status: Complete in source on August 18, 2026. Production availability is unchanged.
 
 Build the reusable behavior required by every later vertical:
 
@@ -312,6 +322,8 @@ Build the reusable behavior required by every later vertical:
 Acceptance requires the existing 40 intents and payment journey to use the common task behavior without regression. A user who says “yes,” “take me there,” “I did it,” or “I cannot find it” after any supported guide receives context-aware continuation rather than a repeated generic answer.
 
 ### Batch 3B — Safe preparation
+
+Implementation status: Complete in source on August 18, 2026. Final save/send/submission remains in the existing UI.
 
 Add reversible prefill and draft contracts for:
 
@@ -553,18 +565,17 @@ Keep serving cost low by using the model once for a genuinely new or ambiguous g
 
 ## Immediate implementation recommendation
 
-The next build should be **Batch 3A and 3B**, delivered in that order but treated as one product phase:
+Batch 3A and 3B are implemented. The next build is **Batch 4 — Payments, submitted hours, and recovery**:
 
-1. create the executable Family intent catalog and map the current 40 implemented intents;
-2. add the state-aware chat home;
-3. generalize active-task follow-ups and no-repeat recovery beyond payment;
-4. add the generic prefill and completion-verifier contracts;
-5. implement care-profile, request-reuse, message-draft, hours-correction, and support-intake preparation;
-6. extend the mass runner with multi-turn outcome scenarios for every new journey;
-7. add intent/task completion reporting to the Admin experience; and
-8. pilot the complete phase with the existing two Family users while **Everyone** remains off.
+1. add narrow normalized readers for authorization/capture/failure and submitted-hours difference states;
+2. author or reconcile the exact governed knowledge required for those states;
+3. add exact secure recovery targets and authoritative verifiers;
+4. reuse the submitted-hours preparation contract for corrections/disputes;
+5. promote only low-ambiguity existing domain actions through explicit recap/confirmation and a domain receipt;
+6. add multi-turn, wrong-account, stale-state, failure, browser, and older-adult tests; and
+7. keep the exact two-user pilot and **Everyone** off during implementation and initial verification.
 
-After Batch 3, implement Batch 4 payment/time recovery before expanding into the higher-impact hiring and regular-care mutations. That order gives older users useful help with the problems most likely to create anxiety while reusing the strongest existing application workflows.
+The Batch 3 implementation record is [document 46](46-family-operating-layer-batch-3.md). After Batch 4, expand into hiring and regular-care mutations in the planned order.
 
 ## Maintenance rule
 

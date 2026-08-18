@@ -1,5 +1,8 @@
 <div>
     <div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
+        @if($aiPrepared)
+            <x-alert color="blue">LoLo copied these details into the form. Review and edit everything before you publish. No request was created automatically.</x-alert>
+        @endif
         @if (session('status'))
             <x-alert color="green">{{ session('status') }}</x-alert>
         @endif

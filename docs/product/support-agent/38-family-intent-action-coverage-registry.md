@@ -1,6 +1,6 @@
 # Family Intent and AI Action Coverage Registry
 
-Status: Active coverage registry; Family read-and-guide Batch 2 implemented in source
+Status: Active coverage registry; executable Batch 3 catalog generated and validated from all 324 rows
 
 Established: August 17, 2026
 
@@ -17,15 +17,15 @@ This registry answers two separate questions for every likely Family-user intent
 
 It is deliberately broader than the current AI feature. It inventories the actual Family-facing application, then adds probable user needs and failure cases that may not yet have a complete product flow. A row marked as a product gap must not be mistaken for an AI implementation task until Product defines the underlying app behavior.
 
-Baseline source: production-oriented repository state audited August 17, 2026, plus the 23 published governed KB entries and held pricing entry. Payment-method rows include Batch 1 and the request, visit, hours, profile, message, history, care-payment, and Family-overview rows include the Batch 2 source implementation. Production availability remains controlled separately. Re-audit this registry whenever a Family workflow, AI tool, governed KB entry, or authorization rule changes.
+Baseline source: production-oriented repository state audited August 18, 2026, the governed KB inventory including Family Operations Wave 1, and the Batch 3 operating layer. Payment-method rows include Batch 1; request, visit, hours, profile, message, history, care-payment, and Family-overview rows include Batch 2; every row now has an executable disposition; and five reversible preparation families are implemented in Batch 3. Production availability remains controlled separately. Re-audit this registry whenever a Family workflow, AI tool, governed KB entry, or authorization rule changes.
 
 The phased implementation and testing sequence for moving this portfolio from explanation/navigation to verified task completion is defined in the [Family chat operator master coverage and delivery plan](44-family-chat-operator-master-plan.md).
 
 ## Automated coverage of implemented rows
 
-The registry is the 324-intent demand backlog. The machine-readable [Family Batch 1-2 evaluation harness](40-family-batch-1-2-evaluation-harness.md) currently covers the exact **40** rows changed by guided-assistance Batches 1 and 2: six Batch 1 saved-payment-method rows and 34 Batch 2 overview/read/guide rows.
+The registry is the human-readable source for the generated 324-intent executable catalog. The [Family Batch 1–3 evaluation harness](40-family-batch-1-2-evaluation-harness.md) validates **324 / 324** catalog records, **190 / 190** explicit Wave 1 KB mappings, and **1,296** phrase definitions. Its deep runtime regression continues to cover the exact **40** read/guide rows implemented in Batches 1 and 2, plus the reusable Batch 3 task, verifier, preparation, start-card, security, and Admin contracts.
 
-The August 18, 2026 corrective baseline passed 40 of 40 intent mappings, 121 of 121 representative phrasings, 10 of 10 collision cases, and 30 application tests with 367 assertions. It uses an isolated in-memory database and makes zero provider calls. The other **284** registry rows are not implied to have mass-test coverage by that result. Guide coverage also remains distinct from completing the underlying domain action.
+The August 18, 2026 Batch 3 baseline passed 324 of 324 catalog records, 190 of 190 KB mappings, 122 of 122 implemented routing phrases, 10 of 10 collision cases, and 41 isolated application tests with 1,862 assertions. It uses an isolated in-memory database and makes zero provider calls. Catalog validation is not a claim that all 324 intents can execute a domain action: each record's current stages and rollout state remain authoritative. Guide and preparation coverage remain distinct from completion.
 
 ## Status legend
 
@@ -68,6 +68,8 @@ This registry contains **324 unique Family intents**.
 | AI can do now | 6 complete | 100 draft/navigation/guide/partial-read | 176 | 42 |
 
 The counts are intent-level inventory indicators, not quality scores. One implementation may cover several rows, and one row may require several KB entries, read contracts, tools, and failure tests. Update the counts when row statuses change.
+
+Batch 3 adds an executable operational view without rewriting these baseline inventory counts. The generated catalog records the current stage, target stage, rollout state, explicit KB mapping, narrow contract references, unsupported behavior, and evaluation IDs for every row. The application rejects a stale generated catalog by comparing this file's SHA-256 hash.
 
 ## Recommended target behavior vocabulary
 
@@ -522,6 +524,15 @@ For every Family-facing product or AI change:
 This registry is the portfolio tracker. Individual capability specifications remain the implementation authority for any new read or write tool.
 
 The reusable contract for live state, exact navigation, accessible highlighting, prefill, and completion verification is [App-aware guided assistance](39-app-aware-guided-assistance.md).
+
+After editing any row, regenerate and validate the executable catalog before committing:
+
+```bash
+php tools/generate_family_intent_catalog.php
+php artisan ai-support:test-family-intents --plan
+```
+
+The Batch 3 implementation details and preserved boundaries are recorded in [Family Operating Layer — Batch 3A and 3B](46-family-operating-layer-batch-3.md).
 
 ## 17. Repository audit basis
 

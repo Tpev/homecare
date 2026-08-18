@@ -1,16 +1,16 @@
-# Family Batch 1-2 Evaluation Harness
+# Family Batch 1–3 Evaluation Harness
 
-Status: Implemented and passing in source
+Status: Expanded for Batch 3 and passing in source
 
 Established: August 17, 2026
 
 Owner: Product and Engineering
 
-Scope: The exact 40 Family intent rows currently covered by guided-assistance Batches 1 and 2
+Scope: All 324 executable Family intent dispositions, 190 explicit KB mappings, and deep runtime coverage for the 40 Batch 1–2 read/guide rows plus Batch 3 operating-layer contracts
 
 ## Outcome
 
-LoLo now has one repeatable command that tests the complete declared Batch 1/2 Family intent slice:
+LoLo now has one repeatable command that validates the complete Family intent catalog and tests the implemented Family operating layer:
 
 ```bash
 php artisan ai-support:test-family-intents
@@ -33,11 +33,18 @@ The first complete run on August 17, 2026 passed:
 | Provider calls | 0 |
 | Production database writes | 0 |
 
-The same corpus/router inventory was then deployed through the normal production workflow at commit `0655b5b54e12ff8abffb6d00dcb81b723bd4a504`. Production `--plan` passed all 40 registry intents, 120 routing phrases, and 10 collision cases using zero provider calls and no database write.
+The original Batch 1–2 corpus/router inventory was deployed through the normal production workflow at commit `0655b5b54e12ff8abffb6d00dcb81b723bd4a504`. Production `--plan` passed all 40 implemented registry intents, 120 routing phrases, and 10 collision cases using zero provider calls and no database write.
 
 The first corrective run on August 18, 2026 expanded the same 40-row corpus to 121 phrases. It passed 121 of 121 phrases, 10 of 10 collision cases, 40 of 40 registry intents, and 30 application tests with 367 assertions. It continued to use isolated in-memory SQLite, made zero provider calls, and made zero production writes. Those cases lock natural “status of my care request” wording and dedicated regular-care status/plan routing.
 
 The task-navigation correction later that day expanded the corpus to 122 phrases with the exact pilot wording **“Hi, I want to use another credit card.”** The full runner passed 122 of 122 phrases, 10 of 10 collision cases, all 40 intents, and 32 application tests with 376 assertions. The deterministic payment-specific regression also proves that the exact phrase and its “I’m the account owner” follow-up create the authorized **Update payment method** action with zero provider calls.
+
+Batch 3 expands the same command into two complementary layers:
+
+- structural validation of all **324 / 324** executable intent records, **190 / 190** explicit Wave 1 KB mappings, and **1,296** phrase definitions; and
+- deep isolated application regression for the 40 implemented Batch 1–2 vertical intents plus universal task, verifier, preparation, state-aware home, authorization, retention, and Admin reporting contracts.
+
+The August 18 Batch 3 run passed 122 of 122 implemented routing phrases, 10 of 10 collisions, and 42 application tests with 1,867 assertions. It made zero provider calls and used no production database.
 
 ## Production browser QA record
 
@@ -113,7 +120,7 @@ The catalog validator fails if an ID is missing, duplicated, malformed, has fewe
 
 ### 1. Language routing and collision protection
 
-`FamilyIntentCoverageTest` checks all 122 phrasings and the 10 near-neighbor cases. The collision set protects existing or later flows such as request creation, passwords, refunds, Family invitations, account deletion, caregiver browsing, medical help, human transfer, general product information, and notification settings.
+`FamilyIntentCoverageTest` checks all 122 implemented phrasings and the 10 near-neighbor cases. `Batch3FamilyOperatingLayerTest` validates all 324 catalog records, 190 explicit mappings, five preparation families, contextual task recovery, verifier truthfulness, state-aware home, security boundaries, and Admin coverage. The collision set protects existing or later flows such as request creation, passwords, refunds, Family invitations, account deletion, caregiver browsing, medical help, human transfer, general product information, and notification settings.
 
 The mass corpus found real natural-language gaps during its first implementation. The deterministic router was expanded to understand plural care profiles, ordinary applicant wording, natural request-status phrasing, pending charge wording, failed time-correction payments, scheduled-care wording, visit-change decisions, corrected hours, completed extra visits, and regular-care history. The expected cases were not weakened to hide those misses.
 
@@ -156,6 +163,20 @@ The mass corpus found real natural-language gaps during its first implementation
 - completed extra-visit payment attention.
 
 These tests assert that domain records remain unchanged. Expected AI-support records—messages, guided tasks/actions, and compact events—are allowed because they are the support feature's output. The tests also assert that no model request or `model_turn_completed` event occurs.
+
+### 5. Batch 3 operating-layer contracts
+
+`Batch3FamilyOperatingLayerTest` proves:
+
+- exact catalog and KB-mapping counts and required schema;
+- deterministic resolution of the existing 40 stable IDs;
+- active-task continuation, check-again, repeated-failure recovery, and stop without a provider;
+- no false completion when a verifier is unavailable;
+- all five preparation contracts hydrate only their authorized existing form and do not mutate domain state;
+- secret-field and cross-account denial;
+- no message send from preparation;
+- no more than three personalized home suggestions plus the six general choices; and
+- searchable Admin catalog and content-free outcome summaries.
 
 ## Commands
 
@@ -205,7 +226,7 @@ If the shared runtime regression fails, no selected intent is reported as passed
 
 ## What this harness does not claim
 
-- It does not test all 324 Family registry rows. It tests the exact 40 rows declared as Batch 1/2 Read/Guide coverage.
+- It structurally validates all 324 Family registry rows, but deep end-to-end domain behavior remains limited to implemented stages. A valid backlog disposition is not executable action coverage.
 - It does not prove that Batch 2 performs the user's domain action. Batch 2 opens and highlights the normal application control; the user still performs the action. Batch 1 separately verifies the payment-method result after the normal secure flow.
 - It does not replace the existing 56-case provider evaluation for request intake and drafting.
 - It does not make a stochastic model-quality claim because the Batch 1/2 fast paths under test do not call the model.
@@ -223,4 +244,4 @@ Whenever a Batch 1/2 phrase, handler, state reader, authorization rule, navigati
 5. fix the implementation or consciously update the declared product behavior; and
 6. update the coverage registry and this record if the 40-intent scope changes.
 
-New Batch 3+ capabilities should join this runner only after their own expected authority is explicit. A prefill, confirmed write, or verified completion must never inherit a passing Read/Guide result as proof of its stronger behavior.
+New Batch 4+ capabilities must join this runner only after their expected authority is explicit. A prefill, confirmed write, or verified completion must never inherit a passing Read/Guide result as proof of its stronger behavior. The generated catalog must be regenerated after any source-registry edit or the application deliberately fails closed.

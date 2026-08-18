@@ -4,6 +4,7 @@ namespace App\Livewire\Messaging;
 
 use App\Models\CareRequestConversation;
 use App\Models\CareRequestMessage;
+use App\Services\AiSupport\AiSupportPreparationService;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
@@ -17,9 +18,14 @@ use Livewire\Component;
 class Inbox extends Component
 {
     public ?int $activeConversationId = null;
+
     public string $messageBody = '';
+
     public string $search = '';
+
     public int $messagesLimit = 50;
+
+    public bool $aiPrepared = false;
 
     public function mount(?int $conversation = null): void
     {
@@ -28,16 +34,28 @@ class Inbox extends Component
 
         if ($conversation) {
             $this->setActiveConversation($conversation);
-            return;
+        } else {
+            $this->activeConversationId = $this->baseConversationQuery($user)
+                ->orderByDesc('last_message_at')
+                ->orderByDesc('updated_at')
+                ->value('id');
+
+            if ($this->activeConversationId) {
+                $this->markActiveAsRead();
+            }
         }
 
-        $this->activeConversationId = $this->baseConversationQuery($user)
-            ->orderByDesc('last_message_at')
-            ->orderByDesc('updated_at')
-            ->value('id');
-
-        if ($this->activeConversationId) {
-            $this->markActiveAsRead();
+        if ($user->role === 'family' && $this->activeConversationId) {
+            $prepared = app(AiSupportPreparationService::class)->consume(
+                $user,
+                'caregiver_message_v1',
+                'conversation',
+                $this->activeConversationId,
+            );
+            if (filled($prepared['message'] ?? null)) {
+                $this->messageBody = (string) $prepared['message'];
+                $this->aiPrepared = true;
+            }
         }
     }
 

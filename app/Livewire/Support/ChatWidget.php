@@ -6,11 +6,15 @@ use App\Models\AiSupportGuidedTask;
 use App\Models\AiSupportMessageAction;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
+use App\Services\AiSupport\AiSupportEligibilityService;
 use App\Services\AiSupport\AiSupportGuidedTaskService;
 use App\Services\AiSupport\AiSupportHandoffService;
+use App\Services\AiSupport\AiSupportPreparationService;
 use App\Services\AiSupport\AiSupportRecapService;
 use App\Services\AiSupport\AiSupportRequestDraftService;
 use App\Services\AiSupport\AiSupportRuntimeService;
+use App\Services\AiSupport\FamilyAssistantHomeService;
+use App\Services\AiSupport\FamilyIntentJourneyService;
 use App\Services\Support\SupportChatService;
 use App\Services\Support\SupportTicketMessagingService;
 use Illuminate\Contracts\View\View;
@@ -151,6 +155,31 @@ class ChatWidget extends Component
         }
     }
 
+    public function chooseStartAction(string $message): void
+    {
+        if (trim($message) === '') {
+            $this->dispatch('support-chat-focus-composer');
+
+            return;
+        }
+
+        $this->sendMessage($message, (string) Str::uuid());
+    }
+
+    public function chooseIntent(string $actionId, string $intentId): void
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+        abort_unless($user && $ticket, 404);
+        try {
+            app(FamilyIntentJourneyService::class)->choose($user, $ticket, $actionId, $intentId);
+            $this->resetValidation('intent');
+            $this->dispatch('support-chat-action-completed');
+        } catch (ValidationException $exception) {
+            $this->addError('intent', (string) collect($exception->errors())->flatten()->first());
+        }
+    }
+
     public function chooseCarePath(string $actionId, string $path): void
     {
         $user = auth()->user();
@@ -224,6 +253,37 @@ class ChatWidget extends Component
         $user = auth()->user();
         abort_unless($user, 401);
         app(AiSupportGuidedTaskService::class)->cancel($user, $taskId);
+        $this->dispatch('support-chat-action-completed');
+    }
+
+    public function checkGuidedTask(string $taskId): void
+    {
+        $user = auth()->user();
+        abort_unless($user, 401);
+        app(AiSupportGuidedTaskService::class)->checkAgain($user, $taskId);
+        $this->dispatch('support-chat-action-completed');
+    }
+
+    public function openPreparation(string $actionId): void
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+        abort_unless($user && $ticket, 404);
+        try {
+            $url = app(AiSupportPreparationService::class)->applyFromAction($user, $ticket, $actionId);
+            $this->resetValidation('preparation');
+            $this->redirect($url, navigate: true);
+        } catch (ValidationException $exception) {
+            $message = (string) collect($exception->errors())->flatten()->first();
+            $this->addError('preparation', $message);
+        }
+    }
+
+    public function cancelPreparation(string $preparationId): void
+    {
+        $user = auth()->user();
+        abort_unless($user, 401);
+        app(AiSupportPreparationService::class)->cancel($user, $preparationId);
         $this->dispatch('support-chat-action-completed');
     }
 
@@ -372,6 +432,18 @@ class ChatWidget extends Component
         return $user
             ? app(AiSupportGuidedTaskService::class)->clientPayload($user, $this->activeGuidedTask)
             : null;
+    }
+
+    /** @return array{personalized:list<array{label:string,message:string}>,general:list<array{label:string,message:?string}>}|null */
+    public function getStartExperienceProperty(): ?array
+    {
+        $user = auth()->user();
+        if (! $user || $user->role !== 'family'
+            || ! app(AiSupportEligibilityService::class)->evaluate($user, 'support_answers_v1')->allowed) {
+            return null;
+        }
+
+        return app(FamilyAssistantHomeService::class)->for($user);
     }
 
     public function render(): View

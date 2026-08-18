@@ -3,6 +3,7 @@
 namespace App\Livewire\Family;
 
 use App\Models\CareRecipientProfile;
+use App\Services\AiSupport\AiSupportPreparationService;
 use App\Services\CareRecipientProfiles\CareRecipientProfileAttachmentService;
 use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use App\Services\CareRecipientProfiles\CareRecipientProfileService;
@@ -99,6 +100,8 @@ class CareProfileEditor extends Component
 
     public array $affectedCare = [];
 
+    public bool $aiPrepared = false;
+
     public function mount(?CareRecipientProfile $careRecipientProfile = null): void
     {
         if ($careRecipientProfile?->exists) {
@@ -110,6 +113,36 @@ class CareProfileEditor extends Component
 
         $requestedStep = (int) request()->query('step', 1);
         $this->step = max(1, min(5, $requestedStep));
+
+        $prepared = app(AiSupportPreparationService::class)->consume(
+            auth()->user(),
+            'care_profile_v1',
+            $this->profileId ? 'care_profile' : null,
+            $this->profileId,
+        );
+        $map = [
+            'preferred_name' => 'preferredName', 'full_name' => 'fullName', 'date_of_birth' => 'dateOfBirth',
+            'pronouns' => 'pronouns', 'relationship_to_family' => 'relationshipToFamily', 'about_them' => 'aboutThem',
+            'interests_and_comforts' => 'interestsAndComforts', 'good_visit_notes' => 'goodVisitNotes',
+            'communication_notes' => 'communicationNotes', 'everyday_health_context' => 'everydayHealthContext',
+            'mobility_level' => 'mobilityLevel', 'mobility_notes' => 'mobilityNotes', 'routine_notes' => 'routineNotes',
+            'food_and_drink_notes' => 'foodAndDrinkNotes', 'personal_care_preferences' => 'personalCarePreferences',
+            'sleep_overnight_notes' => 'sleepOvernightNotes', 'safety_notes' => 'safetyNotes',
+            'additional_contact_name' => 'additionalContactName',
+            'additional_contact_relationship' => 'additionalContactRelationship',
+            'additional_contact_phone' => 'additionalContactPhone', 'additional_contact_email' => 'additionalContactEmail',
+        ];
+        foreach ($prepared as $key => $value) {
+            if (isset($map[$key]) && is_scalar($value)) {
+                $property = $map[$key];
+                $this->{$property} = (string) $value;
+            }
+        }
+        if ($prepared !== []) {
+            $this->aiPrepared = true;
+            $this->includeAdditionalContact = filled($this->additionalContactName)
+                || filled($this->additionalContactPhone) || filled($this->additionalContactEmail);
+        }
     }
 
     public function continue(CareRecipientProfileService $profiles): void

@@ -9,6 +9,7 @@ use App\Models\AiSupportControlVersion;
 use App\Models\AiSupportInteractionEvent;
 use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportPilotGrant;
+use App\Models\AiSupportPreparation;
 use App\Models\AiSupportRequestDraft;
 use App\Models\DataRetentionHold;
 use App\Models\KnowledgeBaseEntry;
@@ -40,6 +41,7 @@ class ApplyAiSupportRetention extends Command
         $this->pruneTranscripts($runReference);
         $this->prunePreviews($runReference);
         $this->pruneRequestDrafts($runReference);
+        $this->prunePreparations($runReference);
         $this->pruneInteractionEvents($runReference);
         $this->pruneActionEvidence($runReference);
         $this->pruneKnowledgeContent($runReference);
@@ -62,6 +64,7 @@ class ApplyAiSupportRetention extends Command
                 ->orWhereNotNull('content_deleted_at'))->count(),
             'private_request_drafts' => AiSupportRequestDraft::query()
                 ->whereNotNull('payload')->where('expires_at', '<=', now())->count(),
+            'reversible_preparations' => AiSupportPreparation::query()->where('expires_at', '<=', now())->count(),
             'interaction_events' => AiSupportInteractionEvent::query()->where('delete_after', '<=', now())->count(),
             'confirmed_action_evidence' => AiSupportConfirmedActionEvidence::query()->where('retain_until', '<=', now())->count(),
             'knowledge_full_content' => KnowledgeBaseVersion::query()->whereNull('content_deleted_at')->where('full_content_retain_until', '<=', now())->count(),
@@ -168,6 +171,36 @@ class ApplyAiSupportRetention extends Command
                 && ! ($event->support_ticket_id && $this->held(SupportTicket::class, (string) $event->support_ticket_id)))
             ->pluck('id');
         $this->deleteWithEvidence(AiSupportInteractionEvent::class, $ids->all(), 'compact_interaction_events', $runReference);
+    }
+
+    private function prunePreparations(string $runReference): void
+    {
+        AiSupportPreparation::query()->where('expires_at', '<=', now())->orderBy('created_at')
+            ->each(function (AiSupportPreparation $preparation) use ($runReference): void {
+                if ($this->held(AiSupportPreparation::class, $preparation->id)
+                    || $this->held(SupportTicket::class, (string) $preparation->support_ticket_id)) {
+                    return;
+                }
+                DB::transaction(function () use ($preparation, $runReference): void {
+                    $locked = AiSupportPreparation::query()->lockForUpdate()->find($preparation->id);
+                    if (! $locked || $locked->expires_at->isFuture()) {
+                        return;
+                    }
+                    AiSupportMessageAction::query()
+                        ->where('support_ticket_id', $locked->support_ticket_id)
+                        ->where('actor_user_id', $locked->actor_user_id)
+                        ->where('action_type', AiSupportMessageAction::TYPE_PREPARATION)
+                        ->get()
+                        ->filter(fn (AiSupportMessageAction $action): bool => data_get($action->payload, 'preparation_id') === $locked->id)
+                        ->each(fn (AiSupportMessageAction $action) => $action->forceFill([
+                            'payload' => null,
+                            'invalidated_at' => now(),
+                            'invalidation_reason' => 'preparation_expired',
+                        ])->save());
+                    $locked->delete();
+                    $this->evidence('reversible_preparation_content', 1, $runReference);
+                }, 3);
+            });
     }
 
     private function pruneActionEvidence(string $runReference): void

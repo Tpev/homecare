@@ -1,4 +1,7 @@
 <div>
+    @if($aiPrepared)
+        <div class="hc-page pb-0 pt-4"><x-alert color="blue">LoLo prepared this message. Edit it if needed, then choose Send yourself. It has not been sent.</x-alert></div>
+    @endif
     @php
         $active = $this->activeConversation;
         $messages = $this->messages;

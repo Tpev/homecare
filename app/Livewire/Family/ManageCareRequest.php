@@ -15,6 +15,7 @@ use App\Models\CareRequestInvitation;
 use App\Models\CareReview;
 use App\Models\SupportTicket;
 use App\Models\User;
+use App\Services\AiSupport\AiSupportPreparationService;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Booking\CareBookingTimeCorrectionService;
 use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
@@ -103,6 +104,8 @@ class ManageCareRequest extends Component
 
     public ?int $confirmingTimeCorrectionId = null;
 
+    public bool $aiPrepared = false;
+
     public array $applicationStatusOptions = [
         ['label' => 'All caregivers', 'value' => 'all'],
         ['label' => 'Interested', 'value' => CareRequestApplication::STATUS_APPLIED],
@@ -159,6 +162,30 @@ class ManageCareRequest extends Component
         $this->activeTab = $requestedTab !== null && in_array($requestedTab, $visibleTabs, true)
             ? $requestedTab
             : $lifecycle['primary_tab'];
+
+        $prepared = app(AiSupportPreparationService::class)->consume(
+            auth()->user(),
+            'submitted_hours_correction_v1',
+            'care_request',
+            $this->requestItem->id,
+        );
+        if ($prepared !== []) {
+            $reason = (string) ($prepared['reason'] ?? '');
+            $issueType = (string) ($prepared['issue_type'] ?? 'correction');
+            if (in_array($issueType, ['correction', 'change_request'], true)) {
+                $this->timeCorrectionResponseNote = $reason;
+            } elseif ($issueType === 'dispute') {
+                $this->disputeReason = $reason;
+            } else {
+                $this->supportCategory = 'time_correction';
+                $this->supportSubject = 'Help with submitted hours';
+                $this->supportDescription = $reason;
+            }
+            if (in_array('shift', $visibleTabs, true)) {
+                $this->activeTab = 'shift';
+            }
+            $this->aiPrepared = true;
+        }
     }
 
     public function setActiveTab(string $tab): void

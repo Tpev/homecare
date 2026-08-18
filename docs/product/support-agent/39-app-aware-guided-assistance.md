@@ -1,6 +1,6 @@
 # App-Aware Guided Assistance
 
-Status: Batches 1 and 2 implemented; deterministic and production-pilot browser rounds completed; corrective deploy and screen-reader session remain
+Status: Batches 1 through 3 implemented in source; Batch 3 production deployment pending
 
 Established: August 17, 2026
 
@@ -278,9 +278,9 @@ Add the Family overview plus targeted readers and exact guide targets for:
 
 At the end of this batch, the assistant can truthfully answer “What needs my attention?” and guide the user to each supported next step.
 
-### Batch 3 - safe prefill
+### Batch 3 - operating layer and safe prefill
 
-Add versioned prefill contracts for non-secret, reversible Family forms, beginning with care profiles, request reuse/editing where the product supports it, message drafts, and support intake. The user reviews and saves through the normal UI.
+Implemented in source on August 18, 2026: executable 324-intent catalog, explicit intent-to-KB resolution, state-aware Family start choices, universal active-task replies and recovery, generic completion verifiers, privacy-safe intent telemetry/Admin coverage, and versioned reversible prefill contracts for care profiles, request reuse, caregiver messages, submitted-hours correction/dispute, and support intake. The user reviews and saves/sends/submits through the normal UI.
 
 ### Batch 4 - confirmed actions
 
@@ -422,3 +422,11 @@ The [Family Batch 1-2 evaluation harness](40-family-batch-1-2-evaluation-harness
 The [Family intent and AI action coverage registry](38-family-intent-action-coverage-registry.md) remains the exhaustive demand backlog. This document defines the reusable experience required to move rows from generic explanation or route navigation into app-aware **Read**, **Guide**, **Prefill**, and eventually **Confirm & execute** coverage.
 
 Guiding the user through the normal UI is not the same as the AI performing the domain action. Registry rows should say **Guide** until the assistant itself invokes an authorized write tool and receives an authoritative receipt.
+
+## Batch 3 implementation record
+
+Batch 3A and 3B are complete in source. The common layer now carries intent, goal, step, semantic target, verifier, optional preparation, recovery count, resume behavior, and human-transfer summary. Contextual replies continue the active task with zero provider calls. Page arrival and user claims remain unverified until a registered verifier proves the outcome.
+
+The five preparation contracts are encrypted, exact-user, allowlisted, versioned, expiring, visible, editable, and reversible. Opening prepared values in a form does not save, send, approve, dispute, publish, or submit them. All referenced resources are re-authorized, and secrets are rejected.
+
+The exact delivered architecture, test evidence, migration, deployment check, and unchanged pilot/payment/pricing boundaries are in [Family Operating Layer — Batch 3A and 3B](46-family-operating-layer-batch-3.md).

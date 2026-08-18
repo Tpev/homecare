@@ -1,4 +1,7 @@
 <div class="hc-page py-8 space-y-6">
+    @if($aiPrepared)
+        <x-alert color="blue">LoLo prepared these support details. Review and edit them before you create the ticket. Nothing was submitted automatically.</x-alert>
+    @endif
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif

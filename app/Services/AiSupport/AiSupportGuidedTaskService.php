@@ -28,6 +28,7 @@ class AiSupportGuidedTaskService
         private readonly FamilyPaymentMethodStatusReader $paymentStatus,
         private readonly NavigationTargetRegistry $navigation,
         private readonly AiSupportEventRecorder $events,
+        private readonly AiSupportCompletionVerifierRegistry $verifiers,
     ) {}
 
     public function isPaymentMethodIntent(string $message): bool
@@ -65,7 +66,7 @@ class AiSupportGuidedTaskService
         );
     }
 
-    public function offerPaymentMethod(User $actor, SupportTicket $ticket): ?AiSupportGuidedTask
+    public function offerPaymentMethod(User $actor, SupportTicket $ticket, ?string $stableIntentId = null): ?AiSupportGuidedTask
     {
         $this->authorizeAutomation($actor, $ticket);
 
@@ -105,7 +106,7 @@ class AiSupportGuidedTaskService
             return null;
         }
 
-        return DB::transaction(function () use ($actor, $ticket, $status): AiSupportGuidedTask {
+        return DB::transaction(function () use ($actor, $ticket, $status, $stableIntentId): AiSupportGuidedTask {
             $locked = $this->lockedAutomatedTicket($actor, $ticket);
             $now = now();
             $this->cancelActorTasks($actor, 'superseded_by_new_task', $now);
@@ -134,6 +135,14 @@ class AiSupportGuidedTaskService
                 'payload' => [
                     'mode' => $mode,
                     'instruction' => $instruction,
+                    'intent_id' => $stableIntentId ?? ($status['ready'] ? 'FAM-PAY-006' : 'FAM-PAY-002'),
+                    'goal' => $status['ready'] ? 'Update the saved payment method' : 'Add a saved payment method',
+                    'step' => 'open_secure_payment_control',
+                    'expected_control' => 'family.billing.manage_payment_method',
+                    'verifier_id' => 'family_payment_method_v1',
+                    'recovery_count' => 0,
+                    'resume_behavior' => 'reopen_registered_target',
+                    'human_transfer_summary' => 'Family user needs help with the saved payment method.',
                 ],
                 'initial_state_hash' => $status['state_hash'],
                 'last_result_code' => $status['attention'],
@@ -149,6 +158,8 @@ class AiSupportGuidedTaskService
                     'guided_task_id' => $task->id,
                     'target_id' => $task->navigation_target_id,
                     'label' => $mode === 'add' ? 'Add payment method' : 'Update payment method',
+                    'progress' => 'Step 1 of 1',
+                    'secondary_action' => 'check_again',
                 ],
                 'expires_at' => $task->expires_at,
             ]);
@@ -173,7 +184,7 @@ class AiSupportGuidedTaskService
     /**
      * Store a deterministic Family-account read result and up to six authorized guide buttons.
      *
-     * @param  list<array{task_type:string,target_id:string,label:string,instruction?:string,resource_type?:string|null,resource_id?:int|null}>  $guides
+     * @param  list<array{task_type:string,target_id:string,label:string,instruction?:string,resource_type?:string|null,resource_id?:int|null,verifier_id?:string|null,prefill_id?:string|null}>  $guides
      * @return Collection<int,AiSupportGuidedTask>
      */
     public function offerFamilyReadResult(
@@ -183,6 +194,7 @@ class AiSupportGuidedTaskService
         string $intent,
         string $resultCode,
         array $guides = [],
+        ?string $readIntent = null,
     ): Collection {
         $this->authorizeAutomation($actor, $ticket);
         $guides = array_slice($guides, 0, 6);
@@ -197,7 +209,7 @@ class AiSupportGuidedTaskService
             }
         }
 
-        return DB::transaction(function () use ($actor, $ticket, $messageBody, $intent, $resultCode, $guides): Collection {
+        return DB::transaction(function () use ($actor, $ticket, $messageBody, $intent, $resultCode, $guides, $readIntent): Collection {
             $locked = $this->lockedAutomatedTicket($actor, $ticket);
             $now = now();
             $this->cancelActorTasks($actor, 'superseded_by_new_task', $now);
@@ -228,6 +240,15 @@ class AiSupportGuidedTaskService
                     'payload' => [
                         'instruction' => (string) ($guide['instruction'] ?? $definition['instruction'] ?? 'Use the highlighted section.'),
                         'checked_at' => $now->toIso8601String(),
+                        'intent_id' => $intent,
+                        'goal' => (string) ($guide['label'] ?? $definition['label'] ?? 'Complete this step'),
+                        'step' => 'open_registered_target',
+                        'expected_control' => (string) ($definition['client_target_id'] ?? ''),
+                        'verifier_id' => (string) ($guide['verifier_id'] ?? 'unavailable_v1'),
+                        'prefill_id' => $guide['prefill_id'] ?? null,
+                        'recovery_count' => 0,
+                        'resume_behavior' => 'reopen_registered_target',
+                        'human_transfer_summary' => 'Family user needs help completing '.$intent.'.',
                     ],
                     'initial_state_hash' => hash('sha256', json_encode([
                         'intent' => $intent,
@@ -249,6 +270,8 @@ class AiSupportGuidedTaskService
                     'payload' => [
                         'guided_task_id' => $task->id,
                         'label' => (string) $guide['label'],
+                        'progress' => 'Step 1 of 1',
+                        'secondary_action' => 'check_again',
                     ],
                     'expires_at' => $task->expires_at,
                 ]);
@@ -266,11 +289,97 @@ class AiSupportGuidedTaskService
                 'capability_id' => 'family_context_v1',
                 'tool_id' => 'family-account-overview',
                 'tool_version' => 'v1',
-                'result_code' => $intent,
+                'result_code' => $readIntent ?? $intent,
             ], $actor);
 
             return $tasks;
         }, 3);
+    }
+
+    public function handleContextualReply(User $actor, SupportTicket $ticket, string $message): bool
+    {
+        $reply = mb_strtolower(trim($message));
+        if (preg_match('/\b(?:yes|yes please|take me there|that one|show me|open it|go ahead|go back)\b/iu', $reply) !== 1
+            && preg_match('/\b(?:i did it|done|check again|cannot find|can\'t find|did not work|didn\'t work|not working|stop|cancel)\b/iu', $reply) !== 1) {
+            return false;
+        }
+
+        $tasks = AiSupportGuidedTask::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->where('actor_user_id', $actor->id)
+            ->whereIn('state', AiSupportGuidedTask::OPEN_STATES)
+            ->where('expires_at', '>', now())
+            ->latest('created_at')
+            ->get();
+        if ($tasks->isEmpty()) {
+            return false;
+        }
+
+        if (preg_match('/\b(?:stop|cancel)\b/iu', $reply) === 1) {
+            $tasks->each(fn (AiSupportGuidedTask $task) => $this->cancel($actor, $task->id, 'user_cancelled'));
+            $this->createAutomatedMessage($ticket, 'I stopped this guided task. Nothing was changed. Tell me what you would like to do next, or ask for a person.');
+            $this->recordTaskEvent($ticket, $tasks->first(), 'intent_abandoned', 'user_cancelled', $actor);
+
+            return true;
+        }
+
+        if ($tasks->count() > 1 && preg_match('/\b(?:that one|yes|go ahead|take me there|show me|open it|go back)\b/iu', $reply) === 1) {
+            $messageModel = $this->createAutomatedMessage($ticket, 'Which step would you like to open?');
+            foreach ($tasks->take(2) as $task) {
+                $this->createTaskAction($messageModel, $task, (string) data_get($task->payload, 'goal', 'Open this step'));
+            }
+            $this->recordTaskEvent($ticket, $tasks->first(), 'intent_clarified', 'multiple_active_choices', $actor);
+
+            return true;
+        }
+
+        $task = $tasks->first();
+        if (preg_match('/\b(?:i did it|done|check again)\b/iu', $reply) === 1) {
+            $this->verifyAndRespond($actor, $ticket, $task);
+
+            return true;
+        }
+
+        if (preg_match('/\b(?:cannot find|can\'t find|did not work|didn\'t work|not working)\b/iu', $reply) === 1) {
+            $payload = (array) $task->payload;
+            $count = min(9, ((int) ($payload['recovery_count'] ?? 0)) + 1);
+            $payload['recovery_count'] = $count;
+            $task->forceFill([
+                'payload' => $payload,
+                'last_result_code' => 'user_reported_blocked',
+                'version' => $task->version + 1,
+            ])->save();
+            $body = $count > 1
+                ? 'This step is still not working. I will not keep repeating the same instructions. You can try opening it once more, or talk to a person.'
+                : 'I am sorry this step did not work. I can open and highlight it again. Nothing has been marked complete.';
+            $sent = $this->createAutomatedMessage($ticket, $body);
+            $this->createTaskAction($sent, $task, 'Open the step again');
+            $this->recordTaskEvent($ticket, $task, $count > 1 ? 'intent_looped' : 'intent_recovery_offered', 'user_reported_blocked', $actor, $count);
+
+            return true;
+        }
+
+        $sent = $this->createAutomatedMessage(
+            $ticket,
+            $task->state === AiSupportGuidedTask::STATE_ARRIVED
+                ? 'You are on the right page. Use the highlighted area. I will only say it is complete after I can verify the result.'
+                : 'I can take you to the right page and highlight the next step.',
+        );
+        $this->createTaskAction($sent, $task, $task->state === AiSupportGuidedTask::STATE_ARRIVED ? 'Show the step again' : 'Take me there');
+        $this->recordTaskEvent($ticket, $task, 'intent_action_offered', 'contextual_follow_up', $actor);
+
+        return true;
+    }
+
+    public function checkAgain(User $actor, string $taskId): void
+    {
+        $task = AiSupportGuidedTask::query()
+            ->whereKey($taskId)
+            ->where('actor_user_id', $actor->id)
+            ->firstOrFail();
+        $ticket = SupportTicket::query()->findOrFail($task->support_ticket_id);
+        $this->authorizeAutomation($actor, $ticket);
+        $this->verifyAndRespond($actor, $ticket, $task);
     }
 
     public function startFromAction(User $actor, SupportTicket $ticket, string $actionId): string
@@ -297,7 +406,11 @@ class AiSupportGuidedTaskService
                 ->where('support_ticket_id', $lockedTicket->id)
                 ->where('actor_user_id', $actor->id)
                 ->firstOrFail();
-            if (! $task->isOpen() || $task->state !== AiSupportGuidedTask::STATE_OFFERED) {
+            if (! $task->isOpen() || ! in_array($task->state, [
+                AiSupportGuidedTask::STATE_OFFERED,
+                AiSupportGuidedTask::STATE_ARRIVED,
+                AiSupportGuidedTask::STATE_IN_PROGRESS,
+            ], true)) {
                 throw ValidationException::withMessages(['guidedTask' => 'This guided step is no longer available. Ask me to start again.']);
             }
 
@@ -334,6 +447,19 @@ class AiSupportGuidedTaskService
                 'capability_id' => 'semantic_navigation_v1',
                 'navigation_target_id' => $task->navigation_target_id,
                 'result_code' => 'navigation_started',
+                'safe_metadata' => [
+                    'intent_id' => (string) data_get($task->payload, 'intent_id', 'FAM-START-017'),
+                    'task_state' => AiSupportGuidedTask::STATE_NAVIGATING,
+                ],
+            ], $actor);
+            $this->events->record($lockedTicket, 'intent_opened', [
+                'capability_id' => 'semantic_navigation_v1',
+                'navigation_target_id' => $task->navigation_target_id,
+                'result_code' => 'navigation_started',
+                'safe_metadata' => [
+                    'intent_id' => (string) data_get($task->payload, 'intent_id', 'FAM-START-017'),
+                    'task_state' => AiSupportGuidedTask::STATE_NAVIGATING,
+                ],
             ], $actor);
 
             return $this->navigation->urlFor($actor, $task->navigation_target_id, [
@@ -442,6 +568,15 @@ class AiSupportGuidedTaskService
                         'capability_id' => 'semantic_navigation_v1',
                         'navigation_target_id' => $task->navigation_target_id,
                         'result_code' => 'target_arrived',
+                    ], $actor);
+                    $this->events->record($lockedTicket, 'intent_arrived', [
+                        'capability_id' => 'semantic_navigation_v1',
+                        'navigation_target_id' => $task->navigation_target_id,
+                        'result_code' => 'target_arrived',
+                        'safe_metadata' => [
+                            'intent_id' => (string) data_get($task->payload, 'intent_id', 'FAM-START-017'),
+                            'task_state' => AiSupportGuidedTask::STATE_ARRIVED,
+                        ],
                     ], $actor);
                 }
 
@@ -724,6 +859,117 @@ class AiSupportGuidedTaskService
                 'last_result_code' => $reason,
                 'updated_at' => $at,
             ]);
+    }
+
+    private function verifyAndRespond(User $actor, SupportTicket $ticket, AiSupportGuidedTask $task): void
+    {
+        if (! $task->isOpen()) {
+            $this->createAutomatedMessage($ticket, 'This guided step expired. Nothing was marked complete. Ask me to start it again.');
+
+            return;
+        }
+
+        $payload = (array) $task->payload;
+        $verifierId = (string) ($payload['verifier_id'] ?? 'unavailable_v1');
+        $result = $this->verifiers->for($verifierId)->verify($actor, $task);
+
+        DB::transaction(function () use ($actor, $ticket, $task, $payload, $verifierId, $result): void {
+            $lockedTicket = $this->lockedAutomatedTicket($actor, $ticket);
+            $locked = AiSupportGuidedTask::query()->lockForUpdate()->findOrFail($task->id);
+            if (! $locked->isOpen()) {
+                return;
+            }
+
+            $now = now();
+            if ($result->verified()) {
+                $locked->forceFill([
+                    'state' => AiSupportGuidedTask::STATE_COMPLETED,
+                    'completed_at' => $now,
+                    'result_state_hash' => $result->stateHash,
+                    'last_result_code' => $result->resultCode,
+                    'version' => $locked->version + 1,
+                ])->save();
+                $message = $this->createAutomatedMessage($lockedTicket, $result->message);
+                $this->events->record($lockedTicket, 'intent_completed', [
+                    'support_ticket_message_id' => $message->id,
+                    'capability_id' => 'semantic_navigation_v1',
+                    'navigation_target_id' => $locked->navigation_target_id,
+                    'result_code' => $result->resultCode,
+                    'safe_metadata' => [
+                        'intent_id' => (string) ($payload['intent_id'] ?? 'FAM-START-017'),
+                        'task_state' => AiSupportGuidedTask::STATE_COMPLETED,
+                        'verifier_id' => $verifierId,
+                    ],
+                ], $actor);
+                if (session()->get(self::SESSION_TASK_KEY) === $locked->id) {
+                    session()->forget(self::SESSION_TASK_KEY);
+                }
+
+                return;
+            }
+
+            $locked->forceFill([
+                'state' => AiSupportGuidedTask::STATE_ARRIVED,
+                'arrived_at' => $locked->arrived_at ?? $now,
+                'last_result_code' => $result->resultCode,
+                'version' => $locked->version + 1,
+            ])->save();
+            $message = $this->createAutomatedMessage($lockedTicket, $result->message);
+            $this->createTaskAction($message, $locked, 'Open the step again');
+            $this->events->record($lockedTicket, 'intent_verification_failed', [
+                'support_ticket_message_id' => $message->id,
+                'capability_id' => 'semantic_navigation_v1',
+                'navigation_target_id' => $locked->navigation_target_id,
+                'result_code' => $result->resultCode,
+                'safe_metadata' => [
+                    'intent_id' => (string) ($payload['intent_id'] ?? 'FAM-START-017'),
+                    'task_state' => AiSupportGuidedTask::STATE_ARRIVED,
+                    'verifier_id' => $verifierId,
+                ],
+            ], $actor);
+        }, 3);
+    }
+
+    private function createTaskAction(SupportTicketMessage $message, AiSupportGuidedTask $task, string $label): AiSupportMessageAction
+    {
+        return AiSupportMessageAction::query()->create([
+            'id' => (string) Str::uuid(),
+            'support_ticket_message_id' => $message->id,
+            'support_ticket_id' => $task->support_ticket_id,
+            'actor_user_id' => $task->actor_user_id,
+            'action_type' => AiSupportMessageAction::TYPE_GUIDED_TASK,
+            'payload' => [
+                'guided_task_id' => $task->id,
+                'target_id' => $task->navigation_target_id,
+                'label' => $label,
+                'progress' => $task->state === AiSupportGuidedTask::STATE_ARRIVED ? 'Right page found' : 'Ready to open',
+                'secondary_action' => 'check_again',
+            ],
+            'expires_at' => $task->expires_at,
+        ]);
+    }
+
+    private function recordTaskEvent(
+        SupportTicket $ticket,
+        AiSupportGuidedTask $task,
+        string $eventType,
+        string $resultCode,
+        User $actor,
+        int $repetitionCount = 0,
+    ): void {
+        $metadata = [
+            'intent_id' => (string) data_get($task->payload, 'intent_id', 'FAM-START-017'),
+            'task_state' => $task->state,
+        ];
+        if ($repetitionCount > 0) {
+            $metadata['repetition_count'] = $repetitionCount;
+        }
+        $this->events->record($ticket, $eventType, [
+            'capability_id' => 'semantic_navigation_v1',
+            'navigation_target_id' => $task->navigation_target_id,
+            'result_code' => $resultCode,
+            'safe_metadata' => $metadata,
+        ], $actor);
     }
 
     private function createAutomatedMessage(SupportTicket $ticket, string $body): SupportTicketMessage

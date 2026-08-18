@@ -20,7 +20,8 @@ class AiSupportEventRecorder
     private const ALLOWED_METADATA_KEYS = [
         'ownership_from', 'ownership_to', 'transfer_priority', 'delivery_suppressed',
         'policy_result', 'validation_result', 'route_contract_version', 'confirmation_reference',
-        'cached_input_tokens', 'provider_price_version',
+        'cached_input_tokens', 'provider_price_version', 'intent_id', 'resolution_source',
+        'task_state', 'verifier_id', 'preparation_contract_id', 'repetition_count',
     ];
 
     /** @param array<string, mixed> $fields */

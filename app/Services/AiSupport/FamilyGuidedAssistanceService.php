@@ -92,7 +92,7 @@ class FamilyGuidedAssistanceService
         return null;
     }
 
-    public function respond(User $actor, SupportTicket $ticket, string $intent): void
+    public function respond(User $actor, SupportTicket $ticket, string $intent, ?string $stableIntentId = null): void
     {
         $account = $this->familyAccounts->account($actor);
         $actionItems = $this->actions->buildForAccount($account);
@@ -128,9 +128,10 @@ class FamilyGuidedAssistanceService
             $actor,
             $ticket,
             $message,
-            $intent,
+            $stableIntentId ?? $intent,
             $resultCode,
             $guides,
+            $intent,
         );
     }
 

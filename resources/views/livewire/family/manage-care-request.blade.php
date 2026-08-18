@@ -3,6 +3,9 @@
     x-on:caregiver-invite-panel-closed.window="$nextTick(() => $refs.inviteCaregiverTrigger?.focus())"
     class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8"
 >
+    @if($aiPrepared)
+        <x-alert color="blue">LoLo prepared the correction details. Review and edit them before you send, submit, or approve anything. Nothing was changed automatically.</x-alert>
+    @endif
     @if (session('warning'))
         <x-alert color="amber">{{ session('warning') }}</x-alert>
     @endif

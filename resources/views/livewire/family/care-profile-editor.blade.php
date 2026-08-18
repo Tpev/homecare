@@ -1,5 +1,8 @@
 <div class="hc-page py-8 sm:py-12">
     <div class="mx-auto max-w-4xl space-y-6">
+        @if($aiPrepared)
+            <x-alert color="blue">LoLo prepared these visible fields. Review and edit them before you choose a save action. Nothing was saved automatically.</x-alert>
+        @endif
         <header>
             <a href="{{ route('family.care-profiles.index') }}" wire:navigate class="inline-flex min-h-11 items-center text-sm font-semibold text-[#2F6F62] underline underline-offset-4">Back to care profiles</a>
             <p class="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-[#B95745]">Care profile</p>

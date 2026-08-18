@@ -1,6 +1,6 @@
 # Family Operations Knowledge Base Wave 1
 
-Status: Implemented in source; deploy and run the exact publication command before claiming production coverage
+Status: Published in production and explicitly consumed by the Batch 3 intent catalog
 
 Approved: August 18, 2026
 
@@ -86,6 +86,8 @@ After publication:
 
 Only after this production verification should the Explain column in the Family coverage registry be promoted for the mapped rows. Action coverage does not change merely because knowledge was published.
 
-## Next implementation slice
+## Batch 3 consumption
 
-Proceed to Batch 3A: executable intent catalog, universal active-task follow-ups, personalized task launcher, explicit intent-to-KB retrieval, outcome verification interface, unmatched/loop telemetry, and mass tests that combine the 40 existing read/guide intents with this 190-intent knowledge map.
+Batch 3A now explicitly maps all 190 covered Family intent rows to their Wave 1 stable IDs. Runtime retrieval for a recognized intent is limited to those mapped entries and still applies role, capability, state, publication, and pricing-hold filters. The generated catalog and mass harness reject any mapping count other than 190.
+
+See [Family Operating Layer — Batch 3A and 3B](46-family-operating-layer-batch-3.md) for the delivered task, verifier, preparation, telemetry, Admin, and test contracts. The next content work should accompany Batch 4 payment/time recovery and must preserve the pricing hold until product and code truth are reconciled.

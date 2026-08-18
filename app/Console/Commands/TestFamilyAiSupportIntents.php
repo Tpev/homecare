@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\AiSupport\FamilyIntentCatalog;
 use App\Services\AiSupport\FamilyIntentEvaluationCatalog;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
@@ -18,12 +19,13 @@ class TestFamilyAiSupportIntents extends Command
         {--intent=* : Optional exact registry intent ID}
         {--output= : Optional content-minimized JSON report path on the local storage disk}';
 
-    protected $description = 'Mass-test the 40 Family Batch 1/2 intents in an isolated SQLite test process.';
+    protected $description = 'Validate all 324 Family intents and mass-test implemented Family journeys in isolated SQLite.';
 
-    public function handle(FamilyIntentEvaluationCatalog $catalog): int
+    public function handle(FamilyIntentEvaluationCatalog $catalog, FamilyIntentCatalog $fullCatalog): int
     {
         try {
             $manifest = $catalog->manifest();
+            $fullManifest = $fullCatalog->manifest();
             $cases = $this->selectedCases($manifest['cases']);
         } catch (Throwable $exception) {
             $this->error($exception->getMessage());
@@ -32,11 +34,16 @@ class TestFamilyAiSupportIntents extends Command
         }
 
         $phraseCount = array_sum(array_map(static fn (array $case): int => count($case['phrases']), $cases));
+        $fullPhraseCount = collect($fullManifest['records'])->sum(fn (array $record): int => count((array) data_get($record, 'phrases.ordinary', [])) + count((array) data_get($record, 'phrases.imperfect', [])));
         $this->table(['Property', 'Value'], [
-            ['Corpus', $manifest['version']],
+            ['Executable catalog', $fullManifest['version']],
+            ['Catalog registry intents', count($fullManifest['records']).' / 324'],
+            ['Explicit Wave 1 KB mappings', $fullCatalog->coverageSummary()['kb_mapped'].' / 190'],
+            ['Catalog phrase definitions', $fullPhraseCount],
+            ['Runtime corpus', $manifest['version']],
             ['Frozen on', $manifest['frozen_on']],
-            ['Selected registry intents', count($cases).' / '.count($manifest['cases'])],
-            ['Selected routing phrases', $phraseCount],
+            ['Implemented runtime intents', count($cases).' / '.count($manifest['cases'])],
+            ['Implemented routing phrases', $phraseCount],
             ['Near-neighbor collision cases', count($manifest['negative_cases'])],
             ['Provider calls', '0'],
             ['Database', 'isolated SQLite :memory:'],
@@ -48,19 +55,21 @@ class TestFamilyAiSupportIntents extends Command
             foreach ($routing['failures'] as $failure) {
                 $this->error($failure);
             }
-            $this->warn('Plan only. No test database, provider call, production write, or report write occurred.');
+            $this->warn('Plan only. All 324 catalog records were validated. No test database, provider call, production write, or report write occurred.');
 
             return $routing['passed'] ? self::SUCCESS : self::FAILURE;
         }
 
         $this->newLine();
-        $this->info('Running the full shared Batch 1/2 application regression in an isolated test process...');
+        $this->info('Running the full Family operating-layer application regression in an isolated test process...');
         $runtime = $this->runIsolatedApplicationTests();
         $passed = $routing['passed'] && $runtime['passed'];
 
         $report = $this->report($manifest, $cases, $routing, $runtime, $passed);
         $this->table(['Result', 'Value'], [
             ['Routing phrases', $routing['passed_phrases'].' / '.$routing['total_phrases'].' passed'],
+            ['Executable catalog', count($fullManifest['records']).' / 324 valid'],
+            ['Explicit KB mappings', $fullCatalog->coverageSummary()['kb_mapped'].' / 190 valid'],
             ['Collision cases', $routing['passed_negative_cases'].' / '.$routing['total_negative_cases'].' passed'],
             ['Application regression', $runtime['passed'] ? 'PASS' : 'FAIL'],
             ['Registry intents', $report['summary']['passed_intents'].' / '.$report['summary']['selected_intents'].' passed'],
@@ -82,7 +91,7 @@ class TestFamilyAiSupportIntents extends Command
         }
 
         if ($passed) {
-            $this->info('Batch 1/2 Family intent evaluation passed. No provider or production database was used.');
+            $this->info('Family Batch 1-3 intent evaluation passed. No provider or production database was used.');
         }
 
         return $passed ? self::SUCCESS : self::FAILURE;
@@ -187,6 +196,7 @@ class TestFamilyAiSupportIntents extends Command
             'tests/Feature/AiSupport/GuidedPaymentMethodTest.php',
             'tests/Feature/AiSupport/FamilyGuidedAssistanceTest.php',
             'tests/Feature/AiSupport/FamilyGuidedAssistanceStateMatrixTest.php',
+            'tests/Feature/AiSupport/Batch3FamilyOperatingLayerTest.php',
         ];
         if (! class_exists('PHPUnit\\Framework\\TestCase')) {
             $error = 'The full Family intent regression requires Composer development dependencies. Run it in the development/CI workspace; use --plan on a no-dev production install.';
