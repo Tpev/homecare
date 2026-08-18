@@ -35,6 +35,7 @@ class Overview extends Component
         $outcomeTypes = [
             'intent_unmatched', 'intent_looped', 'intent_failed', 'intent_verification_failed',
             'intent_recovery_offered', 'guided_action_recovery', 'intent_transferred', 'handoff_completed',
+            'transferred_to_human',
         ];
         $recentOutcomes = AiSupportInteractionEvent::query()
             ->whereIn('event_type', $outcomeTypes)
@@ -42,6 +43,15 @@ class Overview extends Component
             ->latest('occurred_at')
             ->limit(500)
             ->get();
+
+        $outcomeCounts = $recentOutcomes->countBy('event_type');
+        $outcomeCounts->put(
+            'intent_transferred',
+            $recentOutcomes
+                ->whereIn('event_type', ['intent_transferred', 'handoff_completed', 'transferred_to_human'])
+                ->unique('support_ticket_id')
+                ->count(),
+        );
 
         return view('livewire.admin.ai-support.overview', [
             'runtimeAvailable' => (bool) config('ai_support.runtime_available', false),
@@ -89,7 +99,7 @@ class Overview extends Component
             ])->values(),
             'intentRecords' => $visibleIntentRecords,
             'recentIntentOutcomes' => $recentOutcomes->take(30),
-            'intentOutcomeCounts' => $recentOutcomes->countBy('event_type'),
+            'intentOutcomeCounts' => $outcomeCounts,
         ]);
     }
 }

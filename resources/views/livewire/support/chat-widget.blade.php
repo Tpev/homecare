@@ -369,13 +369,13 @@
             @endif
 
             <template x-if="pendingMessage">
-                <div class="mt-3 flex justify-end" data-testid="support-chat-pending-message">
-                    <article class="support-chat-bubble support-chat-bubble-user" x-bind:class="pendingMessage?.status === 'failed' ? 'support-chat-bubble-failed' : ''">
-                        <p class="support-chat-message-text" x-text="pendingMessage?.body ?? ''"></p>
+                <div x-data="{ message: pendingMessage }" class="mt-3 flex justify-end" data-testid="support-chat-pending-message">
+                    <article class="support-chat-bubble support-chat-bubble-user" x-bind:class="message.status === 'failed' ? 'support-chat-bubble-failed' : ''">
+                        <p class="support-chat-message-text" x-text="message.body"></p>
                         <div class="mt-1.5 flex items-center justify-between gap-3 text-[11px] text-[#DDEEEA]">
-                            <span x-text="pendingMessage?.status === 'failed' ? 'Not sent' : 'Sending…'"></span>
+                            <span x-text="message.status === 'failed' ? 'Not sent' : 'Sending…'"></span>
                             <button
-                                x-show="pendingMessage?.status === 'failed'"
+                                x-show="message.status === 'failed'"
                                 type="button"
                                 class="min-h-11 rounded-lg px-2 font-bold underline underline-offset-2"
                                 aria-label="Try sending this support message again"

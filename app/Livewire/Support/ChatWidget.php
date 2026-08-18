@@ -282,8 +282,10 @@ class ChatWidget extends Component
     public function cancelPreparation(string $preparationId): void
     {
         $user = auth()->user();
-        abort_unless($user, 401);
-        app(AiSupportPreparationService::class)->cancel($user, $preparationId);
+        $ticket = $this->ticket;
+        abort_unless($user && $ticket, 404);
+        app(AiSupportPreparationService::class)->cancel($user, $preparationId, $ticket);
+        $this->createAutomatedMessage($ticket, 'Prepared details discarded. Nothing was saved or sent.');
         $this->dispatch('support-chat-action-completed');
     }
 

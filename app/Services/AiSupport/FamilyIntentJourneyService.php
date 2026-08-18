@@ -175,7 +175,15 @@ class FamilyIntentJourneyService
                 str_contains(mb_strtolower($message), 'name') => 'preferred_name',
                 default => $create ? 'preferred_name' : 'about_them',
             };
-            $fields[$field] = $this->detailValue($message);
+            $value = $field === 'preferred_name'
+                ? $this->profileNameValue($message)
+                : $this->detailValue($message);
+            if ($field === 'preferred_name' && $value === '') {
+                $this->automatedMessage($ticket, 'I can prepare that care receiver profile change, but I could not tell which name to use. Please say, for example, "Create a care receiver profile for Maria."');
+
+                return true;
+            }
+            $fields[$field] = $value;
             if ($profile) {
                 $context += ['target_id' => 'family.care_profile.edit', 'resource_type' => 'care_profile', 'resource_id' => $profile->id];
             }
@@ -219,7 +227,7 @@ class FamilyIntentJourneyService
             $fields = [
                 'care_request_id' => (string) $request->id,
                 'issue_type' => str_contains(mb_strtolower($message), 'dispute') ? 'dispute' : 'correction',
-                'reason' => $this->detailValue($message),
+                'reason' => $this->correctionReasonValue($message),
             ];
             $context += ['resource_type' => 'care_request', 'resource_id' => $request->id];
         } elseif ($contractId === 'support_intake_v1') {
@@ -283,6 +291,33 @@ class FamilyIntentJourneyService
         $value = preg_replace('/^.*?\b(?:that|to|saying|message|because|reason is)\b\s*/iu', '', trim($message), 1);
 
         return Str::limit(trim((string) $value), 3000, '');
+    }
+
+    private function correctionReasonValue(string $message): string
+    {
+        $trimmed = trim($message);
+        if (preg_match('/\b(?:because|reason is)\b\s*(.+)\z/iu', $trimmed, $matches) === 1) {
+            return Str::limit(trim((string) $matches[1]), 3000, '');
+        }
+
+        return $this->detailValue($trimmed);
+    }
+
+    private function profileNameValue(string $message): string
+    {
+        $value = trim($message);
+        $patterns = [
+            '/\bcare[\s-]*(?:receiver|recipient)\s+profile\s+(?:for|named)\s+([\p{L}][\p{L}\p{M}\'’ .-]{0,79}?)(?=\s*(?:[?.!,]|$))/iu',
+            '/\b(?:preferred\s+)?name\s+(?:is|to|should\s+be)\s+([\p{L}][\p{L}\p{M}\'’ .-]{0,79}?)(?=\s*(?:[?.!,]|$))/iu',
+            '/\bprofile\s+(?:for|named)\s+([\p{L}][\p{L}\p{M}\'’ .-]{0,79}?)(?=\s*(?:[?.!,]|$))/iu',
+        ];
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $value, $matches) === 1) {
+                return Str::limit(trim((string) $matches[1]), 80, '');
+            }
+        }
+
+        return '';
     }
 
     private function record(SupportTicket $ticket, string $event, string $intentId, string $result, User $actor, string $source): void

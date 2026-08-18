@@ -8,6 +8,7 @@ use App\Livewire\Support\ChatWidget;
 use App\Models\AiSupportGuidedTask;
 use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportPreparation;
+use App\Models\CareBooking;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
@@ -211,6 +212,69 @@ class Batch3FamilyOperatingLayerTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_natural_profile_creation_extracts_only_the_name_and_discard_removes_the_card(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $text = 'Can you help me create a care-receiver profile for Maria?';
+        $ticket = $this->ticket($family, $text);
+        Http::fake();
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $text);
+
+        $preparation = AiSupportPreparation::query()->sole();
+        $this->assertSame('care_profile_v1', $preparation->contract_id);
+        $this->assertSame('Maria', data_get($preparation->payload, 'fields.preferred_name'));
+        $this->assertNotSame($text, data_get($preparation->payload, 'fields.preferred_name'));
+        $action = AiSupportMessageAction::query()
+            ->where('action_type', AiSupportMessageAction::TYPE_PREPARATION)
+            ->sole();
+
+        Livewire::actingAs($family)
+            ->test(ChatWidget::class)
+            ->call('cancelPreparation', $preparation->id)
+            ->assertSee('Prepared details discarded. Nothing was saved or sent.');
+
+        $this->assertSame(AiSupportPreparation::STATE_CANCELLED, $preparation->fresh()->state);
+        $this->assertNotNull($action->fresh()->invalidated_at);
+        $this->assertSame('preparation_cancelled', $action->fresh()->invalidation_reason);
+        Http::assertNothingSent();
+    }
+
+    public function test_questioning_submitted_hours_prepares_an_editable_correction(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $request = $this->request($family);
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        CareBooking::query()->create([
+            'care_request_id' => $request->id,
+            'family_account_id' => app(FamilyAccountContext::class)->account($family)->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBooking::STATUS_COMPLETED,
+            'scheduled_start_at' => now()->subHours(3),
+            'scheduled_end_at' => now()->subHour(),
+            'completed_at' => now()->subHour(),
+            'timesheet_submitted_at' => now()->subMinutes(45),
+            'worked_minutes' => 120,
+        ]);
+        $text = 'I need help to question submitted hours because the end time should be 11 AM.';
+        $resolution = app(FamilyIntentResolver::class)->resolve($text);
+        $this->assertSame(FamilyIntentResolver::STATUS_RECOGNIZED, $resolution['status']);
+        $this->assertSame('FAM-VISIT-022', $resolution['intent_id']);
+        $ticket = $this->ticket($family, $text);
+        Http::fake();
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $text);
+
+        $preparation = AiSupportPreparation::query()->sole();
+        $this->assertSame('submitted_hours_correction_v1', $preparation->contract_id);
+        $this->assertSame((string) $request->id, data_get($preparation->payload, 'fields.care_request_id'));
+        $this->assertSame('correction', data_get($preparation->payload, 'fields.issue_type'));
+        $this->assertSame('the end time should be 11 AM.', data_get($preparation->payload, 'fields.reason'));
+        $this->assertDatabaseMissing('ai_support_interaction_events', ['event_type' => 'model_turn_completed']);
+        Http::assertNothingSent();
+    }
+
     public function test_preparation_rejects_secrets_and_cross_account_resources(): void
     {
         [, $family] = $this->eligibleFamily();
@@ -269,6 +333,9 @@ class Batch3FamilyOperatingLayerTest extends TestCase
         app(\App\Services\AiSupport\AiSupportEventRecorder::class)->record($ticket, 'intent_unmatched', [
             'capability_id' => 'support_answers_v1', 'result_code' => 'unmatched',
         ], $family);
+        app(\App\Services\AiSupport\AiSupportEventRecorder::class)->record($ticket, 'transferred_to_human', [
+            'capability_id' => 'support_answers_v1', 'result_code' => 'user_requested',
+        ], $family);
 
         Livewire::actingAs($admin)->test(Overview::class)
             ->assertSee('Family intent coverage')
@@ -276,7 +343,8 @@ class Batch3FamilyOperatingLayerTest extends TestCase
             ->assertSee('197')
             ->assertSee('FAM-START-001')
             ->assertSee('Recent Family intent outcomes')
-            ->assertSee('Unmatched');
+            ->assertSee('Unmatched')
+            ->assertViewHas('intentOutcomeCounts', fn ($counts): bool => $counts->get('intent_transferred') === 1);
     }
 
     /** @return array{User,User} */

@@ -6,6 +6,8 @@ test.describe('In-app support chat', () => {
     test('family starts a chat, admin claims and replies, and family receives the unread reply', async ({ page }, testInfo) => {
         const message = `E2E widget question ${Date.now()}`;
         const reply = `E2E support reply ${Date.now()}`;
+        const pageErrors: string[] = [];
+        page.on('pageerror', (error) => pageErrors.push(error.message));
 
         await loginAs(page, 'family');
         const launcher = page.getByTestId('support-chat-launcher');
@@ -28,6 +30,7 @@ test.describe('In-app support chat', () => {
         await expect(page.getByTestId('support-chat-pending-message').getByText('Sending…')).toBeVisible();
         await expect(panel.getByText(message, { exact: true })).toBeVisible();
         await expect(page.getByTestId('support-chat-pending-message')).toHaveCount(0);
+        expect(pageErrors).toEqual([]);
 
         await page.getByRole('button', { name: 'Minimize support chat' }).click();
         await expect(panel).toBeHidden();

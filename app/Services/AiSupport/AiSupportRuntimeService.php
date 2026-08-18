@@ -100,7 +100,7 @@ class AiSupportRuntimeService
             : null;
         $preparationRequested = $intentRecord !== null
             && in_array((string) data_get($intentRecord, 'contracts.prefill', ''), array_keys(app(AiSupportPreparationContractRegistry::class)->all()), true)
-            && preg_match('/\b(?:prepare|draft|write|send|create|copy|duplicate|reuse|update|change|correct|correction|dispute)\b/i', $newestMessage) === 1;
+            && preg_match('/\b(?:prepare|draft|write|send|create|copy|duplicate|reuse|update|change|correct|correction|question|dispute)\b/i', $newestMessage) === 1;
 
         if ($actor->role === 'family' && ! $paymentFastPath && $familyIntent === null
             && ($intentResolution['status'] ?? null) === FamilyIntentResolver::STATUS_CLARIFY) {

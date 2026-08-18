@@ -172,10 +172,47 @@ class AiSupportPreparationService
         return (array) data_get($preparation->payload, 'fields', []);
     }
 
-    public function cancel(User $actor, string $preparationId): void
+    public function cancel(User $actor, string $preparationId, ?SupportTicket $expectedTicket = null): void
     {
-        $preparation = AiSupportPreparation::query()->whereKey($preparationId)->where('actor_user_id', $actor->id)->firstOrFail();
-        $preparation->forceFill(['state' => AiSupportPreparation::STATE_CANCELLED, 'cancelled_at' => now()])->save();
+        $candidate = AiSupportPreparation::query()
+            ->whereKey($preparationId)
+            ->where('actor_user_id', $actor->id)
+            ->when($expectedTicket, fn ($query) => $query->where('support_ticket_id', $expectedTicket->id))
+            ->firstOrFail();
+
+        $preparation = DB::transaction(function () use ($actor, $candidate): AiSupportPreparation {
+            $ticket = SupportTicket::query()->lockForUpdate()->findOrFail($candidate->support_ticket_id);
+            $this->authorize($actor, $ticket);
+            $preparation = AiSupportPreparation::query()
+                ->lockForUpdate()
+                ->whereKey($candidate->id)
+                ->where('actor_user_id', $actor->id)
+                ->where('support_ticket_id', $ticket->id)
+                ->firstOrFail();
+            $cancelledAt = now();
+            $preparation->forceFill([
+                'state' => AiSupportPreparation::STATE_CANCELLED,
+                'cancelled_at' => $cancelledAt,
+            ])->save();
+
+            AiSupportMessageAction::query()
+                ->lockForUpdate()
+                ->where('support_ticket_id', $ticket->id)
+                ->where('actor_user_id', $actor->id)
+                ->where('action_type', AiSupportMessageAction::TYPE_PREPARATION)
+                ->whereNull('invalidated_at')
+                ->get()
+                ->filter(fn (AiSupportMessageAction $action): bool => (string) data_get($action->payload, 'preparation_id') === $preparation->id)
+                ->each(function (AiSupportMessageAction $action) use ($cancelledAt): void {
+                    $action->forceFill([
+                        'invalidated_at' => $cancelledAt,
+                        'invalidation_reason' => 'preparation_cancelled',
+                    ])->save();
+                });
+
+            return $preparation;
+        }, 3);
+
         if (session()->get(self::SESSION_KEY) === $preparation->id) {
             session()->forget(self::SESSION_KEY);
         }

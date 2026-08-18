@@ -46,7 +46,7 @@ Batch 3 expanded the same command into two complementary layers:
 
 The August 18 Batch 3 run passed 122 of 122 implemented routing phrases, 10 of 10 collisions, and 42 application tests with 1,867 assertions. It made zero provider calls and used no production database.
 
-Batch 4 expands the current deep corpus to 45 intents and 137 phrases, adds the 18-entry/90-evaluation payment-time package, and includes exact Family/Caregiver pricing, normalized failure reasons, Family-visible payment totals/refunds, submitted-hours differences, and resource-authorized recovery paths. The current isolated runner passes 137 of 137 phrases, 10 of 10 collisions, all 45 intents, and 64 application tests with 2,107 assertions. The complete AI Support suite passes 156 tests with 2,916 assertions, and the wider payment/time/regular-care regression passes 100 tests with 623 assertions. No provider or production database is used.
+Batch 4 expands the current deep corpus to 45 intents and 137 phrases, adds the 18-entry/90-evaluation payment-time package, and includes exact Family/Caregiver pricing, normalized failure reasons, Family-visible payment totals/refunds, submitted-hours differences, and resource-authorized recovery paths. The current isolated runner passes 137 of 137 phrases, 10 of 10 collisions, all 45 intents, and 64 application tests with 2,107 assertions. After the Batch 4.1 production-audit corrections, the complete AI Support suite passes 159 tests with 2,943 assertions, and the wider payment/time/regular-care regression passes 100 tests with 623 assertions. No provider or production database is used.
 
 ## Production browser QA record
 

@@ -50,10 +50,6 @@ class FamilyGuidedAssistanceService
     {
         $message = mb_strtolower(trim($message));
 
-        if (preg_match('/\b(?:what|anything|everything|account)\b.{0,45}\b(?:needs?\s+(?:my\s+)?attention|need\s+to\s+do|pending|okay|ok|action)\b|\bwhat\s+should\s+i\s+do\b|\bcheck\s+(?:my\s+)?account\b/iu', $message)) {
-            return self::INTENT_OVERVIEW;
-        }
-
         if (preg_match('/\b(?:inbox|unread|reply|conversation)\b|\b(?:message|messages)\b.{0,24}\b(?:caregiver|inbox|unread|read|reply|send|sent)\b|\b(?:open|show|check|read|reply\s+to|send)\b.{0,24}\bmessages?\b/iu', $message)) {
             return self::INTENT_MESSAGES;
         }
@@ -70,7 +66,7 @@ class FamilyGuidedAssistanceService
             return self::INTENT_PAYMENT_ATTENTION;
         }
 
-        if (preg_match('/\b(?:timesheet|time\s*sheet|submitted\s+hours?|worked\s+hours?|approve\s+(?:the\s+)?hours?|review\s+(?:the\s+)?hours?|reported\s+hours?|time\s+correction)\b|\bcaregiver\b.{0,24}\b(?:submit|submitted)\b.{0,24}\b(?:time|duration|start|end)\b|\b(?:time|duration|start|end)\b.{0,40}\bcaregiver\b.{0,24}\b(?:submit|submitted)\b/iu', $message)) {
+        if (preg_match('/\b(?:timesheet|time\s*sheet|submitted\s+hours?|worked\s+hours?|approve\s+(?:the\s+)?hours?|review\s+(?:the\s+)?hours?|reported\s+hours?|time\s+correction)\b|\bcaregiver\b.{0,24}\b(?:submit|submitted)\b.{0,24}\b(?:hours?|time|duration|start|end)\b|\b(?:hours?|time|duration|start|end)\b.{0,40}\bcaregiver\b.{0,24}\b(?:submit|submitted)\b/iu', $message)) {
             return self::INTENT_TIMESHEETS;
         }
 
@@ -88,6 +84,13 @@ class FamilyGuidedAssistanceService
 
         if (preg_match('/\b(?:applicant|applicants|application|applications|caregiver\s+responses?|caregivers?\s+(?:apply|applied|interested|respond|responded)|caregivers?\b.{0,12}\bapplied|request\s+status|status\s+of\s+(?:my\s+)?(?:care\s+)?request|open\s+(?:care\s+)?requests?|show\s+(?:my\s+)?(?:care\s+)?requests?|care\s+request\s+stand)\b/iu', $message)) {
             return self::INTENT_REQUESTS;
+        }
+
+        // Account-wide wording is intentionally evaluated after specific domains so a
+        // question such as "why did my payment fail and what should I do?" stays about
+        // that exact payment instead of being widened to the whole-account overview.
+        if (preg_match('/\b(?:what|anything|everything|account)\b.{0,45}\b(?:needs?\s+(?:my\s+)?attention|need\s+to\s+do|pending|okay|ok|action)\b|\bwhat\s+should\s+i\s+do\b|\bcheck\s+(?:my\s+)?account\b/iu', $message)) {
+            return self::INTENT_OVERVIEW;
         }
 
         return null;
@@ -225,7 +228,7 @@ class FamilyGuidedAssistanceService
         $lines = $visible->values()->map(
             fn (array $item, int $index): string => ($index + 1).'. '.$item['summary'],
         )->implode("\n");
-        $message = 'I checked your care requests, visits, submitted hours, care receiver profiles, messages, and care-payment actions. I found '.$items->count().' item'.($items->count() === 1 ? '' : 's').' that need attention:'."\n".$lines;
+        $message = 'I checked your care requests, visits, submitted hours, care receiver profiles, messages, and care-payment actions. I found '.$items->count().' item'.($items->count() === 1 ? ' that needs' : 's that need').' attention:'."\n".$lines;
         if ($items->count() > $visible->count()) {
             $message .= "\n".'I am showing the first six. Ask me to check again after you finish one.';
         }
@@ -363,6 +366,10 @@ class FamilyGuidedAssistanceService
                     $target['label'],
                     $target['resource_type'],
                     (int) $target['resource_id'],
+                    ($target['target_id'] === 'family.request.payment_attention'
+                        || (string) data_get($state, 'correction.status') === 'payment_action_required')
+                            ? 'family_payment_attention_v1'
+                            : null,
                 )],
                 $state['correction'] ? 'correction_read' : ($state['family_confirmed'] ? 'hours_confirmed' : 'hours_need_attention'),
             ];
@@ -435,6 +442,7 @@ class FamilyGuidedAssistanceService
                     $target['label'],
                     $target['resource_type'],
                     (int) $target['resource_id'],
+                    'family_payment_attention_v1',
                 )],
                 'payment_'.$state['reason_code'],
             ];
@@ -770,12 +778,19 @@ class FamilyGuidedAssistanceService
             default => AiSupportGuidedTask::TYPE_FAMILY_REQUEST,
         };
 
+        $targetId = (string) $item['navigation_target_id'];
+        $isPaymentAction = (string) $item['type'] === 'payment'
+            || $targetId === 'family.request.payment_attention'
+            || ($targetId === 'family.regular_care.attention'
+                && str_contains(mb_strtolower((string) ($item['title'] ?? '')), 'payment'));
+
         return $this->guide(
             $taskType,
-            (string) $item['navigation_target_id'],
+            $targetId,
             (string) $item['label'],
             $item['resource_type'] ?? null,
             isset($item['resource_id']) ? (int) $item['resource_id'] : null,
+            $isPaymentAction ? 'family_payment_attention_v1' : null,
         );
     }
 
@@ -808,6 +823,7 @@ class FamilyGuidedAssistanceService
         string $label,
         ?string $resourceType = null,
         ?int $resourceId = null,
+        ?string $verifierId = null,
     ): array {
         return [
             'task_type' => $taskType,
@@ -815,6 +831,7 @@ class FamilyGuidedAssistanceService
             'label' => $label,
             'resource_type' => $resourceType,
             'resource_id' => $resourceId,
+            'verifier_id' => $verifierId,
         ];
     }
 

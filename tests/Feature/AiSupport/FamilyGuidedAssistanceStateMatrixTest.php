@@ -177,6 +177,47 @@ class FamilyGuidedAssistanceStateMatrixTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_failed_payment_guide_rechecks_the_exact_payment_before_completing(): void
+    {
+        $family = $this->eligibleFamily();
+        $account = app(FamilyAccountContext::class)->account($family);
+        $caregiver = User::factory()->create(['role' => 'caregiver', 'name' => 'Morgan Care']);
+        $request = $this->request($family, ['title' => 'Payment recovery', 'status' => CareRequest::STATUS_FILLED]);
+        $booking = $this->booking($family, $caregiver, $request, [
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now()->subHour(),
+            'timesheet_submitted_at' => now()->subMinutes(50),
+            'worked_minutes' => 120,
+        ]);
+        $payment = CareBookingPayment::query()->create([
+            'care_booking_id' => $booking->id,
+            'family_account_id' => $account->id,
+            'family_user_id' => $family->id,
+            'initiated_by_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareBookingPayment::STATUS_FAILED,
+            'currency' => 'usd',
+            'amount_authorized_cents' => 6000,
+            'last_error' => 'card_declined',
+        ]);
+        Http::fake();
+
+        [$ticket, $task] = $this->respond($family, 'Why did my latest payment fail, and what should I do next?');
+        $this->assertSame('family_payment_attention_v1', data_get($task->payload, 'verifier_id'));
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, 'I did it');
+        $this->assertStringContainsString('still needs attention', $ticket->publicMessages()->reorder()->latest()->firstOrFail()->body);
+        $this->assertStringContainsString('card provider declined', $ticket->publicMessages()->reorder()->latest()->firstOrFail()->body);
+        $this->assertNull($task->fresh()->completed_at);
+
+        $payment->forceFill(['status' => CareBookingPayment::STATUS_CAPTURED, 'last_error' => null])->save();
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, 'Check again');
+
+        $this->assertSame(AiSupportGuidedTask::STATE_COMPLETED, $task->fresh()->state);
+        $this->assertStringContainsString('no longer needs attention', $ticket->publicMessages()->reorder()->latest()->firstOrFail()->body);
+        Http::assertNothingSent();
+    }
+
     public function test_payment_history_returns_exact_family_visible_amounts(): void
     {
         $family = $this->eligibleFamily();

@@ -14,9 +14,16 @@ class FamilyPaymentTimeStateReader
     public function __construct(private readonly FamilyAccountContext $familyAccounts) {}
 
     /** @return array<string,mixed>|null */
-    public function latestPaymentAttention(User $actor): ?array
-    {
+    public function latestPaymentAttention(
+        User $actor,
+        ?string $resourceType = null,
+        ?int $resourceId = null,
+    ): ?array {
         $account = $this->authorizedAccount($actor);
+        if (($resourceType !== null || $resourceId !== null)
+            && (! in_array($resourceType, ['care_request', 'care_plan'], true) || ! $resourceId)) {
+            return null;
+        }
         $booking = CareBooking::query()
             ->forFamilyAccount($account)
             ->with([
@@ -33,6 +40,8 @@ class FamilyPaymentTimeStateReader
                 })->orWhereHas('latestTimeCorrection', fn ($correction) => $correction
                     ->where('status', CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED));
             })
+            ->when($resourceType === 'care_request', fn ($query) => $query->where('care_request_id', $resourceId))
+            ->when($resourceType === 'care_plan', fn ($query) => $query->where('care_plan_id', $resourceId))
             ->latest('updated_at')
             ->first();
 

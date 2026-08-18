@@ -1,10 +1,10 @@
 # Payments, Submitted Hours, and Recovery — Batch 4
 
-Status: Implemented in source; production deployment and KB publication intentionally deferred for the joint Batch 3/4 review
+Status: Deployed to the exact two-user pilot; all 18 Batch 4 knowledge entries published; Batch 4.1 audit corrections implemented and awaiting the normal deployment
 
 Date: August 18, 2026
 
-Production impact now: None. No deployment, production command, availability change, pilot-grant change, payment mutation, visit mutation, or user-session change was performed.
+Production impact now: Batch 3 and Batch 4 were deployed at commit `0ab4eedb52c417040d53f2a5e03efb75a2d8f627`, and the exact 18-entry `payment-time-kb-v1` package was published. Availability remains **Pilot only** for the same two Family users; **Live for everyone** remains off. No payment, visit, timesheet, or pilot-grant record was changed by publication.
 
 ## Product decision
 
@@ -111,7 +111,7 @@ php artisan ai-support:import-payment-time-kb \
 
 The publication command can be run by either full Administrator alone. It publishes only the exact 18-entry manifest. Existing-content differences are refused. It does not change Availability, grants, payment records, visits, timesheets, or application sessions.
 
-Do not run this production command until the user chooses the joint Batch 3/4 deployment window.
+This publication operation was completed successfully on August 18, 2026: 18 entries were created and 18 were published, with no knowledge conflicts and no Availability, pilot, payment, or visit mutation.
 
 ## Evaluation and proof
 
@@ -131,7 +131,7 @@ The generated Family catalog now has 324 records and 197 explicitly KB-mapped in
 
 Final source verification on August 18, 2026:
 
-- complete AI Support suite: **156 tests / 2,916 assertions**;
+- complete AI Support suite after the Batch 4.1 corrections: **159 tests / 2,943 assertions**;
 - isolated Family Batch 1–4 mass harness: **64 tests / 2,107 assertions**;
 - mass routing: **45 / 45 intents**, **137 / 137 phrases**, and **10 / 10 collisions**;
 - wider payment, Stripe, care-history, time-correction, timesheet, completed-extra-visit, and regular-care regression: **100 tests / 623 assertions**; and
@@ -139,7 +139,7 @@ Final source verification on August 18, 2026:
 
 ## Deliberately unchanged
 
-- Production remains on the existing deployed commit until the joint review.
+- Production remains on the deployed Batch 3/4 baseline until the normal deployment of the Batch 4.1 correction commit.
 - The exact two-user pilot remains the only enabled audience.
 - **Live for everyone** remains off.
 - No database migration is required for Batch 4.
@@ -147,17 +147,8 @@ Final source verification on August 18, 2026:
 - No existing payment, visit, correction, refund, payout, or timesheet was written.
 - The old readiness/preflight evidence system is not required for this release under `DEC-072`.
 
-## Joint Batch 3/4 review
+## Joint Batch 3/4 review outcome
 
-When an appropriate maintenance window is available:
+The combined release, migration, KB publication, and authenticated pilot-browser review were completed. The review found several ordinary-language and continuation defects rather than a release-boundary problem. Those findings and their regression coverage are recorded in [Production Audit Corrections — Batch 4.1](48-production-audit-corrections-batch-4-1.md).
 
-1. review the combined Batch 3 and Batch 4 code and documentation;
-2. run the full isolated AI Support and wider targeted regression suites;
-3. commit and push the combined Batch 4 source to `master` without deploying during active shifts;
-4. run the normal `deploy.sh` once;
-5. publish the exact Batch 4 KB package with the command above;
-6. test both pilot accounts for price, failed-payment reason, submitted-hours recap, exact navigation, secure recovery, and human transfer;
-7. confirm Admin transcripts and KB entries; and
-8. leave **Live for everyone** off.
-
-After that joint review, the next implementation batch is Batch 5: care profiles and request lifecycle.
+After the normal deployment and quick two-pilot-user verification of Batch 4.1, the next implementation batch is Batch 5: care profiles and request lifecycle.

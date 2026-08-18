@@ -45,6 +45,9 @@ class FamilyGuidedAssistanceTest extends TestCase
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_MESSAGES, $service->intentFor('Do I have unread messages?'));
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_MESSAGES, $service->intentFor('Can I message my caregiver?'));
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_PAYMENT_ATTENTION, $service->intentFor('What does this payment error message mean?'));
+        $this->assertSame(FamilyGuidedAssistanceService::INTENT_PAYMENT_ATTENTION, $service->intentFor('Why did my latest payment fail, and what should I do next?'));
+        $this->assertSame(FamilyGuidedAssistanceService::INTENT_TIMESHEETS, $service->intentFor('Please show me the latest hours the caregiver submitted and anything I need to review.'));
+        $this->assertSame(FamilyGuidedAssistanceService::INTENT_TIMESHEETS, $service->intentFor('What hours did my caregiver submit?'));
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_HISTORY, $service->intentFor('Show my past visit receipts'));
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_REQUESTS, $service->intentFor('What is the status of my care request?'));
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_REGULAR_CARE, $service->intentFor('When is my next regular care visit?'));

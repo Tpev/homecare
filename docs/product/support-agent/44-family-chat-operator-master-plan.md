@@ -38,7 +38,7 @@ The following verification passed on August 18, 2026:
 
 | Verification | Result |
 | --- | ---: |
-| Complete AI Support feature suite | 156 tests / 2,916 assertions passed |
+| Complete AI Support feature suite | 159 tests / 2,943 assertions passed |
 | Deep runtime intent inventory after Batch 4 | 45 / 45 intents |
 | Deep runtime representative phrases | 137 |
 | Near-neighbor routing collisions | 10 / 10 protected |
@@ -124,34 +124,34 @@ The operating layer is implemented, but domain breadth is still incomplete:
 - the model may answer, choose a care path, patch a care-request draft, propose an allowlisted navigation target, or transfer, but it cannot invoke general Family tools;
 - only care-request publication has a registered confirmed domain write;
 - Batch 2 guidance does not approve hours, accept or reject a visit change, send a message, edit a profile, retry a care payment, or mutate another domain record;
-- authoritative completion verification is complete for care-request publication and the saved-payment-method journey, not for every highlighted control;
+- authoritative completion verification is complete for care-request publication, the saved-payment-method journey, and exact care-payment-attention recovery, not for every highlighted control;
 - the five preparation contracts fill existing forms but deliberately do not save, send, approve, dispute, publish, or submit;
 - payment and submitted-hours reads now have a normalized authorized reader, but secure payment/authentication and hours approval remain in the existing UI;
 - support for hiring, visit changes, regular care mutations, Family administration, Continuous Coverage, and exceptional outcomes still needs domain-specific readers, targets, verifiers, and narrow tools; and
-- source now contains the approved `$30 Family / $27 caregiver / $3 LoLo` truth, but it is not active in production until the joint deployment and exact Batch 4 KB publication.
+- the approved `$30 Family / $27 caregiver / $3 LoLo` support truth is published for the exact two-user production pilot; application pricing reconciliation remains separate.
 
 ### Master execution board
 
 | Workstream | Current position | Target | Delivery state |
 | --- | --- | --- | --- |
 | Intent portfolio | 324 / 324 executable dispositions; 45 deep runtime rows | Every implemented row retains evidence and rollout state | Batch 4 source complete; expand by domain |
-| Governed knowledge | Family Operations Wave 1 in production; Batch 4 pack ready in source; 197 explicit catalog mappings | Stable domain packs mapped explicitly to every Explain-capable intent | Batch 4 source complete; production publication deferred |
+| Governed knowledge | Family Operations Wave 1 and all 18 Batch 4 entries published; 197 explicit catalog mappings | Stable domain packs mapped explicitly to every Explain-capable intent | Batch 4 deployed for the two-user pilot |
 | Intent resolution | Layered safety, active task, deterministic prep/handlers, catalog classification, bounded fallback | Add high-confidence domain handlers only with authority/evidence | Batch 3 complete |
 | Authorized reads | Overview plus normalized payment-failure, payment-amount, submitted-hours, correction, requests, visits, profiles, messages, history, and regular-care state | Narrow normalized readers for every state-dependent supported intent | Batch 4 expanded; continues Batches 5-9 |
 | Navigation and guidance | 24 Family destinations; 19 exact highlights | Every guided intent has a resource-authorized target, one-step instruction, and recovery behavior | Foundation complete; coverage expands by domain |
 | Preparation/prefill | Five reversible Batch 3 contracts plus care-request chat draft | Add domain contracts only for supported existing forms | Batch 3 complete; expand by domain |
 | Confirmed execution | Two request-publication tools | Narrow confirmed tools for appropriate existing domain services | Expands Batches 4-8 |
-| Authoritative verification | Generic registry; request receipt and saved payment method proven; unavailable verifier is explicit | Every complete journey has a domain receipt or fresh state verifier | Interface complete; expands by domain |
+| Authoritative verification | Generic registry; request receipt, saved payment method, and exact payment-attention clearing proven; unavailable verifier is explicit | Every complete journey has a domain receipt or fresh state verifier | Interface complete; expands by domain |
 | Human support | Atomic same-conversation transfer, Admin alert, context summary | Human terminal path for every judgment/exception intent with no repetition | Implemented; refine with domain context |
 | Older-adult UI | State-aware start, mobile chat, universal contextual follow-ups, action progress, recovery, and guide highlight | Complete more domain journeys without adding cognitive load | Batch 3 complete; usability expands by domain |
-| Evaluation | 324 catalog rows, 197 mappings, 1,296 phrases, 18 Batch 4 entries, 90 Batch 4 KB cases, 45 deep runtime intents, 137 routes, 10 collisions | Per-intent multi-turn, state, browser, and usability coverage | Batch 4 source complete; joint review pending |
+| Evaluation | 324 catalog rows, 197 mappings, 1,296 phrases, 18 Batch 4 entries, 90 Batch 4 KB cases, 45 deep runtime intents, 137 routes, 10 collisions; 159 AI Support tests and seven isolated browser scenarios green | Per-intent multi-turn, state, browser, and usability coverage | Batch 4.1 correction regression complete |
 | Admin visibility | KB lifecycle, transcripts, Availability, searchable 324-intent catalog, and compact outcome summary | Add useful domain funnel detail without transcript duplication | Batch 3 complete; refine by domain |
 
 ## Knowledge-base audit
 
 ### Current governed inventory
 
-Family Operations KB Wave 1 has been published in production and its 190 covered intent rows remain mapped. Batch 4 adds 18 source-defined payment/time entries, 90 evaluations, and seven additional unique mappings for a total of 197. The Batch 4 package and pricing truth are not yet deployed or published in production. See [document 47](47-payment-time-recovery-batch-4.md).
+Family Operations KB Wave 1 and the 18-entry Batch 4 payment/time package have been published in production for the exact two-user pilot. Their 197 unique covered intent rows remain explicitly mapped, and Batch 4 carries 90 linked evaluations. See [document 47](47-payment-time-recovery-batch-4.md) and the [Batch 4.1 production-audit correction](48-production-audit-corrections-batch-4-1.md).
 
 | Package | Entries | Current scope |
 | --- | ---: | --- |
@@ -353,7 +353,7 @@ Make the assistant able to explain and recover the highest-anxiety money and tim
 - exact secure retry/authentication controls; and
 - authoritative verification after recovery.
 
-Implemented in source on August 18, 2026. This batch includes the 18-entry payment/time KB pack, 90 linked KB evaluations, the `$30 / $27 / $3` product truth, deterministic publication-gated price calculations, normalized failure and submitted-hours readers, exact resource-authorized recovery targets, and existing reversible dispute/correction preparation. Secure payment/authentication and consequential hours/payment actions remain in the normal UI. Production deployment and publication are deferred to the joint Batch 3/4 review.
+Deployed and published for the exact two-user pilot on August 18, 2026. This batch includes the 18-entry payment/time KB pack, 90 linked KB evaluations, the `$30 / $27 / $3` product truth, deterministic publication-gated price calculations, normalized failure and submitted-hours readers, exact resource-authorized recovery targets, and existing reversible dispute/correction preparation. Secure payment/authentication and consequential hours/payment actions remain in the normal UI. The authenticated findings are corrected by [Batch 4.1](48-production-audit-corrections-batch-4-1.md).
 
 ### Batch 5 — Care profiles and request lifecycle
 
@@ -570,9 +570,9 @@ Keep serving cost low by using the model once for a genuinely new or ambiguous g
 
 ## Immediate implementation recommendation
 
-Batch 4 is implemented in source. The immediate next step is the **joint Batch 3/4 review and controlled deployment** described in [document 47](47-payment-time-recovery-batch-4.md): run the combined regression, deploy once through `deploy.sh`, publish the exact Batch 4 KB package, test both pilot accounts, and keep **Live for everyone** off.
+Batch 4 is deployed and published for the exact two-user pilot. The immediate operational step is to deploy the [Batch 4.1 production-audit correction](48-production-audit-corrections-batch-4-1.md) through the normal `deploy.sh`, verify the corrected phrases and continuation behavior in both pilot accounts, and keep **Live for everyone** off.
 
-After that joint review, the next build is **Batch 5 — Care profiles and request lifecycle**. The Batch 3 implementation record is [document 46](46-family-operating-layer-batch-3.md).
+The next build is **Batch 5 — Care profiles and request lifecycle**. The Batch 3 implementation record is [document 46](46-family-operating-layer-batch-3.md).
 
 ## Maintenance rule
 

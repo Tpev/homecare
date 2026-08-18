@@ -140,7 +140,7 @@ class FamilyIntentResolver
     private function preparationIntent(string $message): ?string
     {
         $value = $this->normalize($message);
-        $prepareVerb = preg_match('/\b(?:prepare|draft|write|send|create|copy|duplicate|reuse|update|change|correct)\b/', $value) === 1;
+        $prepareVerb = preg_match('/\b(?:prepare|draft|write|send|create|copy|duplicate|reuse|update|change|correct|question|dispute)\b/', $value) === 1;
         if (! $prepareVerb) {
             return null;
         }
