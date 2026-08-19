@@ -1,6 +1,6 @@
 # Family Chat Operator Master Coverage and Delivery Plan
 
-Status: Active master plan; Batches 1 through 5 deployed to the exact two-user pilot; the August 19 Batch 5 completion audit is locally green and awaits normal deployment plus final production recheck
+Status: Active master plan; Batches 1 through 5 and the August 19 completion correction are deployed to the exact two-user pilot; final authenticated Family lifecycle journeys remain
 
 Audited: August 19, 2026
 
@@ -157,7 +157,7 @@ The operating layer is implemented, but domain breadth is still incomplete:
 
 ### Current governed inventory
 
-Family Operations KB Wave 1, the 18-entry Batch 4 payment/time package, and the 20-entry Batch 5 profile/request package are published in production for the exact two-user pilot. Together they map 230 unique Family intent rows. The authenticated Batch 5 smoke produced three narrow source corrections; the August 19 completion audit then expanded exact lifecycle, failure, desktop, and mobile evidence. That completion package awaits normal deployment and production recheck. See [document 47](47-payment-time-recovery-batch-4.md), the [Batch 4.1 production-audit correction](48-production-audit-corrections-batch-4-1.md), and the [Batch 5 implementation and production-audit record](49-care-profiles-request-lifecycle-batch-5.md).
+Family Operations KB Wave 1, the 18-entry Batch 4 payment/time package, and the 20-entry Batch 5 profile/request package are published in production for the exact two-user pilot. Together they map 230 unique Family intent rows. The authenticated Batch 5 smoke produced three narrow source corrections; the August 19 completion audit then expanded exact lifecycle, failure, desktop, and mobile evidence. The completion package and catalog-checksum correction are deployed, and the Admin production surface is green; final authenticated Family lifecycle journeys remain. See [document 47](47-payment-time-recovery-batch-4.md), the [Batch 4.1 production-audit correction](48-production-audit-corrections-batch-4-1.md), and the [Batch 5 implementation and production-audit record](49-care-profiles-request-lifecycle-batch-5.md).
 
 | Package | Entries | Current scope |
 | --- | ---: | --- |
@@ -364,7 +364,7 @@ Deployed and published for the exact two-user pilot on August 18, 2026. This bat
 
 ### Batch 5 — Care profiles and request lifecycle
 
-Implementation status: The base batch is deployed, published, and active for the exact two-user pilot. The August 19 completion package is verified locally with expanded lifecycle and browser evidence; its normal deployment and final production recheck remain. **Live for everyone stays off.**
+Implementation status: The base batch and August 19 completion correction are deployed, published, and active for the exact two-user pilot. Expanded lifecycle, browser, mass-corpus, and Admin production evidence is green; final authenticated Family lifecycle journeys remain. **Live for everyone stays off.**
 
 Complete the main preparation journey:
 

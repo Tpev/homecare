@@ -1,6 +1,6 @@
 # Care Profiles and Request Lifecycle — Batch 5
 
-Status: Deployed, published, and active for the exact two-user pilot; full completion audit and expanded browser coverage passed locally on August 19, 2026; normal deployment and final production recheck remain
+Status: Deployed, published, and active for the exact two-user pilot; full completion audit, expanded browser coverage, and Admin production recovery passed on August 19, 2026; final authenticated Family lifecycle journeys remain
 
 Approved: August 18, 2026
 
@@ -166,6 +166,14 @@ After the completion commit is deployed, the production recheck is:
 5. read an eligible request, withdraw it, create a fresh copy, supply a new schedule, publish it, and verify the new request ID differs while the source remains withdrawn;
 6. inspect the Admin evidence for the separate publication and lifecycle receipts; and
 7. confirm Availability is **Pilot only**, exactly the two approved Family grants remain active, and **Live for everyone** is off.
+
+### Completion-deployment correction — August 19, 2026
+
+Production served the completion bundle from commit `788deecf`, but the Admin AI Support overview returned HTTP 500 while its Availability, Pilot users, Knowledge base, Activity, and ticket-evidence pages remained healthy. The failure was not caused by production data or the Batch 5 runtime. The authoritative Family coverage registry had changed without regenerating the source checksum stored in `resources/ai-support/intents/family-v1.php`; `FamilyIntentCatalog` correctly failed closed on that mismatch.
+
+Commit `463291e5` regenerates the exact checksum and adds a regression assertion for the bounded searchable intent surface. It also keeps the overview lean by aggregating 30-day outcome counts in SQL, loading only the 30 newest outcome rows, and rendering at most 50 matching intent rows at once. Before push, the complete AI Support suite passed **180 tests / 3,188 assertions** and the isolated Family Batch 1–5 harness passed **88 tests / 2,379 assertions**, **137 / 137** routing phrases, **64 / 64** Batch 5 phrases, **324 / 324** catalog records, **230 / 230** KB mappings, and **10 / 10** collision cases with zero provider calls or production writes.
+
+The same authenticated Admin session confirmed **Pilot only**, exactly users `19` and `282`, **Live for everyone off**, 111 published KB entries including the complete Batch 5 package, and then resolved transferred pilot ticket `#33`. After the normal deployment of `463291e5`, the overview loaded its 324-intent / 230-mapping surface and recent outcome aggregates with zero browser errors. The final Family lifecycle production journeys remain and require an authenticated session for one of the two exact pilot users.
 
 ## Production deployment
 
