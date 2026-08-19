@@ -71,13 +71,17 @@ document.addEventListener('alpine:init', () => {
         guidedObserver: null,
         guidedTimer: null,
         isMobile: false,
+        loadingEarlier: false,
         mediaQuery: null,
+        messageResizeObserver: null,
         newMessagesBelow: false,
         online: window.navigator.onLine,
         open: false,
         pendingMessage: null,
         pollTimer: null,
         popstateHandler: null,
+        scrollFrame: null,
+        scrollSettleTimer: null,
         sendError: '',
         sending: false,
         shouldStickToBottom: true,
@@ -153,13 +157,18 @@ document.addEventListener('alpine:init', () => {
             this.$nextTick(() => {
                 this.updateVisualViewport();
                 this.resizeComposer();
+                this.initializeMessageAnchoring();
                 if (this.open) {
                     this.applyScrollLock();
                     this.prepareHistoryState();
-                    this.restoreScroll(this.isMobile || this.initialUnreadCount > 0);
+                    this.shouldStickToBottom = true;
+                    this.restoreScroll(true);
                     this.$wire.openPanel()
                         .then(() => {
-                            if (this.isMobile) this.$nextTick(() => this.scrollToBottom());
+                            this.$nextTick(() => {
+                                this.initializeMessageAnchoring();
+                                this.queueScrollToBottom();
+                            });
                         })
                         .catch(() => {});
                 }
@@ -172,7 +181,10 @@ document.addEventListener('alpine:init', () => {
         destroy() {
             window.clearTimeout(this.pollTimer);
             window.clearTimeout(this.guidedTimer);
+            window.clearTimeout(this.scrollSettleTimer);
+            window.cancelAnimationFrame(this.scrollFrame);
             this.guidedObserver?.disconnect();
+            this.messageResizeObserver?.disconnect();
             this.clearGuidedHighlight();
             window.removeEventListener('popstate', this.popstateHandler);
             window.visualViewport?.removeEventListener('resize', this.viewportHandler);
@@ -206,7 +218,8 @@ document.addEventListener('alpine:init', () => {
             this.announcement = 'Support chat opened.';
 
             this.$nextTick(() => {
-                this.restoreScroll(this.isMobile || this.initialUnreadCount > 0);
+                this.shouldStickToBottom = true;
+                this.restoreScroll(true);
                 this.$refs.composer?.focus({ preventScroll: true });
             });
 
@@ -214,7 +227,8 @@ document.addEventListener('alpine:init', () => {
                 .then(() => {
                     this.initialUnreadCount = 0;
                     this.$nextTick(() => {
-                        if (this.isMobile) this.scrollToBottom();
+                        this.initializeMessageAnchoring();
+                        this.queueScrollToBottom();
                         this.restoreComposerFocusIfLost();
                     });
                 })
@@ -347,31 +361,36 @@ document.addEventListener('alpine:init', () => {
 
             composer.style.height = 'auto';
             composer.style.height = `${Math.min(112, Math.max(44, composer.scrollHeight))}px`;
+            if (this.open && this.shouldStickToBottom && ! this.loadingEarlier) {
+                this.queueScrollToBottom();
+            }
         },
 
-        handleComposerEnter(event) {
-            if (event.isComposing || event.shiftKey) return;
+        handleComposerKeydown(event) {
+            if (event.key !== 'Enter' || event.isComposing || event.shiftKey) return;
 
             event.preventDefault();
+            event.stopPropagation();
             this.sendMessage();
         },
 
         sendMessage() {
             const body = this.draft.trim();
-            if (! body || this.sending) return;
-
-            if (this.pendingMessage?.status === 'failed' && this.pendingMessage.body === body) {
-                this.retryPending();
-
-                return;
-            }
+            if (! body || this.sending || this.pendingMessage) return;
 
             const clientId = newClientMessageId();
             this.pendingMessage = { body, clientId, status: this.online ? 'sending' : 'failed' };
             this.sendError = this.online ? '' : "You're offline. We'll send when you reconnect.";
             this.sending = this.online;
-            writeSession(this.draftKey(), this.draft);
-            this.$nextTick(() => this.scrollToBottom());
+            writeSession(this.draftKey(), body);
+            this.draft = '';
+            this.composerSelectionStart = 0;
+            this.composerSelectionEnd = 0;
+            this.shouldStickToBottom = true;
+            this.$nextTick(() => {
+                this.resizeComposer();
+                this.queueScrollToBottom();
+            });
 
             if (! this.online) {
                 this.announcement = 'Message not sent because you are offline.';
@@ -410,9 +429,9 @@ document.addEventListener('alpine:init', () => {
                     const responseStatus = Number(error?.status ?? error?.response?.status ?? error?.cause?.status);
                     const sessionExpired = [401, 419].includes(responseStatus);
                     this.sendError = sessionExpired
-                        ? 'Your session expired. Sign in again to send this message. Your draft is safe.'
+                        ? 'Your session expired. Sign in again to send this message. Your message is safe.'
                         : (window.navigator.onLine
-                            ? 'We could not send that message. Your draft is safe; try again.'
+                            ? 'We could not send that message. Your message is safe; try again.'
                             : "You're offline. We'll send when you reconnect.");
                     this.announcement = sessionExpired ? this.sendError : 'Message failed to send. Try again.';
                 })
@@ -424,20 +443,22 @@ document.addEventListener('alpine:init', () => {
         messageSent(detail) {
             if (this.pendingMessage && detail.clientId !== this.pendingMessage.clientId) return;
 
+            const followUpDraft = this.draft;
             const previousDraftKey = this.draftKey();
             this.ticketId = detail.ticketId ?? this.ticketId;
             removeSession(previousDraftKey);
             removeSession(this.draftKey());
+            if (followUpDraft) writeSession(this.draftKey(), followUpDraft);
             this.pendingMessage = null;
             this.sending = false;
             this.sendError = '';
-            this.draft = '';
             this.announcement = 'Message sent.';
             this.initialUnreadCount = 0;
 
             this.$nextTick(() => {
+                this.initializeMessageAnchoring();
                 this.resizeComposer();
-                this.scrollToBottom();
+                this.queueScrollToBottom();
                 this.$refs.composer?.focus({ preventScroll: true });
             });
         },
@@ -450,7 +471,7 @@ document.addEventListener('alpine:init', () => {
             }
             this.sending = false;
             this.sendError = detail.message || 'We could not send that message. Try again.';
-            this.announcement = `${this.sendError} Your draft is still here.`;
+            this.announcement = `${this.sendError} Your message is still here.`;
         },
 
         conversationReset() {
@@ -463,8 +484,9 @@ document.addEventListener('alpine:init', () => {
             this.sendError = '';
             this.announcement = 'New support conversation ready.';
             this.$nextTick(() => {
+                this.initializeMessageAnchoring();
                 this.resizeComposer();
-                this.scrollToBottom();
+                this.queueScrollToBottom();
                 this.$refs.composer?.focus({ preventScroll: true });
             });
         },
@@ -623,10 +645,12 @@ document.addEventListener('alpine:init', () => {
             try {
                 await this.$wire.refreshWidget(this.open);
                 this.$nextTick(() => {
+                    this.initializeMessageAnchoring();
                     this.syncGuidedTask();
                     if (composerWasFocused) this.restoreComposerFocusIfLost();
                     if (wasNearBottom) {
-                        this.scrollToBottom();
+                        this.shouldStickToBottom = true;
+                        this.queueScrollToBottom();
                     } else if (this.$refs.messages) {
                         this.$refs.messages.scrollTop = previousScrollTop;
                         if (this.$refs.messages.scrollHeight > previousScrollHeight + 1) {
@@ -651,18 +675,74 @@ document.addEventListener('alpine:init', () => {
             writeSession(this.scrollKey(), String(messageArea.scrollTop));
         },
 
+        async loadEarlier() {
+            if (this.loadingEarlier) return;
+
+            const messageArea = this.$refs.messages;
+            if (! messageArea) return;
+
+            const previousScrollTop = messageArea.scrollTop;
+            const previousScrollHeight = messageArea.scrollHeight;
+            this.loadingEarlier = true;
+            this.shouldStickToBottom = false;
+
+            try {
+                await this.$wire.loadMore();
+                await this.$nextTick();
+
+                const nextMessageArea = this.$refs.messages;
+                if (! nextMessageArea) return;
+
+                const addedHeight = Math.max(0, nextMessageArea.scrollHeight - previousScrollHeight);
+                nextMessageArea.scrollTop = previousScrollTop + addedHeight;
+                writeSession(this.scrollKey(), String(nextMessageArea.scrollTop));
+                this.initializeMessageAnchoring();
+            } finally {
+                this.loadingEarlier = false;
+            }
+        },
+
         restoreScroll(forceBottom = false) {
             const messageArea = this.$refs.messages;
             if (! messageArea) return;
 
-            const stored = Number(readSession(this.scrollKey(), ''));
+            const storedValue = readSession(this.scrollKey(), null);
+            const stored = storedValue === null || storedValue === '' ? Number.NaN : Number(storedValue);
             if (forceBottom || ! Number.isFinite(stored) || stored < 0) {
-                this.scrollToBottom();
+                this.queueScrollToBottom();
 
                 return;
             }
 
             messageArea.scrollTop = stored;
+        },
+
+        initializeMessageAnchoring() {
+            this.messageResizeObserver?.disconnect();
+            this.messageResizeObserver = null;
+
+            const messageContent = this.$refs.messageContent;
+            if (! messageContent || typeof window.ResizeObserver === 'undefined') return;
+
+            this.messageResizeObserver = new window.ResizeObserver(() => {
+                if (! this.open || ! this.shouldStickToBottom || this.loadingEarlier) return;
+
+                this.queueScrollToBottom();
+            });
+            this.messageResizeObserver.observe(messageContent);
+        },
+
+        queueScrollToBottom() {
+            window.cancelAnimationFrame(this.scrollFrame);
+            window.clearTimeout(this.scrollSettleTimer);
+
+            this.scrollFrame = window.requestAnimationFrame(() => {
+                this.scrollToBottom();
+                this.scrollFrame = window.requestAnimationFrame(() => this.scrollToBottom());
+            });
+            this.scrollSettleTimer = window.setTimeout(() => {
+                if (this.shouldStickToBottom && ! this.loadingEarlier) this.scrollToBottom();
+            }, 80);
         },
 
         scrollToBottom(smooth = false) {

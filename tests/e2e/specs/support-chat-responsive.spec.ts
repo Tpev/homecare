@@ -171,12 +171,21 @@ test.describe('Mobile support chat', () => {
     test('supports long history, resolved state, large text, and a new conversation', async ({ page }) => {
         const pageErrors: string[] = [];
         page.on('pageerror', (error) => pageErrors.push(error.message));
-        await page.setViewportSize({ width: 430, height: 932 });
+        await page.setViewportSize({ width: 1280, height: 800 });
         await loginAs(page, 'caregiverMarketplace');
         await page.goto('/profile');
         await page.getByTestId('support-chat-launcher').click();
 
         const panel = page.getByTestId('support-chat-panel');
+        const messages = page.getByTestId('support-chat-messages');
+        await expect.poll(() => messages.evaluate((element) => (
+            element.scrollHeight - element.scrollTop - element.clientHeight
+        ))).toBeLessThan(4);
+
+        await page.setViewportSize({ width: 430, height: 932 });
+        await expect.poll(() => messages.evaluate((element) => (
+            element.scrollHeight - element.scrollTop - element.clientHeight
+        ))).toBeLessThan(4);
         await expect(panel.getByText('This conversation is resolved. Replying will reopen it.')).toBeVisible();
         await expect(panel.getByRole('button', { name: 'Load earlier messages' })).toBeVisible();
         await expectMinimumTextContrast(panel.locator('.support-chat-time-separator').first(), [247, 242, 234]);
@@ -185,7 +194,6 @@ test.describe('Mobile support chat', () => {
         await panel.getByRole('button', { name: 'Load earlier messages' }).click();
         await expect(panel.getByText('E2E oldest mobile support message')).toBeVisible();
 
-        const messages = page.getByTestId('support-chat-messages');
         await messages.evaluate((element) => { element.scrollTop = 0; });
         await page.getByRole('button', { name: 'Minimize support chat' }).click();
         await expect(panel).toBeHidden();
@@ -212,6 +220,7 @@ test.describe('Mobile support chat', () => {
         await expect(composer).toHaveValue('A new question after\nthe resolved conversation.');
         await expect(page.getByTestId('support-chat-send')).toBeEnabled();
         await composer.press('Enter');
+        await expect(composer).toHaveValue('');
         await expect(panel.getByText('A new question after\nthe resolved conversation.', { exact: true })).toBeVisible({ timeout: 15_000 });
         await expect(page.getByTestId('support-chat-pending-message')).toHaveCount(0, { timeout: 15_000 });
 

@@ -21,15 +21,21 @@ test.describe('In-app support chat', () => {
         await expect(panel.getByText('Hi E2E. How can we help?')).toBeVisible();
         await page.screenshot({ path: testInfo.outputPath('support-chat-desktop-empty.png'), fullPage: true });
 
-        await page.getByLabel('Message LoLo Support').fill(message);
+        const composer = page.getByLabel('Message LoLo Support');
+        await composer.fill(message);
         await page.route('**/livewire/update', async (route) => {
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            await new Promise((resolve) => setTimeout(resolve, 1_000));
             await route.continue();
         }, { times: 1 });
         await page.getByTestId('support-chat-send').click();
+        await expect(composer).toHaveValue('');
         await expect(page.getByTestId('support-chat-pending-message').getByText('Sending…')).toBeVisible();
+        const followUpDraft = 'A follow-up I am already typing.';
+        await composer.fill(followUpDraft);
         await expect(panel.getByText(message, { exact: true })).toBeVisible();
         await expect(page.getByTestId('support-chat-pending-message')).toHaveCount(0);
+        await expect(composer).toHaveValue(followUpDraft);
+        await composer.fill('');
         expect(pageErrors).toEqual([]);
 
         await page.getByRole('button', { name: 'Minimize support chat' }).click();

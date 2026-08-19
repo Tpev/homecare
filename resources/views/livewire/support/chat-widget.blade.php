@@ -153,11 +153,17 @@
             aria-label="Conversation with LoLo Support"
             x-on:scroll.debounce.150ms="rememberScroll()"
         >
-            @if ($this->hasOlderMessages)
-                <div class="mb-4 text-center">
-                    <button type="button" wire:click="loadMore" x-on:click="rememberScroll()" class="inline-flex min-h-11 items-center rounded-xl border border-[#D8D0C5] bg-white px-4 text-sm font-semibold text-[#0F5B52]">Load earlier messages</button>
-                </div>
-            @endif
+            <div x-ref="messageContent" class="min-h-full">
+                @if ($this->hasOlderMessages)
+                    <div class="mb-4 text-center">
+                        <button
+                            type="button"
+                            x-on:click="loadEarlier()"
+                            x-bind:disabled="loadingEarlier"
+                            class="inline-flex min-h-11 items-center rounded-xl border border-[#D8D0C5] bg-white px-4 text-sm font-semibold text-[#0F5B52] disabled:cursor-wait disabled:opacity-60"
+                        ><span x-text="loadingEarlier ? 'Loading…' : 'Load earlier messages'">Load earlier messages</span></button>
+                    </div>
+                @endif
 
             @if (! $ticket)
                 <div class="mx-auto flex min-h-full w-full max-w-sm flex-col items-center justify-center px-3 py-6 text-center">
@@ -417,23 +423,24 @@
                 </div>
             @endif
 
-            <template x-if="pendingMessage">
-                <div x-data="{ message: pendingMessage }" class="mt-3 flex justify-end" data-testid="support-chat-pending-message">
-                    <article class="support-chat-bubble support-chat-bubble-user" x-bind:class="message.status === 'failed' ? 'support-chat-bubble-failed' : ''">
-                        <p class="support-chat-message-text" x-text="message.body"></p>
-                        <div class="mt-1.5 flex items-center justify-between gap-3 text-[11px] text-[#DDEEEA]">
-                            <span x-text="message.status === 'failed' ? 'Not sent' : 'Sending…'"></span>
-                            <button
-                                x-show="message.status === 'failed'"
-                                type="button"
-                                class="min-h-11 rounded-lg px-2 font-bold underline underline-offset-2"
-                                aria-label="Try sending this support message again"
-                                x-on:click="retryPending()"
-                            >Try again</button>
-                        </div>
-                    </article>
-                </div>
-            </template>
+                <template x-if="pendingMessage">
+                    <div x-data="{ message: pendingMessage }" class="mt-3 flex justify-end" data-testid="support-chat-pending-message">
+                        <article class="support-chat-bubble support-chat-bubble-user" x-bind:class="message.status === 'failed' ? 'support-chat-bubble-failed' : ''">
+                            <p class="support-chat-message-text" x-text="message.body"></p>
+                            <div class="mt-1.5 flex items-center justify-between gap-3 text-[11px] text-[#DDEEEA]">
+                                <span x-text="message.status === 'failed' ? 'Not sent' : 'Sending…'"></span>
+                                <button
+                                    x-show="message.status === 'failed'"
+                                    type="button"
+                                    class="min-h-11 rounded-lg px-2 font-bold underline underline-offset-2"
+                                    aria-label="Try sending this support message again"
+                                    x-on:click="retryPending()"
+                                >Try again</button>
+                            </div>
+                        </article>
+                    </div>
+                </template>
+            </div>
         </div>
 
         <div x-show="newMessagesBelow" x-transition.opacity class="support-chat-new-message-layer">
@@ -474,7 +481,7 @@
                             x-on:click="rememberComposerSelection()"
                             x-on:select="rememberComposerSelection()"
                             x-on:keyup="rememberComposerSelection()"
-                            x-on:keydown.enter="handleComposerEnter($event)"
+                            x-on:keydown="handleComposerKeydown($event)"
                             rows="1"
                             maxlength="3000"
                             enterkeyhint="send"
@@ -486,7 +493,7 @@
                             type="submit"
                             data-testid="support-chat-send"
                             class="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-xl bg-[#23483F] px-3 text-sm font-semibold text-white transition hover:bg-[#173F35] focus:outline-none focus:ring-2 focus:ring-[#0F5B52] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            x-bind:disabled="sending || ! draft.trim()"
+                            x-bind:disabled="sending || pendingMessage || ! draft.trim()"
                             x-bind:aria-label="sending ? 'Sending message to LoLo Support' : 'Send message to LoLo Support'"
                         >
                             <svg x-show="! sending" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -501,7 +508,7 @@
                         </button>
                     </div>
                     <div class="flex min-h-5 items-start justify-between gap-3">
-                        <p id="support-chat-composer-help" class="text-[11px] leading-4 text-[#626B73]">Replies appear here and in your Support Center.</p>
+                        <p id="support-chat-composer-help" class="text-[11px] leading-4 text-[#626B73]">Enter sends. Shift+Enter starts a new line.</p>
                         <p class="shrink-0 text-[11px] text-[#626B73]" x-text="draft.length ? `${draft.length}/3000` : ''"></p>
                     </div>
                     <p id="support-chat-send-error" x-show="sendError" x-text="sendError" class="break-words text-sm font-medium text-rose-700" role="alert"></p>
