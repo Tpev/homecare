@@ -28,14 +28,18 @@ The deployment keeps at least five recent releases. It never deletes the active 
 
 ## First deployment
 
-The server currently has an in-place Git checkout, so obtain the new deployment script once:
+If the server still has the legacy in-place deployment script, obtain only the new deployment script first. Do not pull the whole application into the live checkout:
 
 ```bash
 cd /var/www/homecare
-git pull --ff-only origin master
+git fetch origin master
+git restore --source=origin/master -- deploy.sh
 ./deploy.sh
 cd /var/www/homecare
+./deploy.sh --status
 ```
+
+Fetching does not change the live checkout, and restoring only `deploy.sh` does not alter code or assets served by the application. The new script then prepares the complete latest release away from the live path before the atomic switch.
 
 The first run:
 
