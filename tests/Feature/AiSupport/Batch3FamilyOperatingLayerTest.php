@@ -342,6 +342,7 @@ class Batch3FamilyOperatingLayerTest extends TestCase
             ->assertSee('324')
             ->assertSee('230')
             ->assertSee('FAM-START-001')
+            ->assertSee('Showing the first 50 of 324 matching intents')
             ->assertSee('Recent Family intent outcomes')
             ->assertSee('Unmatched')
             ->assertViewHas('intentOutcomeCounts', fn ($counts): bool => $counts->get('intent_transferred') === 1);

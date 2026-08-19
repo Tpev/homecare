@@ -27,7 +27,7 @@ class Overview extends Component
         $now = now();
         $intentRecords = collect($intentCatalog->records());
         $search = mb_strtolower(trim($this->intentSearch));
-        $visibleIntentRecords = $intentRecords
+        $matchingIntentRecords = $intentRecords
             ->when($search !== '', fn ($records) => $records->filter(fn (array $record): bool => str_contains(mb_strtolower(implode(' ', [
                 $record['intent_id'], $record['domain'], $record['intent'], implode(' ', (array) $record['kb_stable_ids']),
             ])), $search)))
@@ -37,21 +37,26 @@ class Overview extends Component
             'intent_recovery_offered', 'guided_action_recovery', 'intent_transferred', 'handoff_completed',
             'transferred_to_human',
         ];
-        $recentOutcomes = AiSupportInteractionEvent::query()
+        $outcomesQuery = AiSupportInteractionEvent::query()
             ->whereIn('event_type', $outcomeTypes)
-            ->where('occurred_at', '>=', now()->subDays(30))
-            ->latest('occurred_at')
-            ->limit(500)
-            ->get();
-
-        $outcomeCounts = $recentOutcomes->countBy('event_type');
+            ->where('occurred_at', '>=', now()->subDays(30));
+        $outcomeCounts = (clone $outcomesQuery)
+            ->selectRaw('event_type, COUNT(*) as aggregate')
+            ->groupBy('event_type')
+            ->pluck('aggregate', 'event_type')
+            ->map(fn (mixed $count): int => (int) $count);
         $outcomeCounts->put(
             'intent_transferred',
-            $recentOutcomes
+            (clone $outcomesQuery)
                 ->whereIn('event_type', ['intent_transferred', 'handoff_completed', 'transferred_to_human'])
-                ->unique('support_ticket_id')
-                ->count(),
+                ->distinct()
+                ->count('support_ticket_id'),
         );
+        $recentOutcomes = (clone $outcomesQuery)
+            ->select(['id', 'support_ticket_id', 'event_type', 'result_code', 'safe_metadata', 'occurred_at'])
+            ->latest('occurred_at')
+            ->limit(30)
+            ->get();
 
         return view('livewire.admin.ai-support.overview', [
             'runtimeAvailable' => (bool) config('ai_support.runtime_available', false),
@@ -97,8 +102,9 @@ class Overview extends Component
                 'mapped' => $records->filter(fn (array $record): bool => (array) $record['kb_stable_ids'] !== [])->count(),
                 'pilot' => $records->where('rollout_state', 'pilot')->count(),
             ])->values(),
-            'intentRecords' => $visibleIntentRecords,
-            'recentIntentOutcomes' => $recentOutcomes->take(30),
+            'intentRecords' => $matchingIntentRecords->take(50),
+            'matchingIntentCount' => $matchingIntentRecords->count(),
+            'recentIntentOutcomes' => $recentOutcomes,
             'intentOutcomeCounts' => $outcomeCounts,
         ]);
     }

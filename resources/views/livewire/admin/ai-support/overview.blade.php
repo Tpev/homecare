@@ -89,6 +89,9 @@
                 </tbody>
             </table>
         </div>
+        @if($matchingIntentCount > $intentRecords->count())
+            <p class="mt-3 text-sm text-slate-600">Showing the first {{ $intentRecords->count() }} of {{ $matchingIntentCount }} matching intents. Refine the search to find a specific task or KB entry.</p>
+        @endif
     </x-card>
 
     <x-card>
