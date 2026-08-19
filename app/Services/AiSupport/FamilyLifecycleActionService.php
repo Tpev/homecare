@@ -291,6 +291,44 @@ class FamilyLifecycleActionService
         ];
     }
 
+    public function cancelActiveProfileDraft(User $actor, SupportTicket $ticket): bool
+    {
+        return DB::transaction(function () use ($actor, $ticket): bool {
+            $preparation = AiSupportPreparation::query()
+                ->lockForUpdate()
+                ->where('support_ticket_id', $ticket->id)
+                ->where('actor_user_id', $actor->id)
+                ->where('contract_id', self::PROFILE_CONTRACT)
+                ->whereIn('state', [AiSupportPreparation::STATE_READY, AiSupportPreparation::STATE_APPLIED])
+                ->where('expires_at', '>', now())
+                ->latest('updated_at')
+                ->first();
+            if (! $preparation) {
+                return false;
+            }
+
+            $cancelledAt = now();
+            $preparation->forceFill([
+                'state' => AiSupportPreparation::STATE_CANCELLED,
+                'cancelled_at' => $cancelledAt,
+            ])->save();
+            AiSupportMessageAction::query()
+                ->lockForUpdate()
+                ->where('support_ticket_id', $ticket->id)
+                ->where('actor_user_id', $actor->id)
+                ->where('action_type', AiSupportMessageAction::TYPE_DOMAIN_RECAP)
+                ->whereNull('invalidated_at')
+                ->get()
+                ->filter(fn (AiSupportMessageAction $action): bool => (string) data_get($action->payload, 'preparation_id') === $preparation->id)
+                ->each(fn (AiSupportMessageAction $action) => $action->forceFill([
+                    'invalidated_at' => $cancelledAt,
+                    'invalidation_reason' => 'preparation_cancelled',
+                ])->save());
+
+            return true;
+        }, 3);
+    }
+
     public function confirm(User $actor, SupportTicket $ticket, string $actionId): AiSupportConfirmedActionEvidence
     {
         $action = $this->domainAction($actor, $ticket, $actionId);
@@ -566,6 +604,8 @@ class FamilyLifecycleActionService
                 ->whereKey((string) ($preview['preparation_id'] ?? ''))
                 ->where('actor_user_id', $actor->id)
                 ->where('support_ticket_id', $ticket->id)
+                ->whereIn('state', [AiSupportPreparation::STATE_READY, AiSupportPreparation::STATE_APPLIED])
+                ->where('expires_at', '>', now())
                 ->firstOrFail();
             if ((int) $preparation->version !== (int) ($preview['preparation_version'] ?? 0)
                 || ! hash_equals($preparation->fields_hash, (string) ($preview['fields_hash'] ?? ''))) {
@@ -736,6 +776,7 @@ class FamilyLifecycleActionService
     {
         $text = trim($message);
         $detail = trim((string) preg_replace('/^.*?\b(?:to|is|as|that|saying|notes?|information)\b\s*/iu', '', $text, 1));
+        $detail = trim((string) preg_replace('/^say\s*:?\s*/iu', '', $detail, 1));
         $detail = Str::limit($detail !== '' ? $detail : $text, 3000, '');
         $name = null;
         if (preg_match('/\b(?:profile\s+(?:for|named)|preferred\s+name\s+(?:is|to)|name\s+is)\s+([\p{L}][\p{L}\p{M}\'’ .-]{0,79}?)(?=\s*(?:[?.!,]|$))/iu', $text, $matches) === 1) {
@@ -745,7 +786,7 @@ class FamilyLifecycleActionService
         return array_filter(match ($intentId) {
             'FAM-PROFILE-003', 'FAM-REQUEST-006' => ['preferred_name' => $name],
             'FAM-PROFILE-007' => $this->identityPatch($text, $name),
-            'FAM-PROFILE-008' => ['about_them' => $detail],
+            'FAM-PROFILE-008' => $this->aboutPatch($text, $detail),
             'FAM-PROFILE-009' => ['communication_notes' => $detail],
             'FAM-PROFILE-010' => ['everyday_health_context' => $detail],
             'FAM-PROFILE-011' => ['mobility_level' => $this->mobilityLevel($text), 'mobility_notes' => $detail],
@@ -756,6 +797,16 @@ class FamilyLifecycleActionService
             'FAM-PROFILE-018' => ['about_them' => $detail],
             default => [],
         }, static fn ($value): bool => $value !== null && $value !== '');
+    }
+
+    /** @return array<string,string> */
+    private function aboutPatch(string $text, string $detail): array
+    {
+        $lower = mb_strtolower($text);
+        $genericEditRequest = preg_match('/\b(?:finish|edit|update|change|correct)\b.*\bprofile\b/u', $lower) === 1
+            && preg_match('/\b(?:add|about|description|interest|comfort|enjoy|like|prefer|note|saying|that|with)\w*\b/u', $lower) !== 1;
+
+        return $genericEditRequest ? [] : ['about_them' => $detail];
     }
 
     /** @return array<string,mixed> */

@@ -129,6 +129,32 @@ class InteractiveSupportRuntimeTest extends TestCase
         $this->assertDatabaseMissing('notifications', ['notifiable_id' => $admin->id]);
     }
 
+    public function test_complete_one_time_request_sentence_with_profile_in_its_name_starts_care_path_not_profile_creation(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $message = 'Create a one-time care request for Batch Five Final Profile on August 28, 2026 at 10:00 AM for 2 hours, at 123 Pilot Test Way, Raleigh, NC 27601, for companionship.';
+        Http::fake(['*/responses' => Http::response($this->providerEnvelope([
+            'operation' => 'care_path',
+            'message' => 'This is one visit, so one-time care is the right choice.',
+            'navigation_target_id' => null,
+            'care_path' => 'one_time',
+            'clarifying_question' => null,
+            'confidence_band' => 'clear',
+            'kb_stable_ids' => [],
+            'draft_patch' => $this->emptyPatch(),
+        ]))]);
+        $ticket = $this->automatedTicket($family);
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $message);
+
+        $action = AiSupportMessageAction::query()->sole();
+        $this->assertSame(AiSupportMessageAction::TYPE_PATH_CHOICES, $action->action_type);
+        $this->assertSame('one_time', data_get($action->payload, 'recommended_path'));
+        $this->assertDatabaseCount('ai_support_preparations', 0);
+        $this->assertDatabaseCount('care_recipient_profiles', 0);
+        Http::assertSentCount(1);
+    }
+
     public function test_continuous_coverage_transfers_without_model_or_queue_claims(): void
     {
         [, $family] = $this->eligibleFamily();

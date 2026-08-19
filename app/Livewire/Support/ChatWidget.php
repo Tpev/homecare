@@ -290,6 +290,18 @@ class ChatWidget extends Component
         $this->dispatch('support-chat-action-completed');
     }
 
+    public function cancelActiveProfileChange(): void
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+        abort_unless($user && $user->role === 'family' && $ticket, 404);
+
+        if (app(FamilyLifecycleActionService::class)->cancelActiveProfileDraft($user, $ticket)) {
+            $this->createAutomatedMessage($ticket, 'The current profile change was discarded. Nothing was saved.');
+        }
+        $this->dispatch('support-chat-action-completed');
+    }
+
     public function confirmCareRequest(string $actionId): void
     {
         $user = auth()->user();
@@ -477,6 +489,17 @@ class ChatWidget extends Component
         }
 
         return app(FamilyAssistantHomeService::class)->for($user);
+    }
+
+    /** @return array<string,mixed>|null */
+    public function getActiveProfilePreparationProperty(): ?array
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+
+        return $user && $user->role === 'family' && $ticket
+            ? app(FamilyLifecycleActionService::class)->activeProfileContext($user, $ticket)
+            : null;
     }
 
     public function render(): View

@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\AiSupport;
 
+use App\Livewire\Support\ChatWidget;
 use App\Models\AiSupportConfirmedActionEvidence;
 use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportPilotGrant;
+use App\Models\AiSupportPreparation;
 use App\Models\AiSupportRequestDraft;
 use App\Models\CareBooking;
 use App\Models\CareRecipientProfile;
@@ -18,6 +20,7 @@ use App\Services\AiSupport\AiSupportPilotGrantService;
 use App\Services\AiSupport\AiSupportRecapService;
 use App\Services\AiSupport\AiSupportRequestDraftService;
 use App\Services\AiSupport\AiSupportRuntimeService;
+use App\Services\AiSupport\FamilyIntentResolver;
 use App\Services\AiSupport\FamilyLifecycleActionService;
 use App\Services\CareRecipientProfiles\CareRecipientProfileService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
@@ -26,6 +29,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class Batch5FamilyLifecycleTest extends TestCase
@@ -77,6 +81,118 @@ class Batch5FamilyLifecycleTest extends TestCase
         $this->assertTrue($profile->fresh()->isReady());
         $this->assertSame(1, AiSupportConfirmedActionEvidence::query()->count());
         $this->assertSame(1, $profile->versions()->count());
+    }
+
+    public function test_natural_finish_edit_and_add_phrasing_keeps_profile_editing_conversational(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $profile = app(CareRecipientProfileService::class)->saveDraft($family, null, [
+            'preferred_name' => 'Batch Five Final Profile',
+        ]);
+        $ticket = $this->ticket($family, 'I need to finish and edit Batch Five Final Profile.');
+        Http::fake();
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, 'I need to finish and edit Batch Five Final Profile.');
+
+        $preparation = AiSupportPreparation::query()->sole();
+        $this->assertSame($profile->id, $preparation->resource_id);
+        $this->assertStringContainsString(
+            'What would you like to change in Batch Five Final Profile',
+            $ticket->publicMessages()->latest()->firstOrFail()->body,
+        );
+
+        $message = 'Add that Batch Five Final Profile enjoys classical music and prefers quiet mornings.';
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $message);
+
+        $action = AiSupportMessageAction::query()
+            ->where('action_type', AiSupportMessageAction::TYPE_DOMAIN_RECAP)
+            ->latest('created_at')
+            ->firstOrFail();
+        $this->assertSame('family-profile.save-draft', data_get($action->payload, 'tool_id'));
+        $this->assertStringContainsString(
+            'enjoys classical music and prefers quiet mornings',
+            (string) collect((array) data_get($action->payload, 'fields'))->firstWhere('label', 'About Them')['value'],
+        );
+
+        $evidence = app(FamilyLifecycleActionService::class)->confirm($family, $ticket, $action->id);
+        $this->assertSame('profile_saved_verified', $evidence->outcome_code);
+        $this->assertStringContainsString('enjoys classical music', (string) $profile->fresh()->about_them);
+        Http::assertNothingSent();
+    }
+
+    public function test_one_time_request_sentence_with_a_profile_name_never_becomes_profile_creation(): void
+    {
+        $message = 'Create a one-time care request for Batch Five Final Profile on August 28, 2026 at 10:00 AM for 2 hours, at 123 Pilot Test Way, Raleigh, NC 27601, for companionship.';
+
+        $resolution = app(FamilyIntentResolver::class)->resolve($message);
+
+        $this->assertSame(FamilyIntentResolver::STATUS_RECOGNIZED, $resolution['status']);
+        $this->assertSame('FAM-START-008', $resolution['intent_id']);
+    }
+
+    public function test_profile_update_strips_instructional_say_prefix_from_about_them(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $profile = app(CareRecipientProfileService::class)->saveDraft($family, null, [
+            'preferred_name' => 'Batch Five Final Profile',
+        ]);
+        $message = 'Update Batch Five Final Profile to say: Enjoys classical music and prefers quiet mornings.';
+        $ticket = $this->ticket($family, $message);
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $message);
+
+        $action = AiSupportMessageAction::query()
+            ->where('action_type', AiSupportMessageAction::TYPE_DOMAIN_RECAP)
+            ->sole();
+        $about = (string) collect((array) data_get($action->payload, 'fields'))
+            ->firstWhere('label', 'About Them')['value'];
+        $this->assertSame('Enjoys classical music and prefers quiet mornings.', $about);
+
+        app(FamilyLifecycleActionService::class)->confirm($family, $ticket, $action->id);
+        $this->assertSame('Enjoys classical music and prefers quiet mornings.', $profile->fresh()->about_them);
+    }
+
+    public function test_family_can_cancel_an_incomplete_profile_change_from_the_chat_composer(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $ticket = $this->ticket($family, 'Create a care receiver profile.');
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, 'Create a care receiver profile.');
+        $preparation = AiSupportPreparation::query()->sole();
+
+        Livewire::actingAs($family)
+            ->test(ChatWidget::class)
+            ->assertSee('Cancel current profile change')
+            ->call('cancelActiveProfileChange')
+            ->assertSee('The current profile change was discarded. Nothing was saved.')
+            ->assertDontSee('Cancel current profile change');
+
+        $this->assertSame(AiSupportPreparation::STATE_CANCELLED, $preparation->fresh()->state);
+        $this->assertDatabaseCount('care_recipient_profiles', 0);
+    }
+
+    public function test_cancelling_a_profile_change_invalidates_its_existing_confirmation(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $ticket = $this->ticket($family, 'Create a care receiver profile for Maria.');
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, 'Create a care receiver profile for Maria.');
+        $action = AiSupportMessageAction::query()
+            ->where('action_type', AiSupportMessageAction::TYPE_DOMAIN_RECAP)
+            ->sole();
+
+        Livewire::actingAs($family)
+            ->test(ChatWidget::class)
+            ->call('cancelActiveProfileChange');
+
+        $this->assertNotNull($action->fresh()->invalidated_at);
+        $this->assertSame('preparation_cancelled', $action->fresh()->invalidation_reason);
+        try {
+            app(FamilyLifecycleActionService::class)->confirm($family, $ticket, $action->id);
+            $this->fail('Expected the cancelled profile confirmation to be denied.');
+        } catch (ValidationException $exception) {
+            $this->assertStringContainsString('expired or changed', (string) collect($exception->errors())->flatten()->first());
+        }
+        $this->assertDatabaseCount('care_recipient_profiles', 0);
+        $this->assertDatabaseCount('ai_support_confirmed_action_evidence', 0);
     }
 
     public function test_multi_turn_profile_details_use_one_bounded_model_patch_then_require_confirmation(): void
@@ -244,7 +360,9 @@ class Batch5FamilyLifecycleTest extends TestCase
         $evidence = app(FamilyLifecycleActionService::class)->confirm($family, $ticket, $action->id);
         $this->assertSame(CareRequest::STATUS_CANCELLED, $request->fresh()->status);
         $this->assertSame('request_withdrawn_verified', $evidence->outcome_code);
-        $this->assertStringContainsString('withdrawn and checked', $ticket->publicMessages()->latest('id')->first()->body);
+        $this->assertTrue($ticket->publicMessages()->pluck('body')->contains(
+            fn (string $body): bool => str_contains($body, 'withdrawn and checked'),
+        ));
     }
 
     public function test_expired_request_creates_fresh_private_copy_clears_schedule_and_keeps_original(): void

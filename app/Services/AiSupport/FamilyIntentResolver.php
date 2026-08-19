@@ -166,7 +166,7 @@ class FamilyIntentResolver
         if (preg_match('/\b(?:reopen|restore|fresh copy)\b.*\b(?:expired|withdrawn|cancelled)?\s*request\b/', $value)) {
             return 'FAM-REQUEST-039';
         }
-        $prepareVerb = preg_match('/\b(?:prepare|draft|write|send|create|copy|duplicate|reuse|update|change|correct|question|dispute)\b/', $value) === 1;
+        $prepareVerb = preg_match('/\b(?:prepare|draft|write|send|create|copy|duplicate|reuse|update|change|edit|add|correct|question|dispute)\b/', $value) === 1;
         if (! $prepareVerb) {
             return null;
         }
@@ -182,7 +182,7 @@ class FamilyIntentResolver
         if (preg_match('/\b(?:create|new)\b.*\b(?:care receiver|recipient)\b.*\bprofile\b/', $value)) {
             return 'FAM-PROFILE-003';
         }
-        if (preg_match('/\b(?:update|change|edit|correct)\b.*\bprofile\b|\b(?:mobility|routine|safety|communication|allerg)\w*\b.*\b(?:note|profile|information)\w*\b/', $value)) {
+        if (preg_match('/\b(?:update|change|edit|add|correct)\b.*\bprofile\b|\b(?:mobility|routine|safety|communication|allerg)\w*\b.*\b(?:note|profile|information)\w*\b/', $value)) {
             return match (true) {
                 str_contains($value, 'mobility') => 'FAM-PROFILE-011',
                 str_contains($value, 'communicat') => 'FAM-PROFILE-009',
@@ -237,6 +237,12 @@ class FamilyIntentResolver
         if (preg_match('/\b(?:caregiver\s+responses?|applicants?|applied|applications?)\b.*\brequest\b|\b(?:did|any|how\s+many|show)\b.*\b(?:caregivers?\s+)?(?:apply|applied|applicants?|responses?)\b.*\brequest\b/', $value)) {
             return 'FAM-REQUEST-035';
         }
+        if (preg_match('/\b(?:create|start|need|want|book)\b.*\bone[- ]?time\b.*\b(?:care\s+)?request\b|\bone[- ]?time\b.*\b(?:care\s+)?request\b/', $value)) {
+            return 'FAM-START-008';
+        }
+        if (preg_match('/\b(?:create|start|need|want|book)\b.*\b(?:regular|recurring|weekly)\b.*\b(?:care\s+)?request\b|\b(?:regular|recurring|weekly)\b.*\b(?:care\s+)?request\b/', $value)) {
+            return 'FAM-START-009';
+        }
 
         if (preg_match('/\b(?:restore|bring\s+back)\b.*\b(?:archived\s+)?(?:care\s+(?:receiver|recipient)\s+)?profile\b/', $value)) {
             return 'FAM-PROFILE-021';
@@ -274,7 +280,8 @@ class FamilyIntentResolver
         if (preg_match('/\b(?:preferred\s+name|full\s+name|date\s+of\s+birth|dob|pronoun|relationship)\w*\b.*\bprofile\b|\b(?:edit|update|change|correct)\b.*\b(?:preferred\s+name|full\s+name|date\s+of\s+birth|dob|pronoun|relationship)\w*\b/', $value)) {
             return 'FAM-PROFILE-007';
         }
-        if (preg_match('/\bcreate\b.*\b(?:care\s+(?:receiver|recipient)\s+)?profile\b|\bmake\b.*\bnew\b.*\bprofile\b|\badd\b.*\bcare\s+(?:receiver|recipient)\s+profile\b/', $value)) {
+        if (! preg_match('/\b(?:care\s+)?request\b/', $value)
+            && preg_match('/\bcreate\b.*\b(?:care\s+(?:receiver|recipient)\s+)?profile\b|\bmake\b.*\bnew\b.*\bprofile\b|\badd\b.*\bcare\s+(?:receiver|recipient)\s+profile\b/', $value)) {
             return 'FAM-PROFILE-003';
         }
 

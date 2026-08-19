@@ -511,6 +511,14 @@
                     @error('guidedTask') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
                     @error('preparation') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
                     @error('intent') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
+                    @if ($this->activeProfilePreparation)
+                        <button
+                            type="button"
+                            wire:click="cancelActiveProfileChange"
+                            wire:confirm="Discard the current profile change?"
+                            class="min-h-11 text-sm font-semibold text-rose-700 underline underline-offset-2"
+                        >Cancel current profile change</button>
+                    @endif
                 </form>
             @endif
 
