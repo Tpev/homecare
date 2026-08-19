@@ -1,6 +1,6 @@
 # Care Profiles and Request Lifecycle — Batch 5
 
-Status: Deployed, published, and active for the exact two-user pilot; profile lifecycle and Admin production audits passed on August 19, 2026; natural-language request correction `aa0a63d1` is pushed for deployment and final request-lifecycle verification
+Status: Deployed, published, and active for the exact two-user pilot; profile lifecycle and Admin production audits passed on August 19, 2026; request-publication relationship fallback `bf66c8f8` is pushed for deployment and final request-lifecycle verification
 
 Approved: August 18, 2026
 
@@ -110,8 +110,8 @@ Current completion baseline, passed locally on August 19, 2026:
 
 - Batch 5 lifecycle contract: **23 tests / 148 assertions**;
 - Batch 5 knowledge package: **3 tests / 112 assertions**;
-- Family Batch 1–5 mass harness: **94 tests / 2,405 assertions**;
-- complete AI Support feature suite: **186 tests / 3,214 assertions**;
+- Family Batch 1–5 mass harness: **95 tests / 2,409 assertions**;
+- complete AI Support feature suite: **187 tests / 3,218 assertions**;
 - executable catalog: **324 / 324** records and **230 / 230** explicit KB mappings;
 - deterministic routing: **137 / 137** existing phrases plus **64 / 64** Batch 5 lifecycle phrases;
 - nearby collision protection: **10 / 10**;
@@ -190,6 +190,10 @@ Commit `aa0a63d1` corrects all three findings and adds recovery for an incomplet
 - cancelled or expired profile preparations are rejected again inside the locked confirmed-action commit.
 
 The post-correction source baseline is **186 / 186 AI Support tests with 3,214 assertions**. The isolated Family Batch 1–5 mass harness passes **94 / 94 tests with 2,405 assertions**, **137 / 137** established phrases, **64 / 64** Batch 5 phrases, **324 / 324** catalog records, **230 / 230** mappings, and **10 / 10** collisions with zero provider calls or production database use. Final closure requires the normal deployment of `aa0a63d1`, cancellation of the mistaken production draft, and repetition of the exact request lifecycle in the authenticated pilot.
+
+After `aa0a63d1` deployed, production exposed **Cancel current profile change**, discarded the mistaken preparation without saving, and routed the exact sentence to **One-time care**. The existing ready profile was proposed, the remaining details were collected over two replies, and the deterministic recap correctly showed `Batch Five Final Profile`, Companionship, August 28 at 10:00 AM for two hours, and the synthetic Raleigh address. **Confirm and create request** then returned HTTP 500. The Family request list proved that no August 28 request existed afterward and request `#9` remained untouched, so the confirmed-action transaction rolled back cleanly.
+
+The production-shaped cause is a compatibility edge between the new ready-profile rules and the legacy request-recipient schema. A ready care profile may validly omit `relationship_to_family`, while `care_request_recipients.relationship_to_family` is required. The normal request form already resolves this exact non-self case to `Family member`; the chat publisher had passed `NULL`. Commit `bf66c8f8` aligns the draft proposal, explicit profile selection, and final publisher defense with the normal form's `Self` / `Family member` fallback. Its regression creates a real ready profile with no relationship and verifies successful live publication, exact profile linkage, and the persisted fallback. The final source baseline is **187 / 187 AI Support tests with 3,218 assertions** and **95 / 95 mass-harness tests with 2,409 assertions**. Final production publication, withdrawal, copy, and republish verification remains after deployment.
 
 ## Production deployment
 
