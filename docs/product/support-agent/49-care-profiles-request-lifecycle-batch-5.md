@@ -1,6 +1,6 @@
 # Care Profiles and Request Lifecycle — Batch 5
 
-Status: Deployed, published, and active for the exact two-user pilot; profile lifecycle and Admin production audits passed on August 19, 2026; request-publication fallback `bf66c8f8` and chat-navigation state correction `91ea418f` are pushed for deployment and final request-lifecycle verification
+Status: Deployed, published, and production-verified for the exact two-user pilot; complete care-profile and care-request lifecycle journeys passed on August 19, 2026; **Live for everyone remains off**
 
 Approved: August 18, 2026
 
@@ -197,6 +197,36 @@ The production-shaped cause is a compatibility edge between the new ready-profil
 
 The final browser rerun also exposed a route-navigation state defect that did not change any domain record. After a mobile user followed a verified profile receipt to Care Profiles, Livewire reused the same chat-component identity on the destination page after detaching its Alpine state. The page arrived correctly, but the new chat children briefly evaluated without their parent state and emitted console errors. Commit `91ea418f` keys the chat component by authenticated user and page path so every navigated page receives one clean Alpine/Livewire state boundary while the composer and open/closed state continue through the existing session storage. The exact failing mobile profile journey is green after the correction. The strict completion audit also adds a full 390 × 844 request journey: exact status read and navigation, confirmed withdrawal, fresh private copy, recap, republish, distinct request ID, source-stays-withdrawn verification, touch sizing, reflow, and zero page errors. The complete interactive Chromium suite is **8 / 8**, Pixel/Chromium is **6 / 6**, iPhone/WebKit is **6 / 6** when each mobile project uses its required fresh isolated database, the production frontend build passes, and the complete AI Support suite remains **187 / 187 with 3,218 assertions**.
 
+### Final authenticated production lifecycle — August 19, 2026
+
+After deployment through `b509649e`, the exact `peverelli.t@gmail.com` pilot completed the full request lifecycle in production with zero browser-console errors:
+
+- an expired 30-minute confirmation correctly required **Review and confirm again** while preserving the authorized draft;
+- the renewed recap retained the one-time-care type, `Batch Five Final Profile`, Companionship, August 28 at 10:00 AM for two hours, the synthetic Raleigh address, and the live/no-hire/no-payment disclosure;
+- one confirmation published distinct request `#96`, returned a checked live receipt, and opened the exact request;
+- exact status and applicant reads reported `#96` as **Live**, reported no active caregiver responses, and did not claim or invent caregiver-view tracking;
+- a separate recap and confirmation withdrew `#96`, after which both chat and the request page reported **Withdrawn**;
+- a fresh private copy preserved the source, required a new schedule, published distinct request `#97` for August 29 at 11:00 AM, and left `#96` withdrawn;
+- exact reads reported `#96` as **Withdrawn** and `#97` as **Live**;
+- a separate recap and confirmation withdrew `#97`; and
+- the Family request list showed both synthetic requests as **Withdrawn**, while existing request `#9` retained its assigned caregiver and hours-review state unchanged.
+
+The same authenticated session verified the final profile-text correction. `Update Batch Five Final Profile to say: ...` proposed and persisted `Enjoys classical music and prefers quiet mornings.` without the instructional `say:` prefix. The profile was then archived through its own recap and checked receipt. The Care Profiles page showed no active disposable profile and showed both Batch 5 profiles under Archived. Existing request snapshots remained intact by design.
+
+All synthetic Batch 5 domain records first ended in a safe closed state: requests `#96` and `#97` were withdrawn and `Batch Five Final Profile` was archived. No existing visit, payment, timesheet, or request was changed.
+
+### Final Admin evidence and synthetic-request removal — August 19, 2026
+
+The authenticated Admin audit then verified the current production control plane and preserved conversation evidence:
+
+- Availability remained **Pilot only** with exactly two active grants, users `19` and `282`; **Make live for everyone** was not used;
+- automation was running and the emergency stop remained available;
+- the governed KB contained 111 published entries and one unrelated draft; all 20 visible Batch 5 entries were Published, including profile permissions/readiness/default/archive entries and request status/validation/reuse/replacement/withdrawal/recovery entries;
+- support ticket `#34` belonged to `peverelli.t@gmail.com` and retained separate automated recap and checked-receipt messages for profile save/readiness/default/archive/restore, request `#96` publication and withdrawal, request `#97` publication and withdrawal, and the final profile archive; and
+- Admin independently showed both synthetic requests as Cancelled, with zero applications, invitations, chats, or bookings.
+
+At Product's explicit request, Admin permanently deleted exact synthetic requests `#96` and `#97` after those safety checks. Both disappeared from the Admin request list. Their support-conversation evidence remains in ticket `#34`; the archived disposable profile remains available only under Archived profiles. Existing request `#9` and all real care data remain untouched.
+
 ## Production deployment
 
 Run the normal deployment first:
@@ -246,4 +276,4 @@ Use both Family pilot accounts across these checks:
 
 ## Next batch
 
-After the two-user smoke round and correction of any real wording or state failures, proceed to **Batch 6 — Applicants, messaging, and hiring**. That batch should start with governed KB for applicant facts, invitations, message delivery, rejection, hiring prerequisites, booking/payment confirmation, and failure recovery before adding its narrow readers and actions.
+Proceed to **Batch 6 — Applicants, messaging, and hiring**. Start with governed KB for applicant facts, invitations, message delivery, rejection, hiring prerequisites, booking/payment confirmation, and failure recovery before adding its narrow readers and actions.
