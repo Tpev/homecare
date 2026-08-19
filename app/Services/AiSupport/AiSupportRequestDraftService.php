@@ -72,7 +72,9 @@ class AiSupportRequestDraftService
                     $payload['recipient_profile_version_id'] = $profile['version_id'];
                     $payload['recipient_full_name'] = $profile['name'];
                     $payload['recipient_is_requester'] = $profile['recipient_is_requester'];
-                    $payload['recipient_relationship'] = $profile['relationship'];
+                    $payload['recipient_relationship'] = filled($profile['relationship'] ?? null)
+                        ? $profile['relationship']
+                        : ((bool) $profile['recipient_is_requester'] ? 'Self' : 'Family member');
                     foreach (['recipient_profile_id', 'recipient_full_name', 'recipient_is_requester', 'recipient_relationship'] as $field) {
                         $payload['_provenance'][$field] = 'authorized_profile_proposal';
                     }
@@ -274,7 +276,9 @@ class AiSupportRequestDraftService
                 $payload['recipient_profile_version_id'] = $profile->latest_ready_version_id;
                 $payload['recipient_full_name'] = $profile->displayName();
                 $payload['recipient_is_requester'] = (bool) $profile->recipient_is_requester;
-                $payload['recipient_relationship'] = $profile->relationship_to_family;
+                $payload['recipient_relationship'] = filled($profile->relationship_to_family)
+                    ? $profile->relationship_to_family
+                    : ($profile->recipient_is_requester ? 'Self' : 'Family member');
             }
 
             if ($draft->request_type === CareRequest::TYPE_RECURRING

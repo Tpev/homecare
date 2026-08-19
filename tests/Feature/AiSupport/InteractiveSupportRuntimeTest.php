@@ -17,6 +17,7 @@ use App\Services\AiSupport\AiSupportRecapService;
 use App\Services\AiSupport\AiSupportRequestDraftService;
 use App\Services\AiSupport\AiSupportRuntimeService;
 use App\Services\AiSupport\PaymentTimeKnowledgeBaseImportService;
+use App\Services\CareRecipientProfiles\CareRecipientProfileService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Support\SupportChatService;
 use Carbon\CarbonImmutable;
@@ -274,6 +275,50 @@ class InteractiveSupportRuntimeTest extends TestCase
         $this->assertSame($receiptPayload, $receipt->fresh()->payload);
         $this->assertDatabaseHas('care_requests', ['id' => $request->id]);
         $this->assertDatabaseHas('ai_support_confirmed_action_evidence', ['id' => $request->ai_support_action_evidence_id]);
+    }
+
+    public function test_ready_profile_without_relationship_publishes_with_normal_family_member_fallback(): void
+    {
+        [, $family] = $this->eligibleFamily(true);
+        $profiles = app(CareRecipientProfileService::class);
+        $profile = $profiles->saveDraft($family, null, [
+            'preferred_name' => 'Batch Five Final Profile',
+            'about_them' => 'Enjoys classical music and quiet mornings.',
+        ]);
+        $profile = $profiles->makeReady(
+            $family,
+            $profile,
+            $profile->only(['preferred_name', 'about_them']),
+            (int) $profile->revision,
+            true,
+        );
+        $task = CareTask::query()->create(['name' => 'Companionship']);
+        $ticket = $this->automatedTicket($family);
+        $drafts = app(AiSupportRequestDraftService::class);
+        $draft = $drafts->start($family, $ticket, CareRequest::TYPE_ONE_TIME);
+        $this->assertSame('Family member', data_get($draft->payload, 'recipient_relationship'));
+        $start = now('America/New_York')->addDays(2)->startOfHour()->addHours(2);
+        $draft = $drafts->applyPatch($family, $ticket, [
+            'patch_fields' => [
+                'task_ids', 'requested_start_date', 'requested_start_time', 'duration_minutes',
+                'address_line1', 'city', 'state', 'zip',
+            ],
+            'task_ids' => [$task->id],
+            'requested_start_date' => $start->toDateString(),
+            'requested_start_time' => $start->format('H:i'),
+            'duration_minutes' => 120,
+            'address_line1' => '123 Pilot Test Way',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+        ], $draft->version);
+
+        $action = app(AiSupportRecapService::class)->issue($family, $ticket, $draft);
+        $request = app(AiSupportRecapService::class)->confirm($family, $ticket, $action->id);
+
+        $this->assertSame(CareRequest::STATUS_OPEN, $request->status);
+        $this->assertSame($profile->id, $request->recipient->care_recipient_profile_id);
+        $this->assertSame('Family member', $request->recipient->relationship_to_family);
     }
 
     public function test_stale_tab_expired_confirmation_and_cross_account_draft_access_fail_closed(): void

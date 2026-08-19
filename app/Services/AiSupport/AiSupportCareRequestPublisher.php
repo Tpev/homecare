@@ -129,7 +129,8 @@ class AiSupportCareRequestPublisher
         $careRequest->recipient()->create([
             'recipient_is_requester' => (bool) ($payload['recipient_is_requester'] ?? false),
             'full_name' => $payload['recipient_full_name'],
-            'relationship_to_family' => ($payload['recipient_relationship'] ?? null) ?: ((bool) ($payload['recipient_is_requester'] ?? false) ? 'Self' : null),
+            'relationship_to_family' => ($payload['recipient_relationship'] ?? null)
+                ?: ((bool) ($payload['recipient_is_requester'] ?? false) ? 'Self' : 'Family member'),
             'care_notes' => filled($payload['additional_info'] ?? null) ? $payload['additional_info'] : null,
             'care_recipient_profile_id' => $profile?->id,
             'care_recipient_profile_version_id' => $profile?->latest_ready_version_id,
