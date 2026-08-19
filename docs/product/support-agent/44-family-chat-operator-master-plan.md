@@ -57,7 +57,7 @@ The following verification passed on August 19, 2026:
 | Catalog phrase definitions | 1,296 |
 | Batch 3 isolated operating-layer assertions | 1,491 |
 | Batch 1-5 mass harness | 95 tests / 2,409 assertions |
-| Interactive Chromium journeys | 7 / 7 passed |
+| Interactive Chromium journeys | 8 / 8 passed, including complete desktop and 390×844 mobile request lifecycles |
 | Responsive support-chat scenarios | 6 / 6 Pixel/Chromium and 6 / 6 iPhone/WebKit passed independently |
 
 ## Current capability inventory

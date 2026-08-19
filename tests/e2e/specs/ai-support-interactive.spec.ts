@@ -383,6 +383,74 @@ test.describe.serial('Interactive AI Support pilot', () => {
         expect(pageErrors).toEqual([]);
     });
 
+    test('repeats the complete request withdrawal and fresh-copy journey on mobile', async ({ page }) => {
+        const pageErrors: string[] = [];
+        page.on('pageerror', (error) => pageErrors.push(error.message));
+        await page.setViewportSize({ width: 390, height: 844 });
+        await loginAs(page, 'familyAi');
+        let panel = await openSupportChat(page);
+        let composer = page.getByLabel('Message LoLo Support');
+
+        await composer.fill('What is the status of my care request?');
+        await composer.press('Enter');
+        const statusMessage = panel.getByText(/Live — caregivers can apply/).last()
+            .locator('xpath=ancestor::article[1]');
+        await expect(statusMessage).toBeVisible();
+        const openRequest = statusMessage.getByRole('button', { name: 'Open this request' });
+        await expect(openRequest).toBeEnabled();
+        await openRequest.click();
+        await expect(page).toHaveURL(/\/family\/requests\/\d+/);
+        const originalId = Number(page.url().match(/\/family\/requests\/(\d+)/)?.[1]);
+        expect(originalId).toBeGreaterThan(0);
+        await expect(page.getByTestId('ai-guided-task-strip')).toBeVisible();
+        await expectNoHorizontalOverflow(page);
+
+        panel = await openSupportChat(page);
+        composer = page.getByLabel('Message LoLo Support');
+        await composer.fill(`Withdraw request #${originalId}.`);
+        await composer.press('Enter');
+        let recap = panel.getByRole('region', { name: 'Action recap' }).last();
+        await expect(recap.getByRole('heading', { name: `Withdraw request #${originalId}?` })).toBeVisible();
+        await expectNoHorizontalOverflow(page);
+        await recap.getByRole('button', { name: 'Confirm withdrawal' }).click();
+        await expect(panel.getByText(/request was withdrawn and checked/i).last()).toBeVisible();
+
+        await composer.fill(`Create a fresh copy of withdrawn request #${originalId}.`);
+        await composer.press('Enter');
+        await expect(panel.getByText(new RegExp(`new private copy of request #${originalId}`, 'i')).last()).toBeVisible();
+        completeActiveCopiedRequestDraft();
+        await page.reload();
+        panel = await openSupportChat(page);
+        recap = panel.getByRole('region', { name: 'Care request recap' }).last();
+        await expect(recap.getByText(new RegExp(`copied from request #${originalId}`, 'i'))).toBeVisible();
+        await expect(recap.getByText(/original stays unchanged/i)).toBeVisible();
+        await expectNoHorizontalOverflow(page);
+        for (const button of await recap.getByRole('button').all()) {
+            expect((await button.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(43.9);
+        }
+
+        const liveMessages = panel.getByText(/care request is live/i);
+        const liveMessageCount = await liveMessages.count();
+        const requestLinks = panel.getByRole('link', { name: 'View request' });
+        const requestLinkCount = await requestLinks.count();
+        await recap.getByRole('button', { name: 'Confirm and create request' }).click();
+        await expect(liveMessages).toHaveCount(liveMessageCount + 1);
+        await expect(requestLinks).toHaveCount(requestLinkCount + 1);
+        await requestLinks.last().click();
+        await expect(page).toHaveURL(/\/family\/requests\/\d+$/);
+        const copiedId = Number(page.url().match(/\/family\/requests\/(\d+)/)?.[1]);
+        expect(copiedId).toBeGreaterThan(0);
+        expect(copiedId).not.toBe(originalId);
+
+        panel = await openSupportChat(page);
+        composer = page.getByLabel('Message LoLo Support');
+        await composer.fill(`What is the status of request #${originalId}?`);
+        await composer.press('Enter');
+        await expect(panel.getByText(/is Withdrawn/).last()).toBeVisible();
+        await expect(panel.getByText(/start a fresh copy instead/i).last()).toBeVisible();
+        expect(pageErrors).toEqual([]);
+    });
+
     test('same-account Family member cannot see or inherit the exact-user AI conversation', async ({ page }) => {
         await loginAs(page, 'familyAiMember');
         await page.getByTestId('support-chat-launcher').click();
@@ -417,7 +485,7 @@ test.describe.serial('Interactive AI Support pilot', () => {
         await expect(page.getByRole('heading', { name: 'AI evidence' })).toBeVisible();
         const requestReceipt = page.getByTestId('ai-confirmed-action-receipt')
             .filter({ hasText: /care-request-\d+.*care_request_live/ });
-        await expect(requestReceipt).toHaveCount(2);
+        await expect(requestReceipt).toHaveCount(3);
         await expect(requestReceipt.first().getByText('Confirmed action receipt')).toBeVisible();
         await expect(requestReceipt.last().getByText('Confirmed action receipt')).toBeVisible();
         await expect(requestReceipt.first().getByText(/care-request-\d+.*care_request_live/)).toBeVisible();
