@@ -39,7 +39,7 @@ The following verification passed on August 19, 2026:
 
 | Verification | Result |
 | --- | ---: |
-| Complete AI Support feature suite | 180 tests / 3,187 assertions passed |
+| Complete AI Support feature suite | 186 tests / 3,214 assertions passed |
 | Established read/guide/payment runtime phrases | 137 / 137 |
 | Batch 5 lifecycle intents and phrases | 21 intents / 64 phrases passed |
 | Near-neighbor routing collisions | 10 / 10 protected |
@@ -56,7 +56,7 @@ The following verification passed on August 19, 2026:
 | Explicit KB mappings after Batch 5 | 230 / 230 |
 | Catalog phrase definitions | 1,296 |
 | Batch 3 isolated operating-layer assertions | 1,491 |
-| Batch 1-5 mass harness | 88 tests / 2,378 assertions |
+| Batch 1-5 mass harness | 94 tests / 2,405 assertions |
 | Interactive Chromium journeys | 7 / 7 passed |
 | Responsive support-chat scenarios | 6 / 6 Pixel/Chromium and 6 / 6 iPhone/WebKit passed independently |
 
@@ -150,14 +150,14 @@ The operating layer is implemented, but domain breadth is still incomplete:
 | Authoritative verification | Generic registry; request receipts, saved payment method, exact payment-attention clearing, profile lifecycle, and request withdrawal proven | Every complete journey has a domain receipt or fresh state verifier | Batch 5 expanded; continue by domain |
 | Human support | Atomic same-conversation transfer, Admin alert, context summary | Human terminal path for every judgment/exception intent with no repetition | Implemented; refine with domain context |
 | Older-adult UI | State-aware start, mobile chat, universal contextual follow-ups, action progress, recovery, and guide highlight | Complete more domain journeys without adding cognitive load | Batch 3 complete; usability expands by domain |
-| Evaluation | 324 catalog rows, 230 mappings, 1,296 definitions, 20 Batch 5 entries, 100 Batch 5 KB cases, 137 established routes, 64 Batch 5 routes, and 10 collisions; the completion mass harness passes 88 tests / 2,378 assertions, the full suite passes 180 / 3,187, and desktop plus independent Pixel/iPhone browser regressions are green | Per-intent multi-turn, state, browser, and usability coverage | Batch 5 completion deploy/recheck next |
+| Evaluation | 324 catalog rows, 230 mappings, 1,296 definitions, 20 Batch 5 entries, 100 Batch 5 KB cases, 137 established routes, 64 Batch 5 routes, and 10 collisions; the post-production-correction mass harness passes 94 tests / 2,405 assertions, the full suite passes 186 / 3,214, and desktop plus independent Pixel/iPhone browser regressions are green | Per-intent multi-turn, state, browser, and usability coverage | Deploy `aa0a63d1` and finish exact request lifecycle |
 | Admin visibility | KB lifecycle, transcripts, Availability, searchable 324-intent catalog, and compact outcome summary | Add useful domain funnel detail without transcript duplication | Batch 3 complete; refine by domain |
 
 ## Knowledge-base audit
 
 ### Current governed inventory
 
-Family Operations KB Wave 1, the 18-entry Batch 4 payment/time package, and the 20-entry Batch 5 profile/request package are published in production for the exact two-user pilot. Together they map 230 unique Family intent rows. The authenticated Batch 5 smoke produced three narrow source corrections; the August 19 completion audit then expanded exact lifecycle, failure, desktop, and mobile evidence. The completion package and catalog-checksum correction are deployed, and the Admin production surface is green; final authenticated Family lifecycle journeys remain. See [document 47](47-payment-time-recovery-batch-4.md), the [Batch 4.1 production-audit correction](48-production-audit-corrections-batch-4-1.md), and the [Batch 5 implementation and production-audit record](49-care-profiles-request-lifecycle-batch-5.md).
+Family Operations KB Wave 1, the 18-entry Batch 4 payment/time package, and the 20-entry Batch 5 profile/request package are published in production for the exact two-user pilot. Together they map 230 unique Family intent rows. The authenticated Batch 5 smoke produced three narrow source corrections; the August 19 completion audit then expanded exact lifecycle, failure, desktop, and mobile evidence. The completion package and catalog-checksum correction are deployed, the Admin production surface is green, and the complete disposable profile lifecycle passed. A realistic request sentence whose recipient name ended in `Profile` exposed one deterministic routing collision; correction `aa0a63d1` is pushed and requires deployment plus the final request lifecycle. See [document 47](47-payment-time-recovery-batch-4.md), the [Batch 4.1 production-audit correction](48-production-audit-corrections-batch-4-1.md), and the [Batch 5 implementation and production-audit record](49-care-profiles-request-lifecycle-batch-5.md).
 
 | Package | Entries | Current scope |
 | --- | ---: | --- |
@@ -578,7 +578,7 @@ Keep serving cost low by using the model once for a genuinely new or ambiguous g
 
 ## Immediate implementation recommendation
 
-Deploy the [Batch 5 completion package](49-care-profiles-request-lifecycle-batch-5.md) through the normal `deploy.sh`. Recheck **Modify something**, exact-request guidance telemetry, the exact archive sentence, the profile lifecycle, and the request withdraw/copy/republish journey. Confirm Admin shows the separate receipts while Availability remains **Pilot only**, exactly two grants are active, and **Live for everyone** is off. Once green, Batch 6 — applicants, messaging, and hiring — is next.
+Deploy correction `aa0a63d1` through the normal `deploy.sh`. In the authenticated Family pilot, use **Cancel current profile change** to clear the mistaken preparation, repeat the exact one-time-request sentence, then complete request create/read/withdraw/copy/republish verification. Confirm Admin shows the separate receipts while Availability remains **Pilot only**, exactly two grants are active, and **Live for everyone** is off. Once green, Batch 6 — applicants, messaging, and hiring — is next.
 
 After that pilot smoke round, the next build is **Batch 6 — Applicants, messaging, and hiring**. Start with the governed applicant/message/hiring KB pack, then add authorized readers, exact navigation, reversible message/invitation preparation, confirmed domain actions, verification, and failure recovery.
 

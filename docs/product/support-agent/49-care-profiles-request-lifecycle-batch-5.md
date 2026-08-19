@@ -1,6 +1,6 @@
 # Care Profiles and Request Lifecycle — Batch 5
 
-Status: Deployed, published, and active for the exact two-user pilot; full completion audit, expanded browser coverage, and Admin production recovery passed on August 19, 2026; final authenticated Family lifecycle journeys remain
+Status: Deployed, published, and active for the exact two-user pilot; profile lifecycle and Admin production audits passed on August 19, 2026; natural-language request correction `aa0a63d1` is pushed for deployment and final request-lifecycle verification
 
 Approved: August 18, 2026
 
@@ -108,10 +108,10 @@ There is no generic SQL, ORM, arbitrary URL, selector, browser-control, or unres
 
 Current completion baseline, passed locally on August 19, 2026:
 
-- Batch 5 lifecycle contract: **18 tests / 127 assertions**;
+- Batch 5 lifecycle contract: **23 tests / 148 assertions**;
 - Batch 5 knowledge package: **3 tests / 112 assertions**;
-- Family Batch 1–5 mass harness: **88 tests / 2,378 assertions**;
-- complete AI Support feature suite: **180 tests / 3,187 assertions**;
+- Family Batch 1–5 mass harness: **94 tests / 2,405 assertions**;
+- complete AI Support feature suite: **186 tests / 3,214 assertions**;
 - executable catalog: **324 / 324** records and **230 / 230** explicit KB mappings;
 - deterministic routing: **137 / 137** existing phrases plus **64 / 64** Batch 5 lifecycle phrases;
 - nearby collision protection: **10 / 10**;
@@ -174,6 +174,22 @@ Production served the completion bundle from commit `788deecf`, but the Admin AI
 Commit `463291e5` regenerates the exact checksum and adds a regression assertion for the bounded searchable intent surface. It also keeps the overview lean by aggregating 30-day outcome counts in SQL, loading only the 30 newest outcome rows, and rendering at most 50 matching intent rows at once. Before push, the complete AI Support suite passed **180 tests / 3,188 assertions** and the isolated Family Batch 1–5 harness passed **88 tests / 2,379 assertions**, **137 / 137** routing phrases, **64 / 64** Batch 5 phrases, **324 / 324** catalog records, **230 / 230** KB mappings, and **10 / 10** collision cases with zero provider calls or production writes.
 
 The same authenticated Admin session confirmed **Pilot only**, exactly users `19` and `282`, **Live for everyone off**, 111 published KB entries including the complete Batch 5 package, and then resolved transferred pilot ticket `#33`. After the normal deployment of `463291e5`, the overview loaded its 324-intent / 230-mapping surface and recent outcome aggregates with zero browser errors. The final Family lifecycle production journeys remain and require an authenticated session for one of the two exact pilot users.
+
+### Authenticated Family lifecycle and natural-language correction — August 19, 2026
+
+The `peverelli.t@gmail.com` pilot completed the full disposable profile lifecycle in the production chat with zero browser-console errors: create, **Modify something**, save, edit, make ready, make default, archive, and restore all produced their own recap and checked receipt. The original `Batch Five Test Profile` archive sentence also completed correctly. No active request, visit, payment, or timesheet was changed by those profile checks.
+
+The realistic request sentence `Create a one-time care request for Batch Five Final Profile ...` then exposed a deterministic collision: the terminal word `Profile` inside the recipient name won the broad profile-create matcher, so the assistant asked for a care-receiver name instead of starting the one-time-care path. The same browser round found that ordinary `finish and edit` / `add that` profile wording was less conversational than the explicit `Update ... to say:` form, and the explicit form retained an instructional `say:` prefix in the saved detail.
+
+Commit `aa0a63d1` corrects all three findings and adds recovery for an incomplete profile change:
+
+- explicit one-time and recurring request language resolves before profile-name wording, and the exact production sentence is covered end to end as a care-path choice with no profile preparation or profile write;
+- `finish`, `edit`, and `add` keep the user inside the authorized multi-turn profile draft, while a generic edit request asks what should change instead of treating the command itself as profile content;
+- an instructional `say:` prefix is removed from the proposed About Them value;
+- the composer shows **Cancel current profile change** whenever a profile preparation is active; cancellation saves nothing and invalidates any earlier confirmation for that preparation; and
+- cancelled or expired profile preparations are rejected again inside the locked confirmed-action commit.
+
+The post-correction source baseline is **186 / 186 AI Support tests with 3,214 assertions**. The isolated Family Batch 1–5 mass harness passes **94 / 94 tests with 2,405 assertions**, **137 / 137** established phrases, **64 / 64** Batch 5 phrases, **324 / 324** catalog records, **230 / 230** mappings, and **10 / 10** collisions with zero provider calls or production database use. Final closure requires the normal deployment of `aa0a63d1`, cancellation of the mistaken production draft, and repetition of the exact request lifecycle in the authenticated pilot.
 
 ## Production deployment
 
