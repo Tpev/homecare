@@ -9,11 +9,14 @@ use App\Models\AiSupportRequestDraft;
 use App\Models\CareBooking;
 use App\Models\CareRecipientProfile;
 use App\Models\CareRequest;
+use App\Models\CareRequestApplication;
 use App\Models\CareTask;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\AiSupport\AiSupportControlService;
 use App\Services\AiSupport\AiSupportPilotGrantService;
+use App\Services\AiSupport\AiSupportRecapService;
+use App\Services\AiSupport\AiSupportRequestDraftService;
 use App\Services\AiSupport\AiSupportRuntimeService;
 use App\Services\AiSupport\FamilyLifecycleActionService;
 use App\Services\CareRecipientProfiles\CareRecipientProfileService;
@@ -163,6 +166,70 @@ class Batch5FamilyLifecycleTest extends TestCase
         $this->assertFalse($profile->fresh()->isArchived());
     }
 
+    public function test_default_archive_and_restore_are_each_confirmed_and_database_verified(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $profiles = app(CareRecipientProfileService::class);
+        $first = $profiles->saveDraft($family, null, [
+            'preferred_name' => 'Maria', 'about_them' => 'Enjoys music.',
+        ]);
+        $second = $profiles->saveDraft($family, null, [
+            'preferred_name' => 'Rosa', 'about_them' => 'Enjoys gardening.',
+        ]);
+        $ticket = $this->ticket($family, 'Manage Rosa’s profile.');
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, 'Make Rosa the default profile.');
+        $defaultRecap = AiSupportMessageAction::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->where('action_type', AiSupportMessageAction::TYPE_DOMAIN_RECAP)
+            ->latest('created_at')->firstOrFail();
+        $this->assertSame('family-profile.make-default', data_get($defaultRecap->payload, 'tool_id'));
+        $defaultEvidence = app(FamilyLifecycleActionService::class)->confirm($family, $ticket, $defaultRecap->id);
+        $this->assertSame('profile_default_verified', $defaultEvidence->outcome_code);
+        $this->assertSame($second->id, app(FamilyAccountContext::class)->account($family)->fresh()->default_care_recipient_profile_id);
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, 'Archive Rosa’s profile.');
+        $archiveRecap = AiSupportMessageAction::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->where('action_type', AiSupportMessageAction::TYPE_DOMAIN_RECAP)
+            ->latest('created_at')->firstOrFail();
+        $this->assertSame('family-profile.archive', data_get($archiveRecap->payload, 'tool_id'));
+        $archiveEvidence = app(FamilyLifecycleActionService::class)->confirm($family, $ticket, $archiveRecap->id);
+        $this->assertSame('profile_archived_verified', $archiveEvidence->outcome_code);
+        $this->assertTrue($second->fresh()->isArchived());
+        $this->assertSame($first->id, app(FamilyAccountContext::class)->account($family)->fresh()->default_care_recipient_profile_id);
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, 'Restore Rosa’s archived profile.');
+        $restoreRecap = AiSupportMessageAction::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->where('action_type', AiSupportMessageAction::TYPE_DOMAIN_RECAP)
+            ->latest('created_at')->firstOrFail();
+        $this->assertSame('family-profile.restore', data_get($restoreRecap->payload, 'tool_id'));
+        $restoreEvidence = app(FamilyLifecycleActionService::class)->confirm($family, $ticket, $restoreRecap->id);
+        $this->assertSame('profile_restored_verified', $restoreEvidence->outcome_code);
+        $this->assertFalse($second->fresh()->isArchived());
+        $this->assertSame($first->id, app(FamilyAccountContext::class)->account($family)->fresh()->default_care_recipient_profile_id);
+        $this->assertSame(3, AiSupportConfirmedActionEvidence::query()->count());
+        $this->assertSame(3, AiSupportMessageAction::query()->where('action_type', AiSupportMessageAction::TYPE_DOMAIN_RECEIPT)->count());
+    }
+
+    public function test_wrong_account_profile_is_never_offered_or_changed(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        [, $other] = $this->eligibleFamily();
+        $foreign = app(CareRecipientProfileService::class)->saveDraft($other, null, [
+            'preferred_name' => 'Private Rosa', 'about_them' => 'Private account detail.',
+        ]);
+        $ticket = $this->ticket($family, 'Archive profile #'.$foreign->id.'.');
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, 'Archive profile #'.$foreign->id.'.');
+
+        $this->assertDatabaseCount('ai_support_confirmed_action_evidence', 0);
+        $this->assertSame(0, AiSupportMessageAction::query()->where('action_type', AiSupportMessageAction::TYPE_DOMAIN_RECAP)->count());
+        $this->assertFalse($foreign->fresh()->isArchived());
+        $this->assertStringContainsString('could not safely identify', mb_strtolower($ticket->publicMessages()->latest()->first()->body));
+    }
+
     public function test_open_request_withdrawal_has_recap_confirmation_receipt_and_authoritative_status(): void
     {
         [, $family] = $this->eligibleFamily();
@@ -198,6 +265,110 @@ class Batch5FamilyLifecycleTest extends TestCase
         $this->assertSame(CareRequest::STATUS_EXPIRED, $source->fresh()->status);
         $this->assertSame(1, CareRequest::query()->count());
         $this->assertStringContainsString('original remains unchanged', $ticket->publicMessages()->latest()->first()->body);
+    }
+
+    public function test_reuse_duplicate_live_replacement_type_replacement_and_withdrawn_copy_are_distinct(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $task = CareTask::query()->create(['name' => 'Companionship']);
+        $scenarios = [
+            ['message' => 'Reuse request #%d.', 'status' => CareRequest::STATUS_OPEN, 'mode' => 'reuse', 'type' => CareRequest::TYPE_ONE_TIME],
+            ['message' => 'Duplicate request #%d.', 'status' => CareRequest::STATUS_OPEN, 'mode' => 'duplicate', 'type' => CareRequest::TYPE_ONE_TIME],
+            ['message' => 'Edit live request #%d.', 'status' => CareRequest::STATUS_OPEN, 'mode' => 'replacement', 'type' => CareRequest::TYPE_ONE_TIME],
+            ['message' => 'Change one-time request #%d to recurring.', 'status' => CareRequest::STATUS_OPEN, 'mode' => 'replacement', 'type' => CareRequest::TYPE_RECURRING],
+            ['message' => 'Create a fresh copy of withdrawn request #%d.', 'status' => CareRequest::STATUS_CANCELLED, 'mode' => 'withdrawn_copy', 'type' => CareRequest::TYPE_ONE_TIME],
+        ];
+
+        foreach ($scenarios as $scenario) {
+            $source = $this->request($family, $scenario['status']);
+            $source->tasks()->attach($task->id, ['task_note' => 'Read together.']);
+            $message = sprintf($scenario['message'], $source->id);
+            $ticket = $this->ticket($family, $message);
+
+            app(AiSupportRuntimeService::class)->respond($family, $ticket, $message);
+
+            $draft = AiSupportRequestDraft::query()->where('support_ticket_id', $ticket->id)->sole();
+            $this->assertSame($scenario['mode'], data_get($draft->payload, '_source_request.mode'));
+            $this->assertSame($scenario['type'], $draft->request_type);
+            $this->assertSame($source->id, (int) data_get($draft->payload, '_source_request.id'));
+            $this->assertArrayNotHasKey('requested_start_date', (array) $draft->payload);
+            $this->assertSame($scenario['status'], $source->fresh()->status);
+            $this->assertSame('collecting', $draft->state);
+        }
+    }
+
+    public function test_copied_request_recovers_from_validation_failure_and_publishes_as_a_new_request(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $source = $this->request($family, CareRequest::STATUS_EXPIRED);
+        $task = CareTask::query()->create(['name' => 'Companionship']);
+        $source->tasks()->attach($task->id, ['task_note' => 'Read together.']);
+        $ticket = $this->ticket($family, 'Copy expired request #'.$source->id.'.');
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, 'Create a fresh copy of expired request #'.$source->id.'.');
+        $drafts = app(AiSupportRequestDraftService::class);
+        $draft = AiSupportRequestDraft::query()->where('support_ticket_id', $ticket->id)->sole();
+
+        $invalid = $drafts->applyPatch($family, $ticket, [
+            'patch_fields' => ['requested_start_date', 'requested_start_time', 'duration_minutes'],
+            'requested_start_date' => now('America/New_York')->subDay()->toDateString(),
+            'requested_start_time' => '10:00',
+            'duration_minutes' => 120,
+        ], $draft->version);
+        $this->assertSame(AiSupportRequestDraft::STATE_COLLECTING, $invalid->state);
+        $this->assertSame('start_not_future', $invalid->last_error_code);
+        $this->assertStringContainsString('future', mb_strtolower((string) $drafts->nextQuestion($family, $invalid)));
+
+        $start = now('America/New_York')->addDays(7)->setTime(10, 0);
+        $ready = $drafts->applyPatch($family, $ticket, [
+            'patch_fields' => ['requested_start_date', 'requested_start_time', 'duration_minutes'],
+            'requested_start_date' => $start->toDateString(),
+            'requested_start_time' => $start->format('H:i'),
+            'duration_minutes' => 120,
+        ], $invalid->version);
+        $this->assertSame(AiSupportRequestDraft::STATE_READY_FOR_RECAP, $ready->state);
+
+        $recap = app(AiSupportRecapService::class)->issue($family, $ticket, $ready);
+        $this->assertStringContainsString('original stays unchanged', (string) data_get($recap->payload, 'recap.source_disclosure'));
+        $published = app(AiSupportRecapService::class)->confirm($family, $ticket, $recap->id);
+
+        $this->assertNotSame($source->id, $published->id);
+        $this->assertSame(CareRequest::STATUS_OPEN, $published->status);
+        $this->assertSame(CareRequest::STATUS_EXPIRED, $source->fresh()->status);
+        $this->assertSame($published->id, $ready->fresh()->published_care_request_id);
+        $this->assertSame(2, CareRequest::query()->count());
+    }
+
+    public function test_exact_request_status_blockers_and_applicant_count_are_read_from_authorized_state(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        Http::fake();
+        $open = $this->request($family, CareRequest::STATUS_OPEN);
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        CareRequestApplication::query()->create([
+            'care_request_id' => $open->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestApplication::STATUS_APPLIED,
+            'proposed_rate' => 27,
+        ]);
+        $applicantTicket = $this->ticket($family, 'How many caregivers applied to request #'.$open->id.'?');
+        app(AiSupportRuntimeService::class)->respond($family, $applicantTicket, 'How many caregivers applied to request #'.$open->id.'?');
+        $this->assertStringContainsString('1 caregiver is waiting for your review', $applicantTicket->publicMessages()->latest()->first()->body);
+
+        foreach ([
+            CareRequest::STATUS_DRAFT => ['Draft — not visible to caregivers', 'not been published'],
+            CareRequest::STATUS_FILLED => ['Caregiver selected', 'selected caregiver'],
+            CareRequest::STATUS_CANCELLED => ['Withdrawn', 'fresh copy'],
+            CareRequest::STATUS_EXPIRED => ['Expired', 'fresh copy'],
+        ] as $status => [$label, $blocker]) {
+            $request = $this->request($family, $status);
+            $message = 'What is the status of request #'.$request->id.'?';
+            $ticket = $this->ticket($family, $message);
+            app(AiSupportRuntimeService::class)->respond($family, $ticket, $message);
+            $body = $ticket->publicMessages()->latest()->first()->body;
+            $this->assertStringContainsString($label, $body);
+            $this->assertStringContainsString($blocker, $body);
+        }
+        Http::assertNothingSent();
     }
 
     public function test_wrong_account_request_is_never_offered_or_copied(): void
@@ -348,6 +519,7 @@ class Batch5FamilyLifecycleTest extends TestCase
             'tool.family-profile.save-draft', 'tool.family-profile.make-ready',
             'tool.family-profile.make-default', 'tool.family-profile.archive',
             'tool.family-profile.restore', 'tool.care-request.withdraw',
+            'commit.one_time', 'tool.care-request.publish.one-time',
         ] as $key) {
             if (! $controls->enabled($key)) {
                 $controls->set($admin, $key, true, 'Batch 5 Family lifecycle test');

@@ -56,8 +56,63 @@ $action->forceFill(['expires_at' => now()->subMinute()])->save();
             SESSION_DRIVER: 'file',
             QUEUE_CONNECTION: 'sync',
             MAIL_MAILER: 'array',
+            AI_SUPPORT_RUNTIME_AVAILABLE: 'true',
+            AI_SUPPORT_PROVIDER_ENABLED: 'true',
+            AI_SUPPORT_SAFETY_IDENTIFIER_SECRET: 'playwright-only-ai-support-safety-identifier-secret',
         },
     });
+}
+
+function completeActiveCopiedRequestDraft(): void {
+    const phpCode = String.raw`
+require 'vendor/autoload.php';
+$app = require 'bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+$family = App\Models\User::query()->where('email', 'family.ai.e2e@example.com')->firstOrFail();
+$draft = App\Models\AiSupportRequestDraft::query()
+    ->where('actor_user_id', $family->id)
+    ->whereNull('published_at')
+    ->latest('updated_at')
+    ->firstOrFail();
+$ticket = $draft->ticket()->firstOrFail();
+$start = now('America/New_York')->addDays(8)->setTime(11, 0);
+$draft = app(App\Services\AiSupport\AiSupportRequestDraftService::class)->applyPatch($family, $ticket, [
+    'patch_fields' => ['requested_start_date', 'requested_start_time', 'duration_minutes'],
+    'requested_start_date' => $start->toDateString(),
+    'requested_start_time' => $start->format('H:i'),
+    'duration_minutes' => 120,
+], $draft->version);
+app(App\Services\AiSupport\AiSupportRecapService::class)->issue($family, $ticket, $draft);
+`;
+
+    execFileSync('php', ['-r', phpCode], {
+        cwd: process.cwd(),
+        env: {
+            ...process.env,
+            APP_ENV: 'playwright',
+            APP_URL: 'http://127.0.0.1:8010',
+            DB_CONNECTION: 'sqlite',
+            DB_DATABASE: path.join(process.cwd(), 'database', 'playwright.sqlite'),
+            CACHE_STORE: 'file',
+            SESSION_DRIVER: 'file',
+            QUEUE_CONNECTION: 'sync',
+            MAIL_MAILER: 'array',
+            AI_SUPPORT_RUNTIME_AVAILABLE: 'true',
+            AI_SUPPORT_PROVIDER_ENABLED: 'true',
+            AI_SUPPORT_SAFETY_IDENTIFIER_SECRET: 'playwright-only-ai-support-safety-identifier-secret',
+        },
+    });
+}
+
+async function openSupportChat(page: Page) {
+    const panel = page.getByTestId('support-chat-panel');
+    if (!await panel.isVisible()) {
+        await page.getByTestId('support-chat-launcher').click();
+    }
+    await expect(panel).toBeVisible();
+
+    return panel;
 }
 
 test.describe.serial('Interactive AI Support pilot', () => {
@@ -216,6 +271,118 @@ test.describe.serial('Interactive AI Support pilot', () => {
         expect(pageErrors).toEqual([]);
     });
 
+    test('confirms profile edits, readiness, default, archive, and restore on desktop', async ({ page }) => {
+        const pageErrors: string[] = [];
+        page.on('pageerror', (error) => pageErrors.push(error.message));
+        await loginAs(page, 'familyAi');
+        const panel = await openSupportChat(page);
+        const composer = page.getByLabel('Message LoLo Support');
+
+        await composer.fill('Update the description in Maria Browser profile to Enjoys quiet music and short walks.');
+        await composer.press('Enter');
+        let recap = panel.getByRole('region', { name: 'Action recap' }).last();
+        await expect(recap.getByRole('heading', { name: 'Review changes to Maria Browser' })).toBeVisible();
+        await expect(recap.getByText(/Enjoys quiet music and short walks/)).toBeVisible();
+        await recap.getByRole('button', { name: 'Confirm and save' }).click();
+        await expect(panel.getByText(/profile was saved and checked/i).last()).toBeVisible();
+
+        await composer.fill('Make Maria Browser profile ready.');
+        await composer.press('Enter');
+        recap = panel.getByRole('region', { name: 'Action recap' }).last();
+        await expect(recap.getByText(/share the approved profile details/i)).toBeVisible();
+        await recap.getByRole('button', { name: 'Confirm profile is ready' }).click();
+        await expect(panel.getByText(/profile is ready and the saved version was checked/i)).toBeVisible();
+
+        await composer.fill('Make Maria Browser the default profile.');
+        await composer.press('Enter');
+        recap = panel.getByRole('region', { name: 'Action recap' }).last();
+        await expect(recap.getByRole('heading', { name: 'Make Maria Browser the default profile?' })).toBeVisible();
+        await recap.getByRole('button', { name: 'Confirm default profile' }).click();
+        await expect(panel.getByText(/default care receiver profile was changed and checked/i)).toBeVisible();
+
+        await composer.fill('Archive Maria Browser profile now that the pilot test is complete.');
+        await composer.press('Enter');
+        recap = panel.getByRole('region', { name: 'Action recap' }).last();
+        await expect(recap.getByRole('heading', { name: 'Archive Maria Browser?' })).toBeVisible();
+        await recap.getByRole('button', { name: 'Confirm archive' }).click();
+        await expect(panel.getByText(/profile was archived and checked/i)).toBeVisible();
+
+        await composer.fill('Restore Maria Browser archived profile.');
+        await composer.press('Enter');
+        recap = panel.getByRole('region', { name: 'Action recap' }).last();
+        await expect(recap.getByRole('heading', { name: 'Restore Maria Browser?' })).toBeVisible();
+        await recap.getByRole('button', { name: 'Confirm restore' }).click();
+        await expect(panel.getByText(/profile was restored and checked/i)).toBeVisible();
+
+        const profilesLink = panel.getByRole('link', { name: 'View care profiles' }).last();
+        await profilesLink.click();
+        await expect(page).toHaveURL(/\/family\/care-profiles$/);
+        await expect(page.getByText('Maria Browser', { exact: true }).first()).toBeVisible();
+        expect(pageErrors).toEqual([]);
+    });
+
+    test('reads, withdraws, copies, republishes, and verifies an exact request on desktop', async ({ page }) => {
+        const pageErrors: string[] = [];
+        page.on('pageerror', (error) => pageErrors.push(error.message));
+        await loginAs(page, 'familyAi');
+        let panel = await openSupportChat(page);
+        let composer = page.getByLabel('Message LoLo Support');
+
+        await composer.fill('What is the status of my care request?');
+        await composer.press('Enter');
+        await expect(panel.getByText(/Live — caregivers can apply/).last()).toBeVisible();
+        const openRequest = panel.getByRole('button', { name: 'Open this request' }).last();
+        await openRequest.click();
+        await expect(page).toHaveURL(/\/family\/requests\/\d+/);
+        const originalId = Number(page.url().match(/\/family\/requests\/(\d+)/)?.[1]);
+        expect(originalId).toBeGreaterThan(0);
+        await expect(page.getByTestId('ai-guided-task-strip')).toBeVisible();
+
+        panel = await openSupportChat(page);
+        composer = page.getByLabel('Message LoLo Support');
+        await composer.fill(`Withdraw request #${originalId}.`);
+        await composer.press('Enter');
+        let recap = panel.getByRole('region', { name: 'Action recap' }).last();
+        await expect(recap.getByRole('heading', { name: `Withdraw request #${originalId}?` })).toBeVisible();
+        await recap.getByRole('button', { name: 'Confirm withdrawal' }).click();
+        await expect(panel.getByText(/request was withdrawn and checked/i)).toBeVisible();
+
+        await composer.fill(`Create a fresh copy of withdrawn request #${originalId}.`);
+        await composer.press('Enter');
+        await expect(panel.getByText(new RegExp(`new private copy of request #${originalId}`, 'i'))).toBeVisible();
+        completeActiveCopiedRequestDraft();
+        await page.reload();
+        panel = await openSupportChat(page);
+        recap = panel.getByRole('region', { name: 'Care request recap' }).last();
+        await expect(recap.getByText(new RegExp(`copied from request #${originalId}`, 'i'))).toBeVisible();
+        await expect(recap.getByText(/original stays unchanged/i)).toBeVisible();
+        const liveMessages = panel.getByText(/care request is live/i);
+        const liveMessageCount = await liveMessages.count();
+        const requestLinks = panel.getByRole('link', { name: 'View request' });
+        const requestLinkCount = await requestLinks.count();
+        await recap.getByRole('button', { name: 'Confirm and create request' }).click();
+        await expect(liveMessages).toHaveCount(liveMessageCount + 1);
+        await expect(requestLinks).toHaveCount(requestLinkCount + 1);
+        const copiedRequestLink = panel.locator(
+            `a[href*="/family/requests/"]:not([href$="/${originalId}"])`,
+            { hasText: 'View request' },
+        );
+        await expect(copiedRequestLink).toHaveCount(1);
+        await copiedRequestLink.click();
+        await expect(page).toHaveURL(/\/family\/requests\/\d+$/);
+        const copiedId = Number(page.url().match(/\/family\/requests\/(\d+)/)?.[1]);
+        expect(copiedId).toBeGreaterThan(0);
+        expect(copiedId).not.toBe(originalId);
+
+        panel = await openSupportChat(page);
+        composer = page.getByLabel('Message LoLo Support');
+        await composer.fill(`What is the status of request #${originalId}?`);
+        await composer.press('Enter');
+        await expect(panel.getByText(/is Withdrawn/).last()).toBeVisible();
+        await expect(panel.getByText(/start a fresh copy instead/i).last()).toBeVisible();
+        expect(pageErrors).toEqual([]);
+    });
+
     test('same-account Family member cannot see or inherit the exact-user AI conversation', async ({ page }) => {
         await loginAs(page, 'familyAiMember');
         await page.getByTestId('support-chat-launcher').click();
@@ -250,8 +417,11 @@ test.describe.serial('Interactive AI Support pilot', () => {
         await expect(page.getByRole('heading', { name: 'AI evidence' })).toBeVisible();
         const requestReceipt = page.getByTestId('ai-confirmed-action-receipt')
             .filter({ hasText: /care-request-\d+.*care_request_live/ });
-        await expect(requestReceipt.getByText('Confirmed action receipt')).toBeVisible();
-        await expect(requestReceipt.getByText(/care-request-\d+.*care_request_live/)).toBeVisible();
+        await expect(requestReceipt).toHaveCount(2);
+        await expect(requestReceipt.first().getByText('Confirmed action receipt')).toBeVisible();
+        await expect(requestReceipt.last().getByText('Confirmed action receipt')).toBeVisible();
+        await expect(requestReceipt.first().getByText(/care-request-\d+.*care_request_live/)).toBeVisible();
+        await expect(requestReceipt.last().getByText(/care-request-\d+.*care_request_live/)).toBeVisible();
         await expect(page.getByText(/State published/)).toBeVisible();
     });
 });

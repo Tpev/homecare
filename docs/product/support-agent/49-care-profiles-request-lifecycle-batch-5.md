@@ -1,6 +1,6 @@
 # Care Profiles and Request Lifecycle — Batch 5
 
-Status: Deployed, published, and active for the exact two-user pilot; authenticated production smoke completed; three audit corrections verified in source and awaiting the normal deployment
+Status: Deployed, published, and active for the exact two-user pilot; full completion audit and expanded browser coverage passed locally on August 19, 2026; normal deployment and final production recheck remain
 
 Approved: August 18, 2026
 
@@ -106,22 +106,24 @@ There is no generic SQL, ORM, arbitrary URL, selector, browser-control, or unres
 
 ## Test baseline
 
-Completed locally on August 18, 2026:
+Current completion baseline, passed locally on August 19, 2026:
 
-- Batch 5 lifecycle contract: **13 tests / 60 assertions** after the production routing correction;
+- Batch 5 lifecycle contract: **18 tests / 127 assertions**;
 - Batch 5 knowledge package: **3 tests / 112 assertions**;
-- Family Batch 1–5 mass harness: **83 tests / 2,311 assertions**;
-- complete AI Support feature suite: **175 tests / 3,120 assertions**;
+- Family Batch 1–5 mass harness: **88 tests / 2,378 assertions**;
+- complete AI Support feature suite: **180 tests / 3,187 assertions**;
 - executable catalog: **324 / 324** records and **230 / 230** explicit KB mappings;
 - deterministic routing: **137 / 137** existing phrases plus **64 / 64** Batch 5 lifecycle phrases;
 - nearby collision protection: **10 / 10**;
 - profile/request KB evaluations: **100 / 100** structurally validated;
-- interactive Chromium suite: **5 / 5** scenarios, including the mobile profile recap, confirmation, receipt, and Admin audit;
-- responsive support-chat suite: all **6** scenarios passed, with one keyboard-wrap case rerun after an initial timing-only failure;
+- interactive Chromium suite: **7 / 7** serial journeys, including profile create/edit/readiness/default/archive/restore; exact request read/withdraw/copy/republish/status; payment guidance; exact-user isolation; and Admin evidence;
+- responsive support-chat suite: **6 / 6** Pixel/Chromium and **6 / 6** iPhone/WebKit scenarios passed independently, including background-refresh focus, rotation, draft preservation, offline recovery, long history, large text, and resolved-chat restart;
 - production frontend build: passed; and
 - provider calls and production database writes during the deterministic mass test: **0**.
 
-The focused Batch 5 tests include multi-turn model extraction, wrong-account denial, stale profile revision, expired recap renewal, duplicate/idempotent behavior, request-with-visit denial, withdrawn/expired copy behavior, permanent-deletion transfer, and exact-pilot-only activation.
+The focused Batch 5 tests include multi-turn model extraction; wrong-account profile and request denial; stale profile revision; expired recap renewal; independent default/archive/restore confirmation and database verification; distinct reuse, duplicate, live replacement, request-type replacement, and withdrawn-copy modes; exact status, blocker, and applicant reads; copied-draft validation recovery and fresh publication; duplicate/idempotent behavior; request-with-visit denial; permanent-deletion transfer; and exact-pilot-only activation.
+
+The completion audit also corrected two test-found integration defects. A replacement highlighted DOM control now reinitializes guidance once without stealing focus on unrelated DOM changes. The deterministic browser fixture now explicitly separates the standalone `Arthur E2E` request recipient from the seeded `Rosa Existing` profile, preventing a false linked-profile snapshot during copy and publication.
 
 ## Authenticated production pilot audit — August 18, 2026
 
@@ -146,15 +148,24 @@ The smoke test found three real defects:
 
 No incorrect lifecycle recap was confirmed. The archive recap was stopped and the synthetic profile remains isolated from active requests and visits until the corrected archive journey is verified after deployment.
 
-The correction replaces the missing resize call with the existing composer state handler, safely normalizes the Livewire result through `Promise.resolve`, and gives explicit archive/restore/default verbs priority over readiness wording. Regression coverage includes the exact production archive sentence. The corrected source passes:
+The correction replaces the missing resize call with the existing composer state handler, safely normalizes the Livewire result through `Promise.resolve`, and gives explicit archive/restore/default verbs priority over readiness wording. Regression coverage includes the exact production archive sentence. The completed August 19 source now passes:
 
 - the production frontend build;
-- the focused profile and exact-control Chromium journeys;
-- **41 tests / 249 assertions** across the chat widget, guided payment method, and Batch 5 lifecycle suites;
-- **13 / 13 tests and 60 assertions** in the focused Batch 5 lifecycle contract; and
-- the isolated Batch 1–5 mass harness with **83 tests / 2,311 assertions**, **64 / 64** Batch 5 phrases, **324 / 324** catalog records, **230 / 230** mappings, and **10 / 10** collision cases.
+- **7 / 7** complete interactive Chromium journeys;
+- **6 / 6** independent Pixel/Chromium and **6 / 6** independent iPhone/WebKit responsive scenarios;
+- **18 / 18 tests and 127 assertions** in the focused Batch 5 lifecycle contract;
+- the complete AI Support suite with **180 tests / 3,187 assertions**; and
+- the isolated Batch 1–5 mass harness with **88 tests / 2,378 assertions**, **64 / 64** Batch 5 phrases, **324 / 324** catalog records, **230 / 230** mappings, and **10 / 10** collision cases.
 
-After the correction commit is deployed, the short production recheck is: click **Modify something** with no console error, open an exact guided request with no telemetry error, repeat the exact archive sentence, confirm that the recap says **Archive**, confirm it, and verify the synthetic profile is archived. Pilot-only and exactly two grants must remain unchanged.
+After the completion commit is deployed, the production recheck is:
+
+1. click **Modify something** and confirm the composer remains focused with no console error;
+2. open an exact guided request and confirm navigation, highlight, and telemetry complete with no browser error;
+3. repeat the exact archive sentence, confirm the recap says **Archive**, confirm it, and verify the synthetic profile is archived;
+4. edit, make ready, make default, archive, and restore a disposable pilot profile through separate recaps and verified receipts;
+5. read an eligible request, withdraw it, create a fresh copy, supply a new schedule, publish it, and verify the new request ID differs while the source remains withdrawn;
+6. inspect the Admin evidence for the separate publication and lifecycle receipts; and
+7. confirm Availability is **Pilot only**, exactly the two approved Family grants remain active, and **Live for everyone** is off.
 
 ## Production deployment
 

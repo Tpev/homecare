@@ -127,12 +127,19 @@ document.addEventListener('alpine:init', () => {
             this.visibilityHandler = () => this.schedulePoll(250);
             document.addEventListener('visibilitychange', this.visibilityHandler);
 
-            this.guidedObserver = new MutationObserver(() => {
+            this.guidedObserver = new MutationObserver((mutations) => {
                 if (! this.guidedTask?.id || ! this.guidedTask?.targetId) return;
 
                 const target = Array.from(document.querySelectorAll('[data-ai-target]'))
                     .find((element) => element.dataset.aiTarget === this.guidedTask.targetId);
-                if (! target || (target.dataset.aiGuided === 'true' && target.classList.contains('ai-guide-target-highlight'))) return;
+                if (! target) return;
+
+                const targetWasInserted = mutations.some((mutation) => mutation.type === 'childList'
+                    && Array.from(mutation.addedNodes).some((node) => node instanceof Element
+                        && (node === target || node.contains(target))));
+                const alreadyGuided = target.dataset.aiGuided === 'true'
+                    && target.classList.contains('ai-guide-target-highlight');
+                if (alreadyGuided && ! targetWasInserted) return;
 
                 this.$nextTick(() => this.initializeGuidance());
             });

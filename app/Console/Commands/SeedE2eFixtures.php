@@ -27,6 +27,7 @@ use App\Services\AiSupport\AiSupportRequestDraftService;
 use App\Services\AiSupport\InteractiveKnowledgeBaseImportService;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Caregiver\CaregiverBackgroundService;
+use App\Services\CareRecipientProfiles\CareRecipientProfileService;
 use App\Services\FamilyAccounts\FamilyAccountProvisioner;
 use App\Services\RegularCare\CarePlanHealthService;
 use App\Services\RegularCare\CarePlanService;
@@ -332,6 +333,12 @@ class SeedE2eFixtures extends Command
             'password' => Hash::make('password'),
         ]);
         $account = app(FamilyAccountProvisioner::class)->provisionOwner($family, 'e2e_ai_pilot_fixture');
+        $profileService = app(CareRecipientProfileService::class);
+        $existingProfile = $profileService->saveDraft($family, null, [
+            'preferred_name' => 'Rosa Existing',
+            'about_them' => 'Enjoys gardening and quiet conversation.',
+        ]);
+        $profileService->makeReady($family, $existingProfile, [], $existingProfile->revision, true);
 
         $member = User::query()->create([
             'name' => 'E2E AI Family Member',
@@ -399,12 +406,13 @@ class SeedE2eFixtures extends Command
         $start = now('America/New_York')->addDays(7)->setTime(10, 0);
         $draft = $drafts->applyPatch($family, $ticket, [
             'patch_fields' => [
-                'recipient_is_requester', 'recipient_full_name', 'recipient_relationship',
+                'recipient_is_requester', 'recipient_profile_id', 'recipient_full_name', 'recipient_relationship',
                 'task_ids', 'task_notes', 'requested_start_date', 'requested_start_time',
                 'duration_minutes', 'address_line1', 'city', 'state', 'zip',
                 'additional_info', 'home_access_notes', 'preferred_response_hours',
             ],
             'recipient_is_requester' => false,
+            'recipient_profile_id' => null,
             'recipient_full_name' => 'Arthur E2E',
             'recipient_relationship' => 'Father',
             'task_ids' => [$task->id],

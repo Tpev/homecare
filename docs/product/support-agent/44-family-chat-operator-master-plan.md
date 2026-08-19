@@ -1,8 +1,8 @@
 # Family Chat Operator Master Coverage and Delivery Plan
 
-Status: Active master plan; Batches 1 through 5 deployed to the exact two-user pilot; authenticated Batch 5 smoke completed and its three narrow audit corrections await normal deployment
+Status: Active master plan; Batches 1 through 5 deployed to the exact two-user pilot; the August 19 Batch 5 completion audit is locally green and awaits normal deployment plus final production recheck
 
-Audited: August 18, 2026
+Audited: August 19, 2026
 
 Owner: Product and Engineering
 
@@ -35,11 +35,11 @@ This plan reconciles the source repository rather than treating previous summari
 - the care-profile and request-lifecycle implementation recorded in [document 49](49-care-profiles-request-lifecycle-batch-5.md); and
 - the mobile and task-first corrections recorded in documents 42 and 43.
 
-The following verification passed on August 18, 2026:
+The following verification passed on August 19, 2026:
 
 | Verification | Result |
 | --- | ---: |
-| Complete AI Support feature suite | 175 tests / 3,120 assertions passed |
+| Complete AI Support feature suite | 180 tests / 3,187 assertions passed |
 | Established read/guide/payment runtime phrases | 137 / 137 |
 | Batch 5 lifecycle intents and phrases | 21 intents / 64 phrases passed |
 | Near-neighbor routing collisions | 10 / 10 protected |
@@ -56,9 +56,9 @@ The following verification passed on August 18, 2026:
 | Explicit KB mappings after Batch 5 | 230 / 230 |
 | Catalog phrase definitions | 1,296 |
 | Batch 3 isolated operating-layer assertions | 1,491 |
-| Batch 1-5 mass harness | 83 tests / 2,311 assertions |
-| Interactive Chromium journeys | 5 / 5 passed |
-| Responsive support-chat scenarios | 6 / 6 passed; one timing-only keyboard case confirmed by rerun |
+| Batch 1-5 mass harness | 88 tests / 2,378 assertions |
+| Interactive Chromium journeys | 7 / 7 passed |
+| Responsive support-chat scenarios | 6 / 6 Pixel/Chromium and 6 / 6 iPhone/WebKit passed independently |
 
 ## Current capability inventory
 
@@ -150,14 +150,14 @@ The operating layer is implemented, but domain breadth is still incomplete:
 | Authoritative verification | Generic registry; request receipts, saved payment method, exact payment-attention clearing, profile lifecycle, and request withdrawal proven | Every complete journey has a domain receipt or fresh state verifier | Batch 5 expanded; continue by domain |
 | Human support | Atomic same-conversation transfer, Admin alert, context summary | Human terminal path for every judgment/exception intent with no repetition | Implemented; refine with domain context |
 | Older-adult UI | State-aware start, mobile chat, universal contextual follow-ups, action progress, recovery, and guide highlight | Complete more domain journeys without adding cognitive load | Batch 3 complete; usability expands by domain |
-| Evaluation | 324 catalog rows, 230 mappings, 1,296 definitions, 20 Batch 5 entries, 100 Batch 5 KB cases, 137 established routes, 64 Batch 5 routes, and 10 collisions; the corrected mass harness passes 83 tests / 2,311 assertions and focused production-defect browser regressions are green | Per-intent multi-turn, state, browser, and usability coverage | Batch 5 authenticated smoke completed; correction deploy/recheck next |
+| Evaluation | 324 catalog rows, 230 mappings, 1,296 definitions, 20 Batch 5 entries, 100 Batch 5 KB cases, 137 established routes, 64 Batch 5 routes, and 10 collisions; the completion mass harness passes 88 tests / 2,378 assertions, the full suite passes 180 / 3,187, and desktop plus independent Pixel/iPhone browser regressions are green | Per-intent multi-turn, state, browser, and usability coverage | Batch 5 completion deploy/recheck next |
 | Admin visibility | KB lifecycle, transcripts, Availability, searchable 324-intent catalog, and compact outcome summary | Add useful domain funnel detail without transcript duplication | Batch 3 complete; refine by domain |
 
 ## Knowledge-base audit
 
 ### Current governed inventory
 
-Family Operations KB Wave 1, the 18-entry Batch 4 payment/time package, and the 20-entry Batch 5 profile/request package are published in production for the exact two-user pilot. Together they map 230 unique Family intent rows. The authenticated Batch 5 smoke completed the new-user profile and request-status journeys and produced three narrow source corrections awaiting deployment. See [document 47](47-payment-time-recovery-batch-4.md), the [Batch 4.1 production-audit correction](48-production-audit-corrections-batch-4-1.md), and the [Batch 5 implementation and production-audit record](49-care-profiles-request-lifecycle-batch-5.md).
+Family Operations KB Wave 1, the 18-entry Batch 4 payment/time package, and the 20-entry Batch 5 profile/request package are published in production for the exact two-user pilot. Together they map 230 unique Family intent rows. The authenticated Batch 5 smoke produced three narrow source corrections; the August 19 completion audit then expanded exact lifecycle, failure, desktop, and mobile evidence. That completion package awaits normal deployment and production recheck. See [document 47](47-payment-time-recovery-batch-4.md), the [Batch 4.1 production-audit correction](48-production-audit-corrections-batch-4-1.md), and the [Batch 5 implementation and production-audit record](49-care-profiles-request-lifecycle-batch-5.md).
 
 | Package | Entries | Current scope |
 | --- | ---: | --- |
@@ -364,7 +364,7 @@ Deployed and published for the exact two-user pilot on August 18, 2026. This bat
 
 ### Batch 5 — Care profiles and request lifecycle
 
-Implementation status: Complete and verified in source on August 18, 2026. Production deployment, publication of the 20-entry package, and exact two-user activation remain. **Live for everyone stays off.**
+Implementation status: The base batch is deployed, published, and active for the exact two-user pilot. The August 19 completion package is verified locally with expanded lifecycle and browser evidence; its normal deployment and final production recheck remain. **Live for everyone stays off.**
 
 Complete the main preparation journey:
 
@@ -578,7 +578,7 @@ Keep serving cost low by using the model once for a genuinely new or ambiguous g
 
 ## Immediate implementation recommendation
 
-Deploy the authenticated [Batch 5 production-audit corrections](49-care-profiles-request-lifecycle-batch-5.md) through the normal `deploy.sh`. Recheck **Modify something**, exact-request guidance telemetry, and the exact archive sentence; confirm and verify archival of the synthetic test profile. Keep **Live for everyone** off and exactly two grants active. Once green, Batch 6 — applicants, messaging, and hiring — is next.
+Deploy the [Batch 5 completion package](49-care-profiles-request-lifecycle-batch-5.md) through the normal `deploy.sh`. Recheck **Modify something**, exact-request guidance telemetry, the exact archive sentence, the profile lifecycle, and the request withdraw/copy/republish journey. Confirm Admin shows the separate receipts while Availability remains **Pilot only**, exactly two grants are active, and **Live for everyone** is off. Once green, Batch 6 — applicants, messaging, and hiring — is next.
 
 After that pilot smoke round, the next build is **Batch 6 — Applicants, messaging, and hiring**. Start with the governed applicant/message/hiring KB pack, then add authorized readers, exact navigation, reversible message/invitation preparation, confirmed domain actions, verification, and failure recovery.
 
