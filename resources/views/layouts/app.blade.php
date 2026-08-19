@@ -98,6 +98,7 @@
             <livewire:support.chat-widget
                 :origin-route="request()->route()?->getName()"
                 :origin-path="request()->getPathInfo()"
+                :key="'support-chat-widget-'.auth()->id().'-'.sha1(request()->getPathInfo())"
             />
         @endif
 
