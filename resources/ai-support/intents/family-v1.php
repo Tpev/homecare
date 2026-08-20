@@ -4,14 +4,14 @@
 
 return [
     'version' => 'family-intents-v1',
-    'generated_on' => '2026-08-18',
+    'generated_on' => '2026-08-20',
     'source' => 'docs/product/support-agent/38-family-intent-action-coverage-registry.md',
-    'source_sha256' => '2d4f737a95639a07155f15c120f8d364a77bf31a68d2b9b48083d0183203b361',
+    'source_sha256' => 'ede975aed78829a65198b4ea363873534219d2c507f9c400419fc4565440e5d1',
     'records' => [
         0 => [
             'intent_id' => 'FAM-START-001',
             'domain' => 'orientation',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -42,10 +42,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-001',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -77,12 +79,12 @@ return [
                 2 => 'EVAL-FAM-START-001-DENIED',
                 3 => 'EVAL-FAM-START-001-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         1 => [
             'intent_id' => 'FAM-START-002',
             'domain' => 'orientation',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -114,10 +116,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-001',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -149,12 +153,12 @@ return [
                 2 => 'EVAL-FAM-START-002-DENIED',
                 3 => 'EVAL-FAM-START-002-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         2 => [
             'intent_id' => 'FAM-START-003',
             'domain' => 'orientation',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -188,10 +192,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-001',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -223,12 +229,12 @@ return [
                 2 => 'EVAL-FAM-START-003-DENIED',
                 3 => 'EVAL-FAM-START-003-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         3 => [
             'intent_id' => 'FAM-START-004',
             'domain' => 'orientation',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -262,10 +268,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-001',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -297,7 +305,7 @@ return [
                 2 => 'EVAL-FAM-START-004-DENIED',
                 3 => 'EVAL-FAM-START-004-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         4 => [
             'intent_id' => 'FAM-START-005',
@@ -338,10 +346,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-001',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -411,10 +421,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-001',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -484,10 +496,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-001',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -558,10 +572,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-001',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -632,10 +648,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-001',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -706,10 +724,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-005',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -741,7 +761,7 @@ return [
                 2 => 'EVAL-FAM-START-010-DENIED',
                 3 => 'EVAL-FAM-START-010-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         10 => [
             'intent_id' => 'FAM-START-011',
@@ -780,10 +800,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-005',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -815,7 +837,7 @@ return [
                 2 => 'EVAL-FAM-START-011-DENIED',
                 3 => 'EVAL-FAM-START-011-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         11 => [
             'intent_id' => 'FAM-START-012',
@@ -854,10 +876,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-005',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -889,7 +913,7 @@ return [
                 2 => 'EVAL-FAM-START-012-DENIED',
                 3 => 'EVAL-FAM-START-012-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         12 => [
             'intent_id' => 'FAM-START-013',
@@ -928,10 +952,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-005',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -963,12 +989,12 @@ return [
                 2 => 'EVAL-FAM-START-013-DENIED',
                 3 => 'EVAL-FAM-START-013-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         13 => [
             'intent_id' => 'FAM-START-014',
             'domain' => 'orientation',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -1002,10 +1028,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-001',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -1037,7 +1065,7 @@ return [
                 2 => 'EVAL-FAM-START-014-DENIED',
                 3 => 'EVAL-FAM-START-014-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         14 => [
             'intent_id' => 'FAM-START-015',
@@ -1076,10 +1104,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-005',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -1111,12 +1141,12 @@ return [
                 2 => 'EVAL-FAM-START-015-DENIED',
                 3 => 'EVAL-FAM-START-015-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         15 => [
             'intent_id' => 'FAM-START-016',
             'domain' => 'orientation',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -1147,10 +1177,12 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-005',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -1182,7 +1214,7 @@ return [
                 2 => 'EVAL-FAM-START-016-DENIED',
                 3 => 'EVAL-FAM-START-016-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         16 => [
             'intent_id' => 'FAM-START-017',
@@ -1227,11 +1259,13 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-005',
             ],
             'contracts' => [
                 'reader' => 'family_attention_v1',
                 'destinations' => [
                     0 => 'family.dashboard',
+                    1 => 'support.center',
                 ],
                 'guided_task' => 'family_attention_v1',
                 'prefill' => null,
@@ -1268,7 +1302,7 @@ return [
         17 => [
             'intent_id' => 'FAM-ACCOUNT-001',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -1286,28 +1320,33 @@ return [
                     0 => 'pls help me create a Family login',
                 ],
                 'follow_ups' => [
+                    0 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -1334,12 +1373,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-001-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-001-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         18 => [
             'intent_id' => 'FAM-ACCOUNT-002',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -1357,28 +1396,33 @@ return [
                     0 => 'pls help me sign in',
                 ],
                 'follow_ups' => [
+                    0 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -1405,12 +1449,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-002-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-002-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         19 => [
             'intent_id' => 'FAM-ACCOUNT-003',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -1428,27 +1472,39 @@ return [
                     0 => 'pls help me sign out',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Navigate',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'account.profile',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -1475,12 +1531,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-003-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-003-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         20 => [
             'intent_id' => 'FAM-ACCOUNT-004',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -1498,28 +1554,39 @@ return [
                     0 => 'pls help me recover a forgotten password',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'account.profile',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -1546,12 +1613,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-004-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-004-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         21 => [
             'intent_id' => 'FAM-ACCOUNT-005',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -1569,27 +1636,39 @@ return [
                     0 => 'pls help me undrstand why a reset link failed or expired',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'account.profile',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -1616,12 +1695,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-005-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-005-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         22 => [
             'intent_id' => 'FAM-ACCOUNT-006',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -1640,6 +1719,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -1647,23 +1728,30 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'account.profile',
+                    1 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -1690,12 +1778,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-006-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-006-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         23 => [
             'intent_id' => 'FAM-ACCOUNT-007',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -1714,6 +1802,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -1721,24 +1811,34 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
+                    5 => 'Execute',
+                    6 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
                     3 => 'Execute',
+                    4 => 'Read',
+                    5 => 'Guide',
+                    6 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'account.profile',
+                    1 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
-                'verifier' => null,
+                'tool' => 'account.name.update:v1',
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -1765,12 +1865,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-007-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-007-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         24 => [
             'intent_id' => 'FAM-ACCOUNT-008',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -1789,6 +1889,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -1796,23 +1898,30 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'account.profile',
+                    1 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -1839,12 +1948,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-008-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-008-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         25 => [
             'intent_id' => 'FAM-ACCOUNT-009',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -1862,26 +1971,39 @@ return [
                     0 => 'pls help me undrstand why email verification is required',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'account.profile',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -1908,12 +2030,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-009-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-009-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         26 => [
             'intent_id' => 'FAM-ACCOUNT-010',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -1931,28 +2053,43 @@ return [
                     0 => 'pls help me resend verification email',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Execute',
+                    6 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Navigate',
                     2 => 'Execute',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Guide',
+                    6 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'account.profile',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
-                'verifier' => null,
+                'tool' => 'account.verification.resend:v1',
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -1979,12 +2116,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-010-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-010-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         27 => [
             'intent_id' => 'FAM-ACCOUNT-011',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -2002,37 +2139,51 @@ return [
                     0 => 'pls help me fix an email-verification link problem',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Recover',
                     3 => 'Human',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'account.profile',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Partial UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Explain recovery and transfer persistent failures',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -2051,12 +2202,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-011-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-011-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         28 => [
             'intent_id' => 'FAM-ACCOUNT-012',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -2075,6 +2226,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -2082,23 +2235,30 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'account.profile',
+                    1 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -2125,12 +2285,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-012-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-012-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         29 => [
             'intent_id' => 'FAM-ACCOUNT-013',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -2149,6 +2309,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -2156,23 +2318,30 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'account.profile',
+                    1 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -2199,12 +2368,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-013-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-013-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         30 => [
             'intent_id' => 'FAM-ACCOUNT-014',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -2222,37 +2391,52 @@ return [
                     0 => 'pls help me delete personal acount',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Execute',
                     3 => 'Human',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-005',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'account.profile',
+                    1 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Explain consequences; secure UI confirmation; human for owner conflicts',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -2271,12 +2455,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-014-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-014-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         31 => [
             'intent_id' => 'FAM-ACCOUNT-015',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -2294,26 +2478,40 @@ return [
                     0 => 'pls help me undrstand what happens to care, bookings, paymnts, and Family access after acount deletion',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-005',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'account.profile',
+                    1 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -2340,12 +2538,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-015-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-015-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         32 => [
             'intent_id' => 'FAM-ACCOUNT-016',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -2363,29 +2561,43 @@ return [
                     0 => 'pls help me report suspected acount takeover or unauthorized access',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'support.center',
+                    1 => 'account.profile',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -2412,12 +2624,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-016-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-016-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         33 => [
             'intent_id' => 'FAM-ACCOUNT-017',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -2435,26 +2647,39 @@ return [
                     0 => 'pls help me change phone number',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-007',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'account.profile',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -2481,12 +2706,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-017-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-017-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         34 => [
             'intent_id' => 'FAM-ACCOUNT-018',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -2504,26 +2729,39 @@ return [
                     0 => 'pls help me enable or manage multi-factor authentication',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-007',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'account.profile',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -2550,12 +2788,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-018-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-018-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         35 => [
             'intent_id' => 'FAM-ACCOUNT-019',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -2573,30 +2811,44 @@ return [
                     0 => 'pls help me download or export personal data',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Human',
                     2 => 'Prepare',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-008',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'support.center',
+                    1 => 'account.profile',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -2623,12 +2875,12 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-019-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-019-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         36 => [
             'intent_id' => 'FAM-ACCOUNT-020',
             'domain' => 'account_security',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -2646,29 +2898,43 @@ return [
                     0 => 'pls help me correct personal data the user cannot edit',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCOUNT-008',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_account_v1',
                 'destinations' => [
+                    0 => 'support.center',
+                    1 => 'account.profile',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -2695,7 +2961,7 @@ return [
                 2 => 'EVAL-FAM-ACCOUNT-020-DENIED',
                 3 => 'EVAL-FAM-ACCOUNT-020-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         37 => [
             'intent_id' => 'FAM-ACCESS-001',
@@ -2719,6 +2985,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -2726,26 +2994,31 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-ACC-001',
                 1 => 'KB-FAM-004',
+                2 => 'KB-B89-ACCESS-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -2777,7 +3050,7 @@ return [
         38 => [
             'intent_id' => 'FAM-ACCESS-002',
             'domain' => 'family_access',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -2796,6 +3069,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -2803,23 +3078,29 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCESS-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
+                    0 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -2846,7 +3127,7 @@ return [
                 2 => 'EVAL-FAM-ACCESS-002-DENIED',
                 3 => 'EVAL-FAM-ACCESS-002-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         39 => [
             'intent_id' => 'FAM-ACCESS-003',
@@ -2870,6 +3151,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -2877,26 +3160,30 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
                     3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-ACC-001',
+                1 => 'KB-B89-ACCESS-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -2947,6 +3234,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -2954,6 +3243,10 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
+                    5 => 'Execute',
+                    6 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
@@ -2961,20 +3254,24 @@ return [
                     2 => 'Navigate',
                     3 => 'Prepare',
                     4 => 'Execute',
+                    5 => 'Read',
+                    6 => 'Guide',
+                    7 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-ACC-002',
+                1 => 'KB-B89-ACCESS-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
-                'verifier' => null,
+                'tool' => 'family-access.invite:v1',
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -3025,6 +3322,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -3032,27 +3331,32 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-ACC-001',
                 1 => 'KB-FOP-ACC-002',
                 2 => 'KB-FAM-004',
+                3 => 'KB-B89-ACCESS-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -3103,6 +3407,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -3110,6 +3416,10 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
+                    5 => 'Execute',
+                    6 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
@@ -3117,20 +3427,23 @@ return [
                     2 => 'Navigate',
                     3 => 'Read',
                     4 => 'Execute',
+                    5 => 'Guide',
+                    6 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-ACC-003',
+                1 => 'KB-B89-ACCESS-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
-                'verifier' => null,
+                'tool' => 'family-access.invitation.resend:v1',
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -3181,6 +3494,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -3188,6 +3503,10 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
+                    5 => 'Execute',
+                    6 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
@@ -3195,20 +3514,23 @@ return [
                     2 => 'Navigate',
                     3 => 'Read',
                     4 => 'Execute',
+                    5 => 'Guide',
+                    6 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-ACC-002',
+                1 => 'KB-B89-ACCESS-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
-                'verifier' => null,
+                'tool' => 'family-access.invitation.resend:v1',
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -3259,6 +3581,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -3266,6 +3590,10 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
+                    5 => 'Execute',
+                    6 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
@@ -3273,20 +3601,23 @@ return [
                     2 => 'Navigate',
                     3 => 'Read',
                     4 => 'Execute',
+                    5 => 'Guide',
+                    6 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-ACC-003',
+                1 => 'KB-B89-ACCESS-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
-                'verifier' => null,
+                'tool' => 'family-access.invitation.cancel:v1',
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -3336,31 +3667,40 @@ return [
                     0 => 'pls help me accept a Family invitation',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-ACC-002',
+                1 => 'KB-B89-ACCESS-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -3410,30 +3750,40 @@ return [
                     0 => 'pls help me sign in with the correct acount to accept an invitation',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-ACC-002',
+                1 => 'KB-B89-ACCESS-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -3483,30 +3833,40 @@ return [
                     0 => 'pls help me decline or defer joining a Family acount',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-ACC-002',
+                1 => 'KB-B89-ACCESS-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -3557,6 +3917,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -3564,26 +3926,34 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
+                    5 => 'Execute',
+                    6 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
                     3 => 'Execute',
+                    4 => 'Read',
+                    5 => 'Guide',
+                    6 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-ACC-003',
+                1 => 'KB-B89-ACCESS-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
-                'verifier' => null,
+                'tool' => 'family-access.member.remove:v1',
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -3634,6 +4004,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -3641,26 +4013,34 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
+                    5 => 'Execute',
+                    6 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
                     3 => 'Execute',
+                    4 => 'Read',
+                    5 => 'Guide',
+                    6 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-ACC-003',
+                1 => 'KB-B89-ACCESS-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
-                'verifier' => null,
+                'tool' => 'family-access.leave:v1',
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -3712,6 +4092,7 @@ return [
                 'follow_ups' => [
                     0 => 'take me there',
                     1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -3734,9 +4115,10 @@ return [
                 0 => 'KB-FOP-PAY-002',
                 1 => 'KB-FOP-ACC-001',
                 2 => 'KB-FAM-004',
+                3 => 'KB-B89-ACCESS-005',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.billing.payment_method',
                     1 => 'family.access',
@@ -3744,7 +4126,7 @@ return [
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -3794,25 +4176,35 @@ return [
                     0 => 'pls help me undrstand whose name is recorded for shared-acount actions',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-002',
                 1 => 'KB-FOP-ACC-001',
                 2 => 'KB-FAM-004',
+                3 => 'KB-B89-ACCESS-005',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.billing.payment_method',
                     1 => 'family.access',
@@ -3820,7 +4212,7 @@ return [
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -3870,7 +4262,10 @@ return [
                     0 => 'pls help me transfer Family acount ownership',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -3878,25 +4273,33 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-ACC-003',
+                1 => 'KB-B89-ACCESS-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.access',
+                    1 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -3928,7 +4331,7 @@ return [
         53 => [
             'intent_id' => 'FAM-ACCESS-017',
             'domain' => 'family_access',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -3946,29 +4349,43 @@ return [
                     0 => 'pls help me close the entire Family acount',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCESS-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
+                    0 => 'support.center',
+                    1 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -3995,7 +4412,7 @@ return [
                 2 => 'EVAL-FAM-ACCESS-017-DENIED',
                 3 => 'EVAL-FAM-ACCESS-017-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         54 => [
             'intent_id' => 'FAM-ACCESS-018',
@@ -4018,31 +4435,44 @@ return [
                     0 => 'pls help me resolve duplicate Family acounts or wrong-acount membership',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-ACC-003',
+                1 => 'KB-B89-ACCESS-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.access',
+                    1 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -4092,7 +4522,10 @@ return [
                     0 => 'pls help me undrstand why Family access ended',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -4100,25 +4533,33 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-ACC-003',
+                1 => 'KB-B89-ACCESS-007',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
                     0 => 'family.access',
+                    1 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -4150,7 +4591,7 @@ return [
         56 => [
             'intent_id' => 'FAM-ACCESS-020',
             'domain' => 'family_access',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -4168,26 +4609,40 @@ return [
                     0 => 'pls help me restrict one member from specific recipients, paymnts, or conversations',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-ACCESS-007',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_access_v1',
                 'destinations' => [
+                    0 => 'family.access',
+                    1 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -4214,7 +4669,7 @@ return [
                 2 => 'EVAL-FAM-ACCESS-020-DENIED',
                 3 => 'EVAL-FAM-ACCESS-020-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         57 => [
             'intent_id' => 'FAM-PROFILE-001',
@@ -11116,6 +11571,8 @@ return [
                     2 => 'Read',
                     3 => 'Navigate',
                     4 => 'Guide',
+                    5 => 'Execute',
+                    6 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
@@ -11124,6 +11581,7 @@ return [
                     3 => 'Navigate',
                     4 => 'Guide',
                     5 => 'Execute',
+                    6 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
@@ -16173,6 +16631,8 @@ return [
                     1 => 'Explain',
                     2 => 'Prepare',
                     3 => 'Human',
+                    4 => 'Execute',
+                    5 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
@@ -16180,6 +16640,7 @@ return [
                     2 => 'Prepare',
                     3 => 'Human',
                     4 => 'Execute',
+                    5 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
@@ -17496,11 +17957,15 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Prepare',
+                    3 => 'Execute',
+                    4 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
@@ -17574,12 +18039,16 @@ return [
                     1 => 'Explain',
                     2 => 'Read',
                     3 => 'Prepare',
+                    4 => 'Execute',
+                    5 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Read',
                     3 => 'Prepare',
+                    4 => 'Execute',
+                    5 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
@@ -19427,7 +19896,7 @@ return [
         246 => [
             'intent_id' => 'FAM-COVERAGE-001',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -19445,7 +19914,10 @@ return [
                     0 => 'pls help me undrstand what Continuous Coverage is',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -19453,23 +19925,31 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -19496,12 +19976,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-001-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-001-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         247 => [
             'intent_id' => 'FAM-COVERAGE-002',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -19519,7 +19999,10 @@ return [
                     0 => 'pls help me create a Continuous Coverage plan',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -19527,23 +20010,31 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -19570,12 +20061,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-002-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-002-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         248 => [
             'intent_id' => 'FAM-COVERAGE-003',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -19593,29 +20084,42 @@ return [
                     0 => 'pls help me choose recipient, address, pattern, timezone, dates, and coverage windows',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -19642,12 +20146,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-003-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-003-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         249 => [
             'intent_id' => 'FAM-COVERAGE-004',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -19665,35 +20169,50 @@ return [
                     0 => 'pls help me undrstand whether coverage is fully staffed',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Read',
+                    2 => 'Explain',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Read authoritative coverage gaps; never promise availability',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -19712,12 +20231,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-004-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-004-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         250 => [
             'intent_id' => 'FAM-COVERAGE-005',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -19735,34 +20254,50 @@ return [
                     0 => 'pls help me open the coverage calendar',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Add authorized navigation',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -19781,12 +20316,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-005-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-005-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         251 => [
             'intent_id' => 'FAM-COVERAGE-006',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -19804,34 +20339,50 @@ return [
                     0 => 'pls help me view covered, offered, open, replacement, cancelled, or completed shifts',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Add governed statuses plus live state',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -19850,12 +20401,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-006-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-006-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         252 => [
             'intent_id' => 'FAM-COVERAGE-007',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -19873,35 +20424,50 @@ return [
                     0 => 'pls help me filter calendar or coverage history',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Navigate',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Navigate with safe filter parameters',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -19920,12 +20486,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-007-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-007-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         253 => [
             'intent_id' => 'FAM-COVERAGE-008',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -19943,35 +20509,50 @@ return [
                     0 => 'pls help me view shift details and paymnt status',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Read',
+                    2 => 'Explain',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Read exact authorized shift state',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -19990,12 +20571,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-008-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-008-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         254 => [
             'intent_id' => 'FAM-COVERAGE-009',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -20013,36 +20594,52 @@ return [
                     0 => 'pls help me find and add a caregivr to the care team',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Prepare',
                     2 => 'Execute',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
+                    7 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Prepare search/invitation preferences; confirm & send',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -20061,12 +20658,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-009-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-009-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         255 => [
             'intent_id' => 'FAM-COVERAGE-010',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -20084,36 +20681,51 @@ return [
                     0 => 'pls help me review and approve a caregivr application',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Read',
                     2 => 'Execute',
+                    3 => 'Explain',
+                    4 => 'Navigate',
+                    5 => 'Guide',
+                    6 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Read profile/application; recap; confirm & invite',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -20132,12 +20744,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-010-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-010-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         256 => [
             'intent_id' => 'FAM-COVERAGE-011',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -20155,35 +20767,51 @@ return [
                     0 => 'pls help me decline a caregivr application',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Execute',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
+                    6 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Confirm & execute',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -20202,12 +20830,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-011-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-011-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         257 => [
             'intent_id' => 'FAM-COVERAGE-012',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -20225,36 +20853,52 @@ return [
                     0 => 'pls help me edit future-offer preferences for a caregivr',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Prepare',
                     2 => 'Execute',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
+                    7 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Prepare changes; recap; confirm & execute',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -20273,12 +20917,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-012-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-012-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         258 => [
             'intent_id' => 'FAM-COVERAGE-013',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -20296,36 +20940,51 @@ return [
                     0 => 'pls help me pause or resume a care-team member',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Execute',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
+                    6 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Explain future-offer impact; confirm & execute',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -20344,12 +21003,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-013-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-013-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         259 => [
             'intent_id' => 'FAM-COVERAGE-014',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -20367,36 +21026,51 @@ return [
                     0 => 'pls help me remove a caregivr from future offers',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Execute',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
+                    6 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Explain existing-shift/history impact; confirm & execute',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -20415,12 +21089,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-014-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-014-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         260 => [
             'intent_id' => 'FAM-COVERAGE-015',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -20438,36 +21112,51 @@ return [
                     0 => 'pls help me offer a recurring coverage lane',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Read',
                     2 => 'Execute',
+                    3 => 'Explain',
+                    4 => 'Navigate',
+                    5 => 'Guide',
+                    6 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Read eligible team; recap lane; confirm & offer',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -20486,12 +21175,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-015-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-015-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         261 => [
             'intent_id' => 'FAM-COVERAGE-016',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -20509,36 +21198,51 @@ return [
                     0 => 'pls help me approve one or all requsted recurring lanes',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Read',
                     2 => 'Execute',
+                    3 => 'Explain',
+                    4 => 'Navigate',
+                    5 => 'Guide',
+                    6 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Read availability; recap; confirm & execute',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -20557,12 +21261,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-016-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-016-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         262 => [
             'intent_id' => 'FAM-COVERAGE-017',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -20580,35 +21284,51 @@ return [
                     0 => 'pls help me decline a requsted lane',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Execute',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
+                    6 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Confirm & execute',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -20627,12 +21347,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-017-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-017-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         263 => [
             'intent_id' => 'FAM-COVERAGE-018',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -20650,35 +21370,51 @@ return [
                     0 => 'pls help me confirm an accepted replacement caregivr',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Execute',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
+                    6 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-005',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Compare replacement and gap; explicit confirmation',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -20697,12 +21433,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-018-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-018-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         264 => [
             'intent_id' => 'FAM-COVERAGE-019',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -20720,36 +21456,51 @@ return [
                     0 => 'pls help me decline a replacement and continue searching',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Execute',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
+                    6 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-005',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Explain effect; explicit confirmation',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -20768,12 +21519,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-019-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-019-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         265 => [
             'intent_id' => 'FAM-COVERAGE-020',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -20791,36 +21542,51 @@ return [
                     0 => 'pls help me retry replacement search',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Read',
                     2 => 'Execute',
+                    3 => 'Explain',
+                    4 => 'Navigate',
+                    5 => 'Guide',
+                    6 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-005',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Read case state and execute deterministic retry',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -20839,12 +21605,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-020-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-020-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         266 => [
             'intent_id' => 'FAM-COVERAGE-021',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -20862,35 +21628,51 @@ return [
                     0 => 'pls help me change the future coverage schedule',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Execute',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
+                    6 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Show current/proposed calendar diff; confirm & execute',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -20909,12 +21691,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-021-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-021-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         267 => [
             'intent_id' => 'FAM-COVERAGE-022',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -20932,36 +21714,51 @@ return [
                     0 => 'pls help me end a coverage plan',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Execute',
                     2 => 'Human',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Strong impact recap; confirm & execute or human review',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -20980,12 +21777,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-022-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-022-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         268 => [
             'intent_id' => 'FAM-COVERAGE-023',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -21003,36 +21800,52 @@ return [
                     0 => 'pls help me delete an unused coverage plan',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Execute',
                     2 => 'Verify',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
+                    7 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Verify eligibility/dependencies; explicit confirmation',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -21051,12 +21864,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-023-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-023-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         269 => [
             'intent_id' => 'FAM-COVERAGE-024',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -21074,36 +21887,50 @@ return [
                     0 => 'pls help me view coverage receipts, holds, captured amounts, refunds, and net billed',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-007',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Read authoritative payment values and explain labels',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -21122,12 +21949,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-024-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-024-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         270 => [
             'intent_id' => 'FAM-COVERAGE-025',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -21145,37 +21972,51 @@ return [
                     0 => 'pls help me resolve paymnt attention on a coverage shift',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Read',
                     2 => 'Navigate',
                     3 => 'Recover',
+                    4 => 'Explain',
+                    5 => 'Guide',
+                    6 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-007',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'Flagged UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Read safe failure; navigate to secure recovery',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -21194,12 +22035,12 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-025-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-025-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         271 => [
             'intent_id' => 'FAM-COVERAGE-026',
             'domain' => 'continuous_coverage',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -21217,30 +22058,43 @@ return [
                     0 => 'pls help me report a missed, disputed, unsafe, or incorrect coverage shift',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Human',
                     2 => 'Prepare',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COVERAGE-008',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_continuous_coverage_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -21267,7 +22121,7 @@ return [
                 2 => 'EVAL-FAM-COVERAGE-026-DENIED',
                 3 => 'EVAL-FAM-COVERAGE-026-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         272 => [
             'intent_id' => 'FAM-COMMS-001',
@@ -21301,21 +22155,25 @@ return [
                     1 => 'Explain',
                     2 => 'Navigate',
                     3 => 'Guide',
+                    4 => 'Read',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
                     3 => 'Guide',
+                    4 => 'Read',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-COM-001',
+                1 => 'KB-B89-COMMS-001',
             ],
             'contracts' => [
                 'reader' => 'family_messages_v1',
                 'destinations' => [
                     0 => 'family.messages',
+                    1 => 'family.message',
                 ],
                 'guided_task' => 'family_message_v1',
                 'prefill' => null,
@@ -21395,11 +22253,13 @@ return [
                 0 => 'KB-FOP-REQ-006',
                 1 => 'KB-FOP-VIS-002',
                 2 => 'KB-FOP-COM-001',
+                3 => 'KB-B89-COMMS-001',
             ],
             'contracts' => [
                 'reader' => 'family_messages_v1',
                 'destinations' => [
                     0 => 'family.messages',
+                    1 => 'family.message',
                 ],
                 'guided_task' => 'family_message_v1',
                 'prefill' => null,
@@ -21454,32 +22314,45 @@ return [
                     0 => 'pls help me send a mesage',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Prepare',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Prepare',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-REQ-006',
                 1 => 'KB-FOP-VIS-002',
                 2 => 'KB-FOP-COM-001',
+                3 => 'KB-B89-COMMS-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_notifications_v1',
                 'destinations' => [
                     0 => 'family.messages',
+                    1 => 'family.message',
                 ],
                 'guided_task' => null,
                 'prefill' => 'caregiver_message_v1',
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -21529,30 +22402,42 @@ return [
                     0 => 'pls help me undrstand why a mesage cannot be sent',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-COM-002',
+                1 => 'KB-B89-COMMS-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_notifications_v1',
                 'destinations' => [
                     0 => 'support.center',
+                    1 => 'family.messages',
+                    2 => 'family.message',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -21602,31 +22487,44 @@ return [
                     0 => 'pls help me report harassment, abuse, or unsafe messaging',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-COM-002',
+                1 => 'KB-B89-COMMS-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_notifications_v1',
                 'destinations' => [
                     0 => 'support.center',
+                    1 => 'family.messages',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -21676,28 +22574,41 @@ return [
                     0 => 'pls help me open Family notifications',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-COM-003',
+                1 => 'KB-B89-COMMS-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_notifications_v1',
                 'destinations' => [
                     0 => 'family.dashboard',
+                    1 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -21747,28 +22658,41 @@ return [
                     0 => 'pls help me undrstand a notification',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-COM-003',
+                1 => 'KB-B89-COMMS-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_notifications_v1',
                 'destinations' => [
                     0 => 'family.dashboard',
+                    1 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -21818,29 +22742,41 @@ return [
                     0 => 'pls help me open the object referenced by a notification',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Navigate',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-COM-003',
+                1 => 'KB-B89-COMMS-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_notifications_v1',
                 'destinations' => [
                     0 => 'family.dashboard',
+                    1 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -21890,29 +22826,45 @@ return [
                     0 => 'pls help me mark one notification read',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Execute',
+                    6 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Execute',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
+                    6 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-COM-003',
+                1 => 'KB-B89-COMMS-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_notifications_v1',
                 'destinations' => [
                     0 => 'family.dashboard',
+                    1 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
-                'verifier' => null,
+                'tool' => 'notification.mark-read:v1',
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -21962,29 +22914,45 @@ return [
                     0 => 'pls help me mark all notifications read',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Execute',
+                    6 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Execute',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
+                    6 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-COM-003',
+                1 => 'KB-B89-COMMS-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_notifications_v1',
                 'destinations' => [
                     0 => 'family.dashboard',
+                    1 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
-                'verifier' => null,
+                'tool' => 'notification.mark-all-read:v1',
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -22034,29 +23002,41 @@ return [
                     0 => 'pls help me filter unread, read, or all notifications',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Navigate',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-COM-003',
+                1 => 'KB-B89-COMMS-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_notifications_v1',
                 'destinations' => [
                     0 => 'family.dashboard',
+                    1 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -22106,30 +23086,41 @@ return [
                     0 => 'pls help me filter notifications by event type',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-COM-003',
+                1 => 'KB-B89-COMMS-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_notifications_v1',
                 'destinations' => [
                     0 => 'family.dashboard',
+                    1 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -22179,30 +23170,46 @@ return [
                     0 => 'pls help me change email and in-app notification preferences',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Execute',
+                    6 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Prepare',
                     2 => 'Execute',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
+                    7 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-COM-004',
+                1 => 'KB-B89-COMMS-005',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_notifications_v1',
                 'destinations' => [
                     0 => 'account.profile',
+                    1 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
-                'verifier' => null,
+                'tool' => 'notification.preferences.update:v1',
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -22252,32 +23259,45 @@ return [
                     0 => 'pls help me undrstand why an expected notification or email did not arrive',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Human',
                     2 => 'Read',
+                    3 => 'Explain',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-COM-004',
+                1 => 'KB-B89-COMMS-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_notifications_v1',
                 'destinations' => [
                     0 => 'account.profile',
+                    1 => 'family.notifications',
+                    2 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -22327,31 +23347,46 @@ return [
                     0 => 'pls help me unsubscribe from non-essential email',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Execute',
+                    6 => 'Verify',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
                     3 => 'Execute',
+                    4 => 'Read',
+                    5 => 'Guide',
+                    6 => 'Verify',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-COM-004',
+                1 => 'KB-B89-COMMS-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_notifications_v1',
                 'destinations' => [
                     0 => 'account.profile',
+                    1 => 'family.notifications',
+                    2 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
-                'tool' => null,
-                'verifier' => null,
+                'tool' => 'notification.preferences.update:v1',
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -22402,6 +23437,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -22409,25 +23446,32 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-COM-004',
+                1 => 'KB-B89-COMMS-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_notifications_v1',
                 'destinations' => [
                     0 => 'account.profile',
+                    1 => 'family.notifications',
+                    2 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -22459,7 +23503,7 @@ return [
         288 => [
             'intent_id' => 'FAM-COMMS-017',
             'domain' => 'communications',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -22477,26 +23521,39 @@ return [
                     0 => 'pls help me ask the AI to remind the Family about a visti',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-COMMS-007',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_notifications_v1',
                 'destinations' => [
+                    0 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -22523,7 +23580,7 @@ return [
                 2 => 'EVAL-FAM-COMMS-017-DENIED',
                 3 => 'EVAL-FAM-COMMS-017-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         289 => [
             'intent_id' => 'FAM-HISTORY-001',
@@ -22570,6 +23627,7 @@ return [
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-008',
                 1 => 'KB-FOP-HIS-001',
+                2 => 'KB-B89-HISTORY-001',
             ],
             'contracts' => [
                 'reader' => 'family_care_history_v1',
@@ -22629,30 +23687,40 @@ return [
                     0 => 'pls help me search history by booking, caregivr, recipient, or title',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Read',
                     2 => 'Navigate',
+                    3 => 'Explain',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-HIS-001',
+                1 => 'KB-B89-HISTORY-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -22702,29 +23770,40 @@ return [
                     0 => 'pls help me filter by date, status, paymnt state, recipient, caregivr, or regular-care plan',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Navigate',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-HIS-001',
+                1 => 'KB-B89-HISTORY-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -22797,6 +23876,7 @@ return [
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-HIS-001',
+                1 => 'KB-B89-HISTORY-001',
             ],
             'contracts' => [
                 'reader' => 'family_care_history_v1',
@@ -22856,29 +23936,41 @@ return [
                     0 => 'pls help me view a past visti record',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Navigate',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-HIS-001',
+                1 => 'KB-B89-HISTORY-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
+                    1 => 'family.request.visit',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -22928,29 +24020,41 @@ return [
                     0 => 'pls help me view tasks, event timeline, incidents, change requsts, and reviews',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Read',
+                    2 => 'Explain',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-HIS-001',
+                1 => 'KB-B89-HISTORY-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
+                    1 => 'family.request.visit',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -23000,32 +24104,43 @@ return [
                     0 => 'pls help me view captured, refunded, and net paid amounts',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-PAY-004',
                 1 => 'KB-FOP-PAY-008',
                 2 => 'KB-FOP-HIS-001',
+                3 => 'KB-B89-HISTORY-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
+                    1 => 'family.request.payment_attention',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -23075,29 +24190,41 @@ return [
                     0 => 'pls help me open the caregivr profl from history',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Navigate',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-HIS-001',
+                1 => 'KB-B89-HISTORY-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
+                    1 => 'family.regular_care',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -23147,29 +24274,41 @@ return [
                     0 => 'pls help me open the related regular-care plan',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Navigate',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-HIS-001',
+                1 => 'KB-B89-HISTORY-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
+                    1 => 'family.regular_care',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -23219,7 +24358,10 @@ return [
                     0 => 'pls help me get help with a past visti',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -23227,25 +24369,33 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-HIS-001',
+                1 => 'KB-B89-HISTORY-005',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
+                    1 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -23295,31 +24445,45 @@ return [
                     0 => 'pls help me book the same caregivr again for one visti',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Prepare',
                     2 => 'Execute',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-VIS-010',
                 1 => 'KB-FOP-HIS-002',
+                2 => 'KB-B89-HISTORY-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
+                    1 => 'family.new_care_request',
+                    2 => 'family.regular_care',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -23369,33 +24533,45 @@ return [
                     0 => 'pls help me book the same caregivr again for regular care',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Prepare',
                     3 => 'Execute',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-VIS-010',
                 1 => 'KB-FOP-HIS-002',
+                2 => 'KB-B89-HISTORY-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
+                    1 => 'family.new_care_request',
+                    2 => 'family.regular_care',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -23445,6 +24621,9 @@ return [
                     0 => 'pls help me reuse a prior requst with a different schedule',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -23452,25 +24631,34 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Prepare',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Prepare',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-HIS-002',
+                1 => 'KB-B89-HISTORY-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
+                    1 => 'family.new_care_request',
+                    2 => 'family.regular_care',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_reuse_v1',
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -23520,28 +24708,42 @@ return [
                     0 => 'pls help me download or print visti/paymnt history',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-HIS-002',
+                1 => 'KB-B89-HISTORY-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
+                    1 => 'family.new_care_request',
+                    2 => 'family.regular_care',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -23591,31 +24793,44 @@ return [
                     0 => 'pls help me correct an inaccurate historical record',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
                 0 => 'KB-FOP-HIS-002',
+                1 => 'KB-B89-HISTORY-005',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
+                    1 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -23647,7 +24862,7 @@ return [
         304 => [
             'intent_id' => 'FAM-SUPPORT-001',
             'domain' => 'support_privacy',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -23666,6 +24881,8 @@ return [
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -23673,23 +24890,29 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Navigate',
+                    3 => 'Read',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -23716,12 +24939,12 @@ return [
                 2 => 'EVAL-FAM-SUPPORT-001-DENIED',
                 3 => 'EVAL-FAM-SUPPORT-001-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         305 => [
             'intent_id' => 'FAM-SUPPORT-002',
             'domain' => 'support_privacy',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -23739,7 +24962,10 @@ return [
                     0 => 'pls help me start a new suport conversation',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -23747,23 +24973,31 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -23790,12 +25024,12 @@ return [
                 2 => 'EVAL-FAM-SUPPORT-002-DENIED',
                 3 => 'EVAL-FAM-SUPPORT-002-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         306 => [
             'intent_id' => 'FAM-SUPPORT-003',
             'domain' => 'support_privacy',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -23813,7 +25047,10 @@ return [
                     0 => 'pls help me continue an existing suport conversation',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -23821,23 +25058,31 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -23864,7 +25109,7 @@ return [
                 2 => 'EVAL-FAM-SUPPORT-003-DENIED',
                 3 => 'EVAL-FAM-SUPPORT-003-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         307 => [
             'intent_id' => 'FAM-SUPPORT-004',
@@ -23887,7 +25132,10 @@ return [
                     0 => 'pls help me create a suport ticket with category, subject, and description',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -23896,24 +25144,32 @@ return [
                     1 => 'Explain',
                     2 => 'Prepare',
                     3 => 'Human',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Prepare',
                     3 => 'Human',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => 'support_intake_v1',
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -23945,7 +25201,7 @@ return [
         308 => [
             'intent_id' => 'FAM-SUPPORT-005',
             'domain' => 'support_privacy',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -23963,35 +25219,50 @@ return [
                     0 => 'pls help me check suport-ticket status',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Read',
+                    2 => 'Explain',
+                    3 => 'Navigate',
+                    4 => 'Guide',
+                    5 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
-                'human_transfer' => null,
+                'verifier' => 'authoritative_family_state_v1',
+                'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
                 'product' => 'UI',
                 'explain' => 'No',
                 'action' => 'No',
                 'target_behavior' => 'Read authoritative status; never promise response time',
-                'unsupported_behavior' => 'Say that this exact help is not available in chat. Offer the registered application page or a person without claiming completion.',
+                'unsupported_behavior' => 'Transfer the same conversation to a person and stop automation without a queue or timing promise.',
             ],
             'never_in_chat' => [
                 0 => 'passwords',
@@ -24010,12 +25281,12 @@ return [
                 2 => 'EVAL-FAM-SUPPORT-005-DENIED',
                 3 => 'EVAL-FAM-SUPPORT-005-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         309 => [
             'intent_id' => 'FAM-SUPPORT-006',
             'domain' => 'support_privacy',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -24033,7 +25304,10 @@ return [
                     0 => 'pls help me add more information to a suport ticket',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -24041,23 +25315,31 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-002',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -24084,12 +25366,12 @@ return [
                 2 => 'EVAL-FAM-SUPPORT-006-DENIED',
                 3 => 'EVAL-FAM-SUPPORT-006-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         310 => [
             'intent_id' => 'FAM-SUPPORT-007',
             'domain' => 'support_privacy',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -24107,7 +25389,10 @@ return [
                     0 => 'pls help me ask how long suport will take or requst queue status',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -24115,23 +25400,31 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-003',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -24158,7 +25451,7 @@ return [
                 2 => 'EVAL-FAM-SUPPORT-007-DENIED',
                 3 => 'EVAL-FAM-SUPPORT-007-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         311 => [
             'intent_id' => 'FAM-SUPPORT-008',
@@ -24181,7 +25474,10 @@ return [
                     0 => 'pls help me report a bug or broken page',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -24189,23 +25485,33 @@ return [
                     0 => 'Understand',
                     1 => 'Prepare',
                     2 => 'Human',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Prepare',
                     2 => 'Human',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => 'support_intake_v1',
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -24255,7 +25561,10 @@ return [
                     0 => 'pls help me report an accessibility problem',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -24263,23 +25572,33 @@ return [
                     0 => 'Understand',
                     1 => 'Prepare',
                     2 => 'Human',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Prepare',
                     2 => 'Human',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-004',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => 'support_intake_v1',
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -24329,7 +25648,10 @@ return [
                     0 => 'pls help me report discrimination, abuse, neglect, fraud, or serious safety concern',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -24338,24 +25660,32 @@ return [
                     1 => 'Explain',
                     2 => 'Prepare',
                     3 => 'Human',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Prepare',
                     3 => 'Human',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-005',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => 'support_intake_v1',
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -24405,7 +25735,10 @@ return [
                     0 => 'pls help me complain about a caregivr or care quality',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -24413,23 +25746,33 @@ return [
                     0 => 'Understand',
                     1 => 'Prepare',
                     2 => 'Human',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Prepare',
                     2 => 'Human',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-005',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => 'support_intake_v1',
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -24479,7 +25822,10 @@ return [
                     0 => 'pls help me complain about LoLo or requst supervisor review',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -24487,23 +25833,33 @@ return [
                     0 => 'Understand',
                     1 => 'Prepare',
                     2 => 'Human',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Prepare',
                     2 => 'Human',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-005',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => 'support_intake_v1',
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -24535,7 +25891,7 @@ return [
         316 => [
             'intent_id' => 'FAM-SUPPORT-013',
             'domain' => 'support_privacy',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -24553,29 +25909,43 @@ return [
                     0 => 'pls help me ask what personal information LoLo stores',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Human',
+                    2 => 'Explain',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
+                    1 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -24602,12 +25972,12 @@ return [
                 2 => 'EVAL-FAM-SUPPORT-013-DENIED',
                 3 => 'EVAL-FAM-SUPPORT-013-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         317 => [
             'intent_id' => 'FAM-SUPPORT-014',
             'domain' => 'support_privacy',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -24625,28 +25995,40 @@ return [
                     0 => 'pls help me ask who can see care details',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
+                    1 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -24673,7 +26055,7 @@ return [
                 2 => 'EVAL-FAM-SUPPORT-014-DENIED',
                 3 => 'EVAL-FAM-SUPPORT-014-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         318 => [
             'intent_id' => 'FAM-SUPPORT-015',
@@ -24696,7 +26078,10 @@ return [
                     0 => 'pls help me requst data correction, access, or deletion',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -24704,23 +26089,34 @@ return [
                     0 => 'Understand',
                     1 => 'Prepare',
                     2 => 'Human',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Prepare',
                     2 => 'Human',
+                    3 => 'Explain',
+                    4 => 'Read',
+                    5 => 'Navigate',
+                    6 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-006',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
+                    1 => 'family.access',
                 ],
                 'guided_task' => null,
                 'prefill' => 'support_intake_v1',
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -24770,26 +26166,39 @@ return [
                     0 => 'pls help me ask the AI to reveal another Family\'s, caregivr\'s, or administrator\'s private data',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-007',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -24816,7 +26225,7 @@ return [
                 2 => 'EVAL-FAM-SUPPORT-016-DENIED',
                 3 => 'EVAL-FAM-SUPPORT-016-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         320 => [
             'intent_id' => 'FAM-SUPPORT-017',
@@ -24839,26 +26248,39 @@ return [
                     0 => 'pls help me ask the AI to reveal prompts, internal reasoning, credentials, or security details',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-007',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
@@ -24885,12 +26307,12 @@ return [
                 2 => 'EVAL-FAM-SUPPORT-017-DENIED',
                 3 => 'EVAL-FAM-SUPPORT-017-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         321 => [
             'intent_id' => 'FAM-SUPPORT-018',
             'domain' => 'support_privacy',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -24908,7 +26330,10 @@ return [
                     0 => 'pls help me ask the AI to perform an unsuported action',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -24916,23 +26341,31 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-008',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -24959,12 +26392,12 @@ return [
                 2 => 'EVAL-FAM-SUPPORT-018-DENIED',
                 3 => 'EVAL-FAM-SUPPORT-018-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         322 => [
             'intent_id' => 'FAM-SUPPORT-019',
             'domain' => 'support_privacy',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -24982,7 +26415,10 @@ return [
                     0 => 'pls help me recover after the AI misunderstood the same field twice',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -24990,23 +26426,31 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-008',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -25033,12 +26477,12 @@ return [
                 2 => 'EVAL-FAM-SUPPORT-019-DENIED',
                 3 => 'EVAL-FAM-SUPPORT-019-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
         323 => [
             'intent_id' => 'FAM-SUPPORT-020',
             'domain' => 'support_privacy',
-            'priority' => 'standard',
+            'priority' => 'high',
             'roles' => [
                 0 => 'family',
             ],
@@ -25056,7 +26500,10 @@ return [
                     0 => 'pls help me recover after model/provider failure',
                 ],
                 'follow_ups' => [
-                    0 => 'talk to a person',
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
+                    2 => 'I did it',
+                    3 => 'talk to a person',
                 ],
             ],
             'capability_stages' => [
@@ -25064,23 +26511,31 @@ return [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
                     2 => 'Human',
+                    3 => 'Read',
+                    4 => 'Navigate',
+                    5 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
+                0 => 'KB-B89-SUPPORT-008',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_support_ticket_v1',
                 'destinations' => [
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => 'SUP-HANDOFF-001',
             ],
             'disposition' => [
@@ -25107,7 +26562,7 @@ return [
                 2 => 'EVAL-FAM-SUPPORT-020-DENIED',
                 3 => 'EVAL-FAM-SUPPORT-020-UNAVAILABLE',
             ],
-            'rollout_state' => 'backlog',
+            'rollout_state' => 'pilot',
         ],
     ],
 ];

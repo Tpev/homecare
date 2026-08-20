@@ -42,6 +42,29 @@ class FamilyIntentCoverageTest extends TestCase
             ->assertSuccessful();
     }
 
+    public function test_mass_runner_can_filter_batches_eight_and_nine_with_the_complete_administration_corpus(): void
+    {
+        $this->artisan('ai-support:test-family-intents', [
+            '--plan' => true,
+            '--batch' => [8],
+        ])
+            ->expectsOutputToContain('72 / 118')
+            ->expectsOutputToContain('288')
+            ->expectsOutputToContain('220')
+            ->expectsOutputToContain('Routing precheck: PASS')
+            ->assertSuccessful();
+
+        $this->artisan('ai-support:test-family-intents', [
+            '--plan' => true,
+            '--batch' => [9],
+        ])
+            ->expectsOutputToContain('46 / 118')
+            ->expectsOutputToContain('184')
+            ->expectsOutputToContain('220')
+            ->expectsOutputToContain('Routing precheck: PASS')
+            ->assertSuccessful();
+    }
+
     public function test_every_deep_runtime_intent_has_three_routing_phrases_and_runtime_evidence(): void
     {
         $catalog = app(FamilyIntentEvaluationCatalog::class);

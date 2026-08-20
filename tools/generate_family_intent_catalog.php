@@ -16,6 +16,7 @@ $operationsPath = $root.'/resources/ai-support/knowledge-base/family-operations-
 $paymentTimePath = $root.'/resources/ai-support/knowledge-base/payment-time-v1.php';
 $profileRequestPath = $root.'/resources/ai-support/knowledge-base/profile-request-v1.php';
 $marketplaceCarePath = $root.'/resources/ai-support/knowledge-base/marketplace-care-v1.php';
+$familyAdministrationPath = $root.'/resources/ai-support/knowledge-base/family-administration-support-v1.php';
 
 $markdown = file_get_contents($registryPath);
 if ($markdown === false) {
@@ -27,6 +28,7 @@ $operations = require $operationsPath;
 $paymentTime = require $paymentTimePath;
 $profileRequest = require $profileRequestPath;
 $marketplaceCare = require $marketplaceCarePath;
+$familyAdministration = require $familyAdministrationPath;
 
 $guidedByIntent = [];
 foreach ((array) ($guided['cases'] ?? []) as $case) {
@@ -41,6 +43,7 @@ foreach (array_merge(
     (array) ($paymentTime['entries'] ?? []),
     (array) ($profileRequest['entries'] ?? []),
     (array) ($marketplaceCare['entries'] ?? []),
+    (array) ($familyAdministration['entries'] ?? []),
 ) as $definition) {
     foreach ((array) ($definition['intent_ids'] ?? []) as $intentId) {
         $knowledgeByIntent[$intentId][] = (string) $definition['stable_id'];
@@ -79,6 +82,12 @@ $handlerContracts = [
     'family_messages' => ['family_messages_v1', 'family.messages', 'family_message_v1', 'authoritative_family_state_v1'],
     'family_care_history' => ['family_care_history_v1', 'family.care_history', 'family_history_v1', 'authoritative_family_state_v1'],
     'family_regular_care' => ['family_regular_care_v1', 'family.regular_care', 'family_regular_care_v1', 'authoritative_family_state_v1'],
+    'family_account' => ['family_account_v1', 'account.profile', 'family_account_v1', 'authoritative_family_state_v1'],
+    'family_access' => ['family_access_v1', 'family.access', 'family_access_v1', 'authoritative_family_state_v1'],
+    'family_notifications' => ['family_notifications_v1', 'family.notifications', 'family_notifications_v1', 'authoritative_family_state_v1'],
+    'family_history' => ['family_care_history_v1', 'family.care_history', 'family_history_v1', 'authoritative_family_state_v1'],
+    'family_continuous_coverage' => ['family_continuous_coverage_v1', 'support.center', 'family_support_v1', 'authoritative_family_state_v1'],
+    'family_support' => ['family_support_ticket_v1', 'support.center', 'family_support_v1', 'authoritative_family_state_v1'],
 ];
 
 $preparationByIntent = [
@@ -181,6 +190,30 @@ foreach ($matches as $match) {
         $reader ??= 'family_regular_care_v1';
         $verifier ??= 'authoritative_family_state_v1';
     }
+    if (str_starts_with($intentId, 'FAM-ACCOUNT-')) {
+        $reader ??= 'family_account_v1';
+        $verifier ??= 'authoritative_family_state_v1';
+    }
+    if (str_starts_with($intentId, 'FAM-ACCESS-')) {
+        $reader ??= 'family_access_v1';
+        $verifier ??= 'authoritative_family_state_v1';
+    }
+    if (str_starts_with($intentId, 'FAM-COMMS-')) {
+        $reader ??= 'family_notifications_v1';
+        $verifier ??= 'authoritative_family_state_v1';
+    }
+    if (str_starts_with($intentId, 'FAM-HISTORY-')) {
+        $reader ??= 'family_care_history_v1';
+        $verifier ??= 'authoritative_family_state_v1';
+    }
+    if (str_starts_with($intentId, 'FAM-COVERAGE-')) {
+        $reader ??= 'family_continuous_coverage_v1';
+        $verifier ??= 'authoritative_family_state_v1';
+    }
+    if (str_starts_with($intentId, 'FAM-SUPPORT-')) {
+        $reader ??= 'family_support_ticket_v1';
+        $verifier ??= 'authoritative_family_state_v1';
+    }
 
     $tool = match ($intentId) {
         'FAM-PROFILE-003', 'FAM-PROFILE-004', 'FAM-PROFILE-007', 'FAM-PROFILE-008',
@@ -222,6 +255,16 @@ foreach ($matches as $match) {
         'FAM-REGULAR-020' => 'regular-care.pause:v1',
         'FAM-REGULAR-021' => 'regular-care.resume:v1',
         'FAM-REGULAR-022', 'FAM-REGULAR-023' => 'regular-care.end:v1',
+        'FAM-ACCOUNT-007' => 'account.name.update:v1',
+        'FAM-ACCOUNT-010' => 'account.verification.resend:v1',
+        'FAM-ACCESS-004' => 'family-access.invite:v1',
+        'FAM-ACCESS-006', 'FAM-ACCESS-007' => 'family-access.invitation.resend:v1',
+        'FAM-ACCESS-008' => 'family-access.invitation.cancel:v1',
+        'FAM-ACCESS-012' => 'family-access.member.remove:v1',
+        'FAM-ACCESS-013' => 'family-access.leave:v1',
+        'FAM-COMMS-009' => 'notification.mark-read:v1',
+        'FAM-COMMS-010' => 'notification.mark-all-read:v1',
+        'FAM-COMMS-013', 'FAM-COMMS-015' => 'notification.preferences.update:v1',
         default => null,
     };
     $prefill = $preparationByIntent[$intentId] ?? (stripos($action, 'Draft') !== false ? 'care_request_chat_draft_v1' : null);
@@ -230,7 +273,33 @@ foreach ($matches as $match) {
         $targetStages[] = 'Prepare';
     }
 
-    $human = in_array('Human', $currentStages, true) ? 'SUP-HANDOFF-001' : null;
+    $human = in_array('Human', $currentStages, true)
+        || str_starts_with($intentId, 'FAM-COVERAGE-')
+        || in_array($intentId, [
+            'FAM-ACCOUNT-011', 'FAM-ACCOUNT-014', 'FAM-ACCOUNT-016', 'FAM-ACCOUNT-019', 'FAM-ACCOUNT-020',
+            'FAM-ACCESS-016', 'FAM-ACCESS-017', 'FAM-ACCESS-018',
+            'FAM-COMMS-005',
+            'FAM-HISTORY-010', 'FAM-HISTORY-015',
+            'FAM-SUPPORT-002', 'FAM-SUPPORT-003', 'FAM-SUPPORT-004', 'FAM-SUPPORT-005', 'FAM-SUPPORT-006', 'FAM-SUPPORT-007', 'FAM-SUPPORT-008', 'FAM-SUPPORT-009', 'FAM-SUPPORT-010', 'FAM-SUPPORT-011', 'FAM-SUPPORT-012', 'FAM-SUPPORT-015', 'FAM-SUPPORT-018', 'FAM-SUPPORT-019', 'FAM-SUPPORT-020',
+        ], true)
+        ? 'SUP-HANDOFF-001'
+        : null;
+    if (preg_match('/^FAM-(ACCOUNT|ACCESS|COMMS|HISTORY|COVERAGE|SUPPORT)-/', $intentId) === 1) {
+        $currentStages[] = 'Explain';
+        $currentStages[] = 'Read';
+        if ($destinations !== []) {
+            $currentStages[] = 'Navigate';
+            $currentStages[] = 'Guide';
+        }
+    }
+    if ($tool !== null) {
+        $currentStages[] = 'Execute';
+        $currentStages[] = 'Verify';
+    }
+    if ($human !== null) {
+        $currentStages[] = 'Human';
+    }
+    $targetStages = array_values(array_unique([...$targetStages, ...$currentStages]));
     $unsupported = match (true) {
         str_contains($product, 'Restricted') => 'Deny the private or security-sensitive request without revealing protected data.',
         str_contains($product, 'Gap') => 'Say that LoLo does not currently support this action; do not invent behavior. Offer the valid UI alternative or a person.',
@@ -305,20 +374,27 @@ if (count($rows) !== 324 || count(array_unique(array_column($rows, 'intent_id'))
 }
 
 $mapped = array_filter($rows, static fn (array $row): bool => $row['kb_stable_ids'] !== []);
-if (count($mapped) !== 237) {
-    throw new RuntimeException('Expected exactly 237 Batch 7 KB-mapped intents; found '.count($mapped).'.');
+if (count($mapped) !== 324) {
+    throw new RuntimeException('Expected all 324 Family intents to have explicit KB mappings; found '.count($mapped).'.');
 }
 
 $manifest = [
     'version' => 'family-intents-v1',
-    'generated_on' => '2026-08-18',
+    'generated_on' => '2026-08-20',
     'source' => 'docs/product/support-agent/38-family-intent-action-coverage-registry.md',
     'source_sha256' => hash('sha256', $markdown),
     'records' => $rows,
 ];
 
 @mkdir(dirname($outputPath), 0777, true);
-$php = "<?php\n\n// Generated by tools/generate_family_intent_catalog.php. Do not edit by hand.\n\nreturn ".var_export($manifest, true).";\n";
+$export = var_export($manifest, true);
+$export = preg_replace('/^(\s*)array \($/m', '$1[', $export) ?? $export;
+$export = preg_replace('/^(\s*)\)(,?)$/m', '$1]$2', $export) ?? $export;
+$export = preg_replace('/ =>\s*\R\s*\[/', ' => [', $export) ?? $export;
+$export = preg_replace_callback('/^( +)/m', static fn (array $match): string => str_repeat(' ', strlen($match[1]) * 2), $export) ?? $export;
+$export = preg_replace('/\bNULL\b/', 'null', $export) ?? $export;
+$export = preg_replace('/[ \t]+$/m', '', $export) ?? $export;
+$php = "<?php\n\n// Generated by tools/generate_family_intent_catalog.php. Do not edit by hand.\n\nreturn ".$export.";\n";
 if (file_put_contents($outputPath, $php) === false) {
     throw new RuntimeException('Unable to write the executable Family intent catalog.');
 }

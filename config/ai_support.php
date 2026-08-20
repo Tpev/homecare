@@ -75,6 +75,7 @@ return [
         'capability.care_24h_handoff_v1',
         'capability.family_lifecycle_action_v1',
         'capability.family_care_operations_v1',
+        'capability.family_administration_v1',
         'commit.one_time',
         'commit.recurring',
         'tool.care-request.publish.one-time',
@@ -112,6 +113,16 @@ return [
         'tool.regular-care.end',
         'tool.regular-care.extra-visit.approve',
         'tool.regular-care.extra-visit.request-changes',
+        'tool.account.name.update',
+        'tool.account.verification.resend',
+        'tool.family-access.invite',
+        'tool.family-access.invitation.resend',
+        'tool.family-access.invitation.cancel',
+        'tool.family-access.member.remove',
+        'tool.family-access.leave',
+        'tool.notification.mark-read',
+        'tool.notification.mark-all-read',
+        'tool.notification.preferences.update',
     ],
     'initial_pilot' => [
         // Historical DEC-070 data remains readable but no longer gates operation.
@@ -178,6 +189,7 @@ return [
                 'care_24h_handoff_v1',
                 'family_lifecycle_action_v1',
                 'family_care_operations_v1',
+                'family_administration_v1',
             ],
         ],
         'caregiver_support_v1' => [
@@ -205,6 +217,7 @@ return [
         'capability.care_24h_handoff_v1' => false,
         'capability.family_lifecycle_action_v1' => false,
         'capability.family_care_operations_v1' => false,
+        'capability.family_administration_v1' => false,
         'commit.one_time' => false,
         'commit.recurring' => false,
         'tool.care-request.publish.one-time' => false,
@@ -242,6 +255,16 @@ return [
         'tool.regular-care.end' => false,
         'tool.regular-care.extra-visit.approve' => false,
         'tool.regular-care.extra-visit.request-changes' => false,
+        'tool.account.name.update' => false,
+        'tool.account.verification.resend' => false,
+        'tool.family-access.invite' => false,
+        'tool.family-access.invitation.resend' => false,
+        'tool.family-access.invitation.cancel' => false,
+        'tool.family-access.member.remove' => false,
+        'tool.family-access.leave' => false,
+        'tool.notification.mark-read' => false,
+        'tool.notification.mark-all-read' => false,
+        'tool.notification.preferences.update' => false,
     ],
 
     /*
@@ -301,6 +324,16 @@ return [
             'regular-care.extra-visit.approve', 'regular-care.extra-visit.request-changes',
         ])->mapWithKeys(fn (string $tool): array => [$tool => [
             'capability_id' => 'family_care_operations_v1',
+            'versions' => ['v1'],
+            'preview_validity_minutes' => 30,
+        ]])->all(),
+        ...collect([
+            'account.name.update', 'account.verification.resend',
+            'family-access.invite', 'family-access.invitation.resend', 'family-access.invitation.cancel',
+            'family-access.member.remove', 'family-access.leave',
+            'notification.mark-read', 'notification.mark-all-read', 'notification.preferences.update',
+        ])->mapWithKeys(fn (string $tool): array => [$tool => [
+            'capability_id' => 'family_administration_v1',
             'versions' => ['v1'],
             'preview_validity_minutes' => 30,
         ]])->all(),
@@ -452,6 +485,13 @@ return [
             'client_target_id' => 'family.messages.inbox',
             'label' => 'Messages',
             'instruction' => 'Review the highlighted message inbox.',
+        ],
+        'family.notifications' => [
+            'route' => 'family.notifications.index',
+            'roles' => ['family'],
+            'client_target_id' => 'family.notifications',
+            'label' => 'Notifications',
+            'instruction' => 'Review the highlighted notification and preference controls.',
         ],
         'family.message' => [
             'route' => 'messages.show',

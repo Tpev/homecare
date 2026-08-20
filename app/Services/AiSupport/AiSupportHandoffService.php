@@ -42,7 +42,7 @@ class AiSupportHandoffService
             }
 
             $body = in_array($reasonCode, ['continuous_coverage', 'emergency', 'medical_boundary'], true)
-                ? "I've transferred this conversation to LoLo Support. They'll reply here as soon as they can."
+                ? "I've transferred this conversation to LoLo Support. They'll reply here."
                 : ($reasonCode === 'user_requested'
                     ? "I've sent this conversation to LoLo Support. You can keep using this chat, and you won't need to repeat what you already told me."
                     : "I don't want to give you the wrong help. I'm sending this conversation to LoLo Support.");

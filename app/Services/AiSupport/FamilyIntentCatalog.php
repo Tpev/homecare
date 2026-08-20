@@ -58,8 +58,8 @@ class FamilyIntentCatalog
                 $mapped++;
             }
         }
-        if ($mapped !== 237) {
-            throw new DomainException('The executable Family intent catalog must explicitly map all 237 Batch 7 intents.');
+        if ($mapped !== 324) {
+            throw new DomainException('The executable Family intent catalog must explicitly map all 324 Family intents.');
         }
 
         return $this->manifest = [

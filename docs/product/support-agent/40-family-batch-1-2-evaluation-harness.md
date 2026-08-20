@@ -1,12 +1,12 @@
-# Family Batch 1–5 Evaluation Harness
+# Family Batch 1–9 Evaluation Harness
 
-Status: Expanded for Batch 5 and passing in source
+Status: Expanded through Batch 9 and passing in source
 
 Established: August 17, 2026
 
 Owner: Product and Engineering
 
-Scope: All 324 executable Family intent dispositions, 237 explicit KB mappings, the established 45-intent read/guide/payment corpus, 21 Batch 5 lifecycle intents, all 86 Match/Visit/Regular canonical intents, and Batch 3–7 operating-layer contracts
+Scope: All 324 executable Family intent dispositions and explicit KB mappings, the established 45-intent read/guide/payment corpus, 21 Batch 5 lifecycle intents, all 86 Batch 6/7 Match/Visit/Regular intents, all 118 Batch 8/9 administration/support intents, and Batch 3–9 operating-layer contracts
 
 ## Outcome
 
@@ -50,12 +50,17 @@ Batch 4 expands the current deep corpus to 45 intents and 137 phrases, adds the 
 
 Batch 5 adds a separate 21-intent/64-phrase lifecycle corpus, the 20-entry/100-evaluation profile-request package, all 71 care-profile/request mappings, and deterministic contracts for authorized state, multi-turn profile preparation, recap renewal, confirmed profile actions, request reuse/copy/replacement/withdrawal, stale and cross-account denial, and exact-pilot-only activation. The August 19 post-production-correction run passes 137 of 137 established phrases, 64 of 64 Batch 5 phrases, 10 of 10 collisions, 324 of 324 catalog records, 230 of 230 explicit KB mappings, and 95 application tests with 2,409 assertions. The complete AI Support suite passes 187 tests with 3,218 assertions. Exact evidence now covers independent default/archive/restore actions, wrong-account profiles, distinct request copy/replacement modes, exact status/blocker/applicant reads, copied-draft validation recovery, fresh publication while preserving the source, natural `finish/edit/add` profile language, reversible cancellation of an incomplete profile change, the exact one-time-request sentence whose recipient name ends in `Profile`, and live publication from a ready profile whose optional relationship is absent. The deterministic mass runner makes no provider call and uses no production database.
 
-Batch 6/7 adds the combined 32-entry/160-evaluation marketplace-care package, 86 Match/Visit/Regular intents with all 344 registered phrases checked, 27 default-off tool contracts, and domain tests for account-isolated applicant reads, invitation, shortlist, stale denial, exact messaging, hiring, no-show, visit-change requests, regular-care pause/resume, idempotent receipts, exceptional human transfer, and two-pilot-only activation. The generated catalog now validates 237 explicit KB mappings. These source tests use isolated test databases; they do not publish KB content, change production pilot grants, or call production providers.
+Batch 6/7 adds the combined 32-entry/160-evaluation marketplace-care package, 86 Match/Visit/Regular intents with all 344 registered phrases checked, 27 default-off tool contracts, and domain tests for account-isolated applicant reads, invitation, shortlist, stale denial, exact messaging, hiring, no-show, visit-change requests, regular-care pause/resume, idempotent receipts, exceptional human transfer, and two-pilot-only activation.
 
-Use `--batch=5` for a fast inventory plan or focused lifecycle selection:
+Batch 8/9 adds the combined 44-entry/220-evaluation Family-administration/support package, 72 Batch 8 and 46 Batch 9 intents, all 472 registered phrases, ten default-off account/access/notification tools, and domain tests for account/member/invitation/notification/history readers, name and verification actions, invitation and membership actions, notification read/preferences, stale/idempotent confirmation, protected-data denial, and same-conversation Continuous Coverage/exceptional transfer. The generated catalog now validates **324 / 324** explicit KB mappings. All Continuous Coverage operations remain human-owned and have no plan, shift, assignment, payment, or cancellation tool. These source tests use isolated test databases; they do not publish KB content, change production pilot grants, call production providers, or enable Everyone.
+
+The final Batch 1–9 command passes **127 / 127 application tests with 4,899 assertions**, **137 / 137** established phrases, **64 / 64** Batch 5 phrases, **344 / 344** Batch 6/7 phrases, **472 / 472** Batch 8/9 phrases, all **324 / 324** catalog rows and mappings, and **10 / 10** protected collisions. The complete AI Support feature suite passes **219 / 219 tests with 5,708 assertions**.
+
+Use `--batch=8` or `--batch=9` for a focused administration or exceptional-support inventory:
 
 ```bash
-php artisan ai-support:test-family-intents --plan --batch=5
+php artisan ai-support:test-family-intents --plan --batch=8
+php artisan ai-support:test-family-intents --plan --batch=9
 ```
 
 ## Production browser QA record
@@ -132,7 +137,7 @@ The catalog validator fails if an ID is missing, duplicated, malformed, has fewe
 
 ### 1. Language routing and collision protection
 
-`FamilyIntentCoverageTest` checks all 137 established phrasings and the 10 near-neighbor cases. `Batch5FamilyLifecycleTest` checks 64 lifecycle phrasings plus authorized reads, multi-turn profile changes, recap/renewal/confirmation, verified domain actions, wrong-account and stale-state denial, request copy/withdrawal boundaries, explicit archive priority, permanent-deletion transfer, and exact-pilot activation. `Batch3FamilyOperatingLayerTest` validates all 324 catalog records, 230 explicit mappings, five preparation families, contextual task recovery, verifier truthfulness, state-aware home, security boundaries, and Admin coverage. `PaymentTimeKnowledgeContentTest` validates 18 entries and 90 payment/time evaluations; `ProfileRequestKnowledgeContentTest` validates 20 entries, 100 profile/request evaluations, and all 71 profile/request mappings. The collision set protects request creation, applicant status, passwords, refund execution, Family invitations, account deletion, caregiver browsing, medical help, human transfer, general product information, and notification settings.
+`FamilyIntentCoverageTest` checks all 137 established phrasings and the 10 near-neighbor cases. `Batch5FamilyLifecycleTest` checks 64 lifecycle phrasings plus authorized reads, multi-turn profile changes, recap/renewal/confirmation, verified domain actions, wrong-account and stale-state denial, request copy/withdrawal boundaries, explicit archive priority, permanent-deletion transfer, and exact-pilot activation. `Batch3FamilyOperatingLayerTest` validates all 324 catalog records and mappings, five preparation families, contextual task recovery, verifier truthfulness, state-aware home, security boundaries, and Admin coverage. `PaymentTimeKnowledgeContentTest`, `ProfileRequestKnowledgeContentTest`, `MarketplaceCareKnowledgeContentTest`, and `FamilyAdministrationKnowledgeContentTest` validate their exact governed packages and evaluation inventories. `Batch67FamilyCareOperationsTest` and `Batch89FamilyAdministrationTest` validate registered tools, account isolation, reads, recaps, confirmation, stale/idempotent behavior, authoritative receipts, human boundaries, phrase resolution, and exact-pilot activation. The collision set protects request creation, applicant status, passwords, refund execution, Family invitations, account deletion, caregiver browsing, medical help, human transfer, general product information, and notification settings.
 
 The mass corpus found real natural-language gaps during its first implementation. The deterministic router was expanded to understand plural care profiles, ordinary applicant wording, natural request-status phrasing, pending charge wording, failed time-correction payments, scheduled-care wording, visit-change decisions, corrected hours, completed extra visits, and regular-care history. The expected cases were not weakened to hide those misses.
 
@@ -238,7 +243,7 @@ If the shared runtime regression fails, no selected intent is reported as passed
 
 ## What this harness does not claim
 
-- It structurally validates all 324 Family registry rows, but deep end-to-end domain behavior remains limited to implemented stages. A valid backlog disposition is not executable action coverage.
+- It structurally validates all 324 Family registry rows and mappings, but deep end-to-end behavior remains limited to each declared current stage. A valid Read, Guide, or Human disposition is not executable domain-action coverage.
 - It does not prove that Batch 2 performs the user's domain action. Batch 2 opens and highlights the normal application control; the user still performs the action. Batch 1 separately verifies the payment-method result after the normal secure flow.
 - It does not replace the existing 56-case provider evaluation for request intake and drafting.
 - It does not make a stochastic model-quality claim. The deterministic mass paths do not call the provider; the bounded Batch 5 profile patch is covered separately with a strict fake response and the existing provider-evaluation framework.

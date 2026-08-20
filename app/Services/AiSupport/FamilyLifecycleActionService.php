@@ -41,6 +41,7 @@ class FamilyLifecycleActionService
         private readonly AiSupportEligibilityService $eligibility,
         private readonly AiSupportEventRecorder $events,
         private readonly AiSupportGuidedTaskService $guidedTasks,
+        private readonly FamilyAdministrationActionService $administration,
         private readonly FamilyCareOperationsActionService $careOperations,
     ) {}
 
@@ -48,6 +49,10 @@ class FamilyLifecycleActionService
     public function respond(User $actor, SupportTicket $ticket, array $record, string $message): bool
     {
         $intentId = (string) $record['intent_id'];
+
+        if ($this->administration->respond($actor, $ticket, $record, $message)) {
+            return true;
+        }
 
         if ($this->careOperations->respond($actor, $ticket, $record, $message)) {
             return true;
@@ -118,7 +123,7 @@ class FamilyLifecycleActionService
             return true;
         }
 
-        if (in_array($intentId, ['FAM-REQUEST-020', 'FAM-REQUEST-036', 'FAM-REQUEST-037', 'FAM-REQUEST-039', 'FAM-REQUEST-040'], true)) {
+        if (in_array($intentId, ['FAM-REQUEST-020', 'FAM-REQUEST-036', 'FAM-REQUEST-037', 'FAM-REQUEST-039', 'FAM-REQUEST-040', 'FAM-HISTORY-013'], true)) {
             if (! $this->available($actor, $ticket)) {
                 return false;
             }
@@ -134,7 +139,7 @@ class FamilyLifecycleActionService
                 return true;
             }
             $mode = match ($intentId) {
-                'FAM-REQUEST-020' => 'reuse',
+                'FAM-REQUEST-020', 'FAM-HISTORY-013' => 'reuse',
                 'FAM-REQUEST-036', 'FAM-REQUEST-037' => 'replacement',
                 'FAM-REQUEST-039' => $request->status === CareRequest::STATUS_EXPIRED ? 'expired_copy' : 'withdrawn_copy',
                 default => 'duplicate',
@@ -338,6 +343,9 @@ class FamilyLifecycleActionService
     {
         $action = $this->domainAction($actor, $ticket, $actionId);
         $payload = (array) $action->payload;
+        if ($this->administration->ownsTool((string) ($payload['tool_id'] ?? ''))) {
+            return $this->administration->confirm($actor, $ticket, $actionId);
+        }
         if ($this->careOperations->ownsTool((string) ($payload['tool_id'] ?? ''))) {
             return $this->careOperations->confirm($actor, $ticket, $actionId);
         }
@@ -414,6 +422,9 @@ class FamilyLifecycleActionService
         }
         $payload = (array) $action->payload;
         $tool = (string) ($payload['tool_id'] ?? '');
+        if ($this->administration->ownsTool($tool)) {
+            return $this->administration->renew($actor, $ticket, $actionId);
+        }
         if ($this->careOperations->ownsTool($tool)) {
             return $this->careOperations->renew($actor, $ticket, $actionId);
         }

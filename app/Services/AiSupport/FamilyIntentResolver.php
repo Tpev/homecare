@@ -73,6 +73,17 @@ class FamilyIntentResolver
             ];
         }
 
+        $batchNineIntent = $this->batchNineIntent($message);
+        if ($batchNineIntent !== null) {
+            return [
+                'status' => self::STATUS_RECOGNIZED,
+                'intent_id' => $batchNineIntent,
+                'candidate_ids' => [$batchNineIntent],
+                'confidence' => 1.0,
+                'source' => 'deterministic_batch89',
+            ];
+        }
+
         $normalized = $this->normalize($message);
         if ($normalized === '') {
             return $this->unmatched();
@@ -241,6 +252,69 @@ class FamilyIntentResolver
                 str_contains($value, 'complaint') => 'FAM-SUPPORT-011',
                 default => 'FAM-SUPPORT-008',
             };
+        }
+
+        return null;
+    }
+
+    private function batchNineIntent(string $message): ?string
+    {
+        $value = $this->normalize($message);
+
+        if (preg_match('/\b(?:24\s*\/\s*7|around[- ]the[- ]clock|continuous coverage)\b/', $value)) {
+            return match (true) {
+                preg_match('/\b(?:missed|unsafe|wrong|dispute|problem)\b/', $value) === 1 => 'FAM-COVERAGE-026',
+                preg_match('/\b(?:receipt|refund|payment|charge)\b/', $value) === 1 => 'FAM-COVERAGE-024',
+                default => 'FAM-COVERAGE-001',
+            };
+        }
+        if (preg_match('/\b(?:queue|wait|how long)\b.*\bsupport\b|\bsupport\b.*\b(?:queue|wait|how long)\b/', $value)) {
+            return 'FAM-SUPPORT-007';
+        }
+        if (preg_match('/\b(?:support|ticket)\b.*\bstatus\b|\bstatus\b.*\b(?:support|ticket)\b/', $value)) {
+            return 'FAM-SUPPORT-005';
+        }
+        if (preg_match('/\b(?:privacy|delete my data|data request|what data)\b/', $value)) {
+            return 'FAM-SUPPORT-013';
+        }
+        if (preg_match('/\b(?:change|update)\b.*\bmy name\b|\bmy name\b.*\b(?:change|update)\b/', $value)) {
+            return 'FAM-ACCOUNT-007';
+        }
+        if (preg_match('/\b(?:verify|verification)\b.*\bemail\b|\bresend\b.*\bverification\b/', $value)) {
+            return 'FAM-ACCOUNT-010';
+        }
+        if (preg_match('/\bwho\b.*\b(?:access|family account)\b|\b(?:family members|people with access)\b/', $value)) {
+            return 'FAM-ACCESS-001';
+        }
+        if (preg_match('/\b(?:invite|add)\b.*\b(?:family|member|account)\b/', $value) && str_contains($value, '@')) {
+            return 'FAM-ACCESS-004';
+        }
+        if (preg_match('/\bresend\b.*\b(?:family )?invitation\b/', $value)) {
+            return 'FAM-ACCESS-007';
+        }
+        if (preg_match('/\bcancel\b.*\b(?:family )?invitation\b/', $value)) {
+            return 'FAM-ACCESS-008';
+        }
+        if (preg_match('/\bremove\b.*\b(?:family )?member\b/', $value)) {
+            return 'FAM-ACCESS-012';
+        }
+        if (preg_match('/\bleave\b.*\bfamily account\b/', $value)) {
+            return 'FAM-ACCESS-013';
+        }
+        if (preg_match('/\bmark\b.*\ball\b.*\bnotifications?\b.*\bread\b/', $value)) {
+            return 'FAM-COMMS-010';
+        }
+        if (preg_match('/\bmark\b.*\b(?:latest|this)\b.*\bnotification\b.*\bread\b/', $value)) {
+            return 'FAM-COMMS-009';
+        }
+        if (preg_match('/\b(?:turn|switch|disable|enable|stop)\b.*\b(?:email|in[- ]app)?\s*notifications?\b/', $value)) {
+            return str_contains($value, 'email') ? 'FAM-COMMS-015' : 'FAM-COMMS-013';
+        }
+        if (preg_match('/\bcare history\b.*\b(?:total|hours?|paid|spent|charge)\b|\b(?:total|hours?|paid|spent)\b.*\bcare history\b/', $value)) {
+            return 'FAM-HISTORY-004';
+        }
+        if (preg_match('/\b(?:open|show|search|find)\b.*\bcare history\b/', $value)) {
+            return 'FAM-HISTORY-001';
         }
 
         return null;
@@ -424,7 +498,7 @@ class FamilyIntentResolver
         if (preg_match('/\bcompare\b.*\b(?:caregiver|applicant)s?\b|\bwhich\b.*\bcaregiver\b.*\bchoose\b/', $value)) {
             return 'FAM-MATCH-014';
         }
-        if (preg_match('/\bcancel\b.*\binvitation\b/', $value)) {
+        if (! str_contains($value, 'family') && preg_match('/\bcancel\b.*\binvitation\b/', $value)) {
             return 'FAM-MATCH-012';
         }
         if (preg_match('/\b(?:reinvite|invite\s+again)\b.*\bcaregiver\b/', $value)) {

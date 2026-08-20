@@ -46,7 +46,7 @@ class Batch3FamilyOperatingLayerTest extends TestCase
 
         $this->assertCount(324, $records);
         $this->assertCount(324, array_unique(array_column($records, 'intent_id')));
-        $this->assertSame(237, $catalog->coverageSummary()['kb_mapped']);
+        $this->assertSame(324, $catalog->coverageSummary()['kb_mapped']);
         $this->assertSame(
             ['care_profile_v1', 'care_request_reuse_v1', 'caregiver_message_v1', 'submitted_hours_correction_v1', 'support_intake_v1'],
             array_keys(app(AiSupportPreparationContractRegistry::class)->all()),
@@ -340,7 +340,7 @@ class Batch3FamilyOperatingLayerTest extends TestCase
         Livewire::actingAs($admin)->test(Overview::class)
             ->assertSee('Family intent coverage')
             ->assertSee('324')
-            ->assertSee('237')
+            ->assertSee('324')
             ->assertSee('FAM-START-001')
             ->assertSee('Showing the first 50 of 324 matching intents')
             ->assertSee('Recent Family intent outcomes')
