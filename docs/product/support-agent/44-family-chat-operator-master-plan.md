@@ -6,7 +6,7 @@ Audited: August 20, 2026
 
 Owner: Product and Engineering
 
-Primary scope: Authenticated Family users, with Caregiver adaptation after the Family operating layer is proven
+Primary scope: Authenticated Family users; Caregiver AI adaptation is deferred while Family goal-guided journeys are completed
 
 ## Product outcome
 
@@ -469,9 +469,17 @@ The chat remains the front door for 24/7 and exceptional cases even when a perso
 
 Continuous Coverage management remains out of general AI execution until the currently flagged product workflow is deliberately released and given separate capability contracts.
 
-### Batch 10 — Caregiver adaptation
+### Batch 10 — Family goal-guided journeys
 
-After the Family operating layer is stable, reuse the platform with a completely separate Caregiver catalog, KB applicability, readers, targets, prefill contracts, tools, and evaluations. Initial Caregiver priorities are onboarding/profile readiness, Work Inbox, invitations/applications, upcoming visits, submitted hours, earnings/payout setup, messages, and human support. Family-only data and actions never become Caregiver capabilities by reuse or prompt instruction.
+Implementation status: Approved and specified on August 20, 2026; source implementation pending.
+
+Compose the Batches 1–9 intent, reader, navigation, preparation, confirmed-action, verification, and handoff layers into persistent user goals. The first complete journey begins with a vague care need, recommends one-time or regular care, requires an explicit choice, continues through profile/payment prerequisites and request drafting, and ends only after verified publication or correct human transfer.
+
+The active goal must survive ordinary page navigation and refresh, resume after secure UI steps, keep the next action simple for an older adult, and verify authoritative state before saying the task worked. The initial journey catalog also composes existing payment, applicant/hiring, visit/hours, regular-care, history/rebooking, message/notification, and human-support capabilities. See [Family Goal-Guided Journeys](54-family-goal-guided-journeys.md).
+
+### Deferred future work — Caregiver adaptation
+
+Caregiver AI is not the next batch. Product explicitly deferred it while the Family experience moves from isolated-intent handling to complete goal-guided journeys. When separately resumed, it must use a completely separate Caregiver catalog, KB applicability, readers, targets, prefill contracts, tools, and evaluations. Family-only data and actions never become Caregiver capabilities by reuse or prompt instruction.
 
 ## Knowledge delivery plan
 
@@ -620,7 +628,7 @@ Keep serving cost low by using the model once for a genuinely new or ambiguous g
 
 ## Immediate implementation recommendation
 
-Batches 6 through 9 are source-complete. The next step is one combined normal deployment, governed publication of the Batch 6/7 and Batch 8/9 packages, exact-two-user pilot activation, and authenticated browser audit across one ordinary read, one confirmed write, and one human path in each new operating layer. Keep Availability **Pilot only** until Product separately chooses **Make live for everyone**. After that audit, the next planned implementation is **Batch 10 — Caregiver adaptation** with a separate role-specific catalog and tool boundary.
+Batches 6 through 9 are source-complete. **Batch 10 — Family goal-guided journeys** may now be implemented in source under [the approved contract](54-family-goal-guided-journeys.md). Before Batch 10 production activation, perform one combined normal deployment, governed publication of the Batch 6/7 and Batch 8/9 packages, exact-two-user pilot activation, and authenticated browser audit across one ordinary read, one confirmed write, and one human path in each new operating layer. Keep Availability **Pilot only** until Product separately chooses **Make live for everyone**. Caregiver adaptation is deferred.
 
 ## Maintenance rule
 
