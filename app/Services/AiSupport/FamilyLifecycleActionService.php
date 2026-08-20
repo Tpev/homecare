@@ -41,12 +41,17 @@ class FamilyLifecycleActionService
         private readonly AiSupportEligibilityService $eligibility,
         private readonly AiSupportEventRecorder $events,
         private readonly AiSupportGuidedTaskService $guidedTasks,
+        private readonly FamilyCareOperationsActionService $careOperations,
     ) {}
 
     /** @param array<string,mixed> $record */
     public function respond(User $actor, SupportTicket $ticket, array $record, string $message): bool
     {
         $intentId = (string) $record['intent_id'];
+
+        if ($this->careOperations->respond($actor, $ticket, $record, $message)) {
+            return true;
+        }
 
         if (in_array($intentId, self::PROFILE_DRAFT_INTENTS, true)) {
             if (! $this->available($actor, $ticket)) {
@@ -333,6 +338,9 @@ class FamilyLifecycleActionService
     {
         $action = $this->domainAction($actor, $ticket, $actionId);
         $payload = (array) $action->payload;
+        if ($this->careOperations->ownsTool((string) ($payload['tool_id'] ?? ''))) {
+            return $this->careOperations->confirm($actor, $ticket, $actionId);
+        }
         if ($action->consumed_at) {
             return AiSupportConfirmedActionEvidence::query()
                 ->where('idempotency_key', (string) ($payload['idempotency_key'] ?? ''))
@@ -406,6 +414,9 @@ class FamilyLifecycleActionService
         }
         $payload = (array) $action->payload;
         $tool = (string) ($payload['tool_id'] ?? '');
+        if ($this->careOperations->ownsTool($tool)) {
+            return $this->careOperations->renew($actor, $ticket, $actionId);
+        }
         if (str_starts_with($tool, 'family-profile.save-') || $tool === 'family-profile.make-ready') {
             $preparation = AiSupportPreparation::query()
                 ->whereKey((string) ($payload['preparation_id'] ?? ''))

@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use App\Services\AiSupport\Batch5FamilyIntentEvaluationCatalog;
 use App\Services\AiSupport\FamilyIntentCatalog;
 use App\Services\AiSupport\FamilyIntentEvaluationCatalog;
+use App\Services\AiSupport\FamilyIntentResolver;
+use App\Services\AiSupport\MarketplaceCareKnowledgeEvaluationCatalog;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -15,20 +17,28 @@ class TestFamilyAiSupportIntents extends Command
 {
     protected $signature = 'ai-support:test-family-intents
         {--plan : Validate and display the selected corpus without running application tests}
-        {--batch=* : Optional Batch number (1, 2, 4, or 5)}
+        {--batch=* : Optional Batch number (1, 2, 4, 5, 6, or 7)}
         {--domain=* : Optional exact domain such as payments, visits, or profiles}
         {--intent=* : Optional exact registry intent ID}
         {--output= : Optional content-minimized JSON report path on the local storage disk}';
 
     protected $description = 'Validate all 324 Family intents and mass-test implemented Family journeys in isolated SQLite.';
 
-    public function handle(FamilyIntentEvaluationCatalog $catalog, FamilyIntentCatalog $fullCatalog, Batch5FamilyIntentEvaluationCatalog $batch5Catalog): int
-    {
+    public function handle(
+        FamilyIntentEvaluationCatalog $catalog,
+        FamilyIntentCatalog $fullCatalog,
+        Batch5FamilyIntentEvaluationCatalog $batch5Catalog,
+        FamilyIntentResolver $resolver,
+        MarketplaceCareKnowledgeEvaluationCatalog $marketplaceKnowledge,
+    ): int {
         try {
             $manifest = $catalog->manifest();
             $fullManifest = $fullCatalog->manifest();
+            $this->validatePortfolioFilters($manifest['cases'], $fullManifest['records']);
             $cases = $this->selectedCases($manifest['cases']);
+            $marketplaceRecords = $this->selectedMarketplaceRecords($fullManifest['records']);
             $batch5Manifest = $batch5Catalog->manifest();
+            $marketplaceCases = $marketplaceKnowledge->cases();
         } catch (Throwable $exception) {
             $this->error($exception->getMessage());
 
@@ -40,13 +50,16 @@ class TestFamilyAiSupportIntents extends Command
         $this->table(['Property', 'Value'], [
             ['Executable catalog', $fullManifest['version']],
             ['Catalog registry intents', count($fullManifest['records']).' / 324'],
-            ['Explicit Batch 5 KB mappings', $fullCatalog->coverageSummary()['kb_mapped'].' / 230'],
+            ['Explicit Batch 7 KB mappings', $fullCatalog->coverageSummary()['kb_mapped'].' / 237'],
             ['Catalog phrase definitions', $fullPhraseCount],
             ['Runtime corpus', $manifest['version']],
             ['Frozen on', $manifest['frozen_on']],
             ['Implemented runtime intents', count($cases).' / '.count($manifest['cases'])],
             ['Implemented routing phrases', $phraseCount],
             ['Batch 5 lifecycle intents', count($batch5Manifest['cases']).' / 21'],
+            ['Batch 6/7 runtime intents', count($marketplaceRecords).' / 86'],
+            ['Batch 6/7 routing phrases', collect($marketplaceRecords)->sum(fn (array $record): int => count((array) data_get($record, 'phrases.ordinary', [])) + count((array) data_get($record, 'phrases.imperfect', [])))],
+            ['Batch 6/7 KB evaluations', count($marketplaceCases).' / 160'],
             ['Near-neighbor collision cases', count($manifest['negative_cases'])],
             ['Provider calls', '0'],
             ['Database', 'isolated SQLite :memory:'],
@@ -54,10 +67,11 @@ class TestFamilyAiSupportIntents extends Command
 
         $routing = $this->evaluateRouting($catalog, $cases, $manifest['negative_cases']);
         $batch5Routing = $batch5Catalog->evaluate();
+        $marketplaceRouting = $this->evaluateMarketplaceRouting($resolver, $marketplaceRecords);
         if ($this->option('plan')) {
-            $routingPassed = $routing['passed'] && $batch5Routing['passed'];
+            $routingPassed = $routing['passed'] && $batch5Routing['passed'] && $marketplaceRouting['passed'];
             $this->line('Routing precheck: '.($routingPassed ? 'PASS' : 'FAIL'));
-            foreach ([...$routing['failures'], ...$batch5Routing['failures']] as $failure) {
+            foreach ([...$routing['failures'], ...$batch5Routing['failures'], ...$marketplaceRouting['failures']] as $failure) {
                 $this->error($failure);
             }
             $this->warn('Plan only. All 324 catalog records were validated. No test database, provider call, production write, or report write occurred.');
@@ -68,21 +82,23 @@ class TestFamilyAiSupportIntents extends Command
         $this->newLine();
         $this->info('Running the full Family operating-layer application regression in an isolated test process...');
         $runtime = $this->runIsolatedApplicationTests();
-        $passed = $routing['passed'] && $batch5Routing['passed'] && $runtime['passed'];
+        $passed = $routing['passed'] && $batch5Routing['passed'] && $marketplaceRouting['passed'] && $runtime['passed'];
 
         $report = $this->report($manifest, $cases, $routing, $runtime, $passed);
         $this->table(['Result', 'Value'], [
             ['Routing phrases', $routing['passed_phrases'].' / '.$routing['total_phrases'].' passed'],
             ['Batch 5 routing phrases', $batch5Routing['passed_phrases'].' / '.$batch5Routing['total_phrases'].' passed'],
+            ['Batch 6/7 routing phrases', $marketplaceRouting['passed_phrases'].' / '.$marketplaceRouting['total_phrases'].' passed'],
+            ['Batch 6/7 runtime intents', $marketplaceRouting['passed_intents'].' / '.$marketplaceRouting['total_intents'].' passed'],
             ['Executable catalog', count($fullManifest['records']).' / 324 valid'],
-            ['Explicit KB mappings', $fullCatalog->coverageSummary()['kb_mapped'].' / 230 valid'],
+            ['Explicit KB mappings', $fullCatalog->coverageSummary()['kb_mapped'].' / 237 valid'],
             ['Collision cases', $routing['passed_negative_cases'].' / '.$routing['total_negative_cases'].' passed'],
             ['Application regression', $runtime['passed'] ? 'PASS' : 'FAIL'],
             ['Registry intents', $report['summary']['passed_intents'].' / '.$report['summary']['selected_intents'].' passed'],
             ['Overall', $passed ? 'PASS' : 'FAIL'],
         ]);
 
-        foreach ([...$routing['failures'], ...$batch5Routing['failures']] as $failure) {
+        foreach ([...$routing['failures'], ...$batch5Routing['failures'], ...$marketplaceRouting['failures']] as $failure) {
             $this->error($failure);
         }
 
@@ -97,7 +113,7 @@ class TestFamilyAiSupportIntents extends Command
         }
 
         if ($passed) {
-            $this->info('Family Batch 1-5 intent evaluation passed. No provider or production database was used.');
+            $this->info('Family Batch 1-7 intent evaluation passed. No provider or production database was used.');
         }
 
         return $passed ? self::SUCCESS : self::FAILURE;
@@ -119,30 +135,24 @@ class TestFamilyAiSupportIntents extends Command
             (array) $this->option('intent'),
         ))));
 
-        if (array_diff($batches, [1, 2, 4, 5]) !== []) {
-            throw new \InvalidArgumentException('Batch filters must be 1, 2, 4, or 5.');
-        }
-        $legacyBatches = array_values(array_diff($batches, [5]));
+        $legacyBatches = array_values(array_intersect($batches, [1, 2, 4]));
         if ($batches !== [] && $legacyBatches === []) {
             return [];
         }
 
         $knownDomains = array_values(array_unique(array_column($cases, 'domain')));
-        $unknownDomains = array_diff($domains, $knownDomains);
-        if ($unknownDomains !== []) {
-            throw new \InvalidArgumentException('Unknown domain: '.implode(', ', $unknownDomains).'. Known domains: '.implode(', ', $knownDomains).'.');
-        }
+        $legacyDomains = array_values(array_intersect($domains, $knownDomains));
 
         $knownIntents = array_column($cases, 'intent_id');
-        $unknownIntents = array_diff($intents, $knownIntents);
-        if ($unknownIntents !== []) {
-            throw new \InvalidArgumentException('Unknown Batch 1/2/4 intent: '.implode(', ', $unknownIntents).'.');
+        $legacyIntents = array_values(array_intersect($intents, $knownIntents));
+        if (($domains !== [] && $legacyDomains === []) || ($intents !== [] && $legacyIntents === [])) {
+            return [];
         }
 
-        $selected = array_values(array_filter($cases, static function (array $case) use ($legacyBatches, $domains, $intents): bool {
+        $selected = array_values(array_filter($cases, static function (array $case) use ($legacyBatches, $legacyDomains, $legacyIntents): bool {
             return ($legacyBatches === [] || in_array((int) $case['batch'], $legacyBatches, true))
-                && ($domains === [] || in_array($case['domain'], $domains, true))
-                && ($intents === [] || in_array($case['intent_id'], $intents, true));
+                && ($legacyDomains === [] || in_array($case['domain'], $legacyDomains, true))
+                && ($legacyIntents === [] || in_array($case['intent_id'], $legacyIntents, true));
         }));
 
         if ($selected === [] && $batches === []) {
@@ -150,6 +160,94 @@ class TestFamilyAiSupportIntents extends Command
         }
 
         return $selected;
+    }
+
+    /** @param list<array<string,mixed>> $legacyCases @param list<array<string,mixed>> $records */
+    private function validatePortfolioFilters(array $legacyCases, array $records): void
+    {
+        $batches = array_values(array_unique(array_filter(array_map('intval', (array) $this->option('batch')))));
+        if (array_diff($batches, [1, 2, 4, 5, 6, 7]) !== []) {
+            throw new \InvalidArgumentException('Batch filters must be 1, 2, 4, 5, 6, or 7.');
+        }
+        $domains = array_values(array_unique(array_filter(array_map(
+            static fn (mixed $value): string => mb_strtolower(trim((string) $value)),
+            (array) $this->option('domain'),
+        ))));
+        $knownDomains = array_values(array_unique([
+            ...array_column($legacyCases, 'domain'),
+            ...array_column($records, 'domain'),
+            'visits',
+        ]));
+        if ($unknown = array_diff($domains, $knownDomains)) {
+            throw new \InvalidArgumentException('Unknown domain: '.implode(', ', $unknown).'. Known domains: '.implode(', ', $knownDomains).'.');
+        }
+        $intents = array_values(array_unique(array_filter(array_map(
+            static fn (mixed $value): string => mb_strtoupper(trim((string) $value)),
+            (array) $this->option('intent'),
+        ))));
+        if ($unknown = array_diff($intents, array_column($records, 'intent_id'))) {
+            throw new \InvalidArgumentException('Unknown Family intent: '.implode(', ', $unknown).'.');
+        }
+    }
+
+    /** @param list<array<string,mixed>> $records @return list<array<string,mixed>> */
+    private function selectedMarketplaceRecords(array $records): array
+    {
+        $selected = collect($records)->filter(fn (array $record): bool => preg_match('/^FAM-(MATCH|VISIT|REGULAR)-/', (string) $record['intent_id']) === 1);
+        $batches = array_values(array_unique(array_filter(array_map('intval', (array) $this->option('batch')))));
+        if ($batches !== []) {
+            $selected = $selected->filter(fn (array $record): bool => (in_array(6, $batches, true) && str_starts_with((string) $record['intent_id'], 'FAM-MATCH-'))
+                || (in_array(7, $batches, true) && preg_match('/^FAM-(VISIT|REGULAR)-/', (string) $record['intent_id']) === 1));
+        }
+        $domains = collect((array) $this->option('domain'))->map(fn ($value): string => match (mb_strtolower(trim((string) $value))) {
+            'visits' => 'visits_timesheets',
+            default => mb_strtolower(trim((string) $value)),
+        })->filter()->unique()->values();
+        if ($domains->isNotEmpty()) {
+            $selected = $selected->whereIn('domain', $domains->all());
+        }
+        $intents = collect((array) $this->option('intent'))->map(fn ($value): string => mb_strtoupper(trim((string) $value)))->filter()->unique()->values();
+        if ($intents->isNotEmpty()) {
+            $selected = $selected->whereIn('intent_id', $intents->all());
+        }
+
+        return $selected->values()->all();
+    }
+
+    /** @param list<array<string,mixed>> $records @return array{passed:bool,total_phrases:int,passed_phrases:int,total_intents:int,passed_intents:int,failures:list<string>} */
+    private function evaluateMarketplaceRouting(FamilyIntentResolver $resolver, array $records): array
+    {
+        $totalPhrases = 0;
+        $passedPhrases = 0;
+        $passedIntentIds = [];
+        $failures = [];
+        foreach ($records as $record) {
+            $intentPassed = true;
+            $phrases = [...(array) data_get($record, 'phrases.ordinary', []), ...(array) data_get($record, 'phrases.imperfect', [])];
+            foreach ($phrases as $phrase) {
+                $totalPhrases++;
+                $resolution = $resolver->resolve((string) $phrase);
+                if (($resolution['status'] ?? null) === FamilyIntentResolver::STATUS_RECOGNIZED
+                    && ($resolution['intent_id'] ?? null) === $record['intent_id']) {
+                    $passedPhrases++;
+                } else {
+                    $intentPassed = false;
+                    $failures[] = $record['intent_id'].' phrase routed to '.($resolution['intent_id'] ?? $resolution['status'] ?? 'unmatched').'.';
+                }
+            }
+            if ($intentPassed) {
+                $passedIntentIds[] = $record['intent_id'];
+            }
+        }
+
+        return [
+            'passed' => $failures === [],
+            'total_phrases' => $totalPhrases,
+            'passed_phrases' => $passedPhrases,
+            'total_intents' => count($records),
+            'passed_intents' => count($passedIntentIds),
+            'failures' => $failures,
+        ];
     }
 
     /**
@@ -211,6 +309,8 @@ class TestFamilyAiSupportIntents extends Command
             'tests/Feature/AiSupport/InteractiveSupportRuntimeTest.php',
             'tests/Feature/AiSupport/ProfileRequestKnowledgeContentTest.php',
             'tests/Feature/AiSupport/Batch5FamilyLifecycleTest.php',
+            'tests/Feature/AiSupport/MarketplaceCareKnowledgeContentTest.php',
+            'tests/Feature/AiSupport/Batch67FamilyCareOperationsTest.php',
         ];
         if (! class_exists('PHPUnit\\Framework\\TestCase')) {
             $error = 'The full Family intent regression requires Composer development dependencies. Run it in the development/CI workspace; use --plan on a no-dev production install.';

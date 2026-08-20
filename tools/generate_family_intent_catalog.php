@@ -15,6 +15,7 @@ $guidedPath = $root.'/resources/ai-support/evaluations/family-guided-v1.php';
 $operationsPath = $root.'/resources/ai-support/knowledge-base/family-operations-v1.php';
 $paymentTimePath = $root.'/resources/ai-support/knowledge-base/payment-time-v1.php';
 $profileRequestPath = $root.'/resources/ai-support/knowledge-base/profile-request-v1.php';
+$marketplaceCarePath = $root.'/resources/ai-support/knowledge-base/marketplace-care-v1.php';
 
 $markdown = file_get_contents($registryPath);
 if ($markdown === false) {
@@ -25,6 +26,7 @@ $guided = require $guidedPath;
 $operations = require $operationsPath;
 $paymentTime = require $paymentTimePath;
 $profileRequest = require $profileRequestPath;
+$marketplaceCare = require $marketplaceCarePath;
 
 $guidedByIntent = [];
 foreach ((array) ($guided['cases'] ?? []) as $case) {
@@ -38,6 +40,7 @@ foreach (array_merge(
     (array) ($operations['revisions'] ?? []),
     (array) ($paymentTime['entries'] ?? []),
     (array) ($profileRequest['entries'] ?? []),
+    (array) ($marketplaceCare['entries'] ?? []),
 ) as $definition) {
     foreach ((array) ($definition['intent_ids'] ?? []) as $intentId) {
         $knowledgeByIntent[$intentId][] = (string) $definition['stable_id'];
@@ -166,6 +169,18 @@ foreach ($matches as $match) {
             ? 'care_request_receipt_v1'
             : 'care_request_draft_state_v1';
     }
+    if (str_starts_with($intentId, 'FAM-MATCH-')) {
+        $reader ??= 'family_matching_state_v1';
+        $verifier ??= 'authoritative_family_state_v1';
+    }
+    if (str_starts_with($intentId, 'FAM-VISIT-')) {
+        $reader ??= 'family_visit_state_v1';
+        $verifier ??= 'authoritative_family_state_v1';
+    }
+    if (str_starts_with($intentId, 'FAM-REGULAR-')) {
+        $reader ??= 'family_regular_care_v1';
+        $verifier ??= 'authoritative_family_state_v1';
+    }
 
     $tool = match ($intentId) {
         'FAM-PROFILE-003', 'FAM-PROFILE-004', 'FAM-PROFILE-007', 'FAM-PROFILE-008',
@@ -180,6 +195,33 @@ foreach ($matches as $match) {
         'FAM-REQUEST-029' => 'care-request.publish.recurring:v1',
         'FAM-REQUEST-030' => 'care_request_recap_renew_v1',
         'FAM-REQUEST-038' => 'care-request.withdraw:v1',
+        'FAM-MATCH-008', 'FAM-MATCH-009', 'FAM-MATCH-010' => 'caregiver.invite:v1',
+        'FAM-MATCH-012' => 'caregiver.invitation.cancel:v1',
+        'FAM-MATCH-015' => 'applicant.shortlist:v1',
+        'FAM-MATCH-016' => 'applicant.reject:v1',
+        'FAM-MATCH-017' => 'applicant.conversation:v1',
+        'FAM-MATCH-018', 'FAM-VISIT-004', 'FAM-REGULAR-025' => 'caregiver.message:v1',
+        'FAM-MATCH-020' => 'caregiver.hire:v1',
+        'FAM-VISIT-005', 'FAM-VISIT-006' => 'visit.change-request:v1',
+        'FAM-VISIT-007' => 'visit.cancel:v1',
+        'FAM-VISIT-010', 'FAM-VISIT-011' => 'visit.change-request.resolve:v1',
+        'FAM-VISIT-014' => 'visit.no-show:v1',
+        'FAM-VISIT-017' => 'visit.complete:v1',
+        'FAM-VISIT-020' => 'visit.hours.approve:v1',
+        'FAM-VISIT-024' => 'visit.time-correction.approve:v1',
+        'FAM-VISIT-022', 'FAM-VISIT-025' => 'visit.time-correction.request-changes:v1',
+        'FAM-VISIT-030' => 'visit.review:v1',
+        'FAM-VISIT-032' => 'visit.rebook:v1',
+        'FAM-VISIT-033', 'FAM-REGULAR-002', 'FAM-REGULAR-003', 'FAM-REGULAR-004', 'FAM-REGULAR-005' => 'regular-care.offer:v1',
+        'FAM-REGULAR-008' => 'regular-care.accept-counter:v1',
+        'FAM-REGULAR-011' => 'regular-care.skip-visit:v1',
+        'FAM-REGULAR-012' => 'regular-care.extra-visit:v1',
+        'FAM-REGULAR-014' => 'regular-care.extra-visit.approve:v1',
+        'FAM-REGULAR-015' => 'regular-care.extra-visit.request-changes:v1',
+        'FAM-REGULAR-019' => 'regular-care.schedule-change:v1',
+        'FAM-REGULAR-020' => 'regular-care.pause:v1',
+        'FAM-REGULAR-021' => 'regular-care.resume:v1',
+        'FAM-REGULAR-022', 'FAM-REGULAR-023' => 'regular-care.end:v1',
         default => null,
     };
     $prefill = $preparationByIntent[$intentId] ?? (stripos($action, 'Draft') !== false ? 'care_request_chat_draft_v1' : null);
@@ -263,8 +305,8 @@ if (count($rows) !== 324 || count(array_unique(array_column($rows, 'intent_id'))
 }
 
 $mapped = array_filter($rows, static fn (array $row): bool => $row['kb_stable_ids'] !== []);
-if (count($mapped) !== 230) {
-    throw new RuntimeException('Expected exactly 230 Batch 5 KB-mapped intents; found '.count($mapped).'.');
+if (count($mapped) !== 237) {
+    throw new RuntimeException('Expected exactly 237 Batch 7 KB-mapped intents; found '.count($mapped).'.');
 }
 
 $manifest = [

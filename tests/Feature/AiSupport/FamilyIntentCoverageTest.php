@@ -26,8 +26,20 @@ class FamilyIntentCoverageTest extends TestCase
             '--plan' => true,
             '--intent' => ['FAM-NOT-REAL-999'],
         ])
-            ->expectsOutputToContain('Unknown Batch 1/2/4 intent')
+            ->expectsOutputToContain('Unknown Family intent')
             ->assertFailed();
+    }
+
+    public function test_mass_runner_can_filter_batch_six_and_includes_all_registered_phrases(): void
+    {
+        $this->artisan('ai-support:test-family-intents', [
+            '--plan' => true,
+            '--batch' => [6],
+        ])
+            ->expectsOutputToContain('25 / 86')
+            ->expectsOutputToContain('100')
+            ->expectsOutputToContain('Routing precheck: PASS')
+            ->assertSuccessful();
     }
 
     public function test_every_deep_runtime_intent_has_three_routing_phrases_and_runtime_evidence(): void

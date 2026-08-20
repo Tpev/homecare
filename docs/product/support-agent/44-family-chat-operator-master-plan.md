@@ -1,8 +1,8 @@
 # Family Chat Operator Master Coverage and Delivery Plan
 
-Status: Active master plan; Batches 1 through 5 are deployed and production-verified for the exact two-user pilot; Batch 6 is next; **Live for everyone remains off**
+Status: Active master plan; Batches 1 through 5 are deployed and production-verified for the exact two-user pilot; Batches 6 and 7 are source-complete and await deployment/authenticated pilot audit; **Live for everyone remains off**
 
-Audited: August 19, 2026
+Audited: August 20, 2026
 
 Owner: Product and Engineering
 
@@ -59,6 +59,24 @@ The following verification passed on August 19, 2026:
 | Batch 1-5 mass harness | 95 tests / 2,409 assertions |
 | Interactive Chromium journeys | 8 / 8 passed, including complete desktop and 390×844 mobile request lifecycles |
 | Responsive support-chat scenarios | 6 / 6 Pixel/Chromium and 6 / 6 iPhone/WebKit passed independently |
+
+### August 20 Batch 6/7 source delta
+
+The tables below retain the production-verified Batch 5 baseline until the next authenticated production audit. The current source adds the following bounded pilot capability:
+
+| Source-complete addition | Result |
+| --- | ---: |
+| Batch 6 applicants, messaging, and hiring intents | 25 / 25 |
+| Batch 7 visit and regular-care intents | 61 / 61 |
+| Combined new governed entries | 32 |
+| Combined new KB evaluation cases | 160 |
+| Match/Visit/Regular routing coverage | 86 / 86 intents; 344 / 344 registered phrases |
+| Explicit KB mappings after Batch 7 | 237 |
+| New default-off confirmed tools | 27 |
+| New capability | `family_care_operations_v1` |
+| Rollout boundary | Existing exact two-user pilot only; Everyone off |
+
+Batch 6 now covers authorized applicant facts, invitations, applicant decisions, exact conversations/messages, and hiring through the existing booking/payment workflow. Batch 7 now covers visit state and changes, cancellation/no-show/completion, submitted hours and corrections, reviews/rebooking, and regular-care offers, counters, extra/skip/schedule/pause/resume/end workflows. Safety, serious disputes, completed-record alteration, exceptional payment handling, credential/blocking concerns, and live-plan caregiver replacement transfer to a human. See [Batch 6](50-applicants-messaging-hiring-batch-6.md) and [Batch 7](51-visits-regular-care-batch-7.md).
 
 ## Current capability inventory
 
@@ -121,36 +139,36 @@ The current implementation already has the correct foundations to expand rather 
 - a mobile full-screen conversation, latest-message behavior, focus preservation, and a persistent human-help action; and
 - compact event, cost, action, and handoff evidence visible through existing support and Admin surfaces.
 
-### Current runtime limitations after Batch 5
+### Current runtime limitations after the Batch 6/7 source build
 
 The operating layer is implemented, but domain breadth is still incomplete:
 
-- all 324 intents are cataloged, while only the high-confidence handlers and explicitly prepared paths have deep runtime authority;
-- 230 intents have explicit KB mappings, while the remaining rows still lack governed knowledge or an authorized live-state reader;
-- the model may interpret an ambiguous goal or bounded profile patch, but it cannot invoke general Family tools or construct a database action;
-- confirmed domain writes are limited to request publication, the approved profile lifecycle, and eligible open-request withdrawal;
-- Batch 2 guidance still does not approve hours, accept or reject a visit change, send a caregiver message, retry a care payment, or mutate an unsupported domain record;
-- authoritative completion verification covers request publication, the saved-payment-method journey, exact care-payment-attention recovery, the Batch 5 profile lifecycle, and eligible request withdrawal—not every highlighted control;
+- all 324 intents are cataloged; deep runtime authority now includes Batches 1–7, while untouched domains retain their declared guide, backlog, or human disposition;
+- 237 intents have explicit KB mappings, while the remaining rows still lack governed knowledge or a complete authorized reader;
+- the model may interpret an ambiguous goal or bounded preparation, but it cannot invoke arbitrary Family tools or construct a database action;
+- confirmed writes now include request publication, profile/request lifecycle, applicant/invitation/message/hire, supported visit/hours/correction/review/rebook, and supported regular-care actions; every other domain remains unavailable or human-only;
+- secure card entry and authentication remain in the existing UI, while exceptional care payments, disputes, completed-record alterations, credential concerns, and live regular-care caregiver replacement remain human-owned;
+- authoritative completion verification covers each implemented confirmed tool but does not turn every highlighted UI control into a verified chat action;
 - the remaining preparation contracts for caregiver messages, submitted-hours correction/dispute, and support intake deliberately do not send, approve, dispute, or submit;
-- payment and submitted-hours reads now have a normalized authorized reader, but secure payment/authentication and hours approval remain in the existing UI;
-- support for hiring, caregiver messaging, visit changes, regular care mutations, Family administration, Continuous Coverage, and exceptional outcomes still needs domain-specific readers, targets, verifiers, and narrow tools; and
+- payment and submitted-hours reads use normalized authorized state; supported hours approval and corrections now use narrow tools, while secure payment/authentication stays in the existing UI;
+- Family administration, login/security, Continuous Coverage management, notifications, privacy/complaints, and unsupported exceptional outcomes remain the main unbuilt domains; and
 - the approved `$30 Family / $27 caregiver / $3 LoLo` support truth is published for the exact two-user production pilot; application pricing reconciliation remains separate.
 
 ### Master execution board
 
 | Workstream | Current position | Target | Delivery state |
 | --- | --- | --- | --- |
-| Intent portfolio | 324 / 324 executable dispositions; 45 established deep rows plus 21 Batch 5 lifecycle rows | Every implemented row retains evidence and rollout state | Batch 5 source complete; expand by domain |
-| Governed knowledge | Family Operations Wave 1, all 18 Batch 4 entries, and all 20 Batch 5 entries published; 230 explicit catalog mappings | Stable domain packs mapped explicitly to every Explain-capable intent | Published for the exact two-user pilot |
+| Intent portfolio | 324 / 324 executable dispositions; Match, Visit, and Regular rows added to the deep operating layer | Every implemented row retains evidence and rollout state | Batch 7 source complete; production audit pending |
+| Governed knowledge | Existing packages published; 32-entry Batch 6/7 package source-complete; 237 explicit catalog mappings | Stable domain packs mapped explicitly to every Explain-capable intent | Batch 6/7 publication pending for the exact pilot |
 | Intent resolution | Layered safety, active task, deterministic prep/handlers, catalog classification, bounded fallback | Add high-confidence domain handlers only with authority/evidence | Batch 3 complete |
-| Authorized reads | Overview plus normalized payment/time and care-profile/request lifecycle state, alongside visits, messages, history, and regular-care state | Narrow normalized readers for every state-dependent supported intent | Batch 5 expanded; continues Batches 6-9 |
+| Authorized reads | Overview, payment/time, profile/request, applicant/message/hiring, visit, and regular-care state | Narrow normalized readers for every state-dependent supported intent | Batch 7 expanded; continues Batches 8-9 |
 | Navigation and guidance | 24 Family destinations; 19 exact highlights | Every guided intent has a resource-authorized target, one-step instruction, and recovery behavior | Foundation complete; coverage expands by domain |
 | Preparation/prefill | Five reversible Batch 3 contracts, care-request chat draft, and Batch 5 multi-turn profile/request preparation | Add domain contracts only for supported existing forms | Batch 5 expanded; continue by domain |
-| Confirmed execution | Request publication, profile lifecycle, and eligible request-withdrawal tools | Narrow confirmed tools for appropriate existing domain services | Batch 5 expanded; continues Batches 6-8 |
-| Authoritative verification | Generic registry; request receipts, saved payment method, exact payment-attention clearing, profile lifecycle, and request withdrawal proven | Every complete journey has a domain receipt or fresh state verifier | Batch 5 expanded; continue by domain |
+| Confirmed execution | Batches 1–7 narrow tools, including 27 new applicant/visit/regular-care tools | Narrow confirmed tools for appropriate existing domain services | Batch 7 source complete; pilot audit pending |
+| Authoritative verification | Generic registry plus domain receipts for each supported confirmed action | Every complete journey has a domain receipt or fresh state verifier | Batch 7 source complete; pilot audit pending |
 | Human support | Atomic same-conversation transfer, Admin alert, context summary | Human terminal path for every judgment/exception intent with no repetition | Implemented; refine with domain context |
 | Older-adult UI | State-aware start, mobile chat, universal contextual follow-ups, action progress, recovery, and guide highlight | Complete more domain journeys without adding cognitive load | Batch 3 complete; usability expands by domain |
-| Evaluation | 324 catalog rows, 230 mappings, 1,296 definitions, 20 Batch 5 entries, 100 Batch 5 KB cases, 137 established routes, 64 Batch 5 routes, and 10 collisions; the post-production-correction mass harness passes 95 tests / 2,409 assertions, the full suite passes 187 / 3,218, and desktop, 390 × 844, Pixel, iPhone, and exact-pilot production lifecycle regressions are green | Per-intent multi-turn, state, browser, and usability coverage | Batch 5 complete; expand with Batch 6 |
+| Evaluation | 324 catalog rows, 237 mappings, plus 32 Batch 6/7 entries, 160 linked cases, 86 / 86 intents, 344 / 344 registered phrases, and domain confirmation regressions; prior production browser baselines remain green | Per-intent multi-turn, state, browser, and usability coverage | Batch 7 source complete; production browser audit pending |
 | Admin visibility | KB lifecycle, transcripts, Availability, searchable 324-intent catalog, and compact outcome summary | Add useful domain funnel detail without transcript duplication | Batch 3 complete; refine by domain |
 
 ## Knowledge-base audit
@@ -168,6 +186,7 @@ Family Operations KB Wave 1, the 18-entry Batch 4 payment/time package, and the 
 | Family Operations Wave 1 | 50 new + 1 revision | Payments, requests/applicants, visits/hours, profiles/access, messages/notifications, regular care, and history |
 | Payment/time Batch 4 | 18 new | `$30 / $27 / $3` pricing, payment lifecycle/failures/recovery/history/refunds/disputes, and submitted-hours/correction state |
 | Profile/request Batch 5 | 20 new | Profile visibility, permissions, readiness, lifecycle actions, request state/blockers, reuse, replacement, copy, withdrawal, and recovery |
+| Marketplace care Batches 6/7 — publication pending | 32 new | Applicant matching/invitations/messages/hiring, visits/hours/corrections/reviews/rebooking, and regular-care offers/counters/extra/skip/schedule/pause/resume/end |
 
 `KB-B4-PRICE-001` is the current approved support definition: `$30/hour` paid by the Family, `$27/hour` earned by the caregiver, and `$3/hour` received by LoLo. The runtime supports deterministic, publication-gated quotation and explicit-duration calculations. Batch 4 deliberately does not alter current payment code; that implementation reconciliation remains a separate product task.
 
@@ -179,17 +198,17 @@ The KB lifecycle and Admin UI are implemented; the missing work is breadth and m
 - Family membership, invitations, permissions, removal, leaving, and ownership edge cases;
 - deeper profile edge cases beyond the governed visibility, readiness, lifecycle, and current-care boundaries;
 - deeper request edge cases beyond the governed status, blocker, replacement, withdrawal, duplication, expiry, and copy behavior;
-- applicant comparison, invitations, rejection, messaging, hiring prerequisites, and failures;
+- deeper applicant/hiring edge cases beyond the Batch 6 visible-fact, invitation, decision, messaging, and confirmed-hire contracts;
 - payment behaviors outside the Batch 4 lifecycle/recovery definitions and exceptional financial decisions;
-- visit changes, cancellation, no-show, check-in/out, and visit behaviors outside submitted-hours/correction coverage;
-- regular-care offers, counters, extra visits, skipping, schedule changes, pause, resume, and ending;
+- visit edge cases outside the Batch 7 change, cancellation, no-show, completion, hours, correction, review, and rebook contracts;
+- regular-care edge cases outside the Batch 7 offer, counter, extra, skip, schedule, pause, resume, and end contracts;
 - messages, notification state, notification preferences, and communication recovery;
 - care-history totals, records, receipts, downloads, and rebooking; and
 - complaints, privacy requests, safety reports, unavailable product behavior, and human-only exceptional handling.
 
 New knowledge must be authored as stable product facts or task playbooks, not one long article and not one entry per wording variant. One entry may support several intent IDs. Every covered intent maps explicitly to one or more KB stable IDs in the executable intent catalog.
 
-Family Operations Wave 1, Batch 4, and Batch 5 together map 230 unique Family intents. Remaining major gaps are login/security, Family administration, hiring and caregiver messaging, visit and regular-care actions, Continuous Coverage, complaints/privacy, exceptional handling, and deeper domain edge cases. Final breadth remains determined by distinct truths, permissions, failure behavior, and review cadence rather than a quota.
+Family Operations Wave 1 and Batches 4–7 together map 237 unique Family intents in source. Remaining major gaps are login/security, Family administration, Continuous Coverage, notifications, complaints/privacy, exceptional handling, and deeper domain edge cases. Final breadth remains determined by distinct truths, permissions, failure behavior, and review cadence rather than a quota.
 
 ## Definition of an AI-owned journey
 

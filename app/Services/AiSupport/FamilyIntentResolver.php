@@ -18,6 +18,28 @@ class FamilyIntentResolver
     /** @return array{status:string,intent_id:?string,candidate_ids:list<string>,confidence:float,source:string} */
     public function resolve(string $message): array
     {
+        $exactIntent = $this->exactCatalogIntent($message);
+        if ($exactIntent !== null) {
+            return [
+                'status' => self::STATUS_RECOGNIZED,
+                'intent_id' => $exactIntent,
+                'candidate_ids' => [$exactIntent],
+                'confidence' => 1.0,
+                'source' => 'catalog_exact',
+            ];
+        }
+
+        $batchSevenIntent = $this->batchSevenIntent($message);
+        if ($batchSevenIntent !== null) {
+            return [
+                'status' => self::STATUS_RECOGNIZED,
+                'intent_id' => $batchSevenIntent,
+                'candidate_ids' => [$batchSevenIntent],
+                'confidence' => 1.0,
+                'source' => 'deterministic_batch67',
+            ];
+        }
+
         $batchFiveIntent = $this->batchFiveIntent($message);
         if ($batchFiveIntent !== null) {
             return [
@@ -146,6 +168,24 @@ class FamilyIntentResolver
     private function normalize(string $value): string
     {
         return trim((string) preg_replace('/\s+/', ' ', mb_strtolower(strip_tags($value))));
+    }
+
+    private function exactCatalogIntent(string $message): ?string
+    {
+        $normalized = $this->normalize($message);
+        if ($normalized === '') {
+            return null;
+        }
+        $matches = collect($this->catalog->records())->filter(function (array $record) use ($normalized): bool {
+            $phrases = [
+                ...(array) data_get($record, 'phrases.ordinary', []),
+                ...(array) data_get($record, 'phrases.imperfect', []),
+            ];
+
+            return collect($phrases)->contains(fn (string $phrase): bool => $this->normalize($phrase) === $normalized);
+        });
+
+        return $matches->count() === 1 ? (string) $matches->first()['intent_id'] : null;
     }
 
     private function preparationIntent(string $message): ?string
@@ -283,6 +323,121 @@ class FamilyIntentResolver
         if (! preg_match('/\b(?:care\s+)?request\b/', $value)
             && preg_match('/\bcreate\b.*\b(?:care\s+(?:receiver|recipient)\s+)?profile\b|\bmake\b.*\bnew\b.*\bprofile\b|\badd\b.*\bcare\s+(?:receiver|recipient)\s+profile\b/', $value)) {
             return 'FAM-PROFILE-003';
+        }
+
+        return null;
+    }
+
+    private function batchSevenIntent(string $message): ?string
+    {
+        $value = $this->normalize($message);
+
+        if (preg_match('/\b(?:replace|change)\b.*\bregular\b.*\bcaregiver\b|\bnew\s+caregiver\b.*\bregular\s+care\b/', $value)) {
+            return 'FAM-REGULAR-026';
+        }
+        if (preg_match('/\bend\b.*\bregular\s+care\b.*\bcancel\b.*\bnext\b|\bcancel\b.*\bnext\b.*\bend\b.*\bregular\s+care\b/', $value)) {
+            return 'FAM-REGULAR-023';
+        }
+        if (preg_match('/\b(?:end|stop)\b.*\b(?:regular|recurring|weekly)\s+care\b/', $value)) {
+            return 'FAM-REGULAR-022';
+        }
+        if (preg_match('/\bresume\b.*\b(?:regular|recurring|weekly)\s+care\b/', $value)) {
+            return 'FAM-REGULAR-021';
+        }
+        if (preg_match('/\bpause\b.*\b(?:regular|recurring|weekly)\s+care\b/', $value)) {
+            return 'FAM-REGULAR-020';
+        }
+        if (preg_match('/\b(?:change|move|update)\b.*\b(?:regular|recurring|weekly)\b.*\bschedule\b/', $value)) {
+            return 'FAM-REGULAR-019';
+        }
+        if (preg_match('/\bapprove\b.*\bcompleted\s+extra\s+visit\b|\bcompleted\s+extra\s+visit\b.*\bapprove\b/', $value)) {
+            return 'FAM-REGULAR-014';
+        }
+        if (preg_match('/\b(?:add|request|book)\b.*\bextra\s+visit\b/', $value)) {
+            return 'FAM-REGULAR-012';
+        }
+        if (preg_match('/\bskip\b.*\b(?:regular|weekly|recurring)?\s*(?:care\s+)?visit\b/', $value)) {
+            return 'FAM-REGULAR-011';
+        }
+        if (preg_match('/\baccept\b.*\b(?:regular\s+care\s+)?counter(?:offer)?\b|\bcounteroffer\b.*\baccept\b/', $value)) {
+            return 'FAM-REGULAR-008';
+        }
+        if (preg_match('/\b(?:counteroffer|counter\s+offer)\b/', $value)) {
+            return 'FAM-REGULAR-007';
+        }
+        if (preg_match('/\b(?:set\s+up|start|offer)\b.*\b(?:regular|recurring|weekly)\s+care\b.*\b(?:caregiver|with)\b/', $value)) {
+            return 'FAM-REGULAR-002';
+        }
+        if (preg_match('/\b(?:next|upcoming)\b.*\b(?:regular|recurring|weekly)\s+care\s+visit\b|\b(?:regular|recurring|weekly)\s+care\b.*\b(?:next|upcoming|scheduled)\s+visit\b/', $value)) {
+            return 'FAM-REGULAR-009';
+        }
+
+        if (preg_match('/\b(?:book|hire)\b.*\b(?:same|again)\b.*\bcaregiver\b|\brebook\b.*\bcaregiver\b/', $value)) {
+            return 'FAM-VISIT-032';
+        }
+        if (preg_match('/\b(?:reject|decline)\b.*\b(?:caregiver(?:\'s)?\s+change\s+request|(?:caregiver(?:\'s)?\s+)?(?:requested|proposed)?\s*(?:visit|schedule)\s+change)\b/', $value)) {
+            return 'FAM-VISIT-011';
+        }
+        if (preg_match('/\baccept\b.*\b(?:caregiver(?:\'s)?\s+change\s+request|(?:caregiver(?:\'s)?\s+)?(?:requested|proposed)?\s*(?:visit|schedule)\s+change)\b/', $value)) {
+            return 'FAM-VISIT-010';
+        }
+        if (preg_match('/\b(?:review|show|check)\b.*\bcaregiver(?:\'s)?\b.*\b(?:visit|schedule)\s+change\s+request\b/', $value)) {
+            return 'FAM-VISIT-009';
+        }
+        if (preg_match('/\b(?:leave|submit|give)\b.*\b(?:[1-5]|one|two|three|four|five)\s*(?:star|stars)\b|\b(?:leave|write|submit|post)\b.*\breview\b.*\bcaregiver\b|\breview\b.*\bcaregiver\b.*\b(?:after|completed|finished)\b/', $value)) {
+            return 'FAM-VISIT-030';
+        }
+        if (preg_match('/\bapprove\b.*\btime\s+correction\b|\btime\s+correction\b.*\bapprove\b/', $value)) {
+            return 'FAM-VISIT-024';
+        }
+        if (preg_match('/\bapprove\b.*\b(?:submitted\s+)?hours\b|\b(?:submitted\s+)?hours\b.*\bapprove\b/', $value)) {
+            return 'FAM-VISIT-020';
+        }
+        if (preg_match('/\b(?:mark|tell)\b.*\bvisit\b.*\b(?:complete|completed|ended)\b|\bvisit\b.*\bmark\b.*\bcomplete\b/', $value)) {
+            return 'FAM-VISIT-017';
+        }
+        if (preg_match('/\b(?:no\s*show|didn\'?t\s+show|did\s+not\s+show)\b/', $value)) {
+            return 'FAM-VISIT-014';
+        }
+        if (preg_match('/\b(?:cancel|cancellation)\b.*\b(?:scheduled\s+)?visit\b|\bvisit\b.*\b(?:cancel|cancellation)\b/', $value)) {
+            return str_contains($value, 'request') ? 'FAM-VISIT-006' : 'FAM-VISIT-007';
+        }
+        if (preg_match('/\b(?:reschedule|move|change)\b.*\bvisit\b|\bvisit\b.*\b(?:reschedule|move)\b/', $value)) {
+            return 'FAM-VISIT-005';
+        }
+        if (preg_match('/\b(?:current|today\'?s)\b.*\bvisit\b.*\b(?:status|happening|now|scheduled)\b|\bvisit\b.*\b(?:happening\s+now|current\s+status)\b/', $value)) {
+            return 'FAM-VISIT-003';
+        }
+        if (preg_match('/\b(?:next|upcoming|today\'?s|current)\b.*\bvisit\b|\bwhen\b.*\bnext\b.*\bcaregiver\b/', $value)) {
+            return 'FAM-VISIT-001';
+        }
+
+        if (preg_match('/\bhire\b.*\b(?:caregiver|applicant)\b|\bhire\s+[\p{L}][\p{L}\' -]*\b|\bselect\b.*\bcaregiver\b.*\brequest\b/u', $value)) {
+            return 'FAM-MATCH-020';
+        }
+        if (preg_match('/\b(?:decline|reject|not\s+this)\b.*\b(?:caregiver|applicant)\b/', $value)) {
+            return 'FAM-MATCH-016';
+        }
+        if (preg_match('/\b(?:shortlist|save)\b.*\b(?:caregiver|applicant)\b.*\b(?:later|follow|request)?\b/', $value)) {
+            return 'FAM-MATCH-015';
+        }
+        if (preg_match('/\bcompare\b.*\b(?:caregiver|applicant)s?\b|\bwhich\b.*\bcaregiver\b.*\bchoose\b/', $value)) {
+            return 'FAM-MATCH-014';
+        }
+        if (preg_match('/\bcancel\b.*\binvitation\b/', $value)) {
+            return 'FAM-MATCH-012';
+        }
+        if (preg_match('/\b(?:reinvite|invite\s+again)\b.*\bcaregiver\b/', $value)) {
+            return 'FAM-MATCH-010';
+        }
+        if (preg_match('/\binvite\b.*\bcaregiver\b.*\brequest\b|\binvite\s+[\p{L}][\p{L}\' -]*\b.*\brequest\b|\binvite\b.*\bto\b.*\brequest\b/u', $value)) {
+            return 'FAM-MATCH-008';
+        }
+        if (preg_match('/\b(?:send|write|message|tell)\b.*\b(?:caregiver|applicant)\b.*\b(?:message|say|tell|that)\b|\b(?:send|message|tell)\s+[\p{L}][\p{L}\' -]*\b.*\b(?:message|say|tell|that)\b|\bmessage\b.*\b(?:caregiver|applicant)\b/u', $value)) {
+            return 'FAM-MATCH-018';
+        }
+        if (preg_match('/\b(?:who|caregiver|applicant)\b.*\b(?:applied|applications?|replied)\b/', $value)) {
+            return 'FAM-MATCH-013';
         }
 
         return null;

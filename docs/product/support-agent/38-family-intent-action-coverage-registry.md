@@ -1,6 +1,6 @@
 # Family Intent and AI Action Coverage Registry
 
-Status: Active coverage registry; executable Batch 3 catalog generated and validated from all 324 rows
+Status: Active coverage registry; executable Batch 7 catalog generated and validated from all 324 rows
 
 Established: August 17, 2026
 
@@ -17,13 +17,15 @@ This registry answers two separate questions for every likely Family-user intent
 
 It is deliberately broader than the current AI feature. It inventories the actual Family-facing application, then adds probable user needs and failure cases that may not yet have a complete product flow. A row marked as a product gap must not be mistaken for an AI implementation task until Product defines the underlying app behavior.
 
-Baseline source: production-oriented repository state audited August 19, 2026, the governed KB inventory including Family Operations Wave 1, the Batch 4 payment/time package, the Batch 5 profile/request package, and the Family operating layer. Payment-method rows include Batch 1; request, visit, hours, profile, message, history, care-payment, and Family-overview rows include Batch 2; every row has an executable disposition; five reversible preparation families are implemented in Batch 3; pricing/payment/submitted-hours knowledge plus normalized reads are implemented in Batch 4; and care-profile plus request-lifecycle reads and confirmed actions are implemented in Batch 5 source. Production availability remains controlled separately. Re-audit this registry whenever a Family workflow, AI tool, governed KB entry, or authorization rule changes.
+Baseline source: production-oriented repository state audited August 20, 2026, the governed KB inventory including Family Operations Wave 1 and the Batch 4–7 packages, and the Family operating layer. Payment-method rows include Batch 1; request, visit, hours, profile, message, history, care-payment, and Family-overview rows include Batch 2; every row has an executable disposition; five reversible preparation families are implemented in Batch 3; pricing/payment/submitted-hours knowledge plus normalized reads are implemented in Batch 4; care-profile plus request-lifecycle reads and confirmed actions are implemented in Batch 5; and the Match, Visit, and Regular domains have Batch 6/7 readers, knowledge, human boundaries, and narrow confirmed actions in source. Production availability remains controlled separately and Live for everyone remains off. Re-audit this registry whenever a Family workflow, AI tool, governed KB entry, or authorization rule changes.
 
 The phased implementation and testing sequence for moving this portfolio from explanation/navigation to verified task completion is defined in the [Family chat operator master coverage and delivery plan](44-family-chat-operator-master-plan.md).
 
 ## Automated coverage of implemented rows
 
-The registry is the human-readable source for the generated 324-intent executable catalog. The [Family Batch 1–5 evaluation harness](40-family-batch-1-2-evaluation-harness.md) validates **324 / 324** catalog records, **230 / 230** explicit KB mappings, and **1,296** phrase definitions. Its regression covers the deterministic read/guide rows implemented in Batches 1 and 2, the reusable Batch 3 task, verifier, preparation, start-card, security, and Admin contracts, the Batch 4 payment/time reader, knowledge, pricing, and recovery paths, and the Batch 5 profile/request knowledge, state, preparation, confirmation, execution, verification, and recovery paths.
+The registry is the human-readable source for the generated 324-intent executable catalog. The mass harness validates **324 / 324** catalog records, **237 / 237** explicit KB mappings, and **1,296** phrase definitions. Its regression covers the deterministic read/guide rows implemented in Batches 1 and 2, the reusable Batch 3 task, verifier, preparation, start-card, security, and Admin contracts, the Batch 4 payment/time paths, the Batch 5 profile/request lifecycle, and the Batch 6/7 applicant, messaging, hiring, visit, submitted-hours, and regular-care operating layer.
+
+The August 20, 2026 Batch 6/7 source baseline adds 32 governed entries, 160 linked KB evaluations, all 86 Match/Visit/Regular intent mappings, 86 / 86 intent checks across all 344 registered phrases, 27 registered default-off tools, exact-account readers, recap-confirm-execute-receipt flows, stale/idempotency protection, and exact-two-pilot-only activation. Production deployment and authenticated browser verification remain pending and are not claimed by this source record.
 
 The August 19, 2026 Batch 5 completion baseline validates 324 of 324 catalog records, 230 of 230 KB mappings, 137 of 137 established representative phrases, 64 of 64 Batch 5 lifecycle phrases, and 10 of 10 collision cases. The isolated mass harness passes 88 application tests with 2,378 assertions, and the complete AI Support suite passes 180 tests with 3,187 assertions. Batch 5 adds 20 governed entries, 100 linked evaluations, all 71 care-profile/request mappings, authorized profile/request state, multi-turn profile drafting, recap-confirm-execute-verification, independently verified default/archive/restore, exact status/blocker/applicant reads, distinct reuse/duplicate/replacement/copy behavior, copied-draft validation recovery, withdrawal, fresh publication, stale and denied recovery, and exact-pilot-only activation. Deterministic paths make no provider call unless bounded profile-language interpretation is actually required. Catalog validation is not a claim that all 324 intents can execute a domain action: each record's current stages and rollout state remain authoritative. Guide, preparation, confirmed execution, and verified completion remain distinct coverage levels.
 
@@ -239,31 +241,31 @@ Batch 3 adds an executable operational view without rewriting these baseline inv
 
 | ID | Family intent | Product today | AI explain now | AI do now | Recommended target behavior |
 | --- | --- | --- | --- | --- | --- |
-| FAM-MATCH-001 | Browse caregivers | UI | No | No | Explain and navigate to authorized search |
-| FAM-MATCH-002 | Search caregivers by name, location, availability, or fit | UI / Partial UI | No | No | Add navigation and structured filters; never promise availability |
-| FAM-MATCH-003 | Filter caregivers by certifications or verification status | UI | No | No | Explain verified versus self-reported credentials and navigate |
-| FAM-MATCH-004 | Understand profile ratings, reviews, experience, reliability, or completed visits | UI | No | No | Add governed field definitions and authoritative profile read |
-| FAM-MATCH-005 | View a caregiver profile | UI | No | No | Register authorization-aware navigation target |
-| FAM-MATCH-006 | Understand why a caregiver is recommended | Partial UI | No | No | Define recommendation explanation before AI use |
-| FAM-MATCH-007 | Find matching caregivers for a request | UI | No | No | Read request needs and open structured matching UI |
-| FAM-MATCH-008 | Invite a caregiver to an open request | UI | No | No | Prepare invitation preferences/message; recap; confirm & send |
-| FAM-MATCH-009 | Invite someone the Family already knows | UI | No | No | Prepare and confirm invitation; explain recipient requirements |
-| FAM-MATCH-010 | Reinvite a caregiver | UI | No | No | Read prior invitation state then confirm & execute |
-| FAM-MATCH-011 | See invitation status | UI | No | No | Add authoritative invitation-state read |
-| FAM-MATCH-012 | Cancel a caregiver invitation | Partial UI | No | No | Define supported cancellation state and confirm & execute |
+| FAM-MATCH-001 | Browse caregivers | UI | Yes | Read / Guide | Explain and navigate to authorized search |
+| FAM-MATCH-002 | Search caregivers by name, location, availability, or fit | UI / Partial UI | Yes | Read / Guide | Add navigation and structured filters; never promise availability |
+| FAM-MATCH-003 | Filter caregivers by certifications or verification status | UI | Yes | Read / Guide | Explain verified versus self-reported credentials and navigate |
+| FAM-MATCH-004 | Understand profile ratings, reviews, experience, reliability, or completed visits | UI | Yes | Read / Guide | Add governed field definitions and authoritative profile read |
+| FAM-MATCH-005 | View a caregiver profile | UI | Yes | Read / Guide | Register authorization-aware navigation target |
+| FAM-MATCH-006 | Understand why a caregiver is recommended | Partial UI | Yes | Read / Guide | Define recommendation explanation before AI use |
+| FAM-MATCH-007 | Find matching caregivers for a request | UI | Yes | Read / Guide | Read request needs and open structured matching UI |
+| FAM-MATCH-008 | Invite a caregiver to an open request | UI | Yes | Yes | Prepare invitation preferences/message; recap; confirm & send |
+| FAM-MATCH-009 | Invite someone the Family already knows | UI | Yes | Yes | Prepare and confirm invitation; explain recipient requirements |
+| FAM-MATCH-010 | Reinvite a caregiver | UI | Yes | Yes | Read prior invitation state then confirm & execute |
+| FAM-MATCH-011 | See invitation status | UI | Yes | Read / Guide | Add authoritative invitation-state read |
+| FAM-MATCH-012 | Cancel a caregiver invitation | Partial UI | Yes | Yes | Define supported cancellation state and confirm & execute |
 | FAM-MATCH-013 | See caregivers who applied or replied | UI | Yes | Read / Guide | Read pending applied/shortlisted counts and open the exact applicant area |
-| FAM-MATCH-014 | Compare applicants | UI | No | No | Summarize only authorized comparable fields; user decides |
-| FAM-MATCH-015 | Shortlist or save an applicant for later | UI | No | No | Confirm & execute low-risk state change |
-| FAM-MATCH-016 | Reject or mark “not this caregiver” | UI | No | No | Explain impact then confirm & execute |
-| FAM-MATCH-017 | Start or open a conversation with an applicant | UI | Partial | Read / Guide | Open the newest/unread authorized existing conversation; creating a new conversation remains normal UI work |
-| FAM-MATCH-018 | Send a message to an applicant or hired caregiver | UI | No | No | Prepare message; user reviews and explicitly sends |
-| FAM-MATCH-019 | Understand whether a message was delivered or read | Partial UI | No | No | Read only authoritative delivery state; never infer reading |
-| FAM-MATCH-020 | Hire a caregiver who applied | UI | No | No | Read eligibility/payment prerequisites; recap; confirm & execute |
-| FAM-MATCH-021 | Understand what hiring does to the request and booking | UI | Partial | No | Add governed lifecycle explanation |
-| FAM-MATCH-022 | Understand why hiring is blocked | UI | No | No | Read exact authorization/payment/request state and explain |
-| FAM-MATCH-023 | Choose between multiple caregivers | UI | No | No | Explain comparison factors; never make the final decision autonomously |
-| FAM-MATCH-024 | Report misleading profile information or credential concerns | Human | No | Transfer | Prepare report and transfer to human review |
-| FAM-MATCH-025 | Block a caregiver from future contact or matching | Gap / Human | No | No | Define product/safety workflow; human until implemented |
+| FAM-MATCH-014 | Compare applicants | UI | Yes | Read / Guide | Summarize only authorized comparable fields; user decides |
+| FAM-MATCH-015 | Shortlist or save an applicant for later | UI | Yes | Yes | Confirm & execute low-risk state change |
+| FAM-MATCH-016 | Reject or mark “not this caregiver” | UI | Yes | Yes | Explain impact then confirm & execute |
+| FAM-MATCH-017 | Start or open a conversation with an applicant | UI | Yes | Read / Guide / Yes | Open an authorized conversation or recap and confirm creation |
+| FAM-MATCH-018 | Send a message to an applicant or hired caregiver | UI | Yes | Yes | Prepare message; user reviews and explicitly sends |
+| FAM-MATCH-019 | Understand whether a message was delivered or read | Partial UI | Yes | Read / Guide | Read only authoritative delivery state; never infer reading |
+| FAM-MATCH-020 | Hire a caregiver who applied | UI | Yes | Yes | Read eligibility/payment prerequisites; recap; confirm & execute |
+| FAM-MATCH-021 | Understand what hiring does to the request and booking | UI | Yes | Read / Guide | Add governed lifecycle explanation |
+| FAM-MATCH-022 | Understand why hiring is blocked | UI | Yes | Read / Guide | Read exact authorization/payment/request state and explain |
+| FAM-MATCH-023 | Choose between multiple caregivers | UI | Yes | Read / Guide | Explain comparison factors; never make the final decision autonomously |
+| FAM-MATCH-024 | Report misleading profile information or credential concerns | Human | Yes | Transfer | Prepare report and transfer to human review |
+| FAM-MATCH-025 | Block a caregiver from future contact or matching | Gap / Human | Yes | Transfer | Human until a deterministic block workflow is implemented |
 
 ## 7. Billing, saved cards, authorizations, charges, refunds, and failures
 
@@ -307,71 +309,71 @@ Batch 3 adds an executable operational view without rewriting these baseline inv
 | ID | Family intent | Product today | AI explain now | AI do now | Recommended target behavior |
 | --- | --- | --- | --- | --- | --- |
 | FAM-VISIT-001 | View the next scheduled visit | UI | Yes | Read / Guide | Read the next/current authorized booking and open its exact visit area |
-| FAM-VISIT-002 | View visit date, time, duration, location, tasks, and instructions | UI | No | No | Add authorized booking read with field-level privacy |
+| FAM-VISIT-002 | View visit date, time, duration, location, tasks, and instructions | UI | Yes | Read / Guide | Add authorized booking read with field-level privacy |
 | FAM-VISIT-003 | Understand the current visit status | UI | Yes | Read / Guide | Explain the normalized live/scheduled status and open the visit |
-| FAM-VISIT-004 | Message the hired caregiver before or during a visit | UI | No | No | Navigate or prepare message; explicit send |
-| FAM-VISIT-005 | Request a reschedule | UI | No | No | Prepare change request; recap; explicit send |
-| FAM-VISIT-006 | Request a visit cancellation | UI | No | No | Explain policy/impact; recap; confirm & execute or send request |
-| FAM-VISIT-007 | Cancel a scheduled visit directly when allowed | UI | No | No | Read eligibility/impact; confirm & execute |
-| FAM-VISIT-008 | Understand late-cancellation consequences | Partial UI | No | No | Add authoritative policy explanation before confirmation |
-| FAM-VISIT-009 | Review a caregiver's schedule-change request | UI | Partial | Read / Guide | Detect the pending caregiver request and highlight the exact decision card; full current/proposed recap remains |
-| FAM-VISIT-010 | Accept a caregiver's change request | UI | Partial | Guide | Highlight the normal Accept/Reject decision card; the user performs the decision in the app |
-| FAM-VISIT-011 | Reject a caregiver's change request | UI | Partial | Guide | Highlight the normal Accept/Reject decision card; the user performs the decision in the app |
-| FAM-VISIT-012 | Understand caregiver check-in or check-out state | UI | No | No | Add authorized live-state read |
-| FAM-VISIT-013 | Report that a caregiver is late | Human / Partial UI | No | No | Prepare support contact; distinguish late from no-show |
-| FAM-VISIT-014 | Mark a caregiver as no-show | UI | No | No | Read eligibility and consequences; explicit confirmation |
-| FAM-VISIT-015 | Report a safety incident during or after care | UI / Human | No | No | Prepare structured incident; urgent safety rule; human review |
-| FAM-VISIT-016 | Create a support ticket about the visit | UI | Partial | Transfer | Prefer same support conversation with booking context |
-| FAM-VISIT-017 | Tell the app that the visit ended | UI | No | No | Read booking state; confirm & execute |
+| FAM-VISIT-004 | Message the hired caregiver before or during a visit | UI | Yes | Yes | Navigate or prepare message; explicit send |
+| FAM-VISIT-005 | Request a reschedule | UI | Yes | Yes | Prepare change request; recap; explicit send |
+| FAM-VISIT-006 | Request a visit cancellation | UI | Yes | Yes | Explain policy/impact; recap; confirm & send request |
+| FAM-VISIT-007 | Cancel a scheduled visit directly when allowed | UI | Yes | Yes | Read eligibility/impact; confirm & execute |
+| FAM-VISIT-008 | Understand late-cancellation consequences | Partial UI | Yes | Read / Guide / Yes | Add authoritative policy explanation before confirmation |
+| FAM-VISIT-009 | Review a caregiver's schedule-change request | UI | Yes | Read / Guide | Detect the pending caregiver request and show full current/proposed recap |
+| FAM-VISIT-010 | Accept a caregiver's change request | UI | Yes | Yes | Full recap, explicit confirmation, execution, and receipt |
+| FAM-VISIT-011 | Reject a caregiver's change request | UI | Yes | Yes | Full recap, explicit confirmation, execution, and receipt |
+| FAM-VISIT-012 | Understand caregiver check-in or check-out state | UI | Yes | Read / Guide | Add authorized live-state read |
+| FAM-VISIT-013 | Report that a caregiver is late | Human / Partial UI | Yes | Guide / Transfer | Distinguish late from no-show; message or same-conversation transfer |
+| FAM-VISIT-014 | Mark a caregiver as no-show | UI | Yes | Yes | Read eligibility and consequences; explicit confirmation |
+| FAM-VISIT-015 | Report a safety incident during or after care | UI / Human | Yes | Transfer | Urgent safety rule and same-conversation human review |
+| FAM-VISIT-016 | Create a support ticket about the visit | UI | Yes | Transfer | Prefer same support conversation with booking context |
+| FAM-VISIT-017 | Tell the app that the visit ended | UI | Yes | Yes | Read booking state; confirm & execute |
 | FAM-VISIT-018 | Understand what a timesheet or submitted-hours review is | UI | Yes | Read / Guide | Read whether submitted hours need attention and open the exact hours area |
 | FAM-VISIT-019 | Review caregiver-submitted start, end, duration, tasks, and notes | UI | Yes | Read / Guide | Read the authoritative submission and present a concise recap |
-| FAM-VISIT-020 | Approve submitted hours and payment | UI | Partial | Guide | Read the submitted duration and highlight the normal review/approval area; AI execution remains restricted |
-| FAM-VISIT-021 | Question submitted hours | UI | No | No | Prepare dispute/change request; explicit submission |
-| FAM-VISIT-022 | Ask caregiver to correct submitted time | UI | No | No | Prepare reason and proposed correction; explicit send |
+| FAM-VISIT-020 | Approve submitted hours and payment | UI | Yes | Yes | Read duration/amount; recap; confirm; execute through authoritative payment service |
+| FAM-VISIT-021 | Question submitted hours | UI | Yes | Prepare / Transfer | Prepare current correction request when available; otherwise transfer with context |
+| FAM-VISIT-022 | Ask caregiver to correct submitted time | UI | Yes | Yes / Transfer | Prepare exact reason and confirm send when a correction exists; transfer exceptions |
 | FAM-VISIT-023 | Review a caregiver-submitted time correction | UI | Yes | Read / Guide | Recap original versus proposed hours and open the exact review section |
-| FAM-VISIT-024 | Approve a time correction and payment | UI | No | No | Two-step recap and explicit confirm & execute |
-| FAM-VISIT-025 | Request changes to a time correction | UI | No | No | Prepare request; explicit send |
+| FAM-VISIT-024 | Approve a time correction and payment | UI | Yes | Yes | Two-step recap and explicit confirm & execute |
+| FAM-VISIT-025 | Request changes to a time correction | UI | Yes | Yes | Prepare request; explicit send |
 | FAM-VISIT-026 | Continue payment after a correction requires card action | UI | Partial | Guide | Read the payment-action-required state and highlight the secure continuation control |
-| FAM-VISIT-027 | Escalate a time correction to LoLo | UI / Human | No | Transfer | Transfer with booking/correction context |
-| FAM-VISIT-028 | Open a dispute after care | UI / Human | No | No | Prepare dispute, show effect, explicit submit; human review |
+| FAM-VISIT-027 | Escalate a time correction to LoLo | UI / Human | Yes | Transfer | Transfer with booking/correction context |
+| FAM-VISIT-028 | Open a dispute after care | UI / Human | Yes | Transfer | Preserve exact context for human review; no automated finding |
 | FAM-VISIT-029 | Understand dispute status | UI / Human | Yes | Read / Guide | Read the authoritative case status and next action without promising an outcome or time |
-| FAM-VISIT-030 | Leave a star rating and review | UI | No | No | Prepare text, user selects rating and explicitly submits |
-| FAM-VISIT-031 | Edit or remove a submitted review | Gap / Human | No | No | Define moderation/edit policy before AI work |
-| FAM-VISIT-032 | Book the same caregiver again | UI | No | No | Prepare one-time invite with new schedule; confirm & send |
-| FAM-VISIT-033 | Turn a successful visit into regular care | UI | Partial | No | Prepare recurring offer; recap; confirm & send |
+| FAM-VISIT-030 | Leave a star rating and review | UI | Yes | Yes | Prepare text/rating, recap, confirm, submit, and verify |
+| FAM-VISIT-031 | Edit or remove a submitted review | Gap / Human | Yes | Transfer | Human until moderation/edit policy is defined |
+| FAM-VISIT-032 | Book the same caregiver again | UI | Yes | Yes | Prepare one-time invite with new schedule; confirm & send |
+| FAM-VISIT-033 | Turn a successful visit into regular care | UI | Yes | Yes | Prepare recurring offer; recap; confirm & send |
 | FAM-VISIT-034 | Understand whether approving hours triggers payment | UI | Yes | Read / Guide | Explain the approved lifecycle and use current authorized visit/payment state for a specific case |
-| FAM-VISIT-035 | Correct a completed visit record | Human | No | Transfer | Human only with audit preservation |
+| FAM-VISIT-035 | Correct a completed visit record | Human | Yes | Transfer | Human only with audit preservation |
 
 ## 9. Regular care plans and extra visits
 
 | ID | Family intent | Product today | AI explain now | AI do now | Recommended target behavior |
 | --- | --- | --- | --- | --- | --- |
-| FAM-REGULAR-001 | View active, paused, pending, or ended regular-care plans | UI | Partial | Read / Guide | Batch 2 guides exact regular-care attention; complete plan-list status coverage remains |
-| FAM-REGULAR-002 | Set up regular care with a known caregiver | UI | Partial | No | Prepare offer, schedule, notes; recap; confirm & send |
+| FAM-REGULAR-001 | View active, paused, pending, or ended regular-care plans | UI | Yes | Read / Guide | Complete authorized plan-list status coverage |
+| FAM-REGULAR-002 | Set up regular care with a known caregiver | UI | Yes | Yes | Prepare offer, schedule, notes; recap; confirm & send |
 | FAM-REGULAR-003 | Choose weekly days, per-day times, durations, start, and end | UI | Yes | Draft | Reuse request drafting rules where product semantics match |
 | FAM-REGULAR-004 | Reuse care details and tasks from a prior request | UI | Yes | Partial read | Require explicit reuse and visible recap |
-| FAM-REGULAR-005 | Add a message to the caregiver with a regular-care offer | UI | No | No | Prepare text; explicit send |
-| FAM-REGULAR-006 | Understand why a payment method is required | UI | Partial | No | Publish reconciled billing explanation and navigate |
-| FAM-REGULAR-007 | Understand a caregiver counteroffer | UI | No | No | Read original and countered schedule/terms |
-| FAM-REGULAR-008 | Accept a caregiver counteroffer | UI | No | No | Difference recap; explicit confirmation |
+| FAM-REGULAR-005 | Add a message to the caregiver with a regular-care offer | UI | Yes | Yes | Prepare text; explicit send with offer |
+| FAM-REGULAR-006 | Understand why a payment method is required | UI | Yes | Read / Guide | Publish reconciled billing explanation and navigate |
+| FAM-REGULAR-007 | Understand a caregiver counteroffer | UI | Yes | Read / Guide | Read original and countered schedule/terms |
+| FAM-REGULAR-008 | Accept a caregiver counteroffer | UI | Yes | Yes | Difference recap; explicit confirmation |
 | FAM-REGULAR-009 | View the next regular-care visit | UI | Yes | Read / Guide | Read the next plan booking and open the highlighted regular-care page |
-| FAM-REGULAR-010 | View later generated visits | UI | No | No | Add authorized read and navigation |
-| FAM-REGULAR-011 | Skip one upcoming regular-care visit | UI | No | No | Explain late window; explicit confirm & execute |
-| FAM-REGULAR-012 | Add one extra future visit | UI | No | No | Prepare date/time/duration; recap; confirm & send |
+| FAM-REGULAR-010 | View later generated visits | UI | Yes | Read / Guide | Add authorized read and navigation |
+| FAM-REGULAR-011 | Skip one upcoming regular-care visit | UI | Yes | Yes | Explain late window; explicit confirm & execute |
+| FAM-REGULAR-012 | Add one extra future visit | UI | Yes | Yes | Prepare date/time/duration; recap; confirm & send |
 | FAM-REGULAR-013 | Review a caregiver-reported completed extra visit | UI | Partial | Read / Guide | Detect the pending report and open the exact regular-care attention area; complete field recap remains |
-| FAM-REGULAR-014 | Approve and pay a completed extra visit | UI | No | No | Recap; explicit confirm & execute |
-| FAM-REGULAR-015 | Request changes to a completed extra visit | UI | No | No | Prepare and explicitly send correction request |
-| FAM-REGULAR-016 | Dispute a completed extra visit | UI / Human | No | No | Prepare dispute; explicit submit; human review |
-| FAM-REGULAR-017 | Retry payment for a completed extra visit | UI | Partial | Guide | Highlight the existing secure retry area; normal UI performs payment |
-| FAM-REGULAR-018 | Escalate a completed extra visit to LoLo | UI / Human | No | Transfer | Transfer with exact visit context |
-| FAM-REGULAR-019 | Request a future schedule change | UI | No | No | Prepare old/new schedule comparison; explicit send |
-| FAM-REGULAR-020 | Pause regular care with or without a return date | UI | No | No | Show cancelled-visit impact; confirm & execute |
-| FAM-REGULAR-021 | Resume paused regular care | UI | No | No | Read next generated visit; confirm & execute |
-| FAM-REGULAR-022 | End regular care | UI | No | No | Show next-visit choice and future impact; confirm & execute |
-| FAM-REGULAR-023 | End regular care and cancel the next visit | UI | No | No | Strong impact recap; confirm & execute |
+| FAM-REGULAR-014 | Approve and pay a completed extra visit | UI | Yes | Yes | Recap; explicit confirm & execute |
+| FAM-REGULAR-015 | Request changes to a completed extra visit | UI | Yes | Yes | Prepare and explicitly send correction request |
+| FAM-REGULAR-016 | Dispute a completed extra visit | UI / Human | Yes | Transfer | Preserve exact report for human review; no automated finding |
+| FAM-REGULAR-017 | Resolve a payment problem for a completed regular-care extra visit | UI | Partial | Read / Guide | Explain the authoritative payment state and highlight the existing secure retry area; normal UI performs payment |
+| FAM-REGULAR-018 | Escalate a completed extra visit to LoLo | UI / Human | Yes | Transfer | Transfer with exact visit context |
+| FAM-REGULAR-019 | Request a future schedule change | UI | Yes | Yes | Prepare old/new schedule comparison; explicit send |
+| FAM-REGULAR-020 | Pause regular care with or without a return date | UI | Yes | Yes | Show cancelled-visit impact; confirm & execute |
+| FAM-REGULAR-021 | Resume paused regular care | UI | Yes | Yes | Read next generated visit; confirm & execute |
+| FAM-REGULAR-022 | End regular care | UI | Yes | Yes | Show next-visit choice and future impact; confirm & execute |
+| FAM-REGULAR-023 | End regular care and cancel the next visit | UI | Yes | Yes | Strong impact recap; confirm & execute |
 | FAM-REGULAR-024 | View regular-care history and payments | UI | Partial | Read / Guide | Open Care history and read the available completed-visit summary; plan filter preselection remains |
-| FAM-REGULAR-025 | Message the regular caregiver | UI | No | No | Navigate or prepare message; explicit send |
-| FAM-REGULAR-026 | Replace the caregiver on a regular-care plan | Gap / Human | No | Transfer | Define replacement workflow; human until implemented |
+| FAM-REGULAR-025 | Message the regular caregiver | UI | Yes | Yes | Navigate or prepare message; explicit send |
+| FAM-REGULAR-026 | Replace the caregiver on a regular-care plan | Gap / Human | Yes | Transfer | Human until a deterministic replacement workflow is implemented |
 
 ## 10. Continuous Coverage / 24/7 plan management
 
