@@ -116,6 +116,41 @@ async function openSupportChat(page: Page) {
 }
 
 test.describe.serial('Interactive AI Support pilot', () => {
+    test('keeps a mobile care-choice journey clear, persistent, correctable, and cancellable', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await loginAs(page, 'familyJourney');
+        await page.getByTestId('support-chat-launcher').click();
+
+        const panel = page.getByTestId('support-chat-panel');
+        const composer = page.getByLabel('Message LoLo Support');
+        await composer.fill('My mother needs some help.');
+        await composer.press('Enter');
+
+        await expect(panel.getByText('Choose care and create a request', { exact: true })).toBeVisible();
+        await expect(panel.getByText('Step 1 of 4', { exact: true })).toBeVisible();
+        const regular = panel.getByRole('button', { name: 'Repeats every week' });
+        const oneTime = panel.getByRole('button', { name: 'One specific date' });
+        await expect(regular).toBeVisible();
+        expect((await regular.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+        expect((await oneTime.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+        await expectNoHorizontalOverflow(page);
+
+        await regular.click();
+        await expect(panel.getByText('Step 2 of 4', { exact: true })).toBeVisible();
+        await page.reload();
+        await openSupportChat(page);
+        await expect(panel.getByText('Step 2 of 4', { exact: true })).toBeVisible();
+
+        await composer.fill('Actually, it is just next Sunday.');
+        await composer.press('Enter');
+        await expect(panel.getByText(/I changed this to one-time care/i)).toBeVisible();
+        await expect(panel.getByText('Step 2 of 4', { exact: true })).toBeVisible();
+        await panel.getByRole('button', { name: 'Stop' }).last().click();
+        await expect(panel.getByText('I stopped this task. Nothing in the app was changed.')).toBeVisible();
+        await expect(panel.getByText('Step 2 of 4', { exact: true })).toHaveCount(0);
+        await expectNoHorizontalOverflow(page);
+    });
+
     test('exact Family pilot reviews and confirms a private draft into one live request', async ({ page }, testInfo) => {
         await loginAs(page, 'familyAi');
         await page.getByTestId('support-chat-launcher').click();

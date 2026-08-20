@@ -2,13 +2,21 @@
 
 Status: Active tracker
 
-Last updated: August 17, 2026
+Last updated: August 20, 2026
 
 Owner: Product and engineering
 
 ## Executive state
 
 AI Support is operating in **Pilot only** mode for the two exact Family users approved under `DEC-071`. The Administrator **Live for everyone** switch remains off. Human Only remains the immediate emergency-stop path, and human transfer remains available in the same support conversation.
+
+### Current source/deployment separation — August 20, 2026
+
+- Production evidence in this tracker remains authoritative only for Batches 1–5 and their recorded corrections.
+- Batches 6–9 are source-complete but their new KB packages, exact-pilot capability activation, and authenticated production audit remain pending.
+- Batch 10 Family goal-guided journeys are source-complete at the [implementation record](56-family-goal-guided-journeys-batch-10-implementation-record.md): 10 versioned goals, 48 / 48 care-choice cases, 233 AI Support tests / 5,815 assertions, 324 / 324 catalog/mapping validation, 127 isolated Family tests / 4,898 assertions, frontend/Blade builds, and one 390×844 Chromium journey pass.
+- Batch 10 added no production mutation, KB publication, pilot grant, Availability change, model/provider change, Caregiver behavior, or payment-policy change.
+- The next release operation is one normal `deploy.sh` deployment for Batches 6–10, Batches 6–9 governed publication and exact-two-user activation, then a combined authenticated audit with cleanup. Availability must remain **Pilot only** unless Product separately selects **Live for everyone**.
 
 The repository now contains guided-assistance Batch 1 for saved payment methods and Batch 2 for Family overview, requests/applicants, visits/change requests, submitted hours/care-payment attention, profiles, messages, regular-care attention, and history. Production availability is independent of deployment and remains Pilot only unless an Administrator deliberately changes it.
 

@@ -53,15 +53,23 @@ class AiSupportRequestDraftService
                 ->where('actor_user_id', $actor->id)
                 ->first();
 
-            if ($existing && $existing->isUsable() && $existing->request_type !== $requestType) {
-                throw ValidationException::withMessages([
-                    'draft' => 'A different saved request is already in this conversation. Resume it or discard it first.',
-                ]);
-            }
-
             $payload = $existing?->isUsable() ? (array) $existing->payload : [];
+            $changedType = $existing?->isUsable() === true && $existing->request_type !== $requestType;
+            if ($changedType) {
+                if ($requestType === CareRequest::TYPE_ONE_TIME) {
+                    foreach (['recurring_days', 'recurring_schedule', 'recurring_starts_on', 'recurring_ends_on', '_recurring_start_adjusted_from'] as $field) {
+                        unset($payload[$field], $payload['_provenance'][$field]);
+                    }
+                } else {
+                    foreach (['requested_start_date', 'requested_start_time'] as $field) {
+                        unset($payload[$field], $payload['_provenance'][$field]);
+                    }
+                }
+            }
             $payload['request_type'] = $requestType;
-            $payload['_provenance']['request_type'] = 'explicit_user_selection';
+            $payload['_provenance']['request_type'] = $changedType
+                ? 'explicit_user_type_change'
+                : 'explicit_user_selection';
 
             if (! $existing?->isUsable()) {
                 $profile = count($authorized['recipient_profiles']) === 1
@@ -123,7 +131,7 @@ class AiSupportRequestDraftService
             $this->invalidateConfirmations($lockedTicket, 'draft_started_or_changed');
             $this->events->record($lockedTicket, 'care_path_selected', [
                 'capability_id' => 'care_intake_v1',
-                'result_code' => $requestType,
+                'result_code' => $changedType ? 'changed_to_'.$requestType : $requestType,
             ], $actor);
             $this->events->record($lockedTicket, 'request_draft_started', [
                 'capability_id' => 'care_request_draft_v1',

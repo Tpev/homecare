@@ -2,7 +2,7 @@
 
 Status: Active registry
 
-Last updated: August 14, 2026
+Last updated: August 20, 2026
 
 Owner: Product
 
@@ -809,13 +809,14 @@ Material decisions require a date, owner, approvers, rationale, affected capabil
 
 ### `DEC-082` - Prioritize Family goal-guided journeys and defer Caregiver AI
 
-- Status: Accepted; implementation specified; source implementation pending
+- Status: Accepted; source implementation complete; deployment and production audit pending
 - Accepted: August 20, 2026 through Product instruction to put Caregiver AI aside and improve Family coverage from isolated intents to complete guided goals
 - Decision owner: Product
 - Decision: Make Batch 10 a Family-only goal-guided journey layer. Compose the existing Batches 1–9 readers, semantic navigation, guided tasks, preparations, confirmed tools, verifiers, request drafts, receipts, and human handoff so the assistant retains the user's goal across chat and application pages. The first complete journey starts from a vague care need, recommends one-time or regular care with a plain reason, requires explicit selection, completes ordinary prerequisites and request drafting, and ends only after verified publication or an appropriate human transfer.
 - Experience boundary: Ask one material question at a time, reuse authorized known information, provide outcome-named navigation buttons, focus/highlight registered targets, resume after secure UI work, preserve safe drafts when confirmation expires, and never treat page arrival or the user's “done” as completion proof.
 - Authority boundary: No generic database, ORM, browser, DOM, route, selector, or unrestricted write tool is authorized. Secure credentials and card entry stay in structured UI. Consequential writes retain exact authorization, recap, 30-minute confirmation, fresh-state checks, idempotency, existing domain services, and authoritative receipts. Continuous Coverage and exceptional outcomes remain human-owned.
 - Rollout: Batch 10 source implementation may proceed while Batches 6–9 await production deployment, but Batches 6–9 must first reach and pass the existing two-user pilot audit before Batch 10 production activation. Batch 10 capability remains default off outside those same users, and **Live for everyone** remains off. Caregiver catalog, KB, readers, tools, UI, and rollout are explicitly deferred.
-- Detail: [Family Goal-Guided Journeys — Batch 10](../54-family-goal-guided-journeys.md)
+- Implementation result: Ten versioned Family goals, encrypted seven-day continuation, deterministic one-time/regular/irregular care choice, safe request-type correction, detours, different-goal choice, transfer/resume, atomic single-use actions, retention cleanup, compact events, plain progress UI, a 48-case care corpus, and mobile browser coverage are complete in source. The existing 324 KB mappings and domain contracts are reused; no broad KB pack, generic tool, model/provider change, Caregiver behavior, deployment, or Availability mutation was added.
+- Detail: [Family Goal-Guided Journeys — Batch 10](../54-family-goal-guided-journeys.md) and [source implementation record](../56-family-goal-guided-journeys-batch-10-implementation-record.md)
 
 `DEC-072` is the current operating authority. Administrators choose Pilot only, Live for everyone, or Emergency stop from one Availability page. Historical readiness, evidence, preflight, and exact-commit decisions no longer gate operation. The two-user pilot remains the default after deployment until an Administrator selects Live for everyone. Role boundaries, emergency/24/7 handoff, explicit confirmation, human takeover, monitoring stops, and Human Only rollback remain enforced. `DEC-073` establishes the Family-intent coverage registry as the backlog and coverage source. `DEC-074` establishes app-aware read, guide, prefill, and verified-completion architecture; its payment-method Batch 1 and Family read/guide Batch 2 are implemented. `DEC-075` approves and publishes Family Operations Wave 1 without expanding availability. `DEC-076` implements the Batch 3 Family operating layer, explicit mappings, universal tasks/verifiers, Admin coverage, and five reversible preparation contracts. `DEC-077` approves and publishes the Batch 4 payment/time package and `$30 / $27 / $3` support truth. `DEC-078` corrects the authenticated pilot findings while preserving the exact same two-user boundary. `DEC-079` implements governed care-profile and request-lifecycle ownership with exact-pilot-only activation. `DEC-080` implements applicant, visit, and regular-care ownership. `DEC-081` implements Family administration and makes Continuous Coverage/exceptional outcomes a deterministic context-preserving human path. `DEC-082` makes Family goal-guided journeys the next batch and defers Caregiver AI. **Live for everyone** remains off.

@@ -2,15 +2,15 @@
 
 Status: Implemented and evaluated; release disabled
 
-Version: 1.0
+Version: 1.1
 
 Owner: Family care product
 
 Required release reviewers: Product, engineering, design/accessibility, security/privacy, support operations
 
-Last reviewed: August 14, 2026
+Last reviewed: August 20, 2026
 
-Implementation evidence: [Interactive assistant implementation and release evidence](../24-interactive-assistant-implementation-and-release-evidence.md)
+Implementation evidence: [Interactive assistant implementation and release evidence](../24-interactive-assistant-implementation-and-release-evidence.md) and [Batch 10 source record](../56-family-goal-guided-journeys-batch-10-implementation-record.md)
 
 ## 1. User outcome
 
@@ -58,6 +58,8 @@ Optional recipient, mobility, task notes, access, additional instructions, and t
 - Ask one missing material question at a time.
 - Do not repeat answered questions.
 - Resolve dates explicitly and show Eastern Time.
+- When the user explicitly changes between one-time and recurring care, clear only incompatible schedule fields and retain compatible recipient, task, address, and note fields.
+- Keep the encrypted goal and safe draft resumable across refresh, registered navigation, and supported profile/payment detours.
 - Clarify vague time, duration, recipient, task, address, or schedule.
 - Let the user change fields in ordinary English.
 - After two misunderstandings of the same field, offer a person.

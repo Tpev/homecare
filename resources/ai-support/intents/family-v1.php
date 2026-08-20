@@ -6,7 +6,7 @@ return [
     'version' => 'family-intents-v1',
     'generated_on' => '2026-08-20',
     'source' => 'docs/product/support-agent/38-family-intent-action-coverage-registry.md',
-    'source_sha256' => 'ede975aed78829a65198b4ea363873534219d2c507f9c400419fc4565440e5d1',
+    'source_sha256' => '798fe9bd8ece006621820e558a83cdca3b1b9df2202333cbce0c404a308b4ec3',
     'records' => [
         0 => [
             'intent_id' => 'FAM-START-001',

@@ -1,12 +1,12 @@
-# Family Batch 1–9 Evaluation Harness
+# Family Batch 1–10 Evaluation Harness
 
-Status: Expanded through Batch 9 and passing in source
+Status: Expanded through Batch 10 journey coverage and passing in source
 
 Established: August 17, 2026
 
 Owner: Product and Engineering
 
-Scope: All 324 executable Family intent dispositions and explicit KB mappings, the established 45-intent read/guide/payment corpus, 21 Batch 5 lifecycle intents, all 86 Batch 6/7 Match/Visit/Regular intents, all 118 Batch 8/9 administration/support intents, and Batch 3–9 operating-layer contracts
+Scope: All 324 executable Family intent dispositions and explicit KB mappings, the established 45-intent read/guide/payment corpus, 21 Batch 5 lifecycle intents, all 86 Batch 6/7 Match/Visit/Regular intents, all 118 Batch 8/9 administration/support intents, Batch 3–9 operating-layer contracts, and the Batch 10 48-case care-choice/goal-journey layer
 
 ## Outcome
 
@@ -54,7 +54,9 @@ Batch 6/7 adds the combined 32-entry/160-evaluation marketplace-care package, 86
 
 Batch 8/9 adds the combined 44-entry/220-evaluation Family-administration/support package, 72 Batch 8 and 46 Batch 9 intents, all 472 registered phrases, ten default-off account/access/notification tools, and domain tests for account/member/invitation/notification/history readers, name and verification actions, invitation and membership actions, notification read/preferences, stale/idempotent confirmation, protected-data denial, and same-conversation Continuous Coverage/exceptional transfer. The generated catalog now validates **324 / 324** explicit KB mappings. All Continuous Coverage operations remain human-owned and have no plan, shift, assignment, payment, or cancellation tool. These source tests use isolated test databases; they do not publish KB content, change production pilot grants, call production providers, or enable Everyone.
 
-The final Batch 1–9 command passes **127 / 127 application tests with 4,899 assertions**, **137 / 137** established phrases, **64 / 64** Batch 5 phrases, **344 / 344** Batch 6/7 phrases, **472 / 472** Batch 8/9 phrases, all **324 / 324** catalog rows and mappings, and **10 / 10** protected collisions. The complete AI Support feature suite passes **219 / 219 tests with 5,708 assertions**.
+Batch 10 adds a separate frozen 48-case deterministic care-choice corpus and focused goal-journey suite. It does not inflate the 324 intent-stage counts or make the Batch 1–9 mass command depend on a provider. The focused suite covers persistent goal restoration, explicit care choice, irregular dates, type correction, different-goal handling, profile/payment detours, transfer/resume, cross-account denial, cancellation, single-use choices, retention, and the exact ten-goal catalog. A 390×844 Chromium journey also covers 44-pixel choices, refresh, correction, cancellation, and reflow.
+
+The final source command passes **127 / 127 application tests with 4,898 assertions**, **137 / 137** established phrases, **64 / 64** Batch 5 phrases, **344 / 344** Batch 6/7 phrases, **472 / 472** Batch 8/9 phrases, all **324 / 324** catalog rows and mappings, and **10 / 10** protected collisions. The focused Batch 10 suite passes **14 tests with 108 assertions**, and the complete AI Support feature suite passes **233 / 233 tests with 5,815 assertions** after detour-continuation coverage. All deterministic commands use no provider or production database.
 
 Use `--batch=8` or `--batch=9` for a focused administration or exceptional-support inventory:
 

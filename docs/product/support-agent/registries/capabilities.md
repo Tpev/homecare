@@ -2,7 +2,7 @@
 
 Status: Current implementation registry; availability controlled by Pilot/Everyone/Emergency stop
 
-Last updated: August 19, 2026
+Last updated: August 20, 2026
 
 Owner: Product
 
@@ -29,6 +29,7 @@ No status in this registry proves production deployment. The human support chat 
 | `NAV-GUIDE-001` | Navigate to, focus, and accessibly highlight one registered UI control | Family first; caregiver later | B/guide | Batch 2 implemented; deterministic target regression passing | Guided assistance Batch 1-2 | Exact account-authorized request, plan, profile, conversation, billing, Care, Messages, and History targets; no arbitrary selectors, coordinates, or autonomous clicking |
 | `TASK-VERIFY-001` | Verify guided-task completion against authoritative server state and continue the chat | Family first; caregiver later | B/read | Payment, request, and profile verification implemented | Guided assistance | Domain receipt or fresh authorized read required; abandoned, failed, stale, and unverifiable results remain recoverable and never claim success |
 | `FORM-PREFILL-001` | Prefill allowlisted non-secret reversible form fields through a server draft | Family first; caregiver later | C | Batch 3 implemented; Batch 5 profile/request promotion implemented | Guided assistance | All values visible/editable; profile and request lifecycle may use a separately approved confirmed tool; other preparation families do not save or send |
+| [`FAM-GOAL-JOURNEY-001`](../54-family-goal-guided-journeys.md) | Retain and truthfully complete one authorized Family goal across chat, refresh, navigation, secure UI detours, and human transfer | Exact-pilot authenticated Family users | B/C/orchestration | Batch 10 source complete; not deployed or production-audited | Guided assistance Batch 10 | Ten versioned goals compose existing readers/actions; encrypted seven-day continuation, explicit care choice, one active goal, no generic tool, no Caregiver scope; [implementation record](../56-family-goal-guided-journeys-batch-10-implementation-record.md) |
 | [`FAM-PROFILE-LIFECYCLE-001`](../49-care-profiles-request-lifecycle-batch-5.md) | Create, update, make ready/default, archive, or restore an authorized care profile through recap, confirmation, and verification | Active Family member | D | Production-verified for the exact two-user pilot | Guided assistance Batch 5 | Full create/edit/readiness/default/archive/restore journey and cleanup passed; permanent deletion and current-care impact review transfer to a person; exact revision and account are revalidated |
 | [`FAM-REQUEST-LIFECYCLE-001`](../49-care-profiles-request-lifecycle-batch-5.md) | Read, reuse, copy, replace, recover, or withdraw an authorized care request | Active Family member | B/C/D by operation | Production-verified for the exact two-user pilot | Guided assistance Batch 5 | Full read/publish/withdraw/copy/republish/source-preservation journey passed; never reopen expired/withdrawn in place; live changes use a replacement; booked care stays in visit workflow |
 

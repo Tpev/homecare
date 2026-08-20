@@ -1,6 +1,6 @@
 # Family Chat Operator Master Coverage and Delivery Plan
 
-Status: Active master plan; Batches 1 through 5 are deployed and production-verified for the exact two-user pilot; Batches 6 through 9 are source-complete and await deployment/authenticated pilot audit; **Live for everyone remains off**
+Status: Active master plan; Batches 1 through 5 are deployed and production-verified for the exact two-user pilot; Batches 6 through 10 are source-complete and await combined deployment/authenticated pilot audit; **Live for everyone remains off**
 
 Audited: August 20, 2026
 
@@ -97,6 +97,22 @@ Batch 6 now covers authorized applicant facts, invitations, applicant decisions,
 
 Batch 8 adds account/security guidance, confirmed name and verification actions, Family invitations/membership, notification state/preferences, and authorized history. Batch 9 makes every Continuous Coverage and exceptional-support row a deterministic context-preserving human path without queue, time, availability, or outcome promises. See [Batch 8](52-family-administration-communication-records-batch-8.md) and [Batch 9](53-continuous-coverage-exceptional-support-batch-9.md).
 
+### August 20 Batch 10 source delta
+
+| Source-complete addition | Result |
+| --- | ---: |
+| Persistent Family goal catalog | 10 / 10 versioned journeys |
+| Frozen care-choice cases | 48 / 48 passed |
+| Focused journey suite | 14 tests / 108 assertions |
+| Complete AI Support source regression | 233 tests / 5,815 assertions |
+| Isolated Family Batch 1–9 harness | 127 tests / 4,898 assertions |
+| Mobile Chromium journey | Passed at 390×844 |
+| New broad KB entries | 0; existing 324 / 324 mappings reused |
+| Provider calls for deterministic journey continuation | 0 |
+| Rollout boundary | Existing exact two-user pilot only; Everyone off |
+
+Batch 10 adds encrypted seven-day goal continuity, explicit one-time/regular recommendations, irregular-date handling, safe request-type correction, prerequisite detours, different-goal choice, transfer/resume context, single-use choices, and plain progress in the support UI. It composes the Batches 1–9 readers/actions instead of adding a generic model-controlled tool. See [the implementation record](56-family-goal-guided-journeys-batch-10-implementation-record.md).
+
 ## Current capability inventory
 
 ### Coverage portfolio
@@ -151,6 +167,7 @@ The current implementation already has the correct foundations to expand rather 
 - safe saved-card reading and end-to-end payment-method completion verification through the existing secure Stripe flow;
 - authorized Family context for care-request drafting, including ready care profiles, household data, task choices, and optional previous-request reuse;
 - one-time and recurring request drafting, one-question-at-a-time completion, recap, 30-minute renewal, explicit confirmation, idempotent publication, and receipt;
+- a persistent ten-goal Family journey layer with care-type recommendation, refresh/navigation restoration, safe detours, cancellation/expiry, and human transfer/resume;
 - authorized profile/request state, including readiness, lifecycle blockers, applicant counts, and exact resource ownership;
 - multi-turn care-profile creation/editing with visible modification, recap renewal, confirmed save, make-ready, default, archive, restore, and verified receipt;
 - request reuse, duplication, replacement, expired/withdrawn copy, validation recovery, and confirmed eligible withdrawal while preserving the original where required;
@@ -176,7 +193,7 @@ The operating layer is implemented, but domain breadth is still incomplete:
 
 | Workstream | Current position | Target | Delivery state |
 | --- | --- | --- | --- |
-| Intent portfolio | 324 / 324 executable dispositions; Batches 1–9 represented in the deep operating layer | Every implemented row retains evidence and rollout state | Batch 9 source complete; production audit pending |
+| Intent portfolio | 324 / 324 executable dispositions; Batches 1–9 represented in the deep operating layer and composed by Batch 10 goals | Every implemented row retains evidence and rollout state | Batch 10 source complete; production audit pending |
 | Governed knowledge | Batches 6/7 and 8/9 packages source-complete; 324 / 324 explicit catalog mappings | Stable domain packs mapped explicitly to every Explain-capable intent | Publication pending for the exact pilot |
 | Intent resolution | Layered safety, active task, deterministic prep/handlers, catalog classification, bounded fallback | Add high-confidence domain handlers only with authority/evidence | Batch 3 complete |
 | Authorized reads | Overview, care operations, account/access, notifications, history, support, and minimal Continuous Coverage context | Narrow normalized readers for every state-dependent supported intent | Batch 9 source complete; pilot audit pending |
@@ -185,8 +202,8 @@ The operating layer is implemented, but domain breadth is still incomplete:
 | Confirmed execution | Batches 1–9 narrow tools, including 27 care-operation and 10 administration tools; no Coverage mutation tool | Narrow confirmed tools for appropriate existing domain services | Batch 9 source complete; pilot audit pending |
 | Authoritative verification | Generic registry plus domain receipts for each supported confirmed action | Every complete journey has a domain receipt or fresh state verifier | Batch 9 source complete; pilot audit pending |
 | Human support | Atomic same-conversation transfer, Admin alert, context summary | Human terminal path for every judgment/exception intent with no repetition | Implemented; refine with domain context |
-| Older-adult UI | State-aware start, mobile chat, universal contextual follow-ups, action progress, recovery, and guide highlight | Complete more domain journeys without adding cognitive load | Batch 3 complete; usability expands by domain |
-| Evaluation | 324 catalog rows/mappings; B6/7 32 entries, 160 cases, 86 intents/344 phrases; B8/9 44 entries, 220 cases, 118 intents/472 phrases | Per-intent multi-turn, state, browser, and usability coverage | Batch 9 source complete; production browser audit pending |
+| Older-adult UI | State-aware start, mobile chat, universal contextual follow-ups, action progress, recovery, guide highlight, and persistent plain goal/step | Complete more domain journeys without adding cognitive load | Batch 10 source complete; production usability audit pending |
+| Evaluation | 324 catalog rows/mappings; B6/7 32 entries, 160 cases, 86 intents/344 phrases; B8/9 44 entries, 220 cases, 118 intents/472 phrases; B10 48 care cases and mobile journey | Per-intent multi-turn, state, browser, and usability coverage | Batch 10 source complete; production browser audit pending |
 | Admin visibility | KB lifecycle, transcripts, Availability, searchable 324-intent catalog, and compact outcome summary | Add useful domain funnel detail without transcript duplication | Batch 3 complete; refine by domain |
 
 ## Knowledge-base audit
@@ -471,11 +488,11 @@ Continuous Coverage management remains out of general AI execution until the cur
 
 ### Batch 10 — Family goal-guided journeys
 
-Implementation status: Approved and specified on August 20, 2026; source implementation pending.
+Implementation status: Complete in source on August 20, 2026; deployment, exact-pilot activation, and authenticated production audit pending.
 
 Compose the Batches 1–9 intent, reader, navigation, preparation, confirmed-action, verification, and handoff layers into persistent user goals. The first complete journey begins with a vague care need, recommends one-time or regular care, requires an explicit choice, continues through profile/payment prerequisites and request drafting, and ends only after verified publication or correct human transfer.
 
-The active goal must survive ordinary page navigation and refresh, resume after secure UI steps, keep the next action simple for an older adult, and verify authoritative state before saying the task worked. The initial journey catalog also composes existing payment, applicant/hiring, visit/hours, regular-care, history/rebooking, message/notification, and human-support capabilities. See [Family Goal-Guided Journeys](54-family-goal-guided-journeys.md).
+The active goal survives ordinary page navigation and refresh, resumes after secure UI steps, keeps the next action simple for an older adult, and verifies authoritative state before saying the task worked. The ten-goal catalog composes existing payment, applicant/hiring, visit/hours, regular-care, history/rebooking, message/notification, and human-support capabilities. It adds no broad KB package, Caregiver scope, generic tool, provider/model change, or production activation. See [Family Goal-Guided Journeys](54-family-goal-guided-journeys.md) and its [source implementation record](56-family-goal-guided-journeys-batch-10-implementation-record.md).
 
 ### Deferred future work — Caregiver adaptation
 
@@ -628,7 +645,7 @@ Keep serving cost low by using the model once for a genuinely new or ambiguous g
 
 ## Immediate implementation recommendation
 
-Batches 6 through 9 are source-complete. **Batch 10 — Family goal-guided journeys** may now be implemented in source under [the approved contract](54-family-goal-guided-journeys.md). Before Batch 10 production activation, perform one combined normal deployment, governed publication of the Batch 6/7 and Batch 8/9 packages, exact-two-user pilot activation, and authenticated browser audit across one ordinary read, one confirmed write, and one human path in each new operating layer. Keep Availability **Pilot only** until Product separately chooses **Make live for everyone**. Caregiver adaptation is deferred.
+Batches 6 through 10 are source-complete. Perform one combined normal `deploy.sh` deployment, governed publication of the Batch 6/7 and Batch 8/9 packages, exact-two-user pilot activation, and authenticated browser audit across ordinary reads, confirmed writes, human paths, and the Batch 10 care-choice/request journey. Verify refresh, secure detours, transfer/resume, and cleanup. Keep Availability **Pilot only** until Product separately chooses **Make live for everyone**. Caregiver adaptation remains deferred.
 
 ## Maintenance rule
 

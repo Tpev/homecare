@@ -25,6 +25,7 @@ class AiSupportRuntimeService
         private readonly FamilyIntentResolver $familyIntents,
         private readonly FamilyIntentCatalog $familyIntentCatalog,
         private readonly FamilyIntentJourneyService $familyJourneys,
+        private readonly FamilyGoalJourneyService $goalJourneys,
         private readonly FamilyLifecycleActionService $familyLifecycle,
         private readonly AiSupportPricingTruth $pricing,
         private readonly AiSupportHandoffService $handoff,
@@ -71,6 +72,10 @@ class AiSupportRuntimeService
             return;
         }
 
+        if ($actor->role === 'family' && $this->goalJourneys->handleEarly($actor, $ticket, $newestMessage)) {
+            return;
+        }
+
         if ($actor->role === 'family' && $this->guidedTasks->handleContextualReply($actor, $ticket, $newestMessage)) {
             return;
         }
@@ -102,6 +107,11 @@ class AiSupportRuntimeService
         $preparationRequested = $intentRecord !== null
             && in_array((string) data_get($intentRecord, 'contracts.prefill', ''), array_keys(app(AiSupportPreparationContractRegistry::class)->all()), true)
             && preg_match('/\b(?:prepare|draft|write|send|create|copy|duplicate|reuse|update|change|correct|correction|question|dispute)\b/i', $newestMessage) === 1;
+
+        if ($actor->role === 'family' && $intentRecord !== null
+            && $this->goalJourneys->coordinateIntent($actor, $ticket, $intentRecord, $newestMessage)) {
+            return;
+        }
 
         if ($actor->role === 'family' && ! $paymentFastPath && $familyIntent === null
             && ($intentResolution['status'] ?? null) === FamilyIntentResolver::STATUS_CLARIFY) {
@@ -230,10 +240,12 @@ class AiSupportRuntimeService
         $knowledge = $intentRecord && (array) $intentRecord['kb_stable_ids'] !== []
             ? $this->knowledge->forIntent($actor, 'support_answers_v1', (array) $intentRecord['kb_stable_ids'], 'active')
             : $this->knowledge->relevant($actor, 'support_answers_v1', $newestMessage, 'active');
-        $draft = AiSupportRequestDraft::query()
-            ->where('support_ticket_id', $ticket->id)
-            ->where('actor_user_id', $actor->id)
-            ->first();
+        $draft = $actor->role !== 'family' || $this->goalJourneys->shouldExposeRequestDraft($actor, $ticket)
+            ? AiSupportRequestDraft::query()
+                ->where('support_ticket_id', $ticket->id)
+                ->where('actor_user_id', $actor->id)
+                ->first()
+            : null;
         if ($draft && ! $draft->isUsable()) {
             $draft = null;
         }
@@ -255,7 +267,16 @@ class AiSupportRuntimeService
         try {
             $provider = $this->client->respond(
                 $this->prompt->instructions(),
-                $this->prompt->input($actor, $ticket, $newestMessage, $knowledge, $familyContext, $draft, $profileDraft),
+                $this->prompt->input(
+                    $actor,
+                    $ticket,
+                    $newestMessage,
+                    $knowledge,
+                    $familyContext,
+                    $draft,
+                    $profileDraft,
+                    $actor->role === 'family' ? $this->goalJourneys->providerContext($actor, $ticket) : null,
+                ),
                 (int) $actor->id,
             );
             $result = $provider['result'];
@@ -362,8 +383,10 @@ class AiSupportRuntimeService
             $updated = $this->drafts->applyPatch($actor, $ticket, (array) $result['draft_patch'], $draft->version);
             $question = $this->drafts->nextQuestion($actor, $updated);
             if ($question !== null) {
+                $this->goalJourneys->syncCareDraft($actor, $ticket, false);
                 $this->automatedMessage($ticket, $question);
             } else {
+                $this->goalJourneys->syncCareDraft($actor, $ticket, true);
                 $this->recaps->issue($actor, $ticket, $updated);
             }
 
@@ -389,24 +412,12 @@ class AiSupportRuntimeService
 
                 return;
             }
-            $body = $message !== '' ? $message : ((string) ($result['clarifying_question'] ?? 'Is this one visit, or will care repeat each week?'));
-            DB::transaction(function () use ($actor, $ticket, $body, $result): void {
-                $sent = $this->automatedMessage($ticket, $body);
-                AiSupportMessageAction::query()->create([
-                    'id' => (string) Str::uuid(),
-                    'support_ticket_message_id' => $sent->id,
-                    'support_ticket_id' => $ticket->id,
-                    'actor_user_id' => $actor->id,
-                    'action_type' => AiSupportMessageAction::TYPE_PATH_CHOICES,
-                    'payload' => [
-                        'recommended_path' => $result['care_path'],
-                        'choices' => [
-                            ['id' => 'one_time', 'label' => 'One-time care'],
-                            ['id' => 'recurring', 'label' => 'Regular care'],
-                        ],
-                    ],
-                ]);
-            }, 3);
+            $path = (string) ($result['care_path'] ?? 'clarify');
+            $this->goalJourneys->offerCareChoice($actor, $ticket, [
+                'path' => in_array($path, ['one_time', 'recurring', 'clarify'], true) ? $path : 'clarify',
+                'reason' => $message !== '' ? $message : (string) ($result['clarifying_question'] ?? ''),
+                'dates' => [],
+            ], $newestMessage);
 
             return;
         }

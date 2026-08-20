@@ -6,6 +6,7 @@ use App\Models\AiSupportActionPreview;
 use App\Models\AiSupportAdminAuditEvent;
 use App\Models\AiSupportConfirmedActionEvidence;
 use App\Models\AiSupportControlVersion;
+use App\Models\AiSupportGoalJourney;
 use App\Models\AiSupportInteractionEvent;
 use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportPilotGrant;
@@ -41,6 +42,7 @@ class ApplyAiSupportRetention extends Command
         $this->pruneTranscripts($runReference);
         $this->prunePreviews($runReference);
         $this->pruneRequestDrafts($runReference);
+        $this->pruneGoalJourneys($runReference);
         $this->prunePreparations($runReference);
         $this->pruneInteractionEvents($runReference);
         $this->pruneActionEvidence($runReference);
@@ -64,6 +66,8 @@ class ApplyAiSupportRetention extends Command
                 ->orWhereNotNull('content_deleted_at'))->count(),
             'private_request_drafts' => AiSupportRequestDraft::query()
                 ->whereNotNull('payload')->where('expires_at', '<=', now())->count(),
+            'goal_journey_content' => AiSupportGoalJourney::query()
+                ->whereNotNull('context')->where('expires_at', '<=', now())->count(),
             'reversible_preparations' => AiSupportPreparation::query()->where('expires_at', '<=', now())->count(),
             'interaction_events' => AiSupportInteractionEvent::query()->where('delete_after', '<=', now())->count(),
             'confirmed_action_evidence' => AiSupportConfirmedActionEvidence::query()->where('retain_until', '<=', now())->count(),
@@ -171,6 +175,50 @@ class ApplyAiSupportRetention extends Command
                 && ! ($event->support_ticket_id && $this->held(SupportTicket::class, (string) $event->support_ticket_id)))
             ->pluck('id');
         $this->deleteWithEvidence(AiSupportInteractionEvent::class, $ids->all(), 'compact_interaction_events', $runReference);
+    }
+
+    private function pruneGoalJourneys(string $runReference): void
+    {
+        AiSupportGoalJourney::query()
+            ->whereNotNull('context')
+            ->where('expires_at', '<=', now())
+            ->orderBy('created_at')
+            ->each(function (AiSupportGoalJourney $journey) use ($runReference): void {
+                if ($this->held(AiSupportGoalJourney::class, $journey->id)
+                    || $this->held(SupportTicket::class, (string) $journey->support_ticket_id)) {
+                    return;
+                }
+
+                DB::transaction(function () use ($journey, $runReference): void {
+                    $locked = AiSupportGoalJourney::query()->lockForUpdate()->findOrFail($journey->id);
+                    if ($locked->context === null || $locked->expires_at->isFuture()) {
+                        return;
+                    }
+                    if (in_array($locked->state, AiSupportGoalJourney::RESUMABLE_STATES, true)) {
+                        $locked->state = AiSupportGoalJourney::STATE_EXPIRED;
+                        $locked->last_result_code = 'journey_expired';
+                    }
+                    $locked->forceFill([
+                        'context' => null,
+                        'last_activity_at' => now(),
+                        'version' => $locked->version + 1,
+                    ])->save();
+                    AiSupportMessageAction::query()
+                        ->where('support_ticket_id', $locked->support_ticket_id)
+                        ->where('actor_user_id', $locked->actor_user_id)
+                        ->whereIn('action_type', [
+                            AiSupportMessageAction::TYPE_PATH_CHOICES,
+                            AiSupportMessageAction::TYPE_JOURNEY_CHOICES,
+                        ])
+                        ->whereNull('consumed_at')
+                        ->update([
+                            'payload' => null,
+                            'invalidated_at' => now(),
+                            'invalidation_reason' => 'journey_expired',
+                        ]);
+                    $this->evidence('goal_journey_content', 1, $runReference);
+                }, 3);
+            });
     }
 
     private function prunePreparations(string $runReference): void

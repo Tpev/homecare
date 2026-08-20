@@ -115,18 +115,10 @@ class InteractiveSupportRuntimeTest extends TestCase
 
         app(AiSupportRuntimeService::class)->respond($family, $ticket, $ticket->description);
 
-        Http::assertSentCount(1);
-        Http::assertSent(function ($request): bool {
-            $payload = $request->data();
-
-            return $payload['store'] === false
-                && $payload['parallel_tool_calls'] === false
-                && data_get($payload, 'text.format.strict') === true
-                && data_get($payload, 'text.format.schema.additionalProperties') === false;
-        });
+        Http::assertNothingSent();
         $action = AiSupportMessageAction::query()->sole();
         $this->assertSame(AiSupportMessageAction::TYPE_PATH_CHOICES, $action->action_type);
-        $this->assertDatabaseHas('ai_support_interaction_events', ['event_type' => 'model_turn_completed']);
+        $this->assertDatabaseHas('ai_support_interaction_events', ['event_type' => 'care_path_recommended']);
         $this->assertDatabaseMissing('notifications', ['notifiable_id' => $admin->id]);
     }
 

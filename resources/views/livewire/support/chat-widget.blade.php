@@ -10,6 +10,7 @@
         ? str($ticket->assignedAdmin->name)->before(' ')->value()
         : null;
     $guidedTaskClient = $this->guidedTaskClient;
+    $goalJourneyClient = $this->goalJourneyClient;
     $startExperience = $ticket ? null : $this->startExperience;
 @endphp
 
@@ -36,7 +37,7 @@
     x-on:offline.window="wentOffline()"
     x-cloak
 >
-    @if ($guidedTaskClient)
+    @if ($goalJourneyClient || $guidedTaskClient)
         <aside
             x-show="! open"
             data-testid="ai-guided-task-strip"
@@ -45,12 +46,19 @@
             aria-live="polite"
         >
             <div class="min-w-0 flex-1">
-                <p class="text-xs font-bold uppercase tracking-[0.12em] text-[#9C493A]">LoLo is guiding you</p>
-                <p class="mt-1 text-sm font-semibold leading-5 text-[#17313F]">{{ $guidedTaskClient['instruction'] }}</p>
+                <p class="text-xs font-bold uppercase tracking-[0.12em] text-[#9C493A]">{{ $goalJourneyClient['goal'] ?? 'LoLo is guiding you' }}</p>
+                @if ($goalJourneyClient)
+                    <p class="mt-0.5 text-xs font-semibold text-[#526474]">{{ $goalJourneyClient['progress'] }}</p>
+                @endif
+                <p class="mt-1 text-sm font-semibold leading-5 text-[#17313F]">{{ $goalJourneyClient['instruction'] ?? $guidedTaskClient['instruction'] }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-1.5">
-                <button type="button" x-on:click="showGuidedTarget()" class="ai-guide-strip-button">Show me</button>
-                <button type="button" wire:click="cancelGuidedTask('{{ $guidedTaskClient['id'] }}')" class="ai-guide-strip-button">Stop</button>
+                <button type="button" x-on:click="{{ ($goalJourneyClient['hasGuidedTarget'] ?? false) || $guidedTaskClient ? 'showGuidedTarget()' : 'showPanel()' }}" class="ai-guide-strip-button">Resume</button>
+                @if ($goalJourneyClient && ($goalJourneyClient['canCancel'] ?? false))
+                    <button type="button" wire:click="cancelGoalJourney('{{ $goalJourneyClient['id'] }}')" class="ai-guide-strip-button">Stop</button>
+                @elseif ($guidedTaskClient)
+                    <button type="button" wire:click="cancelGuidedTask('{{ $guidedTaskClient['id'] }}')" class="ai-guide-strip-button">Stop</button>
+                @endif
                 <button type="button" wire:click="transferToPerson" class="ai-guide-strip-button ai-guide-strip-button-primary">Talk to a person</button>
             </div>
         </aside>
@@ -144,6 +152,21 @@
                 </button>
             </div>
         </header>
+
+        @if ($goalJourneyClient)
+            <aside class="border-b border-[#D8E5E1] bg-[#F2F8F6] px-4 py-3" aria-label="Current support goal">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold uppercase tracking-[0.1em] text-[#0F5B52]">{{ $goalJourneyClient['goal'] }}</p>
+                        <p class="mt-0.5 text-xs font-semibold text-[#526474]">{{ $goalJourneyClient['progress'] }}</p>
+                        <p class="mt-1 text-sm font-semibold leading-5 text-[#17313F]">{{ $goalJourneyClient['instruction'] }}</p>
+                    </div>
+                    @if ($goalJourneyClient['canCancel'] ?? false)
+                        <button type="button" wire:click="cancelGoalJourney('{{ $goalJourneyClient['id'] }}')" class="min-h-11 shrink-0 rounded-xl px-2 text-xs font-bold text-[#9C493A] underline underline-offset-2">Stop</button>
+                    @endif
+                </div>
+            </aside>
+        @endif
 
         <div
             x-ref="messages"
@@ -252,6 +275,12 @@
                                         <div class="mt-3 grid gap-2" aria-label="Choose what you need help with">
                                             @foreach ((array) ($actionPayload['choices'] ?? []) as $choice)
                                                 <button type="button" wire:click="chooseIntent('{{ $action->id }}', '{{ $choice['id'] }}')" wire:loading.attr="disabled" class="min-h-12 rounded-xl bg-[#23483F] px-4 text-left text-sm font-semibold text-white disabled:opacity-60">{{ $choice['label'] }}</button>
+                                            @endforeach
+                                        </div>
+                                    @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_JOURNEY_CHOICES && $actionActive)
+                                        <div class="mt-3 grid gap-2" aria-label="Choose which task to continue">
+                                            @foreach ((array) ($actionPayload['choices'] ?? []) as $choice)
+                                                <button type="button" wire:click="chooseJourney('{{ $action->id }}', '{{ $choice['id'] }}')" wire:loading.attr="disabled" class="min-h-12 rounded-xl bg-[#23483F] px-4 text-left text-sm font-semibold text-white disabled:opacity-60">{{ $choice['label'] }}</button>
                                             @endforeach
                                         </div>
                                     @elseif ($action->action_type === \App\Models\AiSupportMessageAction::TYPE_GUIDED_TASK && $actionActive)
@@ -518,6 +547,8 @@
                     @error('guidedTask') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
                     @error('preparation') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
                     @error('intent') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
+                    @error('path') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
+                    @error('journey') <p class="break-words text-sm font-medium text-rose-700" role="alert">{{ $message }}</p> @enderror
                     @if ($this->activeProfilePreparation)
                         <button
                             type="button"

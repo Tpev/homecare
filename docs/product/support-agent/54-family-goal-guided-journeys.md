@@ -1,10 +1,12 @@
 # Family Goal-Guided Journeys — Batch 10
 
-Status: Approved implementation contract; Family only; Caregiver AI deferred; production availability remains Pilot only
+Status: Source complete; Family only; Caregiver AI deferred; not deployed or production-audited; production availability remains Pilot only
 
 Approved: August 20, 2026
 
 Owner: Product and Engineering
+
+Implementation result: [Batch 10 source record](56-family-goal-guided-journeys-batch-10-implementation-record.md)
 
 ## 1. Outcome
 
@@ -58,7 +60,7 @@ Batches 1 through 5 are deployed and production-verified for the exact two-user 
 | Human terminal path | 87 / 324 |
 | No operational path | 11 / 324 |
 
-The Batch 9 source validates 324 catalog records, 1,296 registered phrases, and all explicit KB mappings. The complete AI Support suite passes 219 tests with 5,708 assertions; the isolated Family Batch 1–9 harness passes 127 tests with 4,899 assertions. Those results prove deterministic contracts, not production browser behavior for Batches 6 through 9.
+The Batch 10 source retains 324 catalog records, 1,296 registered phrases, and all explicit KB mappings. The complete AI Support suite passes 233 tests with 5,815 assertions; the isolated Family Batch 1–9 harness passes 127 tests with 4,898 assertions; and the new 48-case care-choice corpus plus mobile journey pass without production or provider use. These results prove source contracts, not production browser behavior for Batches 6 through 10.
 
 ### Foundations to extend, not replace
 

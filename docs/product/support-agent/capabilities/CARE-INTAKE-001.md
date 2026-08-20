@@ -2,15 +2,15 @@
 
 Status: Implemented and evaluated; release disabled
 
-Version: 1.0
+Version: 1.1
 
 Owner: Family care product
 
 Required release reviewers: Product, engineering, support operations, design/accessibility, security/privacy
 
-Last reviewed: August 14, 2026
+Last reviewed: August 20, 2026
 
-Implementation evidence: [Interactive assistant implementation and release evidence](../24-interactive-assistant-implementation-and-release-evidence.md)
+Implementation evidence: [Interactive assistant implementation and release evidence](../24-interactive-assistant-implementation-and-release-evidence.md) and [Batch 10 source record](../56-family-goal-guided-journeys-batch-10-implementation-record.md)
 
 ## 1. User outcome
 
@@ -33,6 +33,7 @@ Wrong-role, inactive-member, missing-grant, closed, deleted, or human-owned conv
 | --- | --- |
 | One specific visit | One-time care |
 | Repeated weekly visits | Regular/recurring care |
+| Several irregular dates without a weekly pattern | Separate one-time requests, beginning with the first date while retaining the remaining dates |
 | Continuous day-and-night or 24/7 coverage | Talk to LoLo Support |
 | Immediate danger | Approved emergency instruction, then human transfer |
 | Medical/clinical procedure or advice | Explain non-medical boundary, then human transfer |
@@ -86,7 +87,7 @@ Record minimized events for route proposed, clarification asked, path selected, 
 
 ## 8. Evaluation and release
 
-Required cases include single visit, weekly visits, different schedules by day, temporary repeated care, overnight but not continuous care, explicit 24/7, emergency language, clinical tasks, ambiguous wording, user correction, wrong role, revoked access, and prompt injection.
+Required cases include single visit, weekly visits, different schedules by day, several irregular dates, temporary repeated care, overnight but not continuous care, explicit 24/7, emergency language, clinical tasks, ambiguous wording, unrelated operational questions, user correction, wrong role, revoked access, and prompt injection. Batch 10 freezes 48 deterministic care-choice cases and proves that established visit/status questions remain routed to their existing readers rather than new-care intake.
 
 Gates:
 

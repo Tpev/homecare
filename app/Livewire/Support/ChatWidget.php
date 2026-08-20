@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Support;
 
+use App\Models\AiSupportGoalJourney;
 use App\Models\AiSupportGuidedTask;
-use App\Models\AiSupportMessageAction;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Services\AiSupport\AiSupportEligibilityService;
@@ -14,6 +14,7 @@ use App\Services\AiSupport\AiSupportRecapService;
 use App\Services\AiSupport\AiSupportRequestDraftService;
 use App\Services\AiSupport\AiSupportRuntimeService;
 use App\Services\AiSupport\FamilyAssistantHomeService;
+use App\Services\AiSupport\FamilyGoalJourneyService;
 use App\Services\AiSupport\FamilyIntentJourneyService;
 use App\Services\AiSupport\FamilyLifecycleActionService;
 use App\Services\Support\SupportChatService;
@@ -186,28 +187,37 @@ class ChatWidget extends Component
         $user = auth()->user();
         $ticket = $this->ticket;
         abort_unless($user && $ticket, 404);
-        DB::transaction(function () use ($user, $ticket, $actionId, $path): void {
-            $lockedTicket = SupportTicket::query()->lockForUpdate()->findOrFail($ticket->id);
-            abort_unless($lockedTicket->responder_mode === SupportTicket::RESPONDER_MODE_AUTOMATED, 409);
-            $action = AiSupportMessageAction::query()->lockForUpdate()->whereKey($actionId)
-                ->where('support_ticket_id', $lockedTicket->id)
-                ->where('actor_user_id', $user->id)
-                ->where('action_type', AiSupportMessageAction::TYPE_PATH_CHOICES)
-                ->firstOrFail();
-            abort_unless($action->isActive(), 409);
-            $allowed = collect((array) data_get($action->payload, 'choices', []))->pluck('id')->all();
-            abort_unless(in_array($path, $allowed, true), 422);
-
-            $draft = app(AiSupportRequestDraftService::class)->start($user, $lockedTicket, $path);
-            $action->forceFill(['consumed_at' => now()])->save();
-            $question = app(AiSupportRequestDraftService::class)->nextQuestion($user, $draft);
-            if ($question === null) {
-                app(AiSupportRecapService::class)->issue($user, $lockedTicket, $draft);
-            } else {
-                $this->createAutomatedMessage($lockedTicket, $question);
+        try {
+            $result = app(FamilyGoalJourneyService::class)->chooseCarePath($user, $ticket, $actionId, $path);
+            if ($result['result'] === 'human') {
+                app(AiSupportHandoffService::class)->transfer($user, $ticket, 'user_requested');
+            } elseif (filled($result['continue_message'])) {
+                app(AiSupportRuntimeService::class)->respond($user, $ticket->fresh(), (string) $result['continue_message']);
             }
-        }, 3);
-        $this->dispatch('support-chat-action-completed');
+            $this->resetValidation('path');
+            $this->dispatch('support-chat-action-completed');
+        } catch (ValidationException $exception) {
+            $this->addError('path', (string) collect($exception->errors())->flatten()->first());
+        }
+    }
+
+    public function chooseJourney(string $actionId, string $choice): void
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+        abort_unless($user && $ticket, 404);
+        try {
+            $result = app(FamilyGoalJourneyService::class)->chooseJourney($user, $ticket, $actionId, $choice);
+            if ($result['result'] === 'human') {
+                app(AiSupportHandoffService::class)->transfer($user, $ticket, 'user_requested');
+            } elseif (filled($result['continue_message'])) {
+                app(AiSupportRuntimeService::class)->respond($user, $ticket->fresh(), (string) $result['continue_message']);
+            }
+            $this->resetValidation('journey');
+            $this->dispatch('support-chat-action-completed');
+        } catch (ValidationException $exception) {
+            $this->addError('journey', (string) collect($exception->errors())->flatten()->first());
+        }
     }
 
     public function transferToPerson(): void
@@ -216,6 +226,18 @@ class ChatWidget extends Component
         $ticket = $this->ticket;
         abort_unless($user && $ticket, 404);
         app(AiSupportHandoffService::class)->transfer($user, $ticket, 'user_requested');
+        $this->dispatch('support-chat-action-completed');
+    }
+
+    public function cancelGoalJourney(string $journeyId): void
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+        abort_unless($user && $ticket, 404);
+        $active = app(FamilyGoalJourneyService::class)->activeFor($user, $ticket);
+        abort_unless($active && hash_equals($active->id, $journeyId), 404);
+        app(FamilyGoalJourneyService::class)->cancelActive($user, $ticket);
+        $this->createAutomatedMessage($ticket, 'I stopped this task. Nothing in the app was changed.');
         $this->dispatch('support-chat-action-completed');
     }
 
@@ -309,6 +331,7 @@ class ChatWidget extends Component
         abort_unless($user && $ticket, 404);
         try {
             app(AiSupportRecapService::class)->confirm($user, $ticket, $actionId);
+            app(FamilyGoalJourneyService::class)->markCompleted($user, $ticket, 'care_request_published');
             $this->resetValidation();
             $this->dispatch('support-chat-action-completed');
         } catch (ValidationException $exception) {
@@ -339,6 +362,7 @@ class ChatWidget extends Component
         abort_unless($user && $ticket, 404);
         try {
             app(FamilyLifecycleActionService::class)->confirm($user, $ticket, $actionId);
+            app(FamilyGoalJourneyService::class)->syncAfterVerifiedStep($user, $ticket, 'domain_action_verified');
             $this->resetValidation();
             $this->dispatch('support-chat-action-completed');
         } catch (ValidationException $exception) {
@@ -368,6 +392,7 @@ class ChatWidget extends Component
         $ticket = $this->ticket;
         abort_unless($user && $ticket, 404);
         app(AiSupportRequestDraftService::class)->discard($user, $ticket);
+        app(FamilyGoalJourneyService::class)->cancelActive($user, $ticket, 'request_draft_discarded');
         $this->createAutomatedMessage($ticket, 'Your private request draft was discarded.');
         $this->dispatch('support-chat-action-completed');
     }
@@ -467,6 +492,27 @@ class ChatWidget extends Component
         $user = auth()->user();
 
         return $user ? app(AiSupportGuidedTaskService::class)->foregroundFor($user) : null;
+    }
+
+    public function getActiveGoalJourneyProperty(): ?AiSupportGoalJourney
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+
+        return $user && $user->role === 'family' && $ticket
+            ? app(FamilyGoalJourneyService::class)->activeFor($user, $ticket)
+            : null;
+    }
+
+    /** @return array{id:string,goal:string,progress:string,instruction:string,state:string,canCancel:bool,hasGuidedTarget:bool}|null */
+    public function getGoalJourneyClientProperty(): ?array
+    {
+        $user = auth()->user();
+        $ticket = $this->ticket;
+
+        return $user && $user->role === 'family' && $ticket
+            ? app(FamilyGoalJourneyService::class)->clientPayload($user, $ticket)
+            : null;
     }
 
     /** @return array{id:string,targetId:string,instruction:string,label:string,state:string}|null */

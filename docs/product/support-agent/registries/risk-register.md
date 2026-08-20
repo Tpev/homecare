@@ -2,7 +2,7 @@
 
 Status: Draft registry
 
-Last updated: August 18, 2026
+Last updated: August 20, 2026
 
 Owner: Security/privacy and product
 
@@ -20,6 +20,7 @@ Owner: Security/privacy and product
 | `RISK-PRIV-001` | Sensitive care/payment/account data enters unnecessary model context or analytics | Critical/high | Context allowlist, redaction, access/retention policy | Field inventory and privacy tests | Open |
 | `RISK-INJECT-001` | User or record text changes agent policy/tool behavior | High | Untrusted-data boundary, capability tools, server validation | Adversarial prompt-injection corpus | Open |
 | `RISK-UX-001` | Older user misunderstands the action or completion state | High | One decision at a time, explicit preview/button/receipt, usability research | Older-adult completion/comprehension gate | Open |
+| `RISK-JOURNEY-001` | Refresh, navigation, a secure detour, or a new topic silently loses or merges the Family user's active goal | High | One actor/account/ticket-bound encrypted goal, explicit different-goal choice, registered detours, plain progress, transfer/resume, seven-day expiry | Batch 10 persistence, detour, different-goal, cross-account, cancellation, retention, and mobile refresh suites | Open; source controls verified, production audit pending |
 | `RISK-OPS-001` | Human transfer is not seen or receives a false queue/time promise | High | Both-admin in-app/email alerts, either-admin claim, persistent incident banner, human-only mode, no queue/time promise | Content-free alert receipt and human-handoff rehearsal | Open |
 | `RISK-COST-001` | Long conversations or loops create excessive cost/latency | Medium/high | Context limits, one-call default, bounded retry, $0.03/$0.05 conversation gates, $2/$5 daily gates, 50-turn user ceiling, P95 monitoring | Versioned Luna price catalog and deterministic monitor tests pass; final local 56-case rehearsal cost $0.0182 and P95 5.468 seconds, so the approved latency warning remains open for exact-release/infrastructure remeasurement | Open |
 | `RISK-MODEL-001` | Model/prompt change silently degrades behavior | High | Versioned candidate/prompt/schema/corpus/grader, repeated critical runs, compact report, full regression and staff-account/pilot gate | Frozen-v4 Luna/Mini report: 556/556 calls, zero hard/critical failures, exact hashes; repeat on governed changes and complete `DEC-064` evidence | Open |

@@ -299,6 +299,7 @@ class SeedE2eFixtures extends Command
             ['Family member', 'family.member.e2e@example.com', 'password'],
             ['AI pilot Family', 'family.ai.e2e@example.com', 'password'],
             ['AI pilot Family member', 'family.ai-member.e2e@example.com', 'password'],
+            ['AI journey Family', 'family.journey.e2e@example.com', 'password'],
             ['Eligible relative', 'family.eligible.e2e@example.com', 'password'],
             ['Removed relative', 'family.removed.e2e@example.com', 'password'],
             ['Admin', 'test@test.com', 'password'],
@@ -381,6 +382,27 @@ class SeedE2eFixtures extends Command
             now(),
             now()->addDay(),
             'Isolated Playwright AI Support fixture',
+            (string) Str::uuid(),
+        );
+
+        $journeyFamily = User::query()->create([
+            'name' => 'E2E Journey Family',
+            'email' => 'family.journey.e2e@example.com',
+            'role' => 'family',
+            'phone' => '+1 919 555 0112',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+        ]);
+        app(FamilyAccountProvisioner::class)->provisionOwner($journeyFamily, 'e2e_ai_journey_fixture');
+        app(AiSupportPilotGrantService::class)->grant(
+            $admin,
+            $journeyFamily,
+            'family_support_v1',
+            now(),
+            now()->addDay(),
+            'Isolated Playwright Batch 10 journey fixture',
             (string) Str::uuid(),
         );
 

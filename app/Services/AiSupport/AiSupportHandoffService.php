@@ -3,6 +3,7 @@
 namespace App\Services\AiSupport;
 
 use App\Models\AiSupportActionPreview;
+use App\Models\AiSupportGoalJourney;
 use App\Models\AiSupportGuidedTask;
 use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportRequestDraft;
@@ -27,6 +28,7 @@ class AiSupportHandoffService
         private readonly AiSupportEligibilityService $eligibility,
         private readonly MarketplaceNotificationService $notifications,
         private readonly AiSupportIncidentService $incidents,
+        private readonly FamilyGoalJourneyService $goalJourneys,
     ) {}
 
     public function transfer(User $actor, SupportTicket $ticket, string $reasonCode = 'user_requested'): SupportTicket
@@ -101,6 +103,7 @@ class AiSupportHandoffService
                     'last_result_code' => 'human_handoff',
                     'updated_at' => $message->created_at,
                 ]);
+            $this->goalJourneys->markTransferred($actor, $locked, $reasonCode);
             SupportTicketActivity::query()->create([
                 'support_ticket_id' => $locked->id,
                 'actor_user_id' => $actor->id,
@@ -221,6 +224,7 @@ class AiSupportHandoffService
                 'last_public_message_sender_id' => null,
                 'opener_last_read_at' => null,
             ])->save();
+            $this->goalJourneys->resumeTransferred($locked->opener, $locked);
             $this->events->record($locked, 'returned_to_automation', [
                 'support_ticket_message_id' => $message->id,
                 'reason_code' => 'admin_deliberate_return',
@@ -274,6 +278,14 @@ class AiSupportHandoffService
             if ((array) ($payload['task_ids'] ?? []) !== []) {
                 $lines[] = 'Authorized care task IDs: '.implode(', ', array_map('intval', $payload['task_ids']));
             }
+        }
+        $journey = AiSupportGoalJourney::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->where('actor_user_id', $actor->id)
+            ->latest('last_activity_at')
+            ->first();
+        if ($journey) {
+            $lines[] = 'Active goal: '.str_replace('_', ' ', $journey->journey_type).'; current step '.str_replace('_', ' ', $journey->step_key).'.';
         }
         $lines[] = 'Use the canonical conversation above for the complete user-supplied context. Do not ask the user to repeat it.';
 

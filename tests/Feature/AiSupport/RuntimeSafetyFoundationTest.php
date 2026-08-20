@@ -172,6 +172,7 @@ class RuntimeSafetyFoundationTest extends TestCase
             app(AiSupportEligibilityService::class),
             $notifications,
             app(AiSupportIncidentService::class),
+            app(\App\Services\AiSupport\FamilyGoalJourneyService::class),
         );
 
         $handoff->transfer($family, $ticket);

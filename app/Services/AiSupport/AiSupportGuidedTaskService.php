@@ -29,6 +29,7 @@ class AiSupportGuidedTaskService
         private readonly NavigationTargetRegistry $navigation,
         private readonly AiSupportEventRecorder $events,
         private readonly AiSupportCompletionVerifierRegistry $verifiers,
+        private readonly FamilyGoalJourneyService $goalJourneys,
     ) {}
 
     public function isPaymentMethodIntent(string $message): bool
@@ -735,6 +736,10 @@ class AiSupportGuidedTaskService
             ], $actor);
         }, 3);
 
+        if ($task->fresh()->state === AiSupportGuidedTask::STATE_COMPLETED) {
+            $this->goalJourneys->syncAfterVerifiedStep($actor, $task->ticket()->firstOrFail(), 'payment_method_verified');
+        }
+
         session()->forget(self::SESSION_TASK_KEY);
         session()->flash(self::SESSION_OPEN_CHAT_KEY, true);
     }
@@ -928,6 +933,10 @@ class AiSupportGuidedTaskService
                 ],
             ], $actor);
         }, 3);
+
+        if ($task->fresh()->state === AiSupportGuidedTask::STATE_COMPLETED) {
+            $this->goalJourneys->syncAfterVerifiedStep($actor, $ticket, $result->resultCode);
+        }
     }
 
     private function createTaskAction(SupportTicketMessage $message, AiSupportGuidedTask $task, string $label): AiSupportMessageAction
