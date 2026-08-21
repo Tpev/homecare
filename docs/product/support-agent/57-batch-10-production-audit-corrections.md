@@ -1,6 +1,6 @@
 # Batch 10 Authenticated Production Audit Corrections
 
-Status: Source complete; focused regression passed; normal deployment and authenticated recheck pending; exact two-user pilot unchanged; Live for everyone remains off
+Status: Initial correction deployed; post-deployment production-capability routing follow-up is source complete and awaiting the normal deployment/recheck; exact two-user pilot unchanged; Live for everyone remains off
 
 Audited: August 21, 2026
 
@@ -33,7 +33,7 @@ Six defects were reproduced and corrected:
 
 ## Regression coverage
 
-Focused verification passes 66 tests and 1,212 assertions across Batch 10 journeys, Family guided state, the Family state matrix, Batch 6/7 care operations, and the interactive runtime. The complete AI Support feature suite passes 238 tests and 5,846 assertions.
+Focused verification passes 58 tests and 1,135 assertions across Batch 10 journeys, Family guided state, Batch 6/7 care operations, and the interactive runtime. The complete AI Support feature suite passes 238 tests and 5,847 assertions.
 
 The new exact cases prove:
 
@@ -45,6 +45,12 @@ The new exact cases prove:
 - `Do I have any caregivers waiting for me to review or hire?` returns an authoritative empty or populated state without a provider call;
 - the direct Batch 6/7 reader selects a future booking over a past reviewed booking and selects an unconfirmed submitted-hours record over a newer confirmed one; and
 - 24/7 transfer discards the superseded ordinary draft, creates a human-help terminal journey, refreshes the Admin title, and omits stale draft content from the internal note.
+
+## Post-deployment production-capability follow-up
+
+The authenticated recheck confirmed that recipient continuation and upcoming-visit selection were corrected. It also exposed a test-configuration gap: with the production `family_care_operations_v1` capability enabled, its deep intent handler could answer three read-only state phrases before the authoritative Family action-inbox reader. That selected one historical visit for submitted hours and treated a hired caregiver as a waiting response. It also started a persistent operational goal for a status question, which could interfere with the next question.
+
+The runtime now routes the three stable read-only intents `FAM-VISIT-001`, `FAM-VISIT-018`, and `FAM-MATCH-013` through the authoritative Family state reader before operational handlers. These answers do not start a goal, do not mutate a domain record, and cannot preempt actual action intents such as `FAM-VISIT-020` approval or `FAM-MATCH-020` hiring. The regression runs with the production care-operations capability enabled and asserts that no goal journey is created.
 
 ## Deployment and recheck
 

@@ -1,6 +1,6 @@
 # Family Chat Operator Master Coverage and Delivery Plan
 
-Status: Active master plan; Batches 1 through 10 are deployed for the exact two-user Family pilot; the August 21 authenticated audit is complete and its targeted correction batch is source-complete pending deployment; **Live for everyone remains off**
+Status: Active master plan; Batches 1 through 10 and the first August 21 correction are deployed for the exact two-user Family pilot; the production-capability state-routing follow-up is source-complete pending deployment; **Live for everyone remains off**
 
 Audited: August 21, 2026
 

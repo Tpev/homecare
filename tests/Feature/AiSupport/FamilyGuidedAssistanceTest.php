@@ -166,7 +166,13 @@ class FamilyGuidedAssistanceTest extends TestCase
 
     public function test_production_state_phrases_ignore_past_visits_list_all_waiting_hours_and_answer_no_applicants(): void
     {
-        [, $family] = $this->eligibleFamily();
+        [$admin, $family] = $this->eligibleFamily();
+        app(AiSupportControlService::class)->set(
+            $admin,
+            'capability.family_care_operations_v1',
+            true,
+            'Match the production pilot capability stack',
+        );
         $caregiver = User::factory()->create(['role' => 'caregiver', 'name' => 'Current Caregiver']);
         $pastRequest = $this->request($family, [
             'title' => 'Old reviewed visit',
@@ -215,6 +221,7 @@ class FamilyGuidedAssistanceTest extends TestCase
             'No caregivers are waiting for you to review or hire right now.',
             $applicantTicket->publicMessages()->latest()->firstOrFail()->body,
         );
+        $this->assertDatabaseCount('ai_support_goal_journeys', 0);
         Http::assertNothingSent();
     }
 
