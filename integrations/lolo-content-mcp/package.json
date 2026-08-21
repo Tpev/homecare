@@ -2,10 +2,11 @@
   "name": "@lolo-care/content-mcp",
   "version": "1.0.0",
   "private": true,
-  "description": "Local STDIO MCP connector for the LoLo Care Content API",
+  "description": "STDIO and hosted Streamable HTTP MCP connector for the LoLo Care Content API",
   "type": "module",
   "bin": {
-    "lolo-content-mcp": "dist/index.js"
+    "lolo-content-mcp": "dist/index.js",
+    "lolo-content-mcp-http": "dist/http.js"
   },
   "files": [
     "dist",
@@ -15,6 +16,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
+    "start:http": "node dist/http.js",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "check": "tsc -p tsconfig.json --noEmit && vitest run"
@@ -24,9 +26,11 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.30.0",
+    "express": "5.2.1",
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@types/express": "5.0.6",
     "@types/node": "22.20.0",
     "typescript": "5.9.3",
     "vitest": "4.1.10"

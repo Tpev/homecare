@@ -1,16 +1,25 @@
-# Example only: copy into this trusted project's .codex/config.toml.
-# Export both variables in the environment that starts Codex. Never put a token here.
+# Preferred hosted configuration. No repository checkout, Node installation, or
+# bearer token is needed on the operator's computer. Codex completes OAuth in a
+# browser and stores its own revocable user session.
 [mcp_servers.lolo_content]
-command = "node"
-args = ["integrations/lolo-content-mcp/dist/index.js"]
-cwd = "."
-env_vars = ["LOLO_CONTENT_API_URL", "LOLO_CONTENT_API_TOKEN"]
+url = "https://carelolo.com/mcp/content"
+auth = "oauth"
 default_tools_approval_mode = "writes"
-startup_timeout_sec = 15
-tool_timeout_sec = 90
+startup_timeout_sec = 20
+tool_timeout_sec = 120
 
 [mcp_servers.lolo_content.tools.schedule_article]
 approval_mode = "prompt"
 
 [mcp_servers.lolo_content.tools.publish_article]
 approval_mode = "prompt"
+
+# The legacy project-local STDIO mode remains supported for maintainers. Use a
+# different server name if both modes are configured, and forward secrets from
+# the process environment instead of putting them in TOML.
+# [mcp_servers.lolo_content_local]
+# command = "node"
+# args = ["integrations/lolo-content-mcp/dist/index.js"]
+# cwd = "/absolute/path/to/homecare"
+# env_vars = ["LOLO_CONTENT_API_URL", "LOLO_CONTENT_API_TOKEN"]
+# default_tools_approval_mode = "writes"

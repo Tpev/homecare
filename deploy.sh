@@ -19,10 +19,12 @@ NPM_BIN="${HOMECARE_NPM_BIN:-npm}"
 GO_BIN="${HOMECARE_GO_BIN:-/usr/local/go/bin/go}"
 FPM_SERVICE="${HOMECARE_FPM_SERVICE:-php8.3-fpm}"
 VOICE_AGENT_SERVICE="${HOMECARE_VOICE_AGENT_SERVICE:-homecare-voice-agent}"
+CONTENT_MCP_SERVICE="${HOMECARE_CONTENT_MCP_SERVICE:-homecare-content-mcp}"
 LOCK_FILE="${HOMECARE_DEPLOY_LOCK:-/tmp/homecare-deploy.lock}"
 APP_HEALTH_HOST="${HOMECARE_APP_HEALTH_HOST:-carelolo.com}"
 APP_HEALTH_URL="${HOMECARE_APP_HEALTH_URL:-https://carelolo.com/up}"
 VOICE_HEALTH_URL="${HOMECARE_VOICE_HEALTH_URL:-http://127.0.0.1:8088/healthz}"
+CONTENT_MCP_HEALTH_URL="${HOMECARE_CONTENT_MCP_HEALTH_URL:-http://127.0.0.1:8090/healthz}"
 
 MODE="${1:-deploy}"
 SWITCHED=0
@@ -136,6 +138,17 @@ voice_is_healthy() {
     "$VOICE_HEALTH_URL" >/dev/null
 }
 
+content_mcp_service_is_installed() {
+  systemctl cat "$CONTENT_MCP_SERVICE" >/dev/null 2>&1
+}
+
+content_mcp_is_healthy() {
+  curl --fail --silent --show-error \
+    --connect-timeout 3 \
+    --max-time 10 \
+    "$CONTENT_MCP_HEALTH_URL" >/dev/null
+}
+
 wait_for_health() {
   local check="$1"
   local label="$2"
@@ -166,6 +179,14 @@ restart_runtime_for_active_release() {
 
   log "Restarting voice-agent..."
   sudo systemctl restart "$VOICE_AGENT_SERVICE"
+
+  if content_mcp_service_is_installed; then
+    log "Restarting the additive Content MCP service..."
+    sudo systemctl restart "$CONTENT_MCP_SERVICE" \
+      || log "Content MCP restart failed; the live Laravel release remains active. Inspect $CONTENT_MCP_SERVICE."
+  else
+    log "Content MCP systemd unit is not installed yet; skipping its optional restart."
+  fi
 }
 
 rollback_after_failure() {
@@ -180,6 +201,9 @@ rollback_after_failure() {
       sudo systemctl reload "$FPM_SERVICE" || true
       run_artisan "$APP_DIR" queue:restart || true
       sudo systemctl restart "$VOICE_AGENT_SERVICE" || true
+      if content_mcp_service_is_installed; then
+        sudo systemctl restart "$CONTENT_MCP_SERVICE" || true
+      fi
       wait_for_health app_is_healthy "Application rollback" || true
       log "Rollback attempt finished. Database migrations were not reversed."
     else
@@ -323,6 +347,12 @@ create_release() {
   log "Building frontend assets in the inactive release..."
   (cd "$NEW_RELEASE" && "$NPM_BIN" run build)
 
+  log "Installing locked Content MCP dependencies in the inactive release..."
+  (cd "$NEW_RELEASE/integrations/lolo-content-mcp" && "$NPM_BIN" ci --no-audit --no-fund)
+
+  log "Building the hosted Content MCP in the inactive release..."
+  (cd "$NEW_RELEASE/integrations/lolo-content-mcp" && "$NPM_BIN" run build)
+
   if [[ -d "$current/public/build/assets" && -d "$NEW_RELEASE/public/build/assets" ]]; then
     log "Retaining the previous hashed assets for in-flight browser requests..."
     cp -a -n "$current/public/build/assets/." "$NEW_RELEASE/public/build/assets/"
@@ -355,6 +385,8 @@ create_release() {
     || die "The release has no Vite manifest."
   [[ -x "$NEW_RELEASE/voice-agent/bin/voice-agent" ]] \
     || die "The release has no executable voice-agent binary."
+  [[ -f "$NEW_RELEASE/integrations/lolo-content-mcp/dist/http.js" ]] \
+    || die "The release has no hosted Content MCP build."
 
   log "Validating the inactive Laravel release..."
   run_artisan "$NEW_RELEASE" route:list --json >/dev/null
@@ -464,6 +496,10 @@ perform_rollback() {
   restart_runtime_for_active_release
   wait_for_health app_is_healthy "Application"
   wait_for_health voice_is_healthy "Voice-agent"
+  if content_mcp_service_is_installed; then
+    wait_for_health content_mcp_is_healthy "Content MCP" \
+      || log "Content MCP is unavailable after rollback; the Laravel application and voice service are healthy."
+  fi
   SWITCHED=0
   log "Rollback complete. Database migrations were intentionally not reversed."
 }
@@ -525,6 +561,10 @@ activate_release "$CURRENT_RELEASE"
 restart_runtime_for_active_release
 wait_for_health app_is_healthy "Application"
 wait_for_health voice_is_healthy "Voice-agent"
+if content_mcp_service_is_installed; then
+  wait_for_health content_mcp_is_healthy "Content MCP" \
+    || log "Content MCP is unavailable; the Laravel application release remains active."
+fi
 
 SWITCHED=0
 BOOTSTRAP_MOVED=0

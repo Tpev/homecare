@@ -20,7 +20,8 @@ class IssueContentApiToken extends Command
         {--ability=* : Ability to grant; repeat for each ability}
         {--ttl= : Lifetime in minutes (maximum 525600)}
         {--expires= : ISO-8601 expiration timestamp}
-        {--issued-by= : Administrator user ID or email for issuer attribution}';
+        {--issued-by= : Administrator user ID or email for issuer attribution}
+        {--hosted-mcp-service : Restrict this credential to signed hosted-MCP actor delegation}';
 
     protected $description = 'Issue a scoped, expiring Content API bearer token and display its secret once';
 
@@ -40,6 +41,7 @@ class IssueContentApiToken extends Command
                 $abilities,
                 $expiresAt,
                 $issuer,
+                (bool) $this->option('hosted-mcp-service'),
             );
         } catch (ValidationException $exception) {
             foreach ($exception->errors() as $messages) {
@@ -57,6 +59,7 @@ class IssueContentApiToken extends Command
         $this->line('Name: '.$token->name);
         $this->line('Actor: '.$actor->name.' <'.$actor->email.'> (user '.$actor->id.')');
         $this->line('Abilities: '.implode(', ', $token->abilities));
+        $this->line('Kind: '.($token->allows_actor_delegation ? 'hosted MCP delegation service' : 'direct machine client'));
         $this->line('Expires: '.$token->expires_at->toIso8601String());
         $this->newLine();
         $this->warn('Copy this bearer token now. It will not be shown again:');

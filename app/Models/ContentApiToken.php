@@ -41,6 +41,7 @@ class ContentApiToken extends Model
         'actor_user_id',
         'issued_by_user_id',
         'abilities',
+        'allows_actor_delegation',
         'expires_at',
         'last_used_at',
         'revoked_at',
@@ -55,6 +56,7 @@ class ContentApiToken extends Model
     {
         return [
             'abilities' => 'array',
+            'allows_actor_delegation' => 'boolean',
             'expires_at' => 'datetime',
             'last_used_at' => 'datetime',
             'revoked_at' => 'datetime',

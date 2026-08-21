@@ -40,6 +40,7 @@ class AuditContentApiRequest
         $token = $request->attributes->get('content_api_token');
         $routePost = $request->attributes->get('content_api_blog_post_id');
         $postId = $routePost instanceof BlogPost ? $routePost->id : (is_numeric($routePost) ? (int) $routePost : null);
+        $oauthAccess = $request->attributes->get('content_mcp_oauth_access_token');
 
         ContentApiAuditEvent::query()->create([
             'content_api_token_id' => $token instanceof ContentApiToken ? $token->id : null,
@@ -56,6 +57,9 @@ class AuditContentApiRequest
             'metadata' => [
                 'method' => $request->method(),
                 'route' => $request->route()?->getName(),
+                'oauth_access_token_id' => $oauthAccess instanceof \App\Models\ContentMcpOAuthAccessToken
+                    ? $oauthAccess->public_id
+                    : null,
             ],
             'occurred_at' => now(),
         ]);

@@ -2,7 +2,7 @@
 
 For the short, repeatable operator workflow, start with [codex-blog-quickstart.md](codex-blog-quickstart.md). This document is the detailed architecture, security, deployment, and incident-response reference.
 
-This integration lets a trusted Codex task work with LoLo Care articles through a versioned Content API and a local STDIO MCP server. It does not create a second publishing path. Every change still passes through the application's existing authorization, `BlogPostWorkflow`, `BlogPostReadiness`, `TiptapDocumentRenderer`, `MediaAssetManager`, optimistic `edit_version` locking, immutable published revisions, scheduling, redirects, and content-audit behavior. Independent review is an optional deployment policy controlled by `CONTENT_REQUIRE_INDEPENDENT_REVIEW`; LoLo Care currently defaults it off.
+This integration lets a trusted Codex task work with LoLo Care articles through a versioned Content API and either the preferred hosted Streamable HTTP MCP server or the maintained local STDIO fallback. It does not create a second publishing path. Every change still passes through the application's existing authorization, `BlogPostWorkflow`, `BlogPostReadiness`, `TiptapDocumentRenderer`, `MediaAssetManager`, optimistic `edit_version` locking, immutable published revisions, scheduling, redirects, and content-audit behavior. Independent review is an optional deployment policy controlled by `CONTENT_REQUIRE_INDEPENDENT_REVIEW`; LoLo Care currently defaults it off. For exact server and Charles setup, use [hosted-content-mcp.md](hosted-content-mcp.md).
 
 Use the connector only from a trusted project and give each machine or automation its own short-lived, least-privilege token. Never place a bearer token in Git, `.env.example`, Codex configuration, a prompt, a ticket, or a log.
 
@@ -10,8 +10,8 @@ Use the connector only from a trusted project and give each machine or automatio
 
 ```text
 Codex task
-  -> local STDIO process: integrations/lolo-content-mcp
-     -> HTTPS + bearer token
+  -> hosted HTTPS/OAuth MCP (preferred), or local STDIO fallback
+     -> signed user delegation + separate server-only bearer
         -> /api/content/v1
            -> token authentication, scope checks, rate/request limits,
               idempotency, policy checks, and audit events
@@ -19,11 +19,11 @@ Codex task
                  -> working draft + immutable published revisions + managed media
 ```
 
-The MCP process is an adapter, not an authority. It reads `LOLO_CONTENT_API_URL` and `LOLO_CONTENT_API_TOKEN` from its process environment, maps MCP tools to HTTP requests, and returns concise structured results. The API authenticates the token, resolves its explicit user actor, checks both the token ability and that user's current content permissions, then calls the same domain services used by the CMS. Controllers and MCP tools must never write blog tables or storage paths directly.
+The MCP process is an adapter, not an authority. Hosted mode introspects the user's audience-bound OAuth bearer, then calls the Content API with a separate server-only credential plus a short-lived signed actor delegation. Local STDIO reads `LOLO_CONTENT_API_URL` and `LOLO_CONTENT_API_TOKEN` from its environment. In both modes the API resolves the accountable user actor, checks effective scope and current content permission, and calls the same domain services used by the CMS. Controllers and MCP tools must never write blog tables or storage paths directly.
 
 The principal trust boundaries are:
 
-- **Codex task to local MCP server.** Prompts and retrieved text are untrusted input. The server exposes narrow schemas and identifies every write accurately. It must not execute content as code or emit credentials.
+- **Codex task to MCP server.** Prompts and retrieved text are untrusted input. The server exposes narrow schemas and identifies every write accurately. It must not execute content as code or emit credentials. Hosted users authenticate with OAuth/PKCE; the local fallback uses an environment-injected Content API token.
 - **MCP server to Content API.** Use HTTPS in production. The bearer token is the machine credential and must be injected from a secret manager or operator environment. Treat the API URL as administrator-controlled configuration, not article input.
 - **Content API to CMS.** Authentication is not sufficient authorization. Every endpoint requires a named ability and the actor's existing application permission. Workflow and readiness failures remain authoritative.
 - **Draft to public content.** Drafts, preview URLs, and managed media are not public merely because Codex can access them. Publishing creates or selects an immutable public revision only after readiness succeeds and an authorized publisher explicitly approves the high-impact operation. When independent-review policy is enabled, that review is an additional gate.
@@ -146,7 +146,30 @@ php artisan content:token:revoke lolo_content_1a2b --revoked-by=admin@example.co
 
 Revocation is immediate. It does not delete attribution, revisions, audit events, or published content.
 
-## Build and configure the local MCP server
+## Configure the hosted MCP (preferred)
+
+The hosted service is deployed at `https://carelolo.com/mcp/content`. Each operator uses the Codex Settings UI to add that URL and selects OAuth/Authenticate. The browser redirects to the LoLo Care login/consent page; no Node installation, checkout, environment variable, or Content API token belongs on the operator's computer. See [hosted-content-mcp.md](hosted-content-mcp.md) for the exact administrator, Nginx, systemd, rotation, and Charles steps.
+
+Equivalent Codex configuration is:
+
+```toml
+[mcp_servers.lolo_content]
+url = "https://carelolo.com/mcp/content"
+auth = "oauth"
+default_tools_approval_mode = "writes"
+startup_timeout_sec = 20
+tool_timeout_sec = 120
+
+[mcp_servers.lolo_content.tools.schedule_article]
+approval_mode = "prompt"
+
+[mcp_servers.lolo_content.tools.publish_article]
+approval_mode = "prompt"
+```
+
+The hosted service follows the current official [MCP Streamable HTTP transport](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports) and [MCP authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization) specifications. Laravel provides OAuth authorization-server and protected-resource metadata, dynamic loopback-only client registration, authorization code + PKCE, rotating refresh tokens, revocation, and authenticated introspection. The Node process binds only to loopback behind Nginx.
+
+## Build and configure the local STDIO fallback
 
 From a trusted checkout with Node.js 20 or newer, install exactly the locked dependencies and build the connector:
 
@@ -165,10 +188,10 @@ export LOLO_CONTENT_API_TOKEN="<retrieve from the approved secret manager>"
 
 Do not add either value to a tracked `.env` file. In particular, never write a token into `.env.example` or the TOML below.
 
-Codex supports local STDIO MCP servers, forwarded environment variables, and project-scoped `.codex/config.toml` for trusted projects. See the [official Codex MCP documentation](https://developers.openai.com/codex/mcp). Add this example to the trusted project's `.codex/config.toml`, replacing only the absolute checkout path:
+Codex also supports local STDIO MCP servers, forwarded environment variables, and project-scoped `.codex/config.toml` for trusted maintainer projects. See the [official Codex MCP documentation](https://learn.chatgpt.com/docs/extend/mcp?surface=cli). Add this fallback example to the trusted project's `.codex/config.toml`, replacing only the absolute checkout path and using a different name if hosted mode is also configured:
 
 ```toml
-[mcp_servers.lolo_content]
+[mcp_servers.lolo_content_local]
 command = "node"
 args = ["integrations/lolo-content-mcp/dist/index.js"]
 cwd = "/absolute/path/to/homecare"
@@ -188,7 +211,7 @@ approval_mode = "prompt"
 
 Do **not** set `approval_mode = "approve"` on `schedule_article` or `publish_article`. In Codex configuration, `approve` means the tool is pre-approved; it is not an instruction to show an approval prompt. It is suitable only for a tool an administrator has intentionally chosen to allow without a prompt. Scheduling and publishing are high-impact external writes and must retain an approval step.
 
-Restart Codex after changing the environment or configuration. Use `/mcp` in Codex, or `codex mcp list`, to confirm that `lolo_content` starts and that tool annotations are visible. A configuration error should fail closed: fix the absolute path, Node runtime, build, environment, or HTTPS endpoint rather than copying the token into the file.
+Restart Codex after changing the environment or configuration. Use `/mcp` in Codex, or `codex mcp list`, to confirm that the server starts and tool annotations are visible. A configuration error should fail closed: fix the URL/OAuth connection or, for fallback mode, the path, Node runtime, build, environment, or HTTPS endpoint rather than copying a token into the file.
 
 ## Editorial workflow
 
@@ -233,25 +256,27 @@ Production is the live `https://carelolo.com` site. A push to `master` does not 
 
 `CONTENT_REQUIRE_INDEPENDENT_REVIEW=false` is the current default. It removes review from readiness and lets an authorized publisher publish a ready draft directly. Set it to `true` to restore the independent-review gate; after changing it, run the normal deployment so `config:cache` is rebuilt.
 
+From an existing administrator terminal on the production host, run only the reviewed deployment entry point:
+
 ```bash
-ssh <production-host>
 cd /var/www/homecare
-git fetch origin
-git log -1 --oneline origin/master
 ./deploy.sh
 ```
 
-`deploy.sh` acquires `/tmp/homecare-deploy.lock`, enters maintenance mode, updates `master` with `git pull --ff-only`, installs locked PHP and Node dependencies, builds production assets, runs migrations, regenerates caregiver image variants, rebuilds Laravel caches, restarts queue workers and PHP-FPM, builds/restarts the voice agent, validates/reloads nginx, and checks both application and voice-agent health. Its exit trap brings Laravel back up after a failure. Investigate any failed step before retrying; do not bypass it with an ad hoc partial deployment.
+`deploy.sh` acquires `/tmp/homecare-deploy.lock`, fetches `master` into its local mirror, constructs an inactive release, installs locked PHP/root Node/connector Node dependencies, builds frontend/hosted-MCP/voice artifacts, runs backward-compatible migrations, rebuilds Laravel caches, validates the release and Nginx configuration, then switches `/var/www/homecare` atomically without maintenance mode. It reloads PHP-FPM, restarts queue/voice runtimes, and restarts the Content MCP only when its systemd unit is installed. Laravel and voice health remain deployment gates; an additive MCP restart/health failure is reported without taking the healthy live site down.
 
-The Content MCP process is built and run only on the trusted Codex operator workstation. It is not a public production daemon and does not need to be installed or started by `deploy.sh`.
+The preferred Content MCP is a production daemon bound to `127.0.0.1:8090` and exposed only at the exact authenticated Nginx location `/mcp/content`. The local STDIO process remains a maintainer fallback.
 
 After `deploy.sh` succeeds, verify the new API and scheduler from the production application directory:
 
 ```bash
 cd /var/www/homecare
 php artisan route:list --path=api/content/v1
+php artisan route:list --path=oauth
+php artisan route:list --path=.well-known
 php artisan schedule:list
 php artisan content:audit --fail-on-issues
+curl -fsS http://127.0.0.1:8090/healthz
 curl -fsS https://carelolo.com/ >/dev/null
 ```
 
@@ -263,7 +288,7 @@ The scheduler also runs Laravel's model pruner daily for expired Content API ide
 * * * * * cd /var/www/homecare && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-Install this cron entry only if the host does not already run Laravel's scheduler; duplicate schedulers are not safe. Keep the existing supervised queue-worker service and restart it through the host's service manager after deployment. The Content API adds no new public daemon.
+Install this cron entry only if the host does not already run Laravel's scheduler; duplicate schedulers are not safe. Keep the existing supervised queue-worker service and restart it through the host's service manager after deployment. The hosted MCP adds one loopback-only Node daemon; Nginx is its sole public boundary.
 
 Ensure the reverse proxy:
 
@@ -271,13 +296,13 @@ Ensure the reverse proxy:
 - passes the `Authorization`, `Idempotency-Key`, content-type, request-ID, and standard forwarding headers without logging their values;
 - enforces the application's request/body limits and does not cache authenticated API or preview responses;
 - keeps protected preview routes behind signed expiry validation; and
-- does not expose Laravel logs, storage paths, or the MCP process.
+- proxies only the exact `/mcp/content` endpoint to the loopback MCP process, validates Nginx configuration before reload, and never exposes Laravel logs or storage paths.
 
-Issue production tokens only after the release and endpoint checks pass. Start with `content:read`, validate a read-only request from the intended workstation, then add a separate authoring or publishing token only if operationally necessary.
+Issue the hosted server-only delegation token only after the release and OAuth metadata checks pass, then keep it solely in `/var/www/homecare-deploy/shared/content-mcp.env`. Human hosted users receive OAuth scopes through consent and their current content role. Normal actor-bound Content API tokens remain available only for the local STDIO fallback.
 
 ### Verify actor attribution and the audit trail
 
-1. Run `php artisan content:token:list --active --actor=<actor-email>` and verify the token name, abilities, expiry, last use, safe prefix, and issuer.
+1. For hosted mode, run `php artisan content-mcp:session:list --active --actor=<actor-email>` and verify the OAuth session, Codex client, scopes, expiry, and last use. Separately run `php artisan content:token:list --active` and verify exactly one intended `hosted MCP service` credential. For local mode, filter that token list by actor.
 2. In Content administration, open the article and inspect its created/updated/published actor fields, revisions, and current/published version. If optional review mode was used, also inspect its submitter, reviewer, and review notes.
 3. Correlate the API response's `request_id` with `content_api_audit_events`. Verify `content_api_token_id`, `actor_user_id`, `blog_post_id`, `action`, `ability`, `outcome`, `response_status`, and `occurred_at`. The event must not contain the bearer token, request body, raw idempotency key, or protected preview signature.
 4. Inspect `blog_post_revisions` for the matching `actor_user_id`, change summary, monotonically increasing revision number, and immutable published snapshot. A published snapshot should match what the public route renders even if a new working draft is started later.
@@ -292,8 +317,8 @@ Application rollback and content rollback are separate decisions.
 For an integration release problem:
 
 1. Revoke affected tokens immediately if requests are unsafe or unaccounted for.
-2. Disable or remove the `lolo_content` entry from the trusted project's Codex configuration and restart Codex.
-3. Put the application into maintenance mode if the API could corrupt state, then deploy the last known-good application revision using the normal release process.
+2. Revoke affected hosted user sessions and stop `homecare-content-mcp` if necessary; this leaves the site, CMS UI, scheduler, bookings, payments, and voice agent running. For local mode, disable/remove the STDIO server configuration and restart Codex.
+3. Deploy the last known-good application revision using the normal atomic release process. Do not put the live site into maintenance mode merely for an MCP incident.
 4. Run the repository's `./deploy.sh` for that known-good `master` revision, then repeat the route, scheduler, content-audit, and public health checks.
 5. Do not roll back a migration destructively until its migration and data impact have been reviewed and a backup has been verified. Leaving new access/audit tables in place is safer than dropping evidence during an incident.
 
@@ -303,7 +328,7 @@ For an incorrect article, use the CMS workflow to archive it or create a correct
 
 For a suspected credential leak, unauthorized tool call, lost workstation, unexpected publication, or unexplained audit event:
 
-1. Revoke the affected token by numeric ID or safe prefix. If scope is uncertain, revoke every token for that actor and disable the Codex MCP configuration.
+1. In hosted mode, run `content-mcp:session:revoke <actor> --revoked-by=<admin>` and remove the actor's content role if account compromise is suspected. If the server credential may be exposed, rotate/revoke it and restart the MCP service. In local mode, revoke the affected token by numeric ID/safe prefix and disable that Codex configuration.
 2. Preserve evidence: token metadata, request IDs, API/audit events, reverse-proxy access metadata with authorization values redacted, article revisions, review records, scheduler/queue output, and the relevant time window. Do not copy secrets into the incident record.
 3. Identify affected articles and operations from `content_api_audit_events`; compare API events with blog revisions and immutable published snapshots. Check idempotency reuse, conflicts, media uploads, preview creation, submission, scheduling, and publication.
 4. Remove public exposure through the supported CMS archive/correction workflow, not direct SQL. Rotate any preview links by allowing them to expire or invalidating the relevant signing key only after assessing the application-wide effect.

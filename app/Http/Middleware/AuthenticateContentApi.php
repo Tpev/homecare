@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Exceptions\ContentMcpDelegationException;
 use App\Services\Content\ContentApiTokenManager;
+use App\Services\Content\ContentMcpDelegationVerifier;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,7 +13,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AuthenticateContentApi
 {
-    public function __construct(private readonly ContentApiTokenManager $tokens) {}
+    public function __construct(
+        private readonly ContentApiTokenManager $tokens,
+        private readonly ContentMcpDelegationVerifier $delegations,
+    ) {}
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -26,7 +31,8 @@ class AuthenticateContentApi
             ]);
         }
 
-        $token = $this->tokens->authenticate((string) $request->bearerToken());
+        $plainTextToken = (string) $request->bearerToken();
+        $token = $this->tokens->authenticate($plainTextToken);
 
         if (! $token) {
             RateLimiter::hit($attemptKey, 60);
@@ -41,7 +47,24 @@ class AuthenticateContentApi
         }
 
         $request->attributes->set('content_api_token', $token);
-        $request->setUserResolver(fn () => $token->actor);
+        if ($token->allows_actor_delegation) {
+            try {
+                $delegation = $this->delegations->verify($request, $token, $plainTextToken);
+            } catch (ContentMcpDelegationException $exception) {
+                return new JsonResponse([
+                    'message' => 'Hosted MCP actor delegation failed.',
+                    'code' => $exception->errorCode,
+                    'errors' => ['delegation' => [$exception->getMessage()]],
+                ], $exception->httpStatus);
+            }
+
+            $request->attributes->set('content_api_abilities', $delegation['abilities']);
+            $request->attributes->set('content_mcp_oauth_access_token', $delegation['access_token']);
+            $request->setUserResolver(fn () => $delegation['access_token']->user);
+        } else {
+            $request->attributes->set('content_api_abilities', $token->abilities ?? []);
+            $request->setUserResolver(fn () => $token->actor);
+        }
 
         return $next($request);
     }

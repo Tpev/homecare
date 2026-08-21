@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { loadConfig } from '../src/config.js';
+import { loadConfig, loadHostedConfig } from '../src/config.js';
 
 describe('loadConfig', () => {
   it('normalizes an HTTPS origin to the versioned API base', () => {
@@ -42,5 +42,26 @@ describe('loadConfig', () => {
   it('requires both settings without including their values in errors', () => {
     expect(() => loadConfig({})).toThrow('LOLO_CONTENT_API_URL is required');
     expect(() => loadConfig({ LOLO_CONTENT_API_URL: 'https://cms.example.test' })).toThrow('LOLO_CONTENT_API_TOKEN is required');
+  });
+});
+
+describe('loadHostedConfig', () => {
+  it('uses the carelolo hosted endpoint and loopback service defaults', () => {
+    const config = loadHostedConfig({
+      LOLO_CONTENT_API_URL: 'https://carelolo.com',
+      LOLO_CONTENT_API_TOKEN: 'service-token',
+    });
+    expect(config.publicUrl.href).toBe('https://carelolo.com/mcp/content');
+    expect(config.introspectionUrl.href).toBe('https://carelolo.com/oauth/introspect');
+    expect(config.host).toBe('127.0.0.1');
+    expect(config.port).toBe(8090);
+  });
+
+  it('rejects a public endpoint outside the fixed MCP path', () => {
+    expect(() => loadHostedConfig({
+      LOLO_CONTENT_API_URL: 'https://carelolo.com',
+      LOLO_CONTENT_API_TOKEN: 'service-token',
+      LOLO_CONTENT_MCP_PUBLIC_URL: 'https://carelolo.com/not-mcp',
+    })).toThrow('/mcp/content');
   });
 });

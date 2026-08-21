@@ -68,14 +68,14 @@ The script performs these operations in order:
 3. creates a new inactive release;
 4. links the protected `.env` and durable storage;
 5. installs production Composer and npm dependencies;
-6. builds frontend and voice-agent artifacts;
+6. builds frontend, hosted Content MCP, and voice-agent artifacts;
 7. retains the previous hashed frontend assets for in-flight browser requests;
 8. runs database migrations and photo generation while the old release remains live;
 9. builds Laravel configuration, route, and view caches inside the inactive release;
 10. validates Laravel routes, migration state, the Vite manifest, the voice binary, and Nginx configuration;
 11. atomically changes the active symlink;
-12. gracefully reloads PHP-FPM, signals queue workers after their current jobs, and restarts the voice agent;
-13. checks `https://carelolo.com/up` through local Nginx and the local voice-agent health endpoint; and
+12. gracefully reloads PHP-FPM, signals queue workers after their current jobs, restarts the voice agent, and restarts the Content MCP when its additive systemd unit is installed;
+13. checks `https://carelolo.com/up` through local Nginx and the local voice-agent health endpoint, then checks Content MCP health when installed without risking the healthy website release if only MCP is unavailable; and
 14. removes only eligible old releases.
 
 The script no longer calls the unavailable Horizon command unless Horizon is actually installed.
@@ -94,7 +94,7 @@ Return to the immediately preceding application release:
 ./deploy.sh --rollback
 ```
 
-Rollback atomically changes the symlink, gracefully reloads PHP-FPM, restarts the runtime workers, and repeats both health checks. It intentionally does **not** reverse database migrations.
+Rollback atomically changes the symlink, gracefully reloads PHP-FPM, restarts the runtime workers, and repeats application/voice health checks plus the optional Content MCP check. It intentionally does **not** reverse database migrations.
 
 If a failure happens before activation, the live release is untouched and the failed release is retained for inspection. If a failure happens after activation, the script automatically points the application back to the prior release and reloads the runtime.
 
@@ -112,7 +112,7 @@ Do not combine a destructive rename/drop with code that requires the new schema 
 
 The website remains available and no maintenance page is enabled. A request already being processed finishes on its existing PHP-FPM worker; new requests use the new release after the graceful reload. Existing sessions and uploads remain in shared storage.
 
-The voice agent is still restarted after the application switch, so an inbound voice request arriving at that exact moment may see a very short interruption. This does not make the website unavailable.
+The voice agent and hosted Content MCP are still restarted after the application switch, so an inbound voice or Codex request arriving at that exact moment may see a very short interruption. This does not make the website unavailable. An MCP-only failure is logged as an additive-service problem and does not roll the healthy Laravel release back.
 
 ## Configuration
 

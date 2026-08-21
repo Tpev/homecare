@@ -20,6 +20,7 @@ Schedule::command('content:publish-scheduled')->everyMinute()->withoutOverlappin
 Schedule::command('content:verify-public --fail-on-issues')->dailyAt('09:20')->withoutOverlapping()->appendOutputTo(storage_path('logs/content-public-verification.log'));
 Schedule::command('content:audit')->weeklyOn(1, '08:00')->withoutOverlapping()->appendOutputTo(storage_path('logs/content-audit.log'));
 Schedule::command('content:prune-events')->dailyAt('03:20')->withoutOverlapping();
+Schedule::command('content-mcp:prune')->dailyAt('03:25')->withoutOverlapping();
 if (config('ai_support.retention_execution_enabled', false)) {
     Schedule::command('ai-support:apply-retention --execute')->dailyAt('03:40')->withoutOverlapping();
 }

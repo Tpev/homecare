@@ -33,11 +33,12 @@ class ListContentApiTokens extends Command
 
         $tokens = $query->get();
         $this->table(
-            ['ID', 'Name', 'Actor', 'Safe prefix', 'Abilities', 'Expires', 'Revoked', 'Last used', 'Issuer'],
+            ['ID', 'Name', 'Actor', 'Kind', 'Safe prefix', 'Abilities', 'Expires', 'Revoked', 'Last used', 'Issuer'],
             $tokens->map(fn (ContentApiToken $token): array => [
                 $token->id,
                 $token->name,
                 $token->actor ? $token->actor->email.' (#'.$token->actor->id.')' : 'deleted user',
+                $token->allows_actor_delegation ? 'hosted MCP service' : 'direct client',
                 $token->token_prefix,
                 implode(', ', $token->abilities ?? []),
                 $token->expires_at?->toIso8601String() ?? 'invalid',

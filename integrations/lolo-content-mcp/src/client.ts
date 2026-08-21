@@ -1,6 +1,6 @@
 import { basename, extname } from 'node:path';
 import { readFile, stat } from 'node:fs/promises';
-import { randomUUID } from 'node:crypto';
+import { createHash, createHmac, randomUUID } from 'node:crypto';
 
 import type { ContentApiConfig } from './config.js';
 
@@ -164,9 +164,42 @@ export class ContentApiClient {
     if (info.size <= 0 || info.size > 20 * 1024 * 1024) throw new Error('The image must be between 1 byte and 20 MiB.');
 
     const bytes = await readFile(filePath);
+    return this.uploadImageBytes(articleId, basename(filePath), bytes, fields, idempotencyKey);
+  }
+
+  async uploadImageBase64(
+    articleId: string | number,
+    filename: string,
+    encodedBytes: string,
+    fields: Record<string, string | number | undefined>,
+    idempotencyKey?: string,
+  ): Promise<ApiCallResult> {
+    if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(encodedBytes)) {
+      throw new Error('file_base64 must be canonical standard Base64 without whitespace or a data-URL prefix.');
+    }
+    const bytes = Buffer.from(encodedBytes, 'base64');
+    if (bytes.toString('base64') !== encodedBytes) {
+      throw new Error('file_base64 is not a canonical Base64 encoding.');
+    }
+    return this.uploadImageBytes(articleId, filename, bytes, fields, idempotencyKey);
+  }
+
+  async uploadImageBytes(
+    articleId: string | number,
+    filename: string,
+    bytes: Uint8Array,
+    fields: Record<string, string | number | undefined>,
+    idempotencyKey?: string,
+  ): Promise<ApiCallResult> {
+    if (basename(filename) !== filename || /[\\/\0]/.test(filename) || filename.length > 255) {
+      throw new Error('filename must be a safe basename no longer than 255 characters.');
+    }
+    if (bytes.byteLength <= 0 || bytes.byteLength > 20 * 1024 * 1024) {
+      throw new Error('The image must be between 1 byte and 20 MiB.');
+    }
     const imageType = detectedImageType(bytes);
     if (!imageType) throw new Error('Unsupported image content. Use a real PNG, JPEG, WebP, or GIF file.');
-    const suppliedExtension = extname(filePath).toLowerCase();
+    const suppliedExtension = extname(filename).toLowerCase();
     const jpegExtensions = ['.jpg', '.jpeg'];
     if (suppliedExtension && suppliedExtension !== imageType.extension
       && !(imageType.mime === 'image/jpeg' && jpegExtensions.includes(suppliedExtension))) {
@@ -175,7 +208,9 @@ export class ContentApiClient {
 
     const key = idempotencyKey?.trim() || randomUUID();
     const form = new FormData();
-    form.set('file', new Blob([bytes], { type: imageType.mime }), basename(filePath));
+    const imageBuffer = new ArrayBuffer(bytes.byteLength);
+    new Uint8Array(imageBuffer).set(bytes);
+    form.set('file', new Blob([imageBuffer], { type: imageType.mime }), filename);
     for (const [name, value] of Object.entries(fields)) {
       if (value !== undefined) form.set(name, String(value));
     }
@@ -200,6 +235,21 @@ export class ContentApiClient {
     headers.set('Accept', 'application/json');
     headers.set('Authorization', `Bearer ${this.#config.token}`);
     headers.set('User-Agent', '@lolo-care/content-mcp/1.0.0');
+    if (this.#config.delegation) {
+      const now = Math.floor(Date.now() / 1000);
+      const payload = Buffer.from(JSON.stringify({
+        v: 1,
+        oauth_token_id: this.#config.delegation.oauthTokenId,
+        method: String(init.method ?? 'GET').toUpperCase(),
+        path: url.pathname,
+        iat: now,
+        exp: now + 30,
+        nonce: randomUUID(),
+      })).toString('base64url');
+      const key = createHash('sha256').update(this.#config.token).digest();
+      headers.set('X-LoLo-MCP-Delegation', payload);
+      headers.set('X-LoLo-MCP-Signature', createHmac('sha256', key).update(payload).digest('base64url'));
+    }
 
     let response: Response;
     try {

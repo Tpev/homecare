@@ -93,7 +93,12 @@ export const TOOL_SCHEMAS = {
   }),
   upload_article_media: z.object({
     article_id: articleId,
-    file_path: z.string().min(1).max(4_096).describe('Local image path. The path itself is never sent to the API.'),
+    file_path: z.string().min(1).max(4_096).optional()
+      .describe('Local STDIO connector only: image path. The path itself is never sent to the API.'),
+    filename: z.string().min(1).max(255).regex(/^[^\\/\0]+$/).optional()
+      .describe('Hosted connector: safe image filename including .png, .jpg, .webp, or .gif.'),
+    file_base64: z.string().min(1).max(27_962_028).optional()
+      .describe('Hosted connector: canonical standard Base64 image bytes, without a data-URL prefix.'),
     alt_text: z.string().min(1).max(255),
     caption: z.string().max(1_000).optional(),
     credit: z.string().max(255).optional(),
@@ -102,6 +107,15 @@ export const TOOL_SCHEMAS = {
       .optional(),
     edit_version: z.number().int().nonnegative().optional(),
     idempotency_key: idempotencyKey,
+  }).superRefine((value, context) => {
+    const local = typeof value.file_path === 'string';
+    const hosted = typeof value.file_base64 === 'string' || typeof value.filename === 'string';
+    if (local === hosted) {
+      context.addIssue({ code: 'custom', message: 'Provide either file_path, or both filename and file_base64.' });
+    }
+    if (hosted && (!value.filename || !value.file_base64)) {
+      context.addIssue({ code: 'custom', message: 'Hosted uploads require both filename and file_base64.' });
+    }
   }),
   preview_article: z.object({ article_id: articleId }),
   audit_article: z.object({ article_id: articleId, idempotency_key: idempotencyKey }),
@@ -124,6 +138,20 @@ export const TOOL_SCHEMAS = {
 } as const;
 
 export type ToolName = keyof typeof TOOL_SCHEMAS;
+
+export const TOOL_REQUIRED_SCOPES: Record<ToolName, string> = {
+  list_articles: 'content:read',
+  get_article: 'content:read',
+  list_content_options: 'content:read',
+  create_article_draft: 'content:draft',
+  update_article: 'content:draft',
+  upload_article_media: 'content:media',
+  preview_article: 'content:read',
+  audit_article: 'content:audit',
+  submit_article_for_review: 'content:submit',
+  schedule_article: 'content:schedule',
+  publish_article: 'content:publish',
+};
 
 type ToolDefinition = {
   title: string;
@@ -172,7 +200,7 @@ export const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
   },
   upload_article_media: {
     title: 'Upload managed article media',
-    description: 'Upload a validated local image as managed article media; raw local paths are not sent to the API.',
+    description: 'Upload a validated PNG, JPEG, WebP, or GIF as managed article media; raw local paths are never sent to the API.',
     annotations: writeAnnotations,
   },
   preview_article: {
@@ -242,6 +270,7 @@ export async function executeTool(
   name: ToolName,
   rawArgs: unknown,
   client: ContentApiClient,
+  options: { allowLocalFiles?: boolean } = {},
 ): Promise<unknown> {
   const args = TOOL_SCHEMAS[name].parse(rawArgs) as Record<string, unknown>;
   const id = (): string => encodeURIComponent(String(args.article_id));
@@ -261,14 +290,26 @@ export async function executeTool(
     case 'update_article':
       return client.mutate('PATCH', `posts/${id()}`, contentPayload(args, false), key);
     case 'upload_article_media':
-      return client.uploadImage(args.article_id as string | number, String(args.file_path), {
+      if (typeof args.file_path === 'string' && options.allowLocalFiles === false) {
+        throw new Error('file_path is disabled on the hosted MCP server. Attach/read the image and provide filename plus file_base64.');
+      }
+      const fields = {
         alt_text: String(args.alt_text),
         caption: typeof args.caption === 'string' ? args.caption : undefined,
         credit: typeof args.credit === 'string' ? args.credit : undefined,
         license: typeof args.license === 'string' ? args.license : undefined,
         source_url: typeof args.source_url === 'string' ? args.source_url : undefined,
         edit_version: typeof args.edit_version === 'number' ? args.edit_version : undefined,
-      }, key);
+      };
+      return typeof args.file_path === 'string'
+        ? client.uploadImage(args.article_id as string | number, args.file_path, fields, key)
+        : client.uploadImageBase64(
+          args.article_id as string | number,
+          String(args.filename),
+          String(args.file_base64),
+          fields,
+          key,
+        );
     case 'preview_article':
       return client.get(`posts/${id()}/preview`);
     case 'audit_article':
@@ -332,7 +373,11 @@ function errorResult(error: unknown): CallToolResult {
   return { content: [{ type: 'text', text: JSON.stringify(payload) }], isError: true };
 }
 
-export function registerTools(server: McpServer, client: ContentApiClient): void {
+export function registerTools(
+  server: McpServer,
+  client: ContentApiClient,
+  options: { allowLocalFiles?: boolean } = {},
+): void {
   for (const name of Object.keys(TOOL_SCHEMAS) as ToolName[]) {
     const definition = TOOL_DEFINITIONS[name];
     server.registerTool(
@@ -345,7 +390,7 @@ export function registerTools(server: McpServer, client: ContentApiClient): void
       },
       async (args: unknown) => {
         try {
-          return result(await executeTool(name, args, client));
+          return result(await executeTool(name, args, client, options));
         } catch (error) {
           return errorResult(error);
         }

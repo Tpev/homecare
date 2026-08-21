@@ -14,7 +14,8 @@ class RequireContentApiAbility
     {
         $token = $request->attributes->get('content_api_token');
 
-        if (! $token instanceof ContentApiToken || ! $token->hasAbility($ability)) {
+        $abilities = $request->attributes->get('content_api_abilities', []);
+        if (! $token instanceof ContentApiToken || ! in_array($ability, is_array($abilities) ? $abilities : [], true)) {
             return new JsonResponse([
                 'message' => 'This token is not authorized for the requested operation.',
                 'code' => 'insufficient_scope',

@@ -136,6 +136,24 @@ describe('executeTool API mapping', () => {
     expect(test.fetch).not.toHaveBeenCalled();
   });
 
+  it('disables server-local file paths in hosted mode and accepts embedded image bytes', async () => {
+    const test = harness();
+    await expect(executeTool('upload_article_media', {
+      article_id: 8,
+      file_path: 'C:\\Users\\Charles\\photo.png',
+      alt_text: 'Care photo',
+    }, test.client, { allowLocalFiles: false })).rejects.toThrow('disabled on the hosted MCP server');
+    expect(test.fetch).not.toHaveBeenCalled();
+
+    await executeTool('upload_article_media', {
+      article_id: 8,
+      filename: 'care.png',
+      file_base64: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).toString('base64'),
+      alt_text: 'Care photo',
+    }, test.client, { allowLocalFiles: false });
+    expect(test.fetch).toHaveBeenCalledOnce();
+  });
+
   it('maps updates to PATCH and keeps the optimistic edit_version', async () => {
     const test = harness();
     await executeTool('update_article', {

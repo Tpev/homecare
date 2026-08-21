@@ -9,12 +9,17 @@ export const SERVER_INSTRUCTIONS = 'Never review or approve an article with this
 export function createServer(
   env: NodeJS.ProcessEnv = process.env,
   fetchImplementation: Fetch = fetch,
+  options: { delegation?: { oauthTokenId: string }; allowLocalFiles?: boolean } = {},
 ): McpServer {
-  const client = new ContentApiClient(loadConfig(env), fetchImplementation);
+  const config = loadConfig(env);
+  if (options.delegation) config.delegation = options.delegation;
+  const client = new ContentApiClient(config, fetchImplementation);
   const server = new McpServer(
     { name: 'lolo-content', version: '1.0.0' },
     { instructions: SERVER_INSTRUCTIONS },
   );
-  registerTools(server, client);
+  registerTools(server, client, {
+    ...(options.allowLocalFiles === undefined ? {} : { allowLocalFiles: options.allowLocalFiles }),
+  });
   return server;
 }

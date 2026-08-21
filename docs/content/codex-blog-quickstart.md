@@ -1,5 +1,7 @@
 # LoLo Care Codex blog quickstart
 
+> **Remote setup for Charles or another editor:** use [hosted-content-mcp.md](hosted-content-mcp.md). It requires only Codex plus a LoLo Care login on the editor's computer. The workstation/STDIO steps below remain a maintainer fallback.
+
 Use this guide when creating, updating, previewing, auditing, or publishing a LoLo Care article through Codex. The detailed security and operations reference remains in [codex-publishing.md](codex-publishing.md).
 
 Production is `https://carelolo.com`. The Content API base is:

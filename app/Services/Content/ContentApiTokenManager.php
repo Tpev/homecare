@@ -25,6 +25,7 @@ class ContentApiTokenManager
         array $abilities,
         CarbonInterface $expiresAt,
         ?User $issuer = null,
+        bool $allowsActorDelegation = false,
     ): array {
         $name = trim($name);
         if ($name === '' || mb_strlen($name) > 100) {
@@ -46,6 +47,11 @@ class ContentApiTokenManager
         }
 
         $abilities = $this->validateAbilities($actor, $abilities);
+        if ($allowsActorDelegation && (! $actor->isAdministrator() || ! $issuer?->isAdministrator())) {
+            throw ValidationException::withMessages([
+                'delegation' => 'A hosted MCP service token requires an administrator actor and an explicitly attributed administrator issuer.',
+            ]);
+        }
         if (! $expiresAt->isFuture()) {
             throw ValidationException::withMessages([
                 'expires_at' => 'The token expiration must be in the future.',
@@ -66,6 +72,7 @@ class ContentApiTokenManager
                     'actor_user_id' => $actor->id,
                     'issued_by_user_id' => $issuer?->id,
                     'abilities' => $abilities,
+                    'allows_actor_delegation' => $allowsActorDelegation,
                     'expires_at' => $expiresAt,
                 ]);
 
