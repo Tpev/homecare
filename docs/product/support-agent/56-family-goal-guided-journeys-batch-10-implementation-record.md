@@ -1,6 +1,6 @@
 # Family Goal-Guided Journeys — Batch 10 Implementation Record
 
-Status: Deployed and active for the exact two-user Family pilot; authenticated production audit completed August 21, 2026; audit corrections are tracked in [document 57](57-batch-10-production-audit-corrections.md)
+Status: Deployed and active for the exact two-user Family pilot; authenticated production audit and both correction rechecks completed August 21, 2026; final evidence is recorded in [document 57](57-batch-10-production-audit-corrections.md)
 
 Implemented: August 20, 2026
 
@@ -98,4 +98,4 @@ Focused coverage includes one-time, regular, irregular-date, ambiguous, unrelate
 | Production authenticated browser audit | Completed August 21, 2026; six corrections implemented and awaiting deployment/recheck |
 | Caregiver AI | Deferred and unchanged |
 
-Batch 10 was deployed and exercised through the exact two-user pilot. The audit proved care-type selection, secure payment navigation, chat composer behavior, mobile layout, deterministic 24/7 transfer, transcript visibility, and absence of a live synthetic request. It also found six state/continuation defects that are corrected and regression-tested in [document 57](57-batch-10-production-audit-corrections.md). The correction deployment remains a normal `deploy.sh` operation and does not enable **Live for everyone**.
+Batch 10 was deployed and exercised through the exact two-user pilot. The audit proved care-type selection, secure payment navigation, chat composer behavior, mobile layout, deterministic 24/7 transfer, transcript visibility, and absence of a live synthetic request. It also found six state/continuation defects and one production-capability routing mismatch; all are corrected, regression-tested, deployed, and authenticated in [document 57](57-batch-10-production-audit-corrections.md). **Live for everyone** remains off.

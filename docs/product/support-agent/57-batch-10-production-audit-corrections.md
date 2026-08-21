@@ -1,6 +1,6 @@
 # Batch 10 Authenticated Production Audit Corrections
 
-Status: Initial correction deployed; post-deployment production-capability routing follow-up is source complete and awaiting the normal deployment/recheck; exact two-user pilot unchanged; Live for everyone remains off
+Status: Both corrections deployed and authenticated in production for the exact two-user Family pilot; final recheck passed; Live for everyone remains off
 
 Audited: August 21, 2026
 
@@ -52,8 +52,20 @@ The authenticated recheck confirmed that recipient continuation and upcoming-vis
 
 The runtime now routes the three stable read-only intents `FAM-VISIT-001`, `FAM-VISIT-018`, and `FAM-MATCH-013` through the authoritative Family state reader before operational handlers. These answers do not start a goal, do not mutate a domain record, and cannot preempt actual action intents such as `FAM-VISIT-020` approval or `FAM-MATCH-020` hiring. The regression runs with the production care-operations capability enabled and asserts that no goal journey is created.
 
+## Final authenticated recheck
+
+The exact pilot Family account and Administrator ticket view were rechecked after deploying `73aba659`. All targeted outcomes passed:
+
+- the waiting-hours question listed the two real approval items and omitted reviewed/transferred history;
+- the caregiver-waiting question stated that nobody was waiting and did not list the already hired caregiver;
+- the next-visit question stated that no current or upcoming visit exists and did not select the reviewed March visit;
+- the three read-only questions ran consecutively without a stale-goal interruption;
+- 24/7 wording produced the specific public transfer message and the Admin title `Chat: Help with 24/7 continuous care`;
+- the latest private handoff note contained only `Handoff goal: 24/7 continuous coverage` and no stale ordinary draft, recipient, location, date, or care-request goal; and
+- the synthetic transfer was deliberately returned to automation after inspection, leaving the pilot assistant available.
+
+No care request, hire, payment, timesheet approval, profile change, or other care-domain mutation was created during this final recheck. The earlier private test draft is visibly discarded.
+
 ## Deployment and recheck
 
-Deploy with the normal `deploy.sh` workflow. There is no migration, KB publication, pilot-grant change, Availability change, or special Artisan command in this correction.
-
-After deployment, repeat the six exact audit phrases in a fresh automated pilot conversation. The 24/7 case intentionally transfers that conversation to human-only; return or resolve the synthetic support conversation through the normal Admin control after reviewing the reason-specific title and internal summary. Do not publish a care-request recap during this recheck.
+Both corrections used the normal `deploy.sh` workflow. They required no migration, KB publication, pilot-grant change, Availability change, or special Artisan command. The exact two-user pilot remained active throughout, and Live for everyone remained off.

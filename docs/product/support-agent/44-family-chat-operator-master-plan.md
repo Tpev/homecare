@@ -1,6 +1,6 @@
 # Family Chat Operator Master Coverage and Delivery Plan
 
-Status: Active master plan; Batches 1 through 10 and the first August 21 correction are deployed for the exact two-user Family pilot; the production-capability state-routing follow-up is source-complete pending deployment; **Live for everyone remains off**
+Status: Active master plan; Batches 1 through 10 and both August 21 production-audit corrections are deployed and authenticated for the exact two-user Family pilot; **Live for everyone remains off**
 
 Audited: August 21, 2026
 
@@ -199,7 +199,7 @@ The operating layer is implemented, but domain breadth is still incomplete:
 
 | Workstream | Current position | Target | Delivery state |
 | --- | --- | --- | --- |
-| Intent portfolio | 324 / 324 executable dispositions; Batches 1–9 represented in the deep operating layer and composed by Batch 10 goals | Every implemented row retains evidence and rollout state | Batch 10 deployed for the exact pilot; audit correction deployment pending |
+| Intent portfolio | 324 / 324 executable dispositions; Batches 1–9 represented in the deep operating layer and composed by Batch 10 goals | Every implemented row retains evidence and rollout state | Batch 10 and its production-audit corrections are deployed and verified for the exact pilot |
 | Governed knowledge | Batches 6/7 and 8/9 packages source-complete; 324 / 324 explicit catalog mappings | Stable domain packs mapped explicitly to every Explain-capable intent | Publication pending for the exact pilot |
 | Intent resolution | Layered safety, active task, deterministic prep/handlers, catalog classification, bounded fallback | Add high-confidence domain handlers only with authority/evidence | Batch 3 complete |
 | Authorized reads | Overview, care operations, account/access, notifications, history, support, and minimal Continuous Coverage context | Narrow normalized readers for every state-dependent supported intent | Batch 9 source complete; pilot audit pending |
@@ -208,7 +208,7 @@ The operating layer is implemented, but domain breadth is still incomplete:
 | Confirmed execution | Batches 1–9 narrow tools, including 27 care-operation and 10 administration tools; no Coverage mutation tool | Narrow confirmed tools for appropriate existing domain services | Batch 9 source complete; pilot audit pending |
 | Authoritative verification | Generic registry plus domain receipts for each supported confirmed action | Every complete journey has a domain receipt or fresh state verifier | Batch 9 source complete; pilot audit pending |
 | Human support | Atomic same-conversation transfer, Admin alert, context summary | Human terminal path for every judgment/exception intent with no repetition | Implemented; refine with domain context |
-| Older-adult UI | State-aware start, mobile chat, universal contextual follow-ups, action progress, recovery, guide highlight, and persistent plain goal/step | Complete more domain journeys without adding cognitive load | Batch 10 deployed and production-audited; six corrections pending deployment/recheck |
+| Older-adult UI | State-aware start, mobile chat, universal contextual follow-ups, action progress, recovery, guide highlight, and persistent plain goal/step | Complete more domain journeys without adding cognitive load | Batch 10 deployed; authenticated audit and correction recheck complete |
 | Evaluation | 324 catalog rows/mappings; B6/7 32 entries, 160 cases, 86 intents/344 phrases; B8/9 44 entries, 220 cases, 118 intents/472 phrases; B10 48 care cases and mobile journey | Per-intent multi-turn, state, browser, and usability coverage | Production browser audit complete; correction suite passes 238 tests / 5,846 assertions |
 | Admin visibility | KB lifecycle, transcripts, Availability, searchable 324-intent catalog, and compact outcome summary | Add useful domain funnel detail without transcript duplication | Batch 3 complete; refine by domain |
 
@@ -494,7 +494,7 @@ Continuous Coverage management remains out of general AI execution until the cur
 
 ### Batch 10 — Family goal-guided journeys
 
-Implementation status: Complete in source on August 20, 2026; deployment, exact-pilot activation, and authenticated production audit pending.
+Implementation status: Complete in source on August 20, 2026; deployed for the exact pilot and authenticated with both correction rechecks complete on August 21, 2026. Live for everyone remains off.
 
 Compose the Batches 1–9 intent, reader, navigation, preparation, confirmed-action, verification, and handoff layers into persistent user goals. The first complete journey begins with a vague care need, recommends one-time or regular care, requires an explicit choice, continues through profile/payment prerequisites and request drafting, and ends only after verified publication or correct human transfer.
 
