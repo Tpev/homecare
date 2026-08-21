@@ -703,10 +703,14 @@
     .content-editor-cta,
     .content-cta { margin: 2rem 0; text-align: center; }
     .content-editor-cta a,
-    .content-cta__link { display: inline-flex; min-height: 3rem; align-items: center; justify-content: center; border-radius: 0.9rem; padding: 0.75rem 1.2rem; font-family: Inter, sans-serif; font-weight: 750; text-decoration: none; }
+    .content-cta__link,
+    .content-editor-prose .content-editor-cta a,
+    .public-article-content .content-cta__link { display: inline-flex; min-height: 3rem; align-items: center; justify-content: center; border-radius: 0.9rem; padding: 0.75rem 1.2rem; font-family: Inter, sans-serif; font-weight: 750; text-decoration: none; }
     .content-cta__link--primary,
-    .content-editor-cta a { background: #0f5b52; color: white; }
-    .content-cta__link--secondary { border: 1px solid #0f5b52; color: #0f5b52; }
+    .content-editor-cta a,
+    .public-article-content .content-cta__link--primary { background: #0f5b52; color: white; }
+    .content-cta__link--secondary,
+    .public-article-content .content-cta__link--secondary { border: 1px solid #0f5b52; color: #0f5b52; }
 
     .content-editor-citation,
     .content-citation { color: #0f5b52; font-family: Inter, sans-serif; font-size: 0.72em; font-weight: 800; }

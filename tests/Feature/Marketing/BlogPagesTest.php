@@ -50,6 +50,16 @@ class BlogPagesTest extends TestCase
             ->assertSee('rel="author"', false);
     }
 
+    public function test_embedded_cta_text_color_overrides_the_generic_article_link_color(): void
+    {
+        $css = file_get_contents(resource_path('css/app.css'));
+
+        $this->assertStringContainsString(
+            '.public-article-content .content-cta__link--primary { background: #0f5b52; color: white; }',
+            $css,
+        );
+    }
+
     public function test_public_only_human_author_is_emitted_as_a_schema_person(): void
     {
         $julie = \App\Models\ContentAuthor::query()->create([
