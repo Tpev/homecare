@@ -24,6 +24,7 @@ class MarketingPagesTest extends TestCase
         $this->get(route('landing.family.variant', ['variant' => 'd']))->assertOk();
         $this->get(route('landing.family.variant', ['variant' => 'e']))->assertOk();
         $this->get(route('landing.caregiver'))->assertOk();
+        $this->get(route('about'))->assertOk();
     }
 
     public function test_marketing_layout_includes_google_analytics(): void
@@ -54,10 +55,25 @@ class MarketingPagesTest extends TestCase
         $response->assertSee('See how LoLo works for families.');
         $response->assertSee(asset('images/marketing/lolo-hero.jpg'), false);
         $response->assertSee(asset('images/marketing/lolo/lolo-wordmark-evergreen.svg'), false);
+        $response->assertSee(route('about'), false);
         $response->assertDontSee('profile-float', false);
         $response->assertDontSee('update-float', false);
         $response->assertDontSeeText('Visit summary shared');
         $response->assertDontSeeText('Mom had a great afternoon.');
+    }
+
+    public function test_about_page_presents_lolo_values_and_clear_paths_forward(): void
+    {
+        $this->get(route('about'))
+            ->assertOk()
+            ->assertSeeText('Care should make life feel more like life.')
+            ->assertSeeText('Dignity comes first.')
+            ->assertSeeText('Trust lives in the details.')
+            ->assertSeeText('Caregivers deserve respect.')
+            ->assertSeeText('LoLo provides non-medical home support.')
+            ->assertSee(route('register'), false)
+            ->assertSee(route('caregiver.register'), false)
+            ->assertSee(asset('images/marketing/homepage/human-moment.jpg'), false);
     }
 
     public function test_homepage_uses_lean_assets_without_losing_analytics(): void

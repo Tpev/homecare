@@ -70,6 +70,11 @@ class MarketingPagesController extends Controller
         );
     }
 
+    public function about(): View
+    {
+        return view('marketing.about');
+    }
+
     /**
      * @param  array<string, mixed>  $data
      */
