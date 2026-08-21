@@ -50,9 +50,6 @@
         $heroCaregiver = $featuredCaregivers->first();
         $heroCaregiverName = $heroCaregiver?->user?->name ?? 'Caregiver profiles';
         $heroCaregiverRate = $heroCaregiver ? '$'.number_format($heroCaregiver->resolvePlatformHourlyRate(), 0).'/hr' : 'From $30/hr';
-        $heroCaregiverMeta = $heroCaregiver && (float) $heroCaregiver->average_rating > 0 && (int) $heroCaregiver->reviews_count > 0
-            ? number_format((float) $heroCaregiver->average_rating, 1).' rating · '.(int) $heroCaregiver->reviews_count.' review'.((int) $heroCaregiver->reviews_count === 1 ? '' : 's')
-            : ($heroCaregiver?->hasIdentityVerifiedBadge() ? 'Identity verified' : 'Explore available caregivers');
         $heroNameParts = preg_split('/\s+/', trim($heroCaregiverName));
         $heroInitials = collect($heroNameParts)->filter()->map(fn ($part) => strtoupper(substr($part, 0, 1)))->take(2)->implode('') ?: 'LC';
     @endphp
@@ -201,36 +198,7 @@
             object-position: center;
             mix-blend-mode: multiply;
         }
-        .lolo-home .profile-float,
-        .lolo-home .update-float {
-            position: absolute;
-            z-index: 2;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border: 1px solid var(--line);
-            border-radius: 18px;
-            background: #fffaf1;
-            padding: 14px 16px;
-            box-shadow: 0 18px 50px rgba(35, 48, 45, .13);
-        }
-        .lolo-home .profile-float { top: 120px; left: -25px; }
-        .lolo-home .profile-float b { margin-left: 18px; }
-        .lolo-home .update-float { right: -15px; bottom: 100px; }
-        .lolo-home .update-float i {
-            display: grid;
-            place-items: center;
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background: var(--green);
-            color: #fff;
-            font-style: normal;
-        }
-        .lolo-home .profile-float small,
-        .lolo-home .update-float small { display: block; margin-top: 3px; color: var(--muted); font-size: .8rem; }
         .lolo-home .avatar { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; font-weight: 700; }
-        .lolo-home .peach { background: #efc0a8; }
         .lolo-home .sage { background: #b9c8b6; }
         .lolo-home .gold { background: #e8cf8b; }
 
@@ -467,8 +435,6 @@
             .lolo-home .hero-visual { height: 370px; }
             .lolo-home .hero-visual::before { width: 330px; height: 330px; }
             .lolo-home .hero-visual img { width: 320px; height: 320px; }
-            .lolo-home .profile-float { top: 35px; left: -5px; transform: scale(.83); transform-origin: left center; }
-            .lolo-home .update-float { right: -8px; bottom: 22px; transform: scale(.83); transform-origin: right center; }
             .lolo-home .booking-wrap { padding: 0 12px; }
             .lolo-home .booking-card { grid-template-columns: 1fr; padding: 22px; }
             .lolo-home .booking-card label,
@@ -546,15 +512,6 @@
 
             <div class="hero-visual">
                 <img src="{{ asset('images/marketing/lolo-hero.jpg') }}" alt="LoLo, the warm and reassuring guide to care at home" width="820" height="820" fetchpriority="high" decoding="async">
-                <div class="profile-float">
-                    <span class="avatar peach">{{ $heroInitials }}</span>
-                    <div><strong>{{ $heroCaregiverName }}</strong><small>{{ $heroCaregiverMeta }}</small></div>
-                    <b>{{ $heroCaregiverRate }}</b>
-                </div>
-                <div class="update-float">
-                    <i aria-hidden="true">✓</i>
-                    <div><strong>Visit summary shared</strong><small>Mom had a great afternoon.</small></div>
-                </div>
             </div>
         </section>
 

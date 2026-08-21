@@ -54,6 +54,10 @@ class MarketingPagesTest extends TestCase
         $response->assertSee('See how LoLo works for families.');
         $response->assertSee(asset('images/marketing/lolo-hero.jpg'), false);
         $response->assertSee(asset('images/marketing/lolo/lolo-wordmark-evergreen.svg'), false);
+        $response->assertDontSee('profile-float', false);
+        $response->assertDontSee('update-float', false);
+        $response->assertDontSeeText('Visit summary shared');
+        $response->assertDontSeeText('Mom had a great afternoon.');
     }
 
     public function test_homepage_uses_lean_assets_without_losing_analytics(): void
