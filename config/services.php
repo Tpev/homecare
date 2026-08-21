@@ -38,6 +38,11 @@ return [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+        'ops' => [
+            'enabled' => filter_var(env('SLACK_OPS_NOTIFICATIONS_ENABLED', false), FILTER_VALIDATE_BOOL),
+            'webhook_url' => env('SLACK_OPS_WEBHOOK_URL'),
+            'timeout_seconds' => (int) env('SLACK_OPS_TIMEOUT_SECONDS', 8),
+        ],
     ],
 
     'didit' => [

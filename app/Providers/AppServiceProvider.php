@@ -9,10 +9,12 @@ use App\Models\BlogPost;
 use App\Models\CareRecipientProfile;
 use App\Models\CareRecipientProfileVersion;
 use App\Models\CareRequest;
+use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\MediaAsset;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
+use App\Observers\CareRequestApplicationObserver;
 use App\Observers\CareRequestObserver;
 use App\Observers\SupportTicketAuditObserver;
 use App\Observers\SupportTicketObserver;
@@ -72,6 +74,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(SupportTicket::class, SupportTicketPolicy::class);
         Gate::policy(SupportTicketMessage::class, SupportTicketMessagePolicy::class);
         CareRequest::observe(CareRequestObserver::class);
+        CareRequestApplication::observe(CareRequestApplicationObserver::class);
         SupportTicket::observe(SupportTicketAuditObserver::class);
         SupportTicket::observe(SupportTicketObserver::class);
 
