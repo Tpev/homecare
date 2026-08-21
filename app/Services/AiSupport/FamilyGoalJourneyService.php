@@ -85,6 +85,10 @@ class FamilyGoalJourneyService
         }
 
         if ($active?->journey_type === 'care_request' && $draft) {
+            if ($this->handleRecipientIdentityReply($actor, $ticket, $draft, $message)) {
+                return true;
+            }
+
             $decision = $this->careTypes->decide($message, true);
             $explicitChange = $decision
                 && in_array($decision['path'], [CareRequest::TYPE_ONE_TIME, CareRequest::TYPE_RECURRING], true)
@@ -544,6 +548,11 @@ class FamilyGoalJourneyService
     {
         $journey = $this->activeFor($actor, $ticket);
         if ($journey) {
+            if ($journey->journey_type === 'care_request'
+                && in_array($reason, ['user_cancelled', 'superseded_by_continuous_coverage'], true)
+                && $this->requestDraft($actor, $ticket)) {
+                $this->drafts->discard($actor, $ticket);
+            }
             $this->cancelJourney($journey, $reason);
             $now = now();
             AiSupportGuidedTask::query()
@@ -655,9 +664,7 @@ class FamilyGoalJourneyService
             ->latest('last_activity_at')
             ->first();
         if (! $journey) {
-            $type = in_array($reasonCode, ['continuous_coverage', 'emergency', 'medical_boundary'], true)
-                ? 'care_request'
-                : 'human_help';
+            $type = 'human_help';
             $journey = $this->begin($actor, $ticket, $type, null, ['plain_goal' => $this->catalog->label($type)], 'journey_transferred');
         }
         $journey->forceFill([
@@ -838,6 +845,59 @@ class FamilyGoalJourneyService
             ->first();
 
         return $draft?->isUsable() ? $draft : null;
+    }
+
+    private function handleRecipientIdentityReply(
+        User $actor,
+        SupportTicket $ticket,
+        AiSupportRequestDraft $draft,
+        string $message,
+    ): bool {
+        $payload = (array) $draft->payload;
+        if (filled($payload['recipient_full_name'] ?? null)) {
+            return false;
+        }
+
+        $normalized = mb_strtolower(trim($message));
+        $isSelf = preg_match('/^(?:it(?:\s+is|\'s)\s+)?(?:me|myself)|^i\s+(?:need|am\s+the\s+one\s+who\s+needs?)\s+care\b|\bcare\s+is\s+for\s+me\b/iu', $normalized) === 1;
+        $relationship = match (true) {
+            preg_match('/\b(?:my\s+)?(?:mother|mom|mum)\b/iu', $normalized) === 1 => 'Mother',
+            preg_match('/\b(?:my\s+)?(?:father|dad)\b/iu', $normalized) === 1 => 'Father',
+            preg_match('/\b(?:my\s+)?(?:wife|spouse|partner)\b/iu', $normalized) === 1 => 'Spouse',
+            preg_match('/\b(?:my\s+)?husband\b/iu', $normalized) === 1 => 'Spouse',
+            preg_match('/\b(?:my\s+)?(?:grandmother|grandma)\b/iu', $normalized) === 1 => 'Grandmother',
+            preg_match('/\b(?:my\s+)?(?:grandfather|grandpa)\b/iu', $normalized) === 1 => 'Grandfather',
+            preg_match('/\b(?:my\s+)?(?:sister|brother|sibling)\b/iu', $normalized) === 1 => 'Sibling',
+            preg_match('/\b(?:my\s+)?(?:son|daughter|child)\b/iu', $normalized) === 1 => 'Child',
+            default => null,
+        };
+        $isOther = $relationship !== null
+            || preg_match('/\b(?:someone|somebody)\s+else\b|\banother\s+person\b|\bnot\s+(?:me|myself)\b/iu', $normalized) === 1;
+
+        if (! $isSelf && ! $isOther) {
+            return false;
+        }
+
+        $patch = $isSelf
+            ? [
+                'patch_fields' => ['recipient_is_requester', 'recipient_full_name', 'recipient_relationship'],
+                'recipient_is_requester' => true,
+                'recipient_full_name' => $actor->name,
+                'recipient_relationship' => 'Self',
+            ]
+            : [
+                'patch_fields' => array_values(array_filter([
+                    'recipient_is_requester',
+                    $relationship !== null ? 'recipient_relationship' : null,
+                ])),
+                'recipient_is_requester' => false,
+                'recipient_relationship' => $relationship,
+            ];
+        $updated = $this->drafts->applyPatch($actor, $ticket, $patch, $draft->version);
+        $question = $this->drafts->nextQuestion($actor, $updated);
+        $this->automatedMessage($ticket, $question ?: 'I have enough information to show your request recap.');
+
+        return true;
     }
 
     private function sourceHasDraftDetails(string $message): bool

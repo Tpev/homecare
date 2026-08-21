@@ -513,6 +513,9 @@ class FamilyIntentResolver
         if (preg_match('/\b(?:who|caregiver|applicant)\b.*\b(?:applied|applications?|replied)\b/', $value)) {
             return 'FAM-MATCH-013';
         }
+        if (preg_match('/\bcaregivers\b.{0,24}\bwaiting\b.{0,30}\b(?:review|hire)\b|\b(?:any|some)\s+caregivers\s+waiting\b/', $value)) {
+            return 'FAM-MATCH-013';
+        }
 
         return null;
     }

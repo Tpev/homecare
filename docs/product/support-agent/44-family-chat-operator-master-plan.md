@@ -1,8 +1,8 @@
 # Family Chat Operator Master Coverage and Delivery Plan
 
-Status: Active master plan; Batches 1 through 5 are deployed and production-verified for the exact two-user pilot; Batches 6 through 10 are source-complete and await combined deployment/authenticated pilot audit; **Live for everyone remains off**
+Status: Active master plan; Batches 1 through 10 are deployed for the exact two-user Family pilot; the August 21 authenticated audit is complete and its targeted correction batch is source-complete pending deployment; **Live for everyone remains off**
 
-Audited: August 20, 2026
+Audited: August 21, 2026
 
 Owner: Product and Engineering
 
@@ -113,6 +113,12 @@ Batch 8 adds account/security guidance, confirmed name and verification actions,
 
 Batch 10 adds encrypted seven-day goal continuity, explicit one-time/regular recommendations, irregular-date handling, safe request-type correction, prerequisite detours, different-goal choice, transfer/resume context, single-use choices, and plain progress in the support UI. It composes the Batches 1–9 readers/actions instead of adding a generic model-controlled tool. See [the implementation record](56-family-goal-guided-journeys-batch-10-implementation-record.md).
 
+### August 21 authenticated pilot audit and correction
+
+The exact pilot audit passed care-type classification, secure payment navigation/highlighting, desktop and mobile chat interaction, 24/7 transfer ownership, Admin transcript visibility, and no-live-request cleanup. It identified six bounded defects: recipient identity looping, past-visit selection, reviewed-hours selection, stale draft context in 24/7 handoff, generic applicant answers, and stale handoff ticket labeling.
+
+The correction makes recipient relationship replies deterministic, reads only current/upcoming visits for next-visit questions, prioritizes and lists every unreviewed hours item, answers applicant-waiting questions from the authorized action inbox, discards an explicitly stopped/superseded request draft, and gives 24/7 transfers a clean reason-specific title and internal summary. See [document 57](57-batch-10-production-audit-corrections.md).
+
 ## Current capability inventory
 
 ### Coverage portfolio
@@ -193,7 +199,7 @@ The operating layer is implemented, but domain breadth is still incomplete:
 
 | Workstream | Current position | Target | Delivery state |
 | --- | --- | --- | --- |
-| Intent portfolio | 324 / 324 executable dispositions; Batches 1–9 represented in the deep operating layer and composed by Batch 10 goals | Every implemented row retains evidence and rollout state | Batch 10 source complete; production audit pending |
+| Intent portfolio | 324 / 324 executable dispositions; Batches 1–9 represented in the deep operating layer and composed by Batch 10 goals | Every implemented row retains evidence and rollout state | Batch 10 deployed for the exact pilot; audit correction deployment pending |
 | Governed knowledge | Batches 6/7 and 8/9 packages source-complete; 324 / 324 explicit catalog mappings | Stable domain packs mapped explicitly to every Explain-capable intent | Publication pending for the exact pilot |
 | Intent resolution | Layered safety, active task, deterministic prep/handlers, catalog classification, bounded fallback | Add high-confidence domain handlers only with authority/evidence | Batch 3 complete |
 | Authorized reads | Overview, care operations, account/access, notifications, history, support, and minimal Continuous Coverage context | Narrow normalized readers for every state-dependent supported intent | Batch 9 source complete; pilot audit pending |
@@ -202,8 +208,8 @@ The operating layer is implemented, but domain breadth is still incomplete:
 | Confirmed execution | Batches 1–9 narrow tools, including 27 care-operation and 10 administration tools; no Coverage mutation tool | Narrow confirmed tools for appropriate existing domain services | Batch 9 source complete; pilot audit pending |
 | Authoritative verification | Generic registry plus domain receipts for each supported confirmed action | Every complete journey has a domain receipt or fresh state verifier | Batch 9 source complete; pilot audit pending |
 | Human support | Atomic same-conversation transfer, Admin alert, context summary | Human terminal path for every judgment/exception intent with no repetition | Implemented; refine with domain context |
-| Older-adult UI | State-aware start, mobile chat, universal contextual follow-ups, action progress, recovery, guide highlight, and persistent plain goal/step | Complete more domain journeys without adding cognitive load | Batch 10 source complete; production usability audit pending |
-| Evaluation | 324 catalog rows/mappings; B6/7 32 entries, 160 cases, 86 intents/344 phrases; B8/9 44 entries, 220 cases, 118 intents/472 phrases; B10 48 care cases and mobile journey | Per-intent multi-turn, state, browser, and usability coverage | Batch 10 source complete; production browser audit pending |
+| Older-adult UI | State-aware start, mobile chat, universal contextual follow-ups, action progress, recovery, guide highlight, and persistent plain goal/step | Complete more domain journeys without adding cognitive load | Batch 10 deployed and production-audited; six corrections pending deployment/recheck |
+| Evaluation | 324 catalog rows/mappings; B6/7 32 entries, 160 cases, 86 intents/344 phrases; B8/9 44 entries, 220 cases, 118 intents/472 phrases; B10 48 care cases and mobile journey | Per-intent multi-turn, state, browser, and usability coverage | Production browser audit complete; correction suite passes 238 tests / 5,846 assertions |
 | Admin visibility | KB lifecycle, transcripts, Availability, searchable 324-intent catalog, and compact outcome summary | Add useful domain funnel detail without transcript duplication | Batch 3 complete; refine by domain |
 
 ## Knowledge-base audit

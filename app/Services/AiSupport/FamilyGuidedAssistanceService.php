@@ -82,7 +82,11 @@ class FamilyGuidedAssistanceService
             return self::INTENT_VISITS;
         }
 
-        if (preg_match('/\b(?:applicant|applicants|application|applications|caregiver\s+responses?|caregivers?\s+(?:apply|applied|interested|respond|responded)|caregivers?\b.{0,12}\bapplied|request\s+status|status\s+of\s+(?:my\s+)?(?:care\s+)?request|open\s+(?:care\s+)?requests?|show\s+(?:my\s+)?(?:care\s+)?requests?|care\s+request\s+stand)\b/iu', $message)) {
+        if (preg_match('/\b(?:applicant|applicants|application|applications|caregiver\s+responses?|caregivers?\s+(?:apply|applied|interested|respond|responded)|caregivers?\b.{0,12}\bapplied|caregivers\b.{0,24}\bwaiting\b|waiting\b.{0,24}\bcaregivers)\b/iu', $message)) {
+            return self::INTENT_REQUESTS;
+        }
+
+        if (preg_match('/\b(?:request\s+status|status\s+of\s+(?:my\s+)?(?:care\s+)?request|open\s+(?:care\s+)?requests?|show\s+(?:my\s+)?(?:care\s+)?requests?|care\s+request\s+stand)\b/iu', $message)) {
             return self::INTENT_REQUESTS;
         }
 
@@ -103,7 +107,9 @@ class FamilyGuidedAssistanceService
 
         [$message, $guides, $resultCode] = match ($intent) {
             self::INTENT_OVERVIEW => $this->overview($actor, $actionItems),
-            self::INTENT_REQUESTS => $this->requests($actor, $actionItems),
+            self::INTENT_REQUESTS => in_array($stableIntentId, ['FAM-REQUEST-035', 'FAM-MATCH-013', 'FAM-MATCH-014'], true)
+                ? $this->applicants($actionItems)
+                : $this->requests($actor, $actionItems),
             self::INTENT_VISITS => $this->visits($actor, $actionItems),
             self::INTENT_TIMESHEETS => $this->timesheets($actor, $actionItems),
             self::INTENT_PAYMENT_ATTENTION => $this->paymentAttention($actor, $actionItems),
@@ -281,6 +287,27 @@ class FamilyGuidedAssistanceService
     }
 
     /** @return array{string,list<array<string,mixed>>,string} */
+    private function applicants(Collection $actionItems): array
+    {
+        $waiting = $actionItems->where('type', 'applicants')->values();
+        if ($waiting->isEmpty()) {
+            return [
+                'No caregivers are waiting for you to review or hire right now.',
+                [$this->guide(AiSupportGuidedTask::TYPE_FAMILY_REQUEST, 'family.care_requests', 'Open care requests')],
+                'no_applicants_waiting',
+            ];
+        }
+
+        $lines = $waiting->take(6)->map(fn (array $item): string => '- '.$this->actionSummary($item))->implode("\n");
+
+        return [
+            'You have '.$waiting->count().' caregiver review item'.($waiting->count() === 1 ? '' : 's').' waiting:'."\n".$lines,
+            $waiting->take(6)->map(fn (array $item): array => $this->guideForAction($item))->all(),
+            'applicants_waiting',
+        ];
+    }
+
+    /** @return array{string,list<array<string,mixed>>,string} */
     private function visits(User $actor, Collection $actionItems): array
     {
         $issue = $actionItems->firstWhere('type', 'visit_change');
@@ -323,6 +350,17 @@ class FamilyGuidedAssistanceService
     /** @return array{string,list<array<string,mixed>>,string} */
     private function timesheets(User $actor, Collection $actionItems): array
     {
+        $waiting = $actionItems->whereIn('type', ['time_correction', 'timesheet', 'completed_extra_visit'])->values();
+        if ($waiting->count() > 1) {
+            $lines = $waiting->take(6)->map(fn (array $item): string => '- '.$this->actionSummary($item))->implode("\n");
+
+            return [
+                'You have '.$waiting->count().' submitted-hours review items waiting:'."\n".$lines,
+                $waiting->take(6)->map(fn (array $item): array => $this->guideForAction($item))->all(),
+                'hours_need_attention',
+            ];
+        }
+
         $state = $this->paymentTime->latestSubmittedHours($actor);
         if ($state) {
             $message = $state['caregiver_name'].' submitted hours for the visit: '.$this->duration((int) $state['worked_minutes']).' for '.$state['subject'].'.';

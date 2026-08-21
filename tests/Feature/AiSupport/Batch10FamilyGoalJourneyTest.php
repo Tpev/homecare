@@ -135,6 +135,84 @@ class Batch10FamilyGoalJourneyTest extends TestCase
         $this->assertSame('explicit_user_type_change', data_get($payload, '_provenance.request_type'));
     }
 
+    public function test_someone_else_and_relationship_answers_advance_recipient_collection_without_looping(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $ticket = $this->ticket($family, 'I need one visit.');
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $ticket->description);
+        app(FamilyGoalJourneyService::class)->chooseCarePath(
+            $family,
+            $ticket,
+            AiSupportMessageAction::query()->sole()->id,
+            CareRequest::TYPE_ONE_TIME,
+        );
+
+        $journeys = app(FamilyGoalJourneyService::class);
+        $this->assertTrue($journeys->handleEarly($family, $ticket, 'Someone else.'));
+        $this->assertSame(
+            'What is the full name of the person who needs care?',
+            $ticket->publicMessages()->reorder()->latest()->firstOrFail()->body,
+        );
+        $this->assertFalse((bool) data_get(AiSupportRequestDraft::query()->sole()->payload, 'recipient_is_requester'));
+
+        $this->assertTrue($journeys->handleEarly($family, $ticket, 'My mother needs care.'));
+        $draft = AiSupportRequestDraft::query()->sole();
+        $this->assertSame('Mother', data_get($draft->payload, 'recipient_relationship'));
+        $this->assertSame('missing_recipient_full_name', $draft->last_error_code);
+        $this->assertStringNotContainsString(
+            'Who needs care',
+            $ticket->publicMessages()->reorder()->latest()->firstOrFail()->body,
+        );
+    }
+
+    public function test_stopping_a_care_request_discards_the_private_draft(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $ticket = $this->ticket($family, 'I need one visit.');
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $ticket->description);
+        app(FamilyGoalJourneyService::class)->chooseCarePath(
+            $family,
+            $ticket,
+            AiSupportMessageAction::query()->sole()->id,
+            CareRequest::TYPE_ONE_TIME,
+        );
+
+        app(FamilyGoalJourneyService::class)->cancelActive($family, $ticket);
+
+        $draft = AiSupportRequestDraft::query()->sole();
+        $this->assertSame(AiSupportRequestDraft::STATE_DISCARDED, $draft->state);
+        $this->assertNull($draft->payload);
+        $this->assertNotNull($draft->discarded_at);
+        $this->assertDatabaseCount('care_requests', 0);
+    }
+
+    public function test_continuous_coverage_replaces_an_ordinary_draft_with_clean_handoff_context(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $ticket = $this->ticket($family, 'I need one visit.');
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $ticket->description);
+        app(FamilyGoalJourneyService::class)->chooseCarePath(
+            $family,
+            $ticket,
+            AiSupportMessageAction::query()->sole()->id,
+            CareRequest::TYPE_ONE_TIME,
+        );
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, 'We actually need 24/7 care.');
+
+        $this->assertSame(AiSupportRequestDraft::STATE_DISCARDED, AiSupportRequestDraft::query()->sole()->state);
+        $this->assertSame('Chat: Help with 24/7 continuous care', $ticket->fresh()->subject);
+        $this->assertSame('continuous_coverage', $ticket->fresh()->handoff_reason_code);
+        $note = $ticket->messages()->where('kind', SupportTicketMessage::KIND_INTERNAL_NOTE)->latest()->firstOrFail()->body;
+        $this->assertStringContainsString('Handoff goal: 24/7 continuous coverage', $note);
+        $this->assertStringNotContainsString('Private draft:', $note);
+        $this->assertStringNotContainsString('Active goal: care request', $note);
+        $this->assertSame(
+            'human_help',
+            AiSupportGoalJourney::query()->where('state', AiSupportGoalJourney::STATE_TRANSFERRED)->sole()->journey_type,
+        );
+    }
+
     public function test_journey_restores_after_refresh_and_chat_renders_plain_goal_progress(): void
     {
         [, $family] = $this->eligibleFamily();

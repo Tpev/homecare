@@ -379,7 +379,17 @@ class AiSupportRequestDraftService
             }
         };
 
-        $required('recipient_full_name', 'Who needs care—you, or someone else?');
+        if (blank($payload['recipient_full_name'] ?? null)) {
+            $recipientQuestion = array_key_exists('recipient_is_requester', $payload)
+                && $payload['recipient_is_requester'] === false
+                    ? 'What is the full name of the person who needs care?'
+                    : 'Who needs care—you, or someone else?';
+            $errors[] = [
+                'field' => 'recipient_full_name',
+                'code' => 'missing_recipient_full_name',
+                'message' => $recipientQuestion,
+            ];
+        }
         $required('task_ids', 'What kind of help is needed?');
         $required('address_line1', 'What is the street address where care is needed?');
         $required('city', 'What city is the care address in?');

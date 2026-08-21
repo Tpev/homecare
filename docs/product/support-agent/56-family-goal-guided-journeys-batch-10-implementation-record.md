@@ -1,6 +1,6 @@
 # Family Goal-Guided Journeys — Batch 10 Implementation Record
 
-Status: Source complete; not deployed; not production-activated; production browser audit pending
+Status: Deployed and active for the exact two-user Family pilot; authenticated production audit completed August 21, 2026; audit corrections are tracked in [document 57](57-batch-10-production-audit-corrections.md)
 
 Implemented: August 20, 2026
 
@@ -74,7 +74,7 @@ All verification used local or isolated test data. No production record, pilot g
 | --- | ---: |
 | Frozen care-choice corpus | 48 / 48 passed; no provider |
 | Focused Batch 10 feature suite | 14 tests / 108 assertions passed |
-| Complete AI Support feature suite | 233 tests / 5,815 assertions passed |
+| Complete AI Support feature suite after production-audit corrections | 238 tests / 5,846 assertions passed |
 | Executable Family catalog | 324 / 324 valid |
 | Explicit KB mappings | 324 / 324 valid |
 | Family routing phrases | 1,017 / 1,017 passed across established, Batch 5, Batch 6/7, and Batch 8/9 corpora |
@@ -92,10 +92,10 @@ Focused coverage includes one-time, regular, irregular-date, ambiguous, unrelate
 | --- | --- |
 | Source | Complete |
 | New KB publication | None required for Batch 10; Batches 6–9 production publication remains pending |
-| Deployment | Not performed |
-| Exact-pilot activation | Not performed; existing production Availability remains Pilot only |
+| Deployment | Batch 10 deployed; audit correction deployment pending |
+| Exact-pilot activation | Active for the exact two approved Family users only |
 | Live for everyone | Not enabled and not authorized by this work |
-| Production authenticated browser audit | Pending |
+| Production authenticated browser audit | Completed August 21, 2026; six corrections implemented and awaiting deployment/recheck |
 | Caregiver AI | Deferred and unchanged |
 
-The next operation is one normal `deploy.sh` deployment of the accumulated Batches 6–10 source, followed by Batches 6–9 governed publication/activation for only the existing two Family pilot users and a combined authenticated browser audit. Batch 10 must not be presented as production-verified until that audit exercises the care-choice/request journey, secure detours, refresh recovery, human transfer, and synthetic-record cleanup. An Administrator may separately choose **Live for everyone** later; this implementation does not make that choice.
+Batch 10 was deployed and exercised through the exact two-user pilot. The audit proved care-type selection, secure payment navigation, chat composer behavior, mobile layout, deterministic 24/7 transfer, transcript visibility, and absence of a live synthetic request. It also found six state/continuation defects that are corrected and regression-tested in [document 57](57-batch-10-production-audit-corrections.md). The correction deployment remains a normal `deploy.sh` operation and does not enable **Live for everyone**.

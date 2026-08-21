@@ -62,6 +62,7 @@ class AiSupportRuntimeService
             return;
         }
         if ($guard === 'continuous_coverage') {
+            $this->goalJourneys->cancelActive($actor, $ticket, 'superseded_by_continuous_coverage');
             $this->handoff->transfer($actor, $ticket, 'continuous_coverage');
 
             return;

@@ -116,6 +116,68 @@ class Batch67FamilyCareOperationsTest extends TestCase
         $this->assertDatabaseCount('ai_support_confirmed_action_evidence', 0);
     }
 
+    public function test_visit_reads_ignore_past_records_and_hours_approval_selects_an_unconfirmed_record(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $oldCaregiver = $this->caregiver('Old Caregiver');
+        $nextCaregiver = $this->caregiver('Next Caregiver');
+        $oldRequest = $this->request($family, 'Past care', now()->subMonths(5), now()->subMonths(5)->addHours(2));
+        $oldBooking = $this->booking(
+            $family,
+            $oldRequest,
+            $oldCaregiver,
+            CareBooking::STATUS_REVIEWED,
+            now()->subMonths(5),
+            now()->subMonths(5)->addHours(2),
+        );
+        $oldBooking->forceFill([
+            'timesheet_submitted_at' => now(),
+            'family_confirmed_at' => now(),
+            'worked_minutes' => 120,
+        ])->save();
+        $nextRequest = $this->request($family, 'Upcoming care');
+        $nextBooking = $this->booking(
+            $family,
+            $nextRequest,
+            $nextCaregiver,
+            CareBooking::STATUS_SCHEDULED,
+            now()->addDays(2),
+            now()->addDays(2)->addHours(2),
+        );
+
+        $visitTicket = $this->ticket($family, 'When is my next scheduled visit and who is the caregiver?');
+        $this->respond($family, $visitTicket, 'FAM-VISIT-001', $visitTicket->description);
+        $visitBody = $visitTicket->publicMessages()->latest()->firstOrFail()->body;
+        $this->assertStringContainsString('Next Caregiver', $visitBody);
+        $this->assertStringNotContainsString('Old Caregiver', $visitBody);
+
+        $nextBooking->delete();
+        $emptyTicket = $this->ticket($family, 'When is my next scheduled visit?');
+        $this->respond($family, $emptyTicket, 'FAM-VISIT-001', $emptyTicket->description);
+        $this->assertStringContainsString(
+            'did not find a current or upcoming visit',
+            $emptyTicket->publicMessages()->latest()->firstOrFail()->body,
+        );
+
+        $hoursRequest = $this->request($family, 'Hours needing review', now()->subDay(), now()->subDay()->addHours(2));
+        $hoursBooking = $this->booking(
+            $family,
+            $hoursRequest,
+            $nextCaregiver,
+            CareBooking::STATUS_COMPLETED,
+            now()->subDay(),
+            now()->subDay()->addHours(2),
+        );
+        $hoursBooking->forceFill([
+            'timesheet_submitted_at' => now()->subHour(),
+            'worked_minutes' => 90,
+            'family_confirmed_at' => null,
+        ])->save();
+        $hoursTicket = $this->ticket($family, 'Approve the submitted hours.');
+        $this->respond($family, $hoursTicket, 'FAM-VISIT-020', $hoursTicket->description);
+        $this->assertSame($hoursBooking->id, (int) data_get($this->latestRecap($hoursTicket)->payload, 'renew_payload.care_booking_id'));
+    }
+
     public function test_invitation_is_not_sent_until_the_family_confirms_the_exact_request_and_caregiver(): void
     {
         [, $family] = $this->eligibleFamily();

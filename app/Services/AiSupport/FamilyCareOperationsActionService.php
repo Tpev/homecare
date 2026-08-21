@@ -377,7 +377,7 @@ class FamilyCareOperationsActionService
     private function respondVisit(User $actor, SupportTicket $ticket, string $intentId, string $message): bool
     {
         if (in_array($intentId, ['FAM-VISIT-001', 'FAM-VISIT-002', 'FAM-VISIT-003', 'FAM-VISIT-012', 'FAM-VISIT-013'], true)) {
-            $booking = $this->selectBooking($actor, $message);
+            $booking = $this->selectCurrentOrUpcomingBooking($actor, $message);
             if (! $booking) {
                 $this->offerRead($actor, $ticket, 'I did not find a current or upcoming visit on your Family account.', $intentId, 'family.care_requests');
 
@@ -576,8 +576,8 @@ class FamilyCareOperationsActionService
         }
 
         if ($intentId === 'FAM-VISIT-020') {
-            $booking = $this->selectBooking($actor, $message, [CareBooking::STATUS_COMPLETED, CareBooking::STATUS_REVIEWED]);
-            if (! $booking || ! $booking->timesheet_submitted_at || $booking->family_confirmed_at) {
+            $booking = $this->selectUnapprovedSubmittedHours($actor, $message);
+            if (! $booking) {
                 $this->automatedMessage($ticket, 'I could not find one unapproved submitted-hours record. Nothing was charged.');
 
                 return true;
@@ -1854,6 +1854,54 @@ class FamilyCareOperationsActionService
         $candidates = $query->orderByRaw("CASE WHEN status = 'in_progress' THEN 0 WHEN status = 'paused' THEN 1 WHEN status = 'scheduled' THEN 2 ELSE 3 END")
             ->orderByRaw('CASE WHEN scheduled_start_at >= ? THEN 0 ELSE 1 END', [now()])
             ->orderBy('scheduled_start_at')->limit(30)->get();
+        $named = $this->filterByCaregiverName($candidates, $message);
+
+        return $named->count() === 1 ? $named->first() : $candidates->first();
+    }
+
+    private function selectCurrentOrUpcomingBooking(User $actor, string $message): ?CareBooking
+    {
+        $query = CareBooking::query()->forFamilyAccount($this->familyAccounts->account($actor))
+            ->with(['careRequest.recipient', 'careRequest.tasks', 'caregiver.caregiverProfile', 'payment', 'latestTimeCorrection', 'taskChecks'])
+            ->where(function ($candidate): void {
+                $candidate->whereIn('status', [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED])
+                    ->orWhere(function ($scheduled): void {
+                        $scheduled->where('status', CareBooking::STATUS_SCHEDULED)
+                            ->where('scheduled_start_at', '>=', now()->subHours(2));
+                    });
+            });
+        if ($id = $this->namedId($message, 'booking')) {
+            return $query->whereKey($id)->first();
+        }
+        if ($requestId = $this->namedId($message, 'request')) {
+            return $query->where('care_request_id', $requestId)->orderBy('scheduled_start_at')->first();
+        }
+
+        $candidates = $query
+            ->orderByRaw("CASE WHEN status = 'in_progress' THEN 0 WHEN status = 'paused' THEN 1 ELSE 2 END")
+            ->orderBy('scheduled_start_at')
+            ->limit(30)
+            ->get();
+        $named = $this->filterByCaregiverName($candidates, $message);
+
+        return $named->count() === 1 ? $named->first() : $candidates->first();
+    }
+
+    private function selectUnapprovedSubmittedHours(User $actor, string $message): ?CareBooking
+    {
+        $query = CareBooking::query()->forFamilyAccount($this->familyAccounts->account($actor))
+            ->with(['careRequest.recipient', 'careRequest.tasks', 'caregiver.caregiverProfile', 'payment', 'latestTimeCorrection', 'taskChecks'])
+            ->whereIn('status', [CareBooking::STATUS_COMPLETED, CareBooking::STATUS_REVIEWED])
+            ->whereNotNull('timesheet_submitted_at')
+            ->whereNull('family_confirmed_at');
+        if ($id = $this->namedId($message, 'booking')) {
+            return $query->whereKey($id)->first();
+        }
+        if ($requestId = $this->namedId($message, 'request')) {
+            return $query->where('care_request_id', $requestId)->latest('timesheet_submitted_at')->first();
+        }
+
+        $candidates = $query->latest('timesheet_submitted_at')->limit(30)->get();
         $named = $this->filterByCaregiverName($candidates, $message);
 
         return $named->count() === 1 ? $named->first() : $candidates->first();

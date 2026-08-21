@@ -96,6 +96,7 @@ class FamilyPaymentTimeStateReader
                 'payment',
             ])
             ->whereNotNull('timesheet_submitted_at')
+            ->orderByRaw('CASE WHEN family_confirmed_at IS NULL THEN 0 ELSE 1 END')
             ->latest('timesheet_submitted_at')
             ->first();
 

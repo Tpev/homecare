@@ -44,7 +44,9 @@ class AiSupportHandoffService
             }
 
             $body = in_array($reasonCode, ['continuous_coverage', 'emergency', 'medical_boundary'], true)
-                ? "I've transferred this conversation to LoLo Support. They'll reply here."
+                ? ($reasonCode === 'continuous_coverage'
+                    ? "I've transferred your 24/7 continuous-care request to LoLo Support. They'll reply here."
+                    : "I've transferred this conversation to LoLo Support. They'll reply here.")
                 : ($reasonCode === 'user_requested'
                     ? "I've sent this conversation to LoLo Support. You can keep using this chat, and you won't need to repeat what you already told me."
                     : "I don't want to give you the wrong help. I'm sending this conversation to LoLo Support.");
@@ -61,6 +63,7 @@ class AiSupportHandoffService
                 'transferred_to_human_at' => $message->created_at,
                 'returned_to_automation_at' => null,
                 'handoff_reason_code' => $reasonCode,
+                'subject' => $this->handoffSubject($reasonCode),
                 'status' => $locked->status === SupportTicket::STATUS_RESOLVED
                     ? SupportTicket::STATUS_OPEN
                     : $locked->status,
@@ -255,6 +258,9 @@ class AiSupportHandoffService
         $draft = AiSupportRequestDraft::query()
             ->where('support_ticket_id', $ticket->id)
             ->where('actor_user_id', $actor->id)
+            ->whereNull('discarded_at')
+            ->whereNull('published_at')
+            ->where('expires_at', '>', now())
             ->first();
         $payload = (array) ($draft?->payload ?? []);
         $lines = [
@@ -264,7 +270,7 @@ class AiSupportHandoffService
             'Reason: '.str_replace('_', ' ', $reasonCode),
             'Emergency screening: '.($reasonCode === 'emergency' ? 'immediate-danger language detected; 911 instruction shown' : 'no immediate-danger trigger recorded'),
         ];
-        if ($draft) {
+        if ($draft && $reasonCode !== 'continuous_coverage') {
             $lines[] = 'Private draft: #'.$draft->id.'; '.str_replace('_', ' ', $draft->request_type ?: 'type not selected').'; state '.str_replace('_', ' ', $draft->state).'.';
             if (filled($payload['recipient_full_name'] ?? null)) {
                 $lines[] = 'Recipient: '.$payload['recipient_full_name'];
@@ -285,7 +291,11 @@ class AiSupportHandoffService
             ->latest('last_activity_at')
             ->first();
         if ($journey) {
-            $lines[] = 'Active goal: '.str_replace('_', ' ', $journey->journey_type).'; current step '.str_replace('_', ' ', $journey->step_key).'.';
+            $goal = $reasonCode === 'continuous_coverage'
+                ? '24/7 continuous coverage'
+                : str_replace('_', ' ', $journey->journey_type);
+            $lines[] = ($reasonCode === 'continuous_coverage' ? 'Handoff goal: ' : 'Active goal: ')
+                .$goal.'; current step '.str_replace('_', ' ', $journey->step_key).'.';
         }
         $lines[] = 'Use the canonical conversation above for the complete user-supplied context. Do not ask the user to repeat it.';
 
@@ -297,5 +307,16 @@ class AiSupportHandoffService
             'body' => implode("\n", $lines),
             'client_message_id' => (string) Str::uuid(),
         ]);
+    }
+
+    private function handoffSubject(string $reasonCode): string
+    {
+        return match ($reasonCode) {
+            'continuous_coverage' => 'Chat: Help with 24/7 continuous care',
+            'emergency' => 'Chat: Immediate safety support follow-up',
+            'medical_boundary' => 'Chat: Non-medical care support needed',
+            'user_requested' => 'Chat: User requested a person',
+            default => 'Chat: Human support needed',
+        };
     }
 }

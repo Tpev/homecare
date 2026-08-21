@@ -37,6 +37,7 @@ class FamilyGuidedAssistanceTest extends TestCase
 
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_OVERVIEW, $service->intentFor('What needs my attention?'));
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_REQUESTS, $service->intentFor('Did any caregivers respond to my request?'));
+        $this->assertSame(FamilyGuidedAssistanceService::INTENT_REQUESTS, $service->intentFor('Do I have any caregivers waiting for me to review or hire?'));
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_VISITS, $service->intentFor('When is my next visit?'));
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_VISITS, $service->intentFor('Can I accept the caregiver change request?'));
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_TIMESHEETS, $service->intentFor('I need to review submitted hours'));
@@ -161,6 +162,60 @@ class FamilyGuidedAssistanceTest extends TestCase
         ));
         $this->assertSame(135, $booking->fresh()->worked_minutes);
         $this->assertNull($booking->fresh()->family_confirmed_at);
+    }
+
+    public function test_production_state_phrases_ignore_past_visits_list_all_waiting_hours_and_answer_no_applicants(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $caregiver = User::factory()->create(['role' => 'caregiver', 'name' => 'Current Caregiver']);
+        $pastRequest = $this->request($family, [
+            'title' => 'Old reviewed visit',
+            'status' => CareRequest::STATUS_FILLED,
+            'requested_start_at' => now()->subMonths(5),
+            'requested_end_at' => now()->subMonths(5)->addHours(2),
+        ]);
+        $this->booking($family, $caregiver, $pastRequest, [
+            'status' => CareBooking::STATUS_REVIEWED,
+            'scheduled_start_at' => now()->subMonths(5),
+            'scheduled_end_at' => now()->subMonths(5)->addHours(2),
+            'timesheet_submitted_at' => now()->subMonths(5),
+            'family_confirmed_at' => now()->subMonths(5),
+        ]);
+
+        $visitTicket = $this->automatedTicket($family, 'When is my next scheduled visit and who is the caregiver?');
+        app(AiSupportRuntimeService::class)->respond($family, $visitTicket, $visitTicket->description);
+        $this->assertStringContainsString(
+            'did not find a current or upcoming visit',
+            $visitTicket->publicMessages()->latest()->firstOrFail()->body,
+        );
+
+        foreach (['Monday hours', 'Tuesday hours'] as $index => $title) {
+            $request = $this->request($family, ['title' => $title, 'status' => CareRequest::STATUS_FILLED]);
+            $this->booking($family, $caregiver, $request, [
+                'status' => CareBooking::STATUS_COMPLETED,
+                'scheduled_start_at' => now()->subDays($index + 1),
+                'scheduled_end_at' => now()->subDays($index + 1)->addHours(2),
+                'completed_at' => now()->subDays($index + 1)->addHours(2),
+                'timesheet_submitted_at' => now()->subDays($index + 1)->addHours(3),
+                'worked_minutes' => 120,
+            ]);
+        }
+
+        $hoursTicket = $this->automatedTicket($family, 'Which submitted hours are waiting for me to review right now?');
+        app(AiSupportRuntimeService::class)->respond($family, $hoursTicket, $hoursTicket->description);
+        $hoursBody = $hoursTicket->publicMessages()->latest()->firstOrFail()->body;
+        $this->assertStringContainsString('2 submitted-hours review items waiting', $hoursBody);
+        $this->assertStringContainsString('Monday hours', $hoursBody);
+        $this->assertStringContainsString('Tuesday hours', $hoursBody);
+        $this->assertStringNotContainsString('Old reviewed visit', $hoursBody);
+
+        $applicantTicket = $this->automatedTicket($family, 'Do I have any caregivers waiting for me to review or hire?');
+        app(AiSupportRuntimeService::class)->respond($family, $applicantTicket, $applicantTicket->description);
+        $this->assertSame(
+            'No caregivers are waiting for you to review or hire right now.',
+            $applicantTicket->publicMessages()->latest()->firstOrFail()->body,
+        );
+        Http::assertNothingSent();
     }
 
     public function test_caregiver_visit_change_is_reported_as_an_attention_item_and_guides_to_the_exact_decision(): void

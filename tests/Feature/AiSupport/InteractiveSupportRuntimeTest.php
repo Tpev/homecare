@@ -161,7 +161,8 @@ class InteractiveSupportRuntimeTest extends TestCase
         $this->assertTrue($ticket->isHumanOnly());
         $this->assertSame('continuous_coverage', $ticket->handoff_reason_code);
         $message = $ticket->publicMessages()->latest()->firstOrFail();
-        $this->assertSame("I've transferred this conversation to LoLo Support. They'll reply here.", $message->body);
+        $this->assertSame("I've transferred your 24/7 continuous-care request to LoLo Support. They'll reply here.", $message->body);
+        $this->assertSame('Chat: Help with 24/7 continuous care', $ticket->subject);
         $this->assertStringNotContainsString('queue', strtolower($message->body));
         $this->assertStringNotContainsString('minutes', strtolower($message->body));
     }
