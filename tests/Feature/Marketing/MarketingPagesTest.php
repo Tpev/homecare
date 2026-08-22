@@ -208,13 +208,24 @@ class MarketingPagesTest extends TestCase
         $response = $this->get(route('landing.caregiver'));
 
         $response->assertOk()
-            ->assertSee('Caregiving work that fits your', false)
+            ->assertSee('Meaningful care work,', false)
             ->assertSee('Create your caregiver profile')
-            ->assertSee('Starting family rate')
+            ->assertSee('Earn $27/hr*', false)
+            ->assertSee('Payment-processing fees may apply.')
+            ->assertSeeText('Tap to claim')
+            ->assertSeeText('Tap Start')
+            ->assertSeeText('Tap Stop')
+            ->assertSeeText('typically arrives within a few days')
+            ->assertSeeText('Can I choose which visits I accept?')
             ->assertSee(route('caregiver.register'), false)
+            ->assertSee(route('landing'), false)
+            ->assertDontSee('Starting family rate')
+            ->assertDontSee('livewire/livewire', false)
             ->assertDontSee('HomeCare')
             ->assertDontSee('AI-guided')
             ->assertDontSee('Text LoLo');
+
+        $this->assertSame(1, substr_count($response->getContent(), 'Earn $27/hr*'));
     }
 
     public function test_family_variant_pages_have_clear_primary_ctas(): void
