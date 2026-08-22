@@ -75,6 +75,13 @@ class MarketingPagesController extends Controller
         return view('marketing.about');
     }
 
+    public function faq(): View
+    {
+        return view('marketing.faq', [
+            'faqCategories' => config('marketing.faq_categories', []),
+        ]);
+    }
+
     /**
      * @param  array<string, mixed>  $data
      */

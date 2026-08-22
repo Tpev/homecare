@@ -17,6 +17,8 @@ class SitemapController extends Controller
             ['url' => route('landing'), 'lastmod' => null, 'priority' => '1.0', 'changefreq' => 'weekly'],
             ['url' => route('landing.family'), 'lastmod' => null, 'priority' => '0.9', 'changefreq' => 'weekly'],
             ['url' => route('landing.caregiver'), 'lastmod' => null, 'priority' => '0.9', 'changefreq' => 'weekly'],
+            ['url' => route('faq'), 'lastmod' => null, 'priority' => '0.8', 'changefreq' => 'monthly'],
+            ['url' => route('about'), 'lastmod' => null, 'priority' => '0.7', 'changefreq' => 'monthly'],
             ['url' => route('blog.index'), 'lastmod' => BlogPost::published()->max('last_published_at'), 'priority' => '0.9', 'changefreq' => 'daily'],
         ];
 

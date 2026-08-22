@@ -175,6 +175,7 @@ Route::get('/families/{variant}', [MarketingPagesController::class, 'familyVaria
     ->name('landing.family.variant');
 Route::get('/caregivers', [MarketingPagesController::class, 'caregiver'])->name('landing.caregiver');
 Route::get('/about', [MarketingPagesController::class, 'about'])->name('about');
+Route::get('/faq', [MarketingPagesController::class, 'faq'])->name('faq');
 Route::view('/flyer/family', 'marketing.flyer-family')->name('marketing.flyer.family');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/feed.xml', BlogFeedController::class)->name('blog.feed');

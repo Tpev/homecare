@@ -25,6 +25,7 @@ class MarketingPagesTest extends TestCase
         $this->get(route('landing.family.variant', ['variant' => 'e']))->assertOk();
         $this->get(route('landing.caregiver'))->assertOk();
         $this->get(route('about'))->assertOk();
+        $this->get(route('faq'))->assertOk();
     }
 
     public function test_marketing_layout_includes_google_analytics(): void
@@ -100,6 +101,34 @@ class MarketingPagesTest extends TestCase
 
         $this->assertNotNull($faqSchema);
         $this->assertCount(count($configuredFaqs), $faqSchema['mainEntity']);
+
+        foreach ($configuredFaqs as $index => $faq) {
+            $response->assertSeeText($faq['question']);
+            $response->assertSeeText($faq['answer']);
+            $this->assertSame($faq['question'], $faqSchema['mainEntity'][$index]['name']);
+            $this->assertSame($faq['answer'], $faqSchema['mainEntity'][$index]['acceptedAnswer']['text']);
+        }
+    }
+
+    public function test_faq_hub_is_searchable_and_schema_matches_every_visible_answer(): void
+    {
+        $response = $this->get(route('faq'))->assertOk();
+        $configuredFaqs = collect(config('marketing.faq_categories'))
+            ->flatMap(fn (array $category): array => $category['faqs'])
+            ->values();
+        $faqSchema = collect($this->structuredData($response))->firstWhere('@type', 'FAQPage');
+
+        $response
+            ->assertSeeText('Questions about care?')
+            ->assertSee('id="faq-search"', false)
+            ->assertSee('data-faq-category', false)
+            ->assertSee('data-faq-item', false)
+            ->assertSee(route('register'), false)
+            ->assertSee(route('caregiver.register'), false);
+
+        $this->assertNotNull($faqSchema);
+        $this->assertCount($configuredFaqs->count(), $faqSchema['mainEntity']);
+        $this->assertGreaterThanOrEqual(40, $configuredFaqs->count());
 
         foreach ($configuredFaqs as $index => $faq) {
             $response->assertSeeText($faq['question']);

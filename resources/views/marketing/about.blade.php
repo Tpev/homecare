@@ -373,6 +373,7 @@
                 <a href="{{ route('landing') }}#caregivers">Caregivers</a>
                 <a href="{{ route('landing') }}#families">For families</a>
                 <a class="active" href="{{ route('about') }}" aria-current="page">About</a>
+                <a href="{{ route('faq') }}">FAQs</a>
             </nav>
 
             <details class="mobile-menu">
@@ -383,6 +384,7 @@
                     <a href="{{ route('landing') }}#caregivers">Caregivers</a>
                     <a href="{{ route('landing') }}#families">For families</a>
                     <a href="{{ route('about') }}" aria-current="page">About</a>
+                    <a href="{{ route('faq') }}">FAQs</a>
                     <a href="{{ route('caregiver.register') }}">Become a caregiver</a>
                     <a href="{{ route('login') }}">Sign in</a>
                 </nav>
@@ -504,7 +506,7 @@
             </div>
             <div><strong>Families</strong><a href="{{ route('register') }}">Find care</a><a href="{{ route('landing') }}#how">How it works</a><a href="{{ route('landing') }}#safety">Safety</a></div>
             <div><strong>Caregivers</strong><a href="{{ route('caregiver.register') }}">Become a caregiver</a><a href="{{ route('login') }}">Caregiver login</a></div>
-            <div><strong>Company</strong><a href="{{ route('about') }}">About LoLo</a><a href="{{ route('blog.index') }}">Resources</a><a href="mailto:hello@carelolo.com">Contact</a><a href="{{ route('legal.index') }}">Legal & privacy</a></div>
+            <div><strong>Company</strong><a href="{{ route('about') }}">About LoLo</a><a href="{{ route('faq') }}">FAQs</a><a href="{{ route('blog.index') }}">Resources</a><a href="mailto:hello@carelolo.com">Contact</a><a href="{{ route('legal.index') }}">Legal & privacy</a></div>
             <p class="copyright">© {{ now()->year }} LoLo Care Inc. Non-medical home support.</p>
         </footer>
     </main>

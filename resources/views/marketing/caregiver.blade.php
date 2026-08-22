@@ -262,12 +262,12 @@
                 <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo Care" width="652" height="222">
             </a>
             <nav class="nav-links desktop-nav" aria-label="Main navigation">
-                <a href="#why">Why LoLo</a><a href="#how">How it works</a><a href="#earnings">Pay & visits</a><a href="#work">The work</a><a href="#faq">FAQs</a>
+                <a href="#why">Why LoLo</a><a href="#how">How it works</a><a href="#earnings">Pay & visits</a><a href="#work">The work</a><a href="{{ route('faq') }}">FAQs</a>
             </nav>
             <details class="mobile-menu">
                 <summary aria-label="Open navigation menu">Menu</summary>
                 <nav aria-label="Mobile navigation">
-                    <a href="#why">Why LoLo</a><a href="#how">How it works</a><a href="#earnings">Pay & visits</a><a href="#work">The work</a><a href="#requirements">Trust & requirements</a><a href="#faq">FAQs</a><a href="{{ route('landing') }}">For families</a><a href="{{ route('login') }}">Sign in</a>
+                    <a href="#why">Why LoLo</a><a href="#how">How it works</a><a href="#earnings">Pay & visits</a><a href="#work">The work</a><a href="#requirements">Trust & requirements</a><a href="{{ route('faq') }}">FAQs</a><a href="{{ route('landing') }}">For families</a><a href="{{ route('login') }}">Sign in</a>
                 </nav>
             </details>
             <div class="nav-actions">
@@ -345,7 +345,7 @@
             <div class="footer-brand"><a class="brand" href="#top" aria-label="Back to the top"><img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo Care" width="652" height="222"></a><p>The trust-and-coordination layer for aging at home.</p></div>
             <div><strong>Caregivers</strong><a href="{{ route('caregiver.register') }}">Create a profile</a><a href="#how">How it works</a><a href="#requirements">Requirements</a><a href="{{ route('login') }}">Caregiver login</a></div>
             <div><strong>Families</strong><a href="{{ route('landing') }}">Find care</a><a href="{{ route('caregivers.search') }}">View caregivers</a><a href="{{ route('landing') }}#safety">Safety</a></div>
-            <div><strong>Company</strong><a href="{{ route('about') }}">About LoLo</a><a href="{{ route('blog.index') }}">Resources</a><a href="mailto:hello@carelolo.com">Contact</a><a href="{{ route('legal.index') }}">Legal & privacy</a></div>
+            <div><strong>Company</strong><a href="{{ route('about') }}">About LoLo</a><a href="{{ route('faq') }}">FAQs</a><a href="{{ route('blog.index') }}">Resources</a><a href="mailto:hello@carelolo.com">Contact</a><a href="{{ route('legal.index') }}">Legal & privacy</a></div>
             <p class="copyright">© {{ now()->year }} LoLo Care Inc. Non-medical home support.</p>
         </footer>
     </main>
