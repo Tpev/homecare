@@ -88,6 +88,60 @@ class CaregiverRegressionTest extends TestCase
         });
     }
 
+    public function test_active_caregiver_is_redirected_away_from_onboarding(): void
+    {
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        $profile = CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($caregiver)
+            ->get(route('caregiver.onboarding', ['step' => 5]))
+            ->assertRedirect(route('dashboard', absolute: false));
+
+        $this->assertDatabaseHas('caregiver_profiles', [
+            'id' => $profile->id,
+            'status' => 'active',
+        ]);
+    }
+
+    public function test_stale_onboarding_tab_cannot_resubmit_an_approved_profile(): void
+    {
+        Mail::fake();
+
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        $profile = CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'draft',
+        ]);
+
+        $component = Livewire::actingAs($caregiver)
+            ->test(OnboardingWizard::class)
+            ->set('step', 5);
+
+        // Simulate an administrator approving the profile while onboarding is still open.
+        $profile->update(['status' => 'active']);
+
+        $component
+            ->call('submitForReview')
+            ->assertRedirect(route('dashboard', absolute: false));
+
+        $this->assertDatabaseHas('caregiver_profiles', [
+            'id' => $profile->id,
+            'status' => 'active',
+        ]);
+        $this->assertDatabaseMissing('caregiver_profile_versions', [
+            'caregiver_profile_id' => $profile->id,
+            'reason' => 'submitted_for_review',
+        ]);
+        $this->assertDatabaseMissing('caregiver_moderation_logs', [
+            'caregiver_profile_id' => $profile->id,
+            'action' => 'submitted',
+        ]);
+        Mail::assertNothingSent();
+    }
+
     public function test_onboarding_rejects_overlapping_availability_ranges(): void
     {
         $skill = Skill::query()->create(['name' => 'Companionship']);

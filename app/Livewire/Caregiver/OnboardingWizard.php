@@ -21,6 +21,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\WithFileUploads;
+use RuntimeException;
 use Throwable;
 
 #[Layout('layouts.app')]
@@ -28,6 +29,8 @@ class OnboardingWizard extends Component
 {
     use ManagesCaregiverBackground;
     use WithFileUploads;
+
+    private const ACTIVE_PROFILE_ONBOARDING_BLOCKED = 'active_profile_onboarding_blocked';
 
     public int $step = 1;
 
@@ -89,6 +92,11 @@ class OnboardingWizard extends Component
             ['user_id' => $user->id],
             ['status' => 'draft']
         );
+
+        if ($this->redirectActiveProfileToDashboard()) {
+            return;
+        }
+
         $this->initializeCaregiverBackground($this->profile);
 
         $this->skillOptions = Skill::query()->orderBy('name')->get(['id', 'name'])->toArray();
@@ -128,11 +136,19 @@ class OnboardingWizard extends Component
 
     public function addRange(int $day): void
     {
+        if ($this->redirectActiveProfileToDashboard()) {
+            return;
+        }
+
         $this->availability[$day][] = ['start' => '09:00', 'end' => '17:00'];
     }
 
     public function removeRange(int $day, int $index): void
     {
+        if ($this->redirectActiveProfileToDashboard()) {
+            return;
+        }
+
         unset($this->availability[$day][$index]);
         $this->availability[$day] = array_values($this->availability[$day]);
     }
@@ -141,6 +157,10 @@ class OnboardingWizard extends Component
     {
         $user = auth()->user();
         abort_unless($user && $user->role === 'caregiver', 403);
+
+        if ($this->redirectActiveProfileToDashboard()) {
+            return;
+        }
 
         $completedStep = $this->step;
 
@@ -158,7 +178,10 @@ class OnboardingWizard extends Component
 
         $saveBackground = $completedStep === 2
             && ($this->profile->requiresCareBackground() || $this->caregiverBackgroundWasStarted());
-        $this->saveDraft(false, $saveBackground);
+        if (! $this->saveDraft(false, $saveBackground)) {
+            return;
+        }
+
         $this->step = min($this->step + 1, $this->totalSteps);
 
         FunnelTracker::track('caregiver_onboarding_step_completed', $user, $this->profile, [
@@ -169,6 +192,10 @@ class OnboardingWizard extends Component
 
     public function previousStep(): void
     {
+        if ($this->redirectActiveProfileToDashboard()) {
+            return;
+        }
+
         $this->step = max($this->step - 1, 1);
     }
 
@@ -176,6 +203,10 @@ class OnboardingWizard extends Component
     {
         $user = auth()->user();
         abort_unless($user && $user->role === 'caregiver', 403);
+
+        if ($this->redirectActiveProfileToDashboard()) {
+            return;
+        }
 
         $this->step = $this->totalSteps;
         try {
@@ -211,7 +242,10 @@ class OnboardingWizard extends Component
         $saveBackground = $this->profile->requiresCareBackground()
             || $this->profile->careBackgroundIsAnswered()
             || $this->caregiverBackgroundWasStarted();
-        $this->saveDraft(true, $saveBackground);
+        if (! $this->saveDraft(true, $saveBackground)) {
+            return;
+        }
+
         app(OpsAlertService::class)->notifyCaregiverReadyForReview($user, $this->profile->fresh());
         FunnelTracker::track('caregiver_onboarding_submitted_for_review', $user, $this->profile->fresh());
 
@@ -326,7 +360,7 @@ class OnboardingWizard extends Component
         }
     }
 
-    private function saveDraft(bool $submitForReview, bool $saveBackground): void
+    private function saveDraft(bool $submitForReview, bool $saveBackground): bool
     {
         $photoProcessor = app(CaregiverProfilePhotoProcessor::class);
         $backgroundService = app(CaregiverBackgroundService::class);
@@ -362,6 +396,17 @@ class OnboardingWizard extends Component
                 &$obsoleteBackgroundPaths,
             ) {
                 $user = auth()->user();
+
+                $persistedProfile = CaregiverProfile::query()
+                    ->lockForUpdate()
+                    ->findOrFail($this->profile->getKey());
+
+                if ($persistedProfile->status === 'active') {
+                    throw new RuntimeException(self::ACTIVE_PROFILE_ONBOARDING_BLOCKED);
+                }
+
+                // Never let a stale onboarding tab overwrite a newer moderation decision.
+                $this->profile = $persistedProfile;
 
                 if ($newProfilePhotoPath) {
                     $this->profile_photo_path = $newProfilePhotoPath;
@@ -461,6 +506,14 @@ class OnboardingWizard extends Component
             $photoProcessor->deleteIfManaged($newProfilePhotoPath);
             $backgroundService->discardUploads($backgroundUploads);
 
+            if ($exception instanceof RuntimeException
+                && $exception->getMessage() === self::ACTIVE_PROFILE_ONBOARDING_BLOCKED
+            ) {
+                $this->redirectActiveProfileToDashboard();
+
+                return false;
+            }
+
             throw $exception;
         }
 
@@ -476,6 +529,8 @@ class OnboardingWizard extends Component
             $this->certificationDocuments = [];
             $this->certificationDocumentsToRemove = [];
         }
+
+        return true;
     }
 
     private function identityIsApproved(): bool
@@ -532,8 +587,33 @@ class OnboardingWizard extends Component
 
     public function updatedProfilePhoto(): void
     {
+        if ($this->redirectActiveProfileToDashboard()) {
+            return;
+        }
+
         $this->resetErrorBag('profile_photo');
         $this->validateOnly('profile_photo', ['profile_photo' => $this->profilePhotoRules()], $this->validationMessages());
+    }
+
+    private function redirectActiveProfileToDashboard(): bool
+    {
+        $user = auth()->user();
+        if (! $user || $user->role !== 'caregiver') {
+            return false;
+        }
+
+        $status = CaregiverProfile::query()
+            ->where('user_id', $user->id)
+            ->value('status');
+
+        if ($status !== 'active') {
+            return false;
+        }
+
+        session()->flash('status', 'Your caregiver profile is active. Use My Caregiver Profile to make updates.');
+        $this->redirect(route('dashboard', absolute: false), navigate: true);
+
+        return true;
     }
 
     private function profilePhotoRules(): array
