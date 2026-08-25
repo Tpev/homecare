@@ -17,6 +17,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $pageTitle }}</title>
+    <x-site-icons />
     <meta name="description" content="{{ $pageDescription }}">
     <meta name="robots" content="{{ $pageRobots }}">
     <link rel="canonical" href="{{ $pageCanonical }}">

@@ -36,6 +36,15 @@ class MarketingPagesTest extends TestCase
             ->assertSee("gtag('config', 'G-WJG3HG6EG6');", false);
     }
 
+    public function test_marketing_layout_uses_lolo_site_icons(): void
+    {
+        $this->get(route('landing'))
+            ->assertOk()
+            ->assertSee(asset('favicon.ico'), false)
+            ->assertSee(asset('images/marketing/lolo/lolo-app-icon.svg'), false)
+            ->assertSee(asset('apple-touch-icon.png'), false);
+    }
+
     public function test_landing_has_registration_ctas(): void
     {
         $response = $this->get(route('landing'));

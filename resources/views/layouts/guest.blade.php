@@ -69,6 +69,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $pageTitle }} | LoLo Care</title>
+    <x-site-icons />
     <meta name="description" content="LoLo helps families find trusted non-medical home care and companionship.">
     <link rel="canonical" href="{{ request()->url() }}">
 
