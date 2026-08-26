@@ -27,16 +27,18 @@
             <div class="max-w-3xl">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#D8E8D4]">Care history</p>
                 <h1 class="mt-2 font-display text-3xl font-semibold leading-tight text-white sm:text-4xl">Care history</h1>
-                <p class="mt-3 max-w-2xl text-base leading-7 text-[#F7F1E8]">
+                <p class="mt-3 hidden max-w-2xl text-base leading-7 text-[#F7F1E8] sm:block">
                     Every previous visit, caregiver, worked hour, and charge in one place.
                 </p>
             </div>
             <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                <a href="{{ route('family.requests.index') }}" wire:navigate class="inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-5 text-sm font-semibold text-[#23483F] shadow-sm transition hover:bg-[#F8F0E2]">Back to Care</a>
-                <a href="{{ route('family.care.index') }}" wire:navigate class="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/35 px-5 text-sm font-semibold text-white transition hover:bg-white/10">Regular care</a>
+                <a href="{{ route('family.care.schedule') }}" wire:navigate class="inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-5 text-sm font-semibold text-[#23483F] shadow-sm transition hover:bg-[#F8F0E2]">Upcoming schedule</a>
+                <a href="{{ route('family.requests.create') }}" wire:navigate class="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/35 px-5 text-sm font-semibold text-white transition hover:bg-white/10">Request care</a>
             </div>
         </div>
     </section>
+
+    <x-family-care-nav active="history" />
 
     <section aria-labelledby="history-summary-heading" class="space-y-3">
         <div class="flex items-end justify-between gap-3">
@@ -86,32 +88,57 @@
             @endif
         </div>
 
-        <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        @php
+            $advancedFilterCount = max(0, $activeFilterCount - (filled($search) ? 1 : 0));
+        @endphp
+
+        <div class="mt-4">
             <div>
                 <label for="care-history-search" class="block text-sm font-medium text-[#324457]">Search</label>
                 <input id="care-history-search" type="search" wire:model.change="search" placeholder="Booking #, person, or title" class="mt-1 h-11 w-full rounded-xl border border-[#DED6CA] bg-white px-3 text-sm text-[#17313F] shadow-sm outline-none transition placeholder:text-[#8A96A3] focus:border-[#4F6FAF] focus:ring-2 focus:ring-[#4F6FAF]/20">
             </div>
-            <x-native-select-field label="Date range" wire:model.live="range" :options="$rangeOptions" id="care-history-range" />
-            <x-native-select-field label="Care type" wire:model.live="careType" :options="$careTypeOptions" id="care-history-type" />
-            <x-native-select-field label="Visit status" wire:model.live="visitStatus" :options="$visitStatusOptions" id="care-history-visit-status" />
-            <x-native-select-field label="Payment status" wire:model.live="paymentStatus" :options="$paymentStatusOptions" id="care-history-payment-status" />
-            <x-native-select-field label="Recipient" wire:model.live="recipient" :options="$recipientOptions" id="care-history-recipient" />
-            <x-native-select-field label="Caregiver" wire:model.live="caregiver" :options="$caregiverOptions" id="care-history-caregiver" />
-            <x-native-select-field label="Regular-care plan" wire:model.live="plan" :options="$planOptions" id="care-history-plan" />
         </div>
 
-        @if ($range === 'custom')
-            <div class="mt-3 grid gap-3 rounded-2xl border border-[#E4DDD3] bg-white p-3 sm:grid-cols-2">
-                <div>
-                    <label for="care-history-from" class="block text-sm font-medium text-[#324457]">From</label>
-                    <input id="care-history-from" type="date" wire:model.change="from" class="mt-1 h-11 w-full rounded-xl border border-[#DED6CA] bg-white px-3 text-sm text-[#17313F] focus:border-[#4F6FAF] focus:ring-2 focus:ring-[#4F6FAF]/20">
+        <details
+            class="mt-3 overflow-hidden rounded-2xl border border-[#E4DDD3] bg-white"
+            @if ($advancedFilterCount > 0) open @endif
+            x-data
+            x-init="if (window.matchMedia('(min-width: 1024px)').matches) $el.open = true"
+        >
+            <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-[#17313F] marker:hidden">
+                <span>More filters</span>
+                @if ($advancedFilterCount > 0)
+                    <span class="rounded-full bg-[#E7F2EE] px-2.5 py-1 text-xs text-[#0F5B52]">{{ $advancedFilterCount }} active</span>
+                @else
+                    <span class="text-xs font-medium text-[#607080]">Date, type, status, or person</span>
+                @endif
+            </summary>
+
+            <div class="border-t border-[#E4DDD3] p-3 sm:p-4">
+                <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    <x-native-select-field label="Date range" wire:model.live="range" :options="$rangeOptions" id="care-history-range" />
+                    <x-native-select-field label="Care type" wire:model.live="careType" :options="$careTypeOptions" id="care-history-type" />
+                    <x-native-select-field label="Visit status" wire:model.live="visitStatus" :options="$visitStatusOptions" id="care-history-visit-status" />
+                    <x-native-select-field label="Payment status" wire:model.live="paymentStatus" :options="$paymentStatusOptions" id="care-history-payment-status" />
+                    <x-native-select-field label="Recipient" wire:model.live="recipient" :options="$recipientOptions" id="care-history-recipient" />
+                    <x-native-select-field label="Caregiver" wire:model.live="caregiver" :options="$caregiverOptions" id="care-history-caregiver" />
+                    <x-native-select-field label="Regular-care plan" wire:model.live="plan" :options="$planOptions" id="care-history-plan" />
                 </div>
-                <div>
-                    <label for="care-history-to" class="block text-sm font-medium text-[#324457]">To</label>
-                    <input id="care-history-to" type="date" wire:model.change="to" class="mt-1 h-11 w-full rounded-xl border border-[#DED6CA] bg-white px-3 text-sm text-[#17313F] focus:border-[#4F6FAF] focus:ring-2 focus:ring-[#4F6FAF]/20">
-                </div>
+
+                @if ($range === 'custom')
+                    <div class="mt-3 grid gap-3 rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-3 sm:grid-cols-2">
+                        <div>
+                            <label for="care-history-from" class="block text-sm font-medium text-[#324457]">From</label>
+                            <input id="care-history-from" type="date" wire:model.change="from" class="mt-1 h-11 w-full rounded-xl border border-[#DED6CA] bg-white px-3 text-sm text-[#17313F] focus:border-[#4F6FAF] focus:ring-2 focus:ring-[#4F6FAF]/20">
+                        </div>
+                        <div>
+                            <label for="care-history-to" class="block text-sm font-medium text-[#324457]">To</label>
+                            <input id="care-history-to" type="date" wire:model.change="to" class="mt-1 h-11 w-full rounded-xl border border-[#DED6CA] bg-white px-3 text-sm text-[#17313F] focus:border-[#4F6FAF] focus:ring-2 focus:ring-[#4F6FAF]/20">
+                        </div>
+                    </div>
+                @endif
             </div>
-        @endif
+        </details>
     </section>
 
     <section aria-labelledby="history-list-heading" class="space-y-3">
@@ -179,6 +206,7 @@
 
                             <div class="flex shrink-0 flex-col gap-2 lg:w-48">
                                 <a href="{{ $item['action_url'] }}" wire:navigate class="hc-primary-button min-h-11 w-full">{{ $item['action_label'] }}</a>
+                                <a href="{{ $item['story_url'] }}" wire:navigate class="hc-secondary-button min-h-11 w-full">View care story</a>
                             </div>
                         </div>
 

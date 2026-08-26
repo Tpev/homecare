@@ -1,4 +1,4 @@
-<div class="hc-page space-y-6 py-6 sm:py-8">
+<div class="hc-page space-y-6 pb-28 pt-6 sm:pb-8 sm:pt-8">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -26,6 +26,7 @@
             <p class="mt-2 text-lg text-[#526474]">{{ $scheduleLabel }}</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
+            <a href="{{ route('family.care.journey', ['resourceType' => 'regular', 'resourceId' => $plan->id]) }}" wire:navigate><x-button color="white" light>Care story</x-button></a>
             <a href="{{ route('family.care.history', ['plan' => $plan->id]) }}" wire:navigate><x-button color="white" light>View past visits</x-button></a>
             @if ($plan->source_care_request_id)
                 <a href="{{ route('family.requests.show', $plan->source_care_request_id) }}" wire:navigate><x-button color="blue" light>Message caregiver</x-button></a>
@@ -144,7 +145,7 @@
     </section>
 
     @if (!$isEnded)
-        <section class="rounded-lg border border-[#D8D0C5] bg-white">
+        <section id="manage-regular-care" class="scroll-mt-24 rounded-lg border border-[#D8D0C5] bg-white">
             <div class="border-b border-[#E7E0D8] px-5 py-4 sm:px-7">
                 <h2 class="font-display text-2xl font-semibold text-[#17313F]">Manage regular care</h2>
                 <p class="mt-1 text-lg text-[#526474]">Choose one change. We will explain what happens before you confirm.</p>
@@ -221,4 +222,17 @@
             <div class="md:col-span-2"><h3 class="text-lg font-semibold text-[#17313F]">Tasks</h3><ul class="mt-2 grid gap-2 sm:grid-cols-2">@forelse ($tasks as $task)<li class="rounded-md bg-[#F5F2ED] px-4 py-3 text-lg text-[#324457]">{{ $task['name'] ?? 'Care task' }}</li>@empty<li class="text-lg text-[#526474]">No task list added.</li>@endforelse</ul></div>
         </div>
     </details>
+
+    <div class="hc-mobile-primary-bar fixed inset-x-0 bottom-0 z-40 border-t border-[#D8D0C5] bg-[#FFFCF8]/95 p-3 shadow-[0_-8px_24px_rgba(23,49,63,0.12)] backdrop-blur sm:hidden">
+        @if ($pendingTimeCorrections->isNotEmpty())
+            @php $mobileCorrection = $pendingTimeCorrections->first(); @endphp
+            <a href="{{ route('family.requests.show', ['careRequest' => $mobileCorrection->booking->care_request_id, 'tab' => 'shift']) }}" wire:navigate class="hc-primary-button w-full">{{ $mobileCorrection->status === \App\Models\CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED ? 'Confirm visit payment' : 'Review reported hours' }}</a>
+        @elseif ($paymentNeedsAction && $next?->care_request_id)
+            <a href="{{ route('family.requests.show', $next->care_request_id) }}" wire:navigate class="hc-primary-button w-full">Fix payment to protect next visit</a>
+        @elseif (! $isEnded)
+            <a href="#manage-regular-care" class="hc-primary-button w-full">Manage regular care</a>
+        @else
+            <a href="{{ route('family.care.journey', ['resourceType' => 'regular', 'resourceId' => $plan->id]) }}" wire:navigate class="hc-primary-button w-full">View care story</a>
+        @endif
+    </div>
 </div>

@@ -1,8 +1,8 @@
 <?php
 
-use App\Support\FamilyQuickRequestDraft;
 use App\Livewire\Forms\LoginForm;
 use App\Services\FamilyAccounts\FamilyAccountContext;
+use App\Support\FamilyQuickRequestDraft;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -32,12 +32,15 @@ new #[Layout('layouts.guest')] class extends Component
         if (FamilyQuickRequestDraft::has() && $user?->role === 'family') {
             session()->flash('status', 'Your quick request draft is ready. Finish review and publish it now.');
             $this->redirect(route('family.requests.create', absolute: false), navigate: true);
+
             return;
         }
 
-        $default = auth()->user()?->isAdministrator()
-            ? route('admin.crm.index', absolute: false)
-            : route('dashboard', absolute: false);
+        $default = match (true) {
+            auth()->user()?->isAdministrator() => route('admin.crm.index', absolute: false),
+            auth()->user()?->role === 'family' => route('family.requests.index', absolute: false),
+            default => route('dashboard', absolute: false),
+        };
         $this->redirectIntended(default: $default, navigate: true);
     }
 }; ?>

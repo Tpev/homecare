@@ -13,9 +13,13 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class NotificationsCenter extends Component
 {
+    private const PAGE_SIZE = 20;
+
     public string $scope = 'unread';
 
     public string $eventFilter = 'all';
+
+    public int $visibleLimit = self::PAGE_SIZE;
 
     /**
      * @var array<string, array<string, bool>>
@@ -100,6 +104,21 @@ class NotificationsCenter extends Component
     public function markAllRead(): void
     {
         auth()->user()->unreadNotifications()->update(['read_at' => now()]);
+    }
+
+    public function updatingScope(): void
+    {
+        $this->visibleLimit = self::PAGE_SIZE;
+    }
+
+    public function updatingEventFilter(): void
+    {
+        $this->visibleLimit = self::PAGE_SIZE;
+    }
+
+    public function loadMoreNotifications(): void
+    {
+        $this->visibleLimit += self::PAGE_SIZE;
     }
 
     public function openNotification(string $notificationId): void
@@ -203,9 +222,10 @@ class NotificationsCenter extends Component
             $notificationsQuery->where('data->event_key', $this->eventFilter);
         }
 
+        $totalNotificationCount = (clone $notificationsQuery)->count();
         $notifications = $notificationsQuery
             ->latest()
-            ->limit(80)
+            ->limit($this->visibleLimit)
             ->get()
             ->map(function (DatabaseNotification $notification): array {
                 $eventKey = (string) data_get($notification->data, 'event_key', 'generic');
@@ -224,14 +244,42 @@ class NotificationsCenter extends Component
                 ];
             });
 
+        $eventOptions = collect($this->eventKeys)->map(fn (string $key) => [
+            'label' => MarketplaceNotificationPresentation::label($key),
+            'value' => $key,
+        ])->values();
+        $preferenceGroups = $eventOptions
+            ->groupBy(fn (array $option): string => $this->preferenceGroupLabel($option['value']))
+            ->map(fn ($events, string $label): array => [
+                'label' => $label,
+                'events' => $events->values()->all(),
+            ])
+            ->values()
+            ->all();
+
         return view('livewire.family.notifications-center', [
             'notifications' => $notifications,
             'unreadCount' => auth()->user()->unreadNotifications()->count(),
-            'eventOptions' => collect($this->eventKeys)->map(fn (string $key) => [
-                'label' => MarketplaceNotificationPresentation::label($key),
-                'value' => $key,
-            ])->values()->all(),
+            'totalNotificationCount' => $totalNotificationCount,
+            'hasMoreNotifications' => $totalNotificationCount > $notifications->count(),
+            'eventOptions' => $eventOptions->all(),
+            'preferenceGroups' => $preferenceGroups,
         ]);
+    }
+
+    private function preferenceGroupLabel(string $eventKey): string
+    {
+        return match (true) {
+            str_starts_with($eventKey, 'continuous_coverage_') => 'Continuous care',
+            str_starts_with($eventKey, 'regular_care_') => 'Regular care',
+            str_starts_with($eventKey, 'time_correction_'),
+            str_starts_with($eventKey, 'completed_extra_visit_') => 'Hours & extra visits',
+            str_starts_with($eventKey, 'payment_') => 'Payments',
+            str_starts_with($eventKey, 'shift_'),
+            str_starts_with($eventKey, 'booking_change_') => 'Visits & schedule',
+            in_array($eventKey, [MarketplaceEvent::MESSAGE_RECEIVED, MarketplaceEvent::SUPPORT_TICKET_REPLY], true) => 'Messages & support',
+            default => 'Requests & caregivers',
+        };
     }
 
     private function eventLabel(string $eventKey): string

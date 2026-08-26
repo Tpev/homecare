@@ -178,6 +178,15 @@
         background: rgba(255, 253, 250, 0.94);
     }
 
+    .hc-horizontal-scroll {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .hc-horizontal-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
     .hc-tab {
         @apply rounded-[1rem] px-3 py-2 text-sm font-medium transition;
         color: color-mix(in srgb, var(--color-hc-muted) 92%, white);
@@ -508,6 +517,14 @@
 }
 
 @media (max-width: 639px) {
+    body:has(.hc-mobile-primary-bar) .support-chat-launcher {
+        bottom: calc(max(5.75rem, env(safe-area-inset-bottom) + 5.75rem) + var(--support-chat-keyboard-inset, 0px));
+    }
+
+    body:has(.hc-mobile-primary-bar) .ai-guide-strip {
+        bottom: calc(max(10.5rem, env(safe-area-inset-bottom) + 10.5rem));
+    }
+
     .support-chat-launcher {
         right: max(1rem, env(safe-area-inset-right));
         bottom: calc(max(1rem, env(safe-area-inset-bottom)) + var(--support-chat-keyboard-inset, 0px));

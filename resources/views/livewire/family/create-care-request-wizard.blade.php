@@ -50,10 +50,10 @@
 
         <section class="hc-brand-panel p-4 sm:p-5">
             <div class="relative max-w-3xl">
-                <p class="hc-brand-kicker text-[#E8E0FF]">New care request</p>
-                <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Tell us what care you need.</h1>
+                <p class="hc-brand-kicker text-[#E8E0FF]">Request care</p>
+                <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">What kind of care would help?</h1>
                 <p class="mt-2 text-sm leading-6 text-[#F7F1E8]/82">
-                    Start with the person, the help needed, the time, and the address.
+                    Choose one visit or a regular schedule. The same details and safeguards stay with your care from request through payment.
                 </p>
             </div>
         </section>
@@ -151,6 +151,45 @@
 
         <section class="mx-auto max-w-5xl">
             <form wire:submit="publish" class="space-y-5">
+                <x-card>
+                    <x-slot:header>
+                        <div>
+                            <h2 class="font-display text-xl font-semibold">Choose a care pattern</h2>
+                            <p class="text-base text-[#607080]">Start here. This choice changes the schedule questions below, not how the rest of your care works.</p>
+                        </div>
+                    </x-slot:header>
+
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            @foreach ($requestTypeOptions as $option)
+                                @php $isRegularChoice = $option['value'] === \App\Models\CareRequest::TYPE_RECURRING; @endphp
+                                <label class="flex min-h-24 cursor-pointer items-start gap-3 rounded-2xl border p-4 transition {{ $request_type === $option['value'] ? 'border-[#0F3D3E] bg-[#0F3D3E] text-white shadow-sm' : 'border-[#DED6CA] bg-white text-[#0F3D3E] hover:bg-[#F5F1EB]' }}">
+                                    <input type="radio" class="sr-only" value="{{ $option['value'] }}" wire:model.live="request_type">
+                                    <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border {{ $request_type === $option['value'] ? 'border-white bg-white text-[#0F3D3E]' : 'border-[#AFA394] bg-white text-transparent' }}">&#10003;</span>
+                                    <span>
+                                        <span class="block text-lg font-semibold">{{ $option['label'] }}</span>
+                                        <span class="mt-1 block text-sm font-normal leading-5 {{ $request_type === $option['value'] ? 'text-white/80' : 'text-[#607080]' }}">
+                                            {{ $isRegularChoice ? 'A repeating weekly schedule with a familiar caregiver.' : 'Care on one specific date and time.' }}
+                                        </span>
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+
+                        @if (app(\App\Services\ContinuousCoverage\ContinuousCoverageAccess::class)->visibleInNavigation(auth()->user()))
+                            <a href="{{ route('family.continuous-coverage.create') }}" wire:navigate class="flex min-h-20 items-center justify-between gap-4 rounded-2xl border border-[#D7CCE9] bg-[#FAF8FD] p-4 transition hover:bg-white">
+                                <span>
+                                    <span class="block text-lg font-semibold text-[#17313F]">Around-the-clock care</span>
+                                    <span class="mt-1 block text-sm leading-5 text-[#607080]">Build substantial coverage across several family-approved caregivers.</span>
+                                </span>
+                                <span class="shrink-0 text-sm font-semibold text-[#6A4E9A]">Set up →</span>
+                            </a>
+                        @endif
+
+                        @error('request_type') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                </x-card>
+
                 <x-card>
                     <x-slot:header>
                         <div>
@@ -345,22 +384,12 @@
                 <x-card>
                     <x-slot:header>
                         <div>
-                            <h2 class="font-display text-xl font-semibold">When should care happen?</h2>
-                            <p class="text-base text-[#607080]">Choose one visit or a regular weekly schedule. We calculate the end time for you.</p>
+                            <h2 class="font-display text-xl font-semibold">{{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Regular-care schedule' : 'Visit schedule' }}</h2>
+                            <p class="text-base text-[#607080]">Add only the dates and times that apply to the care pattern you chose.</p>
                         </div>
                     </x-slot:header>
 
                     <div class="space-y-5">
-                        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                            @foreach ($requestTypeOptions as $option)
-                                <label class="flex min-h-14 cursor-pointer items-center justify-center rounded-lg border px-4 text-lg font-semibold transition {{ $request_type === $option['value'] ? 'border-[#0F3D3E] bg-[#0F3D3E] text-white' : 'border-[#DED6CA] bg-white text-[#0F3D3E] hover:bg-[#F5F1EB]' }}">
-                                    <input type="radio" class="sr-only" value="{{ $option['value'] }}" wire:model.live="request_type">
-                                    {{ $option['label'] }}
-                                </label>
-                            @endforeach
-                        </div>
-                        @error('request_type') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-
                         @if ($request_type === \App\Models\CareRequest::TYPE_ONE_TIME)
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                 <div>
@@ -563,7 +592,7 @@
                         </div>
                         <div class="rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4 md:col-span-2">
                             <p class="text-xs uppercase tracking-[0.12em] text-[#0F7A55]">
-                                {{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated weekly care' : 'Estimated one-time cost' }}
+                                {{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated regular care each week' : 'Estimated one-time cost' }}
                             </p>
                             @if ($this->estimatedCost !== null && $this->estimatedHours !== null)
                                 <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

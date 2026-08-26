@@ -32,10 +32,17 @@ class FamilyActionInboxBuilder
     {
         $items = collect();
 
+        $correctionPaymentBookingIds = CareBookingTimeCorrection::query()
+            ->forFamilyAccount($account)
+            ->where('status', CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED)
+            ->whereHas('booking', fn ($query) => $query->whereNotNull('care_request_id'))
+            ->pluck('care_booking_id');
+
         $paymentBookings = CareBooking::query()
             ->with([
                 'careRequest:id,title',
-                'carePlan:id,title',
+                'careRequest.recipient:id,care_request_id,full_name',
+                'carePlan:id,title,recipient_snapshot',
                 'caregiver:id,name',
                 'caregiver.caregiverProfile:id,user_id,profile_photo_path',
                 'payment:id,care_booking_id,status,last_error',
@@ -43,6 +50,8 @@ class FamilyActionInboxBuilder
             ->forFamilyAccount($account)
             ->whereHas('payment', fn ($query) => $query
                 ->whereIn('status', CareBookingPayment::FAMILY_ACTION_REQUIRED_STATUSES))
+            ->when($correctionPaymentBookingIds->isNotEmpty(), fn ($query) => $query
+                ->whereNotIn('id', $correctionPaymentBookingIds))
             ->orderByDesc('updated_at')
             ->get();
 
@@ -55,7 +64,7 @@ class FamilyActionInboxBuilder
                 'priority' => 10,
                 'eyebrow' => 'Payment action required',
                 'title' => 'Payment needs attention',
-                'subject' => $booking->careRequest?->title ?: $booking->carePlan?->title ?: 'Upcoming care visit',
+                'subject' => $this->bookingSubject($booking),
                 'body' => $booking->payment?->last_error ?: 'Confirm or replace your card for this visit.',
                 'meta' => $this->bookingDateTimeLabel($booking),
                 'label' => 'Fix payment',
@@ -77,7 +86,11 @@ class FamilyActionInboxBuilder
             ]);
         }
 
-        $paymentBookingIds = $paymentBookings->pluck('id')->map(fn ($id) => (int) $id);
+        $paymentBookingIds = $paymentBookings->pluck('id')
+            ->merge($correctionPaymentBookingIds)
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
         $paymentPlans = CarePlan::query()
             ->with([
                 'caregiver:id,name',
@@ -101,7 +114,7 @@ class FamilyActionInboxBuilder
                 'priority' => 10,
                 'eyebrow' => 'Payment action required',
                 'title' => 'Payment needs attention',
-                'subject' => $plan->title,
+                'subject' => 'Regular care for '.$plan->recipientName(),
                 'body' => $plan->nextBooking?->payment?->last_error ?: $plan->last_error ?: 'Confirm or replace your card for the next visit.',
                 'meta' => $plan->nextBooking ? $this->bookingDateTimeLabel($plan->nextBooking) : null,
                 'label' => 'Fix payment',
@@ -232,7 +245,8 @@ class FamilyActionInboxBuilder
                 'requester:id,name,role',
                 'booking:id,care_request_id,care_plan_id,scheduled_start_at,scheduled_end_at,family_account_id',
                 'booking.careRequest:id,title',
-                'booking.carePlan:id,title',
+                'booking.careRequest.recipient:id,care_request_id,full_name',
+                'booking.carePlan:id,title,recipient_snapshot',
             ])
             ->where('status', CareBookingChangeRequest::STATUS_PENDING)
             ->whereHas('requester', fn ($query) => $query->where('role', 'caregiver'))
@@ -256,7 +270,7 @@ class FamilyActionInboxBuilder
                 'title' => $change->type === CareBookingChangeRequest::TYPE_CANCEL
                     ? 'Caregiver requested a visit cancellation'
                     : 'Caregiver proposed a new visit time',
-                'subject' => $booking->careRequest?->title ?: $booking->carePlan?->title ?: 'Upcoming care visit',
+                'subject' => $this->bookingSubject($booking),
                 'body' => $change->type === CareBookingChangeRequest::TYPE_RESCHEDULE
                     ? $this->bookingDateTimeLabel($booking)
                     : 'Review the request before the schedule changes.',
@@ -280,7 +294,8 @@ class FamilyActionInboxBuilder
         $bookingActions = CareBooking::query()
             ->with([
                 'careRequest:id,title',
-                'carePlan:id,title',
+                'careRequest.recipient:id,care_request_id,full_name',
+                'carePlan:id,title,recipient_snapshot',
                 'caregiver:id,name',
                 'caregiver.caregiverProfile:id,user_id,profile_photo_path',
             ])
@@ -314,7 +329,7 @@ class FamilyActionInboxBuilder
                 'title' => $isLive
                     ? ($booking->status === CareBooking::STATUS_PAUSED ? 'Visit is paused' : 'Care is happening now')
                     : 'Approve '.$this->possessiveName($booking->caregiver?->name).' visit hours',
-                'subject' => $booking->careRequest?->title ?: $booking->carePlan?->title ?: 'Care visit',
+                'subject' => $this->bookingSubject($booking),
                 'body' => $isLive ? $this->bookingDateTimeLabel($booking) : 'The caregiver submitted their timesheet.',
                 'meta' => $isLive ? 'Open the visit for tracking, messages, or support.' : $this->bookingDateTimeLabel($booking),
                 'label' => $isLive ? 'Open visit' : 'Review hours',
@@ -329,6 +344,50 @@ class FamilyActionInboxBuilder
                 'tone' => 'green',
                 'caregiver' => $booking->caregiver,
                 'occurred_at' => $booking->completed_at ?: $booking->updated_at,
+            ]);
+        }
+
+        $pastDateRequests = CareRequest::query()
+            ->with('recipient')
+            ->withCount('applications')
+            ->forFamilyAccount($account)
+            ->where('is_system_generated', false)
+            ->where('status', CareRequest::STATUS_OPEN)
+            ->where('request_type', CareRequest::TYPE_ONE_TIME)
+            ->where(function ($query): void {
+                $query->where('requested_end_at', '<', now())
+                    ->orWhere(function ($withoutEnd): void {
+                        $withoutEnd
+                            ->whereNull('requested_end_at')
+                            ->where('requested_start_at', '<', now());
+                    });
+            })
+            ->orderByDesc('requested_start_at')
+            ->get();
+
+        foreach ($pastDateRequests as $request) {
+            $recipient = trim((string) ($request->recipient?->full_name ?? '')) ?: 'Care recipient';
+            $date = $request->requested_start_at?->format('l, F j, Y') ?: 'The requested date';
+
+            $items->push([
+                'key' => 'request-date-passed-'.$request->id,
+                'type' => 'request_date_passed',
+                'priority' => 28,
+                'eyebrow' => 'One-time care · date passed',
+                'title' => 'Resolve the old request for '.$recipient,
+                'subject' => $date,
+                'body' => 'The original visit time has passed. Close the request or use it to arrange another date.',
+                'meta' => (int) $request->applications_count > 0
+                    ? $request->applications_count.' caregiver '.((int) $request->applications_count === 1 ? 'response is' : 'responses are').' still available for reference.'
+                    : 'No visit was booked.',
+                'label' => 'Resolve request',
+                'navigation_target_id' => 'family.request.overview',
+                'resource_type' => 'care_request',
+                'resource_id' => (int) $request->id,
+                'href' => route('family.requests.show', $request->id),
+                'tone' => 'amber',
+                'caregiver' => null,
+                'occurred_at' => $request->requested_start_at ?: $request->updated_at,
             ]);
         }
 
@@ -351,17 +410,25 @@ class FamilyActionInboxBuilder
             ->get();
 
         foreach ($requests as $request) {
+            if (CareRequestProgress::oneTimeDateHasPassed($request)) {
+                continue;
+            }
+
             $count = (int) $request->pending_candidate_count;
+            $recipient = trim((string) ($request->recipient?->full_name ?? '')) ?: 'Care recipient';
+            $careLabel = $request->request_type === CareRequest::TYPE_RECURRING
+                ? 'Regular care for '.$recipient
+                : $recipient.' · '.($request->requested_start_at?->format('D, M j') ?: 'Date pending');
             $items->push([
                 'key' => 'request-applicants-'.$request->id,
                 'type' => 'applicants',
                 'priority' => 30,
                 'eyebrow' => 'Caregiver response',
                 'title' => $count === 1 ? 'A caregiver is waiting for your review' : $count.' caregivers are waiting for your review',
-                'subject' => $request->title,
+                'subject' => $careLabel,
                 'body' => 'Compare profiles, message caregivers, and choose the right fit.',
-                'meta' => null,
-                'label' => $count === 1 ? 'Review caregiver' : 'Review caregivers',
+                'meta' => 'Request #'.$request->id,
+                'label' => 'Review caregivers',
                 'navigation_target_id' => 'family.request.applicants',
                 'resource_type' => 'care_request',
                 'resource_id' => (int) $request->id,
@@ -395,6 +462,23 @@ class FamilyActionInboxBuilder
         return $booking->scheduled_end_at
             ? $label.' to '.$booking->scheduled_end_at->format('g:i A')
             : $label;
+    }
+
+    private function bookingSubject(CareBooking $booking): string
+    {
+        $recipient = trim((string) ($booking->carePlan?->recipientName()
+            ?: $booking->careRequest?->recipient?->full_name
+            ?: 'Care recipient'));
+        $kind = (string) ($booking->plan_visit_kind ?? '');
+        $type = match (true) {
+            $kind === 'coverage' => 'Continuous care',
+            in_array($kind, ['extra', 'completed_extra'], true) => 'Extra visit',
+            (int) $booking->care_plan_id > 0 => 'Regular visit',
+            default => 'One-time visit',
+        };
+        $date = $booking->scheduled_start_at?->format('D, M j') ?: 'Date pending';
+
+        return $type.' for '.$recipient.' · '.$date;
     }
 
     private function reportedTimeLabel(mixed $start, mixed $end, string $duration, string $amount): string

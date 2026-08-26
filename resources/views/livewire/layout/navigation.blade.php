@@ -328,6 +328,10 @@ new class extends Component
             ];
         }
 
+        $notificationHref = $isFamily
+            ? route('family.notifications.index')
+            : (($isCaregiver && ! $caregiverOnboardingMode) ? route('caregiver.notifications.index') : null);
+
         if ($isAdmin && $continuousCoverageVisible) {
             $adminNavGroups[2]['active'] = $adminNavGroups[2]['active'] || request()->routeIs('admin.continuous-coverage.*');
             $adminNavGroups[2]['items'][] = [
@@ -344,7 +348,7 @@ new class extends Component
         } elseif ($isSdr) {
             $primaryLinks = [$sdrCallLink];
         } else {
-            if ($user && ! $caregiverOnboardingMode) {
+            if ($user && ! $caregiverOnboardingMode && ! $isFamily) {
                 $primaryLinks[] = [
                     'label' => $isFamily ? 'Home' : 'Dashboard',
                     'href' => route('dashboard'),
@@ -358,27 +362,21 @@ new class extends Component
                     'href' => route('family.requests.index'),
                     'active' => request()->routeIs('family.requests.index')
                         || request()->routeIs('family.requests.show')
-                        || request()->routeIs('family.care.*'),
+                        || request()->routeIs('family.care.*')
+                        || request()->routeIs('family.continuous-coverage.*'),
                 ];
                 $primaryLinks[] = [
                     'label' => 'Find Caregivers',
                     'href' => route('caregivers.search'),
                     'active' => request()->routeIs('caregivers.search') || request()->routeIs('caregivers.show'),
                 ];
-                if ($continuousCoverageVisible) {
-                    $primaryLinks[] = [
-                        'label' => '24/7 Coverage',
-                        'href' => route('family.continuous-coverage.index'),
-                        'active' => request()->routeIs('family.continuous-coverage.*'),
-                    ];
-                }
                 $primaryLinks[] = [
                     'label' => $messageUnread > 0 ? "Messages ($messageUnread)" : 'Messages',
                     'href' => route('messages.index'),
                     'active' => request()->routeIs('messages.*'),
                 ];
                 $primaryLinks[] = [
-                    'label' => 'Get care',
+                    'label' => 'Request care',
                     'href' => route('family.requests.create'),
                     'active' => request()->routeIs('family.requests.create'),
                     'primary' => true,
@@ -444,7 +442,7 @@ new class extends Component
     <div class="hc-page relative">
         <div class="flex h-[4.5rem] items-center justify-between gap-3 py-2">
             <div class="shrink-0 flex items-center">
-                <a href="{{ $user ? ($isAdmin ? route('admin.crm.index') : ($isContentTeam ? route('admin.content.posts.index') : route('dashboard'))) : route('landing') }}" wire:navigate class="inline-flex items-center gap-3">
+                <a href="{{ $user ? ($isAdmin ? route('admin.crm.index') : ($isContentTeam ? route('admin.content.posts.index') : ($isFamily ? route('family.requests.index') : route('dashboard')))) : route('landing') }}" wire:navigate class="inline-flex items-center gap-3">
                     <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#23483F]/10 bg-[rgba(255,253,250,0.96)] shadow-sm">
                         <img src="{{ asset('images/marketing/lolo/lolo-app-icon.svg') }}" alt="LoLo" class="block h-7 w-7 object-contain" />
                     </span>
@@ -455,7 +453,7 @@ new class extends Component
                 </a>
             </div>
 
-            <div class="hidden min-w-0 flex-1 items-center gap-2 md:ml-8 md:mr-72 md:flex">
+            <div class="hidden min-w-0 flex-1 items-center gap-2 lg:ml-8 lg:mr-72 lg:flex">
                 @if ($isContentTeam && ! $isAdmin)
                     <div class="relative" x-data="{ open: false }">
                         <button type="button" @click="open = !open" class="inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('admin.content.*') ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#547067] hover:bg-[#F8F0E2] hover:text-[#23483F]' }}">
@@ -529,7 +527,25 @@ new class extends Component
                 @endif
             </div>
 
-            <div class="ml-auto flex items-center gap-2 md:hidden" @if ($isAdmin) wire:poll.10s.visible @endif>
+            <div class="ml-auto flex items-center gap-2 lg:hidden" @if ($isAdmin) wire:poll.10s.visible @endif>
+                @if ($notificationHref)
+                    <a
+                        href="{{ $notificationHref }}"
+                        wire:navigate
+                        aria-label="{{ $notificationUnread > 0 ? $notificationUnread.' unread notifications' : 'Notifications' }}"
+                        title="Notifications"
+                        class="relative inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-2xl border border-[#E3D6C5] text-[#23483F] shadow-sm transition {{ request()->routeIs('family.notifications.*', 'caregiver.notifications.*') ? 'bg-[#F8F0E2]' : 'bg-[rgba(255,253,250,0.98)] hover:bg-[#F8F0E2]' }}"
+                    >
+                        <svg class="h-[20px] w-[20px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9a6 6 0 00-12 0v.75a8.967 8.967 0 01-2.312 6.022 23.848 23.848 0 005.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                        </svg>
+                        @if ($notificationUnread > 0)
+                            <span class="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[#C96B55] px-1 text-[10px] font-bold leading-none text-white">
+                                {{ $notificationUnread > 99 ? '99+' : $notificationUnread }}
+                            </span>
+                        @endif
+                    </a>
+                @endif
                 @if ($isAdmin)
                     <a
                         href="{{ route('admin.support.tickets') }}"
@@ -563,7 +579,7 @@ new class extends Component
             </div>
         </div>
 
-        <div class="absolute right-0 top-1/2 hidden -translate-y-1/2 items-center gap-2 md:flex" x-data="{ accountOpen: false, supportOpen: false }">
+        <div class="absolute right-0 top-1/2 hidden -translate-y-1/2 items-center gap-2 lg:flex" x-data="{ accountOpen: false, supportOpen: false }">
             @if ($user)
                 @if ($isAdmin)
                     <div class="relative" wire:poll.10s.visible>
@@ -642,6 +658,25 @@ new class extends Component
                             </a>
                         </div>
                     </div>
+                @endif
+
+                @if ($notificationHref)
+                    <a
+                        href="{{ $notificationHref }}"
+                        wire:navigate
+                        aria-label="{{ $notificationUnread > 0 ? $notificationUnread.' unread notifications' : 'Notifications' }}"
+                        title="Notifications"
+                        class="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#E3D6C5] text-[#23483F] shadow-sm transition {{ request()->routeIs('family.notifications.*', 'caregiver.notifications.*') ? 'bg-[#F8F0E2]' : 'bg-[rgba(255,253,250,0.98)] hover:border-[#23483F]/12 hover:bg-[#F8F0E2]' }}"
+                    >
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9a6 6 0 00-12 0v.75a8.967 8.967 0 01-2.312 6.022 23.848 23.848 0 005.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                        </svg>
+                        @if ($notificationUnread > 0)
+                            <span class="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[#C96B55] px-1 text-[10px] font-bold leading-none text-white">
+                                {{ $notificationUnread > 99 ? '99+' : $notificationUnread }}
+                            </span>
+                        @endif
+                    </a>
                 @endif
 
                 <button
@@ -760,7 +795,7 @@ new class extends Component
         x-cloak
         x-show="open"
         x-transition.opacity
-        class="max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-t border-[#E3D6C5]/80 bg-[rgba(255,253,250,0.98)] backdrop-blur md:hidden"
+        class="max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-t border-[#E3D6C5]/80 bg-[rgba(255,253,250,0.98)] backdrop-blur lg:hidden"
     >
         <div class="space-y-1 px-2 pb-3 pt-2">
             @if ($isContentTeam && ! $isAdmin)

@@ -9,6 +9,18 @@ use Illuminate\Support\Carbon;
 
 class CareRequestProgress
 {
+    public static function oneTimeDateHasPassed(CareRequest $request, ?Carbon $at = null): bool
+    {
+        if ($request->request_type !== CareRequest::TYPE_ONE_TIME
+            || ! in_array($request->status, [CareRequest::STATUS_OPEN, CareRequest::STATUS_DRAFT], true)) {
+            return false;
+        }
+
+        $endsAt = $request->requested_end_at ?: $request->requested_start_at;
+
+        return $endsAt !== null && $endsAt->lt($at ?? now());
+    }
+
     public static function postedAgoLabel(CareRequest $request): string
     {
         return $request->created_at?->diffForHumans(now(), [
@@ -58,6 +70,14 @@ class CareRequestProgress
             CareRequestApplication::STATUS_APPLIED,
             CareRequestApplication::STATUS_SHORTLISTED,
         ];
+
+        if (self::oneTimeDateHasPassed($request)) {
+            return [
+                'title' => 'Requested date has passed',
+                'action' => 'Close this request or start a new one with another date',
+                'tone' => 'amber',
+            ];
+        }
 
         if ($request->relationLoaded('applications')) {
             $pendingCandidates = (int) $request->applications
@@ -217,6 +237,22 @@ class CareRequestProgress
                 'tiles' => $tiles,
             ];
         };
+
+        if (self::oneTimeDateHasPassed($request)) {
+            return $make(
+                'request_date_passed',
+                'Date passed',
+                'This visit can no longer be scheduled for its original time.',
+                'Close the old request or start another one with the correct date. Existing replies remain available for reference.',
+                'overview',
+                ['overview', 'past_caregivers', 'support'],
+                [
+                    ['label' => 'Status', 'value' => 'Needs resolution', 'help' => 'Original date passed'],
+                    ['label' => 'Caregivers', 'value' => (string) $applicationsCount, 'help' => 'Past responses'],
+                    ['label' => 'Next step', 'value' => 'Close or rebook', 'help' => 'Choose a new date'],
+                ],
+            );
+        }
 
         if ($request->status === CareRequest::STATUS_CANCELLED) {
             return $make(

@@ -93,6 +93,27 @@ class FamilyNotificationCenterTest extends TestCase
         $response->assertSee('Notifications (1)');
     }
 
+    public function test_dense_notifications_load_progressively(): void
+    {
+        $family = User::factory()->create([
+            'role' => 'family',
+            'email_verified_at' => now(),
+        ]);
+
+        foreach (range(1, 25) as $index) {
+            $this->createNotification($family, MarketplaceEvent::NEW_APPLICANT, 'Update '.$index);
+        }
+
+        Livewire::actingAs($family)
+            ->test(NotificationsCenter::class)
+            ->assertViewHas('totalNotificationCount', 25)
+            ->assertViewHas('notifications', fn ($notifications): bool => $notifications->count() === 20)
+            ->assertSee('Showing 20 of 25 updates.')
+            ->call('loadMoreNotifications')
+            ->assertViewHas('notifications', fn ($notifications): bool => $notifications->count() === 25)
+            ->assertDontSee('Show 20 older updates');
+    }
+
     private function createNotification(User $user, string $eventKey, string $title, bool $read = false): DatabaseNotification
     {
         return DatabaseNotification::query()->create([

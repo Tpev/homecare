@@ -78,9 +78,12 @@ use App\Livewire\Caregiver\WorkInbox;
 use App\Livewire\Dashboard\Home as DashboardHome;
 use App\Livewire\Family\AcceptFamilyInvitation;
 use App\Livewire\Family\BookAgain;
+use App\Livewire\Family\CareActionsIndex;
 use App\Livewire\Family\CareHistory;
+use App\Livewire\Family\CareJourney;
 use App\Livewire\Family\CareProfileEditor;
 use App\Livewire\Family\CareProfiles;
+use App\Livewire\Family\CareSchedule;
 use App\Livewire\Family\ContinuousCoverageCreate;
 use App\Livewire\Family\ContinuousCoverageIndex as FamilyContinuousCoverageIndex;
 use App\Livewire\Family\ContinuousCoverageShow;
@@ -325,7 +328,13 @@ Route::middleware(['auth', 'family.role'])->prefix('family')->name('family.')->g
         Route::get('/{coveragePlan}', ContinuousCoverageShow::class)->whereNumber('coveragePlan')->name('show');
     });
     Route::get('/care', RegularCareIndex::class)->name('care.index');
+    Route::get('/care/actions', CareActionsIndex::class)->name('care.actions');
+    Route::get('/care/schedule', CareSchedule::class)->name('care.schedule');
     Route::get('/care/history', CareHistory::class)->name('care.history');
+    Route::get('/care/journey/{resourceType}/{resourceId}', CareJourney::class)
+        ->whereIn('resourceType', ['request', 'regular'])
+        ->whereNumber('resourceId')
+        ->name('care.journey');
     Route::get('/care/{carePlan}', RegularCareShow::class)
         ->whereNumber('carePlan')
         ->name('care.show');

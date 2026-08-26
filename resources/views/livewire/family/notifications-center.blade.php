@@ -1,4 +1,4 @@
-﻿<div class="hc-page py-6 space-y-5">
+<div class="hc-page py-6 space-y-5">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -13,9 +13,9 @@
         ];
     @endphp
 
-    <section class="hc-brand-panel p-5">
-        <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#7C5DDC]/20 blur-2xl"></div>
-        <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-[#4F6FAF]/20 blur-2xl"></div>
+    <section class="hc-brand-panel overflow-hidden p-5">
+        <div class="pointer-events-none absolute right-0 -top-10 h-40 w-40 rounded-full bg-[#7C5DDC]/20 blur-2xl"></div>
+        <div class="pointer-events-none absolute bottom-0 left-0 h-40 w-40 rounded-full bg-[#4F6FAF]/20 blur-2xl"></div>
 
         <div class="relative space-y-4">
             <div class="flex items-start justify-between gap-3">
@@ -77,6 +77,7 @@
                         wire:model.live="eventFilter"
                         :options="array_merge([['label' => 'All event types', 'value' => 'all']], $eventOptions)"
                     />
+                    <p class="px-1 text-xs font-medium text-[#7B8794]">Showing {{ $notifications->count() }} of {{ $totalNotificationCount }} updates.</p>
                 </div>
             </div>
 
@@ -133,41 +134,61 @@
                         No notifications for this filter yet.
                     </div>
                 @endforelse
+
+                @if ($hasMoreNotifications)
+                    <div class="rounded-2xl border border-[#D8E1D7] bg-[#F7FBF8] p-4 text-center">
+                        <p class="text-sm text-[#607080]">Older updates stay available without making this page endless.</p>
+                        <button type="button" wire:click="loadMoreNotifications" class="hc-secondary-button mt-3 w-full sm:w-auto">Show {{ min(20, $totalNotificationCount - $notifications->count()) }} older updates</button>
+                    </div>
+                @endif
             </div>
         </section>
 
         <aside class="xl:col-span-4">
-            <x-card>
-                <x-slot:header>
-                    <h2 class="font-display text-lg font-semibold">Delivery preferences</h2>
-                </x-slot:header>
+            <details class="group overflow-hidden rounded-3xl border border-[#E4DDD3] bg-white shadow-sm">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 sm:px-5">
+                    <div>
+                        <h2 class="font-display text-lg font-semibold text-[#17313F]">Delivery preferences</h2>
+                        <p class="mt-1 text-sm text-[#607080]">In-app and email settings</p>
+                    </div>
+                    <span class="rounded-full bg-[#F4EEE5] px-3 py-1 text-xs font-semibold text-[#526474] group-open:hidden">Customize</span>
+                    <span class="hidden rounded-full bg-[#F4EEE5] px-3 py-1 text-xs font-semibold text-[#526474] group-open:inline-flex">Close</span>
+                </summary>
 
-                <div class="space-y-3">
+                <div class="space-y-3 border-t border-[#E4DDD3] p-4 sm:p-5">
                     <p class="text-sm text-[#5B6472]">Choose in-app updates, email, or both. SMS and push are not offered yet.</p>
-                    @foreach ($eventOptions as $eventOption)
-                        @php
-                            $eventKey = $eventOption['value'];
-                        @endphp
-                        <div class="rounded-xl border border-[#DED6CA] bg-[#FFFCF8] p-3">
-                            <p class="text-sm font-semibold text-[#0F172A]">{{ $eventOption['label'] }}</p>
-                            <div class="mt-2 grid grid-cols-2 gap-2 text-xs text-[#3C4A5B]">
-                                <label class="flex items-center gap-2 rounded-lg border border-[#DED6CA] bg-[#FFFCF8] px-2 py-2">
-                                    <input type="checkbox" wire:model="preferences.{{ $eventKey }}.in_app">
-                                    <span>In-app</span>
-                                </label>
-                                <label class="flex items-center gap-2 rounded-lg border border-[#DED6CA] bg-[#FFFCF8] px-2 py-2">
-                                    <input type="checkbox" wire:model="preferences.{{ $eventKey }}.email">
-                                    <span>Email</span>
-                                </label>
+                    @foreach ($preferenceGroups as $preferenceGroup)
+                        <details class="group overflow-hidden rounded-xl border border-[#DED6CA] bg-[#FFFCF8]">
+                            <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-3 py-3">
+                                <span class="text-sm font-semibold text-[#17313F]">{{ $preferenceGroup['label'] }}</span>
+                                <span class="rounded-full bg-[#F4EEE5] px-2.5 py-1 text-[11px] font-semibold text-[#607080]">{{ count($preferenceGroup['events']) }}</span>
+                            </summary>
+                            <div class="space-y-3 border-t border-[#E4DDD3] p-3">
+                                @foreach ($preferenceGroup['events'] as $eventOption)
+                                    @php $eventKey = $eventOption['value']; @endphp
+                                    <div class="rounded-xl border border-[#DED6CA] bg-white p-3">
+                                        <p class="text-sm font-semibold text-[#0F172A]">{{ $eventOption['label'] }}</p>
+                                        <div class="mt-2 grid grid-cols-2 gap-2 text-xs text-[#3C4A5B]">
+                                            <label class="flex items-center gap-2 rounded-lg border border-[#DED6CA] bg-[#FFFCF8] px-2 py-2">
+                                                <input type="checkbox" wire:model="preferences.{{ $eventKey }}.in_app">
+                                                <span>In-app</span>
+                                            </label>
+                                            <label class="flex items-center gap-2 rounded-lg border border-[#DED6CA] bg-[#FFFCF8] px-2 py-2">
+                                                <input type="checkbox" wire:model="preferences.{{ $eventKey }}.email">
+                                                <span>Email</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
-                        </div>
+                        </details>
                     @endforeach
 
                     <button type="button" wire:click="savePreferences">
                         <span class="hc-primary-button w-full">Save preferences</span>
                     </button>
                 </div>
-            </x-card>
+            </details>
         </aside>
     </div>
 </div>

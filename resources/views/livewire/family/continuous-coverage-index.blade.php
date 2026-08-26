@@ -6,13 +6,15 @@
     <section class="hc-brand-panel overflow-hidden">
         <div class="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
             <div>
-                <p class="hc-brand-kicker text-[#E8E0FF]">Continuous Coverage</p>
+                <p class="hc-brand-kicker text-[#E8E0FF]">Continuous care</p>
                 <h1 class="mt-2 max-w-3xl font-display text-3xl font-semibold leading-tight text-white sm:text-4xl">One clear schedule for around-the-clock care.</h1>
                 <p class="mt-3 max-w-2xl text-base text-[#F7F1E8]/85">Build a family-approved care team, fill recurring shifts, and spot coverage gaps before they become surprises.</p>
             </div>
             <a href="{{ route('family.continuous-coverage.create') }}" wire:navigate class="inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-5 py-3 text-base font-semibold text-[#0F3D3E] shadow-sm transition hover:bg-[#F7F2EA]">Create coverage plan</a>
         </div>
     </section>
+
+    <x-family-care-nav active="continuous" />
 
     <div class="rounded-2xl border border-[#D8D0C5] bg-[#FFF9F1] p-4 text-sm text-[#4B5B6B]">
         <p class="font-semibold text-[#17313F]">Your family stays in control.</p>
@@ -77,7 +79,7 @@
         @empty
             <div class="rounded-3xl border border-dashed border-[#CFC4B5] bg-white p-8 text-center lg:col-span-2">
                 <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#EAF6F2] text-2xl" aria-hidden="true">24</div>
-                <h2 class="mt-4 font-display text-2xl font-semibold text-[#17313F]">No active Continuous Coverage plan</h2>
+                <h2 class="mt-4 font-display text-2xl font-semibold text-[#17313F]">No active continuous-care plan</h2>
                 <p class="mx-auto mt-2 max-w-xl text-[#607080]">Use this only for substantial coverage coordinated across several family-approved caregivers, such as 24/7 or overnight care.</p>
                 <a href="{{ route('family.continuous-coverage.create') }}" wire:navigate class="mt-5 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#0F3D3E] px-5 py-3 font-semibold text-white">Create a coverage plan</a>
             </div>

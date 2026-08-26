@@ -1,7 +1,9 @@
 <div
-    x-data
+    x-data="{ confirmingPayment: false }"
     x-on:caregiver-invite-panel-closed.window="$nextTick(() => $refs.inviteCaregiverTrigger?.focus())"
-    class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8"
+    x-on:payment-confirmation-started.window="confirmingPayment = true"
+    x-on:payment-confirmation-finished.window="confirmingPayment = false"
+    class="hc-page space-y-5 pb-28 pt-5 sm:space-y-6 sm:pb-8 sm:pt-8"
 >
     @if($aiPrepared)
         <x-alert color="blue">LoLo prepared the correction details. Review and edit them before you send, submit, or approve anything. Nothing was changed automatically.</x-alert>
@@ -51,6 +53,19 @@
         $familyReview = $booking?->reviews?->firstWhere('reviewer_user_id', (int) auth()->id());
         $caregiverReview = $booking?->reviews?->firstWhere('reviewer_user_id', (int) ($booking?->caregiver_user_id ?? 0));
         $latestTimeCorrection = $booking?->timeCorrections?->first();
+        $paymentTimeCorrection = $latestTimeCorrection?->status === \App\Models\CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED
+            ? $latestTimeCorrection
+            : null;
+        $paymentActionAmountCents = $paymentTimeCorrection
+            ? (int) data_get($paymentTimeCorrection->financial_preview, 'target_charge_cents', 0)
+            : (int) data_get($payment?->metadata, 'requested_authorization_cents', 0);
+        $paymentActionAmountLabel = $paymentActionAmountCents > 0
+            ? '$'.number_format($paymentActionAmountCents / 100, 2)
+            : null;
+        $paymentActionButtonLabel = $paymentTimeCorrection && $paymentActionAmountLabel
+            ? 'Confirm '.$paymentActionAmountLabel.' payment'
+            : 'Confirm card authorization';
+        $showPaymentAuthorizationAction = $needsPaymentAuthorization || (bool) $paymentTimeCorrection;
         $hasActiveTimeCorrection = $latestTimeCorrection
             && in_array($latestTimeCorrection->status, \App\Models\CareBookingTimeCorrection::activeStatuses(), true);
         $timesheetNeedsReview = $booking
@@ -90,6 +105,7 @@
                 \App\Models\CareRequestApplication::STATUS_SHORTLISTED,
             ])
             ->count();
+        $requestDatePassed = \App\Support\CareRequestProgress::oneTimeDateHasPassed($requestItem);
         $topCaregiverActionLabel = $openCaregiverResponses > 0 ? 'Review caregivers' : 'Invite caregivers';
         $canCancelScheduledShift = $booking && $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED;
         $canRequestVisitChange = $booking && $booking->status === \App\Models\CareBooking::STATUS_SCHEDULED;
@@ -185,13 +201,19 @@
             ? ucfirst(str_replace('_', ' ', (string) $booking->status))
             : 'No visit';
         $plainRequestType = $requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME
-            ? 'One visit'
-            : 'Repeats';
+            ? 'One-time care'
+            : 'Regular care';
         $plainSchedule = $booking
             ? trim((optional($booking->scheduled_start_at)->format('M d, g:i A') ?: 'Time pending').' - '.(optional($booking->scheduled_end_at)->format('g:i A') ?: ''))
             : ($requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME
                 ? (optional($requestItem->requested_start_at)->format('M d, g:i A') ?: 'Time not set')
                 : ($requestItem->recurringScheduleLabel() ?: 'Weekly schedule'));
+        $recordRecipientName = trim((string) ($requestItem->recipient?->full_name ?? '')) ?: 'Care recipient';
+        $recordHeadline = $booking
+            ? $recordRecipientName.' · '.($booking->scheduled_start_at?->format('D, M j') ?: 'Visit')
+            : ($requestItem->request_type === \App\Models\CareRequest::TYPE_RECURRING
+                ? 'Regular care for '.$recordRecipientName
+                : $recordRecipientName.' · '.($requestItem->requested_start_at?->format('D, M j') ?: 'Date not set'));
         $visitCaregiverDisplayName = trim((string) $hiredCaregiverFirstName) !== ''
             ? trim((string) $hiredCaregiverFirstName)
             : 'Your caregiver';
@@ -252,7 +274,7 @@
             && ! $timesheetNeedsReview;
         $showVisitMapEmbed = $serviceMapEmbedUrl && ! $isFinalVisitRecord;
         $isScheduledVisit = ($lifecycleStage['key'] ?? '') === 'visit_scheduled';
-        $showVisitActionStrip = (! $isLiveVisit || $needsPaymentAuthorization) && ! $isFinalVisitRecord;
+        $showVisitActionStrip = (! $isLiveVisit || $showPaymentAuthorizationAction) && ! $isFinalVisitRecord;
         $showVisitStatusNotice = $booking && in_array($booking->status, [
             \App\Models\CareBooking::STATUS_PAUSED,
             \App\Models\CareBooking::STATUS_CANCELLED,
@@ -303,20 +325,49 @@
             \App\Models\CareRequestApplication::STATUS_SHORTLISTED => 'Saved',
             default => ucfirst(str_replace('_', ' ', (string) ($featuredCaregiverApplication?->status ?? ''))),
         };
+        $mobilePrimaryAction = match (true) {
+            $showPaymentAuthorizationAction => ['type' => 'payment', 'label' => $paymentActionButtonLabel],
+            $requestDatePassed => ['type' => 'new_date', 'label' => 'Choose another date'],
+            $timesheetNeedsReview => ['type' => 'approve_hours', 'label' => 'Approve hours and pay $'.number_format($estimatedPaymentTotal, 2)],
+            $isLiveVisit => ['type' => 'complete_visit', 'label' => 'The visit has ended'],
+            $isScheduledVisit => ['type' => 'open_visit', 'label' => 'Open visit details'],
+            $isWaitingForCaregivers => ['type' => 'find_caregivers', 'label' => 'Find matching caregivers'],
+            $requestItem->status === \App\Models\CareRequest::STATUS_OPEN => ['type' => 'review_caregivers', 'label' => 'Review caregivers'],
+            default => null,
+        };
     @endphp
 
     @if ($careProfileSnapshot)
         <x-care-recipient-profile-summary :snapshot="$careProfileSnapshot" />
     @endif
 
-    @if ($needsPaymentAuthorization)
+    @if ($showPaymentAuthorizationAction)
         <x-alert color="amber">
             <div data-ai-target="family.request.payment_attention" tabindex="-1" class="flex flex-col gap-3 outline-none sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <p class="font-semibold">Card authorization needs attention.</p>
-                    <p class="text-sm">{{ $payment->last_error ?: 'Confirm the card authorization before the visit is financially protected.' }}</p>
+                    <p class="font-semibold">{{ $paymentTimeCorrection ? 'Finish payment for the approved hours.' : 'Card authorization needs attention.' }}</p>
+                    @if ($paymentTimeCorrection)
+                        <p class="text-sm">
+                            Your approval is saved. Confirm
+                            {{ $paymentTimeCorrection->durationLabel() }}
+                            @if ($paymentActionAmountLabel) for {{ $paymentActionAmountLabel }} @endif
+                            to finish this visit.
+                        </p>
+                    @else
+                        <p class="text-sm">{{ $payment->last_error ?: 'Confirm the card authorization before the visit is financially protected.' }}</p>
+                    @endif
                 </div>
-                <x-button color="amber" wire:click="startPaymentAuthorization" class="w-full sm:w-auto">Confirm card authorization</x-button>
+                <x-button
+                    color="amber"
+                    wire:click="startPaymentAuthorization"
+                    wire:loading.attr="disabled"
+                    wire:target="startPaymentAuthorization"
+                    x-bind:disabled="confirmingPayment"
+                    x-bind:aria-busy="confirmingPayment"
+                    class="w-full disabled:cursor-wait disabled:opacity-60 sm:w-auto"
+                >
+                    <span x-text="confirmingPayment ? 'Opening secure confirmation…' : @js($paymentActionButtonLabel)"></span>
+                </x-button>
             </div>
         </x-alert>
     @endif
@@ -327,21 +378,26 @@
                 <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
-                        <h1 class="text-2xl font-display font-semibold text-[#17313F]">{{ $requestItem->title }}</h1>
+                        <h1 class="text-2xl font-display font-semibold text-[#17313F]">{{ $recordHeadline }}</h1>
                         <x-badge :text="strtoupper($requestItem->status)" color="blue" />
                     @if ($booking)
                         <x-badge :text="'VISIT '.$visitStatusLabel" :color="$shiftBadgeColor" />
                     @endif
                     @if ($payment)
-                        <x-badge :text="'PAYMENT '.strtoupper($payment->status)" color="amber" />
+                        <x-badge :text="'Payment '.ucfirst(str_replace('_', ' ', $payment->status))" color="amber" />
                     @endif
                 </div>
                     <p class="mt-1 text-base text-[#607080]">
                         {{ $plainRequestType }} - {{ $plainSchedule }} - {{ $requestItem->city }}, {{ $requestItem->state }}
                     </p>
+                    <p class="mt-1 text-xs text-[#7B8794]">{{ $booking ? 'Visit #'.$booking->id : 'Request #'.$requestItem->id }}</p>
                 </div>
                 <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                    @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $activeTab !== 'applicants')
+                    <a href="{{ route('family.care.journey', [
+                        'resourceType' => $requestItem->care_plan_id ? 'regular' : 'request',
+                        'resourceId' => $requestItem->care_plan_id ?: $requestItem->id,
+                    ]) }}" wire:navigate class="hc-secondary-button w-full sm:w-auto">Care story</a>
+                    @if ($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $activeTab !== 'applicants' && ! $requestDatePassed)
                         <x-button color="blue" wire:click="setActiveTab('applicants')" class="w-full sm:w-auto">{{ $topCaregiverActionLabel }}</x-button>
                     @endif
                     @if ($hiredConversation && ! $isLiveVisit && ! $isScheduledVisit)
@@ -354,6 +410,7 @@
 
             <div class="grid grid-cols-1 gap-3">
                 <div
+                    id="care-request-primary"
                     @if ($activeTab === 'overview') data-ai-target="family.request.overview" tabindex="-1"
                     @elseif ($activeTab === 'applicants' && ! $showApplicationList) data-ai-target="family.request.applicants" tabindex="-1" @endif
                     class="rounded-[1.4rem] border border-[#D8E1D7] bg-[#F2F8F4] p-4 outline-none"
@@ -372,6 +429,12 @@
                             <a href="{{ route('family.requests.book_again', $requestItem->id) }}" wire:navigate class="block sm:inline-block">
                                 <x-button color="green" light class="w-full sm:w-auto">Book {{ $hiredCaregiverFirstName }} again</x-button>
                             </a>
+                        </div>
+                    @endif
+                    @if ($requestDatePassed)
+                        <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                            <a href="{{ route('family.requests.create', ['type' => \App\Models\CareRequest::TYPE_ONE_TIME]) }}" wire:navigate class="hc-primary-button w-full sm:w-auto">Choose another date</a>
+                            <a href="{{ route('family.requests.index') }}" wire:navigate class="hc-secondary-button w-full sm:w-auto">Back to Care</a>
                         </div>
                     @endif
                     @if ($isWaitingForCaregivers)
@@ -1067,6 +1130,7 @@
                     'booking' => $booking,
                     'correction' => $latestTimeCorrection,
                     'caregiverFirstName' => (string) $hiredCaregiverFirstName,
+                    'paymentActionShown' => $showPaymentAuthorizationAction,
                 ])
 
                 @if ($isScheduledVisit || $isLiveVisit)
@@ -1261,7 +1325,7 @@
                         </div>
                     @else
                         <div @if ($payment->last_error) data-ai-target="family.request.payment_attention" tabindex="-1" @endif class="rounded-xl border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-xs text-[#4B5B6B] outline-none">
-                            Payment status: <span class="font-semibold text-[#17313F]">{{ strtoupper($payment->status) }}</span>
+                            Payment status: <span class="font-semibold text-[#17313F]">{{ ucfirst(str_replace('_', ' ', $payment->status)) }}</span>
                             @if ($payment->amount_authorized_cents)
                                 - Authorized ${{ number_format($payment->amount_authorized_cents / 100, 2) }}
                             @endif
@@ -1270,8 +1334,7 @@
                             @endif
                             @if ($payment->last_error)
                                 <span class="mt-1 block text-amber-800">{{ $payment->last_error }}</span>
-                                <button type="button" wire:click="startPaymentAuthorization" class="mt-1 inline-block font-semibold text-amber-900 underline underline-offset-2">Confirm authorization</button>
-                                <a href="{{ route('family.billing.show') }}" wire:navigate class="ml-2 mt-1 inline-block font-semibold text-amber-900 underline underline-offset-2">Update billing</a>
+                                <a href="{{ route('family.billing.show') }}" wire:navigate class="mt-1 inline-block font-semibold text-amber-900 underline underline-offset-2">Use a different card</a>
                             @endif
                         </div>
                     @endif
@@ -1284,10 +1347,6 @@
                             <a href="{{ route('messages.show', $hiredConversation->id) }}" wire:navigate>
                                 <x-button color="indigo" class="w-full sm:w-auto">Open chat</x-button>
                             </a>
-                        @endif
-
-                        @if ($needsPaymentAuthorization)
-                            <x-button color="amber" wire:click="startPaymentAuthorization" class="w-full sm:w-auto">Confirm card authorization</x-button>
                         @endif
 
                         @if (! $isLiveVisit && in_array($booking->status, [\App\Models\CareBooking::STATUS_IN_PROGRESS, \App\Models\CareBooking::STATUS_PAUSED], true))
@@ -1735,6 +1794,24 @@
     @if ($showCaregiverInvitePanel)
         @include('livewire.family.partials.caregiver-invite-panel')
     @endif
+
+    @if ($mobilePrimaryAction)
+        <div class="hc-mobile-primary-bar fixed inset-x-0 bottom-0 z-40 border-t border-[#D8D0C5] bg-[#FFFCF8]/95 p-3 shadow-[0_-8px_24px_rgba(23,49,63,0.12)] backdrop-blur sm:hidden">
+            @if ($mobilePrimaryAction['type'] === 'payment')
+                <button type="button" wire:click="startPaymentAuthorization" wire:loading.attr="disabled" class="hc-primary-button w-full">{{ $mobilePrimaryAction['label'] }}</button>
+            @elseif ($mobilePrimaryAction['type'] === 'new_date')
+                <a href="{{ route('family.requests.create', ['type' => \App\Models\CareRequest::TYPE_ONE_TIME]) }}" wire:navigate class="hc-primary-button w-full">{{ $mobilePrimaryAction['label'] }}</a>
+            @elseif ($mobilePrimaryAction['type'] === 'approve_hours' || $mobilePrimaryAction['type'] === 'complete_visit')
+                <button type="button" wire:click="completeBooking" class="hc-primary-button w-full">{{ $mobilePrimaryAction['label'] }}</button>
+            @elseif ($mobilePrimaryAction['type'] === 'open_visit')
+                <button type="button" wire:click="setActiveTab('shift')" class="hc-primary-button w-full">{{ $mobilePrimaryAction['label'] }}</button>
+            @elseif ($mobilePrimaryAction['type'] === 'find_caregivers')
+                <button type="button" wire:click="openCaregiverInvitePanel" class="hc-primary-button w-full">{{ $mobilePrimaryAction['label'] }}</button>
+            @else
+                <button type="button" wire:click="setActiveTab('applicants')" class="hc-primary-button w-full">{{ $mobilePrimaryAction['label'] }}</button>
+            @endif
+        </div>
+    @endif
 </div>
 
 @script
@@ -1770,6 +1847,7 @@
         }
 
         window.homecareConfirmingBookingPayment = true;
+        window.dispatchEvent(new CustomEvent('payment-confirmation-started'));
 
         try {
             const StripeConstructor = await window.homecareLoadStripeJs();
@@ -1798,6 +1876,7 @@
             await $wire.failStripeAuthorization(detail.paymentIntentId || '', error?.message || 'Card authorization failed.');
         } finally {
             window.homecareConfirmingBookingPayment = false;
+            window.dispatchEvent(new CustomEvent('payment-confirmation-finished'));
         }
     });
 </script>

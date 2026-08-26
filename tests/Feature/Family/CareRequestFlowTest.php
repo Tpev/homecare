@@ -169,33 +169,37 @@ class CareRequestFlowTest extends TestCase
             ->assertDontSee('>Open</a>', false);
     }
 
-    public function test_family_rebooking_surfaces_each_caregiver_once_across_family_pages(): void
+    public function test_family_rebooking_stays_available_without_cluttering_care_overview(): void
     {
         $family = User::factory()->create(['role' => 'family']);
         $caroline = User::factory()->create(['role' => 'caregiver', 'name' => 'Caroline Petrini-Poli']);
         $bob = User::factory()->create(['role' => 'caregiver', 'name' => 'Bob Helper']);
 
         $this->createCompletedRebookSource($family, $caroline, 'Older visit with Caroline', now()->subWeeks(2));
-        $this->createCompletedRebookSource($family, $caroline, 'Newer visit with Caroline', now()->subWeek());
-        $this->createCompletedRebookSource($family, $bob, 'Visit with Bob', now()->subDays(3));
+        $newerCaroline = $this->createCompletedRebookSource($family, $caroline, 'Newer visit with Caroline', now()->subWeek());
+        $bobVisit = $this->createCompletedRebookSource($family, $bob, 'Visit with Bob', now()->subDays(3));
 
-        foreach ([route('dashboard'), route('family.requests.index')] as $url) {
-            $html = $this->actingAs($family)
-                ->get($url)
-                ->assertOk()
-                ->getContent();
-
-            $this->assertSame(1, substr_count($html, 'Book Caroline again'), 'Caroline should only appear once on '.$url);
-            $this->assertSame(1, substr_count($html, 'Book Bob again'), 'Bob should only appear once on '.$url);
-        }
-
-        $weeklyCareHtml = $this->actingAs($family)
-            ->get(route('family.care.index'))
+        $dashboardHtml = $this->actingAs($family)
+            ->get(route('dashboard'))
             ->assertOk()
             ->getContent();
 
-        $this->assertSame(1, substr_count($weeklyCareHtml, 'Set up regular care with Caroline'), 'Caroline should only appear once on regular care.');
-        $this->assertSame(1, substr_count($weeklyCareHtml, 'Set up regular care with Bob'), 'Bob should only appear once on regular care.');
+        $this->assertSame(1, substr_count($dashboardHtml, 'Book Caroline again'));
+        $this->assertSame(1, substr_count($dashboardHtml, 'Book Bob again'));
+
+        $this->actingAs($family)
+            ->get(route('family.requests.index'))
+            ->assertOk()
+            ->assertDontSee('Book Caroline again')
+            ->assertDontSee('Book Bob again');
+
+        foreach ([$newerCaroline, $bobVisit] as $sourceVisit) {
+            $this->actingAs($family)
+                ->get(route('family.requests.book_again', $sourceVisit))
+                ->assertOk()
+                ->assertSee('One visit or regular care—without starting over.')
+                ->assertSee('Set up regular care');
+        }
     }
 
     public function test_assigned_caregiver_identity_is_visible_on_family_request_cards(): void
@@ -211,13 +215,14 @@ class CareRequestFlowTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->createCompletedRebookSource($family, $caregiver, 'Visit with assigned caregiver', now()->subDay());
+        $request = $this->createCompletedRebookSource($family, $caregiver, 'Visit with assigned caregiver', now()->subDay());
 
         $this->actingAs($family)
-            ->get(route('family.requests.index'))
+            ->get(route('family.requests.show', ['careRequest' => $request, 'tab' => 'applicants']))
             ->assertOk()
-            ->assertSee('Assigned caregiver')
+            ->assertSee('Caregivers who replied')
             ->assertSee('Charles Petrini-Poli')
+            ->assertSee('Hired')
             ->assertSee('/storage/caregiver-photos/charles.jpg', false);
     }
 

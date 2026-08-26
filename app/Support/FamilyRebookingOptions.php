@@ -24,7 +24,7 @@ class FamilyRebookingOptions
                 'booking:id,care_request_id,status,scheduled_start_at,scheduled_end_at,completed_at,caregiver_user_id',
                 'applications' => fn ($query) => $query
                     ->where('status', CareRequestApplication::STATUS_HIRED)
-                    ->with('caregiver:id,name'),
+                    ->with('caregiver.caregiverProfile:id,user_id,profile_photo_path'),
             ])
             ->forFamilyAccount($account)
             ->whereNull('care_plan_id')

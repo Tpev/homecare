@@ -30,6 +30,16 @@
             'button' => 'bg-white text-sky-950',
         ],
     };
+    $consequence = match ($item['type'] ?? null) {
+        'payment' => 'Complete this to keep the visit financially protected and care moving forward.',
+        'time_correction', 'timesheet' => 'The final family charge and caregiver earnings wait for this review.',
+        'completed_extra_visit' => 'No charge or caregiver earnings are finalized until you decide.',
+        'applicants' => 'A caregiver must be selected before this becomes confirmed care.',
+        'request_date_passed' => 'Resolving this keeps old requests from being confused with future care.',
+        'visit_change' => 'The current visit remains unchanged until you decide.',
+        'live_visit' => null,
+        default => null,
+    };
 @endphp
 
 <a
@@ -50,14 +60,17 @@
             @if (filled($item['subject'] ?? null))
                 <p class="mt-1 font-semibold">{{ $item['subject'] }}</p>
             @endif
-            @if (filled($item['body'] ?? null))
+            @if (filled($item['body'] ?? null) && ! $compact)
                 <p class="mt-1 text-sm leading-6 {{ $tone['muted'] }}">{{ $item['body'] }}</p>
             @endif
             @if (filled($item['meta'] ?? null))
                 <p class="mt-1 text-sm font-medium {{ $tone['muted'] }}">{{ $item['meta'] }}</p>
             @endif
+            @if (filled($consequence) && ! $compact)
+                <p class="mt-3 hidden border-t border-current/10 pt-3 text-xs font-semibold leading-5 sm:block {{ $tone['muted'] }}">Why this matters: {{ $consequence }}</p>
+            @endif
             @if (($item['caregiver'] ?? null) && ! $compact)
-                <x-caregiver-identity :caregiver="$item['caregiver']" class="mt-3" />
+                <x-caregiver-identity :caregiver="$item['caregiver']" class="mt-3 hidden sm:flex" />
             @endif
         </div>
         <span class="inline-flex min-h-11 shrink-0 items-center justify-center self-stretch rounded-xl px-4 text-sm font-semibold shadow-sm transition group-hover:shadow sm:self-center {{ $tone['button'] }}">

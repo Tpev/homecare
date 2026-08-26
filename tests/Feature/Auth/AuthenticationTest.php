@@ -34,7 +34,7 @@ class AuthenticationTest extends TestCase
 
         $component
             ->assertHasNoErrors()
-            ->assertRedirect(route('dashboard', absolute: false));
+            ->assertRedirect(route('family.requests.index', absolute: false));
 
         $this->assertAuthenticated();
     }

@@ -153,7 +153,7 @@ class CreateCareRequestWizard extends Component
 
     public array $requestTypeOptions = [
         ['label' => 'One visit', 'value' => CareRequest::TYPE_ONE_TIME],
-        ['label' => 'Regular visits', 'value' => CareRequest::TYPE_RECURRING],
+        ['label' => 'Regular care', 'value' => CareRequest::TYPE_RECURRING],
     ];
 
     public array $careForOptions = [
@@ -216,6 +216,11 @@ class CreateCareRequestWizard extends Component
 
         $this->city = (string) ($user->city ?? '');
         $this->state = (string) ($user->state ?? '');
+
+        $requestedType = (string) request()->query('type', '');
+        if (in_array($requestedType, [CareRequest::TYPE_ONE_TIME, CareRequest::TYPE_RECURRING], true)) {
+            $this->request_type = $requestedType;
+        }
 
         $this->loadSavedProfiles();
         $this->applyHomepageQuickRequestDraft();

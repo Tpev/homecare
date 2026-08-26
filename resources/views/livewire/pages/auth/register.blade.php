@@ -1,7 +1,7 @@
 <?php
 
-use App\Support\FamilyQuickRequestDraft;
 use App\Models\User;
+use App\Support\FamilyQuickRequestDraft;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -12,10 +12,15 @@ use Livewire\Volt\Component;
 new #[Layout('layouts.guest')] class extends Component
 {
     public string $name = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public string $password = '';
+
     public string $password_confirmation = '';
+
     public bool $accept_terms = false;
 
     public function register(): void
@@ -39,10 +44,11 @@ new #[Layout('layouts.guest')] class extends Component
         if (FamilyQuickRequestDraft::has()) {
             session()->flash('status', 'Your request draft is waiting. Review it and publish from your new account.');
             $this->redirect(route('family.requests.create', absolute: false), navigate: true);
+
             return;
         }
 
-        $this->redirect(route('dashboard', absolute: false), navigate: true);
+        $this->redirect(route('family.requests.index', absolute: false), navigate: true);
     }
 }; ?>
 

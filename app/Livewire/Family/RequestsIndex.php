@@ -4,124 +4,95 @@ namespace App\Livewire\Family;
 
 use App\Models\CarePlan;
 use App\Models\CareRequest;
+use App\Models\ContinuousCoveragePlan;
+use App\Services\ContinuousCoverage\ContinuousCoverageAccess;
+use App\Services\Family\FamilyCareActionService;
+use App\Services\Family\FamilyCarePresentationService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
-use App\Support\CareRequestProgress;
-use App\Support\FamilyActionInboxBuilder;
-use App\Support\FamilyRebookingOptions;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class RequestsIndex extends Component
 {
-    use WithPagination;
+    private const ACTION_PREVIEW_LIMIT = 3;
 
+    // Kept for compatible deep links and existing Livewire callers. The
+    // overview is intentionally no longer a request-management table.
     public string $status = 'all';
 
     public string $requestType = 'all';
 
     public string $sort = 'latest';
 
-    public array $statusOptions = [
-        ['label' => 'All statuses', 'value' => 'all'],
-        ['label' => 'Open', 'value' => CareRequest::STATUS_OPEN],
-        ['label' => 'Visit scheduled', 'value' => CareRequest::STATUS_FILLED],
-        ['label' => 'Draft', 'value' => CareRequest::STATUS_DRAFT],
-        ['label' => 'Withdrawn', 'value' => CareRequest::STATUS_CANCELLED],
-        ['label' => 'Expired', 'value' => CareRequest::STATUS_EXPIRED],
-    ];
-
-    public array $sortOptions = [
-        ['label' => 'Latest first', 'value' => 'latest'],
-        ['label' => 'Oldest first', 'value' => 'oldest'],
-        ['label' => 'Start time (soonest)', 'value' => 'start_soon'],
-    ];
-
-    public array $requestTypeOptions = [
-        ['label' => 'All types', 'value' => 'all'],
-        ['label' => 'One visit', 'value' => CareRequest::TYPE_ONE_TIME],
-        ['label' => 'Repeats weekly', 'value' => CareRequest::TYPE_RECURRING],
-    ];
-
     public function mount(): void
     {
         abort_unless(auth()->user()?->role === 'family', 403);
     }
 
-    public function updatingStatus(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatingSort(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatingRequestType(): void
-    {
-        $this->resetPage();
-    }
-
-    public function render(FamilyActionInboxBuilder $actionInbox)
-    {
+    public function render(
+        FamilyCareActionService $actions,
+        FamilyCarePresentationService $presentation,
+        ContinuousCoverageAccess $continuousCoverageAccess,
+    ) {
         $account = app(FamilyAccountContext::class)->account(auth()->user());
-        $requestRelations = [
-            'recipient',
-            'booking.caregiver:id,name',
-            'booking.caregiver.caregiverProfile:id,user_id,profile_photo_path',
-            'booking.payment:id,care_booking_id,status,last_error',
-        ];
-        $requests = CareRequest::query()
-            ->with($requestRelations)
-            ->withCount(['applications'])
+
+        $familyActions = $actions->forAccount($account);
+        $attentionCount = $familyActions->count();
+        $familyActions = $familyActions->take(self::ACTION_PREVIEW_LIMIT)->values();
+
+        $upcomingCount = $presentation->upcomingVisitCount($account);
+        $nextVisit = $presentation->upcomingVisits($account, 1)->first();
+
+        $openRequests = CareRequest::query()
             ->forFamilyAccount($account)
             ->where('is_system_generated', false)
-            ->when($this->status !== 'all', fn ($q) => $q->where('status', $this->status))
-            ->when($this->requestType !== 'all', fn ($q) => $q->where('request_type', $this->requestType));
+            ->whereIn('status', [CareRequest::STATUS_OPEN, CareRequest::STATUS_DRAFT])
+            ->count();
 
-        match ($this->sort) {
-            'oldest' => $requests->orderBy('created_at'),
-            'start_soon' => $requests->orderBy('requested_start_at'),
-            default => $requests->orderByDesc('created_at'),
-        };
-
-        $paginated = $requests->paginate(10);
-
-        $carePlans = CarePlan::query()
-            ->with([
-                'caregiver:id,name,email,city,state',
-                'nextBooking:id,care_request_id,status,scheduled_start_at,scheduled_end_at',
-                'nextBooking.payment:id,care_booking_id,status,last_error',
-            ])
+        $regularPlansQuery = CarePlan::query()
             ->forFamilyAccount($account)
-            ->orderByRaw("CASE WHEN status = '".CarePlan::STATUS_PAYMENT_ATTENTION."' THEN 0 ELSE 1 END")
-            ->latest()
-            ->limit(4)
-            ->get();
+            ->whereNotIn('status', [
+                CarePlan::STATUS_ENDED,
+                CarePlan::STATUS_CANCELLED,
+                CarePlan::STATUS_DECLINED,
+                CarePlan::STATUS_EXPIRED,
+            ]);
+        $regularPlans = (clone $regularPlansQuery)->count();
+        $arrangingPlans = (clone $regularPlansQuery)->whereIn('status', [
+            CarePlan::STATUS_PENDING_CAREGIVER,
+            CarePlan::STATUS_COUNTERED,
+            CarePlan::STATUS_DRAFT,
+        ])->count();
+        $ongoingPlans = (clone $regularPlansQuery)->whereIn('status', [
+            CarePlan::STATUS_ACTIVE,
+            CarePlan::STATUS_PAYMENT_ATTENTION,
+            CarePlan::STATUS_PAUSED,
+        ])->count();
 
-        $rebookableRequests = app(FamilyRebookingOptions::class)->forUser(auth()->user(), 4);
-        $familyActions = $actionInbox->buildForAccount($account);
-
-        $avgFirstResponseMinutes = CareRequest::query()
-            ->forFamilyAccount($account)
-            ->where('is_system_generated', false)
-            ->whereNotNull('first_applicant_at')
-            ->get(['created_at', 'first_applicant_at'])
-            ->map(fn (CareRequest $request) => CareRequestProgress::elapsedMinutes($request->created_at, $request->first_applicant_at))
-            ->filter(fn (?int $minutes) => $minutes !== null)
-            ->avg();
+        $continuousCoverageVisible = $continuousCoverageAccess->visibleInNavigation(auth()->user());
+        $continuousPlans = $continuousCoverageVisible
+            ? ContinuousCoveragePlan::query()
+                ->forFamilyAccount($account)
+                ->whereIn('status', [
+                    ContinuousCoveragePlan::STATUS_ACTIVE,
+                    ContinuousCoveragePlan::STATUS_PAUSED,
+                ])
+                ->count()
+            : 0;
 
         return view('livewire.family.requests-index', [
-            'requests' => $paginated,
-            'carePlans' => $carePlans,
             'familyActions' => $familyActions,
-            'rebookableRequests' => $rebookableRequests,
-            'attentionCount' => $familyActions->count(),
-            'avgFirstResponseLabel' => CareRequestProgress::minutesLabel(
-                $avgFirstResponseMinutes !== null ? (int) round($avgFirstResponseMinutes) : null
-            ),
+            'attentionCount' => $attentionCount,
+            'nextVisit' => $nextVisit,
+            'upcomingCount' => $upcomingCount,
+            'openRequestCount' => $openRequests,
+            'beingArrangedCount' => $openRequests + $arrangingPlans,
+            'ongoingPlanCount' => $ongoingPlans,
+            'planCount' => $regularPlans,
+            'continuousPlanCount' => $continuousPlans,
+            'continuousCoverageVisible' => $continuousCoverageVisible,
+            'arrangementCount' => $openRequests + $regularPlans + $continuousPlans,
         ]);
     }
 }

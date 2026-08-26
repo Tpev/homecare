@@ -227,6 +227,9 @@ class FamilyCareHistoryService
                 'careRequest' => $booking->care_request_id,
                 'tab' => $action['tab'],
             ]),
+            'story_url' => $booking->care_plan_id
+                ? route('family.care.journey', ['resourceType' => 'regular', 'resourceId' => $booking->care_plan_id])
+                : route('family.care.journey', ['resourceType' => 'request', 'resourceId' => $booking->care_request_id]),
         ];
     }
 

@@ -20,7 +20,7 @@
     <section class="hc-brand-panel">
         <div class="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-                <p class="hc-brand-kicker text-[#E8E0FF]">Weekly care</p>
+                <p class="hc-brand-kicker text-[#E8E0FF]">Regular care</p>
                 <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Have {{ $caregiver?->name ?: 'your caregiver' }} come again.</h1>
                 <p class="mt-2 max-w-2xl text-sm text-[#F7F1E8]/82">
                     Pick the weekly days and time. When the caregiver accepts, LoLo creates the next visit and protects payment automatically.
