@@ -27,10 +27,13 @@ class LegalPagesTest extends TestCase
             ->assertSee('Legal Documents');
 
         foreach (array_keys(config('legal_pages.pages', [])) as $slug) {
-            $this->get(route('legal.show', ['slug' => $slug]))
+            $response = $this->get(route('legal.show', ['slug' => $slug]))
                 ->assertOk()
-                ->assertSeeText('Effective Date: August 1, 2026')
-                ->assertSeeText('Last Updated: August 1, 2026')
+                ->assertSeeText('Effective Date: August 1, 2026');
+            $response
+                ->assertSeeText($slug === 'payment-terms-and-cancellation-policy'
+                    ? 'Last Updated: August 26, 2026'
+                    : 'Last Updated: August 1, 2026')
                 ->assertDontSeeText('TO BE REMOVED')
                 ->assertDontSeeText('State-Specific and Operational Placeholders for Counsel Review')
                 ->assertDontSeeText('intended as a business draft for review and customization')

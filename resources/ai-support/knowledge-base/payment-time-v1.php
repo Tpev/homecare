@@ -3,7 +3,7 @@
 $reviewBy = '2026-11-18';
 
 $sources = [
-    'SRC-B4-PRICING-001' => ['Batch 4 approved pricing truth', 'Families pay $30/hour; caregivers earn $27/hour; LoLo receives $3/hour.'],
+    'SRC-B4-PRICING-001' => ['Approved pricing truth', 'Families pay $30/hour for care plus a $1/hour processing fee; caregivers earn $27/hour gross minus actual Stripe processing fees on successful charges.'],
     'SRC-B4-PAYMENT-001' => ['Current booking payment implementation', 'Authorization, capture, retry, refund, and Family-action payment states.'],
     'SRC-B4-TIME-001' => ['Current submitted-hours implementation', 'Timesheet, correction, dispute, and payment-attention states.'],
     'SRC-B4-GUIDANCE-001' => ['AI Support Batch 4 operating specification', 'Safe state reads, normalized failure reasons, exact navigation, preparation, and verification boundaries.'],
@@ -93,12 +93,12 @@ return [
         $entry(
             'KB-B4-PRICE-001',
             'LoLo hourly price, caregiver earnings, and platform portion',
-            'Care on LoLo is $30 per hour for the Family. The caregiver earns $27 per hour. LoLo receives $3 per hour as the platform portion. For a stated number of worked hours, calculate each amount from those exact hourly rates. Do not add taxes, tips, mileage, holiday charges, or surcharges unless a later governed policy explicitly says they apply.',
+            'Care on LoLo is $30 per hour for the Family plus a $1 per hour processing fee, for $31 per worked hour total. The caregiver earns $27 per hour gross minus the actual Stripe processing fees recorded on successful Family charges. Do not deduct refund costs, dispute fees, or optional instant-payout fees from the caregiver rate. For a stated duration, calculate care, the Family processing fee, Family total, and caregiver gross separately; the exact caregiver net comes from the payment record.',
             'Pricing',
             ['family', 'caregiver'],
             [],
             ['FAM-PAY-028', 'FAM-PAY-029'],
-            ['Families pay exactly $30 per hour.', 'Caregivers earn exactly $27 per hour.', 'LoLo receives exactly $3 per hour.', 'The three stated hourly amounts reconcile exactly.'],
+            ['Families pay $30 per hour for care plus a $1 per hour processing fee.', 'Caregivers earn $27 per hour gross minus actual Stripe processing fees on successful Family charges.', 'Refund costs, dispute fees, and optional instant-payout fees are excluded from caregiver processing-fee deductions.', 'Exact caregiver net comes from the payment ledger.'],
             ['A different personalized rate.', 'Taxes, tips, mileage, holiday charges, surcharges, discounts, or promotional credits.', 'A completed-care total without authoritative worked time.'],
             ['How much does care cost?', 'What does a caregiver make per hour?', 'What is LoLo’s platform fee?', 'What would three hours cost?'],
             ['Why did my card fail?', 'Change my payment method.', 'Approve the submitted hours.'],

@@ -33,9 +33,10 @@
                         </div>
                         <h1 class="mt-8 text-5xl font-black uppercase leading-[0.95] tracking-[-0.05em] sm:text-7xl lg:text-8xl">
                             Home care.<br>
-                            <span class="text-blue-600">$30/hour.</span><br>
+                            <span class="text-blue-600">$30/hour.*</span><br>
                             On demand.
-                        </h1>
+                    </h1>
+                    <p class="mt-3 text-sm text-slate-600">*Plus a $1/hour processing fee for completed care.</p>
                         <p class="mx-auto mt-8 max-w-2xl text-xl font-medium leading-8 text-slate-600 sm:text-2xl">
                             No agencies. No waiting.<br class="hidden sm:block">
                             Just post what you need and get help today.

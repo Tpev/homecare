@@ -7,6 +7,7 @@ use App\Livewire\Admin\PaymentsQueue;
 use App\Livewire\Family\ManageCareRequest;
 use App\Models\CareBooking;
 use App\Models\CareBookingPayment;
+use App\Models\CareBookingPaymentOperation;
 use App\Models\CaregiverProfile;
 use App\Models\CarePlan;
 use App\Models\CareRequest;
@@ -14,6 +15,7 @@ use App\Models\CareRequestApplication;
 use App\Models\User;
 use App\Notifications\MarketplaceEventNotification;
 use App\Services\Payments\BookingPaymentService;
+use App\Services\Payments\BookingPaymentV2Service;
 use App\Services\Payments\FamilyBillingService;
 use App\Services\Payments\StripeClient;
 use App\Services\RegularCare\CarePlanHealthService;
@@ -148,6 +150,184 @@ class StripeMarketplacePaymentTest extends TestCase
         ]);
     }
 
+    public function test_superseded_authorization_webhook_cannot_replace_the_current_revision(): void
+    {
+        config()->set('services.stripe.bypass', false);
+        [$family, $request, $application] = $this->seedScenario();
+        $booking = CareBooking::query()->create([
+            'care_request_id' => $request->id,
+            'care_request_application_id' => $application->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $application->caregiver_user_id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+            'scheduled_start_at' => now()->addDay()->setTime(10, 0),
+            'scheduled_end_at' => now()->addDay()->setTime(12, 0),
+            'expected_minutes' => 120,
+        ]);
+
+        $stripe = new class extends StripeClient
+        {
+            public int $created = 0;
+
+            /** @var list<string> */
+            public array $canceled = [];
+
+            public function ensureFamilyCustomer(User $family): string
+            {
+                return 'cus_revision_test';
+            }
+
+            public function defaultPaymentMethodForCustomer(string $customerId): ?array
+            {
+                return ['id' => 'pm_revision_test'];
+            }
+
+            public function createManualAuthorizationIntent(
+                CareBooking $booking,
+                string $customerId,
+                string $paymentMethodId,
+                int $amountCents,
+                string $currency,
+                ?string $idempotencyKey = null,
+            ): array {
+                $this->created++;
+                $id = 'pi_revision_'.$this->created;
+
+                return [
+                    'payment_intent_id' => $id,
+                    'client_secret' => $id.'_secret',
+                    'status' => 'requires_action',
+                    'amount' => $amountCents,
+                    'authorization_expires_at' => null,
+                ];
+            }
+
+            public function cancelPaymentIntent(string $paymentIntentId): void
+            {
+                $this->canceled[] = $paymentIntentId;
+            }
+
+            public function currency(): string
+            {
+                return 'usd';
+            }
+        };
+        app()->instance(StripeClient::class, $stripe);
+        $this->actingAs($family);
+        $payments = app(BookingPaymentService::class);
+
+        $payments->prepareOnSessionAuthorizationForAmount($booking, 5000, 'correction:v1');
+        $payments->prepareOnSessionAuthorizationForAmount($booking->fresh(), 6000, 'correction:v2');
+
+        $this->assertSame(2, $stripe->created);
+        $this->assertSame(['pi_revision_1'], $stripe->canceled);
+        $this->assertDatabaseHas('care_booking_payment_attempts', [
+            'stripe_payment_intent_id' => 'pi_revision_1',
+            'is_active' => false,
+        ]);
+        $this->assertDatabaseHas('care_booking_payment_attempts', [
+            'stripe_payment_intent_id' => 'pi_revision_2',
+            'is_active' => true,
+        ]);
+
+        $payments->handlePaymentIntentWebhook([
+            'id' => 'pi_revision_1',
+            'status' => 'requires_capture',
+            'amount' => 5000,
+        ]);
+        $payment = $booking->fresh()->payment;
+        $this->assertSame('pi_revision_2', $payment?->stripe_payment_intent_id);
+        $this->assertSame(CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED, $payment?->status);
+
+        $payments->handlePaymentIntentWebhook([
+            'id' => 'pi_revision_2',
+            'status' => 'requires_capture',
+            'amount' => 6000,
+            'authorization_expires_at' => now()->addDays(6),
+        ]);
+        $payment->refresh();
+        $this->assertSame(CareBookingPayment::STATUS_AUTHORIZED, $payment->status);
+        $this->assertSame(6000, (int) $payment->amount_authorized_cents);
+    }
+
+    public function test_predeployment_authorization_is_adopted_without_restarting_an_active_users_confirmation(): void
+    {
+        config()->set('services.stripe.bypass', false);
+        [$family, $request, $application] = $this->seedScenario();
+        $booking = CareBooking::query()->create([
+            'care_request_id' => $request->id,
+            'care_request_application_id' => $application->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $application->caregiver_user_id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+            'scheduled_start_at' => now()->addDay()->setTime(10, 0),
+            'scheduled_end_at' => now()->addDay()->setTime(12, 0),
+            'expected_minutes' => 120,
+        ]);
+        CareBookingPayment::query()->create([
+            'care_booking_id' => $booking->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $application->caregiver_user_id,
+            'status' => CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
+            'currency' => 'usd',
+            'stripe_customer_id' => 'cus_legacy_active',
+            'stripe_payment_method_id' => 'pm_legacy_active',
+            'stripe_payment_intent_id' => 'pi_legacy_active',
+            'stripe_payment_intent_client_secret' => 'pi_legacy_active_secret',
+            'metadata' => [
+                'requested_authorization_cents' => 5000,
+            ],
+        ]);
+
+        $stripe = new class extends StripeClient
+        {
+            public int $created = 0;
+
+            public function ensureFamilyCustomer(User $family): string
+            {
+                return 'cus_legacy_active';
+            }
+
+            public function defaultPaymentMethodForCustomer(string $customerId): ?array
+            {
+                return ['id' => 'pm_legacy_active'];
+            }
+
+            public function createManualAuthorizationIntent(
+                CareBooking $booking,
+                string $customerId,
+                string $paymentMethodId,
+                int $amountCents,
+                string $currency,
+                ?string $idempotencyKey = null,
+            ): array {
+                $this->created++;
+
+                throw new PaymentException('The active legacy intent should have been reused.');
+            }
+
+            public function currency(): string
+            {
+                return 'usd';
+            }
+        };
+        app()->instance(StripeClient::class, $stripe);
+        $this->actingAs($family);
+
+        $payment = app(BookingPaymentService::class)->prepareOnSessionAuthorizationForAmount(
+            $booking->fresh(),
+            5000,
+            'time-correction:legacy-compatible:5000',
+        );
+
+        $this->assertSame(0, $stripe->created);
+        $this->assertSame('pi_legacy_active', $payment->stripe_payment_intent_id);
+        $this->assertSame(
+            'time-correction:legacy-compatible:5000',
+            data_get($payment->metadata, 'authorization_revision_key'),
+        );
+    }
+
     public function test_regular_care_plan_recovers_after_client_completes_3ds(): void
     {
         config()->set('services.stripe.bypass', false);
@@ -245,7 +425,7 @@ class StripeMarketplacePaymentTest extends TestCase
         $this->assertNotNull($booking->fresh()?->family_confirmed_at);
     }
 
-    public function test_failed_payout_transfer_notifies_the_caregiver_with_earnings_context_not_the_family(): void
+    public function test_failed_payout_transfer_stays_internal_and_is_retried_without_alerting_the_caregiver(): void
     {
         config()->set('services.stripe.bypass', true);
 
@@ -272,14 +452,16 @@ class StripeMarketplacePaymentTest extends TestCase
 
         app()->instance(StripeClient::class, new class extends StripeClient
         {
-            public function createTransfer(
+            public function createTransferForCharge(
                 string $destinationAccountId,
+                string $sourceChargeId,
+                string $transferGroup,
                 int $amountCents,
                 string $currency,
                 array $metadata = [],
                 ?string $idempotencyKey = null,
             ): array {
-                throw new PaymentException('Unable to transfer caregiver payout right now.');
+                throw new PaymentException('Unable to transfer caregiver earnings right now.');
             }
         });
         Notification::fake();
@@ -288,21 +470,19 @@ class StripeMarketplacePaymentTest extends TestCase
             ->test(ManageCareRequest::class, ['careRequest' => $request->id])
             ->call('completeBooking');
 
-        Notification::assertSentTo($caregiver, MarketplaceEventNotification::class, function (MarketplaceEventNotification $notification, array $channels) use ($caregiver): bool {
-            $data = $notification->toArray($caregiver);
-
-            return data_get($data, 'event_key') === MarketplaceEvent::PAYOUT_TRANSFER_FAILED
-                && str_contains((string) data_get($data, 'url'), '/caregiver/earnings')
-                && collect((array) data_get($data, 'payload.email_details'))->contains(
-                    fn (array $detail): bool => ($detail['label'] ?? null) === 'Pending payout'
-                );
+        $this->assertDatabaseHas('care_booking_payments', [
+            'care_booking_id' => $booking->id,
+            'status' => CareBookingPayment::STATUS_TRANSFER_FAILED,
+        ]);
+        Notification::assertNotSentTo($caregiver, MarketplaceEventNotification::class, function (MarketplaceEventNotification $notification) use ($caregiver): bool {
+            return data_get($notification->toArray($caregiver), 'event_key') === MarketplaceEvent::PAYOUT_TRANSFER_FAILED;
         });
         Notification::assertNotSentTo($family, MarketplaceEventNotification::class, function (MarketplaceEventNotification $notification) use ($family): bool {
             return data_get($notification->toArray($family), 'event_key') === MarketplaceEvent::PAYOUT_TRANSFER_FAILED;
         });
     }
 
-    public function test_family_pricing_override_controls_authorization_capture_fee_and_transfer(): void
+    public function test_new_shift_uses_v2_snapshot_instead_of_legacy_family_override(): void
     {
         config()->set('services.stripe.bypass', true);
         config()->set('marketplace.family_pricing_overrides', [
@@ -328,8 +508,12 @@ class StripeMarketplacePaymentTest extends TestCase
         $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
         $payment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->firstOrFail();
 
-        $this->assertSame(7560, (int) $payment->amount_authorized_cents);
-        $this->assertSame(15.75, (float) data_get($payment->metadata, 'hourly_rate'));
+        $this->assertSame(14880, (int) $payment->amount_authorized_cents);
+        $this->assertSame('2026-08-v2', $payment->pricing_version);
+        $this->assertSame(3000, (int) $payment->family_care_rate_cents);
+        $this->assertSame(100, (int) $payment->family_processing_fee_rate_cents);
+        $this->assertSame(2700, (int) $payment->caregiver_gross_rate_cents);
+        $this->assertSame(30.0, (float) data_get($payment->metadata, 'hourly_rate'));
         $this->assertSame(0.0, (float) data_get($payment->metadata, 'platform_fee_percent'));
 
         $booking->update([
@@ -346,14 +530,217 @@ class StripeMarketplacePaymentTest extends TestCase
         $payment->refresh();
 
         $this->assertSame(CareBookingPayment::STATUS_TRANSFERRED, $payment->status);
-        $this->assertSame(3150, (int) $payment->amount_captured_cents);
-        $this->assertSame(0, (int) $payment->platform_fee_cents);
-        $this->assertSame(3150, (int) $payment->caregiver_amount_cents);
+        $this->assertSame(6200, (int) $payment->amount_captured_cents);
+        $this->assertSame(800, (int) $payment->platform_fee_cents);
+        $this->assertSame(5400, (int) $payment->caregiver_gross_amount_cents);
+        $this->assertSame(0, (int) $payment->stripe_processing_fee_cents);
+        $this->assertSame(5400, (int) $payment->caregiver_amount_cents);
         $this->assertDatabaseHas('caregiver_payout_items', [
             'care_booking_id' => $booking->id,
             'status' => 'paid',
-            'amount' => 31.50,
+            'amount' => 54.00,
         ]);
+    }
+
+    public function test_v2_ledger_links_charge_actual_processing_fee_earning_and_source_transfer(): void
+    {
+        config()->set('services.stripe.bypass', true);
+        config()->set('services.stripe.bypass_processing_fee_percent', 2.9);
+        config()->set('services.stripe.bypass_processing_fee_fixed_cents', 30);
+
+        [$family, $request, $application, $caregiverProfile] = $this->seedScenario(returnProfile: true);
+        $caregiverProfile->update([
+            'stripe_connect_account_id' => 'acct_v2_ledger_ready',
+            'stripe_charges_enabled' => true,
+            'stripe_payouts_enabled' => true,
+            'stripe_connect_onboarding_completed_at' => now(),
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $booking->update([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'timesheet_submitted_at' => now(),
+            'worked_minutes' => 120,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('completeBooking');
+
+        $payment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->firstOrFail();
+        $charge = $payment->operations()->where('type', CareBookingPaymentOperation::TYPE_CHARGE)->firstOrFail();
+        $processingFee = $payment->operations()->where('type', CareBookingPaymentOperation::TYPE_PROCESSING_FEE)->firstOrFail();
+        $earning = $payment->operations()->where('type', CareBookingPaymentOperation::TYPE_EARNING)->latest('id')->firstOrFail();
+        $transfer = $payment->operations()->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)->firstOrFail();
+
+        $this->assertStringStartsWith('SHIFT-', (string) $payment->financial_reference);
+        $this->assertSame($booking->financial_reference, $payment->financial_reference);
+        $this->assertSame(6200, (int) $charge->amount_cents);
+        $this->assertSame(210, (int) $processingFee->amount_cents);
+        $this->assertSame($charge->id, $processingFee->parent_operation_id);
+        $this->assertSame(5400, (int) $earning->amount_cents);
+        $this->assertSame(5190, (int) data_get($earning->metadata, 'net_earnings_cents'));
+        $this->assertSame(5190, (int) $transfer->amount_cents);
+        $this->assertSame($charge->id, $transfer->parent_operation_id);
+        $this->assertSame($charge->stripe_object_id, $transfer->stripe_parent_object_id);
+        $this->assertSame(210, (int) $payment->stripe_processing_fee_cents);
+        $this->assertSame(5190, (int) $payment->caregiver_amount_cents);
+        $this->assertDatabaseHas('caregiver_payout_items', [
+            'care_booking_id' => $booking->id,
+            'financial_reference' => $booking->financial_reference,
+            'gross_amount' => 54.00,
+            'processing_fee_amount' => 2.10,
+            'amount' => 51.90,
+        ]);
+        $this->actingAs($booking->caregiver)
+            ->get(route('caregiver.earnings.index', ['tab' => 'shifts', 'range' => 'all']))
+            ->assertOk()
+            ->assertSee('Gross earnings')
+            ->assertSee('Processing fees')
+            ->assertSee('Net earnings')
+            ->assertSee('$54.00')
+            ->assertSee('$2.10')
+            ->assertSee('$51.90')
+            ->assertSee($booking->financial_reference);
+    }
+
+    public function test_v2_dashboard_refund_reverses_the_matching_caregiver_transfer_once(): void
+    {
+        [$booking, $payment, $charge, $transfer] = $this->completeV2TransferredBooking();
+        $payments = app(BookingPaymentV2Service::class);
+        $refund = [
+            'id' => 're_dashboard_partial_'.$payment->id,
+            'charge' => $charge->stripe_object_id,
+            'status' => 'succeeded',
+            'amount' => 3100,
+        ];
+
+        $this->assertTrue($payments->handleRefund($refund));
+        $this->assertTrue($payments->handleChargeRefund([
+            'id' => $charge->stripe_object_id,
+            'refunds' => ['data' => [$refund]],
+        ]));
+
+        $payment->refresh();
+        $reversals = $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL)
+            ->where('parent_operation_id', $transfer->id)
+            ->get();
+
+        $this->assertSame(CareBookingPayment::STATUS_PARTIALLY_REFUNDED, $payment->status);
+        $this->assertSame(3100, (int) $payment->amount_refunded_cents);
+        $this->assertCount(1, $reversals);
+        $this->assertSame(2595, (int) $reversals->first()->amount_cents);
+        $this->assertSame(CareBookingPaymentOperation::STATUS_SUCCEEDED, $reversals->first()->status);
+        $this->assertDatabaseHas('caregiver_payout_items', [
+            'care_booking_id' => $booking->id,
+            'amount' => 25.95,
+        ]);
+    }
+
+    public function test_v2_dispute_only_reverses_caregiver_transfer_after_a_final_loss(): void
+    {
+        [, $payment, $charge, $transfer] = $this->completeV2TransferredBooking();
+        $payments = app(BookingPaymentV2Service::class);
+        $dispute = [
+            'id' => 'dp_'.$payment->id,
+            'charge' => $charge->stripe_object_id,
+            'status' => 'needs_response',
+            'amount' => $charge->amount_cents,
+            'reason' => 'fraudulent',
+        ];
+
+        $payments->handleDispute($dispute);
+        $this->assertFalse($payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL)
+            ->exists());
+
+        $payments->handleDispute(array_merge($dispute, ['status' => 'lost']));
+        $reversal = $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL)
+            ->where('parent_operation_id', $transfer->id)
+            ->firstOrFail();
+
+        $this->assertSame((int) $transfer->amount_cents, (int) $reversal->amount_cents);
+        $this->assertSame(CareBookingPaymentOperation::STATUS_SUCCEEDED, $reversal->status);
+        $this->assertDatabaseHas('caregiver_payout_items', [
+            'care_booking_id' => $payment->care_booking_id,
+            'status' => 'reversed',
+            'amount' => 0.00,
+        ]);
+    }
+
+    public function test_pre_cutover_booking_without_payment_adopts_v2_when_payment_is_first_created(): void
+    {
+        config()->set('services.stripe.bypass', true);
+        [$family, $request, $application] = $this->seedScenario();
+        $booking = CareBooking::query()->create([
+            'care_request_id' => $request->id,
+            'care_request_application_id' => $application->id,
+            'family_account_id' => $request->family_account_id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $application->caregiver_user_id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+            'scheduled_start_at' => $request->requested_start_at,
+            'scheduled_end_at' => $request->requested_end_at,
+            'expected_minutes' => 240,
+        ]);
+        $booking->forceFill([
+            'pricing_version' => null,
+            'family_care_rate_cents' => null,
+            'family_processing_fee_rate_cents' => null,
+            'caregiver_gross_rate_cents' => null,
+            'caregiver_fee_policy' => null,
+            'pricing_snapshotted_at' => null,
+        ])->save();
+
+        $payment = app(BookingPaymentService::class)->authorizeForBooking($booking->fresh());
+
+        $this->assertSame('2026-08-v2', $booking->fresh()->pricing_version);
+        $this->assertSame('2026-08-v2', $payment->pricing_version);
+        $this->assertSame(3000, (int) $payment->family_care_rate_cents);
+        $this->assertSame(100, (int) $payment->family_processing_fee_rate_cents);
+        $this->assertSame(2700, (int) $payment->caregiver_gross_rate_cents);
+    }
+
+    public function test_existing_legacy_payment_is_not_repriced_during_reauthorization(): void
+    {
+        config()->set('services.stripe.bypass', true);
+        [$family, $request, $application] = $this->seedScenario();
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $booking->forceFill([
+            'pricing_version' => null,
+            'family_care_rate_cents' => null,
+            'family_processing_fee_rate_cents' => null,
+            'caregiver_gross_rate_cents' => null,
+            'caregiver_fee_policy' => null,
+            'pricing_snapshotted_at' => null,
+        ])->save();
+        $payment = $booking->payment()->firstOrFail();
+        $payment->forceFill([
+            'pricing_version' => null,
+            'family_care_rate_cents' => null,
+            'family_processing_fee_rate_cents' => null,
+            'caregiver_gross_rate_cents' => null,
+            'authorization_expires_at' => now()->subMinute(),
+        ])->save();
+
+        $reauthorized = app(BookingPaymentService::class)->authorizeForBooking($booking->fresh());
+
+        $this->assertNull($reauthorized->pricing_version);
+        $this->assertNull($reauthorized->family_processing_fee_rate_cents);
+        $this->assertSame($payment->id, $reauthorized->id);
+        $this->assertSame(14784, (int) $reauthorized->amount_authorized_cents);
     }
 
     public function test_family_billing_checkout_in_bypass_mode_sets_customer_profile(): void
@@ -444,10 +831,18 @@ class StripeMarketplacePaymentTest extends TestCase
         ];
 
         $this->postJson(route('webhooks.stripe'), $payload)->assertOk();
+        $this->postJson(route('webhooks.stripe'), $payload)
+            ->assertOk()
+            ->assertJson(['ok' => true, 'duplicate' => true]);
 
         $this->assertDatabaseHas('care_booking_payments', [
             'care_booking_id' => $booking->id,
             'status' => 'cancelled',
+        ]);
+        $this->assertDatabaseHas('stripe_webhook_events', [
+            'stripe_event_id' => 'evt_test_payment_cancelled',
+            'status' => 'processed',
+            'attempts' => 1,
         ]);
     }
 
@@ -698,7 +1093,7 @@ class StripeMarketplacePaymentTest extends TestCase
         ]);
     }
 
-    public function test_payment_succeeded_webhook_preserves_transfer_failed_state(): void
+    public function test_payment_succeeded_webhook_repairs_stale_transfer_failed_summary_from_ledger(): void
     {
         config()->set('services.stripe.bypass', true);
 
@@ -747,12 +1142,12 @@ class StripeMarketplacePaymentTest extends TestCase
         ])->assertOk();
 
         $payment->refresh();
-        $this->assertSame(CareBookingPayment::STATUS_TRANSFER_FAILED, $payment->status);
-        $this->assertSame('Unable to transfer caregiver payout right now.', $payment->last_error);
-        $this->assertNull($payment->stripe_transfer_id);
+        $this->assertSame(CareBookingPayment::STATUS_TRANSFERRED, $payment->status);
+        $this->assertNull($payment->last_error);
+        $this->assertNotNull($payment->stripe_transfer_id);
     }
 
-    public function test_retry_payout_transfers_command_moves_ready_captured_payment(): void
+    public function test_retry_payout_transfers_command_moves_payment_after_connect_becomes_ready(): void
     {
         config()->set('services.stripe.bypass', true);
 
@@ -775,7 +1170,7 @@ class StripeMarketplacePaymentTest extends TestCase
             ->call('completeBooking');
 
         $payment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->firstOrFail();
-        $this->assertSame(CareBookingPayment::STATUS_CAPTURED, $payment->status);
+        $this->assertSame(CareBookingPayment::STATUS_TRANSFER_FAILED, $payment->status);
         $this->assertNull($payment->stripe_transfer_id);
 
         $this->assertDatabaseHas('caregiver_payout_items', [
@@ -857,7 +1252,7 @@ class StripeMarketplacePaymentTest extends TestCase
             ->assertSuccessful();
 
         $payment->refresh();
-        $this->assertSame(CareBookingPayment::STATUS_CAPTURED, $payment->status);
+        $this->assertSame(CareBookingPayment::STATUS_TRANSFER_FAILED, $payment->status);
         $this->assertNull($payment->stripe_transfer_id);
 
         $this->assertDatabaseHas('caregiver_payout_items', [
@@ -938,6 +1333,47 @@ class StripeMarketplacePaymentTest extends TestCase
     /**
      * @return array{User,CareRequest,CareRequestApplication,CaregiverProfile|null}
      */
+    private function completeV2TransferredBooking(): array
+    {
+        config()->set('services.stripe.bypass', true);
+        config()->set('services.stripe.bypass_processing_fee_percent', 2.9);
+        config()->set('services.stripe.bypass_processing_fee_fixed_cents', 30);
+
+        [$family, $request, $application, $caregiverProfile] = $this->seedScenario(returnProfile: true);
+        $caregiverProfile->update([
+            'stripe_connect_account_id' => 'acct_v2_refund_ready_'.$caregiverProfile->id,
+            'stripe_charges_enabled' => true,
+            'stripe_payouts_enabled' => true,
+            'stripe_connect_onboarding_completed_at' => now(),
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $booking->update([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'timesheet_submitted_at' => now(),
+            'worked_minutes' => 120,
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('completeBooking');
+
+        $payment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->firstOrFail();
+        $charge = $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_CHARGE)
+            ->firstOrFail();
+        $transfer = $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)
+            ->firstOrFail();
+
+        return [$booking, $payment, $charge, $transfer];
+    }
+
     private function seedScenario(bool $returnProfile = false): array
     {
         $family = User::factory()->create(['role' => 'family']);

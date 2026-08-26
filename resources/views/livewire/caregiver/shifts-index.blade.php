@@ -132,7 +132,8 @@
                         $paymentNeedsAction = $payment && in_array($payment->status, [\App\Models\CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED, \App\Models\CareBookingPayment::STATUS_REAUTH_REQUIRED, \App\Models\CareBookingPayment::STATUS_FAILED], true);
                         $paymentProtected = $payment && in_array($payment->status, [\App\Models\CareBookingPayment::STATUS_AUTHORIZED, \App\Models\CareBookingPayment::STATUS_CAPTURED, \App\Models\CareBookingPayment::STATUS_TRANSFERRED], true);
                         $estimatedMinutes = (int) ($booking->expected_minutes ?: optional($booking->scheduled_start_at)->diffInMinutes($booking->scheduled_end_at, false));
-                        $estimatedEarnings = ((float) ($booking->application?->proposed_rate ?? 30)) * max(0, $estimatedMinutes) / 60;
+                        $grossRate = ((int) ($booking->caregiver_gross_rate_cents ?: config('marketplace.pricing_v2.caregiver_gross_hourly_cents', 2700))) / 100;
+                        $estimatedEarnings = $grossRate * max(0, $estimatedMinutes) / 60;
                         $ctaLabel = match ($bookingStatus) {
                             \App\Models\CareBooking::STATUS_SCHEDULED => 'Start visit',
                             \App\Models\CareBooking::STATUS_IN_PROGRESS => 'Continue visit',

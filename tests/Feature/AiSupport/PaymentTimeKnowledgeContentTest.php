@@ -40,7 +40,7 @@ class PaymentTimeKnowledgeContentTest extends TestCase
         $this->assertSame(['family', 'caregiver'], $pricing['roles']);
         $this->assertStringContainsString('$30 per hour', $pricing['answer_body']);
         $this->assertStringContainsString('$27 per hour', $pricing['answer_body']);
-        $this->assertStringContainsString('$3 per hour', $pricing['answer_body']);
+        $this->assertStringContainsString('$1 per hour processing fee', $pricing['answer_body']);
         $this->assertContains('support_answers_v1', $pricing['capability_ids']);
 
         foreach ($entries as $entry) {
@@ -55,15 +55,15 @@ class PaymentTimeKnowledgeContentTest extends TestCase
     {
         $pricing = app(AiSupportPricingTruth::class);
 
-        $this->assertSame(3000, AiSupportPricingTruth::CAREGIVER_HOURLY_CENTS + AiSupportPricingTruth::PLATFORM_HOURLY_CENTS);
+        $this->assertSame(3100, AiSupportPricingTruth::CAREGIVER_HOURLY_CENTS + AiSupportPricingTruth::PLATFORM_HOURLY_CENTS);
         $this->assertSame(
-            'Care costs $30 per hour for the Family. The caregiver earns $27 per hour. LoLo receives $3 per hour.',
+            'Care costs $30 per hour for the Family, plus a $1 per hour processing fee ($31 per hour total). The caregiver earns $27 per hour gross, minus the actual Stripe processing fees on successful family charges. Refund costs, dispute fees, and optional instant-payout fees are not deducted from the caregiver rate.',
             $pricing->familyAnswer('How much does care cost?'),
         );
         $answer = $pricing->familyAnswer('What would 2.5 hours cost?');
-        $this->assertStringContainsString('Family total is $75.00', $answer);
-        $this->assertStringContainsString('caregiver earnings are $67.50', $answer);
-        $this->assertStringContainsString('platform portion is $7.50', $answer);
+        $this->assertStringContainsString('Family total is $77.50', $answer);
+        $this->assertStringContainsString('caregiver gross earnings are $67.50', $answer);
+        $this->assertStringContainsString('platform portion is $10.00', $answer);
         $this->assertStringContainsString(
             'I do not add taxes, tips, mileage, holiday charges, or surcharges',
             $pricing->familyAnswer('Are taxes or mileage added?'),
@@ -71,7 +71,7 @@ class PaymentTimeKnowledgeContentTest extends TestCase
         $this->assertTrue($pricing->isPricingQuestion('What is the caregiver rate?'));
         $caregiver = $pricing->answer('caregiver', 'What do I earn for 2 hours?');
         $this->assertStringContainsString('caregiver earnings are $54.00', $caregiver);
-        $this->assertStringContainsString('Family total is $60.00', $caregiver);
+        $this->assertStringContainsString('Family total is $62.00', $caregiver);
     }
 
     public function test_draft_import_is_idempotent_and_does_not_publish_or_change_pilot_controls(): void

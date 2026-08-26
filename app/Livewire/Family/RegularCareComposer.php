@@ -127,6 +127,7 @@ class RegularCareComposer extends Component
             'scheduleService' => $plans,
             'hiredApplication' => $this->hiredApplication,
             'platformRate' => $plans->hourlyRateForFamily(auth()->user()),
+            'processingFeeRate' => app(\App\Support\MarketplacePricing::class)->familyProcessingFeeHourlyCents() / 100,
         ]);
     }
 

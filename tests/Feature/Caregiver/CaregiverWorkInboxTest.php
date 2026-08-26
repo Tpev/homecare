@@ -91,8 +91,10 @@ class CaregiverWorkInboxTest extends TestCase
         $response->assertSee(route('caregiver.invitations.decline', $invitation), false);
         $response->assertSee('Requester receives care');
         $response->assertSee($family->name);
-        $response->assertSee('3h @ $30.00/hr');
-        $response->assertSee('$90.00 total visit');
+        $response->assertSee('3h visit');
+        $response->assertSee('@ $27.00/hr*');
+        $response->assertSee('$81.00');
+        $response->assertSee('Gross earnings before Stripe processing fees.');
 
         Livewire::actingAs($caregiver)
             ->test(WorkInbox::class)
@@ -107,8 +109,8 @@ class CaregiverWorkInboxTest extends TestCase
             ->assertSee('Open application')
             ->assertSee('Start visit')
             ->assertSee('Apply now')
-            ->assertSee('3h @ $27.00/hr')
-            ->assertSee('$81.00 total visit')
+            ->assertSee('3h @ $27.00/hr*')
+            ->assertSee('$81.00 gross earnings')
             ->set('scope', 'new_requests')
             ->assertSee($recommendedRequest->title)
             ->assertDontSee($appliedRequest->title);
@@ -346,7 +348,8 @@ class CaregiverWorkInboxTest extends TestCase
         $response->assertSee($request->title);
         $response->assertSee('Help with breakfast setup');
         $response->assertSee('8h response target');
-        $response->assertSee('3h at $30.00/hr - about $90.00');
+        $response->assertSee('3h at $27.00/hr* - about $81.00 gross');
+        $response->assertSee('Gross earnings before Stripe processing fees.');
         $response->assertSee('Use the walker for hallway movement.');
     }
 

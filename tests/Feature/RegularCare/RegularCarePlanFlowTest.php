@@ -9,7 +9,6 @@ use App\Livewire\Admin\UsageAnalytics as AdminUsageAnalytics;
 use App\Livewire\Caregiver\RegularClients;
 use App\Livewire\Dashboard\Home as DashboardHome;
 use App\Livewire\Family\RegularCareComposer;
-use App\Livewire\Family\RegularCareIndex as FamilyRegularCareIndex;
 use App\Livewire\Family\RegularCareShow;
 use App\Livewire\Family\RequestsIndex;
 use App\Models\CareBooking;
@@ -92,12 +91,19 @@ class RegularCarePlanFlowTest extends TestCase
         $this->assertSame(CareRequest::STATUS_FILLED, $generatedRequest->status);
         $this->assertSame(CareBooking::STATUS_SCHEDULED, $booking->status);
         $this->assertSame($booking->id, $plan->fresh()->next_booking_id);
+        $this->assertSame('2026-08-v2', $booking->pricing_version);
+        $this->assertSame(3000, (int) $booking->family_care_rate_cents);
+        $this->assertSame(100, (int) $booking->family_processing_fee_rate_cents);
+        $this->assertSame(2700, (int) $booking->caregiver_gross_rate_cents);
+        $this->assertStringStartsWith('SHIFT-', (string) $booking->financial_reference);
 
         $this->assertDatabaseHas('care_booking_payments', [
             'care_booking_id' => $booking->id,
             'family_user_id' => $family->id,
             'caregiver_user_id' => $caregiver->id,
             'status' => CareBookingPayment::STATUS_AUTHORIZED,
+            'pricing_version' => '2026-08-v2',
+            'financial_reference' => $booking->financial_reference,
         ]);
     }
 
@@ -742,7 +748,7 @@ class RegularCarePlanFlowTest extends TestCase
 
         Livewire::actingAs($family)
             ->test(RequestsIndex::class)
-            ->assertViewHas('requests', fn ($requests) => $requests->total() === 1);
+            ->assertViewHas('arrangementCount', 1);
         $admin = User::factory()->create(['role' => 'admin']);
         Livewire::actingAs($admin)
             ->test(AdminCareRequestsIndex::class)
@@ -788,8 +794,8 @@ class RegularCarePlanFlowTest extends TestCase
         $earlierBooking = $earlierPlan->generatedBookings()->orderBy('scheduled_start_at')->firstOrFail();
 
         Livewire::actingAs($family)
-            ->test(FamilyRegularCareIndex::class)
-            ->assertViewHas('nextPlan', fn (?CarePlan $plan) => $plan?->id === $earlierPlan->id);
+            ->test(RequestsIndex::class)
+            ->assertViewHas('nextVisit', fn (?array $visit) => ($visit['id'] ?? null) === $earlierBooking->id);
         Livewire::actingAs($family)
             ->test(DashboardHome::class)
             ->assertViewHas('familyData', function (array $data) use ($earlierBooking): bool {

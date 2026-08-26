@@ -7,12 +7,14 @@ use App\Exceptions\Payments\PaymentException;
 use App\Models\CareBooking;
 use App\Models\CareBookingCorrection;
 use App\Models\CareBookingPayment;
+use App\Models\CareBookingPaymentOperation;
 use App\Models\CaregiverPayout;
 use App\Models\CaregiverPayoutItem;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
+use App\Services\Payments\BookingPaymentV2Service;
 use App\Services\Payments\StripeClient;
 use App\Services\RegularCare\CarePlanHealthService;
 use App\Support\MarketplaceEvent;
@@ -31,6 +33,7 @@ class BookingCorrectionService
         private readonly BookingTrustService $trust,
         private readonly MarketplaceNotificationService $notifications,
         private readonly CarePlanHealthService $planHealth,
+        private readonly BookingPaymentV2Service $paymentsV2,
     ) {}
 
     /**
@@ -472,9 +475,19 @@ class BookingCorrectionService
                 )),
             );
         } elseif (! $correction->payout_applied_at && data_get($correction->provider_payload, 'refunds')) {
-            $caregiverRefundCents = abs(min(0, (int) $correction->caregiver_delta_cents));
-            $this->reversePayoutTransfers($correction, $payment, $caregiverRefundCents);
-            $this->applyPayoutDecrease($correction, $booking, $caregiverRefundCents);
+            if ($this->paymentsV2->usesV2($payment)) {
+                $this->paymentsV2->retryPendingTransferReversals($payment);
+                $this->recordV2CorrectionRefunds(
+                    $correction,
+                    $payment->fresh(),
+                    'booking-correction-'.$correction->id,
+                );
+                $correction->forceFill(['payout_applied_at' => now()])->save();
+            } else {
+                $caregiverRefundCents = abs(min(0, (int) $correction->caregiver_delta_cents));
+                $this->reversePayoutTransfers($correction, $payment, $caregiverRefundCents);
+                $this->applyPayoutDecrease($correction, $booking, $caregiverRefundCents);
+            }
         } else {
             $correction->forceFill(['payout_applied_at' => $correction->payout_applied_at ?: now()])->save();
         }
@@ -485,6 +498,35 @@ class BookingCorrectionService
         $payment = $booking->payment;
         if (! $payment) {
             throw new PaymentException('Payment record is missing for the additional charge.');
+        }
+        if ($this->paymentsV2->usesV2($payment)) {
+            $adjustmentReference = 'booking-correction-'.$correction->id;
+            $updatedPayment = $this->paymentsV2->chargeAdjustment(
+                $booking,
+                $payment,
+                $amountCents,
+                $adjustmentReference,
+            );
+            $charge = $updatedPayment->operations()
+                ->where('type', CareBookingPaymentOperation::TYPE_CHARGE)
+                ->where('metadata->kind', 'adjustment-'.$adjustmentReference)
+                ->latest('id')
+                ->first();
+            $provider = (array) $correction->provider_payload;
+            $provider['additional_charge'] = [
+                'payment_intent_id' => (string) data_get($charge?->metadata, 'payment_intent_id', ''),
+                'charge_id' => $charge?->stripe_object_id,
+                'amount_cents' => (int) ($charge?->amount_cents ?? $amountCents),
+                'caregiver_delta_cents' => max(0, (int) $correction->caregiver_delta_cents),
+                'ledger_operation_id' => $charge?->id,
+                'charged_at' => ($charge?->processed_at ?: now())->toIso8601String(),
+            ];
+            $correction->forceFill([
+                'provider_payload' => $provider,
+                'payout_applied_at' => now(),
+            ])->save();
+
+            return;
         }
 
         $provider = (array) $correction->provider_payload;
@@ -576,6 +618,33 @@ class BookingCorrectionService
         $payment = $booking->payment;
         if (! $payment) {
             throw new PaymentException('Payment record is missing for the refund.');
+        }
+        if ($this->paymentsV2->usesV2($payment)) {
+            $adjustmentReference = 'booking-correction-'.$correction->id;
+            try {
+                $updatedPayment = $this->paymentsV2->refund(
+                    $booking,
+                    $payment,
+                    $amountCents,
+                    'requested_by_customer',
+                    abs(min(0, (int) $correction->caregiver_delta_cents)),
+                    $adjustmentReference,
+                );
+            } catch (PaymentException $exception) {
+                $this->recordV2CorrectionRefunds(
+                    $correction,
+                    $payment->fresh(),
+                    $adjustmentReference,
+                );
+
+                throw $exception;
+            }
+            $this->recordV2CorrectionRefunds($correction, $updatedPayment, $adjustmentReference);
+            $correction->forceFill([
+                'payout_applied_at' => now(),
+            ])->save();
+
+            return;
         }
 
         $components = $this->chargeComponents($payment);
@@ -984,6 +1053,31 @@ class BookingCorrectionService
         }
 
         return array_values($components);
+    }
+
+    private function recordV2CorrectionRefunds(
+        CareBookingCorrection $correction,
+        CareBookingPayment $payment,
+        string $adjustmentReference,
+    ): void {
+        $refunds = $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_REFUND)
+            ->where('metadata->adjustment_reference', $adjustmentReference)
+            ->orderBy('id')
+            ->get()
+            ->map(fn (CareBookingPaymentOperation $refund): array => [
+                'operation_key' => $refund->idempotency_key,
+                'refund_id' => $refund->stripe_object_id,
+                'charge_id' => $refund->stripe_parent_object_id,
+                'amount_cents' => (int) $refund->amount_cents,
+                'status' => $refund->status,
+                'ledger_operation_id' => $refund->id,
+                'refunded_at' => $refund->processed_at?->toIso8601String(),
+            ])
+            ->all();
+        $provider = (array) $correction->provider_payload;
+        $provider['refunds'] = $refunds;
+        $correction->forceFill(['provider_payload' => $provider])->save();
     }
 
     private function markFailed(CareBookingCorrection $correction, User $admin, string $message): void

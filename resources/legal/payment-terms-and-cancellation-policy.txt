@@ -1,6 +1,6 @@
 LoLo Care, Inc.
 Payment Terms and Cancellation Policy
-Effective Date: August 1, 2026 | Last Updated: August 1, 2026
+Effective Date: August 1, 2026 | Last Updated: August 26, 2026
 This Payment Terms and Cancellation Policy (“Payment Policy”) governs payment processing, fees, cancellations, refunds, and financial transactions that may occur through the LoLo Care, Inc. (“LoLo”) platform (the “Platform”).
 This Policy forms part of and is incorporated into the LOLO Platform Terms of Service. If there is a conflict between this Policy and the Terms of Service, the Terms of Service control unless this Policy specifically states otherwise.
 ## 1. Payment Processing
@@ -26,6 +26,8 @@ LOLO reserves the right to modify fee structures, provided changes are communica
 Pricing, service rates, fees, and payout amounts may be set, standardized, or displayed by LOLO through the Platform or established in applicable booking flows or separate agreements.
 Where the Platform permits service providers or organizations to propose or select pricing, those amounts remain subject to Platform rules and disclosure before confirmation.
 - Users are responsible for reviewing and agreeing to applicable rates, fees, and payout terms before confirming or accepting a booking or service request.
+- Unless a booking displays a different legacy or separately agreed price, Family care is $30 per worked hour and a $1 per worked hour processing fee is added, for a $31 per worked hour Family total.
+- Unless a booking displays a different legacy or separately agreed price, caregiver gross earnings are $27 per worked hour before processing fees.
 ## 4. Authorization and Payment Collection
 When a user confirms a service request or booking through the Platform, the user may be required to authorize payment.
 Authorization may include:
@@ -40,6 +42,9 @@ Where the Platform facilitates payments to caregivers or service providers:
 - payouts may be issued through third-party processors;
 - payout timing may vary depending on processor schedules, fraud checks, or compliance reviews;
 - LOLO may delay or withhold payouts where necessary for dispute resolution, fraud prevention, or policy enforcement.
+- the caregiver processing fee is the actual payment-processing fee recorded by Stripe on successful Family charges associated with that visit, including a successful additional charge when worked time exceeds the original authorization;
+- refund costs, dispute fees, and optional instant-payout fees are not included in the caregiver processing-fee deduction described above; and
+- a transfer from LOLO to a caregiver's Stripe balance is not the same as a payout from Stripe to the caregiver's bank account. Stripe controls bank-payout timing and availability.
 Caregivers and providers are responsible for:
 - accurate payout information
 - tax reporting

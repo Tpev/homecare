@@ -118,7 +118,7 @@
                                 : strtoupper(str_replace('_', ' ', $offer->status));
                             $tasks = collect($offer->task_snapshot ?? []);
                             $visits = $scheduleService->upcomingVisits($offer, 3, $offer->status === \App\Models\CarePlan::STATUS_COUNTERED);
-                            $offerRate = $pricing->hourlyRateForFamily($offer->family, (float) $offer->hourly_rate);
+                            $offerRate = $pricing->caregiverGrossHourlyCents() / 100;
                         @endphp
                         <div class="rounded-2xl border border-[#DED6CA] bg-white p-4">
                             <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -128,7 +128,7 @@
                                         <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $style }}">{{ $offerStatusLabel }}</span>
                                     </div>
                                     <p class="mt-1 text-sm text-[#607080]">
-                                        {{ $offer->family?->name }} - {{ $scheduleService->scheduleLabel($offer, $offer->status === \App\Models\CarePlan::STATUS_COUNTERED) }} - ${{ number_format($offerRate, 2) }}/hr
+                                        {{ $offer->family?->name }} - {{ $scheduleService->scheduleLabel($offer, $offer->status === \App\Models\CarePlan::STATUS_COUNTERED) }} - ${{ number_format($offerRate, 2) }}/hr*
                                     </p>
                                     @if ($offer->family_message)
                                         <p class="mt-2 rounded-xl border border-[#E4DDD3] bg-[#F7F2EA] px-3 py-2 text-sm text-[#4B5B6B]">{{ $offer->family_message }}</p>

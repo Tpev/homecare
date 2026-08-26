@@ -722,7 +722,7 @@ class CareRequestFlowTest extends TestCase
             'care_request_id' => $request->id,
             'caregiver_user_id' => $caregiver->id,
             'status' => CareRequestApplication::STATUS_APPLIED,
-            'proposed_rate' => 28.50,
+            'proposed_rate' => 27.00,
         ]);
     }
 
@@ -1263,8 +1263,9 @@ class CareRequestFlowTest extends TestCase
             ->assertSee('Approve hours and pay')
             ->assertSee('capture payment')
             ->assertSee('3h 00m')
-            ->assertSee('$99.00')
+            ->assertSee('$93.00')
             ->assertSee('$90.00')
+            ->assertSee('$3.00 processing fee')
             ->assertDontSee('Review caregiver timesheet')
             ->assertDontSee('Leave a caregiver review')
             ->call('completeBooking');

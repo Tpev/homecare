@@ -411,7 +411,31 @@ class ManageCareRequest extends Component
     {
         $booking = $this->requestItem->booking;
         if (! $booking) {
-            session()->flash('status', 'No visit is ready for payment authorization yet.');
+            session()->flash('warning', 'No visit is ready for payment authorization yet.');
+
+            return;
+        }
+
+        $correction = app(CareBookingTimeCorrectionService::class)->activeForBooking($booking);
+        if ($correction?->status === CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED) {
+            $this->continueTimeCorrectionPayment($correction->id);
+
+            return;
+        }
+        if ($correction?->status === CareBookingTimeCorrection::STATUS_APPROVED_PROCESSING) {
+            $correction = app(CareBookingTimeCorrectionService::class)->retryApprovedProcessing($correction);
+            $this->refreshRequestItem();
+            if ($correction->status === CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED) {
+                $payment = $this->requestItem->booking?->payment;
+                if ($payment) {
+                    $this->dispatchPaymentConfirmation($payment);
+                }
+                session()->flash('warning', 'Confirm billing in the secure Stripe window.');
+            } elseif ($correction->status === CareBookingTimeCorrection::STATUS_APPLIED) {
+                session()->flash('status', 'Visit time updated and payment completed.');
+            } else {
+                session()->flash('warning', 'The approved hours are still processing. LoLo Care will keep the payment record safe.');
+            }
 
             return;
         }
@@ -419,7 +443,7 @@ class ManageCareRequest extends Component
         try {
             $payment = app(BookingPaymentService::class)->prepareOnSessionAuthorization($booking);
         } catch (PaymentException $e) {
-            session()->flash('status', $e->userMessage);
+            session()->flash('warning', $e->userMessage);
 
             return;
         }
@@ -440,7 +464,7 @@ class ManageCareRequest extends Component
     {
         $booking = $this->requestItem->booking;
         if (! $booking) {
-            session()->flash('status', 'No visit is ready for payment authorization yet.');
+            session()->flash('warning', 'No visit is ready for payment authorization yet.');
 
             return;
         }
@@ -448,7 +472,7 @@ class ManageCareRequest extends Component
         try {
             $payment = app(BookingPaymentService::class)->syncPreparedAuthorization($booking, $paymentIntentId);
         } catch (PaymentException $e) {
-            session()->flash('status', $e->userMessage);
+            session()->flash('warning', $e->userMessage);
 
             return;
         }
@@ -460,9 +484,11 @@ class ManageCareRequest extends Component
             if ($correction?->status === CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED) {
                 $correction = app(CareBookingTimeCorrectionService::class)->resumeApproved($correction, auth()->user());
                 $this->refreshRequestItem();
-                session()->flash('status', $correction->status === CareBookingTimeCorrection::STATUS_APPLIED
-                    ? 'Visit time updated and payment completed.'
-                    : 'Hours remain approved. Payment still needs attention.');
+                if ($correction->status === CareBookingTimeCorrection::STATUS_APPLIED) {
+                    session()->flash('status', 'Visit time updated and payment completed.');
+                } else {
+                    session()->flash('warning', 'Hours remain approved. Payment still needs attention.');
+                }
 
                 return;
             }
@@ -472,14 +498,14 @@ class ManageCareRequest extends Component
             return;
         }
 
-        session()->flash('status', $payment->last_error ?: 'Payment authorization still needs attention.');
+        session()->flash('warning', $payment->last_error ?: 'Payment authorization still needs attention.');
     }
 
     public function failStripeAuthorization(?string $paymentIntentId = null, string $message = ''): void
     {
         $booking = $this->requestItem->booking;
         if (! $booking) {
-            session()->flash('status', $message !== '' ? $message : 'Card authorization failed.');
+            session()->flash('warning', $message !== '' ? $message : 'Card authorization failed.');
 
             return;
         }
@@ -491,7 +517,7 @@ class ManageCareRequest extends Component
         );
 
         $this->refreshRequestItem();
-        session()->flash('status', $payment?->last_error ?: ($message !== '' ? $message : 'Card authorization failed.'));
+        session()->flash('warning', $payment?->last_error ?: ($message !== '' ? $message : 'Card authorization failed.'));
     }
 
     public function beginTimeCorrectionApproval(int $correctionId): void
@@ -529,7 +555,7 @@ class ManageCareRequest extends Component
             if ($payment) {
                 $this->dispatchPaymentConfirmation($payment);
             }
-            session()->flash('status', 'Hours approved — payment confirmation needed.');
+            session()->flash('warning', 'Hours approved — payment confirmation needed.');
 
             return;
         }
@@ -565,7 +591,7 @@ class ManageCareRequest extends Component
             if ($payment) {
                 $this->dispatchPaymentConfirmation($payment);
             }
-            session()->flash('status', 'Confirm billing in the secure Stripe window.');
+            session()->flash('warning', 'Confirm billing in the secure Stripe window.');
 
             return;
         }

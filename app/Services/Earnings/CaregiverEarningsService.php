@@ -71,9 +71,9 @@ class CaregiverEarningsService
         $weekGross = $this->sumGrossSince($normalizedStats, $weekStart);
         $monthGross = $this->sumGrossSince($normalizedStats, $monthStart);
 
-        $availableBalance = $this->sumGrossByStatus($normalizedStats, ['eligible']);
-        $pendingBalance = $this->sumGrossByStatus($normalizedStats, ['pending_confirmation', 'scheduled_payout', 'in_progress', 'paused']);
-        $disputedHold = $this->sumGrossByStatus($normalizedStats, ['disputed']);
+        $availableBalance = $this->sumNetByStatus($normalizedStats, ['eligible']);
+        $pendingBalance = $this->sumNetByStatus($normalizedStats, ['pending_confirmation', 'scheduled_payout', 'in_progress', 'paused']);
+        $disputedHold = $this->sumNetByStatus($normalizedStats, ['disputed']);
         $paidThisMonth = round($normalizedStats
             ->filter(function (array $item) use ($monthStart) {
                 if ($item['status_key'] !== 'paid') {
@@ -84,7 +84,7 @@ class CaregiverEarningsService
 
                 return $paidAt instanceof Carbon && $paidAt->greaterThanOrEqualTo($monthStart);
             })
-            ->sum('gross_amount'), 2);
+            ->sum('net_amount'), 2);
 
         $pendingConfirmations = (int) $normalizedStats
             ->where('status_key', 'pending_confirmation')
@@ -110,12 +110,14 @@ class CaregiverEarningsService
         $nextScheduledPayout = $payouts
             ->first(fn (CaregiverPayout $payout) => in_array($payout->status, [CaregiverPayout::STATUS_SCHEDULED, CaregiverPayout::STATUS_PROCESSING], true));
 
-        $nextPayoutDate = $nextScheduledPayout?->scheduled_for ?: $this->nextEstimatedPayoutDate($now);
+        $nextPayoutDate = $nextScheduledPayout?->scheduled_for;
         $nextPayoutAmount = $nextScheduledPayout ? (float) $nextScheduledPayout->net_amount : $availableBalance;
         $nextPayoutType = $nextScheduledPayout ? 'scheduled' : 'estimated';
         $nextPayoutSubtitle = $nextScheduledPayout
-            ? 'Scheduled payout batch'
-            : 'Estimated from confirmed unpaid visits';
+            ? 'Scheduled Stripe balance transfer'
+            : ($availableBalance > 0
+                ? 'Transfers after family approval and processing-fee finalization'
+                : 'No earnings currently waiting to transfer');
 
         $goalCurrent = $weekGross;
         $goalTarget = max(1, $weeklyGoal);
@@ -182,7 +184,7 @@ class CaregiverEarningsService
                 'careRequest:id,title,city,state',
                 'family:id,email',
                 'application:id,care_request_id,caregiver_user_id,proposed_rate',
-                'payoutItem:id,caregiver_payout_id,caregiver_user_id,care_booking_id,status,amount,included_at,paid_at',
+                'payoutItem:id,caregiver_payout_id,caregiver_user_id,care_booking_id,status,gross_amount,processing_fee_amount,amount,stripe_transfer_ids,included_at,paid_at',
                 'payoutItem.payout:id,status,scheduled_for,paid_at',
             ])
             ->where('caregiver_user_id', $caregiverId)
@@ -203,13 +205,19 @@ class CaregiverEarningsService
     private function normalizeBooking(CareBooking $booking, float $profileRate, Carbon $now): array
     {
         $workedMinutes = $this->computeWorkedMinutes($booking, $now);
-        $hourlyRate = app(MarketplacePricing::class)->hourlyRateForBooking(
-            $booking,
-            (float) ($booking->application?->proposed_rate ?: $profileRate)
-        );
-        $grossAmount = $workedMinutes > 0 && $hourlyRate > 0
+        $hourlyRate = $booking->caregiver_gross_rate_cents
+            ? (int) $booking->caregiver_gross_rate_cents / 100
+            : app(MarketplacePricing::class)->caregiverGrossHourlyCents() / 100;
+        $calculatedGross = $workedMinutes > 0 && $hourlyRate > 0
             ? round(($workedMinutes / 60) * $hourlyRate, 2)
             : 0.0;
+        $grossAmount = $booking->payoutItem && (float) $booking->payoutItem->gross_amount > 0
+            ? (float) $booking->payoutItem->gross_amount
+            : $calculatedGross;
+        $processingFeeAmount = (float) ($booking->payoutItem?->processing_fee_amount ?? 0);
+        $netAmount = $booking->payoutItem
+            ? (float) $booking->payoutItem->amount
+            : max(0, $grossAmount - $processingFeeAmount);
 
         $statusKey = $this->resolveStatusKey($booking, $booking->payoutItem);
         $referenceAt = $booking->completed_at ?: $booking->started_at ?: $booking->scheduled_start_at ?: $booking->updated_at;
@@ -228,6 +236,9 @@ class CaregiverEarningsService
             'worked_minutes' => $workedMinutes,
             'worked_label' => sprintf('%02d:%02d', intdiv($workedMinutes, 60), $workedMinutes % 60),
             'gross_amount' => $grossAmount,
+            'processing_fee_amount' => $processingFeeAmount,
+            'net_amount' => $netAmount,
+            'financial_reference' => $booking->financial_reference,
             'scheduled_start_at' => $booking->scheduled_start_at,
             'scheduled_end_at' => $booking->scheduled_end_at,
             'reference_at' => $referenceAt,
@@ -279,6 +290,10 @@ class CaregiverEarningsService
         }
 
         if ($payoutItem) {
+            if ($payoutItem->status === CaregiverPayoutItem::STATUS_REVERSED) {
+                return 'reversed';
+            }
+
             if ($payoutItem->status === CaregiverPayoutItem::STATUS_PAID || $payoutItem->paid_at) {
                 return 'paid';
             }
@@ -308,14 +323,15 @@ class CaregiverEarningsService
     private function statusLabel(string $statusKey): string
     {
         return match ($statusKey) {
-            'paid' => 'Paid',
-            'scheduled_payout' => 'Scheduled payout',
+            'paid' => 'Transferred to Stripe',
+            'scheduled_payout' => 'Transfer processing',
             'eligible' => 'Eligible',
             'pending_confirmation' => 'Pending confirmation',
             'in_progress' => 'In progress',
             'paused' => 'Paused',
             'scheduled' => 'Scheduled',
             'disputed' => 'Disputed',
+            'reversed' => 'Reversed',
             'cancelled' => 'Cancelled',
             default => 'Pending',
         };
@@ -336,7 +352,7 @@ class CaregiverEarningsService
     {
         return round((float) $items
             ->filter(function (array $item) use ($start) {
-                if ($item['status_key'] === 'cancelled') {
+                if (in_array($item['status_key'], ['cancelled', 'reversed'], true)) {
                     return false;
                 }
 
@@ -349,11 +365,11 @@ class CaregiverEarningsService
     /**
      * @param  array<int, string>  $statuses
      */
-    private function sumGrossByStatus(Collection $items, array $statuses): float
+    private function sumNetByStatus(Collection $items, array $statuses): float
     {
         return round((float) $items
             ->filter(fn (array $item) => in_array($item['status_key'], $statuses, true))
-            ->sum('gross_amount'), 2);
+            ->sum('net_amount'), 2);
     }
 
     /**
@@ -369,7 +385,7 @@ class CaregiverEarningsService
 
             $amount = round((float) $items
                 ->filter(function (array $item) use ($start, $end) {
-                    if ($item['status_key'] === 'cancelled') {
+                    if (in_array($item['status_key'], ['cancelled', 'reversed'], true)) {
                         return false;
                     }
 

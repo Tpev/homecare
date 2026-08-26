@@ -594,17 +594,18 @@
                             <p class="text-xs uppercase tracking-[0.12em] text-[#0F7A55]">
                                 {{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated regular care each week' : 'Estimated one-time cost' }}
                             </p>
-                            @if ($this->estimatedCost !== null && $this->estimatedHours !== null)
-                                <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                                    <p class="text-sm text-[#3C4A5B]">
-                                        <span class="font-semibold">{{ number_format($this->estimatedHours, 2) }}h</span>
-                                        x
-                                        <span class="font-semibold">${{ number_format($this->estimateHourlyRate, 2) }}/hr</span>
-                                    </p>
-                                    <p class="font-display text-3xl font-semibold text-[#0F3D3E]">
-                                        ${{ number_format($this->estimatedCost, 2) }}
-                                    </p>
+                            @if ($this->estimatedTotal !== null && $this->estimatedHours !== null)
+                                <div class="mt-3 grid gap-2 text-sm sm:grid-cols-[1fr_auto] sm:items-end">
+                                    <dl class="space-y-1.5 text-[#3C4A5B]">
+                                        <div class="flex justify-between gap-6"><dt>Care · {{ number_format($this->estimatedHours, 2) }}h × ${{ number_format($this->estimateHourlyRate, 2) }}/hr*</dt><dd class="font-semibold">${{ number_format($this->estimatedCost, 2) }}</dd></div>
+                                        <div class="flex justify-between gap-6"><dt>Processing fee · ${{ number_format($this->processingFeeHourlyRate, 2) }}/hr</dt><dd class="font-semibold">${{ number_format($this->estimatedProcessingFee, 2) }}</dd></div>
+                                    </dl>
+                                    <div class="border-t border-[#CFE1D8] pt-2 text-left sm:min-w-36 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0 sm:text-right">
+                                        <p class="text-xs font-semibold uppercase tracking-[0.12em] text-[#607080]">Estimated total</p>
+                                        <p class="font-display text-3xl font-semibold text-[#0F3D3E]">${{ number_format($this->estimatedTotal, 2) }}</p>
+                                    </div>
                                 </div>
+                                <p class="mt-3 text-xs text-[#607080]">*A ${{ number_format($this->processingFeeHourlyRate, 2) }}/hour processing fee is added to the ${{ number_format($this->estimateHourlyRate, 2) }}/hour care rate.</p>
                                 @if ($request_type === \App\Models\CareRequest::TYPE_RECURRING)
                                     <p class="mt-3 text-sm text-[#3C4A5B]">You are not paying for every future visit now. LoLo confirms your card before each visit and charges the final amount after that visit.</p>
                                 @endif

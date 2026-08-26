@@ -61,6 +61,8 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
         'currency' => strtolower((string) env('STRIPE_CURRENCY', 'usd')),
         'bypass' => filter_var(env('STRIPE_BYPASS', env('APP_ENV') === 'local'), FILTER_VALIDATE_BOOL),
+        'bypass_processing_fee_percent' => (float) env('STRIPE_BYPASS_PROCESSING_FEE_PERCENT', 2.9),
+        'bypass_processing_fee_fixed_cents' => (int) env('STRIPE_BYPASS_PROCESSING_FEE_FIXED_CENTS', 30),
     ],
 
     'twilio' => [

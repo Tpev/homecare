@@ -292,6 +292,8 @@ Route::middleware(['auth', 'caregiver.role'])->group(function () {
         ->name('caregiver.payouts.connect.show');
     Route::post('/caregiver/payouts/connect/start', [CaregiverStripeConnectController::class, 'start'])
         ->name('caregiver.payouts.connect.start');
+    Route::get('/caregiver/payouts/connect/refresh', [CaregiverStripeConnectController::class, 'refresh'])
+        ->name('caregiver.payouts.connect.refresh');
     Route::get('/caregiver/payouts/connect/return', [CaregiverStripeConnectController::class, 'returned'])
         ->name('caregiver.payouts.connect.return');
     Route::get('/caregiver/invitations', InvitationsIndex::class)->name('caregiver.invitations.index');

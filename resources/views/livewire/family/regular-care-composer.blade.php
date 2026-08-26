@@ -102,9 +102,10 @@
 
                 <div class="space-y-4">
                     <div class="rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4">
-                        <p class="text-xs uppercase tracking-[0.12em] text-emerald-700">Care rate</p>
-                        <p class="mt-1 font-display text-2xl font-semibold text-emerald-950">${{ number_format((float) $platformRate, 2) }}/hr</p>
-                        <p class="mt-1 text-sm text-emerald-800">LoLo sets the care rate. You only choose the schedule and notes.</p>
+                        <p class="text-xs uppercase tracking-[0.12em] text-emerald-700">Hourly price</p>
+                        <p class="mt-1 font-display text-2xl font-semibold text-emerald-950">${{ number_format((float) $platformRate, 2) }}/hr*</p>
+                        <p class="mt-1 text-sm text-emerald-800">Care ${{ number_format((float) $platformRate, 2) }} + processing fee ${{ number_format((float) $processingFeeRate, 2) }} = <strong>${{ number_format((float) $platformRate + (float) $processingFeeRate, 2) }}/hour total</strong>.</p>
+                        <p class="mt-2 text-xs text-emerald-800">*A ${{ number_format((float) $processingFeeRate, 2) }}/hour processing fee is added to every completed visit.</p>
                     </div>
 
                     <x-textarea label="Care notes" wire:model="careNotes" />
@@ -142,7 +143,7 @@
                     <div>
                         <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Caregiver</p>
                         <p class="mt-1 font-semibold text-[#17313F]">{{ $caregiver?->name ?: '-' }}</p>
-                        <p class="text-[#607080]">Care rate: ${{ number_format((float) $platformRate, 2) }}/hr</p>
+                        <p class="text-[#607080]">${{ number_format((float) $platformRate, 2) }}/hr care* + ${{ number_format((float) $processingFeeRate, 2) }}/hr processing fee</p>
                     </div>
                     <div>
                         <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Recipient</p>

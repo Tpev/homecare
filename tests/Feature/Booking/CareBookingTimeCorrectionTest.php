@@ -20,6 +20,7 @@ use App\Models\User;
 use App\Services\Booking\CareBookingTimeCorrectionService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Payments\BookingPaymentService;
+use App\Services\Payments\StripeClient;
 use App\Support\FamilyActionInboxBuilder;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -268,6 +269,197 @@ class CareBookingTimeCorrectionTest extends TestCase
         $this->assertSame($family->id, $result->approved_by_user_id);
         $this->assertDatabaseCount('care_booking_time_corrections', 1);
         $this->assertSame(CareBooking::STATUS_COMPLETED, $booking->fresh()->status);
+    }
+
+    public function test_new_shift_correction_uses_v2_exact_total_once_and_shows_one_payment_action(): void
+    {
+        config()->set('services.stripe.bypass', false);
+        config()->set('marketplace.family_pricing_overrides', [
+            'donrjohn22@yahoo.com' => [
+                'hourly_rate' => 15.75,
+                'platform_fee_percent' => 0,
+            ],
+        ]);
+        [$family, $caregiver, $booking, $request] = $this->scenario();
+        $family->forceFill(['email' => 'donrjohn22@yahoo.com'])->save();
+        $booking->forceFill([
+            'scheduled_start_at' => now()->subDay()->setTime(10, 0),
+            'scheduled_end_at' => now()->subDay()->setTime(12, 0),
+            'expected_minutes' => 120,
+        ])->save();
+
+        $stripe = new class extends StripeClient
+        {
+            /** @var list<array{amount:int,idempotency_key:string|null}> */
+            public array $authorizations = [];
+
+            /** @var list<array{payment_intent_id:string,amount:int}> */
+            public array $captures = [];
+
+            public function ensureFamilyCustomer(User $family): string
+            {
+                return 'cus_don_exact';
+            }
+
+            public function defaultPaymentMethodForCustomer(string $customerId): ?array
+            {
+                return ['id' => 'pm_don_amex'];
+            }
+
+            public function createManualAuthorizationIntent(
+                CareBooking $booking,
+                string $customerId,
+                string $paymentMethodId,
+                int $amountCents,
+                string $currency,
+                ?string $idempotencyKey = null,
+            ): array {
+                $this->authorizations[] = [
+                    'amount' => $amountCents,
+                    'idempotency_key' => $idempotencyKey,
+                ];
+
+                return [
+                    'payment_intent_id' => 'pi_don_exact',
+                    'client_secret' => 'pi_don_exact_secret',
+                    'status' => 'requires_action',
+                    'amount' => $amountCents,
+                    'authorization_expires_at' => null,
+                ];
+            }
+
+            public function currency(): string
+            {
+                return 'usd';
+            }
+
+            public function retrievePaymentIntent(string $paymentIntentId): array
+            {
+                return [
+                    'id' => $paymentIntentId,
+                    'client_secret' => $paymentIntentId.'_secret',
+                    'status' => 'requires_capture',
+                    'amount' => 9765,
+                    'amount_received' => 0,
+                    'authorization_expires_at' => now()->addDays(6),
+                ];
+            }
+
+            public function capturePaymentIntent(
+                string $paymentIntentId,
+                int $amountToCaptureCents,
+                ?string $idempotencyKey = null,
+            ): array {
+                $this->captures[] = [
+                    'payment_intent_id' => $paymentIntentId,
+                    'amount' => $amountToCaptureCents,
+                ];
+
+                return [
+                    'id' => $paymentIntentId,
+                    'status' => 'succeeded',
+                    'amount_received' => $amountToCaptureCents,
+                    'latest_charge_id' => 'ch_v2_exact',
+                    'balance_transaction_id' => 'txn_v2_exact',
+                    'processing_fee_cents' => 0,
+                    'fee_finalized' => true,
+                ];
+            }
+
+            public function createTransferForCharge(
+                string $destinationAccountId,
+                string $sourceChargeId,
+                string $transferGroup,
+                int $amountCents,
+                string $currency,
+                array $metadata = [],
+                ?string $idempotencyKey = null,
+            ): array {
+                return [
+                    'id' => 'tr_don_exact',
+                    'status' => 'paid',
+                    'amount' => $amountCents,
+                    'source_transaction' => $sourceChargeId,
+                    'transfer_group' => $transferGroup,
+                ];
+            }
+        };
+        app()->instance(StripeClient::class, $stripe);
+
+        $input = $this->input($booking->fresh());
+        $input['started_at'] = $booking->scheduled_start_at->copy()->addHour()->format('Y-m-d\TH:i');
+        $input['completed_at'] = $booking->scheduled_start_at->copy()->addHours(4)->addMinutes(9)->format('Y-m-d\TH:i');
+        $input['explanation'] = 'The completed visit ran from 11:00 AM until 2:09 PM.';
+        $correction = app(CareBookingTimeCorrectionService::class)->submit(
+            $booking->fresh(),
+            $caregiver,
+            $input,
+            (string) Str::uuid(),
+        );
+
+        $this->assertSame(9765, (int) data_get($correction->financial_preview, 'target_charge_cents'));
+        $result = app(CareBookingTimeCorrectionService::class)->approve($correction, $family);
+        $this->assertSame(CareBookingTimeCorrection::STATUS_PAYMENT_ACTION_REQUIRED, $result->status);
+
+        app(CareBookingTimeCorrectionService::class)->resumeApproved($result->fresh(), $family);
+        app(CareBookingTimeCorrectionService::class)->resumeApproved($result->fresh(), $family);
+
+        $this->assertCount(1, $stripe->authorizations);
+        $this->assertSame(9765, $stripe->authorizations[0]['amount']);
+        $this->assertStringStartsWith('booking-auth-', (string) $stripe->authorizations[0]['idempotency_key']);
+        $this->assertDatabaseHas('care_booking_payments', [
+            'care_booking_id' => $booking->id,
+            'stripe_payment_intent_id' => 'pi_don_exact',
+            'status' => CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
+        ]);
+        $this->assertDatabaseHas('care_booking_payment_attempts', [
+            'care_booking_id' => $booking->id,
+            'care_booking_time_correction_id' => $correction->id,
+            'purpose' => 'time_correction',
+            'amount_cents' => 9765,
+            'is_active' => true,
+        ]);
+        $payment = $booking->fresh()->payment;
+        $this->assertSame(30.0, (float) data_get($payment?->metadata, 'hourly_rate'));
+        $this->assertSame(1.0, (float) data_get($payment?->metadata, 'family_processing_fee_rate'));
+        $this->assertSame(0.0, (float) data_get($payment?->metadata, 'platform_fee_percent'));
+
+        $actions = app(FamilyActionInboxBuilder::class)->buildForAccount(
+            app(FamilyAccountContext::class)->account($family)
+        );
+        $this->assertSame(['time_correction'], $actions->pluck('type')->all());
+
+        $component = Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->assertSee('Finish payment for the approved hours.')
+            ->assertSee('Confirm $97.65 payment');
+        $this->assertGreaterThanOrEqual(1, substr_count($component->html(), 'Confirm $97.65 payment'));
+        $this->assertSame(2, substr_count($component->html(), 'wire:click="startPaymentAuthorization"'));
+        $this->assertSame(0, substr_count($component->html(), 'wire:click="continueTimeCorrectionPayment'));
+        $component->assertDontSee('PAYMENT AUTHORIZATION_REQUIRED');
+
+        $component->call('finalizeStripeAuthorization', 'pi_don_exact');
+        $this->assertSame(CareBookingTimeCorrection::STATUS_APPLIED, $correction->fresh()->status);
+        $this->assertSame([[
+            'payment_intent_id' => 'pi_don_exact',
+            'amount' => 9765,
+        ]], $stripe->captures);
+        $this->assertDatabaseHas('care_booking_payments', [
+            'care_booking_id' => $booking->id,
+            'status' => CareBookingPayment::STATUS_TRANSFERRED,
+            'amount_authorized_cents' => 9765,
+            'amount_captured_cents' => 9765,
+            'family_care_amount_cents' => 9450,
+            'family_processing_fee_cents' => 315,
+            'platform_fee_cents' => 1260,
+            'caregiver_gross_amount_cents' => 8505,
+            'caregiver_amount_cents' => 8505,
+        ]);
+        $this->assertDatabaseHas('care_booking_payment_attempts', [
+            'stripe_payment_intent_id' => 'pi_don_exact',
+            'status' => CareBookingPayment::STATUS_CAPTURED,
+            'amount_cents' => 9765,
+        ]);
     }
 
     public function test_expired_authorization_is_safely_reauthorized_after_family_approval(): void

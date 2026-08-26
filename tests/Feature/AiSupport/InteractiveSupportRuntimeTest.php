@@ -556,9 +556,9 @@ class InteractiveSupportRuntimeTest extends TestCase
         app(AiSupportRuntimeService::class)->respond($family, $familyTicket, 'What would 2.5 hours cost?');
 
         $familyAnswer = $familyTicket->publicMessages()->latest()->firstOrFail()->body;
-        $this->assertStringContainsString('Family total is $75.00', $familyAnswer);
-        $this->assertStringContainsString('caregiver earnings are $67.50', $familyAnswer);
-        $this->assertStringContainsString('platform portion is $7.50', $familyAnswer);
+        $this->assertStringContainsString('Family total is $77.50', $familyAnswer);
+        $this->assertStringContainsString('caregiver gross earnings are $67.50', $familyAnswer);
+        $this->assertStringContainsString('platform portion is $10.00', $familyAnswer);
         Http::assertNothingSent();
 
         [, $caregiver] = $this->eligibleCaregiver();
@@ -578,8 +578,8 @@ class InteractiveSupportRuntimeTest extends TestCase
 
         $caregiverAnswer = $caregiverTicket->publicMessages()->latest()->firstOrFail()->body;
         $this->assertStringContainsString('caregiver earnings are $54.00', $caregiverAnswer);
-        $this->assertStringContainsString('Family total is $60.00', $caregiverAnswer);
-        $this->assertStringContainsString('platform portion is $6.00', $caregiverAnswer);
+        $this->assertStringContainsString('Family total is $62.00', $caregiverAnswer);
+        $this->assertStringContainsString('platform portion is $8.00', $caregiverAnswer);
         Http::assertNothingSent();
     }
 

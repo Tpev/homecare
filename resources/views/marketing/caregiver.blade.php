@@ -2,7 +2,7 @@
 
 @php
     $caregiverFaqs = [
-        ['question' => 'How are earnings shown?', 'answer' => 'Every eligible shift shows the expected visit length and estimated payout before you claim it. After a completed visit, LoLo shows the payout status as it moves to your account.'],
+        ['question' => 'How are earnings shown?', 'answer' => 'Every eligible shift shows expected gross earnings before you claim it. After family approval, LoLo shows the actual Stripe processing fee, net earnings, and transfer status to your Stripe balance. Stripe controls later bank payout timing.'],
         ['question' => 'Can I choose which visits I accept?', 'answer' => 'Yes. You set your availability and service area, review each eligible request, and decide which visits fit your schedule, location, and comfort level.'],
         ['question' => 'What kind of support do LoLo caregivers provide?', 'answer' => 'LoLo caregivers provide non-medical support such as companionship, errands, rides where appropriate, meal preparation, light household routines, reminders, and respite support.'],
         ['question' => 'What do I need before I can be matched?', 'answer' => 'You will complete your profile, service area, availability, task preferences, identity verification, background screening, and any other required onboarding review before matching.'],
@@ -294,8 +294,8 @@
                 <div class="snapshot-item start"><span>03 · Begin</span><b class="shift-state">START</b><strong>Tap Start</strong><p>Start the visit in LoLo so your time is recorded.</p></div>
                 <div class="snapshot-item care"><span>04 · Support</span><b class="shift-state">01:42:18</b><strong>Do the visit</strong><p>Follow the notes and provide the agreed non-medical support.</p></div>
                 <div class="snapshot-item stop"><span>05 · Finish</span><b class="shift-state">STOP</b><strong>Tap Stop</strong><p>Confirm the visit is complete and stop the timer.</p></div>
-                <div class="snapshot-item paid"><span>06 · Payout</span><b class="shift-state">PAID</b><strong>Get paid</strong><p>Your payout is sent after completion and typically arrives within a few days.</p></div>
-                <p class="snapshot-note">Shift details, recorded time, completion, and payout status stay together in LoLo. Banking and processor timing can vary.</p>
+                <div class="snapshot-item paid"><span>06 · Earnings</span><b class="shift-state">READY</b><strong>Transfer earnings</strong><p>After family approval, net earnings transfer to your Stripe balance. Stripe controls later bank payout timing.</p></div>
+                <p class="snapshot-note">Shift details, recorded time, gross earnings, processing fees, net earnings, and Stripe transfer status stay together in LoLo.</p>
             </div>
         </section>
 
@@ -316,8 +316,8 @@
         </section>
 
         <section class="earnings" id="earnings" aria-labelledby="earnings-title">
-            <div class="earnings-copy"><p class="eyebrow">Clear earnings</p><h2 id="earnings-title">See the pay before you claim the shift.</h2><p>Every eligible shift shows its expected length and estimated payout up front. After you tap Stop and complete the visit, LoLo tracks the payout through to your account.</p><a class="text-link" href="{{ route('caregiver.register') }}">Start your profile →</a></div>
-            <div class="money-card" aria-label="LoLo caregiver earnings"><span>Your caregiver rate</span><strong>Earn $27/hr*</strong><p>Estimated shift pay is shown before you claim.</p><div><p><small>Before the visit</small><b>Pay shown up front</b></p><p><small>After the visit</small><b>Payout tracked in LoLo</b></p></div><p class="fee-note">*Payment-processing fees may apply.</p></div>
+            <div class="earnings-copy"><p class="eyebrow">Clear earnings</p><h2 id="earnings-title">See the pay before you claim the shift.</h2><p>Every eligible shift shows its expected length and gross earnings up front. After family approval, LoLo shows the actual processing fee, net earnings, and transfer to your Stripe balance.</p><a class="text-link" href="{{ route('caregiver.register') }}">Start your profile →</a></div>
+            <div class="money-card" aria-label="LoLo caregiver earnings"><span>Your caregiver rate</span><strong>Earn $27/hr*</strong><p>Estimated gross shift earnings are shown before you claim.</p><div><p><small>Before the visit</small><b>Gross earnings shown</b></p><p><small>After approval</small><b>Stripe balance transfer tracked</b></p></div><p class="fee-note">*Before actual Stripe processing fees on each successful family charge. Refund costs, dispute fees, and optional instant-payout fees are not deducted.</p></div>
         </section>
 
         <section class="section work" id="work" aria-labelledby="work-title">

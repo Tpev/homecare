@@ -14556,7 +14556,7 @@ return [
                 'product' => 'Approved pricing truth',
                 'explain' => 'Yes',
                 'action' => 'Explain',
-                'target_behavior' => 'State $30/hour Family, $27/hour caregiver, and $3/hour LoLo; do not add other charges without later governed policy',
+                'target_behavior' => 'State $30/hour Family care plus $1/hour Family processing fee, and $27/hour caregiver gross minus actual Stripe processing fees; do not invent other charges',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -14628,7 +14628,7 @@ return [
                 'product' => 'Approved pricing truth',
                 'explain' => 'Yes',
                 'action' => 'Explain / Calculate',
-                'target_behavior' => 'State $30/hour Family, $27/hour caregiver, and $3/hour LoLo; calculate only from an explicit duration',
+                'target_behavior' => 'State $30/hour Family care plus $1/hour Family processing fee, and $27/hour caregiver gross minus actual Stripe processing fees; calculate only from an explicit duration',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [

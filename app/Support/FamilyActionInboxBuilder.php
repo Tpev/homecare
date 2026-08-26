@@ -166,7 +166,7 @@ class FamilyActionInboxBuilder
                 'body' => $this->reportedTimeLabel($start, $end, $correction->durationLabel(), $correction->familyAmountLabel()),
                 'meta' => $paymentAction
                     ? 'Your approval is saved. Confirm payment to finish.'
-                    : 'Review the exact hours before any payment is made.',
+                    : 'Estimated '.$correction->familyAmountLabel().' · Review the exact hours before any payment is made.',
                 'label' => $paymentAction ? 'Confirm payment' : 'Review hours',
                 'navigation_target_id' => $paymentAction
                     ? 'family.request.payment_attention'
@@ -225,7 +225,7 @@ class FamilyActionInboxBuilder
                 ),
                 'meta' => $paymentAction
                     ? 'Your approval is saved. Confirm payment to finish.'
-                    : 'This does not change the regular schedule. Review before payment.',
+                    : 'Estimated $'.number_format($chargeCents / 100, 2).' · This does not change the regular schedule. Review before payment.',
                 'label' => $paymentAction ? 'Confirm payment' : 'Review visit',
                 'navigation_target_id' => 'family.regular_care.attention',
                 'resource_type' => 'care_plan',
@@ -466,6 +466,9 @@ class FamilyActionInboxBuilder
 
     private function bookingSubject(CareBooking $booking): string
     {
+        $requestTitle = ! $booking->care_plan_id && ! $booking->careRequest?->is_system_generated
+            ? trim((string) $booking->careRequest?->title)
+            : '';
         $recipient = trim((string) ($booking->carePlan?->recipientName()
             ?: $booking->careRequest?->recipient?->full_name
             ?: 'Care recipient'));
@@ -478,7 +481,7 @@ class FamilyActionInboxBuilder
         };
         $date = $booking->scheduled_start_at?->format('D, M j') ?: 'Date pending';
 
-        return $type.' for '.$recipient.' · '.$date;
+        return ($requestTitle !== '' ? $requestTitle : $type.' for '.$recipient).' · '.$date;
     }
 
     private function reportedTimeLabel(mixed $start, mixed $end, string $duration, string $amount): string

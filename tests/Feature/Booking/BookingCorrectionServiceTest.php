@@ -420,14 +420,25 @@ class BookingCorrectionServiceTest extends TestCase
         [$admin, $caregiver, $booking, $ticket] = $this->scenario();
         $transferAttempts = 0;
         $stripe = Mockery::mock(StripeClient::class)->makePartial();
-        $stripe->shouldReceive('createTransfer')
+        $stripe->shouldReceive('createTransferForCharge')
             ->twice()
-            ->andReturnUsing(function (string $accountId, int $amountCents) use (&$transferAttempts): array {
+            ->andReturnUsing(function (
+                string $accountId,
+                string $sourceChargeId,
+                string $transferGroup,
+                int $amountCents,
+            ) use (&$transferAttempts): array {
                 if ($transferAttempts++ === 0) {
                     throw new \App\Exceptions\Payments\PaymentException('Caregiver transfer is temporarily unavailable.');
                 }
 
-                return ['id' => 'tr_correction_retry', 'status' => 'paid'];
+                return [
+                    'id' => 'tr_correction_retry',
+                    'status' => 'paid',
+                    'amount' => $amountCents,
+                    'source_transaction' => $sourceChargeId,
+                    'transfer_group' => $transferGroup,
+                ];
             });
         $this->app->instance(StripeClient::class, $stripe);
 
@@ -482,7 +493,6 @@ class BookingCorrectionServiceTest extends TestCase
         $beforeCaptured = (int) $booking->fresh()->payment?->amount_captured_cents;
 
         $stripe = Mockery::mock(StripeClient::class);
-        $stripe->shouldReceive('defaultPaymentMethodForCustomer')->once()->andReturn(['id' => 'pm_requires_action']);
         $stripe->shouldReceive('createAndConfirmCharge')->once()->andThrow(new PaymentActionRequiredException(
             'An additional authorization is required to complete final charges.',
             paymentIntentId: 'pi_correction_action',

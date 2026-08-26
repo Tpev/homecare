@@ -15,6 +15,7 @@ class PaymentsQueue extends Component
     use WithPagination;
 
     public string $status = 'all';
+
     public string $search = '';
 
     /**
@@ -87,13 +88,16 @@ class PaymentsQueue extends Component
                 'booking:id,care_request_id',
                 'family:id,name,email',
                 'caregiver:id,name,email',
+                'operations:id,care_booking_payment_id,type,status,amount_cents,stripe_object_id,stripe_parent_object_id',
             ])
             ->when($this->status !== 'all', fn ($query) => $query->where('status', $this->status))
             ->when($this->search !== '', function ($query): void {
                 $term = trim($this->search);
                 $query->where(function ($inner) use ($term): void {
-                    $inner->where('stripe_payment_intent_id', 'like', '%'.$term.'%')
+                    $inner->where('financial_reference', 'like', '%'.$term.'%')
+                        ->orWhere('stripe_payment_intent_id', 'like', '%'.$term.'%')
                         ->orWhere('stripe_transfer_id', 'like', '%'.$term.'%')
+                        ->orWhereHas('operations', fn ($q) => $q->where('stripe_object_id', 'like', '%'.$term.'%'))
                         ->orWhereHas('family', fn ($q) => $q->where('name', 'like', '%'.$term.'%')->orWhere('email', 'like', '%'.$term.'%'))
                         ->orWhereHas('caregiver', fn ($q) => $q->where('name', 'like', '%'.$term.'%')->orWhere('email', 'like', '%'.$term.'%'));
                 });

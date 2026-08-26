@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToFamilyAccount;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CareBookingPayment extends Model
 {
@@ -41,6 +42,12 @@ class CareBookingPayment extends Model
 
     protected $fillable = [
         'care_booking_id',
+        'financial_reference',
+        'pricing_version',
+        'worked_minutes',
+        'family_care_rate_cents',
+        'family_processing_fee_rate_cents',
+        'caregiver_gross_rate_cents',
         'family_account_id',
         'family_user_id',
         'initiated_by_user_id',
@@ -52,16 +59,25 @@ class CareBookingPayment extends Model
         'stripe_payment_intent_id',
         'stripe_payment_intent_client_secret',
         'stripe_overage_payment_intent_id',
+        'stripe_primary_charge_id',
+        'stripe_overage_charge_id',
+        'stripe_transfer_group',
         'stripe_transfer_id',
         'stripe_last_refund_id',
         'stripe_last_transfer_reversal_id',
         'amount_authorized_cents',
         'amount_captured_cents',
+        'family_care_amount_cents',
+        'family_processing_fee_cents',
         'amount_refunded_cents',
         'amount_overage_cents',
         'overage_pending_cents',
         'platform_fee_cents',
+        'caregiver_gross_amount_cents',
+        'stripe_processing_fee_cents',
         'caregiver_amount_cents',
+        'fee_finalization_status',
+        'fee_finalized_at',
         'authorization_expires_at',
         'authorized_at',
         'reauthorized_at',
@@ -76,12 +92,21 @@ class CareBookingPayment extends Model
     {
         return [
             'metadata' => 'array',
+            'worked_minutes' => 'integer',
+            'family_care_rate_cents' => 'integer',
+            'family_processing_fee_rate_cents' => 'integer',
+            'caregiver_gross_rate_cents' => 'integer',
+            'family_care_amount_cents' => 'integer',
+            'family_processing_fee_cents' => 'integer',
+            'caregiver_gross_amount_cents' => 'integer',
+            'stripe_processing_fee_cents' => 'integer',
             'authorization_expires_at' => 'datetime',
             'authorized_at' => 'datetime',
             'reauthorized_at' => 'datetime',
             'captured_at' => 'datetime',
             'transferred_at' => 'datetime',
             'failed_at' => 'datetime',
+            'fee_finalized_at' => 'datetime',
         ];
     }
 
@@ -98,6 +123,16 @@ class CareBookingPayment extends Model
     public function caregiver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'caregiver_user_id');
+    }
+
+    public function attempts(): HasMany
+    {
+        return $this->hasMany(CareBookingPaymentAttempt::class, 'care_booking_payment_id');
+    }
+
+    public function operations(): HasMany
+    {
+        return $this->hasMany(CareBookingPaymentOperation::class, 'care_booking_payment_id');
     }
 
     public function requiresFamilyAction(): bool

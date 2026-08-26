@@ -8,12 +8,14 @@ use App\Models\ContinuousCoveragePlan;
 use App\Models\ContinuousCoverageShift;
 use App\Models\User;
 use App\Services\Payments\BookingPaymentService;
+use App\Support\MarketplacePricing;
 use Illuminate\Validation\ValidationException;
 
 class ContinuousCoveragePricingService
 {
     public function __construct(
         private readonly BookingPaymentService $payments,
+        private readonly MarketplacePricing $pricing,
     ) {}
 
     /**
@@ -40,6 +42,7 @@ class ContinuousCoveragePricingService
             'caregiver_user_id' => $caregiver->id,
             'expected_minutes' => max(1, $workedMinutes),
         ]);
+        $booking->forceFill($this->pricing->currentSnapshotAttributes());
         $booking->setRelation('application', $application);
         $booking->setRelation('family', $plan->family);
         $booking->setRelation('caregiver', $caregiver);
@@ -81,8 +84,8 @@ class ContinuousCoveragePricingService
     ): string {
         $quote = $this->quoteForPlan($plan, $caregiver, $workedMinutes);
 
-        return '$'.number_format($quote['caregiver_amount_cents'] / 100, 2)
-            .' estimated for '.$this->duration($workedMinutes);
+        return '$'.number_format($quote['caregiver_gross_amount_cents'] / 100, 2)
+            .' gross for '.$this->duration($workedMinutes).' before Stripe processing fees';
     }
 
     private function duration(int $minutes): string

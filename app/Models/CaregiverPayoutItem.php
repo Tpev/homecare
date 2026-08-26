@@ -11,16 +11,23 @@ class CaregiverPayoutItem extends Model
     use HasFactory;
 
     public const STATUS_SCHEDULED = 'scheduled';
+
     public const STATUS_PAID = 'paid';
+
     public const STATUS_REVERSED = 'reversed';
 
     protected $fillable = [
         'caregiver_payout_id',
         'caregiver_user_id',
         'care_booking_id',
+        'care_booking_payment_id',
+        'financial_reference',
         'status',
         'currency',
+        'gross_amount',
+        'processing_fee_amount',
         'amount',
+        'stripe_transfer_ids',
         'included_at',
         'paid_at',
         'notes',
@@ -30,6 +37,9 @@ class CaregiverPayoutItem extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'gross_amount' => 'decimal:2',
+            'processing_fee_amount' => 'decimal:2',
+            'stripe_transfer_ids' => 'array',
             'included_at' => 'datetime',
             'paid_at' => 'datetime',
         ];
@@ -49,5 +59,9 @@ class CaregiverPayoutItem extends Model
     {
         return $this->belongsTo(CareBooking::class, 'care_booking_id');
     }
-}
 
+    public function payment(): BelongsTo
+    {
+        return $this->belongsTo(CareBookingPayment::class, 'care_booking_payment_id');
+    }
+}

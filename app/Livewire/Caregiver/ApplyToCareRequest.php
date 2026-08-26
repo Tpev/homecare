@@ -301,7 +301,7 @@ class ApplyToCareRequest extends Component
             return;
         }
 
-        $applicationRate = app(MarketplacePricing::class)->hourlyRateForRequest($this->requestItem, $platformRate);
+        $applicationRate = app(MarketplacePricing::class)->caregiverGrossHourlyCents() / 100;
 
         $existing = CareRequestApplication::query()
             ->where('care_request_id', $this->requestItem->id)
@@ -522,7 +522,7 @@ class ApplyToCareRequest extends Component
         $baseRatePerHour = (float) ($this->existingApplication?->proposed_rate
             ?: auth()->user()->caregiverProfile?->resolvePlatformHourlyRate()
             ?: 0);
-        $ratePerHour = app(MarketplacePricing::class)->hourlyRateForRequest($this->requestItem, $baseRatePerHour);
+        $ratePerHour = app(MarketplacePricing::class)->caregiverGrossHourlyCents() / 100;
         $estimatedEarnings = $this->calculateShiftEarnings((int) ($workedMinutes ?? 0), $ratePerHour);
 
         $booking->update([

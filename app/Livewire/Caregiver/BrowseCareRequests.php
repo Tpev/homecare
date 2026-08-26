@@ -161,17 +161,14 @@ class BrowseCareRequests extends Component
             return null;
         }
 
-        $rate = app(MarketplacePricing::class)->hourlyRateForRequest(
-            $request,
-            (float) config('marketplace.family_estimate_hourly_rate', 30.00)
-        );
+        $rate = app(MarketplacePricing::class)->caregiverGrossHourlyCents() / 100;
         $hours = $minutes / 60;
         $hoursLabel = abs($hours - round($hours)) < 0.01
             ? (string) (int) round($hours)
             : number_format($hours, 1);
         $total = round($hours * $rate, 2);
 
-        return sprintf('%sh at $%s/hr - about $%s', $hoursLabel, number_format($rate, 2), number_format($total, 2));
+        return sprintf('%sh at $%s/hr* - about $%s gross', $hoursLabel, number_format($rate, 2), number_format($total, 2));
     }
 
     public function postedLabel(CareRequest $request): string

@@ -5,6 +5,9 @@ namespace App\Services\Payments;
 use App\Exceptions\Payments\PaymentException;
 use App\Models\CareBooking;
 use App\Models\CareBookingPayment;
+use App\Models\CareBookingPaymentAttempt;
+use App\Models\CareBookingPaymentOperation;
+use App\Models\CareBookingTimeCorrection;
 use App\Models\CaregiverPayout;
 use App\Models\CaregiverPayoutItem;
 use App\Services\Notifications\MarketplaceNotificationService;
@@ -14,6 +17,7 @@ use App\Support\MarketplacePricing;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class BookingPaymentService
@@ -23,6 +27,7 @@ class BookingPaymentService
         private readonly MarketplaceNotificationService $notifications,
         private readonly MarketplacePricing $pricing,
         private readonly CarePlanHealthService $planHealth,
+        private readonly BookingPaymentV2Service $paymentsV2,
     ) {}
 
     /**
@@ -33,6 +38,16 @@ class BookingPaymentService
         $booking->loadMissing(['application', 'family', 'caregiver.caregiverProfile']);
 
         $workedMinutes = max(1, $workedMinutes);
+        if ($this->pricing->usesCurrentPricing($booking)) {
+            $booking->loadMissing('payment');
+
+            return $this->pricing->quoteForCurrentBooking(
+                $booking,
+                $workedMinutes,
+                max(0, (int) ($booking->payment?->stripe_processing_fee_cents ?? 0)),
+            );
+        }
+
         $hourlyRate = $this->effectiveHourlyRate($booking);
         $subtotalCents = (int) round($this->bookingSubtotal($booking, $workedMinutes) * 100);
         $platformFeePercent = $this->platformFeePercent($booking);
@@ -59,6 +74,8 @@ class BookingPaymentService
             'caregiver.caregiverProfile',
             'payment',
         ]);
+
+        $booking = $this->ensureCurrentPricingForNewPayment($booking);
 
         $existing = $booking->payment?->fresh();
         if ($existing && in_array($existing->status, [
@@ -188,7 +205,7 @@ class BookingPaymentService
 
         $payment = CareBookingPayment::query()->updateOrCreate(
             ['care_booking_id' => $booking->id],
-            [
+            array_merge($this->newPaymentSnapshotAttributes($booking), [
                 'family_account_id' => (int) $booking->family_account_id,
                 'family_user_id' => (int) $booking->family_user_id,
                 'initiated_by_user_id' => auth()->id() ?: $booking->family_user_id,
@@ -213,8 +230,9 @@ class BookingPaymentService
                     $previousIntentId,
                     $previousStatus
                 ),
-            ]
+            ])
         );
+        $this->paymentsV2->recordAuthorization($payment);
 
         if ($notify) {
             $this->notifyAuthorizationState($booking, $payment, CareBookingPayment::STATUS_AUTHORIZED);
@@ -261,6 +279,68 @@ class BookingPaymentService
             'caregiver.caregiverProfile',
             'payment',
         ]);
+        $booking = $this->ensureCurrentPricingForNewPayment($booking);
+
+        $amountCents = $this->authorizationAmountCents($booking);
+        $revisionKey = 'booking:v1:'.hash('sha256', implode('|', [
+            $booking->scheduled_start_at?->toIso8601String(),
+            $booking->scheduled_end_at?->toIso8601String(),
+            $this->estimatedMinutes($booking),
+            $this->effectiveHourlyRate($booking),
+            $this->platformFeePercent($booking),
+            $this->authorizationBufferPercent(),
+            $amountCents,
+        ]));
+
+        if ($forceNewIntent) {
+            $revisionKey .= ':forced:'.bin2hex(random_bytes(8));
+        }
+
+        return $this->prepareAuthorizationIntentForAmount(
+            $booking,
+            $amountCents,
+            $revisionKey,
+            'booking_authorization',
+            null,
+            $forceNewIntent,
+        );
+    }
+
+    public function prepareOnSessionAuthorizationForAmount(
+        CareBooking $booking,
+        int $amountCents,
+        string $revisionKey,
+        ?CareBookingTimeCorrection $correction = null,
+    ): CareBookingPayment {
+        if ($amountCents < 100) {
+            throw new PaymentException('The approved payment amount is invalid. Please contact LoLo Care support.');
+        }
+
+        return $this->prepareAuthorizationIntentForAmount(
+            $booking,
+            $amountCents,
+            $revisionKey,
+            $correction ? 'time_correction' : 'booking_authorization',
+            $correction?->id,
+        );
+    }
+
+    private function prepareAuthorizationIntentForAmount(
+        CareBooking $booking,
+        int $amountCents,
+        string $revisionKey,
+        string $purpose,
+        ?int $correctionId,
+        bool $forceNewIntent = false,
+    ): CareBookingPayment {
+        $booking->loadMissing([
+            'application',
+            'family',
+            'caregiver',
+            'caregiver.caregiverProfile',
+            'payment',
+        ]);
+        $booking = $this->ensureCurrentPricingForNewPayment($booking);
 
         $existing = $booking->payment;
         if ($existing && in_array($existing->status, [
@@ -272,8 +352,11 @@ class BookingPaymentService
         ], true)) {
             return $existing;
         }
-        if (! $forceNewIntent && $existing?->status === CareBookingPayment::STATUS_AUTHORIZED
-            && ! $this->isAuthorizationExpired($existing)) {
+        if (! $forceNewIntent
+            && $existing?->status === CareBookingPayment::STATUS_AUTHORIZED
+            && ! $this->isAuthorizationExpired($existing)
+            && (int) $existing->amount_authorized_cents >= $amountCents
+            && (string) data_get($existing->metadata, 'authorization_revision_key') === $revisionKey) {
             return $existing;
         }
 
@@ -291,15 +374,38 @@ class BookingPaymentService
             );
         }
 
-        $amountCents = $this->authorizationAmountCents($booking);
         $currency = $this->stripe->currency();
         $paymentMethodId = (string) $defaultPaymentMethod['id'];
+        $authorizationKey = hash('sha256', implode('|', [
+            $booking->id,
+            $revisionKey,
+            $amountCents,
+            strtolower($currency),
+            $paymentMethodId,
+        ]));
 
-        if (! $forceNewIntent && $existing && $this->canReuseAuthorizationIntent($existing, $amountCents, $currency, $paymentMethodId)) {
+        if (! $forceNewIntent && $existing && $this->canReuseAuthorizationIntent(
+            $existing,
+            $amountCents,
+            $currency,
+            $paymentMethodId,
+            $revisionKey,
+        )) {
             $existing->forceFill([
                 'stripe_customer_id' => $customerId,
-                'metadata' => array_merge($existing->metadata ?? [], $this->authorizationMetadata($booking, $amountCents)),
+                'metadata' => array_merge(
+                    $existing->metadata ?? [],
+                    $this->authorizationMetadata($booking, $amountCents, $revisionKey, $purpose, $correctionId),
+                ),
             ])->save();
+
+            Log::info('payment.authorization_intent_reused', [
+                'care_booking_id' => $booking->id,
+                'care_booking_payment_id' => $existing->id,
+                'stripe_payment_intent_id' => $existing->stripe_payment_intent_id,
+                'revision_key' => $revisionKey,
+                'amount_cents' => $amountCents,
+            ]);
 
             return $existing->fresh();
         }
@@ -309,21 +415,11 @@ class BookingPaymentService
             $customerId,
             $paymentMethodId,
             $currency,
-            $amountCents
+            $amountCents,
+            $revisionKey,
+            $purpose,
+            $correctionId,
         );
-
-        if ($previousIntentId && in_array($previousStatus, [
-            CareBookingPayment::STATUS_AUTHORIZED,
-            CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
-            CareBookingPayment::STATUS_REAUTH_REQUIRED,
-        ], true)) {
-            try {
-                $this->stripe->cancelPaymentIntent($previousIntentId);
-            } catch (PaymentException $exception) {
-                $this->releaseAuthorizationAttempt($booking->id, $exception->getMessage());
-                throw $exception;
-            }
-        }
 
         try {
             $intent = $this->stripe->createManualAuthorizationIntent(
@@ -332,11 +428,7 @@ class BookingPaymentService
                 $paymentMethodId,
                 $amountCents,
                 $currency,
-                $this->idempotencyKey(
-                    $booking->id,
-                    'authorize-client-attempt-'.$attempt.'-pm-'.substr(hash('sha256', $paymentMethodId), 0, 12),
-                    $amountCents
-                )
+                'booking-auth-'.$authorizationKey,
             );
         } catch (PaymentException $exception) {
             $payment = $this->persistAuthorizationFailure(
@@ -359,7 +451,7 @@ class BookingPaymentService
 
         $payment = CareBookingPayment::query()->updateOrCreate(
             ['care_booking_id' => $booking->id],
-            [
+            array_merge($this->newPaymentSnapshotAttributes($booking), [
                 'family_account_id' => (int) $booking->family_account_id,
                 'family_user_id' => (int) $booking->family_user_id,
                 'initiated_by_user_id' => auth()->id() ?: $booking->family_user_id,
@@ -385,9 +477,62 @@ class BookingPaymentService
                     $attempt,
                     $previousIntentId,
                     $previousStatus,
+                    $revisionKey,
+                    $purpose,
+                    $correctionId,
                 ),
-            ]
+            ])
         );
+        $this->paymentsV2->recordAuthorization($payment);
+
+        $this->recordPreparedAuthorizationAttempt(
+            $payment,
+            $intent,
+            $authorizationKey,
+            $revisionKey,
+            $purpose,
+            $correctionId,
+            $paymentMethodId,
+            $paymentStatus,
+        );
+
+        Log::info('payment.authorization_intent_prepared', [
+            'care_booking_id' => $booking->id,
+            'care_booking_payment_id' => $payment->id,
+            'stripe_payment_intent_id' => (string) $intent['payment_intent_id'],
+            'revision_key' => $revisionKey,
+            'purpose' => $purpose,
+            'amount_cents' => (int) $intent['amount'],
+            'status' => $paymentStatus,
+        ]);
+
+        if ($previousIntentId
+            && $previousIntentId !== (string) $intent['payment_intent_id']
+            && in_array($previousStatus, [
+                CareBookingPayment::STATUS_AUTHORIZED,
+                CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
+                CareBookingPayment::STATUS_REAUTH_REQUIRED,
+            ], true)) {
+            try {
+                $this->stripe->cancelPaymentIntent($previousIntentId);
+                CareBookingPaymentAttempt::query()
+                    ->where('stripe_payment_intent_id', $previousIntentId)
+                    ->update([
+                        'status' => CareBookingPayment::STATUS_CANCELLED,
+                        'is_active' => false,
+                        'canceled_at' => now(),
+                        'superseded_at' => now(),
+                    ]);
+            } catch (PaymentException $exception) {
+                CareBookingPaymentAttempt::query()
+                    ->where('stripe_payment_intent_id', $previousIntentId)
+                    ->update([
+                        'is_active' => false,
+                        'last_error' => 'Superseded intent could not be canceled: '.$exception->getMessage(),
+                        'superseded_at' => now(),
+                    ]);
+            }
+        }
 
         $this->notifyAuthorizationState($booking, $payment, $paymentStatus);
 
@@ -399,11 +544,35 @@ class BookingPaymentService
         $booking->loadMissing(['payment', 'family', 'caregiver']);
 
         $payment = $booking->payment;
-        if (! $payment || (string) $payment->stripe_payment_intent_id !== $paymentIntentId) {
+        if (! $payment) {
+            throw new PaymentException('Payment authorization was not found for this booking.');
+        }
+
+        $attempt = CareBookingPaymentAttempt::query()
+            ->where('care_booking_id', $booking->id)
+            ->where('stripe_payment_intent_id', $paymentIntentId)
+            ->first();
+
+        if (! $attempt && (string) $payment->stripe_payment_intent_id !== $paymentIntentId) {
             throw new PaymentException('Payment authorization was not found for this booking.');
         }
 
         $intent = $this->stripe->retrievePaymentIntent($paymentIntentId);
+        if ($attempt) {
+            $isCurrentAttempt = $attempt->is_active
+                && (string) $payment->stripe_payment_intent_id === $paymentIntentId;
+            $this->applyPaymentIntentStateToAttempt($attempt, $intent);
+
+            if (! $isCurrentAttempt) {
+                Log::notice('payment.stale_client_confirmation_ignored', [
+                    'care_booking_id' => $booking->id,
+                    'stripe_payment_intent_id' => $paymentIntentId,
+                    'current_payment_intent_id' => $payment->stripe_payment_intent_id,
+                ]);
+
+                return $payment->fresh();
+            }
+        }
 
         return $this->applyPaymentIntentState($payment, $intent);
     }
@@ -415,6 +584,19 @@ class BookingPaymentService
         $payment = $booking->payment;
         if (! $payment) {
             return null;
+        }
+
+        if ($paymentIntentId) {
+            $attempt = CareBookingPaymentAttempt::query()
+                ->where('care_booking_id', $booking->id)
+                ->where('stripe_payment_intent_id', $paymentIntentId)
+                ->first();
+            if ($attempt) {
+                $attempt->forceFill([
+                    'status' => CareBookingPayment::STATUS_FAILED,
+                    'last_error' => $message !== '' ? $message : 'Card authorization failed.',
+                ])->save();
+            }
         }
 
         if ($paymentIntentId && (string) $payment->stripe_payment_intent_id !== $paymentIntentId) {
@@ -488,6 +670,13 @@ class BookingPaymentService
             }
         }
 
+        if ($this->paymentsV2->usesV2($payment)) {
+            $payment = $this->paymentsV2->capture($booking, $payment);
+            $this->notifyV2CaptureState($booking, $payment, $notify);
+
+            return $this->reconcilePaymentPlan($payment);
+        }
+
         $paymentIntentId = (string) $payment->stripe_payment_intent_id;
         if ($paymentIntentId === '') {
             throw new PaymentException('Payment authorization reference is missing.');
@@ -511,6 +700,13 @@ class BookingPaymentService
         );
 
         $capturedCents = (int) ($capture['amount_received'] ?? $primaryCaptureCents);
+        CareBookingPaymentAttempt::query()
+            ->where('stripe_payment_intent_id', $paymentIntentId)
+            ->update([
+                'status' => CareBookingPayment::STATUS_CAPTURED,
+                'captured_at' => now(),
+                'last_error' => null,
+            ]);
         $overageCents = max(0, $targetCaptureCents - $primaryCaptureCents);
         $overageChargedCents = 0;
         $overagePendingCents = 0;
@@ -602,21 +798,6 @@ class BookingPaymentService
                     'last_error' => $e->getMessage(),
                 ]);
 
-                if ($notify) {
-                    $this->notify(
-                        recipients: $booking->caregiver,
-                        eventKey: MarketplaceEvent::PAYOUT_TRANSFER_FAILED,
-                        title: 'Your payout is delayed',
-                        body: 'The family payment is complete, but the transfer to your payout account did not finish. LoLo Care will retry it automatically.',
-                        url: route('caregiver.earnings.index'),
-                        payload: [
-                            'care_booking_id' => $booking->id,
-                            'care_booking_payment_id' => $payment->id,
-                        ],
-                        subject: $booking,
-                        dedupeKey: 'payout-transfer-failed:booking-'.$booking->id.'-caregiver-'.$booking->caregiver_user_id
-                    );
-                }
             }
         }
 
@@ -712,6 +893,14 @@ class BookingPaymentService
             CareBookingPayment::STATUS_PARTIALLY_REFUNDED,
         ], true)) {
             throw new PaymentException('This booking is not in a refundable state.');
+        }
+
+        if ($this->paymentsV2->usesV2($payment)) {
+            $beforeRefunded = (int) $payment->amount_refunded_cents;
+            $payment = $this->paymentsV2->refund($booking, $payment, $amountCents, $reason);
+            $this->notifyV2RefundState($booking, $payment, $beforeRefunded);
+
+            return $payment;
         }
 
         $captured = (int) ($payment->amount_captured_cents ?? 0);
@@ -832,6 +1021,24 @@ class BookingPaymentService
             return $payment;
         }
 
+        if ($this->paymentsV2->usesV2($payment)) {
+            $payment = $this->paymentsV2->finalizeFeesAndTransfers($payment);
+            if ($payment->status === CareBookingPayment::STATUS_TRANSFERRED && $booking->caregiver) {
+                $this->notify(
+                    recipients: $booking->caregiver,
+                    eventKey: MarketplaceEvent::PAYOUT_TRANSFERRED,
+                    title: 'Earnings available in Stripe',
+                    body: 'Your earnings were transferred to your Stripe balance. Stripe controls the timing of the bank payout.',
+                    url: route('caregiver.earnings.index'),
+                    payload: ['care_booking_id' => $booking->id, 'care_booking_payment_id' => $payment->id],
+                    subject: $booking,
+                    dedupeKey: 'earnings-transferred-v2:booking-'.$booking->id,
+                );
+            }
+
+            return $payment;
+        }
+
         if ($payment->stripe_transfer_id) {
             return $payment->fresh();
         }
@@ -905,6 +1112,30 @@ class BookingPaymentService
             return;
         }
 
+        $attempt = CareBookingPaymentAttempt::query()
+            ->where('stripe_payment_intent_id', $paymentIntentId)
+            ->first();
+        if ($attempt) {
+            $payment = $attempt->payment;
+            $isCurrentAttempt = $payment
+                && $attempt->is_active
+                && (string) $payment->stripe_payment_intent_id === $paymentIntentId;
+            $this->applyPaymentIntentStateToAttempt($attempt, $object);
+            if (! $isCurrentAttempt) {
+                Log::notice('payment.stale_webhook_ignored', [
+                    'care_booking_id' => $attempt->care_booking_id,
+                    'stripe_payment_intent_id' => $paymentIntentId,
+                    'stripe_status' => (string) ($object['status'] ?? ''),
+                ]);
+
+                return;
+            }
+
+            $this->applyPaymentIntentState($payment, $object);
+
+            return;
+        }
+
         $payment = CareBookingPayment::query()
             ->where('stripe_payment_intent_id', $paymentIntentId)
             ->orWhere('stripe_overage_payment_intent_id', $paymentIntentId)
@@ -915,6 +1146,51 @@ class BookingPaymentService
         }
 
         $this->applyPaymentIntentState($payment, $object);
+    }
+
+    /**
+     * @param  array<string, mixed>  $object
+     */
+    private function applyPaymentIntentStateToAttempt(CareBookingPaymentAttempt $attempt, array $object): void
+    {
+        $stripeStatus = (string) ($object['status'] ?? '');
+        $status = match ($stripeStatus) {
+            'requires_capture' => CareBookingPayment::STATUS_AUTHORIZED,
+            'requires_action', 'requires_confirmation' => CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED,
+            'succeeded' => CareBookingPayment::STATUS_CAPTURED,
+            'canceled' => CareBookingPayment::STATUS_CANCELLED,
+            'requires_payment_method' => CareBookingPayment::STATUS_FAILED,
+            default => $attempt->status,
+        };
+        $clientSecret = (string) ($object['client_secret'] ?? '');
+        $error = (string) data_get($object, 'last_payment_error.message', '');
+
+        $payload = [
+            'status' => $status,
+            'last_error' => in_array($status, [
+                CareBookingPayment::STATUS_AUTHORIZED,
+                CareBookingPayment::STATUS_CAPTURED,
+            ], true) ? null : ($error !== '' ? $error : $attempt->last_error),
+        ];
+
+        if ($clientSecret !== '') {
+            $payload['client_secret'] = $clientSecret;
+        }
+        if ((int) ($object['amount'] ?? 0) > 0) {
+            $payload['amount_cents'] = (int) $object['amount'];
+        }
+        if ($status === CareBookingPayment::STATUS_AUTHORIZED) {
+            $payload['authorized_at'] = $attempt->authorized_at ?: now();
+        }
+        if ($status === CareBookingPayment::STATUS_CAPTURED) {
+            $payload['captured_at'] = $attempt->captured_at ?: now();
+        }
+        if ($status === CareBookingPayment::STATUS_CANCELLED) {
+            $payload['is_active'] = false;
+            $payload['canceled_at'] = $attempt->canceled_at ?: now();
+        }
+
+        $attempt->forceFill($payload)->save();
     }
 
     /**
@@ -947,6 +1223,7 @@ class BookingPaymentService
             }
 
             $payment->forceFill($payload)->save();
+            $this->paymentsV2->recordAuthorization($payment->fresh());
 
             return $this->reconcilePaymentPlan($payment);
         }
@@ -970,6 +1247,12 @@ class BookingPaymentService
         }
 
         if ($status === 'succeeded') {
+            if ($this->paymentsV2->usesV2($payment)) {
+                return $this->reconcilePaymentPlan(
+                    $this->paymentsV2->recordSucceededPaymentIntent($payment, $object)
+                );
+            }
+
             $isOverageIntent = $paymentIntentId !== ''
                 && $payment->stripe_overage_payment_intent_id
                 && $paymentIntentId === (string) $payment->stripe_overage_payment_intent_id;
@@ -1045,6 +1328,22 @@ class BookingPaymentService
             return;
         }
 
+        $operation = CareBookingPaymentOperation::query()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)
+            ->where('stripe_object_id', $transferId)
+            ->first();
+        if ($operation) {
+            $operation->forceFill([
+                'status' => CareBookingPaymentOperation::STATUS_SUCCEEDED,
+                'processed_at' => $operation->processed_at ?: now(),
+                'failed_at' => null,
+                'last_error' => null,
+            ])->save();
+            $this->paymentsV2->finalizeFeesAndTransfers($operation->payment);
+
+            return;
+        }
+
         $payment = CareBookingPayment::query()
             ->where('stripe_transfer_id', $transferId)
             ->first();
@@ -1071,6 +1370,35 @@ class BookingPaymentService
             return;
         }
 
+        $operation = CareBookingPaymentOperation::query()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)
+            ->where('stripe_object_id', $transferId)
+            ->first();
+        if ($operation) {
+            CareBookingPaymentOperation::query()->updateOrCreate(
+                [
+                    'type' => CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL,
+                    'stripe_object_id' => (string) ($object['id'] ?? ''),
+                ],
+                [
+                    'care_booking_payment_id' => $operation->care_booking_payment_id,
+                    'care_booking_id' => $operation->care_booking_id,
+                    'family_account_id' => $operation->family_account_id,
+                    'parent_operation_id' => $operation->id,
+                    'financial_reference' => $operation->financial_reference,
+                    'status' => CareBookingPaymentOperation::STATUS_SUCCEEDED,
+                    'amount_cents' => max(0, (int) ($object['amount'] ?? 0)),
+                    'currency' => $operation->currency,
+                    'stripe_parent_object_id' => $transferId,
+                    'occurred_at' => now(),
+                    'processed_at' => now(),
+                ],
+            );
+            $this->paymentsV2->finalizeFeesAndTransfers($operation->payment);
+
+            return;
+        }
+
         $payment = CareBookingPayment::query()
             ->where('stripe_transfer_id', $transferId)
             ->first();
@@ -1090,6 +1418,10 @@ class BookingPaymentService
      */
     public function handleChargeRefundWebhook(array $object): void
     {
+        if ($this->paymentsV2->handleChargeRefund($object)) {
+            return;
+        }
+
         $paymentIntentId = (string) ($object['payment_intent'] ?? '');
         if ($paymentIntentId === '') {
             return;
@@ -1115,8 +1447,28 @@ class BookingPaymentService
         ])->save();
     }
 
+    /** @param array<string, mixed> $object */
+    public function handleRefundWebhook(array $object): void
+    {
+        $this->paymentsV2->handleRefund($object);
+    }
+
+    /** @param array<string, mixed> $object */
+    public function handleDisputeWebhook(array $object): void
+    {
+        $this->paymentsV2->handleDispute($object);
+    }
+
     private function authorizationAmountCents(CareBooking $booking): int
     {
+        if ($this->pricing->usesCurrentPricing($booking)) {
+            $quote = $this->pricing->quoteForCurrentBooking($booking, $this->estimatedMinutes($booking));
+
+            return max(100, (int) round(
+                (int) $quote['total_charge_cents'] * (1 + ($this->authorizationBufferPercent() / 100))
+            ));
+        }
+
         $subtotal = $this->bookingSubtotal($booking, $this->estimatedMinutes($booking));
         $withPlatformFee = $subtotal * (1 + ($this->platformFeePercent($booking) / 100));
         $withBuffer = $withPlatformFee * (1 + ($this->authorizationBufferPercent() / 100));
@@ -1127,17 +1479,40 @@ class BookingPaymentService
     /**
      * @return array<string, mixed>
      */
-    private function authorizationMetadata(CareBooking $booking, int $amountCents): array
-    {
-        return [
+    private function authorizationMetadata(
+        CareBooking $booking,
+        int $amountCents,
+        ?string $revisionKey = null,
+        ?string $purpose = null,
+        ?int $correctionId = null,
+    ): array {
+        $isV2 = $this->pricing->usesCurrentPricing($booking);
+        $v2Quote = $isV2
+            ? $this->pricing->quoteForCurrentBooking($booking, $this->estimatedMinutes($booking))
+            : null;
+
+        return array_filter([
             'family_account_id' => (int) $booking->family_account_id,
             'acting_user_id' => auth()->id() ?: $booking->family_user_id,
-            'hourly_rate' => $this->effectiveHourlyRate($booking),
+            'financial_reference' => $isV2 ? $booking->financial_reference : null,
+            'pricing_version' => $isV2 ? $booking->pricing_version : null,
+            'hourly_rate' => $isV2
+                ? (float) data_get($v2Quote, 'hourly_rate')
+                : $this->effectiveHourlyRate($booking),
+            'family_processing_fee_rate' => $isV2
+                ? ((int) data_get($v2Quote, 'family_processing_fee_rate_cents') / 100)
+                : null,
+            'caregiver_gross_rate' => $isV2
+                ? ((int) data_get($v2Quote, 'caregiver_gross_rate_cents') / 100)
+                : null,
             'estimated_minutes' => $this->estimatedMinutes($booking),
-            'platform_fee_percent' => $this->platformFeePercent($booking),
+            'platform_fee_percent' => $isV2 ? 0.0 : $this->platformFeePercent($booking),
             'buffer_percent' => $this->authorizationBufferPercent(),
             'requested_authorization_cents' => $amountCents,
-        ];
+            'authorization_revision_key' => $revisionKey,
+            'authorization_purpose' => $purpose,
+            'care_booking_time_correction_id' => $correctionId,
+        ], static fn ($value): bool => $value !== null);
     }
 
     /**
@@ -1149,9 +1524,12 @@ class BookingPaymentService
         string $paymentMethodId,
         string $currency,
         int $amountCents,
+        ?string $revisionKey = null,
+        ?string $purpose = null,
+        ?int $correctionId = null,
     ): array {
         try {
-            return DB::transaction(function () use ($booking, $customerId, $paymentMethodId, $currency, $amountCents): array {
+            return DB::transaction(function () use ($booking, $customerId, $paymentMethodId, $currency, $amountCents, $revisionKey, $purpose, $correctionId): array {
                 $payment = CareBookingPayment::query()
                     ->where('care_booking_id', $booking->id)
                     ->lockForUpdate()
@@ -1182,8 +1560,21 @@ class BookingPaymentService
                         'replaced_at' => now()->toIso8601String(),
                     ];
                 }
+                $history = array_slice($history, -20);
 
-                $metadata = array_merge($metadata, $this->authorizationMetadata($booking, $amountCents), [
+                $authorizationMetadata = $this->authorizationMetadata(
+                    $booking,
+                    $amountCents,
+                    $revisionKey,
+                    $purpose,
+                    $correctionId,
+                );
+                if ($revisionKey === null) {
+                    $metadata = array_merge($metadata, $authorizationMetadata);
+                } else {
+                    $metadata['pending_authorization'] = $authorizationMetadata;
+                }
+                $metadata = array_merge($metadata, [
                     'authorization_attempt_count' => $attempt,
                     'authorization_attempt_payment_method_id' => $paymentMethodId,
                     'authorization_in_progress_at' => now()->toIso8601String(),
@@ -1198,7 +1589,7 @@ class BookingPaymentService
                         'metadata' => $metadata,
                     ])->save();
                 } else {
-                    CareBookingPayment::query()->create([
+                    CareBookingPayment::query()->create(array_merge($this->newPaymentSnapshotAttributes($booking), [
                         'care_booking_id' => $booking->id,
                         'family_account_id' => (int) $booking->family_account_id,
                         'family_user_id' => (int) $booking->family_user_id,
@@ -1209,7 +1600,7 @@ class BookingPaymentService
                         'stripe_customer_id' => $customerId,
                         'stripe_payment_method_id' => $paymentMethodId,
                         'metadata' => $metadata,
-                    ]);
+                    ]));
                 }
 
                 return [$attempt, $previousIntentId, $previousStatus];
@@ -1234,12 +1625,22 @@ class BookingPaymentService
         int $attempt,
         ?string $previousIntentId,
         ?string $previousStatus,
+        ?string $revisionKey = null,
+        ?string $purpose = null,
+        ?int $correctionId = null,
     ): array {
         $reservedPayment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->first();
         $metadata = (array) ($reservedPayment?->metadata ?? []);
         unset($metadata['authorization_in_progress_at']);
+        unset($metadata['pending_authorization']);
 
-        return array_merge($metadata, $this->authorizationMetadata($booking, $amountCents), [
+        return array_merge($metadata, $this->authorizationMetadata(
+            $booking,
+            $amountCents,
+            $revisionKey,
+            $purpose,
+            $correctionId,
+        ), [
             'authorization_attempt_count' => $attempt,
             'previous_payment_intent_id' => $previousIntentId,
             'previous_payment_status' => $previousStatus,
@@ -1267,6 +1668,7 @@ class BookingPaymentService
         int $amountCents,
         string $currency,
         string $paymentMethodId,
+        ?string $revisionKey = null,
     ): bool {
         if (! $payment->stripe_payment_intent_id || ! $payment->stripe_payment_intent_client_secret) {
             return false;
@@ -1282,9 +1684,85 @@ class BookingPaymentService
 
         $metadataAmount = (int) data_get($payment->metadata, 'requested_authorization_cents', 0);
 
+        $metadataRevision = data_get($payment->metadata, 'authorization_revision_key');
+
         return $metadataAmount === $amountCents
             && strtolower((string) $payment->currency) === strtolower($currency)
-            && (string) $payment->stripe_payment_method_id === $paymentMethodId;
+            && (string) $payment->stripe_payment_method_id === $paymentMethodId
+            && ($revisionKey === null
+                || $metadataRevision === null
+                || (string) $metadataRevision === $revisionKey);
+    }
+
+    /**
+     * @param  array<string, mixed>  $intent
+     */
+    private function recordPreparedAuthorizationAttempt(
+        CareBookingPayment $payment,
+        array $intent,
+        string $authorizationKey,
+        string $revisionKey,
+        string $purpose,
+        ?int $correctionId,
+        string $paymentMethodId,
+        string $paymentStatus,
+    ): void {
+        $intentId = (string) ($intent['payment_intent_id'] ?? '');
+        if ($intentId === '') {
+            return;
+        }
+
+        DB::transaction(function () use (
+            $payment,
+            $intent,
+            $intentId,
+            $authorizationKey,
+            $revisionKey,
+            $purpose,
+            $correctionId,
+            $paymentMethodId,
+            $paymentStatus,
+        ): void {
+            CareBookingPaymentAttempt::query()
+                ->where('care_booking_payment_id', $payment->id)
+                ->where('stripe_payment_intent_id', '!=', $intentId)
+                ->where('is_active', true)
+                ->update([
+                    'is_active' => false,
+                    'superseded_at' => now(),
+                ]);
+
+            CareBookingPaymentAttempt::query()->updateOrCreate(
+                [
+                    'care_booking_payment_id' => $payment->id,
+                    'authorization_key' => $authorizationKey,
+                ],
+                [
+                    'care_booking_id' => $payment->care_booking_id,
+                    'family_account_id' => $payment->family_account_id,
+                    'care_booking_time_correction_id' => $correctionId,
+                    'purpose' => $purpose,
+                    'revision_key' => $revisionKey,
+                    'stripe_payment_intent_id' => $intentId,
+                    'stripe_payment_method_id' => $paymentMethodId,
+                    'client_secret' => (string) ($intent['client_secret'] ?? ''),
+                    'amount_cents' => (int) ($intent['amount'] ?? 0),
+                    'currency' => (string) $payment->currency,
+                    'status' => $paymentStatus,
+                    'is_active' => true,
+                    'last_error' => $paymentStatus === CareBookingPayment::STATUS_AUTHORIZED
+                        ? null
+                        : 'Card authorization needs confirmation.',
+                    'authorized_at' => $paymentStatus === CareBookingPayment::STATUS_AUTHORIZED ? now() : null,
+                    'captured_at' => null,
+                    'canceled_at' => null,
+                    'superseded_at' => null,
+                    'metadata' => [
+                        'stripe_status' => (string) ($intent['status'] ?? ''),
+                    ],
+                ],
+            );
+        });
     }
 
     private function captureAmountCents(CareBooking $booking, CareBookingPayment $payment): int
@@ -1292,6 +1770,10 @@ class BookingPaymentService
         $workedMinutes = (int) ($booking->worked_minutes ?? 0);
         if ($workedMinutes <= 0) {
             $workedMinutes = $this->estimatedMinutes($booking);
+        }
+
+        if ($this->paymentsV2->usesV2($payment)) {
+            return (int) $this->pricing->quoteForCurrentBooking($booking, $workedMinutes)['total_charge_cents'];
         }
 
         $subtotal = $this->bookingSubtotal($booking, $workedMinutes);
@@ -1302,6 +1784,29 @@ class BookingPaymentService
         }
 
         return max(100, (int) round($withPlatformFee * 100));
+    }
+
+    private function ensureCurrentPricingForNewPayment(CareBooking $booking): CareBooking
+    {
+        $booking->loadMissing('payment');
+        if ($booking->payment || ! $this->pricing->currentPricingEnabled()) {
+            return $booking;
+        }
+
+        $booking = $this->pricing->ensureCurrentSnapshot($booking);
+        $booking->loadMissing(['application', 'family', 'caregiver', 'caregiver.caregiverProfile', 'payment']);
+
+        return $booking;
+    }
+
+    /** @return array<string, mixed> */
+    private function newPaymentSnapshotAttributes(CareBooking $booking): array
+    {
+        if (! $this->pricing->usesCurrentPricing($booking)) {
+            return [];
+        }
+
+        return $this->paymentsV2->paymentSnapshotAttributes($booking);
     }
 
     private function bookingSubtotal(CareBooking $booking, int $minutes): float
@@ -1543,23 +2048,27 @@ class BookingPaymentService
         $metadata['authorization_attempt_count'] = $attempt;
         $metadata['authorization_failed_at'] = now()->toIso8601String();
 
+        $attributes = array_merge($this->newPaymentSnapshotAttributes($booking), [
+            'family_account_id' => (int) $booking->family_account_id,
+            'family_user_id' => (int) $booking->family_user_id,
+            'initiated_by_user_id' => auth()->id() ?: $booking->family_user_id,
+            'caregiver_user_id' => (int) $booking->caregiver_user_id,
+            'status' => $status,
+            'currency' => $this->stripe->currency(),
+            'stripe_customer_id' => $customerId,
+            'stripe_payment_method_id' => $paymentMethodId,
+            'failed_at' => now(),
+            'last_error' => $message,
+            'metadata' => $metadata,
+        ]);
+        if ($paymentIntentId !== null) {
+            $attributes['stripe_payment_intent_id'] = $paymentIntentId;
+            $attributes['stripe_payment_intent_client_secret'] = $clientSecret;
+        }
+
         return CareBookingPayment::query()->updateOrCreate(
             ['care_booking_id' => $booking->id],
-            [
-                'family_account_id' => (int) $booking->family_account_id,
-                'family_user_id' => (int) $booking->family_user_id,
-                'initiated_by_user_id' => auth()->id() ?: $booking->family_user_id,
-                'caregiver_user_id' => (int) $booking->caregiver_user_id,
-                'status' => $status,
-                'currency' => $this->stripe->currency(),
-                'stripe_customer_id' => $customerId,
-                'stripe_payment_method_id' => $paymentMethodId,
-                'stripe_payment_intent_id' => $paymentIntentId,
-                'stripe_payment_intent_client_secret' => $clientSecret,
-                'failed_at' => now(),
-                'last_error' => $message,
-                'metadata' => $metadata,
-            ]
+            $attributes,
         );
     }
 
@@ -1645,6 +2154,106 @@ class BookingPaymentService
      * @param  \App\Models\User|\Illuminate\Support\Collection<int,\App\Models\User>|array<int,\App\Models\User>|null  $recipients
      * @param  array<string, mixed>  $payload
      */
+    private function notifyV2CaptureState(CareBooking $booking, CareBookingPayment $payment, bool $notify): void
+    {
+        if (! $notify) {
+            return;
+        }
+
+        $this->notify(
+            recipients: $booking->family,
+            eventKey: (int) $payment->overage_pending_cents > 0
+                ? MarketplaceEvent::PAYMENT_ACTION_REQUIRED
+                : MarketplaceEvent::PAYMENT_CAPTURED,
+            title: (int) $payment->overage_pending_cents > 0
+                ? 'Additional payment action needed'
+                : 'Shift payment captured',
+            body: (int) $payment->overage_pending_cents > 0
+                ? 'The final shift total exceeded the authorization. Open Billing & Payments to confirm the remaining amount.'
+                : 'The completed shift charge includes care and the hourly processing fee. No action is needed.',
+            url: (int) $payment->overage_pending_cents > 0
+                ? route('family.billing.show')
+                : route('family.requests.show', $booking->care_request_id),
+            payload: [
+                'care_booking_id' => $booking->id,
+                'care_booking_payment_id' => $payment->id,
+                'financial_reference' => $payment->financial_reference,
+                'amount_captured_cents' => $payment->amount_captured_cents,
+                'overage_pending_cents' => $payment->overage_pending_cents,
+            ],
+            subject: $booking,
+            dedupeKey: ((int) $payment->overage_pending_cents > 0 ? 'payment-overage-v2:' : 'payment-captured-v2:')
+                .'booking-'.$booking->id,
+        );
+
+        if ($payment->status === CareBookingPayment::STATUS_TRANSFERRED && $booking->caregiver) {
+            $this->notify(
+                recipients: $booking->caregiver,
+                eventKey: MarketplaceEvent::PAYOUT_TRANSFERRED,
+                title: 'Earnings available in Stripe',
+                body: 'Your gross earnings, less Stripe processing fees, were transferred to your Stripe balance. Stripe controls bank payout timing.',
+                url: route('caregiver.earnings.index'),
+                payload: [
+                    'care_booking_id' => $booking->id,
+                    'care_booking_payment_id' => $payment->id,
+                    'financial_reference' => $payment->financial_reference,
+                    'gross_cents' => $payment->caregiver_gross_amount_cents,
+                    'processing_fee_cents' => $payment->stripe_processing_fee_cents,
+                    'net_cents' => $payment->caregiver_amount_cents,
+                ],
+                subject: $booking,
+                dedupeKey: 'earnings-transferred-v2:booking-'.$booking->id,
+            );
+        }
+    }
+
+    private function notifyV2RefundState(
+        CareBooking $booking,
+        CareBookingPayment $payment,
+        int $beforeRefundedCents,
+    ): void {
+        $delta = max(0, (int) $payment->amount_refunded_cents - $beforeRefundedCents);
+        if ($delta <= 0) {
+            return;
+        }
+
+        $fullyRefunded = $payment->status === CareBookingPayment::STATUS_REFUNDED;
+        $this->notify(
+            recipients: $booking->family,
+            eventKey: MarketplaceEvent::PAYMENT_REFUNDED,
+            title: $fullyRefunded ? 'Payment refunded' : 'Partial refund issued',
+            body: $fullyRefunded
+                ? 'The family charge for this shift was fully refunded.'
+                : 'A partial refund was issued for this shift.',
+            url: route('family.requests.show', $booking->care_request_id),
+            payload: [
+                'care_booking_id' => $booking->id,
+                'care_booking_payment_id' => $payment->id,
+                'financial_reference' => $payment->financial_reference,
+                'amount_refunded_cents' => $delta,
+            ],
+            subject: $booking,
+            dedupeKey: 'payment-refund-v2:booking-'.$booking->id.'-total-'.$payment->amount_refunded_cents,
+        );
+
+        if ($booking->caregiver) {
+            $this->notify(
+                recipients: $booking->caregiver,
+                eventKey: MarketplaceEvent::PAYMENT_REFUNDED,
+                title: 'Shift earnings adjusted',
+                body: 'A family refund adjusted the earnings transfer for this shift. Refund costs and dispute fees are not deducted from you.',
+                url: route('caregiver.earnings.index'),
+                payload: [
+                    'care_booking_id' => $booking->id,
+                    'care_booking_payment_id' => $payment->id,
+                    'financial_reference' => $payment->financial_reference,
+                ],
+                subject: $booking,
+                dedupeKey: 'caregiver-refund-v2:booking-'.$booking->id.'-total-'.$payment->amount_refunded_cents,
+            );
+        }
+    }
+
     private function notify(
         mixed $recipients,
         string $eventKey,

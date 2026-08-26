@@ -38,6 +38,15 @@ return [
         'authorization_buffer_percent' => (float) env('MARKETPLACE_AUTH_BUFFER_PERCENT', 20),
     ],
 
+    'pricing_v2' => [
+        'enabled' => filter_var(env('MARKETPLACE_PRICING_V2_ENABLED', true), FILTER_VALIDATE_BOOL),
+        'version' => (string) env('MARKETPLACE_PRICING_VERSION', '2026-08-v2'),
+        'family_care_hourly_cents' => (int) env('MARKETPLACE_FAMILY_CARE_HOURLY_CENTS', 3000),
+        'family_processing_fee_hourly_cents' => (int) env('MARKETPLACE_FAMILY_PROCESSING_FEE_HOURLY_CENTS', 100),
+        'caregiver_gross_hourly_cents' => (int) env('MARKETPLACE_CAREGIVER_GROSS_HOURLY_CENTS', 2700),
+        'caregiver_fee_policy' => 'successful_charge_balance_transaction',
+    ],
+
     'time_corrections' => [
         'enabled' => filter_var(env('MARKETPLACE_TIME_CORRECTIONS_ENABLED', false), FILTER_VALIDATE_BOOL),
         'self_service_window_hours' => (int) env('MARKETPLACE_TIME_CORRECTION_WINDOW_HOURS', 72),

@@ -40,7 +40,8 @@
                 <article class="rounded-xl border border-slate-200 p-4">
                     <div class="flex items-start justify-between gap-3">
                         <div>
-                            <p class="font-semibold text-slate-900">Payment #{{ $payment->id }}</p>
+                            <p class="font-semibold text-slate-900">{{ $payment->financial_reference ?: 'Payment #'.$payment->id }}</p>
+                            <p class="text-xs text-slate-500">Payment #{{ $payment->id }} · pricing {{ $payment->pricing_version ?: 'legacy' }}</p>
                             <p class="text-xs text-slate-500 mt-1">
                                 Family: {{ $payment->family?->name }} · Caregiver: {{ $payment->caregiver?->name }}
                             </p>
@@ -51,6 +52,16 @@
                         <x-badge :text="strtoupper((string) $payment->status)" color="blue" />
                     </div>
 
+                    @if ($payment->pricing_version)
+                        <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-700 md:grid-cols-5">
+                            <div class="rounded-md border border-slate-200 p-2">Family care: <strong>${{ number_format((int) $payment->family_care_amount_cents / 100, 2) }}</strong></div>
+                            <div class="rounded-md border border-slate-200 p-2">Family processing fee: <strong>${{ number_format((int) $payment->family_processing_fee_cents / 100, 2) }}</strong></div>
+                            <div class="rounded-md border border-slate-200 p-2">Caregiver gross: <strong>${{ number_format((int) $payment->caregiver_gross_amount_cents / 100, 2) }}</strong></div>
+                            <div class="rounded-md border border-slate-200 p-2">Stripe processing fees: <strong>−${{ number_format((int) $payment->stripe_processing_fee_cents / 100, 2) }}</strong></div>
+                            <div class="rounded-md border border-emerald-200 bg-emerald-50 p-2">Caregiver net: <strong>${{ number_format((int) $payment->caregiver_amount_cents / 100, 2) }}</strong></div>
+                        </div>
+                    @endif
+
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mt-3 text-xs text-slate-700">
                         <div class="rounded-md border border-slate-200 p-2">Authorized: <strong>{{ number_format(((int) ($payment->amount_authorized_cents ?? 0)) / 100, 2) }} {{ strtoupper($payment->currency) }}</strong></div>
                         <div class="rounded-md border border-slate-200 p-2">Captured: <strong>{{ number_format($captured / 100, 2) }} {{ strtoupper($payment->currency) }}</strong></div>
@@ -59,8 +70,10 @@
                     </div>
 
                     <div class="mt-3 text-xs text-slate-500 space-y-1">
-                        <p>Intent: {{ $payment->stripe_payment_intent_id ?: 'N/A' }}</p>
-                        <p>Transfer: {{ $payment->stripe_transfer_id ?: 'N/A' }}</p>
+                        <p>Primary intent: {{ $payment->stripe_payment_intent_id ?: 'N/A' }}</p>
+                        <p>Charges: {{ $payment->operations->where('type', 'charge')->pluck('stripe_object_id')->filter()->implode(', ') ?: 'N/A' }}</p>
+                        <p>Stripe balance transfers: {{ $payment->operations->where('type', 'transfer')->pluck('stripe_object_id')->filter()->implode(', ') ?: ($payment->stripe_transfer_id ?: 'N/A') }}</p>
+                        <p>Fee finalization: {{ $payment->fee_finalization_status ?: 'legacy' }}</p>
                         @if($payment->last_error)
                             <p class="text-rose-600">Last error: {{ $payment->last_error }}</p>
                         @endif

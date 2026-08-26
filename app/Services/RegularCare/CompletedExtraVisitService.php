@@ -651,26 +651,7 @@ class CompletedExtraVisitService
     /** @return array<string,mixed> */
     private function financialPreview(CarePlan $plan, int $workedMinutes): array
     {
-        $plan->loadMissing('family');
-        $hourlyRate = $this->pricing->hourlyRateForFamily($plan->family, (float) $plan->hourly_rate);
-        $feePercent = $this->pricing->platformFeePercentForFamily(
-            $plan->family,
-            max(0, (float) config('marketplace.payments.platform_fee_percent', 10))
-        );
-        $subtotal = (int) round(($workedMinutes / 60) * $hourlyRate * 100);
-        $charge = max(100, (int) round($subtotal * (1 + ($feePercent / 100))));
-        $fee = (int) round($charge * ($feePercent / 100));
-
-        return [
-            'worked_minutes' => $workedMinutes,
-            'hourly_rate' => $hourlyRate,
-            'subtotal_cents' => $subtotal,
-            'platform_fee_percent' => $feePercent,
-            'platform_fee_cents' => $fee,
-            'total_charge_cents' => $charge,
-            'caregiver_amount_cents' => max(0, $charge - $fee),
-            'currency' => 'usd',
-        ];
+        return array_merge($this->pricing->currentQuoteForMinutes($workedMinutes), ['currency' => 'usd']);
     }
 
     private function assertFamily(CompletedExtraVisitRequest $request, User $family): void
@@ -767,12 +748,9 @@ class CompletedExtraVisitService
 
     private function notifyApplied(CompletedExtraVisitRequest $request): void
     {
-        $request->loadMissing(['family', 'caregiver', 'booking.payment']);
-        $payment = $request->booking?->payment;
+        $request->loadMissing(['family', 'caregiver']);
         $familyBody = 'The family-approved extra visit is now in care history.';
-        $caregiverBody = $payment?->status === CareBookingPayment::STATUS_TRANSFER_FAILED
-            ? 'The visit is approved and paid by the family. Your payout transfer is delayed and will be retried.'
-            : 'The family-approved extra visit is complete and your payout was processed.';
+        $caregiverBody = 'The family-approved extra visit is complete and has been added to your earnings.';
         $this->notifyFamily($request, MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED, 'Extra visit approved and recorded', $familyBody, 'applied-family');
         $this->notifyCaregiver($request, MarketplaceEvent::COMPLETED_EXTRA_VISIT_APPLIED, 'Extra visit approved and recorded', $caregiverBody, 'applied-caregiver');
     }

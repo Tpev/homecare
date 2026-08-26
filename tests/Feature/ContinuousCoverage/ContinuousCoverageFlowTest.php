@@ -914,7 +914,7 @@ class ContinuousCoverageFlowTest extends TestCase
         $plan = $this->plan($family);
         $pricing = app(ContinuousCoveragePricingService::class);
         $quote = $pricing->quoteForPlan($plan, $caregiver, 720);
-        $expected = '$'.number_format($quote['caregiver_amount_cents'] / 100, 2).' estimated for 12 hours';
+        $expected = $pricing->caregiverEarningsLabel($plan, $caregiver, 720);
 
         $member = app(ContinuousCoverageRosterService::class)->familyApprove(
             $plan,

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\Payments\PaymentException;
+use App\Models\User;
 use App\Services\Payments\CaregiverStripeConnectService;
 use App\Support\CaregiverOnboardingState;
 use Illuminate\Http\RedirectResponse;
@@ -47,13 +48,28 @@ class CaregiverStripeConnectController extends Controller
         $user = auth()->user();
         abort_unless($user && $user->role === 'caregiver', 403);
 
-        $refreshUrl = route('caregiver.payouts.connect.show', ['sync' => 1]);
+        return $this->redirectToOnboarding($user, $connect);
+    }
+
+    public function refresh(CaregiverStripeConnectService $connect): RedirectResponse
+    {
+        $user = auth()->user();
+        abort_unless($user && $user->role === 'caregiver', 403);
+
+        return $this->redirectToOnboarding($user, $connect);
+    }
+
+    private function redirectToOnboarding(User $user, CaregiverStripeConnectService $connect): RedirectResponse
+    {
+        $refreshUrl = route('caregiver.payouts.connect.refresh');
         $returnUrl = route('caregiver.payouts.connect.return');
 
         try {
             $url = $connect->createOnboardingUrl($user, $refreshUrl, $returnUrl);
         } catch (PaymentException $e) {
-            return back()->withErrors(['payouts' => $e->userMessage]);
+            return redirect()
+                ->route('caregiver.payouts.connect.show')
+                ->withErrors(['payouts' => $e->userMessage]);
         }
 
         return redirect()->away($url);

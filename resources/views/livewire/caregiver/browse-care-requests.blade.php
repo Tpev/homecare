@@ -142,7 +142,8 @@
                         </div>
                         <div class="rounded-2xl border border-[#E4DDD3] bg-white px-3 py-3">
                             <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Estimated pay</p>
-                            <p class="mt-1 text-sm font-medium text-[#17313F]">{{ $payLine ?: '$30.00/hr after schedule is confirmed' }}</p>
+                            <p class="mt-1 text-sm font-medium text-[#17313F]">{{ $payLine ?: '$27.00/hr* after schedule is confirmed' }}</p>
+                            <p class="mt-1 text-xs text-[#607080]">*Gross earnings before Stripe processing fees.</p>
                         </div>
                     </div>
 

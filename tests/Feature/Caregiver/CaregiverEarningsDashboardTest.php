@@ -3,11 +3,11 @@
 namespace Tests\Feature\Caregiver;
 
 use App\Models\CareBooking;
-use App\Models\CareRequest;
-use App\Models\CareRequestApplication;
 use App\Models\CaregiverPayout;
 use App\Models\CaregiverPayoutItem;
 use App\Models\CaregiverProfile;
+use App\Models\CareRequest;
+use App\Models\CareRequestApplication;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -88,9 +88,8 @@ class CaregiverEarningsDashboardTest extends TestCase
         $overview = $this->actingAs($caregiver)->get('/caregiver/earnings');
         $overview->assertOk();
         $overview->assertSee('This week gross');
-        $overview->assertSee('$240.00');
-        $overview->assertSee('$84.00');
-        $overview->assertSee('$86.00');
+        $overview->assertSee('$229.50');
+        $overview->assertSee('$81.00');
         $overview->assertSee('Best next action');
         $overview->assertSee('Open active visit');
 

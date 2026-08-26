@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 class CareBooking extends Model
 {
@@ -30,6 +31,13 @@ class CareBooking extends Model
     public const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
+        'financial_reference',
+        'pricing_version',
+        'family_care_rate_cents',
+        'family_processing_fee_rate_cents',
+        'caregiver_gross_rate_cents',
+        'caregiver_fee_policy',
+        'pricing_snapshotted_at',
         'care_request_id',
         'care_plan_id',
         'occurrence_key',
@@ -86,6 +94,10 @@ class CareBooking extends Model
         return [
             'scheduled_start_at' => 'datetime',
             'scheduled_end_at' => 'datetime',
+            'family_care_rate_cents' => 'integer',
+            'family_processing_fee_rate_cents' => 'integer',
+            'caregiver_gross_rate_cents' => 'integer',
+            'pricing_snapshotted_at' => 'datetime',
             'agreement_snapshot' => 'array',
             'family_terms_accepted_at' => 'datetime',
             'caregiver_terms_accepted_at' => 'datetime',
@@ -252,8 +264,34 @@ class CareBooking extends Model
         return $this->hasOne(CareBookingPayment::class, 'care_booking_id');
     }
 
+    public function paymentOperations(): HasMany
+    {
+        return $this->hasMany(CareBookingPaymentOperation::class, 'care_booking_id');
+    }
+
     public function completedExtraVisitRequest(): HasOne
     {
         return $this->hasOne(CompletedExtraVisitRequest::class, 'care_booking_id');
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (CareBooking $booking): void {
+            $booking->financial_reference ??= 'SHIFT-'.Str::upper((string) Str::ulid());
+
+            if (! config('marketplace.pricing_v2.enabled', true) || $booking->pricing_version) {
+                return;
+            }
+
+            $booking->pricing_version = (string) config('marketplace.pricing_v2.version', '2026-08-v2');
+            $booking->family_care_rate_cents = max(0, (int) config('marketplace.pricing_v2.family_care_hourly_cents', 3000));
+            $booking->family_processing_fee_rate_cents = max(0, (int) config('marketplace.pricing_v2.family_processing_fee_hourly_cents', 100));
+            $booking->caregiver_gross_rate_cents = max(0, (int) config('marketplace.pricing_v2.caregiver_gross_hourly_cents', 2700));
+            $booking->caregiver_fee_policy = (string) config(
+                'marketplace.pricing_v2.caregiver_fee_policy',
+                'successful_charge_balance_transaction'
+            );
+            $booking->pricing_snapshotted_at = now();
+        });
     }
 }

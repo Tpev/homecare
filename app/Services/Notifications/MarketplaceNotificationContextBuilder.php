@@ -375,7 +375,10 @@ class MarketplaceNotificationContextBuilder
                 ? ['Payout adjustment', data_get($payload, 'caregiver_refund_cents')]
                 : ['Amount returned', data_get($payload, 'amount_refunded_cents', $payment?->amount_refunded_cents)],
             MarketplaceEvent::PAYOUT_TRANSFERRED => ['Payout amount', data_get($payload, 'caregiver_amount_cents', $payment?->caregiver_amount_cents)],
-            MarketplaceEvent::PAYOUT_TRANSFER_FAILED => ['Pending payout', $payment?->caregiver_amount_cents],
+            MarketplaceEvent::PAYOUT_TRANSFER_FAILED => [
+                'Pending payout',
+                data_get($payload, 'caregiver_amount_cents', $payment?->caregiver_amount_cents),
+            ],
             MarketplaceEvent::PAYMENT_ACTION_REQUIRED => ['Amount still due', data_get($payload, 'overage_pending_cents', $payment?->overage_pending_cents)],
             default => null,
         };

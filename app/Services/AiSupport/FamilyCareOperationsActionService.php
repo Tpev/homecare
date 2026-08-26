@@ -350,7 +350,7 @@ class FamilyCareOperationsActionService
             ];
             if ($isHire) {
                 $fields[] = ['label' => 'Schedule', 'value' => $this->requestSchedule($application->careRequest)];
-                $fields[] = ['label' => 'Family rate', 'value' => '$30/hour'];
+                $fields[] = ['label' => 'Family price', 'value' => '$30/hour care* + $1/hour processing fee'];
             }
             $this->issueAction($actor, $ticket, $tool, $preview, $intentId,
                 match ($tool) {
@@ -591,7 +591,7 @@ class FamilyCareOperationsActionService
                 'This confirms the worked time and lets the existing payment service capture the authorized amount or request secure card action.', [
                     ['label' => 'Visit', 'value' => $this->bookingTime($booking)],
                     ['label' => 'Submitted time', 'value' => $this->duration((int) $booking->worked_minutes)],
-                    ['label' => 'Family rate', 'value' => '$30/hour'],
+                    ['label' => 'Family price', 'value' => '$30/hour care* + $1/hour processing fee'],
                     ['label' => 'Estimated care amount', 'value' => '$'.number_format(((int) $booking->worked_minutes / 60) * 30, 2)],
                 ], 'Confirm hours and payment');
 
@@ -738,7 +738,7 @@ class FamilyCareOperationsActionService
         }
 
         if ($intentId === 'FAM-REGULAR-006') {
-            $this->offerRead($actor, $ticket, 'A Family payment method is required so LoLo can authorize each generated visit safely. Family care is $30/hour; the caregiver receives $27/hour and LoLo keeps $3/hour.', $intentId, 'family.billing.payment_method');
+            $this->offerRead($actor, $ticket, 'A Family payment method is required so LoLo can authorize each generated visit safely. Family care is $30/hour plus a $1/hour processing fee. Caregiver gross earnings are $27/hour minus actual Stripe processing fees on successful Family charges.', $intentId, 'family.billing.payment_method');
 
             return true;
         }
@@ -1028,7 +1028,7 @@ class FamilyCareOperationsActionService
                 ['label' => 'Caregiver', 'value' => (string) ($hired?->caregiver?->name ?: 'Caregiver')],
                 ['label' => 'Schedule', 'value' => $schedule['label'] ?? $this->requestSchedule($request)],
                 ['label' => 'Starts', 'value' => Carbon::parse($startsOn)->format('M j, Y')],
-                ['label' => 'Family rate', 'value' => '$30/hour'],
+                ['label' => 'Family price', 'value' => '$30/hour care* + $1/hour processing fee'],
                 ['label' => 'Message', 'value' => $payload['family_message'] ?: 'No optional message'],
             ], 'Confirm and send offer');
 

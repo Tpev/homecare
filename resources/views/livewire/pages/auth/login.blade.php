@@ -36,6 +36,15 @@ new #[Layout('layouts.guest')] class extends Component
             return;
         }
 
+        if ($user?->role === 'family') {
+            $intendedPath = (string) parse_url((string) Session::get('url.intended', ''), PHP_URL_PATH);
+            $retiredDashboardPath = (string) parse_url(route('dashboard'), PHP_URL_PATH);
+
+            if (rtrim($intendedPath, '/') === rtrim($retiredDashboardPath, '/')) {
+                Session::forget('url.intended');
+            }
+        }
+
         $default = match (true) {
             auth()->user()?->isAdministrator() => route('admin.crm.index', absolute: false),
             auth()->user()?->role === 'family' => route('family.requests.index', absolute: false),

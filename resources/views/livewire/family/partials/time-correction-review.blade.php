@@ -64,6 +64,9 @@
                 <p class="text-xs font-semibold uppercase tracking-wide text-[#7B8794]">Final amount if approved</p>
                 <p class="mt-2 font-display text-3xl font-semibold text-[#17313F]">{{ $correction->familyAmountLabel() }}</p>
                 <p class="mt-1 text-sm text-[#607080]">For {{ $correction->durationLabel() }} of care.</p>
+                @if ((int) data_get($correction->financial_preview, 'family_processing_fee_cents', 0) > 0)
+                    <p class="mt-2 text-xs text-[#607080]">Care ${{ number_format((int) data_get($correction->financial_preview, 'family_care_amount_cents', 0) / 100, 2) }} + ${{ number_format((int) data_get($correction->financial_preview, 'family_processing_fee_cents', 0) / 100, 2) }} processing fee.</p>
+                @endif
             </div>
         </div>
 
@@ -97,7 +100,9 @@
             <div class="mt-5 rounded-2xl border border-amber-300 bg-white p-4">
                 <p class="font-semibold text-amber-950">Hours approved — payment confirmation needed.</p>
                 <p class="mt-1 text-sm leading-6 text-[#607080]">Your time approval is saved. The caregiver does not need to submit again.</p>
-                <button type="button" wire:click="continueTimeCorrectionPayment({{ $correction->id }})" class="mt-3 min-h-12 w-full rounded-xl bg-[#0F6B62] px-5 text-base font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#0F6B62] focus:ring-offset-2 sm:w-auto">Confirm payment</button>
+                @unless ($paymentActionShown ?? false)
+                    <button type="button" wire:click="continueTimeCorrectionPayment({{ $correction->id }})" class="mt-3 min-h-12 w-full rounded-xl bg-[#0F6B62] px-5 text-base font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#0F6B62] focus:ring-offset-2 sm:w-auto">Confirm payment</button>
+                @endunless
             </div>
         @elseif (in_array($correction->status, [\App\Models\CareBookingTimeCorrection::STATUS_CHANGES_REQUESTED, \App\Models\CareBookingTimeCorrection::STATUS_APPROVED_ADMIN_REQUIRED, \App\Models\CareBookingTimeCorrection::STATUS_ESCALATED], true))
             <p class="mt-5 rounded-2xl border border-current/10 bg-white p-4 text-sm leading-6 text-[#526474]">

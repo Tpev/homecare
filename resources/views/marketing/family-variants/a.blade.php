@@ -71,7 +71,8 @@
             <section class="bg-gray-50 px-6 py-20 text-black">
                 <div class="mx-auto max-w-5xl text-center">
                     <h2 class="text-5xl font-black tracking-[-0.04em] sm:text-7xl">This is different.</h2>
-                    <p class="mt-5 text-3xl font-bold text-emerald-600 sm:text-5xl">Home care. $30/hour.</p>
+                    <p class="mt-5 text-3xl font-bold text-emerald-600 sm:text-5xl">Home care. $30/hour.*</p>
+                    <p class="mt-2 text-sm text-slate-600">*Plus a $1/hour processing fee for completed care.</p>
                     <p class="mt-2 text-xl font-medium text-black/55 sm:text-2xl">No agency. No process.</p>
 
                     <a href="#how-it-works" class="mt-12 inline-flex min-h-14 w-full items-center justify-center rounded-full border-2 border-black px-8 py-4 text-lg font-black transition hover:bg-black hover:text-white sm:w-auto sm:px-10">

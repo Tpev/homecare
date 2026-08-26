@@ -46,6 +46,7 @@
                         <div class="rounded-xl border border-[#C9DCD3] bg-[#F8FBF9] px-4 py-3 sm:min-w-44 sm:text-right">
                             <p class="text-xs font-bold uppercase tracking-wide text-[#6A7784]">{{ $report->status === \App\Models\CompletedExtraVisitRequest::STATUS_APPLIED ? 'Net billed' : 'Estimated charge' }}</p>
                             <p class="mt-1 text-2xl font-semibold text-[#17313F]">${{ number_format($familyCharge / 100, 2) }}</p>
+                            @if ((int) data_get($currentFinancial, 'family_processing_fee_cents', 0) > 0)<p class="mt-1 text-xs text-[#607080]">Care ${{ number_format((int) data_get($currentFinancial, 'family_care_amount_cents', 0) / 100, 2) }} + ${{ number_format((int) data_get($currentFinancial, 'family_processing_fee_cents', 0) / 100, 2) }} processing fee</p>@endif
                         </div>
                     </div>
 

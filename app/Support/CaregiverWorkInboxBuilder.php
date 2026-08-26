@@ -28,7 +28,7 @@ class CaregiverWorkInboxBuilder
         $now = now();
         $profile = $user->caregiverProfile()->with('skills:id')->first();
         $skillIds = $profile?->skills?->pluck('id')->map(fn ($id) => (int) $id)->all() ?? [];
-        $defaultRate = (float) config('marketplace.family_estimate_hourly_rate', 30.00);
+        $defaultRate = app(MarketplacePricing::class)->caregiverGrossHourlyCents() / 100;
 
         $items = collect();
 
@@ -657,7 +657,7 @@ class CaregiverWorkInboxBuilder
             'hourly_rate' => round($hourlyRate, 2),
             'total' => $total,
             'line' => sprintf(
-                '%sh @ $%s/hr • $%s total visit',
+                '%sh @ $%s/hr* • $%s gross earnings',
                 $hoursLabel,
                 number_format($hourlyRate, 2),
                 number_format($total, 2)
@@ -672,15 +672,12 @@ class CaregiverWorkInboxBuilder
 
     private function effectiveRequestRate(CareRequest $request, float $fallback): float
     {
-        return app(MarketplacePricing::class)->hourlyRateForRequest($request, $fallback);
+        return app(MarketplacePricing::class)->caregiverGrossHourlyCents() / 100;
     }
 
     private function effectivePlanRate(CarePlan $plan): float
     {
-        return app(MarketplacePricing::class)->hourlyRateForFamily(
-            $plan->family,
-            (float) $plan->hourly_rate
-        );
+        return app(MarketplacePricing::class)->caregiverGrossHourlyCents() / 100;
     }
 
     private function estimatedShiftMinutes(CareRequest $request, ?CareBooking $booking = null): ?int

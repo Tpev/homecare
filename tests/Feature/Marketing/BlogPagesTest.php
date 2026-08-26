@@ -122,7 +122,7 @@ class BlogPagesTest extends TestCase
         $sitemap->assertSee(route('blog.show', ['blogSlug' => $post->slug]), false)
             ->assertDontSee(route('login'), false)
             ->assertDontSee(route('register'), false)
-            ->assertSee($post->publishedRevision->created_at->toAtomString(), false);
+            ->assertSee($post->last_published_at->toAtomString(), false);
 
         $this->get(route('blog.feed'))->assertOk()->assertSee($post->title)->assertHeader('Content-Type', 'application/atom+xml; charset=UTF-8');
         $this->get(route('llms.txt'))->assertOk()->assertSee($post->title)->assertSee('Only published articles that pass the CMS readiness checks');

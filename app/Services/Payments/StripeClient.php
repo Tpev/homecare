@@ -68,7 +68,7 @@ class StripeClient
                     'owner_user_id' => (string) $account->owner_user_id,
                     'created_by_user_id' => (string) $family->id,
                 ],
-            ]);
+            ], $this->requestOptions('family-customer:account-'.$account->id));
         } catch (Throwable $e) {
             throw new PaymentException(
                 'Unable to initialize billing profile right now. Please try again.',
@@ -155,7 +155,6 @@ class StripeClient
                 'customer' => $customerId,
                 'success_url' => $successUrl,
                 'cancel_url' => $cancelUrl,
-                'payment_method_types' => ['card'],
                 'metadata' => [
                     'family_account_id' => (string) $account->id,
                     'family_user_id' => (string) $account->owner_user_id,
@@ -380,7 +379,9 @@ class StripeClient
                 'refresh_url' => $refreshUrl,
                 'return_url' => $returnUrl,
                 'type' => 'account_onboarding',
-            ], $this->requestOptions('connect-onboarding:'.$accountId));
+            ], $this->requestOptions(
+                'connect-onboarding:'.$accountId.':'.(string) \Illuminate\Support\Str::uuid()
+            ));
         } catch (Throwable $e) {
             throw new PaymentException(
                 'Unable to open payout onboarding right now.',
@@ -581,7 +582,6 @@ class StripeClient
                 'customer' => $customerId,
                 'capture_method' => 'manual',
                 'confirmation_method' => 'automatic',
-                'payment_method_types' => ['card'],
                 'payment_method_options' => [
                     'card' => [
                         'request_three_d_secure' => 'automatic',
@@ -622,7 +622,9 @@ class StripeClient
         }
 
         try {
-            $intent = $this->client()->paymentIntents->retrieve($paymentIntentId);
+            $intent = $this->client()->paymentIntents->retrieve($paymentIntentId, [
+                'expand' => ['latest_charge.balance_transaction'],
+            ]);
         } catch (ApiErrorException $e) {
             throw new PaymentException('Unable to verify card authorization right now.', $e->getMessage());
         }
@@ -631,16 +633,16 @@ class StripeClient
     }
 
     /**
-     * @return array{id:string,status:string,amount_received:int}
+     * @return array{id:string,status:string,amount_received:int,latest_charge_id?:string,balance_transaction_id?:string,processing_fee_cents?:int,fee_finalized?:bool}
      */
     public function capturePaymentIntent(string $paymentIntentId, int $amountToCaptureCents, ?string $idempotencyKey = null): array
     {
         if ($this->isBypass()) {
-            return [
+            return array_merge([
                 'id' => $paymentIntentId,
                 'status' => PaymentIntent::STATUS_SUCCEEDED,
                 'amount_received' => max(0, $amountToCaptureCents),
-            ];
+            ], $this->bypassFinancialDetails($paymentIntentId, $amountToCaptureCents));
         }
 
         try {
@@ -661,11 +663,19 @@ class StripeClient
             );
         }
 
-        return [
+        try {
+            $intent = $this->client()->paymentIntents->retrieve($paymentIntentId, [
+                'expand' => ['latest_charge.balance_transaction'],
+            ]);
+        } catch (Throwable) {
+            // Capture already succeeded. The reconciliation worker will finalize fees before transfer.
+        }
+
+        return array_merge([
             'id' => (string) $intent->id,
             'status' => (string) $intent->status,
             'amount_received' => (int) $intent->amount_received,
-        ];
+        ], $this->financialDetailsFromPaymentIntent($intent));
     }
 
     public function cancelPaymentIntent(string $paymentIntentId): void
@@ -727,8 +737,61 @@ class StripeClient
     }
 
     /**
+     * Create a delivery-gated transfer tied to the exact source charge.
+     *
      * @param  array<string,string>  $metadata
-     * @return array{id:string,status:string,amount_received:int}
+     * @return array{id:string,status:string,amount:int,source_transaction:string,transfer_group:string}
+     */
+    public function createTransferForCharge(
+        string $destinationAccountId,
+        string $sourceChargeId,
+        string $transferGroup,
+        int $amountCents,
+        string $currency,
+        array $metadata = [],
+        ?string $idempotencyKey = null,
+    ): array {
+        if ($amountCents <= 0 || $sourceChargeId === '' || $transferGroup === '') {
+            throw new PaymentException('Transfer source and amount must be valid.');
+        }
+
+        if ($this->isBypass()) {
+            $suffix = substr(hash('sha256', (string) ($idempotencyKey ?: $sourceChargeId.'|'.$amountCents)), 0, 18);
+
+            return [
+                'id' => 'tr_bypass_'.$suffix,
+                'status' => 'paid',
+                'amount' => $amountCents,
+                'source_transaction' => $sourceChargeId,
+                'transfer_group' => $transferGroup,
+            ];
+        }
+
+        try {
+            $transfer = $this->client()->transfers->create([
+                'amount' => $amountCents,
+                'currency' => $currency,
+                'destination' => $destinationAccountId,
+                'source_transaction' => $sourceChargeId,
+                'transfer_group' => $transferGroup,
+                'metadata' => $metadata,
+            ], $this->requestOptions($idempotencyKey));
+        } catch (Throwable $e) {
+            throw new PaymentException('Unable to transfer caregiver earnings right now.', $e->getMessage());
+        }
+
+        return [
+            'id' => (string) $transfer->id,
+            'status' => (string) ($transfer->status ?? 'pending'),
+            'amount' => (int) ($transfer->amount ?? $amountCents),
+            'source_transaction' => (string) ($transfer->source_transaction ?? $sourceChargeId),
+            'transfer_group' => (string) ($transfer->transfer_group ?? $transferGroup),
+        ];
+    }
+
+    /**
+     * @param  array<string,string>  $metadata
+     * @return array{id:string,status:string,amount_received:int,latest_charge_id?:string,balance_transaction_id?:string,processing_fee_cents?:int,fee_finalized?:bool}
      */
     public function createAndConfirmCharge(
         CareBooking $booking,
@@ -744,11 +807,13 @@ class StripeClient
         }
 
         if ($this->isBypass()) {
-            return [
-                'id' => 'pi_bypass_overage_'.$booking->id.'_'.uniqid(),
+            $intentId = 'pi_bypass_overage_'.$booking->id.'_'.substr(hash('sha256', (string) ($idempotencyKey ?: $amountCents)), 0, 12);
+
+            return array_merge([
+                'id' => $intentId,
                 'status' => PaymentIntent::STATUS_SUCCEEDED,
                 'amount_received' => $amountCents,
-            ];
+            ], $this->bypassFinancialDetails($intentId, $amountCents));
         }
 
         try {
@@ -761,6 +826,7 @@ class StripeClient
                 'confirm' => true,
                 'off_session' => true,
                 'description' => 'LoLo Care overage for booking #'.$booking->id,
+                'expand' => ['latest_charge.balance_transaction'],
                 'metadata' => array_merge($metadata, [
                     'care_booking_id' => (string) $booking->id,
                     'care_request_id' => (string) $booking->care_request_id,
@@ -799,11 +865,89 @@ class StripeClient
             );
         }
 
-        return [
+        if (! is_numeric(data_get(json_decode(json_encode($intent), true) ?: [], 'latest_charge.balance_transaction.fee'))) {
+            try {
+                $intent = $this->client()->paymentIntents->retrieve((string) $intent->id, [
+                    'expand' => ['latest_charge.balance_transaction'],
+                ]);
+            } catch (Throwable) {
+                // The charge succeeded. Fee finalization will be retried before funds are released.
+            }
+        }
+
+        return array_merge([
             'id' => (string) $intent->id,
             'status' => (string) $intent->status,
             'amount_received' => (int) $intent->amount_received,
+        ], $this->financialDetailsFromPaymentIntent($intent));
+    }
+
+    /**
+     * @return array{id:string,status:string,amount:int}
+     */
+    public function createRefundForCharge(
+        string $chargeId,
+        int $amountCents,
+        string $reason = 'requested_by_customer',
+        array $metadata = [],
+        ?string $idempotencyKey = null,
+    ): array {
+        if ($chargeId === '' || $amountCents <= 0) {
+            throw new PaymentException('Invalid refund payload.');
+        }
+
+        if ($this->isBypass()) {
+            return [
+                'id' => 're_bypass_'.substr(hash('sha256', (string) ($idempotencyKey ?: $chargeId.'|'.$amountCents)), 0, 18),
+                'status' => 'succeeded',
+                'amount' => $amountCents,
+            ];
+        }
+
+        try {
+            $refund = $this->client()->refunds->create([
+                'charge' => $chargeId,
+                'amount' => $amountCents,
+                'reason' => $reason,
+                'metadata' => $metadata,
+            ], $this->requestOptions($idempotencyKey));
+        } catch (Throwable $e) {
+            throw new PaymentException('Unable to issue refund right now.', $e->getMessage());
+        }
+
+        return [
+            'id' => (string) $refund->id,
+            'status' => (string) ($refund->status ?? 'pending'),
+            'amount' => (int) ($refund->amount ?? $amountCents),
         ];
+    }
+
+    /**
+     * @return array{id:string,status:string,amount_received:int,latest_charge_id?:string,balance_transaction_id?:string,processing_fee_cents?:int,fee_finalized?:bool}
+     */
+    public function retrievePaymentIntentFinancials(string $paymentIntentId, int $fallbackAmountCents = 0): array
+    {
+        if ($this->isBypass()) {
+            return array_merge([
+                'id' => $paymentIntentId,
+                'status' => PaymentIntent::STATUS_SUCCEEDED,
+                'amount_received' => max(0, $fallbackAmountCents),
+            ], $this->bypassFinancialDetails($paymentIntentId, $fallbackAmountCents));
+        }
+
+        try {
+            $intent = $this->client()->paymentIntents->retrieve($paymentIntentId, [
+                'expand' => ['latest_charge.balance_transaction'],
+            ]);
+        } catch (Throwable $e) {
+            throw new PaymentException('Unable to finalize payment processing fees right now.', $e->getMessage());
+        }
+
+        return array_merge([
+            'id' => (string) $intent->id,
+            'status' => (string) $intent->status,
+            'amount_received' => (int) ($intent->amount_received ?? 0),
+        ], $this->financialDetailsFromPaymentIntent($intent));
     }
 
     /**
@@ -868,7 +1012,7 @@ class StripeClient
 
         if ($this->isBypass()) {
             return [
-                'id' => 'trr_bypass_'.uniqid(),
+                'id' => 'trr_bypass_'.substr(hash('sha256', (string) ($idempotencyKey ?: $transferId.'|'.$amountCents)), 0, 18),
                 'status' => 'succeeded',
                 'amount' => $amountCents,
             ];
@@ -885,7 +1029,9 @@ class StripeClient
 
         return [
             'id' => (string) $reversal->id,
-            'status' => (string) ($reversal->status ?? 'pending'),
+            // Stripe creates TransferReversal objects synchronously and does not
+            // expose a lifecycle status field. A successful API response is final.
+            'status' => 'succeeded',
             'amount' => (int) ($reversal->amount ?? $amountCents),
         ];
     }
@@ -1018,7 +1164,7 @@ class StripeClient
     {
         $payload = json_decode(json_encode($intent), true) ?: [];
 
-        return [
+        return array_merge([
             'payment_intent_id' => (string) $intent->id,
             'id' => (string) $intent->id,
             'client_secret' => (string) ($intent->client_secret ?? ''),
@@ -1027,6 +1173,49 @@ class StripeClient
             'amount_received' => (int) ($intent->amount_received ?? 0),
             'authorization_expires_at' => $this->captureBeforeFromPaymentIntent($payload),
             'last_payment_error' => $payload['last_payment_error'] ?? null,
+        ], $this->financialDetailsFromPaymentIntent($intent));
+    }
+
+    /**
+     * @return array{latest_charge_id?:string,balance_transaction_id?:string,processing_fee_cents?:int,fee_finalized:bool}
+     */
+    private function financialDetailsFromPaymentIntent(PaymentIntent $intent): array
+    {
+        $payload = json_decode(json_encode($intent), true) ?: [];
+        $charge = data_get($payload, 'latest_charge');
+        $chargeId = is_array($charge) ? (string) ($charge['id'] ?? '') : (is_string($charge) ? $charge : '');
+        $balanceTransaction = is_array($charge) ? ($charge['balance_transaction'] ?? null) : null;
+        $balanceTransactionId = is_array($balanceTransaction)
+            ? (string) ($balanceTransaction['id'] ?? '')
+            : (is_string($balanceTransaction) ? $balanceTransaction : '');
+        $fee = is_array($balanceTransaction) && is_numeric($balanceTransaction['fee'] ?? null)
+            ? max(0, (int) $balanceTransaction['fee'])
+            : null;
+
+        return array_filter([
+            'latest_charge_id' => $chargeId !== '' ? $chargeId : null,
+            'balance_transaction_id' => $balanceTransactionId !== '' ? $balanceTransactionId : null,
+            'processing_fee_cents' => $fee,
+            'fee_finalized' => $fee !== null && $chargeId !== '',
+        ], static fn ($value): bool => $value !== null);
+    }
+
+    /**
+     * @return array{latest_charge_id:string,balance_transaction_id:string,processing_fee_cents:int,fee_finalized:bool}
+     */
+    private function bypassFinancialDetails(string $paymentIntentId, int $amountCents): array
+    {
+        $safeId = substr(hash('sha256', $paymentIntentId), 0, 24);
+        $fee = (int) round(max(0, $amountCents) * max(0, (float) config('services.stripe.bypass_processing_fee_percent', 2.9)) / 100);
+        if ($amountCents > 0) {
+            $fee += max(0, (int) config('services.stripe.bypass_processing_fee_fixed_cents', 30));
+        }
+
+        return [
+            'latest_charge_id' => 'ch_bypass_'.$safeId,
+            'balance_transaction_id' => 'txn_bypass_'.$safeId,
+            'processing_fee_cents' => $fee,
+            'fee_finalized' => true,
         ];
     }
 

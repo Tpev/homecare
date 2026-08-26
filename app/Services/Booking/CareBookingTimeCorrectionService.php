@@ -92,6 +92,8 @@ class CareBookingTimeCorrectionService
             'worked_label' => $this->durationLabel($workedMinutes),
             'hourly_rate' => (float) $quote['hourly_rate'],
             'subtotal_cents' => (int) $quote['subtotal_cents'],
+            'family_care_amount_cents' => (int) ($quote['family_care_amount_cents'] ?? $quote['subtotal_cents']),
+            'family_processing_fee_cents' => (int) ($quote['family_processing_fee_cents'] ?? 0),
             'platform_fee_percent' => (float) $quote['platform_fee_percent'],
             'target_charge_cents' => (int) $quote['total_charge_cents'],
             'caregiver_amount_cents' => (int) $quote['caregiver_amount_cents'],
@@ -564,7 +566,12 @@ class CareBookingTimeCorrectionService
                 || ($payment->authorization_expires_at && $payment->authorization_expires_at->lte(now()->addMinutes(5)));
 
             if ($authorizationInsufficient) {
-                $payment = $this->payments->prepareOnSessionAuthorization($booking, true);
+                $payment = $this->payments->prepareOnSessionAuthorizationForAmount(
+                    $booking,
+                    $target,
+                    'time-correction:'.$correction->id.':v'.$correction->version.':'.$target,
+                    $correction,
+                );
             }
 
             if ($payment->status !== CareBookingPayment::STATUS_AUTHORIZED) {
@@ -745,6 +752,7 @@ class CareBookingTimeCorrectionService
         $preview = (array) $correction->financial_preview;
         if ((int) $quote['total_charge_cents'] !== (int) data_get($preview, 'target_charge_cents')
             || (int) $quote['caregiver_amount_cents'] !== (int) data_get($preview, 'caregiver_amount_cents')
+            || (int) ($quote['family_processing_fee_cents'] ?? 0) !== (int) data_get($preview, 'family_processing_fee_cents', 0)
             || round((float) $quote['hourly_rate'], 2) !== round((float) data_get($preview, 'hourly_rate'), 2)
             || round((float) $quote['platform_fee_percent'], 4) !== round((float) data_get($preview, 'platform_fee_percent'), 4)) {
             throw ValidationException::withMessages([

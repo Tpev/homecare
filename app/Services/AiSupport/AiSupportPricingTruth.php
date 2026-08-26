@@ -4,11 +4,15 @@ namespace App\Services\AiSupport;
 
 class AiSupportPricingTruth
 {
-    public const FAMILY_HOURLY_CENTS = 3000;
+    public const FAMILY_CARE_HOURLY_CENTS = 3000;
+
+    public const FAMILY_PROCESSING_FEE_HOURLY_CENTS = 100;
+
+    public const FAMILY_TOTAL_HOURLY_CENTS = 3100;
 
     public const CAREGIVER_HOURLY_CENTS = 2700;
 
-    public const PLATFORM_HOURLY_CENTS = 300;
+    public const PLATFORM_HOURLY_CENTS = 400;
 
     public function isPricingQuestion(string $message): bool
     {
@@ -27,7 +31,7 @@ class AiSupportPricingTruth
 
     public function familyAnswer(string $message): string
     {
-        $answer = 'Care costs $30 per hour for the Family. The caregiver earns $27 per hour. LoLo receives $3 per hour.'
+        $answer = 'Care costs $30 per hour for the Family, plus a $1 per hour processing fee ($31 per hour total). The caregiver earns $27 per hour gross, minus the actual Stripe processing fees on successful family charges. Refund costs, dispute fees, and optional instant-payout fees are not deducted from the caregiver rate.'
             .$this->additionalChargeBoundary($message);
         $minutes = $this->explicitMinutes($message);
         if ($minutes === null) {
@@ -39,14 +43,16 @@ class AiSupportPricingTruth
             : ($minutes < 60 ? $minutes.' minutes' : intdiv($minutes, 60).' hr '.($minutes % 60).' min');
 
         return $answer.' For '.$duration.', the Family total is '
-            .$this->amount(self::FAMILY_HOURLY_CENTS, $minutes)
-            .', caregiver earnings are '.$this->amount(self::CAREGIVER_HOURLY_CENTS, $minutes)
-            .', and LoLo’s platform portion is '.$this->amount(self::PLATFORM_HOURLY_CENTS, $minutes).'.';
+            .$this->amount(self::FAMILY_TOTAL_HOURLY_CENTS, $minutes)
+            .' ('.$this->amount(self::FAMILY_CARE_HOURLY_CENTS, $minutes).' care + '
+            .$this->amount(self::FAMILY_PROCESSING_FEE_HOURLY_CENTS, $minutes).' processing fee), caregiver gross earnings are '
+            .$this->amount(self::CAREGIVER_HOURLY_CENTS, $minutes).' before actual Stripe processing fees, and LoLo’s gross platform portion is '
+            .$this->amount(self::PLATFORM_HOURLY_CENTS, $minutes).'.';
     }
 
     private function caregiverAnswer(string $message): string
     {
-        $answer = 'The caregiver earns $27 per hour. The Family pays $30 per hour. LoLo receives $3 per hour.'
+        $answer = 'The caregiver earns $27 per hour gross, minus actual Stripe processing fees on successful family charges. The Family pays $30 per hour for care plus a $1 per hour processing fee. Refund costs, dispute fees, and optional instant-payout fees are not deducted from the caregiver rate.'
             .$this->additionalChargeBoundary($message);
         $minutes = $this->explicitMinutes($message);
         if ($minutes === null) {
@@ -58,9 +64,9 @@ class AiSupportPricingTruth
             : ($minutes < 60 ? $minutes.' minutes' : intdiv($minutes, 60).' hr '.($minutes % 60).' min');
 
         return $answer.' For '.$duration.', caregiver earnings are '
-            .$this->amount(self::CAREGIVER_HOURLY_CENTS, $minutes)
-            .', the Family total is '.$this->amount(self::FAMILY_HOURLY_CENTS, $minutes)
-            .', and LoLo’s platform portion is '.$this->amount(self::PLATFORM_HOURLY_CENTS, $minutes).'.';
+            .$this->amount(self::CAREGIVER_HOURLY_CENTS, $minutes).' gross before actual Stripe processing fees, the Family total is '
+            .$this->amount(self::FAMILY_TOTAL_HOURLY_CENTS, $minutes).', and LoLo’s gross platform portion is '
+            .$this->amount(self::PLATFORM_HOURLY_CENTS, $minutes).'.';
     }
 
     private function explicitMinutes(string $message): ?int

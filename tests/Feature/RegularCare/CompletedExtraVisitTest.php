@@ -341,7 +341,7 @@ class CompletedExtraVisitTest extends TestCase
         app(CompletedExtraVisitService::class)->approve($withdrawn, $family);
     }
 
-    public function test_family_sees_a_changed_price_and_approval_captures_the_authoritative_quote(): void
+    public function test_submitted_v2_extra_visit_keeps_its_snapshot_when_legacy_override_changes(): void
     {
         [$family, $caregiver, $plan] = $this->establishedPlan();
         $report = $this->submit($plan, $caregiver);
@@ -352,14 +352,14 @@ class CompletedExtraVisitTest extends TestCase
 
         Livewire::actingAs($family)
             ->test(RegularCareShow::class, ['carePlan' => $plan->id])
-            ->assertSee('The price changed since this report was submitted.')
-            ->assertSee('$66.00');
+            ->assertDontSee('The price changed since this report was submitted.')
+            ->assertSee('$46.50');
 
         $applied = app(CompletedExtraVisitService::class)->approve($report->fresh(), $family);
 
         $this->assertSame(CompletedExtraVisitRequest::STATUS_APPLIED, $applied->status);
-        $this->assertNotSame($submittedCharge, (int) data_get($applied->final_financial_preview, 'total_charge_cents'));
-        $this->assertSame(6600, (int) data_get($applied->final_financial_preview, 'amount_captured_cents'));
+        $this->assertSame($submittedCharge, (int) data_get($applied->final_financial_preview, 'total_charge_cents'));
+        $this->assertSame(4650, (int) data_get($applied->final_financial_preview, 'amount_captured_cents'));
     }
 
     public function test_payment_failure_preserves_approved_booking_and_enters_recoverable_state(): void

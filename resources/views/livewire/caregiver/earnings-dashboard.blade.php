@@ -1,4 +1,4 @@
-﻿<div class="hc-page space-y-5 py-5 sm:py-6">
+<div class="hc-page space-y-5 py-5 sm:py-6">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -13,12 +13,13 @@
             'paused' => 'bg-amber-100 text-amber-800',
             'scheduled' => 'bg-[#F0E9E1] text-[#4B5B6B]',
             'disputed' => 'bg-rose-100 text-rose-700',
+            'reversed' => 'bg-rose-100 text-rose-700',
             'cancelled' => 'bg-[#E9E1D5] text-[#607080]',
         ];
         $maxTrend = max(1, (float) collect($trend)->max('amount'));
     @endphp
 
-    <section class="hc-brand-panel">
+    <section class="hc-brand-panel relative overflow-hidden">
         <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#7C5DDC]/20 blur-2xl"></div>
         <div class="pointer-events-none absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-[#4F6FAF]/20 blur-2xl"></div>
 
@@ -53,14 +54,14 @@
                     <p class="mt-1 text-lg font-semibold text-amber-200">${{ number_format((float) ($summary['pending_balance'] ?? 0), 2) }}</p>
                 </div>
                 <div class="hc-brand-stat">
-                    <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Paid this month</p>
+                    <p class="text-[11px] uppercase tracking-[0.16em] text-[#F0E9E1]/70">Transferred this month</p>
                     <p class="mt-1 text-lg font-semibold">${{ number_format((float) ($summary['paid_this_month'] ?? 0), 2) }}</p>
                 </div>
             </div>
 
             <div class="rounded-[1.4rem] border border-[#BFD6CE] bg-[rgba(255,255,255,0.08)] px-3 py-3">
                 <div class="flex items-center justify-between gap-2">
-                    <p class="text-xs uppercase tracking-[0.14em] text-emerald-100">{{ ($nextPayout['type'] ?? 'estimated') === 'scheduled' ? 'Next payout' : 'Estimated next payout' }}</p>
+                    <p class="text-xs uppercase tracking-[0.14em] text-emerald-100">{{ ($nextPayout['type'] ?? 'estimated') === 'scheduled' ? 'Next Stripe balance transfer' : 'Estimated Stripe balance transfer' }}</p>
                     <span class="rounded-full bg-[rgba(255,253,250,0.98)]/15 px-2 py-0.5 text-[11px] text-emerald-100">{{ $nextPayout['date']?->format('D, M d') }}</span>
                 </div>
                 <p class="mt-1 text-2xl font-semibold">${{ number_format((float) ($nextPayout['amount'] ?? 0), 2) }}</p>
@@ -162,44 +163,50 @@
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <p class="font-display text-lg font-semibold text-[#17313F]">{{ $item['title'] }}</p>
-                                <p class="text-xs text-[#7B8794]">{{ $item['city'] }}, {{ $item['state'] }}</p>
+                                <p class="text-xs text-[#7B8794]">
+                                    {{ $item['city'] }}, {{ $item['state'] }}
+                                    @if ($item['scheduled_start_at'])
+                                        · {{ $item['scheduled_start_at']->format('M d, Y \a\t g:i A') }}
+                                    @endif
+                                </p>
+                                @if (filled($item['financial_reference'] ?? null))
+                                    <p class="mt-1 font-mono text-[11px] text-[#607080]">Shift reference {{ $item['financial_reference'] }}</p>
+                                @endif
                             </div>
                             <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $statusStyles[$item['status_key']] ?? 'bg-[#F0E9E1] text-[#4B5B6B]' }}">
                                 {{ $item['status_label'] }}
                             </span>
                         </div>
 
-                        <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
+                        <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
                             <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
                                 <p class="text-[11px] uppercase tracking-[0.12em] text-[#7B8794]">Worked</p>
                                 <p class="font-semibold text-[#17313F]">{{ $item['worked_label'] }}</p>
                             </div>
                             <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
-                                <p class="text-[11px] uppercase tracking-[0.12em] text-[#7B8794]">Gross</p>
+                                <p class="text-[11px] uppercase tracking-[0.12em] text-[#7B8794]">Gross earnings</p>
                                 <p class="font-semibold text-[#17313F]">${{ number_format((float) $item['gross_amount'], 2) }}</p>
                             </div>
-                            <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
-                                <p class="text-[11px] uppercase tracking-[0.12em] text-[#7B8794]">Rate</p>
-                                <p class="font-semibold text-[#17313F]">${{ number_format((float) $item['hourly_rate'], 2) }}/hr</p>
-                            </div>
-                            <div class="rounded-lg border border-[#DED6CA] bg-[#F5F1EB] px-3 py-2">
-                                <p class="text-[11px] uppercase tracking-[0.12em] text-[#7B8794]">Window</p>
-                                <p class="font-semibold text-[#17313F] text-xs">
-                                    {{ optional($item['scheduled_start_at'])->format('M d, H:i') ?: '-' }}
-                                </p>
+                            <div class="rounded-lg border border-[#CFE1D8] bg-[#F2F8F4] px-3 py-2">
+                                <p class="text-[11px] uppercase tracking-[0.12em] text-[#607080]">Net earnings</p>
+                                <p class="font-semibold text-[#0F3D3E]">${{ number_format((float) $item['net_amount'], 2) }}</p>
                             </div>
                         </div>
+
+                        <p class="mt-2 text-[11px] text-[#7B8794]">
+                            Gross rate ${{ number_format((float) $item['hourly_rate'], 2) }}/hr · Processing fees −${{ number_format((float) $item['processing_fee_amount'], 2) }}
+                        </p>
 
                         <div class="mt-3 flex items-center justify-between">
                             <p class="text-xs text-[#7B8794]">
                                 @if ($item['status_key'] === 'paid')
-                                    Paid {{ optional($item['paid_at'])->format('M d, Y') ?: '' }}
+                                    Transferred to Stripe balance {{ optional($item['paid_at'])->format('M d, Y') ?: '' }}. Bank payout timing is controlled by Stripe.
                                 @elseif ($item['status_key'] === 'scheduled_payout')
-                                    Included in upcoming payout
+                                    Stripe balance transfer is processing
                                 @elseif ($item['status_key'] === 'pending_confirmation')
                                     Waiting family confirmation
                                 @elseif ($item['status_key'] === 'eligible')
-                                    Ready for payout
+                                    Ready to transfer to Stripe balance
                                 @else
                                     Last update {{ optional($item['reference_at'])->format('M d, H:i') ?: '-' }}
                                 @endif
@@ -225,7 +232,7 @@
         <section class="space-y-4">
             <x-card>
                 <x-slot:header>
-                    <h2 class="font-display text-lg font-semibold">Next payout</h2>
+                    <div><h2 class="font-display text-lg font-semibold">Stripe balance transfers</h2><p class="text-sm text-[#607080]">LoLo transfers earnings to Stripe. Stripe controls when your Stripe balance reaches your bank.</p></div>
                 </x-slot:header>
                 <div class="rounded-xl border border-[#CFE1D8] bg-[#F2F8F4] px-4 py-3">
                     <p class="text-xs uppercase tracking-[0.12em] text-emerald-700">{{ ($nextPayout['type'] ?? 'estimated') === 'scheduled' ? 'Scheduled' : 'Estimated' }}</p>

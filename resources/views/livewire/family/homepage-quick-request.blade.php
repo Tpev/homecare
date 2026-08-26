@@ -4,7 +4,7 @@
             <div>
                 <p class="hub-request-kicker">Book care</p>
                 <h2 class="hub-request-title">Tell us what you need</h2>
-                <p class="hub-request-price">Companionship starts at <strong>$30/hr</strong></p>
+                <p class="hub-request-price">Companionship starts at <strong>$30/hr*</strong> <span class="text-xs">+ $1/hr processing fee</span></p>
             </div>
 
             <span class="hub-request-heart" aria-hidden="true">

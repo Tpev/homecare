@@ -102,7 +102,7 @@
                     </button>
                 </div>
 
-                <p class="lolo-wizard-note">Care starts at $30/hr. LoLo provides non-medical support and is not for emergencies.</p>
+                <p class="lolo-wizard-note">Care starts at $30/hr*; a $1/hr processing fee applies to completed care. LoLo provides non-medical support and is not for emergencies.</p>
             </form>
         @endif
 

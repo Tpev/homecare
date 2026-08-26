@@ -300,13 +300,12 @@ class CreateCareRequestWizard extends Component
 
     public function getEstimateHourlyRateProperty(): float
     {
-        $configuredRate = config('marketplace.family_estimate_hourly_rate');
+        return round(app(\App\Support\MarketplacePricing::class)->familyCareHourlyCents() / 100, 2);
+    }
 
-        if (is_numeric($configuredRate) && (float) $configuredRate > 0) {
-            return round((float) $configuredRate, 2);
-        }
-
-        return 30.00;
+    public function getProcessingFeeHourlyRateProperty(): float
+    {
+        return round(app(\App\Support\MarketplacePricing::class)->familyProcessingFeeHourlyCents() / 100, 2);
     }
 
     public function getEstimatedHoursProperty(): ?float
@@ -340,6 +339,24 @@ class CreateCareRequestWizard extends Component
         }
 
         return round($this->estimatedHours * $this->estimateHourlyRate, 2);
+    }
+
+    public function getEstimatedProcessingFeeProperty(): ?float
+    {
+        if ($this->estimatedHours === null) {
+            return null;
+        }
+
+        return round($this->estimatedHours * $this->processingFeeHourlyRate, 2);
+    }
+
+    public function getEstimatedTotalProperty(): ?float
+    {
+        if ($this->estimatedCost === null || $this->estimatedProcessingFee === null) {
+            return null;
+        }
+
+        return round($this->estimatedCost + $this->estimatedProcessingFee, 2);
     }
 
     public function getMinimumStartDateProperty(): string

@@ -62,7 +62,7 @@
         <x-slot:header>
             <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div><h2 class="text-lg font-semibold">Family intent coverage</h2><p class="mt-1 text-sm text-slate-600">Executable coverage and compact outcomes. No chat text is stored here.</p></div>
-                <label class="block text-sm font-semibold text-slate-700">Find an intent<input type="search" wire:model.live.debounce.250ms="intentSearch" class="mt-1 min-h-11 w-full rounded-xl border-slate-300 sm:w-72" placeholder="ID, domain, task, or KB"></label>
+                <label class="block text-sm font-semibold text-slate-700">Find an intent<input type="search" wire:model.change="intentSearch" class="mt-1 min-h-11 w-full rounded-xl border-slate-300 sm:w-72" placeholder="ID, domain, task, or KB"></label>
             </div>
         </x-slot:header>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">

@@ -256,8 +256,9 @@
                                         {{ data_get($item, 'compensation.hours_label') }}h visit
                                     </p>
                                     <p class="text-[#E7ECF1]">
-                                        @ ${{ number_format((float) data_get($item, 'compensation.hourly_rate', 0), 2) }}/hr
+                                        @ ${{ number_format((float) data_get($item, 'compensation.hourly_rate', 0), 2) }}/hr*
                                     </p>
+                                    <p class="pt-1 text-xs text-[#D7DEE6]">*Gross earnings before Stripe processing fees.</p>
                                 </div>
                             </div>
                         @else

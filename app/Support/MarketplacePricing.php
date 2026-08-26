@@ -9,6 +9,147 @@ use App\Models\User;
 class MarketplacePricing
 {
     /**
+     * @return array{pricing_version:string,family_care_rate_cents:int,family_processing_fee_rate_cents:int,caregiver_gross_rate_cents:int,caregiver_fee_policy:string,pricing_snapshotted_at:\Illuminate\Support\Carbon}
+     */
+    public function currentSnapshotAttributes(): array
+    {
+        return [
+            'pricing_version' => $this->currentVersion(),
+            'family_care_rate_cents' => $this->familyCareHourlyCents(),
+            'family_processing_fee_rate_cents' => $this->familyProcessingFeeHourlyCents(),
+            'caregiver_gross_rate_cents' => $this->caregiverGrossHourlyCents(),
+            'caregiver_fee_policy' => (string) config(
+                'marketplace.pricing_v2.caregiver_fee_policy',
+                'successful_charge_balance_transaction'
+            ),
+            'pricing_snapshotted_at' => now(),
+        ];
+    }
+
+    public function currentPricingEnabled(): bool
+    {
+        return (bool) config('marketplace.pricing_v2.enabled', true);
+    }
+
+    public function currentVersion(): string
+    {
+        return (string) config('marketplace.pricing_v2.version', '2026-08-v2');
+    }
+
+    public function familyCareHourlyCents(): int
+    {
+        return max(0, (int) config('marketplace.pricing_v2.family_care_hourly_cents', 3000));
+    }
+
+    public function familyProcessingFeeHourlyCents(): int
+    {
+        return max(0, (int) config('marketplace.pricing_v2.family_processing_fee_hourly_cents', 100));
+    }
+
+    public function caregiverGrossHourlyCents(): int
+    {
+        return max(0, (int) config('marketplace.pricing_v2.caregiver_gross_hourly_cents', 2700));
+    }
+
+    public function usesCurrentPricing(CareBooking $booking): bool
+    {
+        return (string) $booking->pricing_version === $this->currentVersion();
+    }
+
+    public function ensureCurrentSnapshot(CareBooking $booking): CareBooking
+    {
+        if ($this->usesCurrentPricing($booking)) {
+            return $booking;
+        }
+
+        if (! $this->currentPricingEnabled()) {
+            return $booking;
+        }
+
+        $booking->forceFill($this->currentSnapshotAttributes())->saveQuietly();
+
+        return $booking->refresh();
+    }
+
+    /**
+     * @return array{
+     *   pricing_version:string,worked_minutes:int,hourly_rate:float,subtotal_cents:int,
+     *   platform_fee_percent:float,platform_fee_cents:int,total_charge_cents:int,
+     *   caregiver_amount_cents:int,family_care_rate_cents:int,
+     *   family_processing_fee_rate_cents:int,caregiver_gross_rate_cents:int,
+     *   family_care_amount_cents:int,family_processing_fee_cents:int,
+     *   caregiver_gross_amount_cents:int,stripe_processing_fee_cents:int
+     * }
+     */
+    public function currentQuoteForMinutes(int $workedMinutes, int $stripeProcessingFeeCents = 0): array
+    {
+        $workedMinutes = max(1, $workedMinutes);
+        $familyCare = $this->prorateHourlyCents($this->familyCareHourlyCents(), $workedMinutes);
+        $familyProcessingFee = $this->prorateHourlyCents($this->familyProcessingFeeHourlyCents(), $workedMinutes);
+        $caregiverGross = $this->prorateHourlyCents($this->caregiverGrossHourlyCents(), $workedMinutes);
+        $stripeProcessingFeeCents = max(0, $stripeProcessingFeeCents);
+        $total = $familyCare + $familyProcessingFee;
+        $platformMargin = max(0, $total - $caregiverGross);
+
+        return [
+            'pricing_version' => $this->currentVersion(),
+            'worked_minutes' => $workedMinutes,
+            'hourly_rate' => $this->familyCareHourlyCents() / 100,
+            'subtotal_cents' => $familyCare,
+            'platform_fee_percent' => 0.0,
+            'platform_fee_cents' => $platformMargin,
+            'total_charge_cents' => $total,
+            'caregiver_amount_cents' => max(0, $caregiverGross - $stripeProcessingFeeCents),
+            'family_care_rate_cents' => $this->familyCareHourlyCents(),
+            'family_processing_fee_rate_cents' => $this->familyProcessingFeeHourlyCents(),
+            'caregiver_gross_rate_cents' => $this->caregiverGrossHourlyCents(),
+            'family_care_amount_cents' => $familyCare,
+            'family_processing_fee_cents' => $familyProcessingFee,
+            'caregiver_gross_amount_cents' => $caregiverGross,
+            'stripe_processing_fee_cents' => $stripeProcessingFeeCents,
+        ];
+    }
+
+    /**
+     * @return array<string, int|float|string>
+     */
+    public function quoteForCurrentBooking(CareBooking $booking, int $workedMinutes, int $stripeProcessingFeeCents = 0): array
+    {
+        $workedMinutes = max(1, $workedMinutes);
+        $familyCareRate = max(0, (int) ($booking->family_care_rate_cents ?? $this->familyCareHourlyCents()));
+        $familyFeeRate = max(0, (int) ($booking->family_processing_fee_rate_cents ?? $this->familyProcessingFeeHourlyCents()));
+        $caregiverGrossRate = max(0, (int) ($booking->caregiver_gross_rate_cents ?? $this->caregiverGrossHourlyCents()));
+        $familyCare = $this->prorateHourlyCents($familyCareRate, $workedMinutes);
+        $familyFee = $this->prorateHourlyCents($familyFeeRate, $workedMinutes);
+        $caregiverGross = $this->prorateHourlyCents($caregiverGrossRate, $workedMinutes);
+        $total = $familyCare + $familyFee;
+        $stripeProcessingFeeCents = max(0, $stripeProcessingFeeCents);
+
+        return [
+            'pricing_version' => (string) ($booking->pricing_version ?: $this->currentVersion()),
+            'worked_minutes' => $workedMinutes,
+            'hourly_rate' => $familyCareRate / 100,
+            'subtotal_cents' => $familyCare,
+            'platform_fee_percent' => 0.0,
+            'platform_fee_cents' => max(0, $total - $caregiverGross),
+            'total_charge_cents' => $total,
+            'caregiver_amount_cents' => max(0, $caregiverGross - $stripeProcessingFeeCents),
+            'family_care_rate_cents' => $familyCareRate,
+            'family_processing_fee_rate_cents' => $familyFeeRate,
+            'caregiver_gross_rate_cents' => $caregiverGrossRate,
+            'family_care_amount_cents' => $familyCare,
+            'family_processing_fee_cents' => $familyFee,
+            'caregiver_gross_amount_cents' => $caregiverGross,
+            'stripe_processing_fee_cents' => $stripeProcessingFeeCents,
+        ];
+    }
+
+    public function prorateHourlyCents(int $hourlyCents, int $minutes): int
+    {
+        return (int) round((max(0, $hourlyCents) * max(0, $minutes)) / 60, 0, PHP_ROUND_HALF_UP);
+    }
+
+    /**
      * @return array<string, array{label:string,rate:float}>
      */
     public function tiers(): array

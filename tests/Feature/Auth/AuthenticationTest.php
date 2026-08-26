@@ -39,6 +39,22 @@ class AuthenticationTest extends TestCase
         $this->assertAuthenticated();
     }
 
+    public function test_family_login_replaces_a_saved_old_dashboard_destination(): void
+    {
+        $user = User::factory()->create(['role' => 'family']);
+        session(['url.intended' => route('dashboard')]);
+
+        Volt::test('pages.auth.login')
+            ->set('form.email', $user->email)
+            ->set('form.password', 'password')
+            ->call('login')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('family.requests.index', absolute: false));
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertFalse(session()->has('url.intended'));
+    }
+
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
         $user = User::factory()->create();

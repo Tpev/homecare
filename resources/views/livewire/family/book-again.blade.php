@@ -14,6 +14,8 @@
             $sourceRequest->address_line2,
             trim($sourceRequest->city.', '.$sourceRequest->state.' '.$sourceRequest->zip),
         ])->filter()->implode(', '));
+        $pricing = app(\App\Support\MarketplacePricing::class);
+        $bookAgainQuote = $pricing->currentQuoteForMinutes(max(1, (int) $durationMinutes));
     @endphp
 
     <section class="rounded-3xl border border-[#E4DDD3] bg-[#23483F] p-5 text-white shadow-sm sm:p-7">
@@ -52,6 +54,11 @@
                         <x-native-select-field label="Duration" wire:model.live="durationMinutes" :options="$durationOptions" />
                         @error('durationMinutes') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
+                </div>
+
+                <div class="rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4 text-sm text-[#3C4A5B]">
+                    <div class="flex items-start justify-between gap-4"><div><p class="font-semibold text-[#17313F]">Estimated visit total</p><p class="mt-1">Care ${{ number_format((int) $bookAgainQuote['family_care_amount_cents'] / 100, 2) }} + ${{ number_format((int) $bookAgainQuote['family_processing_fee_cents'] / 100, 2) }} processing fee</p></div><p class="font-display text-2xl font-semibold text-[#0F3D3E]">${{ number_format((int) $bookAgainQuote['total_charge_cents'] / 100, 2) }}</p></div>
+                    <p class="mt-2 text-xs text-[#607080]">$30/hour care* plus a $1/hour processing fee.</p>
                 </div>
 
                 <x-textarea label="Message to caregiver" wire:model="message" />
@@ -124,7 +131,7 @@
                     </div>
                     <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-3">
                         <p class="font-semibold text-[#17313F]">3. The visit follows the usual flow</p>
-                        <p class="mt-1">Check-in, timesheet, approval, and payout stay in the same system.</p>
+                        <p class="mt-1">Check-in, timesheet, approval, and Stripe balance transfer stay in the same system.</p>
                     </div>
                 </div>
             </x-card>

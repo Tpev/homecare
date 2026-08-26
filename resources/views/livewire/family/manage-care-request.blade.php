@@ -89,12 +89,18 @@
         $shiftEarnings = $workedMinutes > 0 && $shiftRate > 0
             ? round(($workedMinutes / 60) * $shiftRate, 2)
             : 0;
-        $platformFeePercent = $booking
+        $usesPricingV2 = $booking && $pricing->usesCurrentPricing($booking);
+        $shiftQuote = $usesPricingV2 && $workedMinutes > 0
+            ? $pricing->quoteForCurrentBooking($booking, $workedMinutes)
+            : null;
+        $shiftEarnings = $shiftQuote ? ((int) $shiftQuote['family_care_amount_cents'] / 100) : $shiftEarnings;
+        $processingFeeAmount = $shiftQuote ? ((int) $shiftQuote['family_processing_fee_cents'] / 100) : 0;
+        $platformFeePercent = $usesPricingV2 ? 0 : ($booking
             ? $pricing->platformFeePercentForBooking($booking, max(0, (float) config('marketplace.payments.platform_fee_percent', 0)))
-            : $pricing->platformFeePercentForFamily($requestItem->family, max(0, (float) config('marketplace.payments.platform_fee_percent', 0)));
-        $estimatedPaymentTotal = $shiftEarnings > 0
-            ? round($shiftEarnings * (1 + ($platformFeePercent / 100)), 2)
-            : 0;
+            : $pricing->platformFeePercentForFamily($requestItem->family, max(0, (float) config('marketplace.payments.platform_fee_percent', 0))));
+        $estimatedPaymentTotal = $shiftQuote
+            ? ((int) $shiftQuote['total_charge_cents'] / 100)
+            : ($shiftEarnings > 0 ? round($shiftEarnings * (1 + ($platformFeePercent / 100)), 2) : 0);
         $canWithdrawRequest = in_array($requestItem->status, [
             \App\Models\CareRequest::STATUS_DRAFT,
             \App\Models\CareRequest::STATUS_OPEN,
@@ -477,11 +483,14 @@
                                 <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Estimated payment</p>
                                 <p class="mt-1 text-2xl font-semibold text-[#17313F]">${{ number_format($estimatedPaymentTotal, 2) }}</p>
                                 <p class="text-xs text-[#607080]">
-                                    Care ${{ number_format($shiftEarnings, 2) }} at {{ '$'.number_format($shiftRate, 2) }}/hr
-                                    @if ($platformFeePercent > 0)
+                                    Care ${{ number_format($shiftEarnings, 2) }} at {{ '$'.number_format($shiftRate, 2) }}/hr*
+                                    @if ($usesPricingV2)
+                                        + ${{ number_format($processingFeeAmount, 2) }} processing fee
+                                    @elseif ($platformFeePercent > 0)
                                         + {{ rtrim(rtrim(number_format($platformFeePercent, 2), '0'), '.') }}% platform fee
                                     @endif
                                 </p>
+                                @if ($usesPricingV2)<p class="mt-1 text-xs text-[#607080]">*A ${{ number_format((int) $booking->family_processing_fee_rate_cents / 100, 2) }}/hour processing fee is added.</p>@endif
                             </div>
                         </div>
                         <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -681,7 +690,7 @@
                         <div>
                             <p class="font-display text-lg font-semibold text-[#17313F]">{{ $hiredApplication->caregiver->name }}</p>
                             <p class="text-sm text-[#607080]">
-                                Care rate: ${{ number_format($selectedCaregiverRate, 2) }}/hr
+                                Care rate: ${{ number_format($selectedCaregiverRate, 2) }}/hr* · processing fee ${{ number_format($pricing->familyProcessingFeeHourlyCents() / 100, 2) }}/hr
                             </p>
                             @if ($selectedCaregiverProfile)
                                 <p class="mt-1 text-sm text-[#4B5B6B]">
@@ -1419,8 +1428,8 @@
                                     </div>
                                     <div>
                                         <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Estimated visit total</p>
-                                        <p class="mt-1 text-base font-semibold text-[#17313F]">${{ number_format($shiftEarnings, 2) }}</p>
-                                        <p class="text-xs text-[#7B8794]">{{ '$'.number_format($shiftRate, 2) }}/hr</p>
+                                        <p class="mt-1 text-base font-semibold text-[#17313F]">${{ number_format($estimatedPaymentTotal, 2) }}</p>
+                                        <p class="text-xs text-[#7B8794]">{{ '$'.number_format($shiftRate, 2) }}/hr care{{ $usesPricingV2 ? ' + processing fee' : '' }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">Timesheet</p>
