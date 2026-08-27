@@ -6,7 +6,7 @@ return [
     'version' => 'family-intents-v1',
     'generated_on' => '2026-08-20',
     'source' => 'docs/product/support-agent/38-family-intent-action-coverage-registry.md',
-    'source_sha256' => '798fe9bd8ece006621820e558a83cdca3b1b9df2202333cbce0c404a308b4ec3',
+    'source_sha256' => 'bb6acaadc5da66955ca68e20c21c036356512037f7ba44da08e48b616688ac8d',
     'records' => [
         0 => [
             'intent_id' => 'FAM-START-001',
@@ -29,20 +29,27 @@ return [
                     0 => 'pls help me undrstand what LoLo does for Families',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
-                0 => 'KB-B89-SUPPORT-001',
+                0 => 'KB-FOP-ORI-001',
+                1 => 'KB-B89-SUPPORT-001',
             ],
             'contracts' => [
                 'reader' => null,
@@ -57,9 +64,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'UI',
-                'explain' => 'Partial',
-                'action' => 'No',
-                'target_behavior' => 'Explain the bounded marketplace and support model',
+                'explain' => 'Yes',
+                'action' => 'Guide',
+                'target_behavior' => 'Explain the bounded marketplace and support model and offer the Support Center',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -102,21 +109,28 @@ return [
                     0 => 'pls help me undrstand what non-medical care means',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
-                    2 => 'Human',
+                    2 => 'Navigate',
+                    3 => 'Guide',
+                    4 => 'Human',
                 ],
             ],
             'kb_stable_ids' => [
-                0 => 'KB-B89-SUPPORT-001',
+                0 => 'KB-FOP-ORI-002',
+                1 => 'KB-B89-SUPPORT-001',
             ],
             'contracts' => [
                 'reader' => null,
@@ -132,8 +146,8 @@ return [
             'disposition' => [
                 'product' => 'UI',
                 'explain' => 'Yes',
-                'action' => 'No',
-                'target_behavior' => 'Keep governed explanation; transfer medical questions',
+                'action' => 'Guide',
+                'target_behavior' => 'Explain the non-medical boundary, offer Support, and transfer medical questions',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -1164,20 +1178,27 @@ return [
                     0 => 'pls help me undrstand what the AI can and cannot do',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
-                0 => 'KB-B89-SUPPORT-005',
+                0 => 'KB-FOP-ORI-003',
+                1 => 'KB-B89-SUPPORT-005',
             ],
             'contracts' => [
                 'reader' => null,
@@ -1191,10 +1212,10 @@ return [
                 'human_transfer' => null,
             ],
             'disposition' => [
-                'product' => 'Partial UI',
-                'explain' => 'Partial',
-                'action' => 'No',
-                'target_behavior' => 'Publish a concise capability/help entry generated from this registry',
+                'product' => 'UI',
+                'explain' => 'Yes',
+                'action' => 'Guide',
+                'target_behavior' => 'Give the concise capability boundary and offer the Support Center',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -4692,16 +4713,22 @@ return [
                     0 => 'pls help me undrstand what a care-receiver profl is and who sees it',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
@@ -4722,8 +4749,8 @@ return [
             'disposition' => [
                 'product' => 'UI',
                 'explain' => 'Yes',
-                'action' => 'No',
-                'target_behavior' => 'Governed purpose and candidate-versus-assigned visibility explanation',
+                'action' => 'Guide',
+                'target_behavior' => 'Explain purpose and visibility, then open Care receiver profiles',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -9132,16 +9159,24 @@ return [
                     0 => 'pls help me undrstand whether publication hired a caregivr',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Read',
+                    3 => 'Navigate',
+                    4 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
@@ -9163,8 +9198,8 @@ return [
             'disposition' => [
                 'product' => 'UI',
                 'explain' => 'Yes',
-                'action' => 'No',
-                'target_behavior' => 'Keep “live is not hired” explanation',
+                'action' => 'Read / Guide',
+                'target_behavior' => 'Explain “live is not hired,” read the latest authorized request state, and open it',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -9207,16 +9242,22 @@ return [
                     0 => 'pls help me undrstand whether publication charged or authorized the card',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
@@ -9238,8 +9279,8 @@ return [
             'disposition' => [
                 'product' => 'UI',
                 'explain' => 'Yes',
-                'action' => 'No',
-                'target_behavior' => 'Keep governed no-charge-at-publication explanation',
+                'action' => 'Guide',
+                'target_behavior' => 'Explain no charge at publication and open the request record',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -10088,16 +10129,22 @@ return [
                     0 => 'pls help me ask for a guaranteed caregivr response or response time',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
@@ -10123,8 +10170,8 @@ return [
             'disposition' => [
                 'product' => 'Gap',
                 'explain' => 'Yes',
-                'action' => 'No',
-                'target_behavior' => 'Explain preference is not a guarantee; no availability promise',
+                'action' => 'Guide',
+                'target_behavior' => 'Explain that no response is guaranteed and open the current request/support path without a timing promise',
                 'unsupported_behavior' => 'Say that LoLo does not currently support this action; do not invent behavior. Offer the valid UI alternative or a person.',
             ],
             'never_in_chat' => [
@@ -13047,16 +13094,22 @@ return [
                     0 => 'pls help me undrstand whether publishing a requst charges the card',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
@@ -13077,8 +13130,8 @@ return [
             'disposition' => [
                 'product' => 'UI',
                 'explain' => 'Yes',
-                'action' => 'No',
-                'target_behavior' => 'Keep covered',
+                'action' => 'Guide',
+                'target_behavior' => 'Explain that publication does not charge and open Care requests',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -14527,24 +14580,32 @@ return [
                     0 => 'pls help me undrstand taxes, fees, tips, mileage, holiday charges, or surcharges',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
-                0 => 'KB-B4-PRICE-001',
+                0 => 'KB-FOP-PAY-011',
+                1 => 'KB-B4-PRICE-001',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -14555,8 +14616,8 @@ return [
             'disposition' => [
                 'product' => 'Approved pricing truth',
                 'explain' => 'Yes',
-                'action' => 'Explain',
-                'target_behavior' => 'State $30/hour Family care plus $1/hour Family processing fee, and $27/hour caregiver gross minus actual Stripe processing fees; do not invent other charges',
+                'action' => 'Explain / Guide',
+                'target_behavior' => 'State $30/hour Family care plus $1/hour Family processing fee, and $27/hour caregiver gross minus actual Stripe processing fees; do not invent other charges; offer the next valid care step',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -14599,24 +14660,32 @@ return [
                     0 => 'pls help me ask the hourly price or estimated total',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
                     1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
-                0 => 'KB-B4-PRICE-001',
+                0 => 'KB-FOP-PAY-011',
+                1 => 'KB-B4-PRICE-001',
             ],
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
+                    0 => 'family.new_care_request',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -14627,8 +14696,8 @@ return [
             'disposition' => [
                 'product' => 'Approved pricing truth',
                 'explain' => 'Yes',
-                'action' => 'Explain / Calculate',
-                'target_behavior' => 'State $30/hour Family care plus $1/hour Family processing fee, and $27/hour caregiver gross minus actual Stripe processing fees; calculate only from an explicit duration',
+                'action' => 'Explain / Calculate / Guide',
+                'target_behavior' => 'State $30/hour Family care plus $1/hour Family processing fee, and $27/hour caregiver gross minus actual Stripe processing fees; calculate only from an explicit duration; offer request creation',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -14671,18 +14740,27 @@ return [
                     0 => 'pls help me apply a coupon, credit, or promo code',
                 ],
                 'follow_ups' => [
+                    0 => 'take me there',
+                    1 => 'I cannot find it',
                 ],
             ],
             'capability_stages' => [
                 'current' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
                 'target' => [
                     0 => 'Understand',
+                    1 => 'Explain',
+                    2 => 'Navigate',
+                    3 => 'Guide',
                 ],
             ],
             'kb_stable_ids' => [
-                0 => 'KB-B4-PAY-011',
+                0 => 'KB-FOP-PAY-010',
+                1 => 'KB-B4-PAY-011',
             ],
             'contracts' => [
                 'reader' => null,
@@ -14697,9 +14775,9 @@ return [
             ],
             'disposition' => [
                 'product' => 'Gap',
-                'explain' => 'No',
-                'action' => 'No',
-                'target_behavior' => 'Product gap; never invent discounts',
+                'explain' => 'Yes',
+                'action' => 'Guide',
+                'target_behavior' => 'State plainly that coupons, credits, and promo codes are not currently supported; never invent a discount; offer Care history or a person for a claimed existing credit',
                 'unsupported_behavior' => 'Say that LoLo does not currently support this action; do not invent behavior. Offer the valid UI alternative or a person.',
             ],
             'never_in_chat' => [

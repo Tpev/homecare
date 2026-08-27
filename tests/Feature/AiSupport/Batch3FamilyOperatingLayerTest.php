@@ -12,6 +12,7 @@ use App\Models\CareBooking;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
+use App\Models\KnowledgeBaseEntry;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\AiSupport\AiSupportCompletionVerifierRegistry;
@@ -25,6 +26,10 @@ use App\Services\AiSupport\FamilyAssistantHomeService;
 use App\Services\AiSupport\FamilyIntentCatalog;
 use App\Services\AiSupport\FamilyIntentEvaluationCatalog;
 use App\Services\AiSupport\FamilyIntentResolver;
+use App\Services\AiSupport\FamilyOperationsKnowledgeBaseImportService;
+use App\Services\AiSupport\InitialKnowledgeBaseImportService;
+use App\Services\AiSupport\KnowledgeBaseWorkflowService;
+use App\Services\AiSupport\PaymentTimeKnowledgeBaseImportService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -61,6 +66,85 @@ class Batch3FamilyOperatingLayerTest extends TestCase
                 $this->assertTrue(app(AiSupportCompletionVerifierRegistry::class)->has($record['contracts']['verifier']));
             }
         }
+    }
+
+    public function test_all_family_intents_now_have_an_operational_resolution(): void
+    {
+        $records = collect(app(FamilyIntentCatalog::class)->records());
+        $outcomes = ['complete' => 0, 'assisted' => 0, 'human' => 0, 'none' => 0];
+
+        foreach ($records as $record) {
+            $stages = (array) data_get($record, 'capability_stages.current', []);
+            $outcome = in_array('Execute', $stages, true) && in_array('Verify', $stages, true)
+                ? 'complete'
+                : (in_array('Human', $stages, true)
+                    ? 'human'
+                    : (array_intersect(['Read', 'Navigate', 'Guide', 'Prepare'], $stages) !== [] ? 'assisted' : 'none'));
+            $outcomes[$outcome]++;
+        }
+
+        $this->assertSame([
+            'complete' => 74,
+            'assisted' => 163,
+            'human' => 87,
+            'none' => 0,
+        ], $outcomes);
+
+        foreach ([
+            'FAM-START-001', 'FAM-START-002', 'FAM-START-016', 'FAM-PROFILE-001',
+            'FAM-REQUEST-032', 'FAM-REQUEST-033', 'FAM-REQUEST-044', 'FAM-PAY-010',
+            'FAM-PAY-028', 'FAM-PAY-029', 'FAM-PAY-030',
+        ] as $intentId) {
+            $record = $records->firstWhere('intent_id', $intentId);
+            $this->assertNotNull($record, $intentId);
+            $this->assertContains('Guide', data_get($record, 'capability_stages.current', []), $intentId);
+            $this->assertNotEmpty(data_get($record, 'contracts.destinations'), $intentId);
+        }
+        $this->assertContains('Read', data_get($records->firstWhere('intent_id', 'FAM-REQUEST-032'), 'capability_stages.current'));
+        $this->assertContains('Explain', data_get($records->firstWhere('intent_id', 'FAM-PAY-030'), 'capability_stages.current'));
+    }
+
+    public function test_the_eleven_closed_intents_answer_and_offer_a_truthful_next_step_without_provider_calls(): void
+    {
+        [$admin, $family] = $this->eligibleFamily();
+        $this->publishCoverageClosureKnowledge($admin);
+        $this->request($family);
+        Http::fake();
+
+        $cases = [
+            ['Understand what LoLo does for Families', 'helps Families arrange non-medical home care', 'support.center'],
+            ['Understand what non-medical care means', 'everyday help such as companionship', 'support.center'],
+            ['Understand what the AI can and cannot do', 'perform specifically enabled actions only after a clear recap and confirmation', 'support.center'],
+            ['Understand what a care-receiver profile is and who sees it', 'profile stores reusable information', 'family.care_profiles'],
+            ['Understand whether publication hired a caregiver', 'publication itself does not hire anyone', 'family.request.overview'],
+            ['Understand whether publication charged or authorized the card', 'does not charge or authorize the card', 'family.care_requests'],
+            ['Ask for a guaranteed caregiver response or response time', 'cannot guarantee', 'support.center'],
+            ['Understand whether publishing a request charges the card', 'does not charge or authorize the card', 'family.care_requests'],
+            ['Are taxes, tips, mileage, or holiday charges added?', 'I do not add taxes, tips, mileage, holiday charges, or surcharges', 'family.new_care_request'],
+            ['What would 2.5 hours cost?', 'Family total is $77.50', 'family.new_care_request'],
+            ['Apply a coupon, credit, or promo code', 'does not currently provide a coupon', 'family.care_history'],
+        ];
+
+        foreach ($cases as [$message, $expectedAnswer, $expectedTarget]) {
+            $ticket = $this->ticket($family, $message);
+            app(AiSupportRuntimeService::class)->respond($family, $ticket, $message);
+
+            $answer = $ticket->publicMessages()->reorder()->latest()->firstOrFail()->body;
+            $this->assertStringContainsString($expectedAnswer, $answer, $message);
+            $this->assertTrue(
+                AiSupportGuidedTask::query()
+                    ->where('support_ticket_id', $ticket->id)
+                    ->where('navigation_target_id', $expectedTarget)
+                    ->exists()
+                || AiSupportMessageAction::query()
+                    ->where('support_ticket_id', $ticket->id)
+                    ->get()
+                    ->contains(fn (AiSupportMessageAction $action): bool => data_get($action->payload, 'target_id') === $expectedTarget),
+                $message.' should offer '.$expectedTarget,
+            );
+        }
+
+        Http::assertNothingSent();
     }
 
     public function test_existing_forty_intents_resolve_to_their_stable_ids(): void
@@ -400,5 +484,24 @@ class Batch3FamilyOperatingLayerTest extends TestCase
             'requested_start_at' => now()->addDay(), 'requested_end_at' => now()->addDay()->addHours(2),
             'address_line1' => '123 Main Street', 'city' => 'Raleigh', 'state' => 'NC', 'zip' => '27601',
         ]);
+    }
+
+    private function publishCoverageClosureKnowledge(User $admin): void
+    {
+        app(InitialKnowledgeBaseImportService::class)->apply($admin);
+        $entry = KnowledgeBaseEntry::query()->where('stable_id', 'KB-FAM-004')->firstOrFail();
+        $workflow = app(KnowledgeBaseWorkflowService::class);
+        $version = $workflow->submitForReview($admin, $entry->workingVersion);
+        $version = $workflow->approve($admin, $version);
+        $workflow->publish($admin, $version, 'Publish initial Family access fixture.');
+
+        app(FamilyOperationsKnowledgeBaseImportService::class)->publishPackage(
+            $admin,
+            'Publish the Family intent coverage closure package.',
+        );
+        app(PaymentTimeKnowledgeBaseImportService::class)->publishPackage(
+            $admin,
+            'Publish pricing knowledge for Family intent coverage closure.',
+        );
     }
 }

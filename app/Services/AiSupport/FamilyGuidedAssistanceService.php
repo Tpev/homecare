@@ -109,7 +109,7 @@ class FamilyGuidedAssistanceService
             self::INTENT_OVERVIEW => $this->overview($actor, $actionItems),
             self::INTENT_REQUESTS => in_array($stableIntentId, ['FAM-REQUEST-035', 'FAM-MATCH-013', 'FAM-MATCH-014'], true)
                 ? $this->applicants($actionItems)
-                : $this->requests($actor, $actionItems),
+                : $this->requests($actor, $actionItems, $stableIntentId),
             self::INTENT_VISITS => $this->visits($actor, $actionItems),
             self::INTENT_TIMESHEETS => $this->timesheets($actor, $actionItems),
             self::INTENT_PAYMENT_ATTENTION => $this->paymentAttention($actor, $actionItems),
@@ -243,8 +243,12 @@ class FamilyGuidedAssistanceService
     }
 
     /** @return array{string,list<array<string,mixed>>,string} */
-    private function requests(User $actor, Collection $actionItems): array
+    private function requests(User $actor, Collection $actionItems, ?string $stableIntentId = null): array
     {
+        if ($stableIntentId === 'FAM-REQUEST-032') {
+            return $this->requestPublicationHiringState($actor);
+        }
+
         $requestActions = $actionItems->whereIn('type', ['applicants'])->values();
         if ($requestActions->isNotEmpty()) {
             $lines = $requestActions->take(4)->map(fn (array $item): string => '- '.$this->actionSummary($item))->implode("\n");
@@ -283,6 +287,46 @@ class FamilyGuidedAssistanceService
                 (int) $request->id,
             )],
             (string) $lifecycle['key'],
+        ];
+    }
+
+    /** @return array{string,list<array<string,mixed>>,string} */
+    private function requestPublicationHiringState(User $actor): array
+    {
+        $request = $this->requestsFor($actor)->first();
+        if (! $request) {
+            return [
+                'Publishing a care request does not hire a caregiver by itself. I did not find a care request on your Family account yet.',
+                [$this->guide(AiSupportGuidedTask::TYPE_FAMILY_REQUEST, 'family.care_requests', 'Open Care requests')],
+                'no_request_to_check_hire',
+            ];
+        }
+
+        $hiredApplication = $request->applications->firstWhere('status', CareRequestApplication::STATUS_HIRED);
+        $hiredCaregiver = trim((string) ($hiredApplication?->caregiver?->name ?? $request->booking?->caregiver?->name ?? ''));
+        if ($hiredCaregiver !== '') {
+            $state = $hiredCaregiver.' is currently hired for '.$request->title.'.';
+            $result = 'caregiver_hired';
+        } elseif ($request->status === CareRequest::STATUS_FILLED) {
+            $state = $request->title.' is marked Filled and has moved into the care workflow. Open it to see the assigned-care details.';
+            $result = 'request_filled';
+        } else {
+            $state = 'No caregiver is currently hired for '.$request->title.'. Its current status is '.str_replace('_', ' ', (string) $request->status).'.';
+            $result = 'no_caregiver_hired';
+        }
+
+        $target = $this->requestTarget($request);
+
+        return [
+            'Publishing a request only makes it available to eligible caregivers; publication itself does not hire anyone. '.$state,
+            [$this->guide(
+                AiSupportGuidedTask::TYPE_FAMILY_REQUEST,
+                $target,
+                'Open '.$request->title,
+                'care_request',
+                (int) $request->id,
+            )],
+            $result,
         ];
     }
 

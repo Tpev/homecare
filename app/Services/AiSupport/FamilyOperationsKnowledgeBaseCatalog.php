@@ -21,6 +21,8 @@ class FamilyOperationsKnowledgeBaseCatalog
         'KB-FOP-COM-001', 'KB-FOP-COM-002', 'KB-FOP-COM-003', 'KB-FOP-COM-004',
         'KB-FOP-REG-001', 'KB-FOP-REG-002', 'KB-FOP-REG-003', 'KB-FOP-REG-004',
         'KB-FOP-HIS-001', 'KB-FOP-HIS-002',
+        'KB-FOP-ORI-001', 'KB-FOP-ORI-002', 'KB-FOP-ORI-003',
+        'KB-FOP-PAY-010', 'KB-FOP-PAY-011',
     ];
 
     public const REVISION_STABLE_IDS = ['KB-FAM-004'];

@@ -29,6 +29,8 @@ The August 20, 2026 Batch 8/9 source baseline adds 44 governed entries, 220 link
 
 The August 20, 2026 Batch 10 source adds a ten-goal persistent composition layer and a frozen 48-case care-choice corpus without changing the 324 intent-stage dispositions merely to improve a count. Care choice now reaches an explicit, server-recorded one-time/regular selection or appropriate transfer; request creation continues through the existing draft/recap/publisher contract. The complete AI Support suite passes 233 tests with 5,815 assertions, the isolated Family harness passes 127 tests with 4,898 assertions, and the focused mobile journey passes. Intent-level Complete/Assisted/Human/No-path counts remain 74/152/87/11 because Batch 10 strengthens cross-intent journey continuity rather than granting new domain-write authority. Production deployment and authenticated audit remain pending. See [Batch 10](54-family-goal-guided-journeys.md) and its [implementation record](56-family-goal-guided-journeys-batch-10-implementation-record.md).
 
+The August 27, 2026 Family intent coverage closure adds specific governed answers and useful next-step guidance to the eleven remaining information-only rows. `FAM-REQUEST-032` now reads the latest authorized request/application/booking state before saying whether a caregiver is actually hired; pricing retains deterministic exact-duration calculation and now offers request creation; promo-code language resolves truthfully as unsupported and offers Care history or a person for a claimed existing credit. Source counts are now **74 Complete / 163 Assisted / 87 Human / 0 no-path**, with **319 / 324 Explain**, **172 Read**, **197 Navigate**, **193 Guide**, **77 Prepare**, and **74 Execute + Verify**. These source changes preserve the exact two-user pilot and require normal deployment plus publication of the five new Family Operations KB entries before production can claim the new coverage. See [the implementation record](58-family-intent-coverage-closure.md).
+
 The August 20, 2026 Batch 6/7 source baseline adds 32 governed entries, 160 linked KB evaluations, all 86 Match/Visit/Regular intent mappings, 86 / 86 intent checks across all 344 registered phrases, 27 registered default-off tools, exact-account readers, recap-confirm-execute-receipt flows, stale/idempotency protection, and exact-two-pilot-only activation. Production deployment and authenticated browser verification remain pending and are not claimed by this source record.
 
 The August 19, 2026 Batch 5 completion baseline validates 324 of 324 catalog records, 230 of 230 KB mappings, 137 of 137 established representative phrases, 64 of 64 Batch 5 lifecycle phrases, and 10 of 10 collision cases. The isolated mass harness passes 88 application tests with 2,378 assertions, and the complete AI Support suite passes 180 tests with 3,187 assertions. Batch 5 adds 20 governed entries, 100 linked evaluations, all 71 care-profile/request mappings, authorized profile/request state, multi-turn profile drafting, recap-confirm-execute-verification, independently verified default/archive/restore, exact status/blocker/applicant reads, distinct reuse/duplicate/replacement/copy behavior, copied-draft validation recovery, withdrawal, fresh publication, stale and denied recovery, and exact-pilot-only activation. Deterministic paths make no provider call unless bounded profile-language interpretation is actually required. Catalog validation is not a claim that all 324 intents can execute a domain action: each record's current stages and rollout state remain authoritative. Guide, preparation, confirmed execution, and verified completion remain distinct coverage levels.
@@ -92,8 +94,8 @@ The table above remains the original inventory snapshot and is not the current B
 
 | ID | Family intent | Product today | AI explain now | AI do now | Recommended target behavior |
 | --- | --- | --- | --- | --- | --- |
-| FAM-START-001 | Understand what LoLo does for Families | UI | Partial | No | Explain the bounded marketplace and support model |
-| FAM-START-002 | Understand what non-medical care means | UI | Yes | No | Keep governed explanation; transfer medical questions |
+| FAM-START-001 | Understand what LoLo does for Families | UI | Yes | Guide | Explain the bounded marketplace and support model and offer the Support Center |
+| FAM-START-002 | Understand what non-medical care means | UI | Yes | Guide | Explain the non-medical boundary, offer Support, and transfer medical questions |
 | FAM-START-003 | Understand what the Family dashboard shows | UI | Yes | Navigate | Keep covered |
 | FAM-START-004 | Open the Family dashboard | UI | Yes | Navigate | Keep covered |
 | FAM-START-005 | Understand the difference between one-time, regular, and 24/7 care | UI | Yes | Draft / Transfer | Keep one-time/regular drafting and 24/7 transfer |
@@ -107,7 +109,7 @@ The table above remains the original inventory snapshot and is not the current B
 | FAM-START-013 | Report immediate danger or urgent medical need | Human | Yes | Transfer | Keep 911-first deterministic response, then transfer |
 | FAM-START-014 | Ask to use the assistant in another language | Human | Yes | Transfer | English-only explanation; no translation claim |
 | FAM-START-015 | Ask to speak to a person | Human | Yes | Transfer | Keep covered in the same conversation |
-| FAM-START-016 | Understand what the AI can and cannot do | Partial UI | Partial | No | Publish a concise capability/help entry generated from this registry |
+| FAM-START-016 | Understand what the AI can and cannot do | UI | Yes | Guide | Give the concise capability boundary and offer the Support Center |
 | FAM-START-017 | Ask what currently needs attention across the Family Account | UI | Yes | Read / Guide | Deterministically check supported payment-method, care-payment, request, applicant, visit-change, submitted-hours, profile, and unread-message states; show up to six exact actions |
 
 ## 2. Login, identity, personal account, and security
@@ -164,7 +166,7 @@ The table above remains the original inventory snapshot and is not the current B
 
 | ID | Family intent | Product today | AI explain now | AI do now | Recommended target behavior |
 | --- | --- | --- | --- | --- | --- |
-| FAM-PROFILE-001 | Understand what a care-receiver profile is and who sees it | UI | Yes | No | Governed purpose and candidate-versus-assigned visibility explanation |
+| FAM-PROFILE-001 | Understand what a care-receiver profile is and who sees it | UI | Yes | Guide | Explain purpose and visibility, then open Care receiver profiles |
 | FAM-PROFILE-002 | View care-receiver profiles | UI | Yes | Read / Guide | Read active profile readiness and open the exact profile area |
 | FAM-PROFILE-003 | Create a care-receiver profile | UI | Yes | Yes | Collect a private chat draft, recap every proposed field, confirm, save, and verify |
 | FAM-PROFILE-004 | Save a profile and finish later | UI | Yes | Yes | Show exact draft readiness, recap, confirm, save, and verify |
@@ -226,8 +228,8 @@ The table above remains the original inventory snapshot and is not the current B
 | FAM-REQUEST-029 | Confirm and publish a recurring request | UI | Yes | Yes | Keep explicit confirmation and idempotent publication |
 | FAM-REQUEST-030 | Renew an expired 30-minute confirmation without retyping | UI | Yes | Yes | Keep one-step fresh recap |
 | FAM-REQUEST-031 | Understand what happens after publication | UI | Yes | Navigate | Keep authoritative receipt and View request action |
-| FAM-REQUEST-032 | Understand whether publication hired a caregiver | UI | Yes | No | Keep “live is not hired” explanation |
-| FAM-REQUEST-033 | Understand whether publication charged or authorized the card | UI | Yes | No | Keep governed no-charge-at-publication explanation |
+| FAM-REQUEST-032 | Understand whether publication hired a caregiver | UI | Yes | Read / Guide | Explain “live is not hired,” read the latest authorized request state, and open it |
+| FAM-REQUEST-033 | Understand whether publication charged or authorized the card | UI | Yes | Guide | Explain no charge at publication and open the request record |
 | FAM-REQUEST-034 | See current request status | UI | Yes | Read / Guide | Read the current lifecycle and open the exact request tab |
 | FAM-REQUEST-035 | See whether caregivers viewed or applied | UI | Yes | Read / Guide | Read authoritative applicant counts and guide to replies; never claim caregiver views |
 | FAM-REQUEST-036 | Edit a live request's recipient, tasks, date, time, duration, address, or notes | Replacement workflow | Yes | Draft | Create a reviewed replacement draft; never silently mutate the live request |
@@ -238,7 +240,7 @@ The table above remains the original inventory snapshot and is not the current B
 | FAM-REQUEST-041 | Understand why request publication failed validation | UI | Yes | Draft / Guide | Explain the exact field error and continue from that field without restarting |
 | FAM-REQUEST-042 | Understand why an AI confirmation failed or became stale | UI | Yes | Yes | Explain and reload fresh recap |
 | FAM-REQUEST-043 | Avoid creating a duplicate request after retrying | UI | Yes | Yes | Keep idempotent reconciliation and authoritative receipt |
-| FAM-REQUEST-044 | Ask for a guaranteed caregiver response or response time | Gap | Yes | No | Explain preference is not a guarantee; no availability promise |
+| FAM-REQUEST-044 | Ask for a guaranteed caregiver response or response time | Gap | Yes | Guide | Explain that no response is guaranteed and open the current request/support path without a timing promise |
 | FAM-REQUEST-045 | Ask for a medical task inside a request | Human | Yes | Transfer | Keep medical boundary and transfer |
 
 ## 6. Finding, comparing, inviting, messaging, and hiring caregivers
@@ -284,7 +286,7 @@ The table above remains the original inventory snapshot and is not the current B
 | FAM-PAY-007 | Remove the card on file | Gap | Yes | Guide | Explain that chat cannot remove the card; open Billing & Payments or transfer when the current UI has no valid removal control |
 | FAM-PAY-008 | Understand whether a Family member may change the shared card | UI | Yes | Read / Guide | Deterministically explain shared Family billing access, return only safe card facts, and guide to the secure control |
 | FAM-PAY-009 | Understand when payment is authorized and captured | UI | Yes | Read / Guide | Explain the approved lifecycle, then use the current authorized visit state for a specific case |
-| FAM-PAY-010 | Understand whether publishing a request charges the card | UI | Yes | No | Keep covered |
+| FAM-PAY-010 | Understand whether publishing a request charges the card | UI | Yes | Guide | Explain that publication does not charge and open Care requests |
 | FAM-PAY-011 | Understand an authorization hold versus a captured charge | UI | Yes | Read / Guide | Explain the governed distinction and label the current Family-visible payment state |
 | FAM-PAY-012 | Understand a pending payment | UI | Partial | Read / Guide | Read whether Family action is required and open the exact care-payment recovery area |
 | FAM-PAY-013 | Understand why card authorization failed | UI | Yes | Read / Guide | State a safe normalized reason when possible, never raw provider text, and open the exact retry control |
@@ -302,9 +304,9 @@ The table above remains the original inventory snapshot and is not the current B
 | FAM-PAY-025 | Understand a duplicate or unfamiliar charge | Human | No | Transfer | Read matching authorized records if safe, then human |
 | FAM-PAY-026 | Get a receipt | UI | Yes | Guide | Navigate to the exact Family-visible care and payment record; never invent a document action |
 | FAM-PAY-027 | Get an invoice or tax document | Gap / Human | Yes | Guide / Transfer | Explain current availability and transfer rather than promise a document |
-| FAM-PAY-028 | Understand taxes, fees, tips, mileage, holiday charges, or surcharges | Approved pricing truth | Yes | Explain | State $30/hour Family, $27/hour caregiver, and $3/hour LoLo; do not add other charges without later governed policy |
-| FAM-PAY-029 | Ask the hourly price or estimated total | Approved pricing truth | Yes | Explain / Calculate | State $30/hour Family, $27/hour caregiver, and $3/hour LoLo; calculate only from an explicit duration |
-| FAM-PAY-030 | Apply a coupon, credit, or promo code | Gap | No | No | Product gap; never invent discounts |
+| FAM-PAY-028 | Understand taxes, fees, tips, mileage, holiday charges, or surcharges | Approved pricing truth | Yes | Explain / Guide | State $30/hour Family care plus $1/hour Family processing fee, and $27/hour caregiver gross minus actual Stripe processing fees; do not invent other charges; offer the next valid care step |
+| FAM-PAY-029 | Ask the hourly price or estimated total | Approved pricing truth | Yes | Explain / Calculate / Guide | State $30/hour Family care plus $1/hour Family processing fee, and $27/hour caregiver gross minus actual Stripe processing fees; calculate only from an explicit duration; offer request creation |
+| FAM-PAY-030 | Apply a coupon, credit, or promo code | Gap | Yes | Guide | State plainly that coupons, credits, and promo codes are not currently supported; never invent a discount; offer Care history or a person for a claimed existing credit |
 | FAM-PAY-031 | Change billing owner or use a different person's card | Gap / Human | No | No | Define authorization and account model; human until then |
 | FAM-PAY-032 | Understand whether caregiver payout has happened | Human / restricted | No | No | Do not expose caregiver payout details; explain Family-visible state only |
 

@@ -46,9 +46,9 @@ The following verification passed on August 19, 2026:
 | Provider calls made by the Batch 1-2 plan | 0 |
 | Initial KB evaluations | 60 |
 | Interactive KB evaluations | 60 |
-| Family Operations KB Wave 1 | 50 new entries + 1 corrective revision |
+| Family Operations KB package | 55 new entries + 1 corrective revision |
 | Family Operations intent mapping | 217 links / 190 unique Family intents |
-| Family Operations KB evaluations | 255 |
+| Family Operations KB evaluations | 280 |
 | Payment/time Batch 4 | 18 entries / 90 evaluations |
 | Interactive request/provider cases | 56 |
 | Executable Family intent catalog | 324 / 324 |
@@ -128,11 +128,11 @@ The registry contains 324 unique Family intents.
 | Current action level | Intents | Meaning |
 | --- | ---: | --- |
 | Complete | 74 | The current catalog has a narrow Execute plus Verify path |
-| Assisted | 152 | Read, navigate, guide, or preparation exists, but the domain outcome is not executed by chat |
-| No AI action | 11 | No reliable read, guide, execution, or human terminal path is implemented |
+| Assisted | 163 | Read, navigate, guide, or preparation exists, but the domain outcome is not executed by chat |
+| No operational path | 0 | Every cataloged intent now has a truthful AI-assisted, completed, or human terminal path |
 | Human transfer | 87 | Human handling is the declared terminal behavior, including all Continuous Coverage management |
 
-Information coverage is now broad: 318 intents have an approved Explain stage and 6 payment-edge rows deliberately do not claim a complete automated explanation.
+Information coverage is now broad: 319 intents have an approved Explain stage and 5 payment-edge rows deliberately do not claim a complete automated explanation.
 
 All 324 intents have an executable disposition and explicit KB mapping. A valid read, guide, or human disposition is not a claim that the assistant executes the requested domain outcome.
 
@@ -142,13 +142,13 @@ All 324 intents have an executable disposition and explicit KB mapping. A valid 
 
 | Domain | Intents | Explain Y/P/N | Do C/A/N/H |
 | --- | ---: | ---: | ---: |
-| Orientation and care-path selection | 17 | 17 / 0 / 0 | 0 / 7 / 3 / 7 |
+| Orientation and care-path selection | 17 | 17 / 0 / 0 | 0 / 10 / 0 / 7 |
 | Login, identity, account, and security | 20 | 20 / 0 / 0 | 2 / 13 / 0 / 5 |
 | Family access and ownership | 20 | 20 / 0 / 0 | 6 / 10 / 0 / 4 |
-| Care-receiver profiles | 26 | 26 / 0 / 0 | 15 / 7 / 1 / 3 |
-| Care-request lifecycle | 45 | 45 / 0 / 0 | 8 / 33 / 3 / 1 |
+| Care-receiver profiles | 26 | 26 / 0 / 0 | 15 / 8 / 0 / 3 |
+| Care-request lifecycle | 45 | 45 / 0 / 0 | 8 / 36 / 0 / 1 |
 | Applicants, messaging, and hiring | 25 | 25 / 0 / 0 | 9 / 14 / 0 / 2 |
-| Billing and payment recovery | 32 | 26 / 0 / 6 | 0 / 21 / 4 / 7 |
+| Billing and payment recovery | 32 | 27 / 0 / 5 | 0 / 25 / 0 / 7 |
 | Visits, submitted hours, and problems | 35 | 35 / 0 / 0 | 15 / 11 / 0 / 9 |
 | Regular care and extra visits | 26 | 26 / 0 / 0 | 15 / 8 / 0 / 3 |
 | Continuous Coverage / 24/7 management | 26 | 26 / 0 / 0 | 0 / 0 / 0 / 26 |
@@ -209,7 +209,7 @@ The operating layer is implemented, but domain breadth is still incomplete:
 | Authoritative verification | Generic registry plus domain receipts for each supported confirmed action | Every complete journey has a domain receipt or fresh state verifier | Batch 9 source complete; pilot audit pending |
 | Human support | Atomic same-conversation transfer, Admin alert, context summary | Human terminal path for every judgment/exception intent with no repetition | Implemented; refine with domain context |
 | Older-adult UI | State-aware start, mobile chat, universal contextual follow-ups, action progress, recovery, guide highlight, and persistent plain goal/step | Complete more domain journeys without adding cognitive load | Batch 10 deployed; authenticated audit and correction recheck complete |
-| Evaluation | 324 catalog rows/mappings; B6/7 32 entries, 160 cases, 86 intents/344 phrases; B8/9 44 entries, 220 cases, 118 intents/472 phrases; B10 48 care cases and mobile journey | Per-intent multi-turn, state, browser, and usability coverage | Production browser audit complete; correction suite passes 238 tests / 5,846 assertions |
+| Evaluation | 324 catalog rows/mappings; B6/7 32 entries, 160 cases, 86 intents/344 phrases; B8/9 44 entries, 220 cases, 118 intents/472 phrases; B10 48 care cases; coverage closure 11 runtime paths and 25 new KB evaluations | Per-intent multi-turn, state, browser, and usability coverage | Coverage-closure source passes 240 tests / 5,911 assertions; production recheck pending |
 | Admin visibility | KB lifecycle, transcripts, Availability, searchable 324-intent catalog, and compact outcome summary | Add useful domain funnel detail without transcript duplication | Batch 3 complete; refine by domain |
 
 ## Knowledge-base audit
@@ -224,7 +224,7 @@ Family Operations KB Wave 1, the 18-entry Batch 4 payment/time package, and the 
 | Family orientation | 5 | Dashboard, requests, new request, Family access, Account Settings |
 | Caregiver orientation | 4 | Dashboard/onboarding, Work Inbox, visits, Account Settings |
 | Interactive Family care requests | 12 | Care-path choice, required request information, 24/7 transfer, safety, draft/confirmation/publication behavior |
-| Family Operations Wave 1 | 50 new + 1 revision | Payments, requests/applicants, visits/hours, profiles/access, messages/notifications, regular care, and history |
+| Family Operations package | 55 new + 1 revision | Payments, requests/applicants, visits/hours, profiles/access, messages/notifications, regular care, history, and the final orientation/pricing coverage closure |
 | Payment/time Batch 4 | 18 new | `$30 / $27 / $3` pricing, payment lifecycle/failures/recovery/history/refunds/disputes, and submitted-hours/correction state |
 | Profile/request Batch 5 | 20 new | Profile visibility, permissions, readiness, lifecycle actions, request state/blockers, reuse, replacement, copy, withdrawal, and recovery |
 | Marketplace care Batches 6/7 — publication pending | 32 new | Applicant matching/invitations/messages/hiring, visits/hours/corrections/reviews/rebooking, and regular-care offers/counters/extra/skip/schedule/pause/resume/end |

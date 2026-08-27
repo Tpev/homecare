@@ -32,7 +32,7 @@ class FamilyOperationsKnowledgeContentTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_catalog_has_fifty_entries_one_revision_and_255_linked_evaluations(): void
+    public function test_catalog_has_fifty_five_entries_one_revision_and_280_linked_evaluations(): void
     {
         $catalog = app(FamilyOperationsKnowledgeBaseCatalog::class);
         $definitions = collect($catalog->allDefinitions());
@@ -42,17 +42,17 @@ class FamilyOperationsKnowledgeContentTest extends TestCase
         preg_match_all('/FAM-[A-Z]+-[0-9]{3}/', (string) $registry, $matches);
         $knownIntents = collect($matches[0])->unique();
 
-        $this->assertCount(50, $catalog->entries());
+        $this->assertCount(55, $catalog->entries());
         $this->assertCount(1, $catalog->revisions());
-        $this->assertCount(255, $evaluationIds);
-        $this->assertCount(255, $evaluationIds->unique());
-        $this->assertCount(255, $cases);
+        $this->assertCount(280, $evaluationIds);
+        $this->assertCount(280, $evaluationIds->unique());
+        $this->assertCount(280, $cases);
         $this->assertEqualsCanonicalizing($evaluationIds->all(), $cases->pluck('id')->all());
         $this->assertTrue($definitions->every(fn (array $definition): bool => $definition['roles'] === ['family']));
         $this->assertTrue($definitions->flatMap(fn (array $definition): array => $definition['intent_ids'])
             ->every(fn (string $intentId): bool => $knownIntents->contains($intentId)));
-        $this->assertFalse($definitions->flatMap(fn (array $definition): array => $definition['intent_ids'])->contains('FAM-PAY-028'));
-        $this->assertFalse($definitions->flatMap(fn (array $definition): array => $definition['intent_ids'])->contains('FAM-PAY-029'));
+        $this->assertTrue($definitions->flatMap(fn (array $definition): array => $definition['intent_ids'])->contains('FAM-PAY-028'));
+        $this->assertTrue($definitions->flatMap(fn (array $definition): array => $definition['intent_ids'])->contains('FAM-PAY-029'));
 
         foreach ($definitions as $definition) {
             $this->assertSame(
@@ -69,15 +69,15 @@ class FamilyOperationsKnowledgeContentTest extends TestCase
         $importer = app(FamilyOperationsKnowledgeBaseImportService::class);
 
         $plan = $importer->plan();
-        $this->assertSame(50, $plan['counts']['creates']);
+        $this->assertSame(55, $plan['counts']['creates']);
         $this->assertSame(1, $plan['counts']['revisions']);
         $this->assertSame(0, $plan['counts']['conflicts']);
 
         $result = $importer->apply($admin);
-        $this->assertCount(50, $result['created']);
+        $this->assertCount(55, $result['created']);
         $this->assertCount(1, $result['revised']);
         $this->assertSame(1, $result['published_count_after']);
-        $this->assertSame(51, KnowledgeBaseEntry::query()
+        $this->assertSame(56, KnowledgeBaseEntry::query()
             ->whereIn('stable_id', array_merge(
                 FamilyOperationsKnowledgeBaseCatalog::APPROVED_STABLE_IDS,
                 FamilyOperationsKnowledgeBaseCatalog::REVISION_STABLE_IDS,
@@ -93,7 +93,7 @@ class FamilyOperationsKnowledgeContentTest extends TestCase
         $this->assertStringContainsString('Active Family members', $familyAccess->workingVersion->answer_body);
 
         $again = $importer->apply($admin);
-        $this->assertCount(51, $again['noops']);
+        $this->assertCount(56, $again['noops']);
         $this->assertCount(0, $again['created']);
         $this->assertCount(0, $again['revised']);
     }
@@ -108,11 +108,11 @@ class FamilyOperationsKnowledgeContentTest extends TestCase
             '--actor-email' => $admin->email,
             '--reason' => 'Publish approved Family Operations KB Wave 1.',
             '--confirm' => 'PUBLISH-FAMILY-OPERATIONS-KB',
-        ])->expectsOutputToContain('51 entries published')
+        ])->expectsOutputToContain('56 entries published')
             ->expectsOutputToContain('two-user pilot boundary were not changed')
             ->assertSuccessful();
 
-        $this->assertSame(51, KnowledgeBaseEntry::query()
+        $this->assertSame(56, KnowledgeBaseEntry::query()
             ->whereIn('stable_id', array_merge(
                 FamilyOperationsKnowledgeBaseCatalog::APPROVED_STABLE_IDS,
                 FamilyOperationsKnowledgeBaseCatalog::REVISION_STABLE_IDS,

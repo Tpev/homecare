@@ -24,6 +24,7 @@ class FamilyIntentJourneyService
         private readonly AiSupportPreparationService $preparations,
         private readonly AiSupportHandoffService $handoff,
         private readonly AiSupportPricingTruth $pricing,
+        private readonly FamilyGuidedAssistanceService $familyGuidance,
         private readonly NavigationTargetRegistry $navigation,
         private readonly FamilyAccountContext $familyAccounts,
         private readonly AiSupportEventRecorder $events,
@@ -37,6 +38,17 @@ class FamilyIntentJourneyService
         $this->record($ticket, 'intent_recognized', $intentId, 'recognized', $actor, $source);
 
         if ($this->familyLifecycle->respond($actor, $ticket, $record, $message)) {
+            return;
+        }
+
+        if ($intentId === 'FAM-REQUEST-032') {
+            $this->familyGuidance->respond(
+                $actor,
+                $ticket,
+                FamilyGuidedAssistanceService::INTENT_REQUESTS,
+                $intentId,
+            );
+
             return;
         }
 
@@ -69,7 +81,7 @@ class FamilyIntentJourneyService
             return;
         }
 
-        $answer = $intentId === 'FAM-PAY-029'
+        $answer = in_array($intentId, ['FAM-PAY-028', 'FAM-PAY-029'], true)
             ? $this->pricing->familyAnswer($message)
             : trim((string) $versions->first()->answer_body);
         $destination = collect((array) data_get($record, 'contracts.destinations', []))
@@ -101,6 +113,49 @@ class FamilyIntentJourneyService
         }
 
         $this->automatedMessage($ticket, Str::limit($answer, 1000, ''));
+    }
+
+    public function respondPricing(User $actor, SupportTicket $ticket, string $message): void
+    {
+        $intentId = preg_match('/\b(?:tax|taxes|tip|tips|mileage|holiday charge|surcharge|fee|fees)\b/i', $message) === 1
+            ? 'FAM-PAY-028'
+            : 'FAM-PAY-029';
+        $record = $this->catalog->find($intentId);
+        if (! $record) {
+            $this->automatedMessage($ticket, $this->pricing->familyAnswer($message));
+
+            return;
+        }
+
+        $this->record($ticket, 'intent_recognized', $intentId, 'recognized', $actor, 'pricing_fast_path');
+        $answer = $this->pricing->familyAnswer($message);
+        $destination = collect((array) data_get($record, 'contracts.destinations', []))
+            ->first(fn (string $target): bool => $this->navigation->allowedFor($actor, $target));
+        if (! $destination) {
+            $this->automatedMessage($ticket, $answer);
+
+            return;
+        }
+
+        $definition = $this->navigation->definition($destination) ?? [];
+        if (filled($definition['client_target_id'] ?? null)) {
+            $this->guidedTasks->offerFamilyReadResult(
+                $actor,
+                $ticket,
+                Str::limit($answer, 1000, ''),
+                $intentId,
+                'pricing_answer',
+                [[
+                    'task_type' => AiSupportGuidedTask::TYPE_FAMILY_REQUEST,
+                    'target_id' => $destination,
+                    'label' => $intentId === 'FAM-PAY-029' ? 'Start a care request' : 'Continue to care request',
+                    'verifier_id' => 'unavailable_v1',
+                ]],
+            );
+        } else {
+            $this->navigateMessage($actor, $ticket, $answer, $destination, $intentId);
+        }
+        $this->record($ticket, 'intent_action_offered', $intentId, 'pricing_next_step', $actor, 'pricing_fast_path');
     }
 
     /** @param list<string> $candidateIds */

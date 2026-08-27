@@ -333,7 +333,7 @@ Exercise desktop and mobile with the exact pilot boundary:
 - Zero synthetic live records left after automated or browser evaluation.
 - Average model cost remains below $0.01 per completed assisted journey where deterministic continuation is possible.
 
-The desired portfolio direction is to reduce the 11 no-operational-path rows to zero and move appropriate high-value assisted rows toward verified completion. Do not relabel informational or human-owned intents merely to improve a percentage. Journey completion is the primary product measure; intent-stage counts remain the authority measure.
+The August 27 source closure reduces the 11 no-operational-path rows to zero by implementing specific answers and real next steps rather than relabeling them. The resulting portfolio is 74 Complete / 163 Assisted / 87 Human / 0 no-path. Production retains the previous position until the code is deployed and the five new governed Family Operations entries are published. Continue moving appropriate high-value assisted rows toward verified completion; journey completion remains the primary product measure and intent-stage counts remain the authority measure.
 
 ## 15. Implementation sequence
 

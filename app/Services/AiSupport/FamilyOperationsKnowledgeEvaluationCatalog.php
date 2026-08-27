@@ -22,10 +22,10 @@ class FamilyOperationsKnowledgeEvaluationCatalog
         $expectedIds = collect($this->knowledge->allDefinitions())
             ->flatMap(fn (array $definition): array => $definition['evaluation_ids'])
             ->all();
-        if (count($cases) !== 255
-            || count(array_unique(array_column($cases, 'id'))) !== 255
+        if (count($cases) !== 280
+            || count(array_unique(array_column($cases, 'id'))) !== 280
             || collect($cases)->pluck('id')->sort()->values()->all() !== collect($expectedIds)->sort()->values()->all()) {
-            throw new DomainException('Family operations KB evaluation inventory must contain the 255 linked unique cases.');
+            throw new DomainException('Family operations KB evaluation inventory must contain the 280 linked unique cases.');
         }
 
         $stableIds = array_merge(

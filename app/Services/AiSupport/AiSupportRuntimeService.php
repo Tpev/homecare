@@ -89,7 +89,11 @@ class AiSupportRuntimeService
                 ['KB-B4-PRICE-001'],
                 'active',
             )->isNotEmpty()) {
-            $this->automatedMessage($ticket, $this->pricing->answer($actor->role, $newestMessage));
+            if ($actor->role === 'family') {
+                $this->familyJourneys->respondPricing($actor, $ticket, $newestMessage);
+            } else {
+                $this->automatedMessage($ticket, $this->pricing->answer($actor->role, $newestMessage));
+            }
 
             return;
         }
@@ -124,6 +128,24 @@ class AiSupportRuntimeService
                 report($exception);
                 $this->handoff->transfer($actor, $ticket, 'family_status_unavailable');
             }
+
+            return;
+        }
+
+        $resolvedInformationIntent = $actor->role === 'family'
+            && in_array($intentRecord['intent_id'] ?? null, [
+                'FAM-START-001', 'FAM-START-002', 'FAM-START-016', 'FAM-PROFILE-001',
+                'FAM-REQUEST-032', 'FAM-REQUEST-033', 'FAM-REQUEST-044', 'FAM-PAY-010',
+                'FAM-PAY-028', 'FAM-PAY-029', 'FAM-PAY-030',
+            ], true);
+        if ($resolvedInformationIntent) {
+            $this->familyJourneys->respond(
+                $actor,
+                $ticket,
+                $intentRecord,
+                $newestMessage,
+                (string) ($intentResolution['source'] ?? 'resolved_information'),
+            );
 
             return;
         }
