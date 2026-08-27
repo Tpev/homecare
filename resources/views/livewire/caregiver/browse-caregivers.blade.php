@@ -1,4 +1,4 @@
-<div class="hc-page py-8 space-y-6">
+<div data-ai-target="family.caregivers" tabindex="-1" class="hc-page space-y-6 py-8 outline-none">
     @if (!empty($prelaunchMode))
         <x-alert color="yellow">
             Caregiver marketplace is in pre-launch mode. Profiles are not publicly available yet.

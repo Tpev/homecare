@@ -13,7 +13,8 @@
         ];
     @endphp
 
-    <section data-ai-target="family.regular_care" tabindex="-1" class="hc-brand-panel outline-none">
+    <section data-ai-target="family.care_arrangements" tabindex="-1" class="hc-brand-panel outline-none">
+        <span data-ai-target="family.regular_care" tabindex="-1" class="sr-only">Care arrangements</span>
         <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
                 <p class="hc-brand-kicker text-[#E8E0FF]">Arrangements</p>

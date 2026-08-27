@@ -93,7 +93,7 @@ class FamilyGuidedAssistanceService
         // Account-wide wording is intentionally evaluated after specific domains so a
         // question such as "why did my payment fail and what should I do?" stays about
         // that exact payment instead of being widened to the whole-account overview.
-        if (preg_match('/\b(?:what|anything|everything|account)\b.{0,45}\b(?:needs?\s+(?:my\s+)?attention|need\s+to\s+do|pending|okay|ok|action)\b|\bwhat\s+should\s+i\s+do\b|\bcheck\s+(?:my\s+)?account\b/iu', $message)) {
+        if (preg_match('/\b(?:care\s+overview|family\s+(?:home|dashboard)|where\s+is\s+(?:my\s+)?(?:home|care)\s+page)\b|\b(?:what|anything|everything|account)\b.{0,45}\b(?:needs?\s+(?:my\s+)?attention|need\s+to\s+do|pending|okay|ok|action)\b|\bwhat\s+should\s+i\s+do\b|\bcheck\s+(?:my\s+)?account\b/iu', $message)) {
             return self::INTENT_OVERVIEW;
         }
 
@@ -106,7 +106,7 @@ class FamilyGuidedAssistanceService
         $actionItems = $this->actions->buildForAccount($account);
 
         [$message, $guides, $resultCode] = match ($intent) {
-            self::INTENT_OVERVIEW => $this->overview($actor, $actionItems),
+            self::INTENT_OVERVIEW => $this->overview($actor, $actionItems, $stableIntentId),
             self::INTENT_REQUESTS => in_array($stableIntentId, ['FAM-REQUEST-035', 'FAM-MATCH-013', 'FAM-MATCH-014'], true)
                 ? $this->applicants($actionItems)
                 : $this->requests($actor, $actionItems, $stableIntentId),
@@ -146,8 +146,16 @@ class FamilyGuidedAssistanceService
     }
 
     /** @return array{string,list<array<string,mixed>>,string} */
-    private function overview(User $actor, Collection $actionItems): array
+    private function overview(User $actor, Collection $actionItems, ?string $stableIntentId = null): array
     {
+        if (in_array($stableIntentId, ['FAM-START-003', 'FAM-START-004'], true)) {
+            return [
+                'Care is your Family home. Overview shows what needs attention and each care journey. Actions collects decisions and problems, Schedule shows upcoming visits, Arrangements shows recurring care and care still being arranged, and History shows past care.',
+                [$this->guide(AiSupportGuidedTask::TYPE_FAMILY_REQUEST, 'family.care_requests', 'Open Care overview')],
+                'care_overview_explained',
+            ];
+        }
+
         $items = collect();
         try {
             $payment = $this->paymentStatus->read($actor);
@@ -687,7 +695,7 @@ class FamilyGuidedAssistanceService
         if ($plans->isEmpty()) {
             return [
                 'You do not have a recurring care plan yet. After you complete and approve a visit, the Recurring care page shows caregivers you can book on a repeating schedule.',
-                [$this->guide(AiSupportGuidedTask::TYPE_FAMILY_VISIT, 'family.regular_care', 'Open recurring care')],
+                [$this->guide(AiSupportGuidedTask::TYPE_FAMILY_VISIT, 'family.care_arrangements', 'Open Arrangements')],
                 'regular_care_empty',
             ];
         }

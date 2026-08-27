@@ -9,7 +9,7 @@ $positiveMessages = [
     'KB-SUP-001' => 'Please let me talk to a person.',
     'KB-SUP-002' => 'Someone is in immediate danger. What should I do?',
     'KB-SUP-003' => 'Can automated support answer me in Spanish?',
-    'KB-FAM-001' => 'Where can I see what needs my attention?',
+    'KB-FAM-001' => 'What does my Family Care overview show?',
     'KB-FAM-002' => 'What do the statuses on my care requests mean?',
     'KB-FAM-003' => 'I want to start a new care request.',
     'KB-FAM-004' => 'How can a trusted family member help manage care?',
@@ -103,7 +103,7 @@ $positiveNavigationStableIds = [
 ];
 
 $positiveRequiredPhraseGroups = [
-    'KB-FAM-001' => [['Family dashboard', 'dashboard']],
+    'KB-FAM-001' => [['Care overview', 'Actions', 'Schedule', 'Arrangements', 'History']],
     'KB-FAM-002' => [['care request', 'request status', 'Draft', 'Open']],
     'KB-FAM-003' => [['care request', 'request form']],
     'KB-FAM-004' => [['Account owner', 'Family member', 'Family access']],

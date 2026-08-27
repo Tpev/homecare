@@ -14,7 +14,7 @@ class FamilyIntentEvaluationCatalog
 
     private const EXPECTED_INTENT_IDS = [
         'FAM-PAY-002', 'FAM-PAY-003', 'FAM-PAY-004', 'FAM-PAY-005', 'FAM-PAY-006', 'FAM-PAY-008',
-        'FAM-START-017',
+        'FAM-START-003', 'FAM-START-004', 'FAM-START-017',
         'FAM-PROFILE-002', 'FAM-PROFILE-003', 'FAM-PROFILE-004',
         'FAM-REQUEST-034', 'FAM-REQUEST-035',
         'FAM-MATCH-013', 'FAM-MATCH-017',
@@ -47,7 +47,7 @@ class FamilyIntentEvaluationCatalog
         sort($expected);
 
         if ($ids !== $expected || count($ids) !== count(array_unique($ids))) {
-            throw new DomainException('Family intent evaluation must cover each of the 45 Batch 1/2/4 registry IDs exactly once.');
+            throw new DomainException('Family intent evaluation must cover each of the 47 Batch 1/2/4 registry IDs exactly once.');
         }
 
         $handlers = [

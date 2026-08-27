@@ -14,7 +14,7 @@ class FamilyIntentCoverageTest extends TestCase
             '--batch' => [1],
             '--domain' => ['payments'],
         ])
-            ->expectsOutputToContain('6 / 45')
+            ->expectsOutputToContain('6 / 47')
             ->expectsOutputToContain('Routing precheck: PASS')
             ->expectsOutputToContain('No test database, provider call, production write, or report write occurred')
             ->assertSuccessful();
@@ -71,8 +71,8 @@ class FamilyIntentCoverageTest extends TestCase
         $manifest = $catalog->manifest();
 
         $this->assertSame(FamilyIntentEvaluationCatalog::VERSION, $manifest['version']);
-        $this->assertCount(45, $manifest['cases']);
-        $this->assertGreaterThanOrEqual(135, array_sum(array_map(
+        $this->assertCount(47, $manifest['cases']);
+        $this->assertGreaterThanOrEqual(141, array_sum(array_map(
             static fn (array $case): int => count($case['phrases']),
             $manifest['cases'],
         )));

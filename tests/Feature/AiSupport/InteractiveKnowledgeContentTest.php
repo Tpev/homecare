@@ -15,7 +15,7 @@ class InteractiveKnowledgeContentTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_approved_interactive_catalog_has_twelve_entries_sixty_unique_evaluations_and_pricing_hold(): void
+    public function test_approved_interactive_catalog_has_twelve_entries_sixty_unique_evaluations_and_current_pricing(): void
     {
         $catalog = app(InteractiveKnowledgeBaseCatalog::class);
         $entries = collect($catalog->entries());
@@ -25,8 +25,8 @@ class InteractiveKnowledgeContentTest extends TestCase
         $this->assertCount(60, $evaluations);
         $this->assertCount(60, $evaluations->unique());
         $pricing = $entries->firstWhere('stable_id', 'KB-CARE-006');
-        $this->assertSame(['pricing_answers_held_v1'], $pricing['capability_ids']);
-        $this->assertNotContains('support_answers_v1', $pricing['capability_ids']);
+        $this->assertSame(['support_answers_v1'], $pricing['capability_ids']);
+        $this->assertStringContainsString('$31 per worked hour', $pricing['answer_body']);
         $this->assertTrue($entries->every(fn (array $entry): bool => count($entry['sources']) >= 1));
         $cases = collect(app(InteractiveKnowledgeEvaluationCatalog::class)->cases());
         $this->assertCount(60, $cases);

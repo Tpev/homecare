@@ -112,19 +112,19 @@ class InteractiveAiSupportModelEvaluationService
         ] : null;
 
         return json_encode([
-            'current_date' => '2026-08-14',
+            'current_date' => '2026-08-27',
             'timezone' => 'America/New_York (Eastern Time)',
             'actor' => ['id' => 'synthetic-user', 'role' => $role],
             'available_semantic_targets' => $role === 'family'
-                ? ['support.center', 'family.dashboard', 'family.care_requests', 'family.new_care_request', 'family.access', 'account.profile']
+                ? ['support.center', 'family.care_requests', 'family.care_actions', 'family.care_schedule', 'family.care_arrangements', 'family.caregivers', 'family.new_care_request', 'family.access', 'account.profile']
                 : ['support.center', 'caregiver.dashboard', 'caregiver.work_inbox', 'caregiver.shifts', 'account.profile'],
             'governed_knowledge' => [[
                 'stable_id' => 'KB-SYNTHETIC-EVAL',
                 'version_id' => 1,
                 'title' => 'Synthetic governed evaluation context',
-                'answer' => 'Family users may choose one-time or recurring care. Caregivers receive answers and navigation only. Pricing answers are held. Human transfer is always available.',
+                'answer' => 'Family users may choose one-time or recurring care. Caregivers receive answers and navigation only. Family care is $30 per worked hour plus a $1 per worked hour processing fee. Human transfer is always available.',
                 'may_state' => ['Use only approved navigation and care paths.'],
-                'must_not_infer' => ['Price, payment state, availability, or another account data.'],
+                'must_not_infer' => ['Payment state, historical totals, availability, or another account data.'],
                 'targets' => [],
             ]],
             'authorized_family_context' => $role === 'family' ? [

@@ -2,6 +2,7 @@
 
 namespace App\Services\AiSupport;
 
+use App\Models\CaregiverProfile;
 use App\Models\CarePlan;
 use App\Models\CareRecipientProfile;
 use App\Models\CareRequest;
@@ -63,9 +64,17 @@ class NavigationTargetRegistry
         }
 
         $definition = $this->definition($targetId);
-        $parameters = (array) ($definition['query'] ?? []);
+        $parameters = array_merge(
+            (array) ($definition['route_parameters'] ?? []),
+            (array) ($definition['query'] ?? []),
+        );
         if (isset($definition['resource_type'])) {
-            $parameters[(string) $definition['route_parameter']] = (int) $resource['resource_id'];
+            $resourceId = (int) $resource['resource_id'];
+            $parameters[(string) $definition['route_parameter']] = $this->resourceRouteValue(
+                (string) $definition['resource_type'],
+                $resourceId,
+                (string) ($definition['resource_route_key'] ?? 'id'),
+            );
         }
 
         return route((string) $definition['route'], $parameters);
@@ -109,7 +118,22 @@ class NavigationTargetRegistry
             'care_plan' => CarePlan::query()->forFamilyAccount($account)->whereKey($resourceId)->exists(),
             'care_profile' => CareRecipientProfile::query()->forFamilyAccount($account)->whereKey($resourceId)->exists(),
             'conversation' => CareRequestConversation::query()->forUser($user)->whereKey($resourceId)->exists(),
+            'caregiver_profile' => CaregiverProfile::query()
+                ->whereKey($resourceId)
+                ->where('status', 'active')
+                ->whereNotNull('slug')
+                ->where('slug', '!=', '')
+                ->exists(),
             default => false,
         };
+    }
+
+    private function resourceRouteValue(string $resourceType, int $resourceId, string $routeKey): int|string
+    {
+        if ($resourceType === 'caregiver_profile' && $routeKey === 'slug') {
+            return (string) CaregiverProfile::query()->whereKey($resourceId)->value('slug');
+        }
+
+        return $resourceId;
     }
 }

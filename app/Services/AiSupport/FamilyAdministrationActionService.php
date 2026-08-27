@@ -5,6 +5,8 @@ namespace App\Services\AiSupport;
 use App\Models\AiSupportConfirmedActionEvidence;
 use App\Models\AiSupportGuidedTask;
 use App\Models\AiSupportMessageAction;
+use App\Models\CaregiverProfile;
+use App\Models\CarePlan;
 use App\Models\ContinuousCoveragePlan;
 use App\Models\ContinuousCoverageShift;
 use App\Models\FamilyAccountInvitation;
@@ -425,13 +427,45 @@ class FamilyAdministrationActionService
             return true;
         }
         $row = $this->history->present($booking);
+        if ($number === 8) {
+            $profile = $booking->caregiver?->caregiverProfile;
+            if ($profile) {
+                $this->offerRead(
+                    $actor,
+                    $ticket,
+                    'I found the current public caregiver profile linked to booking #'.$row['booking_id'].'. Availability still needs to be confirmed for any new care.',
+                    $intentId,
+                    'family.caregiver_profile',
+                    $profile,
+                );
+
+                return true;
+            }
+            $this->offerRead($actor, $ticket, 'That historical caregiver no longer has a public profile I can open. You can browse current caregiver profiles instead.', $intentId, 'family.caregivers');
+
+            return true;
+        }
+        if ($number === 9) {
+            if ($booking->carePlan) {
+                $this->offerRead(
+                    $actor,
+                    $ticket,
+                    'I found the recurring-care journey linked to booking #'.$row['booking_id'].'.',
+                    $intentId,
+                    'family.recurring_care.journey',
+                    $booking->carePlan,
+                );
+
+                return true;
+            }
+            $this->offerRead($actor, $ticket, 'This historical visit is not linked to a recurring-care plan.', $intentId, 'family.care_history');
+
+            return true;
+        }
         $money = collect($summary['money'])->map(fn (array $amount): string => $amount['net_billed_label'].' net billed and '.$amount['refunded_label'].' refunded')->implode('; ');
         $body = in_array($number, [1, 2, 3, 4], true)
             ? 'Care History has '.$summary['care_provided'].' care record'.($summary['care_provided'] === 1 ? '' : 's').', '.$this->minutesLabel((int) $summary['worked_minutes']).', '.$money.'.'
             : 'Booking #'.$row['booking_id'].' with '.$row['caregiver_name'].' for '.$row['recipient_name'].' was '.$row['visit_status_label'].'. Worked time: '.($row['worked_label'] ?: 'not recorded').'. Payment: '.$row['payment']['label'].'; net '.$row['payment']['net_label'].'.';
-        if (in_array($number, [8, 9], true)) {
-            $body .= ' Related records are re-authorized before opening; a historical link is never treated as current caregiver availability.';
-        }
         $this->offerRead($actor, $ticket, $body, $intentId, 'family.care_history');
 
         return true;
@@ -745,13 +779,20 @@ class FamilyAdministrationActionService
         }
     }
 
-    private function offerRead(User $actor, SupportTicket $ticket, string $body, string $intentId, string $targetId): void
+    private function offerRead(User $actor, SupportTicket $ticket, string $body, string $intentId, string $targetId, mixed $resource = null): void
     {
+        $resourceType = match (true) {
+            $resource instanceof CarePlan => 'care_plan',
+            $resource instanceof CaregiverProfile => 'caregiver_profile',
+            default => null,
+        };
+        $resourceContext = ['resource_type' => $resourceType, 'resource_id' => $resource?->id];
         $guides = [];
-        if ($this->navigation->allowedFor($actor, $targetId)) {
+        if ($this->navigation->allowedFor($actor, $targetId, $resourceContext)) {
             $definition = $this->navigation->definition($targetId) ?? [];
             $guides[] = ['task_type' => str_contains($targetId, 'history') ? AiSupportGuidedTask::TYPE_FAMILY_HISTORY : AiSupportGuidedTask::TYPE_FAMILY_REQUEST,
-                'target_id' => $targetId, 'label' => (string) ($definition['label'] ?? 'Open the right page'),
+                'target_id' => $targetId, 'resource_type' => $resourceType, 'resource_id' => $resource?->id,
+                'label' => (string) ($definition['label'] ?? 'Open the right page'),
                 'verifier_id' => 'authoritative_family_state_v1'];
         }
         $this->guidedTasks->offerFamilyReadResult($actor, $ticket, Str::limit($body, 1400, ''), $intentId, 'family_administration_authoritative_read', $guides);

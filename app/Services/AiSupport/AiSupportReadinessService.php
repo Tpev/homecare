@@ -275,14 +275,20 @@ class AiSupportReadinessService
         }
 
         $published = KnowledgeBaseEntry::query()->active()->whereNotNull('published_version_id')->count();
-        $held = KnowledgeBaseEntry::query()->active()->where('stable_id', 'KB-CARE-006')->with('workingVersion')->first();
-        $heldCorrectly = $held !== null
-            && $held->published_version_id === null
-            && $held->workingVersion?->status === KnowledgeBaseVersion::STATUS_DRAFT;
+        $pricing = KnowledgeBaseEntry::query()->active()->where('stable_id', 'KB-CARE-006')
+            ->with(['workingVersion', 'publishedVersion'])->first();
+        $heldCorrectly = $pricing !== null
+            && $pricing->published_version_id === null
+            && $pricing->workingVersion?->status === KnowledgeBaseVersion::STATUS_DRAFT;
+        $pricingPublished = $pricing?->publishedVersion?->status === KnowledgeBaseVersion::STATUS_PUBLISHED
+            && in_array('support_answers_v1', (array) $pricing->publishedVersion->capability_ids, true)
+            && str_contains((string) $pricing->publishedVersion->answer_body, '$31 per worked hour');
         $overdue = KnowledgeBaseEntry::query()->active()
             ->whereHas('workingVersion', fn ($query) => $query->whereDate('review_by', '<', today()))
             ->count();
-        $add('knowledge', 'Governed non-pricing KB ready and pricing held', $published === 23 && $heldCorrectly && $overdue === 0, "{$published} published; pricing hold ".($heldCorrectly ? 'valid' : 'invalid')."; {$overdue} overdue");
+        $knowledgeReady = $published >= 23 && ($heldCorrectly || $pricingPublished) && $overdue === 0;
+        $pricingState = $pricingPublished ? 'current pricing published' : ($heldCorrectly ? 'legacy pricing hold valid' : 'pricing invalid');
+        $add('knowledge', 'Governed KB and current pricing are ready', $knowledgeReady, "{$published} published; {$pricingState}; {$overdue} overdue");
 
         $providerConfigurationValid = (string) config('ai_support.model') === 'gpt-5.6-luna'
             && (string) config('ai_support.reasoning_effort') === 'low'

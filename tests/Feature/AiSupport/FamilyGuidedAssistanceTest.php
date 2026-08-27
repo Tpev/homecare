@@ -289,7 +289,7 @@ class FamilyGuidedAssistanceTest extends TestCase
         $this->assertDatabaseMissing('ai_support_interaction_events', ['event_type' => 'model_turn_completed']);
     }
 
-    public function test_empty_regular_care_answer_guides_to_the_regular_care_page(): void
+    public function test_empty_recurring_care_answer_guides_to_arrangements(): void
     {
         [, $family] = $this->eligibleFamily();
         Http::fake();
@@ -298,7 +298,7 @@ class FamilyGuidedAssistanceTest extends TestCase
         app(AiSupportRuntimeService::class)->respond($family, $ticket, $ticket->description);
 
         $task = AiSupportGuidedTask::query()->where('support_ticket_id', $ticket->id)->sole();
-        $this->assertSame('family.regular_care', $task->navigation_target_id);
+        $this->assertSame('family.care_arrangements', $task->navigation_target_id);
         $this->assertStringContainsString('do not have a recurring care plan yet', $ticket->publicMessages()->reorder()->latest()->firstOrFail()->body);
         $this->assertSame(
             route('family.care.index'),
@@ -308,7 +308,7 @@ class FamilyGuidedAssistanceTest extends TestCase
         $this->actingAs($family)
             ->get(route('family.care.index'))
             ->assertOk()
-            ->assertSee('data-ai-target="family.regular_care"', false);
+            ->assertSee('data-ai-target="family.care_arrangements"', false);
         Http::assertNothingSent();
     }
 

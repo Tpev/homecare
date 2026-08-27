@@ -172,7 +172,7 @@ return [
         $entry(
             'KB-B4-PAY-006',
             'Payment attention after corrected time or an extra visit',
-            'Corrected time and completed extra visits can require a new or additional secure authorization. Open the exact correction, visit, or regular-care attention area shown by LoLo. Review the amount and complete the secure payment step there. The assistant may prepare an explanation or dispute, but does not silently approve hours or charge a card.',
+            'Corrected time and completed extra visits can require a new or additional secure authorization. Open the exact correction, visit, or recurring-care attention area shown by LoLo. Review the amount and complete the secure payment step there. The assistant may prepare an explanation or dispute, but does not silently approve hours or charge a card.',
             'Care payments', $family, $visitPage,
             ['FAM-PAY-017', 'FAM-PAY-018', 'FAM-VISIT-026'],
             ['A correction or extra visit may require payment action.', 'The exact authorized care record determines the recovery page.', 'The user reviews and completes the normal secure payment step.'],
@@ -237,7 +237,7 @@ return [
         $entry(
             'KB-B4-PAY-011',
             'Unsupported discounts, billing ownership, and private payout details',
-            'AI Support does not apply coupons, credits, or promo codes. It does not change Family billing ownership or collect another person’s card in chat. It also does not reveal private caregiver payout status to a Family user; it may explain only the Family-visible care-payment state and the approved $30/$27/$3 hourly breakdown.',
+            'AI Support does not apply coupons, credits, or promo codes. It does not change Family billing ownership or collect another person’s card in chat. It also does not reveal private caregiver payout status to a Family user. It may explain that care is $30 per worked hour plus a $1 processing fee, for a $31 Family total; caregiver gross is $27 per worked hour minus actual Stripe processing fees; and LoLo’s gross portion is $4 per worked hour.',
             'Care payments', $family, $historyPage,
             ['FAM-PAY-030', 'FAM-PAY-031', 'FAM-PAY-032'],
             ['Coupons and promo codes are not an AI Support action.', 'Billing ownership changes require a person.', 'Caregiver payout status is private from Family support.', 'The governed hourly breakdown is $30 Family, $27 caregiver, and $3 LoLo.'],

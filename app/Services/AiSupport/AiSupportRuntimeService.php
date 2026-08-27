@@ -566,7 +566,12 @@ class AiSupportRuntimeService
     {
         return match ($target) {
             'family.new_care_request' => 'Open care request form',
-            'family.care_requests' => 'View care requests',
+            'family.care_requests' => 'Open Care overview',
+            'family.care_actions' => 'Open Care actions',
+            'family.care_schedule' => 'Open Care schedule',
+            'family.care_arrangements', 'family.regular_care' => 'Open Arrangements',
+            'family.caregivers' => 'Find caregivers',
+            'family.caregiver_profile' => 'Open caregiver profile',
             'caregiver.work_inbox' => 'Open Work Inbox',
             'caregiver.shifts' => 'View visits',
             'account.profile' => 'Open profile',

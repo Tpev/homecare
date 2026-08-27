@@ -8,6 +8,7 @@ use App\Models\AiSupportMessageAction;
 use App\Models\CareBooking;
 use App\Models\CareBookingChangeRequest;
 use App\Models\CareBookingTimeCorrection;
+use App\Models\CaregiverProfile;
 use App\Models\CarePlan;
 use App\Models\CarePlanScheduleChange;
 use App\Models\CareRequest;
@@ -180,7 +181,7 @@ class FamilyCareOperationsActionService
         if (in_array($intentId, ['FAM-MATCH-001', 'FAM-MATCH-002', 'FAM-MATCH-003', 'FAM-MATCH-004', 'FAM-MATCH-005', 'FAM-MATCH-006', 'FAM-MATCH-007'], true)) {
             $request = $this->selectRequest($actor, $message, [CareRequest::STATUS_OPEN]);
             $body = 'I can help you browse and compare only the caregiver facts shown to your Family account. Search results and availability notes are not a promise that someone will accept.';
-            $this->offerRead($actor, $ticket, $body, $intentId, $request ? 'family.request.applicants' : 'family.care_requests', $request);
+            $this->offerRead($actor, $ticket, $body, $intentId, $request ? 'family.request.applicants' : 'family.caregivers', $request);
 
             return true;
         }
@@ -711,7 +712,7 @@ class FamilyCareOperationsActionService
         if (in_array($intentId, ['FAM-REGULAR-001', 'FAM-REGULAR-009', 'FAM-REGULAR-010', 'FAM-REGULAR-024'], true)) {
             $plan = $this->selectPlan($actor, $message);
             if (! $plan) {
-                $this->offerRead($actor, $ticket, 'I did not find a recurring care plan on your Family account.', $intentId, 'family.regular_care');
+                $this->offerRead($actor, $ticket, 'I did not find a recurring care plan on your Family account.', $intentId, 'family.care_arrangements');
 
                 return true;
             }
@@ -2302,6 +2303,7 @@ class FamilyCareOperationsActionService
             $resource instanceof CareRequest => 'care_request',
             $resource instanceof CarePlan => 'care_plan',
             $resource instanceof CareRequestConversation => 'conversation',
+            $resource instanceof CaregiverProfile => 'caregiver_profile',
             default => null,
         };
         $resourceId = $resource?->id;

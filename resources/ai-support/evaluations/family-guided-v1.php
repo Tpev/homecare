@@ -18,7 +18,7 @@ $case = static fn (
 
 return [
     'version' => 'family-guided-evals-v1',
-    'frozen_on' => '2026-08-18',
+    'frozen_on' => '2026-08-27',
     'cases' => [
         $case('FAM-PAY-002', 1, 'payments', 'family_payment_method', [
             'Who is allowed to change the saved payment method?',
@@ -57,6 +57,16 @@ return [
             'Please check my account for pending actions.',
             'What should I do next in my Family account?',
         ], 'FamilyGuidedAssistanceTest::test_attention_overview_reads_authoritative_account_data_and_offers_exact_actions_without_model_call'),
+        $case('FAM-START-003', 1, 'orientation', 'family_overview', [
+            'What does the Family Care overview show?',
+            'Where is my Family home page?',
+            'Explain the Care overview.',
+        ], 'FamilyExperienceKnowledgeAlignmentTest::test_current_family_pages_render_their_registered_highlight_markers'),
+        $case('FAM-START-004', 1, 'orientation', 'family_overview', [
+            'Open my Care overview.',
+            'Take me to my Family home page.',
+            'Where is my Care page?',
+        ], 'FamilyExperienceKnowledgeAlignmentTest::test_current_family_pages_render_their_registered_highlight_markers'),
 
         $case('FAM-PROFILE-002', 2, 'profiles', 'family_care_profiles', [
             'Show my care receiver profiles.',

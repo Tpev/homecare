@@ -1,4 +1,4 @@
-<div class="hc-page py-8 space-y-6">
+<div data-ai-target="family.caregiver_profile" tabindex="-1" class="hc-page space-y-6 py-8 outline-none">
     @php
         $photoUrl = $caregiver->profile_photo_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($caregiver->profile_photo_path) : null;
         $nameParts = preg_split('/\s+/', trim((string) $caregiver->user->name));

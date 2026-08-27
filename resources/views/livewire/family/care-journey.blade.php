@@ -11,7 +11,7 @@
     };
 @endphp
 
-<div class="hc-page space-y-5 pb-28 pt-5 sm:space-y-6 sm:pb-8 sm:pt-8">
+<div data-ai-target="{{ ($journey['kind'] ?? 'request') === 'regular' ? 'family.recurring_care.journey' : 'family.request.journey' }}" tabindex="-1" class="hc-page space-y-5 pb-28 pt-5 outline-none sm:space-y-6 sm:pb-8 sm:pt-8">
     <section class="overflow-hidden rounded-[2rem] border border-[#D8D0C5] bg-[#FFFCF8] shadow-sm">
         <div class="grid lg:grid-cols-[minmax(0,1fr)_21rem]">
             <div class="p-5 sm:p-7 lg:p-8">

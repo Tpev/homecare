@@ -1,5 +1,5 @@
 <div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
-    <section class="rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm sm:p-6">
+    <section data-ai-target="family.care_schedule" tabindex="-1" class="rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm outline-none sm:p-6">
         <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
                 <p class="hc-brand-kicker">Care schedule</p>

@@ -4,9 +4,9 @@
 
 return [
     'version' => 'family-intents-v1',
-    'generated_on' => '2026-08-20',
+    'generated_on' => '2026-08-27',
     'source' => 'docs/product/support-agent/38-family-intent-action-coverage-registry.md',
-    'source_sha256' => 'bb6acaadc5da66955ca68e20c21c036356512037f7ba44da08e48b616688ac8d',
+    'source_sha256' => '6587c85beb05ef447c03488642b54f6241ae5b8f471be4cc227c61cf1a72b07a',
     'records' => [
         0 => [
             'intent_id' => 'FAM-START-001',
@@ -179,18 +179,19 @@ return [
             'membership_states' => [
                 0 => 'active',
             ],
-            'intent' => 'Understand what the Family dashboard shows',
+            'intent' => 'Understand what the Family Care overview shows',
             'phrases' => [
                 'ordinary' => [
-                    0 => 'Understand what the Family dashboard shows',
-                    1 => 'I need help to understand what the Family dashboard shows.',
-                    2 => 'Can you help me understand what the Family dashboard shows?',
+                    0 => 'Understand what the Family Care overview shows',
+                    1 => 'I need help to understand what the Family Care overview shows.',
+                    2 => 'Can you help me understand what the Family Care overview shows?',
                 ],
                 'imperfect' => [
-                    0 => 'pls help me undrstand what the Family dashboard shows',
+                    0 => 'pls help me undrstand what the Family Care overview shows',
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -206,24 +207,25 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
-                0 => 'KB-B89-SUPPORT-001',
+                0 => 'KB-FAM-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_attention_v1',
                 'destinations' => [
-                    0 => 'support.center',
+                    0 => 'family.care_actions',
+                    1 => 'family.care_requests',
                 ],
-                'guided_task' => null,
+                'guided_task' => 'family_attention_v1',
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
                 'explain' => 'Yes',
                 'action' => 'Navigate',
-                'target_behavior' => 'Keep covered',
+                'target_behavior' => 'Explain Overview, Actions, Schedule, Arrangements, and History',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -255,18 +257,19 @@ return [
             'membership_states' => [
                 0 => 'active',
             ],
-            'intent' => 'Open the Family dashboard',
+            'intent' => 'Open the Family Care overview',
             'phrases' => [
                 'ordinary' => [
-                    0 => 'Open the Family dashboard',
-                    1 => 'I need help to open the Family dashboard.',
-                    2 => 'Can you help me open the Family dashboard?',
+                    0 => 'Open the Family Care overview',
+                    1 => 'I need help to open the Family Care overview.',
+                    2 => 'Can you help me open the Family Care overview?',
                 ],
                 'imperfect' => [
-                    0 => 'pls help me open the Family dashboard',
+                    0 => 'pls help me open the Family Care overview',
                 ],
                 'follow_ups' => [
                     0 => 'take me there',
+                    1 => 'I did it',
                 ],
             ],
             'capability_stages' => [
@@ -282,24 +285,25 @@ return [
                 ],
             ],
             'kb_stable_ids' => [
-                0 => 'KB-B89-SUPPORT-001',
+                0 => 'KB-FAM-001',
             ],
             'contracts' => [
-                'reader' => null,
+                'reader' => 'family_attention_v1',
                 'destinations' => [
-                    0 => 'support.center',
+                    0 => 'family.care_actions',
+                    1 => 'family.care_requests',
                 ],
-                'guided_task' => null,
+                'guided_task' => 'family_attention_v1',
                 'prefill' => null,
                 'tool' => null,
-                'verifier' => null,
+                'verifier' => 'authoritative_family_state_v1',
                 'human_transfer' => null,
             ],
             'disposition' => [
                 'product' => 'UI',
                 'explain' => 'Yes',
                 'action' => 'Navigate',
-                'target_behavior' => 'Keep covered',
+                'target_behavior' => 'Open the current Care overview, never the retired dashboard',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -1285,7 +1289,7 @@ return [
             'contracts' => [
                 'reader' => 'family_attention_v1',
                 'destinations' => [
-                    0 => 'family.dashboard',
+                    0 => 'family.care_actions',
                     1 => 'support.center',
                 ],
                 'guided_task' => 'family_attention_v1',
@@ -2443,8 +2447,7 @@ return [
             'contracts' => [
                 'reader' => 'family_account_v1',
                 'destinations' => [
-                    0 => 'account.profile',
-                    1 => 'support.center',
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -2526,8 +2529,7 @@ return [
             'contracts' => [
                 'reader' => 'family_account_v1',
                 'destinations' => [
-                    0 => 'account.profile',
-                    1 => 'support.center',
+                    0 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -10317,7 +10319,8 @@ return [
             'contracts' => [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
-                    0 => 'family.care_requests',
+                    0 => 'family.caregivers',
+                    1 => 'family.request.applicants',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -10401,7 +10404,8 @@ return [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
                     0 => 'support.center',
-                    1 => 'family.care_requests',
+                    1 => 'family.caregivers',
+                    2 => 'family.request.applicants',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -10483,7 +10487,8 @@ return [
             'contracts' => [
                 'reader' => 'family_matching_state_v1',
                 'destinations' => [
-                    0 => 'family.care_requests',
+                    0 => 'family.caregivers',
+                    1 => 'family.request.applicants',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -17560,7 +17565,7 @@ return [
                 'destinations' => [
                     0 => 'family.care_history',
                     1 => 'family.request.overview',
-                    2 => 'family.regular_care',
+                    2 => 'family.care_arrangements',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -17642,7 +17647,7 @@ return [
                 'destinations' => [
                     0 => 'family.care_history',
                     1 => 'family.request.overview',
-                    2 => 'family.regular_care',
+                    2 => 'family.care_arrangements',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -17890,8 +17895,8 @@ return [
             'contracts' => [
                 'reader' => 'family_attention_v1',
                 'destinations' => [
-                    0 => 'family.dashboard',
-                    1 => 'family.regular_care',
+                    0 => 'family.care_actions',
+                    1 => 'family.care_arrangements',
                     2 => 'family.regular_care.attention',
                 ],
                 'guided_task' => 'family_attention_v1',
@@ -17972,7 +17977,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -18053,7 +18058,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_chat_draft_v1',
@@ -18136,7 +18141,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_reuse_v1',
@@ -18217,7 +18222,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                 ],
                 'guided_task' => null,
                 'prefill' => 'caregiver_message_v1',
@@ -18300,7 +18305,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -18383,7 +18388,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'family.regular_care.attention',
                 ],
                 'guided_task' => null,
@@ -18463,7 +18468,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'family.regular_care.attention',
                 ],
                 'guided_task' => null,
@@ -18547,7 +18552,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'family.regular_care.attention',
                 ],
                 'guided_task' => 'family_regular_care_v1',
@@ -18631,7 +18636,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'family.regular_care.attention',
                 ],
                 'guided_task' => null,
@@ -18711,7 +18716,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'family.regular_care.attention',
                 ],
                 'guided_task' => null,
@@ -18792,7 +18797,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'family.regular_care.attention',
                 ],
                 'guided_task' => null,
@@ -18877,7 +18882,7 @@ return [
                 'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.regular_care',
+                    1 => 'family.care_arrangements',
                     2 => 'family.regular_care.attention',
                 ],
                 'guided_task' => 'family_timesheet_v1',
@@ -18957,7 +18962,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'family.regular_care.attention',
                 ],
                 'guided_task' => null,
@@ -19038,7 +19043,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'family.regular_care.attention',
                 ],
                 'guided_task' => null,
@@ -19119,7 +19124,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'family.regular_care.attention',
                 ],
                 'guided_task' => null,
@@ -19205,7 +19210,7 @@ return [
                 'reader' => 'family_payment_time_v1',
                 'destinations' => [
                     0 => 'family.care_requests',
-                    1 => 'family.regular_care',
+                    1 => 'family.care_arrangements',
                     2 => 'family.regular_care.attention',
                 ],
                 'guided_task' => 'family_payment_attention_v1',
@@ -19284,7 +19289,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'family.regular_care.attention',
                 ],
                 'guided_task' => null,
@@ -19365,7 +19370,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'family.regular_care.attention',
                 ],
                 'guided_task' => null,
@@ -19445,7 +19450,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'family.regular_care.attention',
                 ],
                 'guided_task' => null,
@@ -19526,7 +19531,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'family.regular_care.attention',
                 ],
                 'guided_task' => null,
@@ -19606,7 +19611,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'family.regular_care.attention',
                 ],
                 'guided_task' => null,
@@ -19686,7 +19691,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'family.regular_care.attention',
                 ],
                 'guided_task' => null,
@@ -19771,7 +19776,7 @@ return [
                 'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
-                    1 => 'family.regular_care',
+                    1 => 'family.care_arrangements',
                     2 => 'family.message',
                 ],
                 'guided_task' => 'family_history_v1',
@@ -19856,7 +19861,7 @@ return [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
                     0 => 'family.messages',
-                    1 => 'family.regular_care',
+                    1 => 'family.care_arrangements',
                     2 => 'family.care_history',
                     3 => 'family.message',
                 ],
@@ -19936,7 +19941,7 @@ return [
             'contracts' => [
                 'reader' => 'family_regular_care_v1',
                 'destinations' => [
-                    0 => 'family.regular_care',
+                    0 => 'family.care_arrangements',
                     1 => 'support.center',
                 ],
                 'guided_task' => null,
@@ -22680,8 +22685,7 @@ return [
             'contracts' => [
                 'reader' => 'family_notifications_v1',
                 'destinations' => [
-                    0 => 'family.dashboard',
-                    1 => 'family.notifications',
+                    0 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -22764,8 +22768,7 @@ return [
             'contracts' => [
                 'reader' => 'family_notifications_v1',
                 'destinations' => [
-                    0 => 'family.dashboard',
-                    1 => 'family.notifications',
+                    0 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -22848,8 +22851,7 @@ return [
             'contracts' => [
                 'reader' => 'family_notifications_v1',
                 'destinations' => [
-                    0 => 'family.dashboard',
-                    1 => 'family.notifications',
+                    0 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -22936,8 +22938,7 @@ return [
             'contracts' => [
                 'reader' => 'family_notifications_v1',
                 'destinations' => [
-                    0 => 'family.dashboard',
-                    1 => 'family.notifications',
+                    0 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -23024,8 +23025,7 @@ return [
             'contracts' => [
                 'reader' => 'family_notifications_v1',
                 'destinations' => [
-                    0 => 'family.dashboard',
-                    1 => 'family.notifications',
+                    0 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -23108,8 +23108,7 @@ return [
             'contracts' => [
                 'reader' => 'family_notifications_v1',
                 'destinations' => [
-                    0 => 'family.dashboard',
-                    1 => 'family.notifications',
+                    0 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -23192,8 +23191,7 @@ return [
             'contracts' => [
                 'reader' => 'family_notifications_v1',
                 'destinations' => [
-                    0 => 'family.dashboard',
-                    1 => 'family.notifications',
+                    0 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -23281,8 +23279,7 @@ return [
             'contracts' => [
                 'reader' => 'family_notifications_v1',
                 'destinations' => [
-                    0 => 'account.profile',
-                    1 => 'family.notifications',
+                    0 => 'family.notifications',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -23368,8 +23365,8 @@ return [
             'contracts' => [
                 'reader' => 'family_notifications_v1',
                 'destinations' => [
-                    0 => 'account.profile',
-                    1 => 'family.notifications',
+                    0 => 'family.notifications',
+                    1 => 'account.profile',
                     2 => 'support.center',
                 ],
                 'guided_task' => null,
@@ -23457,8 +23454,8 @@ return [
             'contracts' => [
                 'reader' => 'family_notifications_v1',
                 'destinations' => [
-                    0 => 'account.profile',
-                    1 => 'family.notifications',
+                    0 => 'family.notifications',
+                    1 => 'account.profile',
                     2 => 'support.center',
                 ],
                 'guided_task' => null,
@@ -23542,8 +23539,8 @@ return [
             'contracts' => [
                 'reader' => 'family_notifications_v1',
                 'destinations' => [
-                    0 => 'account.profile',
-                    1 => 'family.notifications',
+                    0 => 'family.notifications',
+                    1 => 'account.profile',
                     2 => 'support.center',
                 ],
                 'guided_task' => null,
@@ -24297,7 +24294,8 @@ return [
                 'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
-                    1 => 'family.regular_care',
+                    1 => 'family.caregiver_profile',
+                    2 => 'family.recurring_care.journey',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -24381,7 +24379,8 @@ return [
                 'reader' => 'family_care_history_v1',
                 'destinations' => [
                     0 => 'family.care_history',
-                    1 => 'family.regular_care',
+                    1 => 'family.caregiver_profile',
+                    2 => 'family.recurring_care.journey',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -24556,7 +24555,7 @@ return [
                 'destinations' => [
                     0 => 'family.care_history',
                     1 => 'family.new_care_request',
-                    2 => 'family.regular_care',
+                    2 => 'family.care_arrangements',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -24644,7 +24643,7 @@ return [
                 'destinations' => [
                     0 => 'family.care_history',
                     1 => 'family.new_care_request',
-                    2 => 'family.regular_care',
+                    2 => 'family.care_arrangements',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -24731,7 +24730,7 @@ return [
                 'destinations' => [
                     0 => 'family.care_history',
                     1 => 'family.new_care_request',
-                    2 => 'family.regular_care',
+                    2 => 'family.care_arrangements',
                 ],
                 'guided_task' => null,
                 'prefill' => 'care_request_reuse_v1',
@@ -24816,7 +24815,7 @@ return [
                 'destinations' => [
                     0 => 'family.care_history',
                     1 => 'family.new_care_request',
-                    2 => 'family.regular_care',
+                    2 => 'family.care_arrangements',
                 ],
                 'guided_task' => null,
                 'prefill' => null,

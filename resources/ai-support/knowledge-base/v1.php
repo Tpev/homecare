@@ -223,23 +223,23 @@ return [
         $entry(
             'KB-FAM-001',
             'navigation',
-            'Your Family dashboard',
-            'Your Family dashboard is the home page for your care activity. It shows the most important next step for your account, recent updates, and, when available, your next visit and ways to start or book care again. What appears depends on your account and current care activity. I can take you there.',
-            'Family dashboard',
+            'Your Family Care overview',
+            'Care is the signed-in home for your Family care activity. Overview shows what needs attention and your care journeys. Actions collects decisions and problems, Schedule shows upcoming visits, Arrangements shows recurring care and care still being arranged, and History shows past care. What appears depends on your authorized Family Account and current care activity. I can take you to the Care overview.',
+            'Family Care overview',
             ['family'],
-            'family.dashboard',
+            'family.care_requests',
             [
-                'The Family dashboard is the signed-in Family home page.',
-                'It conditionally prioritizes a current next step from authoritative account state.',
-                'It may show recent updates, care actions needing attention, the next visit, care history, and ways to start or book care again.',
+                'The Care overview is the signed-in Family home page.',
+                'Overview, Actions, Schedule, Arrangements, and History organize the current Family care workspace.',
+                'It conditionally prioritizes current next steps from authoritative account state.',
             ],
             [
                 'That a request, caregiver reply, message, visit, booking, payment state, or required action exists without fresh authorized context.',
-                'That opening the dashboard creates, accepts, approves, pays, messages, or changes anything.',
-                'Any Family dashboard data to a Caregiver or a user outside the applicable Family Account.',
+                'That opening Care creates, accepts, approves, pays, messages, or changes anything.',
+                'Any Family care data to a Caregiver or a user outside the applicable Family Account.',
             ],
             [
-                'navigate:family.dashboard',
+                'navigate:family.care_requests',
             ],
             [
                 'Family Account authorization cannot be resolved.',
@@ -248,7 +248,7 @@ return [
             ],
             [
                 'Where do I see what needs attention?',
-                'Take me to my Family dashboard.',
+                'Take me to my Care overview.',
                 'Where is my home page?',
             ],
             [
@@ -265,21 +265,21 @@ return [
             ],
             $review180,
             [
-                $source('SRC-AI-DECISIONS-001', 'Intelligent Support decision log', 'Family-only dashboard scope and generic navigation boundary.', 'DEC-032, DEC-038'),
-                $source('SRC-FAMILY-WORKFLOW-001', 'Family care receiver workflow', 'Family lifecycle and dashboard orientation design input.', 'Family dashboard and care lifecycle'),
-                $source('SRC-CODE-DASHBOARD-001', 'Current role-aware dashboard implementation', 'Current conditional Family dashboard sections, account isolation, and registered route target.', 'Dashboard Home and family-home view'),
+                $source('SRC-AI-DECISIONS-001', 'Intelligent Support decision log', 'Family-only orientation scope and generic navigation boundary.', 'DEC-032, DEC-038'),
+                $source('SRC-FAMILY-WORKFLOW-001', 'Family care receiver workflow', 'Family lifecycle and Care workspace orientation design input.', 'Family Care workspace and care lifecycle'),
+                $source('SRC-CODE-DASHBOARD-001', 'Current Family Care workspace implementation', 'Current Overview, Actions, Schedule, Arrangements, and History navigation with account isolation.', 'Family Care routes and views'),
             ],
         ),
         $entry(
             'KB-FAM-002',
             'product_fact',
-            'Your care requests and visits',
-            "Your Care page keeps your care requests and visits in one place. Draft means the request has not been posted. Open means caregivers can still respond. Visit scheduled means a caregiver was selected; open the request to see the visit's current status. Withdrawn or Expired requests no longer accept new caregiver responses. I can take you to your Care page.",
-            'Family care requests',
+            'Your Care overview and care journeys',
+            "The Care overview shows current care and what needs attention. Open a care journey to follow a request from caregiver selection through the visit, submitted hours, and payment. Draft means a request has not been posted. Open means caregivers can respond. Visit scheduled means a caregiver was selected; the journey shows the visit's fresher status. Withdrawn or Expired requests no longer accept new caregiver responses. I can take you to the Care overview.",
+            'Family Care overview',
             ['family'],
             'family.care_requests',
             [
-                'The Family Care page includes requests and visits for the authorized Family Account.',
+                'The Family Care workspace includes Overview, Actions, Schedule, Arrangements, and History for the authorized Family Account.',
                 'Available request filters are Open, Visit scheduled, Draft, Withdrawn, and Expired.',
                 'Draft is not posted; Open is eligible for caregiver responses but guarantees none.',
                 'Visit scheduled means a caregiver was selected, while the booking may show a newer visit state.',
@@ -302,7 +302,7 @@ return [
             [
                 'What do the care request statuses mean?',
                 'Where can I find my existing requests?',
-                'Take me to my Care page.',
+                'Take me to my Care overview.',
             ],
             [
                 'Show me the Caregiver Work Inbox.',

@@ -1,4 +1,4 @@
-<div class="hc-page py-6 space-y-5">
+<div data-ai-target="family.notifications" tabindex="-1" class="hc-page space-y-5 py-6 outline-none">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif

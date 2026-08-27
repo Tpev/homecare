@@ -54,6 +54,13 @@ foreach (array_merge(
     }
 }
 
+// The original orientation package predates per-intent manifest links. Keep the
+// executable registry tied to its current revised Family Care overview entry.
+foreach (['FAM-START-003', 'FAM-START-004'] as $overviewIntentId) {
+    $knowledgeByIntent[$overviewIntentId] = ['KB-FAM-001'];
+    $targetsByIntent[$overviewIntentId] = ['family.care_requests'];
+}
+
 $domainNames = [
     'START' => 'orientation',
     'ACCOUNT' => 'account_security',
@@ -73,7 +80,7 @@ $domainNames = [
 $handlerContracts = [
     'family_payment_method' => ['family_payment_method_status_v1', 'family.billing.payment_method', 'family_payment_method_v1', 'family_payment_method_v1'],
     'family_pricing' => [null, null, null, null],
-    'family_overview' => ['family_attention_v1', 'family.dashboard', 'family_attention_v1', 'authoritative_family_state_v1'],
+    'family_overview' => ['family_attention_v1', 'family.care_actions', 'family_attention_v1', 'authoritative_family_state_v1'],
     'family_requests' => ['family_requests_v1', 'family.care_requests', 'family_request_v1', 'authoritative_family_state_v1'],
     'family_visits' => ['family_visits_v1', 'family.care_requests', 'family_visit_v1', 'authoritative_family_state_v1'],
     'family_timesheets' => ['family_payment_time_v1', 'family.care_requests', 'family_timesheet_v1', 'authoritative_family_state_v1'],
@@ -81,7 +88,7 @@ $handlerContracts = [
     'family_care_profiles' => ['family_care_profiles_v1', 'family.care_profiles', 'family_care_profile_v1', 'authoritative_family_state_v1'],
     'family_messages' => ['family_messages_v1', 'family.messages', 'family_message_v1', 'authoritative_family_state_v1'],
     'family_care_history' => ['family_care_history_v1', 'family.care_history', 'family_history_v1', 'authoritative_family_state_v1'],
-    'family_regular_care' => ['family_regular_care_v1', 'family.regular_care', 'family_regular_care_v1', 'authoritative_family_state_v1'],
+    'family_regular_care' => ['family_regular_care_v1', 'family.care_arrangements', 'family_regular_care_v1', 'authoritative_family_state_v1'],
     'family_account' => ['family_account_v1', 'account.profile', 'family_account_v1', 'authoritative_family_state_v1'],
     'family_access' => ['family_access_v1', 'family.access', 'family_access_v1', 'authoritative_family_state_v1'],
     'family_notifications' => ['family_notifications_v1', 'family.notifications', 'family_notifications_v1', 'authoritative_family_state_v1'],
@@ -380,7 +387,7 @@ if (count($mapped) !== 324) {
 
 $manifest = [
     'version' => 'family-intents-v1',
-    'generated_on' => '2026-08-20',
+        'generated_on' => '2026-08-27',
     'source' => 'docs/product/support-agent/38-family-intent-action-coverage-registry.md',
     'source_sha256' => hash('sha256', $markdown),
     'records' => $rows,

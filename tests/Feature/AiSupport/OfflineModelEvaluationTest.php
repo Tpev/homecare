@@ -163,9 +163,9 @@ class OfflineModelEvaluationTest extends TestCase
         ]);
 
         $structured = [
-            'answer' => 'Your Family dashboard shows the current items that may need your attention.',
+            'answer' => 'Your Care overview shows current care and the items that may need your attention.',
             'outcome' => 'answer',
-            'navigation_target' => 'family.dashboard',
+            'navigation_target' => 'family.care_requests',
             'action' => 'none',
             'handoff_human_only' => false,
             'suppress_after_handoff' => false,
@@ -211,7 +211,7 @@ class OfflineModelEvaluationTest extends TestCase
             $this->assertSame([], $result['report']['baseline_eligible_passing_candidate_ids']);
             $this->assertNull($result['report']['recommended_candidate_id']);
             $this->assertSame('answer', data_get($result, 'report.results.gpt-5-nano-low.0.response_evidence.outcome'));
-            $this->assertSame('family.dashboard', data_get($result, 'report.results.gpt-5-nano-low.0.response_evidence.navigation_target'));
+            $this->assertSame('family.care_requests', data_get($result, 'report.results.gpt-5-nano-low.0.response_evidence.navigation_target'));
             $this->assertSame(str_word_count($structured['answer']), data_get($result, 'report.results.gpt-5-nano-low.0.response_evidence.answer_word_count'));
 
             $persisted = File::get($result['path']);
@@ -231,7 +231,7 @@ class OfflineModelEvaluationTest extends TestCase
                 && $payload['store'] === false
                 && data_get($payload, 'text.format.type') === 'json_schema'
                 && data_get($payload, 'text.format.strict') === true
-                && data_get($payload, 'text.format.schema.properties.navigation_target.enum') === ['family.dashboard', null]
+                && data_get($payload, 'text.format.schema.properties.navigation_target.enum') === ['family.care_requests', null]
                 && data_get($payload, 'text.format.schema.properties.action.enum') === ['none']
                 && data_get($payload, 'text.format.schema.properties.cited_kb_ids.items.enum') === ['KB-FAM-001']
                 && ! array_key_exists('tools', $payload)

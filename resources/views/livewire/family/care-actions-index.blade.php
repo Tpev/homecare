@@ -1,5 +1,5 @@
 <div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
-    <section class="hc-brand-panel">
+    <section data-ai-target="family.care_actions" tabindex="-1" class="hc-brand-panel outline-none">
         <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
                 <p class="hc-brand-kicker text-[#E8E0FF]">Actions</p>

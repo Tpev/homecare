@@ -96,8 +96,8 @@ The table above remains the original inventory snapshot and is not the current B
 | --- | --- | --- | --- | --- | --- |
 | FAM-START-001 | Understand what LoLo does for Families | UI | Yes | Guide | Explain the bounded marketplace and support model and offer the Support Center |
 | FAM-START-002 | Understand what non-medical care means | UI | Yes | Guide | Explain the non-medical boundary, offer Support, and transfer medical questions |
-| FAM-START-003 | Understand what the Family dashboard shows | UI | Yes | Navigate | Keep covered |
-| FAM-START-004 | Open the Family dashboard | UI | Yes | Navigate | Keep covered |
+| FAM-START-003 | Understand what the Family Care overview shows | UI | Yes | Navigate | Explain Overview, Actions, Schedule, Arrangements, and History |
+| FAM-START-004 | Open the Family Care overview | UI | Yes | Navigate | Open the current Care overview, never the retired dashboard |
 | FAM-START-005 | Understand the difference between one-time, regular, and 24/7 care | UI | Yes | Draft / Transfer | Keep one-time/regular drafting and 24/7 transfer |
 | FAM-START-006 | Decide whether the need is one visit or recurring weekly care | UI | Yes | Draft | Keep AI recommendation plus explicit path selection |
 | FAM-START-007 | Explain an ambiguous need and ask the minimum clarifying question | UI | Yes | Draft | Keep covered |
