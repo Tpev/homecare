@@ -1,6 +1,6 @@
 <div class="hc-page space-y-5 py-6">
     <header class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div><p class="text-sm font-semibold uppercase tracking-wide text-[#0F6B5B]">Care operations</p><h1 class="mt-1 font-display text-3xl font-semibold text-[#17313F]">Regular care</h1><p class="mt-1 text-base text-[#526474]">Agreements, upcoming visits, and payment readiness.</p></div>
+        <div><p class="text-sm font-semibold uppercase tracking-wide text-[#0F6B5B]">Care operations</p><h1 class="mt-1 font-display text-3xl font-semibold text-[#17313F]">Recurring care</h1><p class="mt-1 text-base text-[#526474]">Agreements, upcoming visits, and payment readiness.</p></div>
         <div class="grid gap-3 sm:grid-cols-2">
             <input type="search" wire:model.blur="search" class="min-h-12 rounded-md border-[#BFC8CE] text-base" placeholder="Search family or caregiver">
             <select wire:model.live="status" class="min-h-12 rounded-md border-[#BFC8CE] text-base"><option value="live">Live plans</option><option value="all">All plans</option><option value="active">Active</option><option value="paused">Paused</option><option value="ended">Ended</option><option value="pending_caregiver">Pending caregiver</option></select>
@@ -20,7 +20,7 @@
                     <a href="{{ route('admin.care-plans.show', $plan) }}" wire:navigate class="hc-secondary-button min-h-11">Open</a>
                 </article>
             @empty
-                <p class="px-5 py-10 text-center text-base text-[#526474]">No regular-care plans matched.</p>
+                <p class="px-5 py-10 text-center text-base text-[#526474]">No recurring care plans matched.</p>
             @endforelse
         </div>
     </section>

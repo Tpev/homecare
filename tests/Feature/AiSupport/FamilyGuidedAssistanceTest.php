@@ -299,7 +299,7 @@ class FamilyGuidedAssistanceTest extends TestCase
 
         $task = AiSupportGuidedTask::query()->where('support_ticket_id', $ticket->id)->sole();
         $this->assertSame('family.regular_care', $task->navigation_target_id);
-        $this->assertStringContainsString('do not have a regular care plan yet', $ticket->publicMessages()->reorder()->latest()->firstOrFail()->body);
+        $this->assertStringContainsString('do not have a recurring care plan yet', $ticket->publicMessages()->reorder()->latest()->firstOrFail()->body);
         $this->assertSame(
             route('family.care.index'),
             app(NavigationTargetRegistry::class)->urlFor($family, $task->navigation_target_id),

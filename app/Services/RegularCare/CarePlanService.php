@@ -138,7 +138,7 @@ class CarePlanService
         }
 
         return [
-            'title' => 'Regular care with '.($caregiver?->name ?: 'your caregiver'),
+            'title' => 'Recurring care with '.($caregiver?->name ?: 'your caregiver'),
             'recipient_name' => $source->recipient?->full_name,
             'caregiver_name' => $caregiver?->name,
             'schedule_days' => $days,
@@ -168,13 +168,13 @@ class CarePlanService
         }
         if (! $this->sourceIsEligible($source, $family)) {
             throw ValidationException::withMessages([
-                'source' => 'This request does not have a hired caregiver available for regular care.',
+                'source' => 'This request does not have a hired caregiver available for recurring care.',
             ]);
         }
 
         $billingSummary = $this->billingSummaryFor($family);
         if (! ($billingSummary['ready'] ?? false)) {
-            throw new PaymentException('Add a payment method before sending a regular-care offer.');
+            throw new PaymentException('Add a payment method before sending a recurring care offer.');
         }
 
         $source->loadMissing([
@@ -247,7 +247,7 @@ class CarePlanService
                     'source_care_request_id' => $source->id,
                     'source_care_booking_id' => $source->booking?->id,
                     'status' => CarePlan::STATUS_PENDING_CAREGIVER,
-                    'title' => trim((string) ($payload['title'] ?? '')) ?: 'Regular care with '.$caregiver->name,
+                    'title' => trim((string) ($payload['title'] ?? '')) ?: 'Recurring care with '.$caregiver->name,
                     'recipient_snapshot' => $this->recipientSnapshot($source),
                     'care_recipient_profile_id' => $recipientProfileId,
                     'care_recipient_profile_version_id' => $source->recipient?->care_recipient_profile_version_id,
@@ -292,8 +292,8 @@ class CarePlanService
             $this->notifications->notify(
                 recipients: $caregiver,
                 eventKey: MarketplaceEvent::REGULAR_CARE_OFFERED,
-                title: 'Regular care offer',
-                body: $family->name.' offered you a regular care schedule.',
+                title: 'Recurring care offer',
+                body: $family->name.' offered you a recurring care schedule.',
                 url: route('caregiver.regular-clients.index'),
                 payload: ['care_plan_id' => $plan->id, 'care_request_id' => $source->id],
                 subject: $plan,
@@ -318,7 +318,7 @@ class CarePlanService
     ): CarePlan {
         if (! app(FamilyAccountContext::class)->canAccessRecord($family, $source) || ! $source->isRecurring()) {
             throw ValidationException::withMessages([
-                'request' => 'This regular-care request cannot be activated.',
+                'request' => 'This recurring care request cannot be activated.',
             ]);
         }
 
@@ -406,7 +406,7 @@ class CarePlanService
                     'caregiver_user_id' => $caregiver->id,
                     'source_care_request_id' => $source->id,
                     'status' => CarePlan::STATUS_ACTIVE,
-                    'title' => 'Regular care with '.$caregiver->name,
+                    'title' => 'Recurring care with '.$caregiver->name,
                     'recipient_snapshot' => $this->recipientSnapshot($source),
                     'care_recipient_profile_id' => $recipientProfileId,
                     'care_recipient_profile_version_id' => $source->recipient?->care_recipient_profile_version_id,
@@ -457,8 +457,8 @@ class CarePlanService
         $this->notifications->notify(
             recipients: $caregiver,
             eventKey: MarketplaceEvent::CAREGIVER_HIRED,
-            title: 'Regular care confirmed',
-            body: $family->name.' selected you for regular care. Your confirmed visits are in My Visits.',
+            title: 'Recurring care confirmed',
+            body: $family->name.' selected you for recurring care. Your confirmed visits are in My Visits.',
             url: route('caregiver.shifts.index'),
             payload: ['care_plan_id' => $plan->id, 'care_request_id' => $source->id],
             subject: $plan,
@@ -481,7 +481,7 @@ class CarePlanService
         $profile = $caregiver->caregiverProfile;
         if (! $profile || ! $profile->isMarketplaceReady()) {
             throw ValidationException::withMessages([
-                'offer' => 'Complete your caregiver profile before accepting regular-care offers.',
+                'offer' => 'Complete your caregiver profile before accepting recurring care offers.',
             ]);
         }
 
@@ -515,8 +515,8 @@ class CarePlanService
         $this->notifications->notify(
             recipients: $activatedPlan->family,
             eventKey: MarketplaceEvent::REGULAR_CARE_ACCEPTED,
-            title: 'Regular care accepted',
-            body: $caregiver->name.' accepted your regular care schedule.',
+            title: 'Recurring care accepted',
+            body: $caregiver->name.' accepted your recurring care schedule.',
             url: route('family.care.show', $activatedPlan->id),
             payload: ['care_plan_id' => $activatedPlan->id, 'care_booking_id' => $booking?->id],
             subject: $activatedPlan,
@@ -557,7 +557,7 @@ class CarePlanService
         $this->notifications->notify(
             recipients: $plan->family,
             eventKey: MarketplaceEvent::REGULAR_CARE_COUNTERED,
-            title: 'Regular care counteroffer',
+            title: 'Recurring care counteroffer',
             body: $caregiver->name.' suggested a different schedule.',
             url: route('family.care.show', $plan->id),
             payload: ['care_plan_id' => $plan->id],
@@ -589,8 +589,8 @@ class CarePlanService
         $this->notifications->notify(
             recipients: $plan->family,
             eventKey: MarketplaceEvent::REGULAR_CARE_DECLINED,
-            title: 'Regular care declined',
-            body: $caregiver->name.' declined the regular care offer.',
+            title: 'Recurring care declined',
+            body: $caregiver->name.' declined the recurring care offer.',
             url: route('family.care.show', $plan->id),
             payload: ['care_plan_id' => $plan->id],
             subject: $plan,
@@ -641,7 +641,7 @@ class CarePlanService
             recipients: $activatedPlan->caregiver,
             eventKey: MarketplaceEvent::REGULAR_CARE_ACCEPTED,
             title: 'Counteroffer accepted',
-            body: $family->name.' accepted your regular care schedule.',
+            body: $family->name.' accepted your recurring care schedule.',
             url: route('caregiver.regular-clients.index'),
             payload: ['care_plan_id' => $activatedPlan->id, 'care_booking_id' => $booking?->id],
             subject: $activatedPlan,
@@ -706,7 +706,7 @@ class CarePlanService
             $this->notifications->notify(
                 recipients: $plan->caregiver,
                 eventKey: MarketplaceEvent::REGULAR_CARE_SCHEDULE_CHANGE_REQUESTED,
-                title: 'Regular care schedule change',
+                title: 'Recurring care schedule change',
                 body: $family->name.' asked to change future regular visits.',
                 url: route('caregiver.regular-clients.index'),
                 payload: ['care_plan_id' => $plan->id, 'schedule_change_id' => $change->id],
@@ -856,7 +856,7 @@ class CarePlanService
                 recipients: $plan->caregiver,
                 eventKey: MarketplaceEvent::REGULAR_CARE_VISIT_SKIPPED,
                 title: 'Regular visit skipped',
-                body: $family->name.' skipped the visit on '.$booking->scheduled_start_at->format('l, F j').'. Regular care continues.',
+                body: $family->name.' skipped the visit on '.$booking->scheduled_start_at->format('l, F j').'. Recurring care continues.',
                 url: route('caregiver.shifts.index'),
                 payload: ['care_plan_id' => $plan->id, 'care_booking_id' => $booking->id],
                 subject: $booking,
@@ -915,9 +915,9 @@ class CarePlanService
         });
         if ($changed) {
             $body = $from->isFuture()
-                ? $family->name.' scheduled a regular-care pause starting '.$from->format('F j').'.'
-                : $family->name.' paused regular care.';
-            $this->notifyPlanState($plan, MarketplaceEvent::REGULAR_CARE_PAUSED, 'Regular care paused', $body);
+                ? $family->name.' scheduled a recurring care pause starting '.$from->format('F j').'.'
+                : $family->name.' paused recurring care.';
+            $this->notifyPlanState($plan, MarketplaceEvent::REGULAR_CARE_PAUSED, 'Recurring care paused', $body);
         }
 
         return $this->health->reconcile($plan->fresh());
@@ -932,7 +932,7 @@ class CarePlanService
                 return [$lockedPlan, false];
             }
             if (! $lockedPlan->isLive()) {
-                throw ValidationException::withMessages(['plan' => 'This regular-care plan cannot be resumed.']);
+                throw ValidationException::withMessages(['plan' => 'This recurring care plan cannot be resumed.']);
             }
 
             $previousStatus = $lockedPlan->status;
@@ -968,7 +968,7 @@ class CarePlanService
         }
         $this->occurrences->materialize($plan->fresh());
         $this->paymentWindow->preparePlan($plan->fresh());
-        $this->notifyPlanState($plan, MarketplaceEvent::REGULAR_CARE_RESUMED, 'Regular care resumed', $family->name.' resumed regular care.');
+        $this->notifyPlanState($plan, MarketplaceEvent::REGULAR_CARE_RESUMED, 'Recurring care resumed', $family->name.' resumed recurring care.');
 
         return $this->health->reconcile($plan->fresh());
     }
@@ -1023,8 +1023,8 @@ class CarePlanService
             $this->notifications->notify(
                 recipients: $plan->caregiver,
                 eventKey: MarketplaceEvent::REGULAR_CARE_ENDED,
-                title: 'Regular care plan ended',
-                body: $family->name.' ended regular care.'.($keptNext ? ' The next confirmed visit will still happen.' : ''),
+                title: 'Recurring care plan ended',
+                body: $family->name.' ended recurring care.'.($keptNext ? ' The next confirmed visit will still happen.' : ''),
                 url: route('caregiver.regular-clients.index'),
                 payload: ['care_plan_id' => $plan->id],
                 subject: $plan,
@@ -1205,10 +1205,10 @@ class CarePlanService
             eventKey: $accepted
                 ? MarketplaceEvent::REGULAR_CARE_SCHEDULE_CHANGE_ACCEPTED
                 : MarketplaceEvent::REGULAR_CARE_SCHEDULE_CHANGE_DECLINED,
-            title: $accepted ? 'Regular care update accepted' : 'Regular care update declined',
+            title: $accepted ? 'Recurring care update accepted' : 'Recurring care update declined',
             body: $accepted
-                ? 'Your caregiver accepted the requested regular-care update.'
-                : 'Your caregiver could not accept the requested regular-care update.',
+                ? 'Your caregiver accepted the requested recurring care update.'
+                : 'Your caregiver could not accept the requested recurring care update.',
             url: route('family.care.show', $change->care_plan_id),
             payload: ['care_plan_id' => $change->care_plan_id, 'schedule_change_id' => $change->id],
             subject: $change,
@@ -1423,9 +1423,9 @@ class CarePlanService
     private function existingAgreementMessage(CarePlan $plan): string
     {
         if ($this->requiresNewAgreementSource($plan)) {
-            return 'The previous regular-care agreement is '.str_replace('_', ' ', $plan->status).'. Create a new care request before starting a new agreement.';
+            return 'The previous recurring care agreement is '.str_replace('_', ' ', $plan->status).'. Create a new care request before starting a new agreement.';
         }
 
-        return 'A regular-care agreement already exists for this request (plan #'.$plan->id.'). Open that plan instead of creating another.';
+        return 'A recurring care agreement already exists for this request (plan #'.$plan->id.'). Open that plan instead of creating another.';
     }
 }

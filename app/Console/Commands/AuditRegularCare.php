@@ -13,7 +13,7 @@ class AuditRegularCare extends Command
 {
     protected $signature = 'homecare:regular-care-audit {--request=} {--plan=} {--email=}';
 
-    protected $description = 'Read-only audit of one recurring-care customer and its bookings/payments.';
+    protected $description = 'Read-only audit of one recurring care customer and its bookings/payments.';
 
     public function handle(RegularCareMigrationService $migration): int
     {

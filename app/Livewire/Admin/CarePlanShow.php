@@ -61,7 +61,7 @@ class CarePlanShow extends Component
     {
         $this->assertAdministrator();
         if (! in_array($state, ['pause', 'resume', 'end'], true)) {
-            abort(422, 'Unsupported regular-care state transition.');
+            abort(422, 'Unsupported recurring care state transition.');
         }
         $this->validate(['operationsReason' => ['required', 'string', 'min:8', 'max:1000']]);
         match ($state) {
@@ -71,7 +71,7 @@ class CarePlanShow extends Component
         };
         $this->operationsReason = '';
         $this->reload();
-        session()->flash('status', 'Regular care updated by operations.');
+        session()->flash('status', 'Recurring care updated by operations.');
     }
 
     public function render(BookingPaymentService $payments)

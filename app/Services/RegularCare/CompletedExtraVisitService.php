@@ -574,7 +574,7 @@ class CompletedExtraVisitService
         // Eligibility, the reporting window, overlap checks, caregiver attestation,
         // and explicit family approval are the authoritative safeguards here.
         if ($plan->ended_at && $startLocal->gt($plan->ended_at->copy()->setTimezone($timezone)->endOfDay())) {
-            throw ValidationException::withMessages(['reportDate' => 'The visit happened after this regular-care relationship ended.']);
+            throw ValidationException::withMessages(['reportDate' => 'The visit happened after this recurring care relationship ended.']);
         }
 
         return [

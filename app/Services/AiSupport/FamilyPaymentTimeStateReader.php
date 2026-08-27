@@ -257,7 +257,7 @@ class FamilyPaymentTimeStateReader
             'target_id' => 'family.regular_care.attention',
             'resource_type' => 'care_plan',
             'resource_id' => (int) $booking->care_plan_id,
-            'label' => $payment ? 'Fix this regular-care payment' : 'Review regular-care hours',
+            'label' => $payment ? 'Fix this recurring care payment' : 'Review recurring care hours',
         ];
     }
 }

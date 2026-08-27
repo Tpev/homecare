@@ -39,7 +39,7 @@ class AiSupportRequestDraftService
     {
         $this->authorize($actor, $ticket);
         if (! in_array($requestType, [CareRequest::TYPE_ONE_TIME, CareRequest::TYPE_RECURRING], true)) {
-            throw ValidationException::withMessages(['path' => 'Choose one-time care or regular care.']);
+            throw ValidationException::withMessages(['path' => 'Choose one-time care or recurring care.']);
         }
 
         $account = $this->families->account($actor);
@@ -159,7 +159,7 @@ class AiSupportRequestDraftService
         }
         $requestType = $replacementType ?: $source->request_type;
         if (! in_array($requestType, [CareRequest::TYPE_ONE_TIME, CareRequest::TYPE_RECURRING], true)) {
-            throw ValidationException::withMessages(['draft' => 'Choose one-time care or regular care for the new request.']);
+            throw ValidationException::withMessages(['draft' => 'Choose one-time care or recurring care for the new request.']);
         }
 
         $draft = $this->start($actor, $ticket, $requestType);
@@ -417,7 +417,7 @@ class AiSupportRequestDraftService
         } else {
             $required('recurring_days', 'Which days of the week is care needed?');
             $required('recurring_schedule', 'What start time and duration should we use for each selected day?');
-            $required('recurring_starts_on', 'What date should regular care begin?');
+            $required('recurring_starts_on', 'What date should recurring care begin?');
             $days = array_values(array_unique(array_map('intval', (array) ($payload['recurring_days'] ?? []))));
             $schedule = collect((array) ($payload['recurring_schedule'] ?? []));
             $scheduleDays = $schedule->pluck('day')->map(fn ($day): int => (int) $day)->unique()->sort()->values()->all();
@@ -433,14 +433,14 @@ class AiSupportRequestDraftService
                 : null;
             if (filled($payload['recurring_starts_on'] ?? null)
                 && (! $startsOn || $startsOn->isBefore(now('America/New_York')->startOfDay()))) {
-                $errors[] = ['field' => 'recurring_starts_on', 'code' => 'recurring_start_invalid', 'message' => 'Choose a regular-care start date that is not in the past.'];
+                $errors[] = ['field' => 'recurring_starts_on', 'code' => 'recurring_start_invalid', 'message' => 'Choose a recurring care start date that is not in the past.'];
             }
             if (filled($payload['recurring_ends_on'] ?? null)) {
                 $endsOn = $this->strictDate((string) $payload['recurring_ends_on']);
                 if (! $endsOn) {
-                    $errors[] = ['field' => 'recurring_ends_on', 'code' => 'recurring_end_invalid', 'message' => 'Choose a valid regular-care end date.'];
+                    $errors[] = ['field' => 'recurring_ends_on', 'code' => 'recurring_end_invalid', 'message' => 'Choose a valid recurring care end date.'];
                 } elseif ($startsOn && $endsOn->isBefore($startsOn)) {
-                    $errors[] = ['field' => 'recurring_ends_on', 'code' => 'end_before_start', 'message' => 'The regular-care end date must be on or after the start date.'];
+                    $errors[] = ['field' => 'recurring_ends_on', 'code' => 'end_before_start', 'message' => 'The recurring care end date must be on or after the start date.'];
                 }
             }
         }
@@ -499,7 +499,7 @@ class AiSupportRequestDraftService
             'draft_id' => $draft->id,
             'draft_version' => $draft->version,
             'request_type' => $draft->request_type,
-            'request_type_label' => $draft->request_type === CareRequest::TYPE_ONE_TIME ? 'One-time care' : 'Regular care',
+            'request_type_label' => $draft->request_type === CareRequest::TYPE_ONE_TIME ? 'One-time care' : 'Recurring care',
             'recipient' => $payload['recipient_full_name'],
             'tasks' => $tasks,
             'schedule' => $schedule,

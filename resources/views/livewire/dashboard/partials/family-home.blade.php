@@ -412,7 +412,7 @@
                         <h2 class="font-display text-xl font-semibold">Book again</h2>
                         <p class="text-sm text-[#607080]">Book one more visit or make care weekly.</p>
                     </div>
-                    <a href="{{ route('family.care.index') }}" wire:navigate class="hc-link">Weekly care</a>
+                    <a href="{{ route('family.care.index') }}" wire:navigate class="hc-link">Recurring care</a>
                 </div>
             </x-slot:header>
 

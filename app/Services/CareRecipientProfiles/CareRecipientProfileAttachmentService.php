@@ -106,7 +106,7 @@ class CareRecipientProfileAttachmentService
             ->where(fn ($query) => $query->whereNull('care_recipient_profile_version_id')->orWhere('care_recipient_profile_version_id', '!=', $latest))
             ->whereIn('status', [CarePlan::STATUS_PENDING_CAREGIVER, CarePlan::STATUS_COUNTERED, CarePlan::STATUS_ACTIVE, CarePlan::STATUS_PAYMENT_ATTENTION, CarePlan::STATUS_PAUSED])
             ->get(['id', 'title'])
-            ->each(fn (CarePlan $plan) => $items[] = ['type' => 'regular', 'id' => $plan->id, 'title' => $plan->title]);
+            ->each(fn (CarePlan $plan) => $items[] = ['type' => 'regular', 'id' => $plan->id, 'title' => $plan->displayTitle()]);
 
         ContinuousCoveragePlan::query()->forFamilyAccount($account)
             ->where('care_recipient_profile_id', $owned->id)

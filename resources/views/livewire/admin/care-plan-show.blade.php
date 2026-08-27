@@ -1,7 +1,7 @@
 <div class="hc-page space-y-5 py-6">
     @if(session('status'))<x-alert color="green">{{ session('status') }}</x-alert>@endif
     <header class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div><a href="{{ route('admin.care-plans.index') }}" wire:navigate class="font-semibold text-[#0F5B52] underline">Back to regular care</a><h1 class="mt-3 font-display text-3xl font-semibold text-[#17313F]">Plan #{{ $plan->id }} - {{ $plan->title }}</h1><p class="mt-1 text-base text-[#526474]">{{ $plan->family?->name }} with {{ $plan->caregiver?->name }} - {{ ucfirst(str_replace('_', ' ', $plan->status)) }}</p></div>
+        <div><a href="{{ route('admin.care-plans.index') }}" wire:navigate class="font-semibold text-[#0F5B52] underline">Back to recurring care</a><h1 class="mt-3 font-display text-3xl font-semibold text-[#17313F]">Plan #{{ $plan->id }} - {{ $plan->displayTitle() }}</h1><p class="mt-1 text-base text-[#526474]">{{ $plan->family?->name }} with {{ $plan->caregiver?->name }} - {{ ucfirst(str_replace('_', ' ', $plan->status)) }}</p></div>
         <div class="flex flex-wrap gap-2"><x-button color="blue" light wire:click="regenerate" wire:confirm="Generate any missing visits for this plan?">Generate missing visits</x-button><x-button color="green" light wire:click="preparePayments" wire:confirm="Prepare due per-visit payment authorizations now?">Prepare due payments</x-button></div>
     </header>
 
@@ -86,7 +86,7 @@
     <section class="rounded-lg border border-[#D8D0C5] bg-white">
         <div class="border-b border-[#E7E0D8] px-5 py-4">
             <h2 class="font-display text-2xl font-semibold text-[#17313F]">Notification history</h2>
-            <p class="text-base text-[#526474]">Delivery records linked to this exact regular-care plan.</p>
+            <p class="text-base text-[#526474]">Delivery records linked to this exact recurring care plan.</p>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-[760px] w-full text-left text-sm">

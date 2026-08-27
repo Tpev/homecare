@@ -5,6 +5,7 @@
         @endif
 
         @php
+            $familyFirstName = str(trim((string) auth()->user()?->name))->before(' ')->value() ?: 'there';
             $toneClasses = [
                 'green' => 'bg-emerald-100 text-emerald-800',
                 'blue' => 'bg-sky-100 text-sky-800',
@@ -19,8 +20,8 @@
         <section data-ai-target="family.care_requests" tabindex="-1" class="overflow-hidden rounded-[2rem] border border-[#D8D0C5] bg-[#FFFCF8] shadow-sm outline-none">
             <div class="p-5 sm:p-7 lg:p-8">
                 <p class="hc-brand-kicker">Care overview</p>
-                <h1 class="mt-2 max-w-3xl font-display text-3xl font-semibold leading-tight text-[#17313F] sm:text-4xl">What matters next.</h1>
-                <p class="mt-3 hidden max-w-2xl text-sm leading-6 text-[#607080] sm:block sm:text-base">Decisions first, then your next visit and ongoing care. Everything else is one click deeper.</p>
+                <h1 class="mt-2 max-w-3xl font-display text-3xl font-semibold leading-tight text-[#17313F] sm:text-4xl">Hi, {{ $familyFirstName }}.</h1>
+                <p class="mt-2 max-w-2xl text-sm leading-6 text-[#607080] sm:text-base">Here’s an overview of your care.</p>
                 <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button mt-5 min-h-12 w-full sm:w-auto">Request care</a>
             </div>
         </section>
@@ -95,13 +96,13 @@
                     <a href="{{ route('family.care.index', ['view' => 'arranging']) }}" wire:navigate class="flex min-h-20 items-center justify-between gap-4 px-4 py-3 transition hover:bg-[#F8F4ED]">
                         <div>
                             <p class="font-semibold text-[#17313F]">Being arranged</p>
-                            <p class="mt-0.5 text-sm text-[#607080]">Open one-time and regular-care requests</p>
+                            <p class="mt-0.5 text-sm text-[#607080]">Open one-time and recurring care requests</p>
                         </div>
                         <span class="text-2xl font-semibold text-[#17313F]">{{ $beingArrangedCount }}</span>
                     </a>
                     <a href="{{ route('family.care.index', ['view' => 'ongoing', 'type' => 'regular']) }}" wire:navigate class="flex min-h-20 items-center justify-between gap-4 px-4 py-3 transition hover:bg-[#F8F4ED]">
                         <div>
-                            <p class="font-semibold text-[#17313F]">Ongoing regular care</p>
+                            <p class="font-semibold text-[#17313F]">Ongoing recurring care</p>
                             <p class="mt-0.5 text-sm text-[#607080]">Active or paused schedules</p>
                         </div>
                         <span class="text-2xl font-semibold text-[#17313F]">{{ $ongoingPlanCount }}</span>

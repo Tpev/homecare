@@ -153,14 +153,14 @@ class RegularCareShow extends Component
         );
         $this->reloadPlan();
         $this->managePanel = '';
-        session()->flash('status', $this->resumeOn !== '' ? 'Regular care paused until '.$this->plan->resumes_on?->format('F j').'.' : 'Regular care paused.');
+        session()->flash('status', $this->resumeOn !== '' ? 'Recurring care paused until '.$this->plan->resumes_on?->format('F j').'.' : 'Recurring care paused.');
     }
 
     public function resumePlan(): void
     {
         app(CarePlanService::class)->resumePlan($this->plan, auth()->user());
         $this->reloadPlan();
-        session()->flash('status', 'Regular care resumed. Your upcoming visits are ready.');
+        session()->flash('status', 'Recurring care resumed. Your upcoming visits are ready.');
     }
 
     public function endPlan(): void
@@ -169,8 +169,8 @@ class RegularCareShow extends Component
         $this->reloadPlan();
         $this->managePanel = '';
         session()->flash('status', $this->cancelNextWhenEnding
-            ? 'Regular care ended and the next visit was cancelled.'
-            : 'Regular care ended. The next confirmed visit remains scheduled.');
+            ? 'Recurring care ended and the next visit was cancelled.'
+            : 'Recurring care ended. The next confirmed visit remains scheduled.');
     }
 
     public function approveCompletedExtraVisit(int $requestId): void

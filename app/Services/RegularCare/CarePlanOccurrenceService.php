@@ -109,7 +109,7 @@ class CarePlanOccurrenceService
                     $this->notifications->notify(
                         recipients: $recipient,
                         eventKey: MarketplaceEvent::REGULAR_CARE_RESUMED,
-                        title: 'Regular care resumed',
+                        title: 'Recurring care resumed',
                         body: 'The scheduled pause ended and future regular visits are active again.',
                         url: $url,
                         payload: ['care_plan_id' => $plan->id, 'resume_date' => $resumeOn->toDateString()],
@@ -215,7 +215,7 @@ class CarePlanOccurrenceService
             if ((int) $existing->care_plan_id !== (int) $plan->id
                 || ! in_array($existing->plan_visit_kind, ['extra', 'completed_extra'], true)) {
                 throw ValidationException::withMessages([
-                    'extraVisitDate' => 'That time is already reserved by another regular-care visit.',
+                    'extraVisitDate' => 'That time is already reserved by another recurring care visit.',
                 ]);
             }
             if ($existing->status === CareBooking::STATUS_CANCELLED) {
@@ -240,7 +240,7 @@ class CarePlanOccurrenceService
             ->exists();
         if ($overlapExists) {
             throw ValidationException::withMessages([
-                'extraVisitDate' => 'That extra visit overlaps an existing regular-care visit.',
+                'extraVisitDate' => 'That extra visit overlaps an existing recurring care visit.',
             ]);
         }
 
@@ -382,7 +382,7 @@ class CarePlanOccurrenceService
                     'family_user_id' => $plan->family_user_id,
                     'care_plan_id' => $plan->id,
                     'is_system_generated' => true,
-                    'title' => ($kind === 'extra' ? 'Extra visit: ' : 'Regular care: ').$plan->recipientName().' with '.$plan->caregiver?->name,
+                    'title' => ($kind === 'extra' ? 'Extra visit: ' : 'Recurring care: ').$plan->recipientName().' with '.$plan->caregiver?->name,
                     'additional_info' => $plan->care_notes,
                     'scope_of_work' => $plan->care_notes,
                     'time_expectations' => $occurrence['start']->format('l, F j \f\r\o\m g:i A').' to '.$occurrence['end']->format('g:i A'),
@@ -429,7 +429,7 @@ class CarePlanOccurrenceService
                     'caregiver_user_id' => $plan->caregiver_user_id,
                     'status' => CareRequestApplication::STATUS_HIRED,
                     'proposed_rate' => $hourlyRate,
-                    'cover_note' => 'Confirmed through regular care.',
+                    'cover_note' => 'Confirmed through recurring care.',
                 ]);
 
                 $booking = CareBooking::query()->create([

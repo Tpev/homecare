@@ -495,7 +495,7 @@ class FamilyLifecycleActionService
             $profile ? 'Review changes to '.$profile->displayName() : 'Review new care receiver profile',
             $desiredState === 'ready'
                 ? 'This will save a new ready version and share the approved profile details with eligible caregivers.'
-                : 'This saves the profile only. It does not silently change any live request, visit, or regular care.',
+                : 'This saves the profile only. It does not silently change any live request, visit, or recurring care.',
             $this->visibleFields($fields),
             $desiredState === 'ready' ? 'Confirm profile is ready' : 'Confirm and save',
             ['preparation_id' => $preparation->id],
@@ -519,7 +519,7 @@ class FamilyLifecycleActionService
             $fields = [
                 ['label' => 'Profile', 'value' => $resource->displayName()],
                 ['label' => 'Current status', 'value' => (string) $resource->status],
-                ['label' => 'Used by', 'value' => ($state['dependencies']['requests'] ?? 0).' requests, '.($state['dependencies']['regular_care'] ?? 0).' regular-care plans'],
+                ['label' => 'Used by', 'value' => ($state['dependencies']['requests'] ?? 0).' requests, '.($state['dependencies']['regular_care'] ?? 0).' recurring care plans'],
             ];
             $preview = [
                 'profile_id' => (int) $resource->id,

@@ -212,7 +212,7 @@ new class extends Component
                         'active' => request()->routeIs('admin.requests.*'),
                     ],
                     [
-                        'label' => 'Regular Care',
+                        'label' => 'Recurring Care',
                         'href' => route('admin.care-plans.index'),
                         'active' => request()->routeIs('admin.care-plans.*'),
                     ],
@@ -366,7 +366,7 @@ new class extends Component
                         || request()->routeIs('family.continuous-coverage.*'),
                 ];
                 $primaryLinks[] = [
-                    'label' => 'Find Caregivers',
+                    'label' => 'Caregivers',
                     'href' => route('caregivers.search'),
                     'active' => request()->routeIs('caregivers.search') || request()->routeIs('caregivers.show'),
                 ];
@@ -408,7 +408,7 @@ new class extends Component
                         'active' => request()->routeIs('caregiver.work-inbox.*'),
                     ];
                     $primaryLinks[] = [
-                        'label' => 'Regular Clients',
+                        'label' => 'Recurring Clients',
                         'href' => route('caregiver.regular-clients.index'),
                         'active' => request()->routeIs('caregiver.regular-clients.*'),
                     ];

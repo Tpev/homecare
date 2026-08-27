@@ -143,7 +143,7 @@ class FamilyProfileRequestStateReader
             CareRequest::STATUS_DRAFT => 'This request has not been published.',
             CareRequest::STATUS_CANCELLED => 'A withdrawn request cannot be reopened; start a fresh copy instead.',
             CareRequest::STATUS_EXPIRED => 'An expired request cannot be reopened; start a fresh copy instead.',
-            CareRequest::STATUS_FILLED => 'This request already has a selected caregiver; use the visit or regular-care flow for changes.',
+            CareRequest::STATUS_FILLED => 'This request already has a selected caregiver; use the visit or recurring care flow for changes.',
             default => null,
         };
     }

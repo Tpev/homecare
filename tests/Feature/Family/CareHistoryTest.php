@@ -126,7 +126,7 @@ class CareHistoryTest extends TestCase
 
         $presented = $bookings->mapWithKeys(fn (CareBooking $booking): array => [$booking->id => $service->present($booking)]);
         $this->assertSame('One-time', $presented[$oneTime->id]['care_type_label']);
-        $this->assertSame('Regular care', $presented[$regular->id]['care_type_label']);
+        $this->assertSame('Recurring care', $presented[$regular->id]['care_type_label']);
         $this->assertSame('Extra visit', $presented[$extra->id]['care_type_label']);
         $this->assertTrue($presented[$regular->id]['adjusted']);
         $this->assertSame('Check-in missing', $presented[$expired->id]['visit_status_label']);

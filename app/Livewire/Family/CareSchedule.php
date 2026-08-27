@@ -24,7 +24,7 @@ class CareSchedule extends Component
     public array $careTypeOptions = [
         ['label' => 'All upcoming care', 'value' => 'all'],
         ['label' => 'One-time visits', 'value' => 'one_time'],
-        ['label' => 'Regular-care visits', 'value' => 'regular'],
+        ['label' => 'Recurring care visits', 'value' => 'regular'],
         ['label' => 'Extra visits', 'value' => 'extra'],
         ['label' => 'Continuous care', 'value' => 'coverage'],
     ];

@@ -81,14 +81,14 @@ class RegularClients extends Component
             throw $exception;
         }
 
-        session()->flash('status', 'Regular care accepted. The next visit is booked.');
+        session()->flash('status', 'Recurring care accepted. The next visit is booked.');
     }
 
     public function declineOffer(int $planId): void
     {
         $plan = $this->findOwnPlan($planId);
         app(CarePlanService::class)->declineOffer($plan, auth()->user());
-        session()->flash('status', 'Regular care offer declined.');
+        session()->flash('status', 'Recurring care offer declined.');
     }
 
     public function respondToChange(int $changeId, bool $accept): void
@@ -402,7 +402,7 @@ class RegularClients extends Component
     private function reportPlan(): CarePlan
     {
         if (! $this->reportPlanId) {
-            throw ValidationException::withMessages(['reportSubmit' => 'Choose a regular-care client first.']);
+            throw ValidationException::withMessages(['reportSubmit' => 'Choose a recurring care client first.']);
         }
 
         return $this->findOwnPlan($this->reportPlanId);

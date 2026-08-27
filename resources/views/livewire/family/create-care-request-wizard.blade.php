@@ -384,7 +384,7 @@
                 <x-card>
                     <x-slot:header>
                         <div>
-                            <h2 class="font-display text-xl font-semibold">{{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Regular-care schedule' : 'Visit schedule' }}</h2>
+                            <h2 class="font-display text-xl font-semibold">{{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring care schedule' : 'Visit schedule' }}</h2>
                             <p class="text-base text-[#607080]">Add only the dates and times that apply to the care pattern you chose.</p>
                         </div>
                     </x-slot:header>
@@ -592,7 +592,7 @@
                         </div>
                         <div class="rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4 md:col-span-2">
                             <p class="text-xs uppercase tracking-[0.12em] text-[#0F7A55]">
-                                {{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated regular care each week' : 'Estimated one-time cost' }}
+                                {{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated recurring care each week' : 'Estimated one-time cost' }}
                             </p>
                             @if ($this->estimatedTotal !== null && $this->estimatedHours !== null)
                                 <div class="mt-3 grid gap-2 text-sm sm:grid-cols-[1fr_auto] sm:items-end">

@@ -129,8 +129,8 @@ class FamilyCarePresentationService
         return [
             'id' => (int) $request->id,
             'type_key' => $isRegular ? 'regular' : 'one_time',
-            'type_label' => $isRegular ? 'Regular care' : 'One-time care',
-            'headline' => $isRegular ? 'Regular care for '.$recipient : $recipient.' · '.($request->requested_start_at?->format('D, M j') ?: 'Date not set'),
+            'type_label' => $isRegular ? 'Recurring care' : 'One-time care',
+            'headline' => $isRegular ? 'Recurring care for '.$recipient : $recipient.' · '.($request->requested_start_at?->format('D, M j') ?: 'Date not set'),
             'recipient' => $recipient,
             'schedule' => $schedule,
             'location' => trim(collect([$request->city, $request->state])->filter()->implode(', ')),
@@ -176,7 +176,7 @@ class FamilyCarePresentationService
 
         return [
             'id' => (int) $plan->id,
-            'type_label' => 'Regular care',
+            'type_label' => 'Recurring care',
             'headline' => $recipient.' with '.$caregiver,
             'recipient' => $recipient,
             'caregiver' => $caregiver,
@@ -188,10 +188,10 @@ class FamilyCarePresentationService
                 CarePlan::PAYMENT_ACTION_REQUIRED => 'Payment action needed',
                 default => 'Payment checked before each visit',
             },
-            'action_label' => $plan->status === CarePlan::STATUS_PAYMENT_ATTENTION ? 'Fix payment' : 'Manage regular care',
+            'action_label' => $plan->status === CarePlan::STATUS_PAYMENT_ATTENTION ? 'Fix payment' : 'Manage recurring care',
             'action_url' => route('family.care.show', $plan->id),
             'details_url' => route('family.care.journey', ['resourceType' => 'regular', 'resourceId' => $plan->id]),
-            'reference' => 'Regular care #'.$plan->id,
+            'reference' => 'Recurring care #'.$plan->id,
         ];
     }
 

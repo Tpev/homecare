@@ -66,7 +66,7 @@ class RegularCarePlanFlowTest extends TestCase
         $this->actingAs($caregiver)
             ->get(route('caregiver.regular-clients.index'))
             ->assertOk()
-            ->assertSee('Direct regular-care offers')
+            ->assertSee('Direct recurring care offers')
             ->assertSee('Family member receives care')
             ->assertSee('Accept schedule');
 

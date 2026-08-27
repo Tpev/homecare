@@ -492,7 +492,7 @@ class FamilyGuidedAssistanceService
             ->values();
         if ($items->isEmpty()) {
             return [
-                'I did not find a care visit or regular-care payment that currently requires Family action.',
+                'I did not find a care visit or recurring care payment that currently requires Family action.',
                 [$this->guide(AiSupportGuidedTask::TYPE_FAMILY_HISTORY, 'family.care_history', 'Review payment history')],
                 'no_payment_attention',
             ];
@@ -642,8 +642,8 @@ class FamilyGuidedAssistanceService
 
         if ($plans->isEmpty()) {
             return [
-                'You do not have a regular care plan yet. After you complete and approve a visit, the Regular care page shows caregivers you can book on a repeating schedule.',
-                [$this->guide(AiSupportGuidedTask::TYPE_FAMILY_VISIT, 'family.regular_care', 'Open regular care')],
+                'You do not have a recurring care plan yet. After you complete and approve a visit, the Recurring care page shows caregivers you can book on a repeating schedule.',
+                [$this->guide(AiSupportGuidedTask::TYPE_FAMILY_VISIT, 'family.regular_care', 'Open recurring care')],
                 'regular_care_empty',
             ];
         }
@@ -664,11 +664,11 @@ class FamilyGuidedAssistanceService
             $caregiver = trim((string) $plan->caregiver?->name) ?: 'Your caregiver';
 
             return [
-                $caregiver.' has your next regular care visit '.$this->bookingTime($booking).'.',
+                $caregiver.' has your next recurring care visit '.$this->bookingTime($booking).'.',
                 [$this->guide(
                     AiSupportGuidedTask::TYPE_FAMILY_VISIT,
                     'family.regular_care.attention',
-                    'Open regular care plan',
+                    'Open recurring care plan',
                     'care_plan',
                     (int) $plan->id,
                 )],
@@ -679,11 +679,11 @@ class FamilyGuidedAssistanceService
         $status = str_replace('_', ' ', (string) $plan->status);
 
         return [
-            $plan->title.' is '.$status.'. I did not find an upcoming regular care visit on this plan right now.',
+            $plan->displayTitle().' is '.$status.'. I did not find an upcoming recurring care visit on this plan right now.',
             [$this->guide(
                 AiSupportGuidedTask::TYPE_FAMILY_VISIT,
                 'family.regular_care.attention',
-                'Open regular care plan',
+                'Open recurring care plan',
                 'care_plan',
                 (int) $plan->id,
             )],

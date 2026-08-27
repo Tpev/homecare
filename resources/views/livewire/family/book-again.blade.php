@@ -22,7 +22,7 @@
         <div class="max-w-3xl">
             <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#D8E8D4]">Request care with {{ $caregiverFirstName }}</p>
             <h1 class="mt-2 font-display text-3xl font-semibold leading-tight sm:text-4xl">
-                One visit or regular care—without starting over.
+                One visit or recurring care—without starting over.
             </h1>
             <p class="mt-3 text-base leading-7 text-[#F7F1E8]">
                 We copied the care details from {{ $lastVisitLabel }}. Choose how often you need care; the existing invitation, approval, and payment flow stays the same.
@@ -102,7 +102,7 @@
             <x-card>
                 <x-slot:header>
                     <div>
-                        <p class="hc-brand-kicker">Regular care</p>
+                        <p class="hc-brand-kicker">Recurring care</p>
                         <h2 class="mt-1 font-display text-xl font-semibold text-[#17313F]">Set up a repeating schedule</h2>
                     </div>
                 </x-slot:header>
@@ -111,7 +111,7 @@
                     <p>
                         Choose this when {{ $caregiverFirstName }} should come every week. You can set the days, time, start date, and end date before sending the offer.
                     </p>
-                        <a href="{{ route('family.care.compose', $sourceRequest->id) }}" wire:navigate class="hc-primary-button w-full">Set up regular care</a>
+                        <a href="{{ route('family.care.compose', $sourceRequest->id) }}" wire:navigate class="hc-primary-button w-full">Set up recurring care</a>
                 </div>
             </x-card>
 

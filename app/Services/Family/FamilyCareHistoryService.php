@@ -138,7 +138,7 @@ class FamilyCareHistoryService
             ->orderBy('title')
             ->get(['id', 'title'])
             ->map(fn (CarePlan $plan): array => [
-                'label' => $plan->title,
+                'label' => $plan->displayTitle(),
                 'value' => (string) $plan->id,
             ]);
 
@@ -156,7 +156,7 @@ class FamilyCareHistoryService
             $booking->care_plan_id === null => ['key' => 'one_time', 'label' => 'One-time'],
             $booking->plan_visit_kind === 'completed_extra' => ['key' => 'extra', 'label' => 'Family-approved extra visit'],
             $booking->plan_visit_kind === 'extra' => ['key' => 'extra', 'label' => 'Extra visit'],
-            default => ['key' => 'regular', 'label' => 'Regular care'],
+            default => ['key' => 'regular', 'label' => 'Recurring care'],
         };
         $workedMinutes = is_null($booking->worked_minutes) ? null : max(0, (int) $booking->worked_minutes);
         $scheduledMinutes = $booking->scheduled_start_at && $booking->scheduled_end_at

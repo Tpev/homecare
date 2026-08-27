@@ -587,7 +587,7 @@ class SeedE2eFixtures extends Command
         $request = CareRequest::query()->create([
             'family_user_id' => $family->id,
             'title' => 'E2E Missed Regular Visit - Time Correction',
-            'additional_info' => 'Past regular-care occurrence for time-correction browser coverage.',
+            'additional_info' => 'Past recurring care occurrence for time-correction browser coverage.',
             'scope_of_work' => 'Companionship and morning routine support.',
             'status' => CareRequest::STATUS_FILLED,
             'request_type' => CareRequest::TYPE_ONE_TIME,
@@ -609,7 +609,7 @@ class SeedE2eFixtures extends Command
             'caregiver_user_id' => $caregiver->id,
             'status' => CareRequestApplication::STATUS_HIRED,
             'proposed_rate' => 30,
-            'cover_note' => 'Assigned regular-care caregiver.',
+            'cover_note' => 'Assigned recurring care caregiver.',
         ]);
         $booking = CareBooking::query()->create([
             'care_request_id' => $request->id,
@@ -629,7 +629,7 @@ class SeedE2eFixtures extends Command
             'source_care_request_id' => $request->id,
             'source_care_booking_id' => $booking->id,
             'status' => CarePlan::STATUS_ACTIVE,
-            'title' => 'E2E time correction regular care',
+            'title' => 'E2E time correction recurring care',
             'schedule_days' => [strtolower($start->format('l'))],
             'schedule_start_time' => '07:30:00',
             'schedule_end_time' => '09:30:00',
@@ -767,9 +767,9 @@ class SeedE2eFixtures extends Command
     {
         $service = app(CarePlanService::class);
         $first = now()->addDay()->startOfDay();
-        $activeSource = $this->makeCompletedSource($family, $caregiver, $taskIds, 'E2E regular care active source');
+        $activeSource = $this->makeCompletedSource($family, $caregiver, $taskIds, 'E2E recurring care active source');
         $active = $service->sendOfferFromRequest($activeSource, $family, [
-            'title' => 'Regular care for E2E Recipient',
+            'title' => 'Recurring care for E2E Recipient',
             'schedule_days' => [$first->dayOfWeek, $first->copy()->addDays(2)->dayOfWeek],
             'schedule_start_time' => '09:00',
             'schedule_end_time' => '12:00',
@@ -787,7 +787,7 @@ class SeedE2eFixtures extends Command
             app(CarePlanHealthService::class)->reconcile($active->fresh());
         }
 
-        $offerSource = $this->makeCompletedSource($family, $caregiver, $taskIds, 'E2E direct regular care offer source');
+        $offerSource = $this->makeCompletedSource($family, $caregiver, $taskIds, 'E2E direct recurring care offer source');
         $service->sendOfferFromRequest($offerSource, $family, [
             'title' => 'Evening companionship for E2E Recipient',
             'schedule_days' => [$first->copy()->addDay()->dayOfWeek],
@@ -805,7 +805,7 @@ class SeedE2eFixtures extends Command
         $request = CareRequest::query()->create([
             'family_user_id' => $family->id,
             'title' => $title,
-            'additional_info' => 'Completed visit used to establish regular care.',
+            'additional_info' => 'Completed visit used to establish recurring care.',
             'scope_of_work' => 'Companionship and meal preparation.',
             'status' => CareRequest::STATUS_FILLED,
             'request_type' => CareRequest::TYPE_ONE_TIME,

@@ -195,6 +195,21 @@ class CarePlan extends Model
         return (string) data_get($this->recipient_snapshot, 'full_name', 'Care recipient');
     }
 
+    public function displayTitle(): string
+    {
+        $title = trim((string) $this->title);
+
+        if ($title === '') {
+            return 'Recurring care';
+        }
+
+        return str_replace(
+            ['Regular Care', 'Regular care', 'regular care', 'Regular-care', 'regular-care'],
+            ['Recurring Care', 'Recurring care', 'recurring care', 'Recurring care', 'recurring care'],
+            $title,
+        );
+    }
+
     public function recipientRelationship(): string
     {
         return (string) data_get($this->recipient_snapshot, 'relationship_to_family', '');

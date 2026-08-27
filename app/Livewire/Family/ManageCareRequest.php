@@ -284,9 +284,9 @@ class ManageCareRequest extends Component
             $payment = $this->requestItem->booking?->payment;
             if ($payment?->status === CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED) {
                 $this->dispatchPaymentConfirmation($payment);
-                session()->flash('status', 'Regular care is set up. Confirm your card for the first visit.');
+                session()->flash('status', 'Recurring care is set up. Confirm your card for the first visit.');
             } else {
-                session()->flash('status', 'Regular care is confirmed. Your upcoming visits are ready.');
+                session()->flash('status', 'Recurring care is confirmed. Your upcoming visits are ready.');
             }
 
             FunnelTracker::track('regular_care_marketplace_hired', auth()->user(), $plan, [

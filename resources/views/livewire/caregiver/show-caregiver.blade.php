@@ -83,8 +83,11 @@
                                             <p class="mt-1 text-xs leading-5">{{ $contextRelationship['status_detail'] }}</p>
                                         </div>
                                     @endif
-                                @else
+                                @elseif (count($familyRequestOptions) > 0)
                                     <x-button color="blue" wire:click="openInviteModal" class="w-full">Invite to request</x-button>
+                                @else
+                                    <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button w-full">Create a request to invite</a>
+                                    <p class="text-xs leading-5 text-[#607080]">Caregivers are contacted and hired through a care request with the schedule and care details.</p>
                                 @endif
                                 <x-button :color="$isFavorite ? 'amber' : 'slate'" light wire:click="toggleFavorite" class="w-full">
                                     {{ $isFavorite ? 'Saved caregiver' : 'Save caregiver' }}

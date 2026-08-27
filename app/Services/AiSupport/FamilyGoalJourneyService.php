@@ -101,7 +101,7 @@ class FamilyGoalJourneyService
                     'path_reason' => $decision['reason'],
                 ]);
                 $question = $this->drafts->nextQuestion($actor, $updated);
-                $type = $decision['path'] === CareRequest::TYPE_ONE_TIME ? 'one-time care' : 'regular care';
+                $type = $decision['path'] === CareRequest::TYPE_ONE_TIME ? 'one-time care' : 'recurring care';
                 $this->automatedMessage(
                     $ticket,
                     'I changed this to '.$type.'. I kept the recipient, care tasks, address, and notes that still apply. '.($question ?: 'The request is ready to review again.'),
@@ -219,7 +219,7 @@ class FamilyGoalJourneyService
             }
 
             if (! in_array($path, [CareRequest::TYPE_ONE_TIME, CareRequest::TYPE_RECURRING], true)) {
-                throw ValidationException::withMessages(['path' => 'Choose one-time care, regular care, or a person.']);
+                throw ValidationException::withMessages(['path' => 'Choose one-time care, recurring care, or a person.']);
             }
 
             $sourceMessage = trim((string) data_get($action->payload, 'source_message', ''));
@@ -388,7 +388,7 @@ class FamilyGoalJourneyService
         $path = $decision['path'];
         $body = match ($path) {
             CareRequest::TYPE_ONE_TIME => 'Based on what you told me, one-time care looks like the best fit because this is one specific visit or date.',
-            CareRequest::TYPE_RECURRING => 'Based on what you told me, regular care looks like the best fit because the help repeats every week.',
+            CareRequest::TYPE_RECURRING => 'Based on what you told me, recurring care looks like the best fit because the help repeats every week.',
             'irregular_dates' => 'These dates do not follow a weekly pattern. They should be separate one-time visits. I can help with the first one and keep the remaining dates here.',
             default => 'Is this help for one specific date, or will it repeat every week?',
         };
@@ -397,12 +397,12 @@ class FamilyGoalJourneyService
             : ($path === 'irregular_dates' ? CareRequest::TYPE_ONE_TIME : null);
         $choices = $recommended === CareRequest::TYPE_RECURRING
             ? [
-                ['id' => CareRequest::TYPE_RECURRING, 'label' => 'Continue with regular care'],
+                ['id' => CareRequest::TYPE_RECURRING, 'label' => 'Continue with recurring care'],
                 ['id' => CareRequest::TYPE_ONE_TIME, 'label' => 'Choose one-time care instead'],
             ]
             : [
                 ['id' => CareRequest::TYPE_ONE_TIME, 'label' => $path === 'irregular_dates' ? 'Start the first one-time request' : ($recommended ? 'Continue with one-time care' : 'One specific date')],
-                ['id' => CareRequest::TYPE_RECURRING, 'label' => $recommended ? 'Choose regular care instead' : 'Repeats every week'],
+                ['id' => CareRequest::TYPE_RECURRING, 'label' => $recommended ? 'Choose recurring care instead' : 'Repeats every week'],
             ];
         $choices[] = ['id' => 'unsure', 'label' => "I'm still not sure"];
         $choices[] = ['id' => 'human', 'label' => 'Talk to a person'];
@@ -923,7 +923,7 @@ class FamilyGoalJourneyService
         if ($journey->state === AiSupportGoalJourney::STATE_AWAITING_CHOICE) {
             return $journey->step_key === 'choose_goal'
                 ? 'Next: choose which task to continue'
-                : 'Next: choose one-time or regular care';
+                : 'Next: choose one-time or recurring care';
         }
         if ($journey->journey_type === 'care_request') {
             $draft = $this->requestDraft($actor, $ticket);
@@ -944,7 +944,7 @@ class FamilyGoalJourneyService
                 return $question ? 'Next: '.Str::lcfirst(rtrim($question, '.')) : 'Next: review your request';
             }
 
-            return 'Next: choose one-time or regular care';
+            return 'Next: choose one-time or recurring care';
         }
 
         return match ($journey->step_key) {
@@ -953,7 +953,7 @@ class FamilyGoalJourneyService
             'read_payment_problem' => 'Next: review the payment problem and recovery choice',
             'review_caregivers' => 'Next: review the caregiver choices',
             'review_visit' => 'Next: review the visit or submitted hours',
-            'review_regular_care' => 'Next: review the regular-care details',
+            'review_regular_care' => 'Next: review the recurring care details',
             'find_past_care' => 'Next: open the correct past care record',
             'open_messages' => 'Next: open the right conversation or notification setting',
             default => 'Next: use the action in the latest support message',

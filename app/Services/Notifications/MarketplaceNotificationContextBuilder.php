@@ -134,7 +134,7 @@ class MarketplaceNotificationContextBuilder
     {
         $request->loadMissing('tasks:id,name');
         $details = collect([$this->detail('Care request', '#'.$request->id.' · '.$request->title)]);
-        $details->push($this->detail('Care type', $request->isRecurring() ? 'Regular care' : 'One-time care'));
+        $details->push($this->detail('Care type', $request->isRecurring() ? 'Recurring care' : 'One-time care'));
 
         $timezone = $this->requestTimezone($request);
         if ($request->requested_start_at) {
@@ -248,7 +248,8 @@ class MarketplaceNotificationContextBuilder
     private function planDetails(User $recipient, CarePlan $plan): Collection
     {
         $plan->loadMissing(['family:id,name', 'caregiver:id,name']);
-        $details = collect([$this->detail('Regular care', '#'.$plan->id.' · '.($plan->title ?: $plan->recipientName()))]);
+        $planLabel = trim((string) $plan->title) !== '' ? $plan->displayTitle() : $plan->recipientName();
+        $details = collect([$this->detail('Recurring care', '#'.$plan->id.' · '.$planLabel)]);
         $otherPerson = $recipient->role === 'caregiver' ? $plan->family?->name : $plan->caregiver?->name;
         if ($otherPerson) {
             $details->push($this->detail($recipient->role === 'caregiver' ? 'Family' : 'Caregiver', $otherPerson));
@@ -319,7 +320,7 @@ class MarketplaceNotificationContextBuilder
     {
         $request->loadMissing('plan.family:id,name', 'plan.caregiver:id,name');
         $details = collect([
-            $this->detail('Regular care plan', '#'.$request->care_plan_id),
+            $this->detail('Recurring care plan', '#'.$request->care_plan_id),
             $this->detail('Visit start', $this->formatDateTime($request->proposed_started_at, $request->timezone)),
             $this->detail('Visit end', $this->formatDateTime($request->proposed_completed_at, $request->timezone)),
             $this->detail('Unpaid break', ((int) $request->proposed_break_minutes).' minutes'),

@@ -209,7 +209,7 @@
             </div>
             @if($careRequest->booking->care_plan_id)
                 <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
-                    <p class="font-semibold text-amber-950">Regular-care check-in override</p>
+                    <p class="font-semibold text-amber-950">Recurring care check-in override</p>
                     @if($careRequest->booking->hasCheckInOverride())
                         <p class="mt-1 text-sm text-amber-900">Allowed {{ $careRequest->booking->check_in_override_at?->format('M d, Y g:i A') }}. Reason: {{ $careRequest->booking->check_in_override_reason }}</p>
                     @else

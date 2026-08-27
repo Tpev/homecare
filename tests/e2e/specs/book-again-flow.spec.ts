@@ -115,7 +115,7 @@ test.describe('Book Again Flow', () => {
         await expect(page.getByLabel('Starting day')).toBeVisible();
         await expect(page.getByLabel('Starting time')).toBeVisible();
         await expect(page.getByLabel('Duration')).toBeVisible();
-        await expect(page.getByRole('link', { name: 'Set up weekly care' })).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Set up recurring care' })).toBeVisible();
 
         await page.getByRole('button', { name: 'Send one-time invite' }).click();
         await expect(page.getByText('One-time invite sent to E2E Ready Caregiver.')).toBeVisible();

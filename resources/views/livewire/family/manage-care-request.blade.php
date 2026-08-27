@@ -208,7 +208,7 @@
             : 'No visit';
         $plainRequestType = $requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME
             ? 'One-time care'
-            : 'Regular care';
+            : 'Recurring care';
         $plainSchedule = $booking
             ? trim((optional($booking->scheduled_start_at)->format('M d, g:i A') ?: 'Time pending').' - '.(optional($booking->scheduled_end_at)->format('g:i A') ?: ''))
             : ($requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME
@@ -218,7 +218,7 @@
         $recordHeadline = $booking
             ? $recordRecipientName.' · '.($booking->scheduled_start_at?->format('D, M j') ?: 'Visit')
             : ($requestItem->request_type === \App\Models\CareRequest::TYPE_RECURRING
-                ? 'Regular care for '.$recordRecipientName
+                ? 'Recurring care for '.$recordRecipientName
                 : $recordRecipientName.' · '.($requestItem->requested_start_at?->format('D, M j') ?: 'Date not set'));
         $visitCaregiverDisplayName = trim((string) $hiredCaregiverFirstName) !== ''
             ? trim((string) $hiredCaregiverFirstName)

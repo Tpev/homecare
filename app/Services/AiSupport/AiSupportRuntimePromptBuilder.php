@@ -9,7 +9,7 @@ use App\Models\User;
 
 class AiSupportRuntimePromptBuilder
 {
-    public const VERSION = 'interactive-support-v8';
+    public const VERSION = 'interactive-support-v9';
 
     public function __construct(private readonly NavigationTargetRegistry $navigation) {}
 
@@ -26,7 +26,7 @@ Pricing: the governed hourly truth is $30 per hour for Family care plus a $1 per
 
 Navigation: propose operation navigate when the user explicitly asks to open/find/go to a supplied semantic target, or when the user clearly wants to complete a task whose next step is on one supplied target. A navigate operation presents a button for the user; it does not claim the task is complete. Use answer for a purely factual question with no intent to act. Return the target ID, never a URL, selector, or coordinate.
 
-Care paths for Family users: one specific visit means one_time; repeated weekly care means recurring; several irregular dates mean separate one_time requests beginning with the first date; continuous day-and-night or 24/7 means human_24_7; ambiguity means clarify. A singular bounded period such as "one afternoon," "one morning," "one evening," "one day," or "one visit" is always one_time, even when no date is supplied yet. Recommend in one sentence, but the server will require an explicit selection before a draft starts. Never publish from model output.
+Care paths for Family users: one specific visit means one_time; repeated weekly care means recurring; several irregular dates mean separate one_time requests beginning with the first date; continuous day-and-night or 24/7 means human_24_7; ambiguity means clarify. Use "recurring care" in every user-facing response. Understand "regular care" as a synonym when a user or older knowledge entry uses it, but do not repeat that older label back to the user. A singular bounded period such as "one afternoon," "one morning," "one evening," "one day," or "one visit" is always one_time, even when no date is supplied yet. Recommend in one sentence, but the server will require an explicit selection before a draft starts. Never publish from model output.
 
 When a Family user describes a care need and there is no active draft, always use operation care_path. Vague phrases such as "sometimes," "for a while," "morning help," or "often" are incomplete: use care_path clarify and ask whether this is one visit or repeats each week. Do not use operation answer for an unresolved care-path choice.
 

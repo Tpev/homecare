@@ -71,7 +71,7 @@ class CareJourney extends Component
         $payment = $booking?->payment;
         $recipient = trim((string) ($request->recipient?->full_name ?? '')) ?: 'Care recipient';
         $caregiver = trim((string) ($hired?->caregiver?->name ?? $booking?->caregiver?->name ?? '')) ?: null;
-        $requestType = $request->request_type === CareRequest::TYPE_RECURRING ? 'Regular-care request' : 'One-time care';
+        $requestType = $request->request_type === CareRequest::TYPE_RECURRING ? 'Recurring care request' : 'One-time care';
 
         $visits = collect($booking ? [$this->visitCard($booking)] : []);
         $timeline = collect([
@@ -178,7 +178,7 @@ class CareJourney extends Component
 
         return [
             'kind' => 'regular',
-            'type_label' => 'Regular care',
+            'type_label' => 'Recurring care',
             'title' => $plan->recipientName().' with '.$caregiver,
             'subtitle' => WeeklySchedule::label($plan->weeklyScheduleSlots()) ?: 'Schedule pending',
             'status' => match ((string) $plan->status) {
@@ -189,10 +189,10 @@ class CareJourney extends Component
             'status_tone' => $plan->status === CarePlan::STATUS_PAYMENT_ATTENTION ? 'amber' : ($active ? 'green' : 'slate'),
             'recipient' => $plan->recipientName(),
             'caregiver' => $caregiver,
-            'reference' => 'Regular care #'.$plan->id,
+            'reference' => 'Recurring care #'.$plan->id,
             'schedule' => WeeklySchedule::label($plan->weeklyScheduleSlots()) ?: 'Schedule pending',
             'timeline' => collect([
-                $this->stage('Care proposed', 'complete', 'The family created this regular-care arrangement.', $plan->offered_at ?: $plan->created_at),
+                $this->stage('Care proposed', 'complete', 'The family created this recurring care arrangement.', $plan->offered_at ?: $plan->created_at),
                 $this->stage(
                     'Caregiver confirmed',
                     $plan->accepted_at || $active ? 'complete' : 'current',
@@ -200,7 +200,7 @@ class CareJourney extends Component
                     $plan->accepted_at,
                 ),
                 $this->stage(
-                    'Regular care active',
+                    'Recurring care active',
                     $active ? 'complete' : ($plan->status === CarePlan::STATUS_PENDING_CAREGIVER ? 'pending' : 'current'),
                     $active ? 'Future visits follow the agreed weekly schedule.' : 'The arrangement is not currently generating visits.',
                     $plan->activated_at,
@@ -229,7 +229,7 @@ class CareJourney extends Component
                 ->values(),
             'manage_url' => route('family.care.show', $plan->id),
             'primary_action' => [
-                'label' => 'Manage regular care',
+                'label' => 'Manage recurring care',
                 'url' => route('family.care.show', $plan->id),
                 'consequence' => 'Change future visits, add an extra visit, pause care, or review payment.',
                 'urgent' => false,

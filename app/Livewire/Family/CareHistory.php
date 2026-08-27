@@ -55,7 +55,7 @@ class CareHistory extends Component
     public array $careTypeOptions = [
         ['label' => 'All care types', 'value' => 'all'],
         ['label' => 'One-time', 'value' => 'one_time'],
-        ['label' => 'Regular care', 'value' => 'regular'],
+        ['label' => 'Recurring care', 'value' => 'regular'],
         ['label' => 'Extra visit', 'value' => 'extra'],
     ];
 
@@ -131,7 +131,7 @@ class CareHistory extends Component
             'summary' => $history->summary($family, $filters),
             'caregiverOptions' => collect([['label' => 'All caregivers', 'value' => '']])->concat($options['caregivers'])->all(),
             'recipientOptions' => collect([['label' => 'All recipients', 'value' => '']])->concat($options['recipients'])->all(),
-            'planOptions' => collect([['label' => 'All regular-care plans', 'value' => '']])->concat($options['plans'])->all(),
+            'planOptions' => collect([['label' => 'All recurring care plans', 'value' => '']])->concat($options['plans'])->all(),
             'activeFilterCount' => $this->activeFilterCount(),
         ]);
     }

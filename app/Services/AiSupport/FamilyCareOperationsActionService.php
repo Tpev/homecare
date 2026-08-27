@@ -341,7 +341,7 @@ class FamilyCareOperationsActionService
             $summary = match ($tool) {
                 'applicant.shortlist' => 'This saves the caregiver for follow-up. It does not hire them.',
                 'applicant.reject' => 'This declines the caregiver for this request. It does not block their account.',
-                default => 'This selects the caregiver, closes other active applications, creates the visit or regular-care plan, and starts the existing payment-authorization workflow.',
+                default => 'This selects the caregiver, closes other active applications, creates the visit or recurring care plan, and starts the existing payment-authorization workflow.',
             };
             $fields = [
                 ['label' => 'Caregiver', 'value' => (string) $application->caregiver?->name],
@@ -711,7 +711,7 @@ class FamilyCareOperationsActionService
         if (in_array($intentId, ['FAM-REGULAR-001', 'FAM-REGULAR-009', 'FAM-REGULAR-010', 'FAM-REGULAR-024'], true)) {
             $plan = $this->selectPlan($actor, $message);
             if (! $plan) {
-                $this->offerRead($actor, $ticket, 'I did not find a regular-care plan on your Family account.', $intentId, 'family.regular_care');
+                $this->offerRead($actor, $ticket, 'I did not find a recurring care plan on your Family account.', $intentId, 'family.regular_care');
 
                 return true;
             }
@@ -729,7 +729,7 @@ class FamilyCareOperationsActionService
         if (in_array($intentId, ['FAM-REGULAR-002', 'FAM-REGULAR-003', 'FAM-REGULAR-004', 'FAM-REGULAR-005'], true)) {
             $request = $this->selectRequest($actor, $message);
             if (! $request) {
-                $this->automatedMessage($ticket, 'I could not find an eligible earlier request or hired caregiver for a regular-care offer.');
+                $this->automatedMessage($ticket, 'I could not find an eligible earlier request or hired caregiver for a recurring care offer.');
 
                 return true;
             }
@@ -746,7 +746,7 @@ class FamilyCareOperationsActionService
         if (in_array($intentId, ['FAM-REGULAR-007', 'FAM-REGULAR-008'], true)) {
             $plan = $this->selectPlan($actor, $message, [CarePlan::STATUS_COUNTERED]);
             if (! $plan) {
-                $this->automatedMessage($ticket, 'I did not find one current regular-care counteroffer.');
+                $this->automatedMessage($ticket, 'I did not find one current recurring care counteroffer.');
 
                 return true;
             }
@@ -764,7 +764,7 @@ class FamilyCareOperationsActionService
                 'expected_status' => (string) $plan->status,
                 'expected_schedule_version' => (int) $plan->schedule_version,
                 'expected_updated_at' => $this->stamp($plan->updated_at),
-            ], $intentId, 'Accept this regular-care counteroffer?',
+            ], $intentId, 'Accept this recurring care counteroffer?',
                 'This replaces the proposed schedule with the caregiver’s counter and may create the next visit.', [
                     ['label' => 'Current offer', 'value' => $this->plans->scheduleLabel($plan)],
                     ['label' => 'Caregiver counter', 'value' => $this->plans->scheduleLabel($plan, true)],
@@ -778,7 +778,7 @@ class FamilyCareOperationsActionService
             $plan = $this->selectPlan($actor, $message, [CarePlan::STATUS_ACTIVE, CarePlan::STATUS_PAYMENT_ATTENTION]);
             $booking = $plan ? $this->selectPlanBooking($plan, $message) : null;
             if (! $plan || ! $booking) {
-                $this->automatedMessage($ticket, 'I could not find one upcoming scheduled regular-care visit to skip.');
+                $this->automatedMessage($ticket, 'I could not find one upcoming scheduled recurring care visit to skip.');
 
                 return true;
             }
@@ -789,10 +789,10 @@ class FamilyCareOperationsActionService
                 'expected_plan_updated_at' => $this->stamp($plan->updated_at),
                 'expected_booking_status' => (string) $booking->status,
                 'expected_booking_updated_at' => $this->stamp($booking->updated_at),
-            ], $intentId, 'Skip this one regular-care visit?',
-                ($late ? 'This is inside the 24-hour late-cancellation window. ' : '').'The regular-care plan and later schedule continue.', [
+            ], $intentId, 'Skip this one recurring care visit?',
+                ($late ? 'This is inside the 24-hour late-cancellation window. ' : '').'The recurring care plan and later schedule continue.', [
                     ['label' => 'Visit', 'value' => $this->bookingTime($booking)],
-                    ['label' => 'Plan', 'value' => (string) $plan->title],
+                    ['label' => 'Plan', 'value' => $plan->displayTitle()],
                     ['label' => 'Late-cancellation window', 'value' => $late ? 'Inside' : 'Outside'],
                 ], 'Confirm skip visit');
 
@@ -899,7 +899,7 @@ class FamilyCareOperationsActionService
                 'expected_status' => (string) $plan->status,
                 'expected_schedule_version' => (int) $plan->schedule_version,
                 'expected_updated_at' => $this->stamp($plan->updated_at),
-            ], $intentId, 'Send this regular-care schedule change?',
+            ], $intentId, 'Send this recurring care schedule change?',
                 'Current generated visits stay unchanged until the caregiver accepts.', [
                     ['label' => 'Current schedule', 'value' => $this->plans->scheduleLabel($plan)],
                     ['label' => 'Proposed schedule', 'value' => $schedule['label']],
@@ -926,9 +926,9 @@ class FamilyCareOperationsActionService
                 'expected_status' => (string) $plan->status,
                 'expected_schedule_version' => (int) $plan->schedule_version,
                 'expected_updated_at' => $this->stamp($plan->updated_at),
-            ], $intentId, 'Pause this regular-care plan?',
+            ], $intentId, 'Pause this recurring care plan?',
                 'Affected future generated visits will be suppressed from the pause date. Completed care is unchanged.', [
-                    ['label' => 'Plan', 'value' => (string) $plan->title],
+                    ['label' => 'Plan', 'value' => $plan->displayTitle()],
                     ['label' => 'Pause from', 'value' => $from->format('M j, Y')],
                     ['label' => 'Return date', 'value' => $resume?->format('M j, Y') ?: 'No automatic return date'],
                 ], 'Confirm pause');
@@ -939,7 +939,7 @@ class FamilyCareOperationsActionService
         if ($intentId === 'FAM-REGULAR-021') {
             $plan = $this->selectPlan($actor, $message, [CarePlan::STATUS_PAUSED]);
             if (! $plan) {
-                $this->automatedMessage($ticket, 'I could not find one paused regular-care plan to resume.');
+                $this->automatedMessage($ticket, 'I could not find one paused recurring care plan to resume.');
 
                 return true;
             }
@@ -948,8 +948,8 @@ class FamilyCareOperationsActionService
                 'expected_status' => (string) $plan->status,
                 'expected_schedule_version' => (int) $plan->schedule_version,
                 'expected_updated_at' => $this->stamp($plan->updated_at),
-            ], $intentId, 'Resume this regular-care plan?', 'Upcoming visits will be generated again from the current plan schedule.', [
-                ['label' => 'Plan', 'value' => (string) $plan->title],
+            ], $intentId, 'Resume this recurring care plan?', 'Upcoming visits will be generated again from the current plan schedule.', [
+                ['label' => 'Plan', 'value' => $plan->displayTitle()],
                 ['label' => 'Schedule', 'value' => $this->plans->scheduleLabel($plan)],
             ], 'Confirm resume');
 
@@ -959,7 +959,7 @@ class FamilyCareOperationsActionService
         if (in_array($intentId, ['FAM-REGULAR-022', 'FAM-REGULAR-023'], true)) {
             $plan = $this->selectPlan($actor, $message, [CarePlan::STATUS_ACTIVE, CarePlan::STATUS_PAYMENT_ATTENTION, CarePlan::STATUS_PAUSED]);
             if (! $plan) {
-                $this->automatedMessage($ticket, 'I could not find one live regular-care plan to end.');
+                $this->automatedMessage($ticket, 'I could not find one live recurring care plan to end.');
 
                 return true;
             }
@@ -970,9 +970,9 @@ class FamilyCareOperationsActionService
                 'expected_status' => (string) $plan->status,
                 'expected_schedule_version' => (int) $plan->schedule_version,
                 'expected_updated_at' => $this->stamp($plan->updated_at),
-            ], $intentId, 'End this regular-care plan?',
+            ], $intentId, 'End this recurring care plan?',
                 $cancelNext ? 'Future plan generation stops and the next confirmed visit is also cancelled.' : 'Future plan generation stops. The next already-confirmed visit remains scheduled.', [
-                    ['label' => 'Plan', 'value' => (string) $plan->title],
+                    ['label' => 'Plan', 'value' => $plan->displayTitle()],
                     ['label' => 'Next confirmed visit', 'value' => $cancelNext ? 'Cancel it' : 'Keep it scheduled'],
                 ], $cancelNext ? 'Confirm end and cancel next' : 'Confirm end plan');
 
@@ -989,7 +989,7 @@ class FamilyCareOperationsActionService
     private function prepareRegularOffer(User $actor, SupportTicket $ticket, string $intentId, string $message, CareRequest $request): bool
     {
         if (! $this->plans->sourceIsEligible($request, $actor)) {
-            $this->offerRead($actor, $ticket, 'This request is not currently eligible to start a regular-care offer. Open it to review the caregiver and care details.', $intentId, 'family.request.overview', $request);
+            $this->offerRead($actor, $ticket, 'This request is not currently eligible to start a recurring care offer. Open it to review the caregiver and care details.', $intentId, 'family.request.overview', $request);
 
             return true;
         }
@@ -1004,7 +1004,7 @@ class FamilyCareOperationsActionService
             return true;
         }
         if (! $this->available($actor, $ticket, 'regular-care.offer')) {
-            $this->offerRead($actor, $ticket, 'Open the regular-care setup to review and send the offer.', $intentId, 'family.request.overview', $request);
+            $this->offerRead($actor, $ticket, 'Open the recurring care setup to review and send the offer.', $intentId, 'family.request.overview', $request);
 
             return true;
         }
@@ -1023,7 +1023,7 @@ class FamilyCareOperationsActionService
             'expected_application_updated_at' => $this->stamp($hired?->updated_at),
         ];
         $this->issueAction($actor, $ticket, 'regular-care.offer', $payload, $intentId,
-            'Send this regular-care offer to '.$hired?->caregiver?->name.'?',
+            'Send this recurring care offer to '.$hired?->caregiver?->name.'?',
             'The caregiver must accept. The offer does not claim all future visits are booked.', [
                 ['label' => 'Caregiver', 'value' => (string) ($hired?->caregiver?->name ?: 'Caregiver')],
                 ['label' => 'Schedule', 'value' => $schedule['label'] ?? $this->requestSchedule($request)],
@@ -1623,11 +1623,11 @@ class FamilyCareOperationsActionService
     private function commitRegularOffer(User $actor, array $preview): array
     {
         $request = $this->ownedRequest($actor, (int) ($preview['care_request_id'] ?? 0), true);
-        $this->assertUpdated($request, (string) ($preview['expected_request_updated_at'] ?? ''), 'This request changed. Review the regular-care offer.');
+        $this->assertUpdated($request, (string) ($preview['expected_request_updated_at'] ?? ''), 'This request changed. Review the recurring care offer.');
         $application = $this->plans->hiredApplicationFor($request);
         if (! $application || (int) $application->id !== (int) ($preview['expected_application_id'] ?? 0)
             || ! hash_equals($this->stamp($application->updated_at), (string) ($preview['expected_application_updated_at'] ?? ''))) {
-            throw ValidationException::withMessages(['confirmation' => 'The hired caregiver changed. Review the regular-care offer again.']);
+            throw ValidationException::withMessages(['confirmation' => 'The hired caregiver changed. Review the recurring care offer again.']);
         }
         $slots = array_values((array) ($preview['schedule_slots'] ?? []));
         $plan = $this->plans->sendOfferFromRequest($request, $actor, [
@@ -1659,7 +1659,7 @@ class FamilyCareOperationsActionService
     private function commitRegularScheduleChange(User $actor, array $preview): array
     {
         $plan = $this->ownedPlan($actor, (int) ($preview['care_plan_id'] ?? 0), true);
-        $this->assertPlanState($plan, $preview, 'This regular-care plan changed. Review the schedule again.');
+        $this->assertPlanState($plan, $preview, 'This recurring care plan changed. Review the schedule again.');
         $slots = array_values((array) ($preview['schedule_slots'] ?? []));
         $change = $this->plans->requestScheduleChange($plan, $actor, [
             'schedule_days' => array_map('intval', (array) ($preview['schedule_days'] ?? [])),
@@ -1679,7 +1679,7 @@ class FamilyCareOperationsActionService
     private function commitRegularExtraVisit(User $actor, array $preview): array
     {
         $plan = $this->ownedPlan($actor, (int) ($preview['care_plan_id'] ?? 0), true);
-        $this->assertPlanState($plan, $preview, 'This regular-care plan changed. Review the extra visit again.');
+        $this->assertPlanState($plan, $preview, 'This recurring care plan changed. Review the extra visit again.');
         $change = $this->plans->requestExtraVisit(
             $plan, $actor, Carbon::parse((string) $preview['start_at']), Carbon::parse((string) $preview['end_at']),
             filled($preview['note'] ?? null) ? (string) $preview['note'] : null,
@@ -1696,7 +1696,7 @@ class FamilyCareOperationsActionService
         if ((int) $booking->care_plan_id !== (int) $plan->id
             || ! hash_equals($this->stamp($booking->updated_at), (string) ($preview['expected_booking_updated_at'] ?? ''))
             || ! hash_equals((string) $booking->status, (string) ($preview['expected_booking_status'] ?? ''))) {
-            throw ValidationException::withMessages(['confirmation' => 'This regular-care visit changed. Review it again.']);
+            throw ValidationException::withMessages(['confirmation' => 'This recurring care visit changed. Review it again.']);
         }
         $result = $this->plans->skipVisit($plan, $booking, $actor);
 
@@ -1707,7 +1707,7 @@ class FamilyCareOperationsActionService
     private function commitRegularPause(User $actor, array $preview): array
     {
         $plan = $this->ownedPlan($actor, (int) ($preview['care_plan_id'] ?? 0), true);
-        $this->assertPlanState($plan, $preview, 'This regular-care plan changed. Review the pause again.');
+        $this->assertPlanState($plan, $preview, 'This recurring care plan changed. Review the pause again.');
         $result = $this->plans->pausePlan(
             $plan, $actor, Carbon::parse((string) $preview['pause_from'])->startOfDay(),
             filled($preview['resume_on'] ?? null) ? Carbon::parse((string) $preview['resume_on'])->startOfDay() : null,
@@ -1720,7 +1720,7 @@ class FamilyCareOperationsActionService
     private function commitRegularResume(User $actor, array $preview): array
     {
         $plan = $this->ownedPlan($actor, (int) ($preview['care_plan_id'] ?? 0), true);
-        $this->assertPlanState($plan, $preview, 'This regular-care plan changed. Review resume again.');
+        $this->assertPlanState($plan, $preview, 'This recurring care plan changed. Review resume again.');
         $result = $this->plans->resumePlan($plan, $actor);
 
         return $this->receipt('regular_care_resumed_verified', 'care_plan', (int) $result->id, 'care-plan-'.$result->id.'-'.$result->status);
@@ -1730,7 +1730,7 @@ class FamilyCareOperationsActionService
     private function commitRegularEnd(User $actor, array $preview): array
     {
         $plan = $this->ownedPlan($actor, (int) ($preview['care_plan_id'] ?? 0), true);
-        $this->assertPlanState($plan, $preview, 'This regular-care plan changed. Review ending it again.');
+        $this->assertPlanState($plan, $preview, 'This recurring care plan changed. Review ending it again.');
         $result = $this->plans->endPlan($plan, $actor, (bool) ($preview['cancel_next_visit'] ?? false));
 
         return $this->receipt('regular_care_ended_verified', 'care_plan', (int) $result->id, 'care-plan-'.$result->id.'-ended');
@@ -2110,7 +2110,7 @@ class FamilyCareOperationsActionService
 
     private function planSummary(CarePlan $plan): string
     {
-        $body = ($plan->title ?: 'Regular care').' with '.($plan->caregiver?->name ?: 'the caregiver').' is '.str_replace('_', ' ', $plan->status).'. Schedule: '.$this->plans->scheduleLabel($plan).'.';
+        $body = $plan->displayTitle().' with '.($plan->caregiver?->name ?: 'the caregiver').' is '.str_replace('_', ' ', $plan->status).'. Schedule: '.$this->plans->scheduleLabel($plan).'.';
         $next = $plan->nextBooking ?: $plan->generatedBookings->where('status', CareBooking::STATUS_SCHEDULED)->sortBy('scheduled_start_at')->first();
         if ($next) {
             $body .= ' Next generated visit: '.$this->bookingTime($next).'.';
@@ -2398,14 +2398,14 @@ class FamilyCareOperationsActionService
             'time_correction_changes_requested_verified' => 'The request for time-correction changes was sent. No hours were approved.',
             'care_review_submitted_verified' => 'The caregiver review was submitted and verified.',
             'rebook_request_created_verified' => 'A new care request was created and the caregiver invitation was sent.',
-            'regular_care_offer_sent_verified' => 'The regular-care offer was sent. The caregiver still needs to accept it.',
-            'regular_counter_accepted_verified' => 'The regular-care counteroffer was accepted and verified.',
-            'regular_schedule_change_sent_verified' => 'The regular-care schedule request was sent. Current visits remain until acceptance.',
+            'regular_care_offer_sent_verified' => 'The recurring care offer was sent. The caregiver still needs to accept it.',
+            'regular_counter_accepted_verified' => 'The recurring care counteroffer was accepted and verified.',
+            'regular_schedule_change_sent_verified' => 'The recurring care schedule request was sent. Current visits remain until acceptance.',
             'regular_extra_visit_requested_verified' => 'The extra-visit request was sent. It is not booked until accepted.',
-            'regular_visit_skipped_verified' => 'The selected regular-care visit was skipped. The plan continues.',
-            'regular_care_paused_verified' => 'Regular care was paused and verified.',
-            'regular_care_resumed_verified' => 'Regular care was resumed and verified.',
-            'regular_care_ended_verified' => 'Regular care was ended and verified.',
+            'regular_visit_skipped_verified' => 'The selected recurring care visit was skipped. The plan continues.',
+            'regular_care_paused_verified' => 'Recurring care was paused and verified.',
+            'regular_care_resumed_verified' => 'Recurring care was resumed and verified.',
+            'regular_care_ended_verified' => 'Recurring care was ended and verified.',
             'completed_extra_visit_approved_verified' => 'The completed extra visit was approved and its current payment state was verified.',
             'completed_extra_visit_changes_requested_verified' => 'The extra-visit change request was sent. No payment was approved.',
             default => 'The requested action was completed and checked against the current record.',
@@ -2416,7 +2416,7 @@ class FamilyCareOperationsActionService
     {
         return match ($evidence->domain_reference_type) {
             'conversation' => 'Open conversation',
-            'care_plan', 'care_plan_schedule_change', 'completed_extra_visit' => 'Open regular care',
+            'care_plan', 'care_plan_schedule_change', 'completed_extra_visit' => 'Open recurring care',
             'care_request_application', 'care_request_invitation' => 'Review caregivers',
             default => 'Open care record',
         };

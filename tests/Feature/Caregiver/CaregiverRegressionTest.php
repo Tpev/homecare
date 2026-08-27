@@ -520,6 +520,23 @@ class CaregiverRegressionTest extends TestCase
         $response->assertSee('Top Caregiver');
     }
 
+    public function test_family_caregiver_directory_explains_the_request_first_workflow(): void
+    {
+        $family = User::factory()->create([
+            'role' => 'family',
+            'name' => 'Barbara Pearl',
+        ]);
+
+        $this->actingAs($family)
+            ->get(route('caregivers.search'))
+            ->assertOk()
+            ->assertSee('Browse trusted non-medical caregivers')
+            ->assertSee('Choose caregivers through a care request')
+            ->assertSee('To contact or hire someone, create a care request')
+            ->assertSee('Create care request')
+            ->assertDontSee('Find Caregivers');
+    }
+
     public function test_search_filters_apply_on_submit_without_live_typing_updates(): void
     {
         $viewer = User::factory()->create(['role' => 'family']);

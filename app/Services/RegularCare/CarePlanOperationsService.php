@@ -33,7 +33,7 @@ class CarePlanOperationsService
                 return [$lockedPlan, false];
             }
             if (! $lockedPlan->isLive()) {
-                throw ValidationException::withMessages(['operationsReason' => 'Only a live regular-care plan can be paused.']);
+                throw ValidationException::withMessages(['operationsReason' => 'Only a live recurring care plan can be paused.']);
             }
 
             $previousStatus = $lockedPlan->status;
@@ -52,7 +52,7 @@ class CarePlanOperationsService
         if (! $changed) {
             return $this->health->reconcile($plan->fresh());
         }
-        $this->notifyBoth($plan, MarketplaceEvent::REGULAR_CARE_PAUSED, 'Regular care paused by LoLo Care', 'LoLo Care operations paused this regular-care schedule.');
+        $this->notifyBoth($plan, MarketplaceEvent::REGULAR_CARE_PAUSED, 'Recurring care paused by LoLo Care', 'LoLo Care operations paused this recurring care schedule.');
 
         return $this->health->reconcile($plan->fresh());
     }
@@ -66,7 +66,7 @@ class CarePlanOperationsService
                 return [$lockedPlan, false];
             }
             if ($lockedPlan->status !== CarePlan::STATUS_PAUSED) {
-                throw ValidationException::withMessages(['operationsReason' => 'Only a paused regular-care plan can be resumed.']);
+                throw ValidationException::withMessages(['operationsReason' => 'Only a paused recurring care plan can be resumed.']);
             }
 
             $previousStatus = $lockedPlan->status;
@@ -97,7 +97,7 @@ class CarePlanOperationsService
         }
         $this->occurrences->materialize($plan->fresh());
         $this->paymentWindow->preparePlan($plan->fresh());
-        $this->notifyBoth($plan, MarketplaceEvent::REGULAR_CARE_RESUMED, 'Regular care resumed by LoLo Care', 'LoLo Care operations resumed this regular-care schedule.');
+        $this->notifyBoth($plan, MarketplaceEvent::REGULAR_CARE_RESUMED, 'Recurring care resumed by LoLo Care', 'LoLo Care operations resumed this recurring care schedule.');
 
         return $this->health->reconcile($plan->fresh());
     }
@@ -111,7 +111,7 @@ class CarePlanOperationsService
                 return [$lockedPlan, false];
             }
             if (! $lockedPlan->isLive()) {
-                throw ValidationException::withMessages(['operationsReason' => 'Only a live regular-care plan can be ended.']);
+                throw ValidationException::withMessages(['operationsReason' => 'Only a live recurring care plan can be ended.']);
             }
 
             $previousStatus = $lockedPlan->status;
@@ -128,7 +128,7 @@ class CarePlanOperationsService
         if (! $changed) {
             return $this->health->reconcile($plan->fresh());
         }
-        $this->notifyBoth($plan, MarketplaceEvent::REGULAR_CARE_ENDED, 'Regular care ended by LoLo Care', 'LoLo Care operations ended this regular-care schedule.');
+        $this->notifyBoth($plan, MarketplaceEvent::REGULAR_CARE_ENDED, 'Recurring care ended by LoLo Care', 'LoLo Care operations ended this recurring care schedule.');
 
         return $this->health->reconcile($plan->fresh());
     }

@@ -75,7 +75,7 @@ class Batch10FamilyGoalJourneyTest extends TestCase
         $action = AiSupportMessageAction::query()->sole();
 
         $this->assertSame('recurring', data_get($action->payload, 'recommended_path'));
-        $this->assertSame('Continue with regular care', data_get($action->payload, 'choices.0.label'));
+        $this->assertSame('Continue with recurring care', data_get($action->payload, 'choices.0.label'));
         $result = app(FamilyGoalJourneyService::class)->chooseCarePath($family, $ticket, $action->id, 'recurring');
 
         $this->assertSame('selected', $result['result']);
@@ -227,7 +227,7 @@ class Batch10FamilyGoalJourneyTest extends TestCase
             ->test(ChatWidget::class)
             ->assertSee('Choose care and create a request')
             ->assertSee('Step 1 of 4')
-            ->assertSee('Next: choose one-time or regular care');
+            ->assertSee('Next: choose one-time or recurring care');
     }
 
     public function test_different_goal_never_silently_merges_and_user_can_keep_the_current_goal(): void

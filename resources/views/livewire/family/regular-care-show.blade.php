@@ -22,7 +22,7 @@
     <header data-ai-target="family.regular_care.attention" tabindex="-1" class="flex flex-col gap-4 outline-none sm:flex-row sm:items-start sm:justify-between">
         <div>
             <a href="{{ route('family.care.index') }}" wire:navigate class="text-lg font-semibold text-[#0F5B52] underline underline-offset-4">Back to your care</a>
-            <h1 class="mt-3 font-display text-3xl font-semibold leading-tight text-[#17313F]">Regular care with {{ $plan->caregiver?->name }}</h1>
+            <h1 class="mt-3 font-display text-3xl font-semibold leading-tight text-[#17313F]">Recurring care with {{ $plan->caregiver?->name }}</h1>
             <p class="mt-2 text-lg text-[#526474]">{{ $scheduleLabel }}</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
@@ -32,7 +32,7 @@
                 <a href="{{ route('family.requests.show', $plan->source_care_request_id) }}" wire:navigate><x-button color="blue" light>Message caregiver</x-button></a>
             @endif
             <span class="inline-flex min-h-11 items-center self-start rounded-full px-4 text-sm font-semibold {{ $isEnded ? 'bg-slate-100 text-slate-700' : ($isPaused ? 'bg-sky-100 text-sky-800' : 'bg-emerald-100 text-emerald-800') }}">
-                {{ $isEnded ? 'Regular care ended' : ($isPaused ? 'Care is paused' : 'Regular care is active') }}
+                {{ $isEnded ? 'Recurring care ended' : ($isPaused ? 'Care is paused' : 'Recurring care is active') }}
             </span>
         </div>
     </header>
@@ -46,7 +46,7 @@
     @if ($pendingTimeCorrections->isNotEmpty())
         <section class="rounded-3xl border-2 border-amber-300 bg-amber-50 p-5" aria-labelledby="regular-time-corrections-heading">
             <p class="text-xs font-semibold uppercase tracking-[0.16em] text-amber-800">Your review is needed</p>
-            <h2 id="regular-time-corrections-heading" class="mt-1 font-display text-2xl font-semibold text-[#17313F]">{{ $pendingTimeCorrections->count() }} regular-care visit{{ $pendingTimeCorrections->count() === 1 ? '' : 's' }} need{{ $pendingTimeCorrections->count() === 1 ? 's' : '' }} attention</h2>
+            <h2 id="regular-time-corrections-heading" class="mt-1 font-display text-2xl font-semibold text-[#17313F]">{{ $pendingTimeCorrections->count() }} recurring care visit{{ $pendingTimeCorrections->count() === 1 ? '' : 's' }} need{{ $pendingTimeCorrections->count() === 1 ? 's' : '' }} attention</h2>
             <div class="mt-4 grid gap-3">
                 @foreach ($pendingTimeCorrections as $correction)
                     <a href="{{ route('family.requests.show', ['careRequest' => $correction->booking->care_request_id, 'tab' => 'shift']) }}" wire:navigate class="flex min-h-12 flex-col justify-center rounded-2xl border border-amber-200 bg-white px-4 py-3 text-[#17313F] transition hover:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-600 sm:flex-row sm:items-center sm:justify-between">
@@ -147,18 +147,18 @@
     @if (!$isEnded)
         <section id="manage-regular-care" class="scroll-mt-24 rounded-lg border border-[#D8D0C5] bg-white">
             <div class="border-b border-[#E7E0D8] px-5 py-4 sm:px-7">
-                <h2 class="font-display text-2xl font-semibold text-[#17313F]">Manage regular care</h2>
+                <h2 class="font-display text-2xl font-semibold text-[#17313F]">Manage recurring care</h2>
                 <p class="mt-1 text-lg text-[#526474]">Choose one change. We will explain what happens before you confirm.</p>
             </div>
             <div class="grid gap-3 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-4">
                 <button type="button" wire:click="openManagePanel('extra')" class="min-h-14 rounded-md border border-[#B9CDC5] px-4 text-left text-lg font-semibold text-[#174C43] hover:bg-[#F1F7F4]">Add an extra visit</button>
                 <button type="button" wire:click="openManagePanel('schedule')" class="min-h-14 rounded-md border border-[#B9CDC5] px-4 text-left text-lg font-semibold text-[#174C43] hover:bg-[#F1F7F4]">Change future schedule</button>
                 @if ($isPaused)
-                    <button type="button" wire:click="resumePlan" class="min-h-14 rounded-md border border-[#B9CDC5] px-4 text-left text-lg font-semibold text-[#174C43] hover:bg-[#F1F7F4]">Resume regular care</button>
+                    <button type="button" wire:click="resumePlan" class="min-h-14 rounded-md border border-[#B9CDC5] px-4 text-left text-lg font-semibold text-[#174C43] hover:bg-[#F1F7F4]">Resume recurring care</button>
                 @else
-                    <button type="button" wire:click="openManagePanel('pause')" class="min-h-14 rounded-md border border-[#B9CDC5] px-4 text-left text-lg font-semibold text-[#174C43] hover:bg-[#F1F7F4]">Pause regular care</button>
+                    <button type="button" wire:click="openManagePanel('pause')" class="min-h-14 rounded-md border border-[#B9CDC5] px-4 text-left text-lg font-semibold text-[#174C43] hover:bg-[#F1F7F4]">Pause recurring care</button>
                 @endif
-                <button type="button" wire:click="openManagePanel('end')" class="min-h-14 rounded-md border border-[#D9AEA5] px-4 text-left text-lg font-semibold text-[#913E31] hover:bg-rose-50">End regular care</button>
+                <button type="button" wire:click="openManagePanel('end')" class="min-h-14 rounded-md border border-[#D9AEA5] px-4 text-left text-lg font-semibold text-[#913E31] hover:bg-rose-50">End recurring care</button>
             </div>
 
             @if ($managePanel === 'extra')
@@ -199,16 +199,16 @@
                 </form>
             @elseif ($managePanel === 'pause')
                 <form wire:submit="pausePlan" class="border-t border-[#E7E0D8] bg-[#F8FAF8] p-5 sm:p-7">
-                    <h3 class="font-display text-xl font-semibold text-[#17313F]">Pause regular care</h3><p class="mt-1 text-lg text-[#526474]">Visits during the pause will be cancelled. You can choose a return date or resume later.</p>
+                    <h3 class="font-display text-xl font-semibold text-[#17313F]">Pause recurring care</h3><p class="mt-1 text-lg text-[#526474]">Visits during the pause will be cancelled. You can choose a return date or resume later.</p>
                     <div class="mt-5 grid gap-4 md:grid-cols-2"><label class="text-lg font-semibold text-[#263C48]">Pause starting<input type="date" wire:model="pauseFrom" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg"></label><label class="text-lg font-semibold text-[#263C48]">Return date (optional)<input type="date" wire:model="resumeOn" class="mt-2 min-h-12 w-full rounded-md border-[#BFC8CE] text-lg"></label></div>
                     <x-input-error :messages="$errors->get('pauseFrom')" class="mt-2" /><x-input-error :messages="$errors->get('resumeOn')" class="mt-2" />
                     <div class="mt-5 flex flex-col gap-3 sm:flex-row"><x-button color="green" class="min-h-12 text-lg">Pause care</x-button><button type="button" wire:click="openManagePanel('')" class="hc-secondary-button min-h-12 text-lg">Cancel</button></div>
                 </form>
             @elseif ($managePanel === 'end')
                 <div class="border-t border-[#E7E0D8] bg-rose-50 p-5 sm:p-7">
-                    <h3 class="font-display text-xl font-semibold text-[#612A22]">End regular care?</h3><p class="mt-2 text-lg text-[#713C34]">No new visits will be created. By default, your next confirmed visit still happens.</p>
+                    <h3 class="font-display text-xl font-semibold text-[#612A22]">End recurring care?</h3><p class="mt-2 text-lg text-[#713C34]">No new visits will be created. By default, your next confirmed visit still happens.</p>
                     <label class="mt-4 flex min-h-12 items-center gap-3 rounded-md border border-rose-200 bg-white px-4 text-lg text-[#612A22]"><input type="checkbox" wire:model="cancelNextWhenEnding" class="h-5 w-5">Also cancel the next confirmed visit</label>
-                    <div class="mt-5 flex flex-col gap-3 sm:flex-row"><x-button color="red" wire:click="endPlan" wire:confirm="End regular care?" class="min-h-12 text-lg">End regular care</x-button><button type="button" wire:click="openManagePanel('')" class="hc-secondary-button min-h-12 text-lg">Keep regular care</button></div>
+                    <div class="mt-5 flex flex-col gap-3 sm:flex-row"><x-button color="red" wire:click="endPlan" wire:confirm="End recurring care?" class="min-h-12 text-lg">End recurring care</x-button><button type="button" wire:click="openManagePanel('')" class="hc-secondary-button min-h-12 text-lg">Keep recurring care</button></div>
                 </div>
             @endif
         </section>
@@ -230,7 +230,7 @@
         @elseif ($paymentNeedsAction && $next?->care_request_id)
             <a href="{{ route('family.requests.show', $next->care_request_id) }}" wire:navigate class="hc-primary-button w-full">Fix payment to protect next visit</a>
         @elseif (! $isEnded)
-            <a href="#manage-regular-care" class="hc-primary-button w-full">Manage regular care</a>
+            <a href="#manage-regular-care" class="hc-primary-button w-full">Manage recurring care</a>
         @else
             <a href="{{ route('family.care.journey', ['resourceType' => 'regular', 'resourceId' => $plan->id]) }}" wire:navigate class="hc-primary-button w-full">View care story</a>
         @endif

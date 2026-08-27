@@ -84,7 +84,7 @@ class RegularCareIndex extends Component
         $careTypeOptions = [
             ['label' => 'All care types', 'value' => 'all'],
             ['label' => 'One-time care', 'value' => 'one_time'],
-            ['label' => 'Regular care', 'value' => 'regular'],
+            ['label' => 'Recurring care', 'value' => 'regular'],
         ];
         if ($continuousCoverageVisible) {
             $careTypeOptions[] = ['label' => 'Continuous care', 'value' => 'continuous'];

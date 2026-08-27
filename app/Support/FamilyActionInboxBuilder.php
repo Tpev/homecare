@@ -114,7 +114,7 @@ class FamilyActionInboxBuilder
                 'priority' => 10,
                 'eyebrow' => 'Payment action required',
                 'title' => 'Payment needs attention',
-                'subject' => 'Regular care for '.$plan->recipientName(),
+                'subject' => 'Recurring care for '.$plan->recipientName(),
                 'body' => $plan->nextBooking?->payment?->last_error ?: $plan->last_error ?: 'Confirm or replace your card for the next visit.',
                 'meta' => $plan->nextBooking ? $this->bookingDateTimeLabel($plan->nextBooking) : null,
                 'label' => 'Fix payment',
@@ -417,7 +417,7 @@ class FamilyActionInboxBuilder
             $count = (int) $request->pending_candidate_count;
             $recipient = trim((string) ($request->recipient?->full_name ?? '')) ?: 'Care recipient';
             $careLabel = $request->request_type === CareRequest::TYPE_RECURRING
-                ? 'Regular care for '.$recipient
+                ? 'Recurring care for '.$recipient
                 : $recipient.' · '.($request->requested_start_at?->format('D, M j') ?: 'Date pending');
             $items->push([
                 'key' => 'request-applicants-'.$request->id,

@@ -80,10 +80,10 @@ test.describe('Visit time correction collaboration', () => {
         await page.reload();
 
         await page.goto('/family/care');
-        const planLink = page.locator('a[href*="/family/care/"]').filter({ hasText: 'E2E time correction regular care' }).first();
+        const planLink = page.locator('a[href*="/family/care/"]').filter({ hasText: 'E2E time correction recurring care' }).first();
         await expect(planLink).toBeVisible();
         await planLink.click();
-        await expect(page.getByText('regular-care visit needs attention')).toBeVisible();
+        await expect(page.getByText('recurring care visit needs attention')).toBeVisible();
         await page.screenshot({ path: testInfo.outputPath('family-plan-banner-1440.png'), fullPage: true });
 
         await page.goto(`/family/requests/${requestId}?tab=shift`);

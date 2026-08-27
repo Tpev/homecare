@@ -34,7 +34,7 @@
         <div class="relative grid grid-cols-1 gap-5 lg:grid-cols-5">
             <div class="lg:col-span-3">
                 <p class="hc-brand-kicker text-[#E8E0FF]">Regular Clients</p>
-                <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Direct regular-care offers from families.</h1>
+                <h1 class="mt-1 text-2xl font-display font-semibold leading-tight sm:text-3xl">Direct recurring care offers from families.</h1>
                 <p class="mt-2 max-w-2xl text-sm text-[#F7F1E8]/82">
                     Accept a schedule, suggest a better time, or decline. Accepted offers create real booked visits with payment authorization.
                 </p>
@@ -56,7 +56,7 @@
         <section class="rounded-lg border border-amber-300 bg-amber-50">
             <div class="border-b border-amber-200 px-5 py-4 sm:px-7">
                 <p class="text-sm font-bold uppercase tracking-wide text-amber-800">Needs your response</p>
-                <h2 class="mt-1 font-display text-2xl font-semibold text-amber-950">Regular-care changes</h2>
+                <h2 class="mt-1 font-display text-2xl font-semibold text-amber-950">Recurring care changes</h2>
                 <p class="mt-1 text-base text-amber-900">Review the exact change before accepting. Current visits stay unchanged until you accept.</p>
             </div>
             <div class="divide-y divide-amber-200">
@@ -216,7 +216,7 @@
                         </div>
                     @empty
                         <div class="rounded-2xl border border-dashed border-[#D6CCBE] bg-[#F7F2EA] px-4 py-8 text-center">
-                            <p class="font-display text-lg font-semibold text-[#17313F]">No regular-care offers right now.</p>
+                            <p class="font-display text-lg font-semibold text-[#17313F]">No recurring care offers right now.</p>
                             <p class="mx-auto mt-2 max-w-xl text-sm text-[#607080]">When a family wants to rebook you repeatedly, the offer appears here and in your work inbox.</p>
                         </div>
                     @endforelse
@@ -381,7 +381,7 @@
                             @endif
                         </div>
                     @empty
-                        <p class="text-sm text-[#607080]">Accepted regular-care plans appear here.</p>
+                        <p class="text-sm text-[#607080]">Accepted recurring care plans appear here.</p>
                     @endforelse
                 </div>
             </x-card>

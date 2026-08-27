@@ -111,7 +111,7 @@ class CaregiverWorkInboxBuilder
                 'priority' => 1250,
                 'created_at' => $plan->offered_at ?: $plan->created_at,
                 'start_at' => $plan->starts_on,
-                'title' => $plan->title,
+                'title' => $plan->displayTitle(),
                 'location' => $this->planLocation($plan),
                 'schedule' => $this->planScheduleLabel($plan),
                 'compensation' => $compensation,
@@ -132,7 +132,7 @@ class CaregiverWorkInboxBuilder
                     'href' => route('caregiver.regular-clients.index'),
                 ],
                 'open_href' => route('caregiver.regular-clients.index'),
-                'meta' => $plan->family ? 'From '.$plan->family->name : 'Direct regular-care offer',
+                'meta' => $plan->family ? 'From '.$plan->family->name : 'Direct recurring care offer',
             ]);
         }
 
@@ -190,7 +190,7 @@ class CaregiverWorkInboxBuilder
                 'priority' => $plan->status === CarePlan::STATUS_PAYMENT_ATTENTION ? 430 : 360,
                 'created_at' => $plan->updated_at,
                 'start_at' => $plan->nextBooking?->scheduled_start_at ?: $plan->starts_on,
-                'title' => $plan->title,
+                'title' => $plan->displayTitle(),
                 'location' => $this->planLocation($plan),
                 'schedule' => $this->planScheduleLabel($plan),
                 'compensation' => $compensation,
@@ -200,8 +200,8 @@ class CaregiverWorkInboxBuilder
                 'fit_reason' => $paymentNeedsFamily
                     ? 'Family needs to update payment. No action needed from you right now.'
                     : ($plan->nextBooking
-                    ? 'Next regular-care visit is ready in your visit workflow.'
-                    : 'Regular-care schedule accepted.'),
+                    ? 'Next recurring care visit is ready in your visit workflow.'
+                    : 'Recurring care schedule accepted.'),
                 'recipient_context' => $this->planRecipientContext($plan),
                 'note' => null,
                 'primary_action' => [

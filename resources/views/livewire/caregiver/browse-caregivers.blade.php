@@ -6,10 +6,20 @@
     @endif
 
     <section class="hc-hero">
-        <p class="text-xs uppercase tracking-[0.2em] text-[#CFC6F7]">Find Caregivers</p>
-        <h1 class="mt-2 text-2xl md:text-3xl font-display font-semibold text-[#FFF8F0]">Find trusted non-medical caregivers</h1>
-        <p class="mt-2 text-sm text-[#CFC6F7]">Filter by trust badges, skills, language, certifications, and experience to shortlist faster.</p>
+        <p class="text-xs uppercase tracking-[0.2em] text-[#CFC6F7]">Caregivers</p>
+        <h1 class="mt-2 text-2xl md:text-3xl font-display font-semibold text-[#FFF8F0]">Browse trusted non-medical caregivers</h1>
+        <p class="mt-2 text-sm text-[#CFC6F7]">Explore profiles by skills, language, certifications, experience, and trust badges.</p>
     </section>
+
+    @if (auth()->user()?->role === 'family')
+        <section class="rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4 sm:flex sm:items-center sm:justify-between sm:gap-5" aria-labelledby="caregiver-hiring-heading">
+            <div>
+                <h2 id="caregiver-hiring-heading" class="font-display text-lg font-semibold text-[#17313F]">Choose caregivers through a care request</h2>
+                <p class="mt-1 text-sm leading-6 text-[#526474]">You can browse and save profiles here. To contact or hire someone, create a care request with the schedule and care details first.</p>
+            </div>
+            <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button mt-4 w-full shrink-0 sm:mt-0 sm:w-auto">Create care request</a>
+        </section>
+    @endif
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
         <aside class="h-fit rounded-2xl border border-[#E4DDD3] bg-white p-4 shadow-sm lg:sticky lg:top-20">
@@ -215,4 +225,3 @@
         </section>
     </div>
 </div>
-

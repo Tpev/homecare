@@ -229,7 +229,7 @@ class RegularCareMigrationService
             'source_care_request_id' => $request->id,
             'source_care_booking_id' => $request->booking?->id,
             'status' => CarePlan::STATUS_ACTIVE,
-            'title' => 'Regular care for '.($recipient?->full_name ?: $request->family?->name),
+            'title' => 'Recurring care for '.($recipient?->full_name ?: $request->family?->name),
             'recipient_snapshot' => [
                 'recipient_is_requester' => (bool) $recipient?->recipient_is_requester,
                 'full_name' => $recipient?->full_name,

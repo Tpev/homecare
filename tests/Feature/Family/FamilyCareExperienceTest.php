@@ -18,6 +18,25 @@ class FamilyCareExperienceTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_family_overview_uses_a_personal_greeting_and_plain_language(): void
+    {
+        $family = User::factory()->create([
+            'role' => 'family',
+            'name' => 'Barbara Pearl',
+        ]);
+
+        $this->actingAs($family)
+            ->get(route('family.requests.index'))
+            ->assertOk()
+            ->assertSee('Care overview')
+            ->assertSee('Hi, Barbara.')
+            ->assertSee('Here’s an overview of your care.')
+            ->assertSee('Caregivers')
+            ->assertDontSee('Find Caregivers')
+            ->assertDontSee('What matters next.')
+            ->assertDontSee('Decisions first');
+    }
+
     public function test_family_care_is_one_workspace_with_a_shared_schedule(): void
     {
         $family = User::factory()->create(['role' => 'family']);
@@ -448,7 +467,7 @@ class FamilyCareExperienceTest extends TestCase
         $this->get(route('family.care.index', ['view' => 'arranging']))
             ->assertOk()
             ->assertSee('One Time Person ·')
-            ->assertSee('Regular care for Repeating Request Person')
+            ->assertSee('Recurring care for Repeating Request Person')
             ->assertSee('Pending Plan Person with Care Helper')
             ->assertSee('Countered Plan Person with Care Helper')
             ->assertDontSee('Active Plan Person with Care Helper')
@@ -476,7 +495,7 @@ class FamilyCareExperienceTest extends TestCase
         $this->get(route('family.care.index', ['view' => 'current', 'type' => 'one_time']))
             ->assertOk()
             ->assertSee('One Time Person ·')
-            ->assertDontSee('Regular care for Repeating Request Person')
+            ->assertDontSee('Recurring care for Repeating Request Person')
             ->assertDontSee('Active Plan Person with Care Helper');
     }
 }

@@ -153,7 +153,7 @@ class CreateCareRequestWizard extends Component
 
     public array $requestTypeOptions = [
         ['label' => 'One visit', 'value' => CareRequest::TYPE_ONE_TIME],
-        ['label' => 'Regular care', 'value' => CareRequest::TYPE_RECURRING],
+        ['label' => 'Recurring care', 'value' => CareRequest::TYPE_RECURRING],
     ];
 
     public array $careForOptions = [
@@ -779,7 +779,7 @@ class CreateCareRequestWizard extends Component
             'recurring_schedule.*.end_time.required' => 'Choose an earlier start time or a shorter visit.',
             'recurring_starts_on.required' => 'Choose the first day care should start.',
             'recurring_starts_on.after_or_equal' => 'The first day cannot be in the past.',
-            'recurring_ends_on.required' => 'Choose the last day for regular care.',
+            'recurring_ends_on.required' => 'Choose the last day for recurring care.',
             'address_line1.required' => 'Enter the care address.',
             'city.required' => 'Enter the city.',
             'state.required' => 'Choose the state.',

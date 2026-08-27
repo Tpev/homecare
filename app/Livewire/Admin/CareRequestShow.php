@@ -97,7 +97,7 @@ class CareRequestShow extends Component
         $this->validate(['checkInOverrideReason' => ['required', 'string', 'min:8', 'max:1000']]);
         $booking = $this->careRequest->booking;
         if (! $booking?->care_plan_id) {
-            $this->addError('checkInOverrideReason', 'This is not a regular-care visit.');
+            $this->addError('checkInOverrideReason', 'This is not a recurring care visit.');
 
             return;
         }

@@ -122,7 +122,7 @@
                     <x-native-select-field label="Payment status" wire:model.live="paymentStatus" :options="$paymentStatusOptions" id="care-history-payment-status" />
                     <x-native-select-field label="Recipient" wire:model.live="recipient" :options="$recipientOptions" id="care-history-recipient" />
                     <x-native-select-field label="Caregiver" wire:model.live="caregiver" :options="$caregiverOptions" id="care-history-caregiver" />
-                    <x-native-select-field label="Regular-care plan" wire:model.live="plan" :options="$planOptions" id="care-history-plan" />
+                    <x-native-select-field label="Recurring care plan" wire:model.live="plan" :options="$planOptions" id="care-history-plan" />
                 </div>
 
                 @if ($range === 'custom')
@@ -295,7 +295,7 @@
                                         <a href="{{ $item['caregiver_profile_url'] }}" wire:navigate class="hc-secondary-button min-h-11">View caregiver profile</a>
                                     @endif
                                     @if ($item['care_plan_id'])
-                                        <a href="{{ route('family.care.show', $item['care_plan_id']) }}" wire:navigate class="hc-secondary-button min-h-11">Open regular-care plan</a>
+                                        <a href="{{ route('family.care.show', $item['care_plan_id']) }}" wire:navigate class="hc-secondary-button min-h-11">Open recurring care plan</a>
                                     @endif
                                 </div>
                             </div>

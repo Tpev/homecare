@@ -117,7 +117,7 @@ class RegularCareComposer extends Component
             throw $exception;
         }
 
-        session()->flash('status', 'Regular-care offer sent to '.$plan->caregiver?->name.'.');
+        session()->flash('status', 'Recurring care offer sent to '.$plan->caregiver?->name.'.');
         $this->redirect(route('family.care.show', $plan->id, false), navigate: true);
     }
 

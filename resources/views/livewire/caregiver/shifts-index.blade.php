@@ -158,7 +158,7 @@
                                     @if ($booking->plan_visit_kind === 'completed_extra')
                                         <span class="rounded-full bg-[#E8F4EE] px-3 py-1 text-xs font-semibold text-[#17634F]">Family-approved extra visit</span>
                                     @elseif ($isRegular)
-                                        <span class="rounded-full bg-[#E8F4EE] px-3 py-1 text-xs font-semibold text-[#17634F]">Regular care</span>
+                                        <span class="rounded-full bg-[#E8F4EE] px-3 py-1 text-xs font-semibold text-[#17634F]">Recurring care</span>
                                     @endif
                                     @if ($timeCorrection)<span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">{{ $timeCorrection->statusLabel() }}</span>@endif
                                 </div>

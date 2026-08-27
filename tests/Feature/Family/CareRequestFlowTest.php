@@ -197,8 +197,8 @@ class CareRequestFlowTest extends TestCase
             $this->actingAs($family)
                 ->get(route('family.requests.book_again', $sourceVisit))
                 ->assertOk()
-                ->assertSee('One visit or regular care—without starting over.')
-                ->assertSee('Set up regular care');
+                ->assertSee('One visit or recurring care—without starting over.')
+                ->assertSee('Set up recurring care');
         }
     }
 
