@@ -150,7 +150,7 @@ document.addEventListener('alpine:init', () => {
             });
             this.guidedObserver.observe(document.body, {
                 attributes: true,
-                attributeFilter: ['class', 'data-ai-guided'],
+                attributeFilter: ['class', 'data-ai-guided', 'open'],
                 childList: true,
                 subtree: true,
             });

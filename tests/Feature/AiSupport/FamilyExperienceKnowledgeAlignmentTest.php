@@ -168,6 +168,17 @@ class FamilyExperienceKnowledgeAlignmentTest extends TestCase
             ->assertSee('Delivery preferences');
     }
 
+    public function test_guided_details_targets_are_reopened_after_livewire_removes_the_open_attribute(): void
+    {
+        $client = file_get_contents(resource_path('js/support-chat.js'));
+
+        $this->assertIsString($client);
+        $this->assertStringContainsString("attributeFilter: ['class', 'data-ai-guided', 'open']", $client);
+        $this->assertStringContainsString('collapsedGuidedDetails', $client);
+        $this->assertStringContainsString('target.open = true', $client);
+        $this->assertStringContainsString('then(() => this.$nextTick(() => this.initializeGuidance()))', $client);
+    }
+
     public function test_care_profile_guidance_names_useful_content_and_safe_boundaries(): void
     {
         $catalog = app(FamilyExperienceKnowledgeBaseCatalog::class);

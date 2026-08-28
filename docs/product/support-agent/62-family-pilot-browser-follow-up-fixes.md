@@ -121,3 +121,15 @@ The useful care-profile article was present in source but the production answer 
 - Exact complete recurring production sentence: ready-for-recap, correct recipient, both care tasks, Monday schedule, October 19 start, 9:00 AM–12:00 PM, zero provider calls, and zero care requests.
 - No-active-task Stop: automated reply retained, zero provider calls, zero handoff, and zero care requests.
 - Production asset build passed.
+
+## Final production acceptance after deterministic intake deployment
+
+The deployed deterministic corrections passed the authenticated pilot acceptance:
+
+- `Stop this task` with no active task returned the safe no-change answer in under one second and kept the conversation automated.
+- The published care-profile answer named communication, routine, mobility, comfort, non-medical safety, daily assistance, clinical boundaries, and candidate/assigned sharing boundaries.
+- A cancellation-policy detour returned the governed 24-hour-window explanation without care-type intake and preserved the notification guide.
+- The complete recurring-care sentence reached the recap immediately after **Continue with recurring care**. The recap contained Production Test Recipient, Companionship, Daily living assistance, Monday at 9:00 AM for three hours, the October 19 start date, **Modify something**, and **Confirm and create request**.
+- Confirm was not selected. The private draft was discarded, its receipt appeared in chat, and the Care overview still showed `Being arranged: 0`.
+
+One remaining frontend race was reproduced: the Delivery preferences target received the correct highlight and instruction, but the Livewire arrival refresh removed the `<details open>` attribute. The final source correction observes changes to the `open` attribute as well as the existing class and guided-data markers, so a highlighted details target is reopened after a DOM morph. A final deployment and focused notification-panel retest remain pending.
