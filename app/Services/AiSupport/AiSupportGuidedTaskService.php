@@ -300,8 +300,10 @@ class AiSupportGuidedTaskService
     public function handleContextualReply(User $actor, SupportTicket $ticket, string $message): bool
     {
         $reply = mb_strtolower(trim($message));
+        $explicitCancellation = $this->explicitlyCancelsGuidedTask($reply);
         if (preg_match('/\b(?:yes|yes please|take me there|that one|show me|open it|go ahead|go back)\b/iu', $reply) !== 1
-            && preg_match('/\b(?:i did it|done|check again|cannot find|can\'t find|did not work|didn\'t work|not working|stop|cancel)\b/iu', $reply) !== 1) {
+            && preg_match('/\b(?:i did it|done|check again|cannot find|can\'t find|did not work|didn\'t work|not working)\b/iu', $reply) !== 1
+            && ! $explicitCancellation) {
             return false;
         }
 
@@ -316,7 +318,7 @@ class AiSupportGuidedTaskService
             return false;
         }
 
-        if (preg_match('/\b(?:stop|cancel)\b/iu', $reply) === 1) {
+        if ($explicitCancellation) {
             $tasks->each(fn (AiSupportGuidedTask $task) => $this->cancel($actor, $task->id, 'user_cancelled'));
             $this->createAutomatedMessage($ticket, 'I stopped this guided task. Nothing was changed. Tell me what you would like to do next, or ask for a person.');
             $this->recordTaskEvent($ticket, $tasks->first(), 'intent_abandoned', 'user_cancelled', $actor);
@@ -370,6 +372,14 @@ class AiSupportGuidedTaskService
         $this->recordTaskEvent($ticket, $task, 'intent_action_offered', 'contextual_follow_up', $actor);
 
         return true;
+    }
+
+    private function explicitlyCancelsGuidedTask(string $reply): bool
+    {
+        return preg_match(
+            '/^(?:please\s+)?(?:stop|cancel)(?:\s+(?:this|the|my))?(?:\s+(?:task|help|guidance|journey|process|step))?(?:\s+please)?[.!]?$/iu',
+            trim($reply),
+        ) === 1;
     }
 
     public function checkAgain(User $actor, string $taskId): void

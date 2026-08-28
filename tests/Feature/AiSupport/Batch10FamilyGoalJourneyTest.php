@@ -7,6 +7,7 @@ use App\Models\AiSupportGoalJourney;
 use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportRequestDraft;
 use App\Models\CareRequest;
+use App\Models\CareTask;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Models\User;
@@ -86,14 +87,14 @@ class Batch10FamilyGoalJourneyTest extends TestCase
         $this->assertSame('collect_request_details', AiSupportGoalJourney::query()->sole()->step_key);
     }
 
-    public function test_explicit_care_type_question_replaces_a_stale_unrelated_goal_with_real_path_choices(): void
+    public function test_information_lookup_does_not_create_a_sticky_goal_before_a_care_type_question(): void
     {
         [, $family] = $this->eligibleFamily();
-        $ticket = $this->ticket($family, 'Where can I change my credit card?');
+        $ticket = $this->ticket($family, 'How do I view my payment history?');
         Http::fake();
 
         app(AiSupportRuntimeService::class)->respond($family, $ticket, $ticket->description);
-        $this->assertSame('payment_method', AiSupportGoalJourney::query()->resumable()->sole()->journey_type);
+        $this->assertSame(0, AiSupportGoalJourney::query()->resumable()->count());
 
         $question = 'I need help deciding whether I need one-time care or recurring care.';
         app(AiSupportRuntimeService::class)->respond($family, $ticket->fresh(), $question);
@@ -111,6 +112,64 @@ class Batch10FamilyGoalJourneyTest extends TestCase
             'Is this help for one specific date, or will it repeat every week?',
             SupportTicketMessage::query()->findOrFail($action->support_ticket_message_id)->body,
         );
+    }
+
+    public function test_payment_history_question_is_not_hijacked_by_an_active_care_type_decision(): void
+    {
+        $decision = app(FamilyCareTypeDecisionService::class)->decide('How do I view my payment history?', true);
+        $record = app(FamilyIntentCatalog::class)->find('FAM-PAY-010');
+
+        $this->assertNull($decision);
+        $this->assertNotNull($record);
+        $this->assertNull(app(FamilyGoalJourneyCatalog::class)->forIntent($record));
+    }
+
+    public function test_completed_recurring_draft_start_time_is_modified_deterministically_and_reissued_for_review(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $ticket = $this->ticket($family, 'Help me create recurring care.');
+        $journeys = app(FamilyGoalJourneyService::class);
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $ticket->description);
+        $journeys->chooseCarePath(
+            $family,
+            $ticket,
+            AiSupportMessageAction::query()->where('action_type', AiSupportMessageAction::TYPE_PATH_CHOICES)->sole()->id,
+            CareRequest::TYPE_RECURRING,
+        );
+        $task = CareTask::query()->create(['name' => 'Companionship']);
+        $draft = AiSupportRequestDraft::query()->sole();
+        $draft = app(AiSupportRequestDraftService::class)->applyPatch($family, $ticket, [
+            'patch_fields' => [
+                'recipient_is_requester', 'recipient_full_name', 'recipient_relationship', 'task_ids',
+                'address_line1', 'city', 'state', 'zip', 'recurring_days', 'recurring_schedule', 'recurring_starts_on',
+            ],
+            'recipient_is_requester' => true,
+            'recipient_full_name' => $family->name,
+            'recipient_relationship' => 'Self',
+            'task_ids' => [$task->id],
+            'address_line1' => '10 Oak Street',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+            'recurring_days' => [1, 3],
+            'recurring_schedule' => [
+                ['day' => 1, 'start_time' => '09:00', 'duration_minutes' => 120],
+                ['day' => 3, 'start_time' => '09:00', 'duration_minutes' => 120],
+            ],
+            'recurring_starts_on' => now('America/New_York')->next('Monday')->toDateString(),
+        ], $draft->version);
+        app(\App\Services\AiSupport\AiSupportRecapService::class)->issue($family, $ticket, $draft);
+
+        $handled = $journeys->handleEarly($family, $ticket, 'I want to change the start time to 10:00 AM.');
+
+        $this->assertTrue($handled);
+        $schedule = (array) AiSupportRequestDraft::query()->sole()->payload['recurring_schedule'];
+        $this->assertSame(['10:00', '10:00'], collect($schedule)->pluck('start_time')->all());
+        $recaps = AiSupportMessageAction::query()->where('action_type', AiSupportMessageAction::TYPE_RECAP)->orderBy('created_at')->get();
+        $this->assertCount(2, $recaps);
+        $this->assertNotNull($recaps->first()->invalidated_at);
+        $this->assertStringContainsString('10:00 AM', (string) data_get($recaps->last()->payload, 'recap.schedule'));
+        Http::assertNothingSent();
     }
 
     public function test_irregular_dates_start_the_first_one_time_request_and_preserve_the_remainder(): void
@@ -257,7 +316,7 @@ class Batch10FamilyGoalJourneyTest extends TestCase
             ->assertSee('Next: choose one-time or recurring care');
     }
 
-    public function test_different_goal_never_silently_merges_and_user_can_keep_the_current_goal(): void
+    public function test_information_lookup_does_not_interrupt_or_replace_the_current_actionable_goal(): void
     {
         [, $family] = $this->eligibleFamily();
         $ticket = $this->ticket($family, 'I need one visit next Tuesday.');
@@ -274,13 +333,10 @@ class Batch10FamilyGoalJourneyTest extends TestCase
             'Open my messages.',
         );
 
-        $this->assertTrue($blocked);
+        $this->assertFalse($blocked);
         $this->assertSame(AiSupportGoalJourney::STATE_AWAITING_CHOICE, $active->fresh()->state);
-        $choice = AiSupportMessageAction::query()->where('action_type', AiSupportMessageAction::TYPE_JOURNEY_CHOICES)->sole();
-        $this->assertSame(['continue_current', 'start_new', 'unsure', 'human'], collect($choice->payload['choices'])->pluck('id')->all());
-        app(FamilyGoalJourneyService::class)->chooseJourney($family, $ticket, $choice->id, 'continue_current');
         $this->assertSame('care_request', $active->fresh()->journey_type);
-        $this->assertSame(AiSupportGoalJourney::STATE_ACTIVE, $active->fresh()->state);
+        $this->assertDatabaseCount('ai_support_message_actions', 1);
         $this->assertDatabaseCount('ai_support_goal_journeys', 1);
     }
 

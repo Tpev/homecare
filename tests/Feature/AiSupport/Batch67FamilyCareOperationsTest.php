@@ -45,6 +45,8 @@ class Batch67FamilyCareOperationsTest extends TestCase
             'What is the current visit status?' => 'FAM-VISIT-003',
             'Help me accept the caregiver change request.' => 'FAM-VISIT-010',
             'The caregiver did not show.' => 'FAM-VISIT-014',
+            'What happens if I need to cancel a booked visit?' => 'FAM-VISIT-008',
+            'What is the cancellation policy for care visits?' => 'FAM-VISIT-008',
             'Approve the submitted hours.' => 'FAM-VISIT-020',
             'Leave a five star review for the caregiver.' => 'FAM-VISIT-030',
             'When is my next regular care visit?' => 'FAM-REGULAR-009',
@@ -55,6 +57,21 @@ class Batch67FamilyCareOperationsTest extends TestCase
             $this->assertSame(FamilyIntentResolver::STATUS_RECOGNIZED, $result['status'], $message);
             $this->assertSame($intentId, $result['intent_id'], $message);
         }
+    }
+
+    public function test_general_visit_cancellation_question_explains_the_rule_without_requesting_a_reason_or_handoff(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $ticket = $this->ticket($family, 'What happens if I need to cancel a booked visit?');
+
+        $handled = $this->respond($family, $ticket, 'FAM-VISIT-008', $ticket->description);
+
+        $this->assertTrue($handled);
+        $body = $ticket->publicMessages()->latest()->firstOrFail()->body;
+        $this->assertStringContainsString('24-hour late-cancellation window', $body);
+        $this->assertStringNotContainsString('Tell me which scheduled visit and the cancellation reason', $body);
+        $this->assertSame(SupportTicket::RESPONDER_MODE_AUTOMATED, $ticket->fresh()->responder_mode);
+        $this->assertDatabaseCount('ai_support_confirmed_action_evidence', 0);
     }
 
     public function test_all_eighty_six_batch_six_seven_catalog_intents_resolve_from_every_registered_phrase(): void

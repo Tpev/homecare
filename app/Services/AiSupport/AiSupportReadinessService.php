@@ -282,7 +282,7 @@ class AiSupportReadinessService
             && $pricing->workingVersion?->status === KnowledgeBaseVersion::STATUS_DRAFT;
         $pricingPublished = $pricing?->publishedVersion?->status === KnowledgeBaseVersion::STATUS_PUBLISHED
             && in_array('support_answers_v1', (array) $pricing->publishedVersion->capability_ids, true)
-            && str_contains((string) $pricing->publishedVersion->answer_body, '$31 per worked hour');
+            && str_contains((string) $pricing->publishedVersion->answer_body, '$30 per worked hour');
         $overdue = KnowledgeBaseEntry::query()->active()
             ->whereHas('workingVersion', fn ($query) => $query->whereDate('review_by', '<', today()))
             ->count();

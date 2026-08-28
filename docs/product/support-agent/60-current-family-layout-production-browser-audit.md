@@ -37,12 +37,17 @@ The audit also found deterministic routing and presentation defects caused by th
 | Two submitted-hours buttons were both named “Review hours” | Multi-record actions now include the visit subject/date in each button label. |
 | The desktop guide strip overlapped the floating Support launcher | Desktop layout now reserves the launcher area instead of centering underneath it. |
 | “What does LoLo do?” opened the Support Center | The governed orientation entry now offers the current Family Care Overview first. |
-| “two-hour visit” did not show the two-hour total | Pricing recognizes written one- through twelve-hour durations; two hours returns a $62 Family total. |
+| “two-hour visit” did not show the two-hour total | Pricing recognizes written one- through twelve-hour durations; two hours returns the approved $60 Family total. |
+| A completed recurring draft failed after “change the start time to 10:00 AM” | Explicit start-time and duration edits now update the private draft deterministically, invalidate the old recap, and issue a fresh recap without a provider call. |
+| Payment-history and other informational questions inherited or created unrelated long-lived goals | Durable goals now start only for actionable work; read-only answers and guided destinations do not replace the user’s current task. |
+| “Cancel a booked visit” could stop the current chat guide, while cancellation-policy questions transferred to a person | Only an explicit standalone request to stop the guided task cancels it. Visit policy questions now route to the cancellation-policy intent and explain the 24-hour window without inventing a fee or refund. |
+| A care-profile purpose question returned only profile counts | Purpose, contents, and visibility questions now route to the governed care-profile explanation before offering Care profiles. |
+| Notifications and Care profiles opened correctly but sometimes reported that the highlight was missing; Livewire navigation logged Alpine errors | The route-dependent inner Livewire key now matches the outer component key, so a navigation mounts one fresh Alpine chat instance and target discovery observes the new page. |
 
 ## Known product state intentionally not changed
 
-- The application’s visible payment-fee implementation differs from the approved pilot KB truth. This batch does not change payment or pricing implementation.
-- The recurring request recap did not expose **Confirm and create request** because pilot publishing controls were not all enabled. The draft and recap path works; production must verify and deliberately enable `care_request_publish_v1`, both commit controls, and both publish-tool controls for the two-user pilot only before expecting chat publication.
+- The application’s visible payment-fee implementation may differ from the approved pilot KB truth. This batch changes AI Support only: $30/hour Family total, $27/hour caregiver gross less actual Stripe processing fees, and a $3/hour gross LoLo platform portion. It does not change payment or Stripe implementation.
+- The recurring request recap did not expose **Confirm and create request** because pilot publishing controls were not all enabled. The existing `ai-support:activate-batch5-pilot` command now idempotently enables the two publish commits, both publish tools, and `care_request_publish_v1` for the exact two pilot grants while keeping general release off.
 - Provider instability previously triggered the automatic answer stop. The capability was restored for the pilot, and subsequent audited turns completed, but health monitoring remains relevant.
 
 ## Regression coverage
@@ -67,4 +72,4 @@ Run the normal deployment, publish the one changed KB definition through the exi
 8. `Which submitted hours are waiting for me to review right now?`
 9. `Where do I change my notification preferences?`
 
-Expected: exact current pages, visible highlights without false missing-target messages, distinct record buttons, real care-type choices, and a $62 two-hour Family total. Keep Live for everyone off throughout the retest.
+Expected: exact current pages, visible highlights without false missing-target messages, distinct record buttons, real care-type choices, and a $60 two-hour Family total. Keep Live for everyone off throughout the retest.

@@ -121,7 +121,7 @@ class Batch3FamilyOperatingLayerTest extends TestCase
             ['Ask for a guaranteed caregiver response or response time', 'cannot guarantee', 'support.center'],
             ['Understand whether publishing a request charges the card', 'does not charge or authorize the card', 'family.care_requests'],
             ['Are taxes, tips, mileage, or holiday charges added?', 'I do not add taxes, tips, mileage, holiday charges, or surcharges', 'family.new_care_request'],
-            ['What would 2.5 hours cost?', 'Family total is $77.50', 'family.new_care_request'],
+            ['What would 2.5 hours cost?', 'Family total is $75.00', 'family.new_care_request'],
             ['Apply a coupon, credit, or promo code', 'does not currently provide a coupon', 'family.care_history'],
         ];
 

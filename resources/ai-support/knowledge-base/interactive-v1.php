@@ -127,9 +127,9 @@ return [
         $entry(
             'KB-CARE-006',
             'Current hourly price',
-            'Care costs $30 per worked hour plus a $1 per worked hour processing fee, so the Family total is $31 per worked hour. The caregiver gross amount is $27 per worked hour minus the actual Stripe processing fees recorded on the successful Family charge. LoLo’s gross portion is $4 per worked hour. The exact receipt and payment record determine historical amounts, refunds, and payment status.',
+            'The Family total is $30 per worked hour. The caregiver gross amount is $27 per worked hour minus the actual Stripe processing fees recorded on the successful Family charge. LoLo’s gross portion is $3 per worked hour. The exact receipt and payment record determine historical amounts, refunds, and payment status.',
             'family.care_requests',
-            ['Care is $30 per worked hour and processing is $1 per worked hour.', 'The Family total is $31 per worked hour.', 'Caregiver gross is $27 per worked hour minus actual Stripe processing fees.', 'LoLo’s gross portion is $4 per worked hour.'],
+            ['The Family total is $30 per worked hour.', 'Caregiver gross is $27 per worked hour minus actual Stripe processing fees.', 'LoLo’s gross portion is $3 per worked hour.'],
             ['A payment outcome not present in authoritative state.', 'A historical total without its pricing version and payment record.', 'Caregiver availability.'],
             ['How much does care cost?', 'What is the hourly rate?', 'Calculate the cost of care.'],
             ['Create my request.', 'Was my card charged?', 'What is the support queue?'],

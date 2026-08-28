@@ -20,6 +20,10 @@ class FamilyCareTypeDecisionService
             return ['path' => 'human_24_7', 'reason' => 'You need continuous day-and-night coverage.', 'dates' => []];
         }
 
+        if ($careContext && $this->looksLikeIndependentAppTask($value)) {
+            return null;
+        }
+
         if (! $careContext) {
             if (preg_match('/\b(?:change|convert|edit|copy|duplicate|reuse|withdraw)\w*\b.{0,48}\brequest\b|\brequest\b.{0,48}\b(?:change|convert|edit|copy|duplicate|reuse|withdraw)\w*\b/iu', $value) === 1) {
                 return null;
@@ -80,6 +84,14 @@ class FamilyCareTypeDecisionService
         }
 
         return preg_match('/\b(?:need|want|arrange|set up|looking for)\b.{0,48}\b(?:care|caregiver|help|visit|companionship)|\bneed\s+someone\b|\b(?:mother|father|mom|dad|parent|spouse)\s+needs?\b.{0,32}\b(?:care|help)|\b(?:care|help)\s+is\s+needed\b|\bcan\s+(?:a\s+)?caregiver\s+help\b|\bsomeone\s+(?:(?:must|should)\s+)?(?:come|be there)\b|\b(?:one[- ]time|one[- ]off|regular|recurring|weekly)\s+care\b/iu', $value) === 1;
+    }
+
+    private function looksLikeIndependentAppTask(string $value): bool
+    {
+        return preg_match(
+            '/\b(?:payment|billing|card|receipt|invoice|password|login|notification|message|timesheet|submitted hours|care profile|profile|family member|applicant|invite|hire|care history|payment history|refund|charge|failed payment)\b/iu',
+            $value,
+        ) === 1;
     }
 
     /** @return list<string> */

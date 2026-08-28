@@ -324,6 +324,10 @@ class FamilyIntentResolver
     {
         $value = $this->normalize($message);
 
+        if (preg_match('/\bwhat\s+(?:is|does)\b.{0,32}\bcare\s+(?:receiver\s+)?profile\b|\bwhat\b.{0,32}\b(?:information|details?)\b.{0,32}\b(?:put|include|belong|contain)\w*\b.{0,32}\b(?:care\s+)?profile\b|\b(?:care\s+)?profile\b.{0,32}\b(?:purpose|contain|include|who\s+sees?)\w*\b/', $value)) {
+            return 'FAM-PROFILE-001';
+        }
+
         if (preg_match('/\b(?:delete|remove)\b.*\bprofile\b.*\b(?:permanent|permanently|forever)\b|\b(?:permanent|permanently)\b.*\b(?:delete|remove)\b.*\bprofile\b/', $value)) {
             return 'FAM-PROFILE-026';
         }
@@ -473,7 +477,11 @@ class FamilyIntentResolver
         if (preg_match('/\b(?:no\s*show|didn\'?t\s+show|did\s+not\s+show)\b/', $value)) {
             return 'FAM-VISIT-014';
         }
-        if (preg_match('/\b(?:cancel|cancellation)\b.*\b(?:scheduled\s+)?visit\b|\bvisit\b.*\b(?:cancel|cancellation)\b/', $value)) {
+        if (preg_match('/\b(?:cancel|cancellation)\b.*\b(?:booked|scheduled|care\s+)?visits?\b|\bvisits?\b.*\b(?:cancel|cancellation)\b/', $value)
+            && preg_match('/\b(?:what\s+happens|policy|consequence|fee|charge|refund|late|window|allowed|can\s+i|need\s+to|have\s+to)\b/', $value)) {
+            return 'FAM-VISIT-008';
+        }
+        if (preg_match('/\b(?:cancel|cancellation)\b.*\b(?:booked|scheduled|care\s+)?visits?\b|\bvisits?\b.*\b(?:cancel|cancellation)\b/', $value)) {
             return str_contains($value, 'request') ? 'FAM-VISIT-006' : 'FAM-VISIT-007';
         }
         if (preg_match('/\b(?:reschedule|move|change)\b.*\bvisit\b|\bvisit\b.*\b(?:reschedule|move)\b/', $value)) {

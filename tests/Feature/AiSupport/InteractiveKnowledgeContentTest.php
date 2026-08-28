@@ -26,7 +26,8 @@ class InteractiveKnowledgeContentTest extends TestCase
         $this->assertCount(60, $evaluations->unique());
         $pricing = $entries->firstWhere('stable_id', 'KB-CARE-006');
         $this->assertSame(['support_answers_v1'], $pricing['capability_ids']);
-        $this->assertStringContainsString('$31 per worked hour', $pricing['answer_body']);
+        $this->assertStringContainsString('$30 per worked hour', $pricing['answer_body']);
+        $this->assertStringContainsString('$3 per worked hour', $pricing['answer_body']);
         $this->assertTrue($entries->every(fn (array $entry): bool => count($entry['sources']) >= 1));
         $cases = collect(app(InteractiveKnowledgeEvaluationCatalog::class)->cases());
         $this->assertCount(60, $cases);

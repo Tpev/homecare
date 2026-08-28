@@ -51,8 +51,15 @@ class FamilyGoalJourneyCatalog
         $domain = (string) ($intent['domain'] ?? '');
         $intentText = mb_strtolower((string) ($intent['intent'] ?? ''));
 
-        if ($domain === 'payments' && preg_match('/\b(?:card|payment method|credit card)\b/iu', $intentText)) {
+        if ($domain === 'payments'
+            && preg_match('/\b(?:card|payment method|credit card)\b/iu', $intentText)
+            && preg_match('/\b(?:add|change|replace|update|manage|fix|recover)\b/iu', $intentText)) {
             return 'payment_method';
+        }
+
+        $stages = array_map('strval', (array) data_get($intent, 'capability_stages.current', []));
+        if (array_intersect($stages, ['Prepare', 'Execute', 'Confirm']) === []) {
+            return null;
         }
 
         foreach ($this->all() as $type => $journey) {

@@ -6,7 +6,7 @@ return [
     'version' => 'family-intents-v1',
     'generated_on' => '2026-08-28',
     'source' => 'docs/product/support-agent/38-family-intent-action-coverage-registry.md',
-    'source_sha256' => 'be5c24b40121b4513f20f17dfb3b7990b254c992f659e16b36777b52f6224e97',
+    'source_sha256' => '73a05003e223401ca7bda84c0078c505b13916111d322a622d36eec6708d1364',
     'records' => [
         0 => [
             'intent_id' => 'FAM-START-001',
@@ -14623,7 +14623,7 @@ return [
                 'product' => 'Approved pricing truth',
                 'explain' => 'Yes',
                 'action' => 'Explain / Guide',
-                'target_behavior' => 'State $30/hour Family care plus $1/hour Family processing fee, and $27/hour caregiver gross minus actual Stripe processing fees; do not invent other charges; offer the next valid care step',
+                'target_behavior' => 'State $30/hour Family total, $27/hour caregiver gross minus actual Stripe processing fees, and $3/hour LoLo gross platform portion; do not invent other charges; offer the next valid care step',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [
@@ -14703,7 +14703,7 @@ return [
                 'product' => 'Approved pricing truth',
                 'explain' => 'Yes',
                 'action' => 'Explain / Calculate / Guide',
-                'target_behavior' => 'State $30/hour Family care plus $1/hour Family processing fee, and $27/hour caregiver gross minus actual Stripe processing fees; calculate only from an explicit duration; offer request creation',
+                'target_behavior' => 'State $30/hour Family total, $27/hour caregiver gross minus actual Stripe processing fees, and $3/hour LoLo gross platform portion; calculate only from an explicit duration; offer request creation',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [

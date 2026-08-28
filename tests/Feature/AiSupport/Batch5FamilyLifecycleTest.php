@@ -130,6 +130,14 @@ class Batch5FamilyLifecycleTest extends TestCase
         $this->assertSame('FAM-START-008', $resolution['intent_id']);
     }
 
+    public function test_care_profile_purpose_question_routes_to_the_explanation_intent(): void
+    {
+        $resolution = app(FamilyIntentResolver::class)->resolve('What is a care profile and what should it contain?');
+
+        $this->assertSame(FamilyIntentResolver::STATUS_RECOGNIZED, $resolution['status']);
+        $this->assertSame('FAM-PROFILE-001', $resolution['intent_id']);
+    }
+
     public function test_profile_update_strips_instructional_say_prefix_from_about_them(): void
     {
         [, $family] = $this->eligibleFamily();
@@ -601,7 +609,7 @@ class Batch5FamilyLifecycleTest extends TestCase
         config(['ai_support.initial_pilot.approved_user_ids' => [$first->id, $second->id]]);
         AiSupportPilotGrant::query()->get()->each(function (AiSupportPilotGrant $grant): void {
             $grant->forceFill(['capability_ids' => collect($grant->capability_ids)
-                ->reject(fn (string $id): bool => $id === 'family_lifecycle_action_v1')->values()->all()])->save();
+                ->reject(fn (string $id): bool => in_array($id, ['family_lifecycle_action_v1', 'care_request_publish_v1'], true))->values()->all()])->save();
         });
 
         $this->artisan('ai-support:activate-batch5-pilot', ['--actor-email' => $admin->email])
@@ -609,11 +617,16 @@ class Batch5FamilyLifecycleTest extends TestCase
             ->assertSuccessful();
 
         $this->assertTrue(AiSupportPilotGrant::query()->get()->every(
-            fn (AiSupportPilotGrant $grant): bool => in_array('family_lifecycle_action_v1', $grant->capability_ids, true),
+            fn (AiSupportPilotGrant $grant): bool => in_array('family_lifecycle_action_v1', $grant->capability_ids, true)
+                && in_array('care_request_publish_v1', $grant->capability_ids, true),
         ));
         $controls = app(AiSupportControlService::class);
         $this->assertTrue($controls->enabled('capability.family_lifecycle_action_v1'));
         $this->assertTrue($controls->enabled('tool.care-request.withdraw'));
+        $this->assertTrue($controls->enabled('commit.one_time'));
+        $this->assertTrue($controls->enabled('commit.recurring'));
+        $this->assertTrue($controls->enabled('tool.care-request.publish.one-time'));
+        $this->assertTrue($controls->enabled('tool.care-request.publish.recurring'));
         $this->assertFalse($controls->enabled('general_release_enabled'));
     }
 

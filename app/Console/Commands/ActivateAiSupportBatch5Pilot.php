@@ -15,7 +15,7 @@ class ActivateAiSupportBatch5Pilot extends Command
 {
     protected $signature = 'ai-support:activate-batch5-pilot {--actor-email= : Full Administrator email}';
 
-    protected $description = 'Enable Batch 5 profile/request actions for the existing two-user pilot without enabling general release.';
+    protected $description = 'Enable Batch 5 profile/request actions and confirmed care-request creation for the existing two-user pilot.';
 
     public function handle(AiSupportControlService $controls): int
     {
@@ -47,7 +47,7 @@ class ActivateAiSupportBatch5Pilot extends Command
                 foreach ($grants as $grant) {
                     $locked = AiSupportPilotGrant::query()->lockForUpdate()->findOrFail($grant->id);
                     $capabilities = collect((array) $locked->capability_ids)
-                        ->push('family_lifecycle_action_v1')->unique()->values()->all();
+                        ->push('family_lifecycle_action_v1', 'care_request_publish_v1')->unique()->values()->all();
                     if ($capabilities !== $locked->capability_ids) {
                         $locked->forceFill(['capability_ids' => $capabilities])->save();
                         $now = now();
@@ -61,8 +61,8 @@ class ActivateAiSupportBatch5Pilot extends Command
                             'subject_id' => $locked->id,
                             'result' => 'succeeded',
                             'reason_code' => 'batch5_pilot_capability',
-                            'reason' => 'Enable approved Batch 5 profile and request lifecycle actions for the existing pilot.',
-                            'metadata' => ['capability_id' => 'family_lifecycle_action_v1'],
+                            'reason' => 'Enable approved Batch 5 profile, request lifecycle, and confirmed request creation for the existing pilot.',
+                            'metadata' => ['capability_ids' => ['family_lifecycle_action_v1', 'care_request_publish_v1']],
                             'policy_version' => (string) config('ai_support.policy_version'),
                             'retain_until' => $now->copy()->addMonths((int) config('ai_support.grant_history_months', 24)),
                             'occurred_at' => $now,
@@ -74,6 +74,11 @@ class ActivateAiSupportBatch5Pilot extends Command
                 $reason = 'Enable approved Batch 5 actions for the exact two-user pilot.';
                 foreach ([
                     'capability.family_lifecycle_action_v1',
+                    'capability.care_request_publish_v1',
+                    'commit.one_time',
+                    'commit.recurring',
+                    'tool.care-request.publish.one-time',
+                    'tool.care-request.publish.recurring',
                     'tool.family-profile.save-draft',
                     'tool.family-profile.make-ready',
                     'tool.family-profile.make-default',
@@ -99,8 +104,8 @@ class ActivateAiSupportBatch5Pilot extends Command
 
         $this->table(['Check', 'Result'], [
             ['Pilot users', $approvedIds->implode(', ')],
-            ['Batch 5 capability', 'Enabled'],
-            ['Batch 5 tools', '6 enabled'],
+            ['Batch 5 capabilities', 'Lifecycle and confirmed request creation enabled'],
+            ['Batch 5 tools', '8 enabled'],
             ['Live for everyone', 'Off'],
         ]);
         $this->info('Batch 5 is active for the existing two-user pilot only.');

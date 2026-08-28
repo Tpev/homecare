@@ -122,7 +122,7 @@ class InteractiveAiSupportModelEvaluationService
                 'stable_id' => 'KB-SYNTHETIC-EVAL',
                 'version_id' => 1,
                 'title' => 'Synthetic governed evaluation context',
-                'answer' => 'Family users may choose one-time or recurring care. Caregivers receive answers and navigation only. Family care is $30 per worked hour plus a $1 per worked hour processing fee. Human transfer is always available.',
+                'answer' => 'Family users may choose one-time or recurring care. Caregivers receive answers and navigation only. Family care is $30 per worked hour total. Human transfer is always available.',
                 'may_state' => ['Use only approved navigation and care paths.'],
                 'must_not_infer' => ['Payment state, historical totals, availability, or another account data.'],
                 'targets' => [],

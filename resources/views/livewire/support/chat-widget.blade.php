@@ -15,7 +15,7 @@
 @endphp
 
 <div
-    wire:key="support-chat-widget-{{ auth()->id() }}"
+    wire:key="support-chat-widget-{{ auth()->id() }}-{{ sha1($originPath ?: request()->getPathInfo()) }}"
     data-testid="support-chat-widget"
     class="support-chat-root"
     x-data="supportChatWidget()"
@@ -46,11 +46,11 @@
             aria-live="polite"
         >
             <div class="min-w-0 flex-1">
-                <p class="text-xs font-bold uppercase tracking-[0.12em] text-[#9C493A]">{{ $goalJourneyClient['goal'] ?? 'LoLo is guiding you' }}</p>
-                @if ($goalJourneyClient)
+                <p class="text-xs font-bold uppercase tracking-[0.12em] text-[#9C493A]">{{ $guidedTaskClient ? 'LoLo is guiding you' : ($goalJourneyClient['goal'] ?? 'LoLo is guiding you') }}</p>
+                @if ($goalJourneyClient && ! $guidedTaskClient)
                     <p class="mt-0.5 text-xs font-semibold text-[#526474]">{{ $goalJourneyClient['progress'] }}</p>
                 @endif
-                <p class="mt-1 text-sm font-semibold leading-5 text-[#17313F]">{{ $goalJourneyClient['instruction'] ?? $guidedTaskClient['instruction'] }}</p>
+                <p class="mt-1 text-sm font-semibold leading-5 text-[#17313F]">{{ $guidedTaskClient['instruction'] ?? $goalJourneyClient['instruction'] }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-1.5">
                 <button type="button" x-on:click="{{ ($goalJourneyClient['hasGuidedTarget'] ?? false) || $guidedTaskClient ? 'showGuidedTarget()' : 'showPanel()' }}" class="ai-guide-strip-button">Resume</button>
@@ -153,7 +153,7 @@
             </div>
         </header>
 
-        @if ($goalJourneyClient)
+        @if ($goalJourneyClient && ! $guidedTaskClient)
             <aside class="border-b border-[#D8E5E1] bg-[#F2F8F6] px-4 py-3" aria-label="Current support goal">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">

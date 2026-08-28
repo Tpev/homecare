@@ -76,6 +76,22 @@ class GuidedPaymentMethodTest extends TestCase
         $this->assertStringNotContainsString('4242', json_encode($task->getAttributes(), JSON_THROW_ON_ERROR));
     }
 
+    public function test_visit_cancellation_question_does_not_cancel_an_unrelated_guided_task(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $ticket = $this->automatedTicket($family, 'Update my payment method.');
+        $task = app(AiSupportGuidedTaskService::class)->offerPaymentMethod($family, $ticket);
+
+        $handled = app(AiSupportGuidedTaskService::class)->handleContextualReply(
+            $family,
+            $ticket,
+            'What happens if I need to cancel a booked visit?',
+        );
+
+        $this->assertFalse($handled);
+        $this->assertContains($task->fresh()->state, AiSupportGuidedTask::OPEN_STATES);
+    }
+
     public function test_owner_wanting_to_use_another_credit_card_gets_the_update_action_without_a_model_call(): void
     {
         [, $family] = $this->eligibleFamily();

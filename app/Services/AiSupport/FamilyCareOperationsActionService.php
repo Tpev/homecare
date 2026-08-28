@@ -351,7 +351,7 @@ class FamilyCareOperationsActionService
             ];
             if ($isHire) {
                 $fields[] = ['label' => 'Schedule', 'value' => $this->requestSchedule($application->careRequest)];
-                $fields[] = ['label' => 'Family price', 'value' => '$30/hour care* + $1/hour processing fee'];
+                $fields[] = ['label' => 'Family price', 'value' => '$30/hour total'];
             }
             $this->issueAction($actor, $ticket, $tool, $preview, $intentId,
                 match ($tool) {
@@ -445,6 +445,25 @@ class FamilyCareOperationsActionService
 
         if (in_array($intentId, ['FAM-VISIT-007', 'FAM-VISIT-008'], true)) {
             $booking = $this->selectBooking($actor, $message, [CareBooking::STATUS_SCHEDULED]);
+            if ($intentId === 'FAM-VISIT-008') {
+                $late = $booking?->scheduled_start_at
+                    && now()->greaterThanOrEqualTo($booking->scheduled_start_at->copy()->subHours(24));
+                $body = $booking
+                    ? ($late
+                        ? 'This scheduled visit is inside the 24-hour late-cancellation window. The exact booking and payment record determines any authorization release, reconciliation, fee, or refund.'
+                        : 'This scheduled visit is outside the 24-hour late-cancellation window. The exact booking and payment record determines the final authorization release, reconciliation, fee, or refund.')
+                    : 'Visit cancellation depends on the exact scheduled visit and timing. LoLo shows whether it is inside the 24-hour late-cancellation window, and the booking and payment record determines any authorization release, reconciliation, fee, or refund. I will not guess an amount.';
+                $this->offerRead(
+                    $actor,
+                    $ticket,
+                    $body,
+                    $intentId,
+                    $booking ? 'family.request.visit' : 'family.care_actions',
+                    $booking?->careRequest,
+                );
+
+                return true;
+            }
             $reason = $this->reasonText($message);
             if (! $booking || $reason === '') {
                 $this->automatedMessage($ticket, 'Tell me which scheduled visit and the cancellation reason. I will show whether it is inside the late-cancellation window before anything changes.');
@@ -452,13 +471,6 @@ class FamilyCareOperationsActionService
                 return true;
             }
             $late = $booking->scheduled_start_at && now()->greaterThanOrEqualTo($booking->scheduled_start_at->copy()->subHours(24));
-            if ($intentId === 'FAM-VISIT-008' && ! str_contains(mb_strtolower($message), 'cancel')) {
-                $this->offerRead($actor, $ticket,
-                    $late ? 'This scheduled visit is currently inside the 24-hour late-cancellation window.' : 'This scheduled visit is currently outside the 24-hour late-cancellation window.',
-                    $intentId, 'family.request.visit', $booking->careRequest);
-
-                return true;
-            }
             if (! $this->available($actor, $ticket, 'visit.cancel')) {
                 $this->offerRead($actor, $ticket, 'Open the visit to cancel it.', $intentId, 'family.request.visit', $booking->careRequest);
 
@@ -592,7 +604,7 @@ class FamilyCareOperationsActionService
                 'This confirms the worked time and lets the existing payment service capture the authorized amount or request secure card action.', [
                     ['label' => 'Visit', 'value' => $this->bookingTime($booking)],
                     ['label' => 'Submitted time', 'value' => $this->duration((int) $booking->worked_minutes)],
-                    ['label' => 'Family price', 'value' => '$30/hour care* + $1/hour processing fee'],
+                    ['label' => 'Family price', 'value' => '$30/hour total'],
                     ['label' => 'Estimated care amount', 'value' => '$'.number_format(((int) $booking->worked_minutes / 60) * 30, 2)],
                 ], 'Confirm hours and payment');
 
@@ -739,7 +751,7 @@ class FamilyCareOperationsActionService
         }
 
         if ($intentId === 'FAM-REGULAR-006') {
-            $this->offerRead($actor, $ticket, 'A Family payment method is required so LoLo can authorize each generated visit safely. Family care is $30/hour plus a $1/hour processing fee. Caregiver gross earnings are $27/hour minus actual Stripe processing fees on successful Family charges.', $intentId, 'family.billing.payment_method');
+            $this->offerRead($actor, $ticket, 'A Family payment method is required so LoLo can authorize each generated visit safely. The Family pays $30/hour total. Caregiver gross earnings are $27/hour minus actual Stripe processing fees on successful Family charges, and LoLo’s gross platform portion is $3/hour.', $intentId, 'family.billing.payment_method');
 
             return true;
         }
@@ -1029,7 +1041,7 @@ class FamilyCareOperationsActionService
                 ['label' => 'Caregiver', 'value' => (string) ($hired?->caregiver?->name ?: 'Caregiver')],
                 ['label' => 'Schedule', 'value' => $schedule['label'] ?? $this->requestSchedule($request)],
                 ['label' => 'Starts', 'value' => Carbon::parse($startsOn)->format('M j, Y')],
-                ['label' => 'Family price', 'value' => '$30/hour care* + $1/hour processing fee'],
+                ['label' => 'Family price', 'value' => '$30/hour total'],
                 ['label' => 'Message', 'value' => $payload['family_message'] ?: 'No optional message'],
             ], 'Confirm and send offer');
 

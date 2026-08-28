@@ -22,6 +22,7 @@ class FamilyGoalJourneyService
         private readonly FamilyGoalJourneyCatalog $catalog,
         private readonly FamilyCareTypeDecisionService $careTypes,
         private readonly AiSupportRequestDraftService $drafts,
+        private readonly AiSupportRecapService $recaps,
         private readonly FamilyAccountContext $familyAccounts,
         private readonly AiSupportEventRecorder $events,
     ) {}
@@ -85,6 +86,10 @@ class FamilyGoalJourneyService
         }
 
         if ($active?->journey_type === 'care_request' && $draft) {
+            if ($this->handleDraftModificationReply($actor, $ticket, $draft, $message)) {
+                return true;
+            }
+
             if ($this->handleRecipientIdentityReply($actor, $ticket, $draft, $message)) {
                 return true;
             }
@@ -919,6 +924,128 @@ class FamilyGoalJourneyService
         $this->automatedMessage($ticket, $question ?: 'I have enough information to show your request recap.');
 
         return true;
+    }
+
+    private function handleDraftModificationReply(
+        User $actor,
+        SupportTicket $ticket,
+        AiSupportRequestDraft $draft,
+        string $message,
+    ): bool {
+        $normalized = mb_strtolower(trim($message));
+        if (preg_match('/\b(?:change|update|modify|correct|make|set)\b/iu', $normalized) !== 1) {
+            return false;
+        }
+
+        $startTime = $this->startTimeFromMessage($normalized);
+        $duration = $this->durationFromMessage($normalized);
+        if ($startTime === null && $duration === null) {
+            return false;
+        }
+
+        $patch = ['patch_fields' => []];
+        $payload = (array) $draft->payload;
+        if ($draft->request_type === CareRequest::TYPE_ONE_TIME) {
+            if ($startTime !== null) {
+                $patch['patch_fields'][] = 'requested_start_time';
+                $patch['requested_start_time'] = $startTime;
+            }
+            if ($duration !== null) {
+                $patch['patch_fields'][] = 'duration_minutes';
+                $patch['duration_minutes'] = $duration;
+            }
+        } else {
+            $schedule = array_values((array) ($payload['recurring_schedule'] ?? []));
+            if ($schedule === []) {
+                return false;
+            }
+            $mentionedDays = $this->mentionedWeekdays($normalized);
+            $schedule = array_map(function (array $slot) use ($startTime, $duration, $mentionedDays): array {
+                $day = (int) ($slot['day'] ?? -1);
+                if ($mentionedDays === [] || in_array($day, $mentionedDays, true)) {
+                    if ($startTime !== null) {
+                        $slot['start_time'] = $startTime;
+                    }
+                    if ($duration !== null) {
+                        $slot['duration_minutes'] = $duration;
+                    }
+                }
+
+                return $slot;
+            }, $schedule);
+            $patch['patch_fields'][] = 'recurring_schedule';
+            $patch['recurring_schedule'] = $schedule;
+        }
+
+        $updated = $this->drafts->applyPatch($actor, $ticket, $patch, $draft->version);
+        $ready = $updated->state === AiSupportRequestDraft::STATE_READY_FOR_RECAP;
+        $this->syncCareDraft($actor, $ticket, $ready);
+        if ($ready) {
+            $this->recaps->issue($actor, $ticket, $updated);
+        } else {
+            $this->automatedMessage($ticket, $this->drafts->nextQuestion($actor, $updated) ?: 'Your request is ready to review.');
+        }
+
+        return true;
+    }
+
+    private function startTimeFromMessage(string $message): ?string
+    {
+        if (preg_match('/\b(?:at|to|is|start(?:ing)?(?:\s+time)?(?:\s+to)?|time\s+(?:to|is))\s*(\d{1,2})(?::([0-5]\d))?\s*(a\.?m\.?|p\.?m\.?)\b/iu', $message, $match) === 1) {
+            $hour = (int) $match[1];
+            if ($hour < 1 || $hour > 12) {
+                return null;
+            }
+            $minute = (int) ($match[2] ?? 0);
+            $period = str_starts_with(str_replace('.', '', mb_strtolower($match[3])), 'p') ? 'pm' : 'am';
+            if ($period === 'am' && $hour === 12) {
+                $hour = 0;
+            } elseif ($period === 'pm' && $hour !== 12) {
+                $hour += 12;
+            }
+
+            return sprintf('%02d:%02d', $hour, $minute);
+        }
+
+        if (preg_match('/\b(?:at|to|is|start(?:ing)?(?:\s+time)?(?:\s+to)?|time\s+(?:to|is))\s*([01]?\d|2[0-3]):([0-5]\d)\b/iu', $message, $match) === 1) {
+            return sprintf('%02d:%02d', (int) $match[1], (int) $match[2]);
+        }
+
+        return null;
+    }
+
+    private function durationFromMessage(string $message): ?int
+    {
+        if (preg_match('/\b(?:duration|last|lasting|for)\b.{0,16}\b(\d{1,2}(?:\.5)?)\s*(?:hours?|hrs?)\b/iu', $message, $match) === 1) {
+            return (int) round(((float) $match[1]) * 60);
+        }
+        if (preg_match('/\b(?:duration|last|lasting|for)\b.{0,16}\b(\d{2,3})\s*(?:minutes?|mins?)\b/iu', $message, $match) === 1) {
+            return (int) $match[1];
+        }
+        if (preg_match('/\b(?:duration|last|lasting|for)\b.{0,16}\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+hours?\b/iu', $message, $match) === 1) {
+            $hours = array_search(mb_strtolower($match[1]), [
+                1 => 'one', 2 => 'two', 3 => 'three', 4 => 'four', 5 => 'five', 6 => 'six',
+                7 => 'seven', 8 => 'eight', 9 => 'nine', 10 => 'ten', 11 => 'eleven', 12 => 'twelve',
+            ], true);
+
+            return ((int) $hours) * 60;
+        }
+
+        return null;
+    }
+
+    /** @return list<int> */
+    private function mentionedWeekdays(string $message): array
+    {
+        $days = [
+            0 => 'sunday', 1 => 'monday', 2 => 'tuesday', 3 => 'wednesday',
+            4 => 'thursday', 5 => 'friday', 6 => 'saturday',
+        ];
+
+        return array_values(array_keys(array_filter(
+            $days,
+            static fn (string $name): bool => preg_match('/\b'.preg_quote($name, '/').'s?\b/iu', $message) === 1,
+        )));
     }
 
     private function sourceHasDraftDetails(string $message): bool

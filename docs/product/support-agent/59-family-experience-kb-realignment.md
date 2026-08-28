@@ -32,11 +32,11 @@ Every destination above has a matching `data-ai-target` marker. Exact request, p
 
 ## Knowledge corrections
 
-The source catalogs were audited entry by entry. The realignment package contains all 51 definitions changed by the audit, including:
+The source catalogs were audited entry by entry. The original realignment package contained 51 definitions changed by the audit. The August 28 Family pilot correction extends the package to 53 by adding the canonical `KB-B4-PRICE-001` and `KB-FOP-PAY-011` entries, so one realignment command also publishes the approved 30/27/3 AI Support pricing truth. The package includes:
 
 - Family home and Care orientation;
 - one-time versus recurring-care selection and intake;
-- the released pricing truth: $30 care plus $1 processing, $31 Family total, $27 caregiver gross less actual Stripe processing fees, and $4 LoLo gross portion per worked hour;
+- the pilot pricing truth: $30 Family total, $27 caregiver gross less actual Stripe processing fees, and $3 LoLo gross platform portion per worked hour;
 - Notifications as the location for marketplace notification preferences;
 - Find Caregivers as the generic caregiver-browsing destination;
 - exact caregiver-profile and recurring-care destinations from Care History;
