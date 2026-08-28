@@ -113,6 +113,26 @@ class AiSupportRuntimeService
             && in_array((string) data_get($intentRecord, 'contracts.prefill', ''), array_keys(app(AiSupportPreparationContractRegistry::class)->all()), true)
             && preg_match('/\b(?:prepare|draft|write|send|create|copy|duplicate|reuse|update|change|correct|correction|question|dispute)\b/i', $newestMessage) === 1;
 
+        $explicitFamilyNavigation = $actor->role === 'family'
+            && in_array($familyIntent, [
+                FamilyGuidedAssistanceService::INTENT_CARE_ACTIONS,
+                FamilyGuidedAssistanceService::INTENT_CARE_SCHEDULE,
+                FamilyGuidedAssistanceService::INTENT_CARE_ARRANGEMENTS,
+                FamilyGuidedAssistanceService::INTENT_CAREGIVERS,
+            ], true);
+        if ($explicitFamilyNavigation) {
+            try {
+                $this->goalJourneys->cancelActive($actor, $ticket, 'superseded_by_explicit_navigation');
+                $this->recordRecognizedIntent($ticket, $actor, $intentRecord, (string) ($intentResolution['source'] ?? 'current_family_navigation'));
+                $this->familyGuidance->respond($actor, $ticket, $familyIntent, $intentRecord['intent_id'] ?? null);
+            } catch (Throwable $exception) {
+                report($exception);
+                $this->handoff->transfer($actor, $ticket, 'family_navigation_unavailable');
+            }
+
+            return;
+        }
+
         $stateFirstIntent = $actor->role === 'family'
             && $familyIntent !== null
             && in_array($intentRecord['intent_id'] ?? null, [

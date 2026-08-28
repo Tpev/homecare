@@ -112,7 +112,7 @@ class Batch3FamilyOperatingLayerTest extends TestCase
         Http::fake();
 
         $cases = [
-            ['Understand what LoLo does for Families', 'helps Families arrange non-medical home care', 'support.center'],
+            ['Understand what LoLo does for Families', 'helps Families arrange non-medical home care', 'family.care_requests'],
             ['Understand what non-medical care means', 'everyday help such as companionship', 'support.center'],
             ['Understand what the AI can and cannot do', 'perform specifically enabled actions only after a clear recap and confirmation', 'support.center'],
             ['Understand what a care-receiver profile is and who sees it', 'profile stores reusable information', 'family.care_profiles'],

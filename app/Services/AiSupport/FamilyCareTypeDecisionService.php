@@ -20,8 +20,13 @@ class FamilyCareTypeDecisionService
             return ['path' => 'human_24_7', 'reason' => 'You need continuous day-and-night coverage.', 'dates' => []];
         }
 
-        if (! $careContext && ! $this->looksLikeCareNeed($value)) {
-            return null;
+        if (! $careContext) {
+            if (preg_match('/\b(?:change|convert|edit|copy|duplicate|reuse|withdraw)\w*\b.{0,48}\brequest\b|\brequest\b.{0,48}\b(?:change|convert|edit|copy|duplicate|reuse|withdraw)\w*\b/iu', $value) === 1) {
+                return null;
+            }
+            if (! $this->looksLikeCareNeed($value)) {
+                return null;
+            }
         }
 
         $weekly = preg_match('/\b(?:every|each)\s+(?:week|weekday|weekend|monday|tuesday|wednesday|thursday|friday|saturday|sunday)s?\b|\b(?:weekly|regular|recurring)\s+(?:care|visits?|help)\b|\b(?:\d+|once|twice|three)\s+(?:days?\s+)?a\s+week\b|\bongoing\b.{0,24}\b(?:week|care|visit)/iu', $value) === 1

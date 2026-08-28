@@ -94,7 +94,7 @@ The table above remains the original inventory snapshot and is not the current B
 
 | ID | Family intent | Product today | AI explain now | AI do now | Recommended target behavior |
 | --- | --- | --- | --- | --- | --- |
-| FAM-START-001 | Understand what LoLo does for Families | UI | Yes | Guide | Explain the bounded marketplace and support model and offer the Support Center |
+| FAM-START-001 | Understand what LoLo does for Families | UI | Yes | Guide | Explain the bounded marketplace and support model and offer the current Family Care overview |
 | FAM-START-002 | Understand what non-medical care means | UI | Yes | Guide | Explain the non-medical boundary, offer Support, and transfer medical questions |
 | FAM-START-003 | Understand what the Family Care overview shows | UI | Yes | Navigate | Explain Overview, Actions, Schedule, Arrangements, and History |
 | FAM-START-004 | Open the Family Care overview | UI | Yes | Navigate | Open the current Care overview, never the retired dashboard |

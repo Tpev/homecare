@@ -387,7 +387,7 @@ if (count($mapped) !== 324) {
 
 $manifest = [
     'version' => 'family-intents-v1',
-        'generated_on' => '2026-08-27',
+        'generated_on' => '2026-08-28',
     'source' => 'docs/product/support-agent/38-family-intent-action-coverage-registry.md',
     'source_sha256' => hash('sha256', $markdown),
     'records' => $rows,

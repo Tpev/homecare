@@ -540,7 +540,9 @@ document.addEventListener('alpine:init', () => {
             const target = Array.from(document.querySelectorAll('[data-ai-target]'))
                 .find((element) => element.dataset.aiTarget === this.guidedTask.targetId);
             if (! target) {
-                if (attempt < 30) {
+                // Livewire navigation can take several seconds on a slower mobile
+                // connection. Keep looking before reporting a false missing target.
+                if (attempt < 120) {
                     this.guidedTimer = window.setTimeout(() => this.initializeGuidance(attempt + 1), 100);
                 } else {
                     this.reportGuidance('target_missing');

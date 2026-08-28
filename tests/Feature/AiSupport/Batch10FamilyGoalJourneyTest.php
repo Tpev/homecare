@@ -86,6 +86,33 @@ class Batch10FamilyGoalJourneyTest extends TestCase
         $this->assertSame('collect_request_details', AiSupportGoalJourney::query()->sole()->step_key);
     }
 
+    public function test_explicit_care_type_question_replaces_a_stale_unrelated_goal_with_real_path_choices(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $ticket = $this->ticket($family, 'Where can I change my credit card?');
+        Http::fake();
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $ticket->description);
+        $this->assertSame('payment_method', AiSupportGoalJourney::query()->resumable()->sole()->journey_type);
+
+        $question = 'I need help deciding whether I need one-time care or recurring care.';
+        app(AiSupportRuntimeService::class)->respond($family, $ticket->fresh(), $question);
+
+        Http::assertNothingSent();
+        $journey = AiSupportGoalJourney::query()->resumable()->sole();
+        $this->assertSame('care_request', $journey->journey_type);
+        $this->assertSame(AiSupportGoalJourney::STATE_AWAITING_CHOICE, $journey->state);
+        $action = AiSupportMessageAction::query()
+            ->where('action_type', AiSupportMessageAction::TYPE_PATH_CHOICES)
+            ->whereNull('invalidated_at')
+            ->sole();
+        $this->assertSame(['one_time', 'recurring', 'unsure', 'human'], collect($action->payload['choices'])->pluck('id')->all());
+        $this->assertSame(
+            'Is this help for one specific date, or will it repeat every week?',
+            SupportTicketMessage::query()->findOrFail($action->support_ticket_message_id)->body,
+        );
+    }
+
     public function test_irregular_dates_start_the_first_one_time_request_and_preserve_the_remainder(): void
     {
         [, $family] = $this->eligibleFamily();

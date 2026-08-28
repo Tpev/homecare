@@ -37,6 +37,14 @@ class FamilyGuidedAssistanceService
 
     public const INTENT_REGULAR_CARE = 'family_regular_care';
 
+    public const INTENT_CARE_ACTIONS = 'family_care_actions';
+
+    public const INTENT_CARE_SCHEDULE = 'family_care_schedule';
+
+    public const INTENT_CARE_ARRANGEMENTS = 'family_care_arrangements';
+
+    public const INTENT_CAREGIVERS = 'family_caregivers';
+
     public function __construct(
         private readonly FamilyAccountContext $familyAccounts,
         private readonly FamilyActionInboxBuilder $actions,
@@ -49,6 +57,26 @@ class FamilyGuidedAssistanceService
     public function intentFor(string $message): ?string
     {
         $message = mb_strtolower(trim($message));
+
+        // Current Family navigation commands are resolved before state-reading
+        // phrases. "Compare caregivers" means the caregiver directory unless
+        // the user explicitly refers to applicants or replies on a request.
+        if (preg_match('/\b(?:open|show|view|go\s+to|where\s+(?:is|can\s+i\s+(?:find|see)))\b.{0,36}\bcare\s+actions?\b/iu', $message)) {
+            return self::INTENT_CARE_ACTIONS;
+        }
+
+        if (preg_match('/\b(?:open|show|view|go\s+to|where\s+(?:is|can\s+i\s+(?:find|see)))\b.{0,36}\b(?:my\s+)?care\s+schedule\b/iu', $message)) {
+            return self::INTENT_CARE_SCHEDULE;
+        }
+
+        if (preg_match('/\b(?:open|show|view|go\s+to|where\s+(?:is|can\s+i\s+(?:find|see)))\b.{0,36}\b(?:my\s+)?care\s+arrangements?\b/iu', $message)) {
+            return self::INTENT_CARE_ARRANGEMENTS;
+        }
+
+        if (preg_match('/\b(?:find|browse|search\s+for|compare|where\s+can\s+i\s+(?:find|see))\b.{0,40}\bcaregivers?\b/iu', $message)
+            && preg_match('/\b(?:applicants?|applications?|applied|reply|replies|responses?|waiting|inbox|conversation|unread|messages?|my\s+request|this\s+request)\b/iu', $message) !== 1) {
+            return self::INTENT_CAREGIVERS;
+        }
 
         if (preg_match('/\b(?:inbox|unread|reply|conversation)\b|\b(?:message|messages)\b.{0,24}\b(?:caregiver|inbox|unread|read|reply|send|sent)\b|\b(?:open|show|check|read|reply\s+to|send)\b.{0,24}\bmessages?\b/iu', $message)) {
             return self::INTENT_MESSAGES;
@@ -82,7 +110,7 @@ class FamilyGuidedAssistanceService
             return self::INTENT_VISITS;
         }
 
-        if (preg_match('/\b(?:applicant|applicants|application|applications|caregiver\s+responses?|caregivers?\s+(?:apply|applied|interested|respond|responded)|caregivers?\b.{0,12}\bapplied|caregivers\b.{0,24}\bwaiting\b|waiting\b.{0,24}\bcaregivers)\b/iu', $message)) {
+        if (preg_match('/\b(?:applicant|applicants|application|applications|caregiver\s+responses?|caregivers?\s+(?:apply|applied|interested|reply|replied|respond|responded)|caregivers?\b.{0,12}\b(?:applied|replied)|caregivers\b.{0,24}\bwaiting\b|waiting\b.{0,24}\bcaregivers)\b/iu', $message)) {
             return self::INTENT_REQUESTS;
         }
 
@@ -117,6 +145,26 @@ class FamilyGuidedAssistanceService
             self::INTENT_MESSAGES => $this->messages($actor),
             self::INTENT_HISTORY => $this->history($actor, $stableIntentId),
             self::INTENT_REGULAR_CARE => $this->regularCare($actor),
+            self::INTENT_CARE_ACTIONS => $this->directNavigation(
+                'Care Actions collects decisions and problems that need your attention. I can open it and highlight the right area.',
+                'family.care_actions',
+                'Open Care Actions',
+            ),
+            self::INTENT_CARE_SCHEDULE => $this->directNavigation(
+                'Care Schedule shows your upcoming visits. I can open it and highlight the schedule.',
+                'family.care_schedule',
+                'Open Care Schedule',
+            ),
+            self::INTENT_CARE_ARRANGEMENTS => $this->directNavigation(
+                'Care Arrangements shows recurring care and care that is still being arranged. I can open it and highlight the right area.',
+                'family.care_arrangements',
+                'Open Care Arrangements',
+            ),
+            self::INTENT_CAREGIVERS => $this->directNavigation(
+                'Find Caregivers lets you browse and compare available caregiver profiles. I can open it and highlight the search and filters.',
+                'family.caregivers',
+                'Open Find Caregivers',
+            ),
             default => throw new \InvalidArgumentException('Unsupported Family assistance intent.'),
         };
 
@@ -143,6 +191,16 @@ class FamilyGuidedAssistanceService
             $guides,
             $intent,
         );
+    }
+
+    /** @return array{string,list<array<string,mixed>>,string} */
+    private function directNavigation(string $message, string $targetId, string $label): array
+    {
+        return [
+            $message,
+            [$this->guide(AiSupportGuidedTask::TYPE_FAMILY_REQUEST, $targetId, $label)],
+            'current_family_navigation',
+        ];
     }
 
     /** @return array{string,list<array<string,mixed>>,string} */
@@ -408,7 +466,7 @@ class FamilyGuidedAssistanceService
 
             return [
                 'You have '.$waiting->count().' submitted-hours review items waiting:'."\n".$lines,
-                $waiting->take(6)->map(fn (array $item): array => $this->guideForAction($item))->all(),
+                $waiting->take(6)->map(fn (array $item): array => $this->guideForAction($item, true))->all(),
                 'hours_need_attention',
             ];
         }
@@ -859,7 +917,7 @@ class FamilyGuidedAssistanceService
     }
 
     /** @param array<string,mixed> $item @return array<string,mixed> */
-    private function guideForAction(array $item): array
+    private function guideForAction(array $item, bool $includeSubject = false): array
     {
         $taskType = match ((string) $item['type']) {
             'applicants' => AiSupportGuidedTask::TYPE_FAMILY_REQUEST,
@@ -874,10 +932,16 @@ class FamilyGuidedAssistanceService
             || ($targetId === 'family.regular_care.attention'
                 && str_contains(mb_strtolower((string) ($item['title'] ?? '')), 'payment'));
 
+        $label = (string) $item['label'];
+        $subject = trim((string) ($item['subject'] ?? ''));
+        if ($includeSubject && $subject !== '') {
+            $label .= ' — '.$subject;
+        }
+
         return $this->guide(
             $taskType,
             $targetId,
-            (string) $item['label'],
+            $label,
             $item['resource_type'] ?? null,
             isset($item['resource_id']) ? (int) $item['resource_id'] : null,
             $isPaymentAction ? 'family_payment_attention_v1' : null,

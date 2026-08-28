@@ -73,6 +73,12 @@ class AiSupportPricingTruth
     {
         if (preg_match('/\b(\d{1,3}(?:\.\d{1,2})?)\s*(?:hours?|hrs?)\b/i', $message, $match) === 1) {
             $minutes = (int) round(((float) $match[1]) * 60);
+        } elseif (preg_match('/\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s*[- ]\s*hours?\b/i', $message, $match) === 1) {
+            $hours = array_search(mb_strtolower($match[1]), [
+                1 => 'one', 2 => 'two', 3 => 'three', 4 => 'four', 5 => 'five', 6 => 'six',
+                7 => 'seven', 8 => 'eight', 9 => 'nine', 10 => 'ten', 11 => 'eleven', 12 => 'twelve',
+            ], true);
+            $minutes = ((int) $hours) * 60;
         } elseif (preg_match('/\b(\d{1,4})\s*(?:minutes?|mins?)\b/i', $message, $match) === 1) {
             $minutes = (int) $match[1];
         } else {

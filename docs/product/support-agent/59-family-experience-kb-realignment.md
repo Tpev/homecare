@@ -1,8 +1,8 @@
 # Family Experience and Knowledge-Base Realignment
 
-Status: Implemented in source; deployment and production KB publication pending
+Status: Deployed and published for the two-user Family pilot; August 28 browser corrections pending deployment
 
-Implemented: August 27, 2026
+Implemented: August 27, 2026; production package published August 28, 2026
 
 Scope: Family AI Support only; pilot membership and Live for everyone are unchanged
 
@@ -54,6 +54,8 @@ The package reads the canonical definitions from the existing source catalogs ra
 7. becomes an exact no-op when run again.
 
 It never changes AI availability, pilot grants, users, care records, payment records, or notification records.
+
+Production publication created the one missing canonical entry, updated the one unpublished draft, revised 49 published entries, and published all 51 definitions. An immediate second plan returned 51 exact no-ops and zero conflicts. The executable intent plan returned 324 of 324 registry intents and 324 of 324 explicit KB mappings.
 
 ## Intent and evaluation changes
 

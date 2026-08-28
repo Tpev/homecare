@@ -3,6 +3,7 @@
 namespace Tests\Feature\AiSupport;
 
 use App\Models\AiSupportGuidedTask;
+use App\Models\AiSupportGoalJourney;
 use App\Models\AiSupportMessageAction;
 use App\Models\CareBooking;
 use App\Models\CareBookingChangeRequest;
@@ -53,8 +54,67 @@ class FamilyGuidedAssistanceTest extends TestCase
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_REQUESTS, $service->intentFor('What is the status of my care request?'));
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_REGULAR_CARE, $service->intentFor('When is my next regular care visit?'));
         $this->assertSame(FamilyGuidedAssistanceService::INTENT_REGULAR_CARE, $service->intentFor('Show me my regular care plan.'));
+        $this->assertSame(FamilyGuidedAssistanceService::INTENT_CARE_ACTIONS, $service->intentFor('Open Care Actions.'));
+        $this->assertSame(FamilyGuidedAssistanceService::INTENT_CARE_SCHEDULE, $service->intentFor('Open my care schedule.'));
+        $this->assertSame(FamilyGuidedAssistanceService::INTENT_CARE_ARRANGEMENTS, $service->intentFor('Open my Care Arrangements.'));
+        $this->assertSame(FamilyGuidedAssistanceService::INTENT_CAREGIVERS, $service->intentFor('Where can I find and compare caregivers?'));
+        $this->assertSame(FamilyGuidedAssistanceService::INTENT_REQUESTS, $service->intentFor('Compare the caregivers who replied to my request.'));
         $this->assertNull($service->intentFor('I want to create a one-time care request.'));
         $this->assertNull($service->intentFor('I want to create a regular care request.'));
+    }
+
+    public function test_current_family_navigation_commands_open_exact_new_layout_destinations_without_a_model(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        Http::fake();
+
+        $cases = [
+            ['Open Care Actions.', 'family.care_actions', 'Open Care Actions'],
+            ['Open my care schedule.', 'family.care_schedule', 'Open Care Schedule'],
+            ['Open my Care Arrangements.', 'family.care_arrangements', 'Open Care Arrangements'],
+            ['Where can I find and compare caregivers?', 'family.caregivers', 'Open Find Caregivers'],
+        ];
+
+        foreach ($cases as [$question, $target, $label]) {
+            $ticket = $this->automatedTicket($family, $question);
+            app(AiSupportRuntimeService::class)->respond($family, $ticket, $question);
+
+            $task = AiSupportGuidedTask::query()->where('support_ticket_id', $ticket->id)->sole();
+            $this->assertSame($target, $task->navigation_target_id);
+            $this->assertSame(
+                $label,
+                AiSupportMessageAction::query()
+                    ->where('support_ticket_id', $ticket->id)
+                    ->where('action_type', AiSupportMessageAction::TYPE_GUIDED_TASK)
+                    ->sole()
+                    ->payload['label'],
+            );
+        }
+
+        Http::assertNothingSent();
+    }
+
+    public function test_explicit_current_layout_navigation_replaces_a_stale_unrelated_goal(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        Http::fake();
+        $ticket = $this->automatedTicket($family, 'Where can I change my credit card?');
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $ticket->description);
+        $this->assertSame('payment_method', AiSupportGoalJourney::query()->resumable()->sole()->journey_type);
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket->fresh(), 'Open my care schedule.');
+
+        $this->assertFalse(AiSupportGoalJourney::query()->resumable()->exists());
+        $this->assertSame(
+            'family.care_schedule',
+            AiSupportGuidedTask::query()
+                ->where('support_ticket_id', $ticket->id)
+                ->whereIn('state', AiSupportGuidedTask::OPEN_STATES)
+                ->sole()
+                ->navigation_target_id,
+        );
+        Http::assertNothingSent();
     }
 
     public function test_attention_overview_reads_authoritative_account_data_and_offers_exact_actions_without_model_call(): void
@@ -214,6 +274,14 @@ class FamilyGuidedAssistanceTest extends TestCase
         $this->assertStringContainsString('Monday hours', $hoursBody);
         $this->assertStringContainsString('Tuesday hours', $hoursBody);
         $this->assertStringNotContainsString('Old reviewed visit', $hoursBody);
+        $hoursLabels = AiSupportMessageAction::query()
+            ->where('support_ticket_id', $hoursTicket->id)
+            ->where('action_type', AiSupportMessageAction::TYPE_GUIDED_TASK)
+            ->get()
+            ->map(fn (AiSupportMessageAction $action): string => (string) data_get($action->payload, 'label'));
+        $this->assertCount(2, $hoursLabels);
+        $this->assertCount(2, $hoursLabels->unique());
+        $this->assertTrue($hoursLabels->every(fn (string $label): bool => str_starts_with($label, 'Review hours — ')));
 
         $applicantTicket = $this->automatedTicket($family, 'Do I have any caregivers waiting for me to review or hire?');
         app(AiSupportRuntimeService::class)->respond($family, $applicantTicket, $applicantTicket->description);

@@ -757,7 +757,7 @@ $entries = [
         'What LoLo helps Families do',
         'LoLo helps Families arrange non-medical home care. A Family can create a one-time or recurring care request, review interested caregivers, hire through the normal booking and payment flow, manage visits and submitted hours, and keep care information together. AI Support can explain the app, read authorized Family information, open the right page, prepare supported changes, complete specifically enabled actions after confirmation, or transfer this same conversation to a person.',
         'Getting started',
-        'support.center',
+        'family.care_requests',
         ['FAM-START-001'],
         ['LoLo helps Families arrange and manage non-medical home care.', 'AI Support can explain, read authorized state, guide, prepare, complete specifically enabled confirmed actions, and transfer to a person.'],
         ['A caregiver match, response, hire, payment, or completed action that is not confirmed by current application state.', 'Medical care or emergency service.'],

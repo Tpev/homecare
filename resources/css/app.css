@@ -563,11 +563,11 @@
 
 @media (min-width: 640px) {
     .ai-guide-strip {
-        right: auto;
+        right: 10rem;
         bottom: max(1.5rem, env(safe-area-inset-bottom));
-        left: 50%;
-        width: min(46rem, calc(100vw - 12rem));
-        transform: translateX(-50%);
+        left: auto;
+        width: min(46rem, calc(100vw - 12.5rem));
+        transform: none;
         flex-direction: row;
         align-items: center;
         justify-content: space-between;

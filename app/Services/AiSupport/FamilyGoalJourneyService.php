@@ -111,7 +111,28 @@ class FamilyGoalJourneyService
             }
         }
 
-        $decision = $this->careTypes->decide($message, $active?->journey_type === 'care_request');
+        $explicitCareTypeQuestion = preg_match(
+            '/\b(?:one[- ]?time|one[- ]?off|single\s+visit)\b.{0,80}\b(?:recurring|regular|weekly)\b|\b(?:recurring|regular|weekly)\b.{0,80}\b(?:one[- ]?time|one[- ]?off|single\s+visit)\b/iu',
+            $normalized,
+        ) === 1
+            && preg_match('/\b(?:change|convert|edit|copy|duplicate|reuse|withdraw)\w*\b.{0,48}\brequest\b|\brequest\b.{0,48}\b(?:change|convert|edit|copy|duplicate|reuse|withdraw)\w*\b/iu', $normalized) !== 1;
+        if ($explicitCareTypeQuestion && $active && $active->journey_type !== 'care_request') {
+            $this->cancelActive($actor, $ticket, 'superseded_by_care_type_decision');
+            $active = null;
+        }
+
+        $decision = $this->careTypes->decide(
+            $message,
+            $active?->journey_type === 'care_request' || $explicitCareTypeQuestion,
+        );
+        if ($explicitCareTypeQuestion
+            && preg_match('/\b(?:decid|whether|which|not\s+sure|unsure)\w*\b/iu', $normalized) === 1) {
+            $decision = [
+                'path' => 'clarify',
+                'reason' => 'We can decide from whether this is one visit or repeats every week.',
+                'dates' => [],
+            ];
+        }
         $waitingForCareType = $active?->journey_type === 'care_request'
             && ! $draft
             && in_array($active->step_key, ['choose_care_type', 'clarify_care_type'], true);

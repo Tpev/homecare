@@ -4,9 +4,9 @@
 
 return [
     'version' => 'family-intents-v1',
-    'generated_on' => '2026-08-27',
+    'generated_on' => '2026-08-28',
     'source' => 'docs/product/support-agent/38-family-intent-action-coverage-registry.md',
-    'source_sha256' => '6587c85beb05ef447c03488642b54f6241ae5b8f471be4cc227c61cf1a72b07a',
+    'source_sha256' => 'be5c24b40121b4513f20f17dfb3b7990b254c992f659e16b36777b52f6224e97',
     'records' => [
         0 => [
             'intent_id' => 'FAM-START-001',
@@ -54,7 +54,8 @@ return [
             'contracts' => [
                 'reader' => null,
                 'destinations' => [
-                    0 => 'support.center',
+                    0 => 'family.care_requests',
+                    1 => 'support.center',
                 ],
                 'guided_task' => null,
                 'prefill' => null,
@@ -66,7 +67,7 @@ return [
                 'product' => 'UI',
                 'explain' => 'Yes',
                 'action' => 'Guide',
-                'target_behavior' => 'Explain the bounded marketplace and support model and offer the Support Center',
+                'target_behavior' => 'Explain the bounded marketplace and support model and offer the current Family Care overview',
                 'unsupported_behavior' => 'Use only the declared stages and current authorized state. Never infer or claim a write.',
             ],
             'never_in_chat' => [

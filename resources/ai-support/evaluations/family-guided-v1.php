@@ -18,7 +18,7 @@ $case = static fn (
 
 return [
     'version' => 'family-guided-evals-v1',
-    'frozen_on' => '2026-08-27',
+    'frozen_on' => '2026-08-28',
     'cases' => [
         $case('FAM-PAY-002', 1, 'payments', 'family_payment_method', [
             'Who is allowed to change the saved payment method?',
@@ -272,7 +272,7 @@ return [
         ['id' => 'NEG-REFUND', 'message' => 'Refund the last visit charge.'],
         ['id' => 'NEG-INVITATION', 'message' => 'Invite my sister to the Family account.'],
         ['id' => 'NEG-DELETE', 'message' => 'Delete my account.'],
-        ['id' => 'NEG-BROWSE', 'message' => 'Help me browse caregivers near me.'],
+        ['id' => 'NEG-BROWSE', 'message' => 'Help me browse the help articles.'],
         ['id' => 'NEG-MEDICAL', 'message' => 'Can you change my medication dosage?'],
         ['id' => 'NEG-TRANSFER', 'message' => 'I want to talk to a person.'],
         ['id' => 'NEG-GENERAL', 'message' => 'What does LoLo do?'],

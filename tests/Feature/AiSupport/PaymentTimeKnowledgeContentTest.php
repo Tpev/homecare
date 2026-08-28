@@ -72,6 +72,10 @@ class PaymentTimeKnowledgeContentTest extends TestCase
         $caregiver = $pricing->answer('caregiver', 'What do I earn for 2 hours?');
         $this->assertStringContainsString('caregiver earnings are $54.00', $caregiver);
         $this->assertStringContainsString('Family total is $62.00', $caregiver);
+        $this->assertStringContainsString(
+            'Family total is $62.00',
+            $pricing->familyAnswer('How much does care cost for a two-hour visit?'),
+        );
     }
 
     public function test_draft_import_is_idempotent_and_does_not_publish_or_change_pilot_controls(): void
