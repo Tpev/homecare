@@ -8,6 +8,7 @@ use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportRequestDraft;
 use App\Models\CareRequest;
 use App\Models\CareTask;
+use App\Models\FamilyHouseholdProfile;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Models\User;
@@ -85,6 +86,70 @@ class Batch10FamilyGoalJourneyTest extends TestCase
         $this->assertSame(CareRequest::TYPE_RECURRING, $draft->request_type);
         $this->assertSame('explicit_user_selection', data_get($draft->payload, '_provenance.request_type'));
         $this->assertSame('collect_request_details', AiSupportGoalJourney::query()->sole()->step_key);
+    }
+
+    public function test_complete_recurring_message_is_applied_deterministically_after_the_explicit_choice(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $account = app(FamilyAccountContext::class)->account($family);
+        FamilyHouseholdProfile::query()->create([
+            'family_account_id' => $account->id,
+            'family_user_id' => $family->id,
+            'address_line1' => '10 Oak Street',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+            'preferred_response_hours' => 12,
+        ]);
+        $companionship = CareTask::query()->create(['name' => 'Companionship']);
+        $dailyLiving = CareTask::query()->create(['name' => 'Daily living assistance']);
+        $message = 'I need recurring care for Production Test Recipient every Monday starting October 19, 2026, from 9:00 AM to 12:00 PM, for companionship and help with daily routines.';
+        $ticket = $this->ticket($family, $message);
+        Http::fake();
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $message);
+        $choice = AiSupportMessageAction::query()->where('action_type', AiSupportMessageAction::TYPE_PATH_CHOICES)->sole();
+        $selected = app(FamilyGoalJourneyService::class)->chooseCarePath(
+            $family,
+            $ticket,
+            $choice->id,
+            CareRequest::TYPE_RECURRING,
+        );
+        app(AiSupportRuntimeService::class)->respond($family, $ticket->fresh(), (string) $selected['continue_message']);
+
+        Http::assertNothingSent();
+        $draft = AiSupportRequestDraft::query()->sole();
+        $this->assertSame(AiSupportRequestDraft::STATE_READY_FOR_RECAP, $draft->state);
+        $this->assertSame('Production Test Recipient', data_get($draft->payload, 'recipient_full_name'));
+        $this->assertFalse((bool) data_get($draft->payload, 'recipient_is_requester'));
+        $this->assertEqualsCanonicalizing([$companionship->id, $dailyLiving->id], data_get($draft->payload, 'task_ids'));
+        $this->assertSame([1], data_get($draft->payload, 'recurring_days'));
+        $this->assertSame('2026-10-19', data_get($draft->payload, 'recurring_starts_on'));
+        $this->assertSame('09:00', data_get($draft->payload, 'recurring_schedule.0.start_time'));
+        $this->assertSame(180, data_get($draft->payload, 'recurring_schedule.0.duration_minutes'));
+        $this->assertDatabaseHas('ai_support_message_actions', [
+            'support_ticket_id' => $ticket->id,
+            'action_type' => AiSupportMessageAction::TYPE_RECAP,
+        ]);
+        $this->assertDatabaseCount('care_requests', 0);
+    }
+
+    public function test_stop_without_any_active_task_answers_safely_without_provider_or_handoff(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $ticket = $this->ticket($family, 'Stop this task.');
+        Http::fake();
+
+        app(AiSupportRuntimeService::class)->respond($family, $ticket, $ticket->description);
+
+        Http::assertNothingSent();
+        $this->assertSame(SupportTicket::RESPONDER_MODE_AUTOMATED, $ticket->fresh()->responder_mode);
+        $this->assertSame(
+            'There is no active task to stop. Nothing in the app was changed.',
+            $ticket->publicMessages()->reorder()->latest()->firstOrFail()->body,
+        );
+        $this->assertDatabaseCount('ai_support_goal_journeys', 0);
+        $this->assertDatabaseCount('care_requests', 0);
     }
 
     public function test_information_lookup_does_not_create_a_sticky_goal_before_a_care_type_question(): void

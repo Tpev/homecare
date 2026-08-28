@@ -143,7 +143,8 @@ document.addEventListener('alpine:init', () => {
                         && (node === target || node.contains(target))));
                 const alreadyGuided = target.dataset.aiGuided === 'true'
                     && target.classList.contains('ai-guide-target-highlight');
-                if (alreadyGuided && ! targetWasInserted) return;
+                const collapsedGuidedDetails = target instanceof HTMLDetailsElement && ! target.open;
+                if (alreadyGuided && ! targetWasInserted && ! collapsedGuidedDetails) return;
 
                 this.$nextTick(() => this.initializeGuidance());
             });
@@ -597,6 +598,7 @@ document.addEventListener('alpine:init', () => {
 
             this.guidedReportKey = key;
             Promise.resolve(this.$wire.guidedTaskArrived(this.guidedTask.id, result))
+                .then(() => this.$nextTick(() => this.initializeGuidance()))
                 .catch(() => {
                     this.guidedReportKey = '';
                     this.announcement = 'The guided step could not be verified.';

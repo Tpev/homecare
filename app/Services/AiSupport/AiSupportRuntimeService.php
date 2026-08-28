@@ -81,6 +81,12 @@ class AiSupportRuntimeService
             return;
         }
 
+        if ($actor->role === 'family' && $this->isStopWithoutActiveTask($newestMessage)) {
+            $this->automatedMessage($ticket, 'There is no active task to stop. Nothing in the app was changed.');
+
+            return;
+        }
+
         if (in_array($actor->role, ['family', 'caregiver'], true)
             && $this->pricing->isPricingQuestion($newestMessage)
             && $this->knowledge->forIntent(
@@ -515,6 +521,14 @@ class AiSupportRuntimeService
         }
 
         $this->handoff->transfer($actor, $ticket, 'knowledge_or_scope_gap');
+    }
+
+    private function isStopWithoutActiveTask(string $message): bool
+    {
+        return preg_match(
+            '/^(?:please\s+)?(?:stop|cancel)(?:\s+(?:this|the|my))?(?:\s+(?:task|help|guidance|journey|process|step))?(?:\s+please)?[.!]?$/iu',
+            trim($message),
+        ) === 1;
     }
 
     private function deterministicGuard(string $message): ?string

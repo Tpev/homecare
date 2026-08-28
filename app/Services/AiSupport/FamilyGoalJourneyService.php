@@ -7,10 +7,12 @@ use App\Models\AiSupportGuidedTask;
 use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportRequestDraft;
 use App\Models\CareRequest;
+use App\Models\CareTask;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
 use App\Models\User;
 use App\Services\FamilyAccounts\FamilyAccountContext;
+use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -35,11 +37,20 @@ class FamilyGoalJourneyService
         $this->authorize($actor, $ticket);
         $this->resumeTransferred($actor, $ticket);
         $active = $this->activeFor($actor, $ticket);
+        $draft = $this->requestDraft($actor, $ticket);
         $normalized = mb_strtolower(trim($message));
+        $stopRequested = preg_match('/\b(?:stop|cancel)\s+(?:this|the|my)\s+(?:task|help|journey|process)\b|\bnever mind about this\b/iu', $normalized) === 1;
 
-        if ($active && preg_match('/\b(?:stop|cancel)\s+(?:this|the|my)\s+(?:task|help|journey|process)\b|\bnever mind about this\b/iu', $normalized)) {
+        if ($active && $stopRequested) {
             $this->cancelActive($actor, $ticket, 'user_cancelled');
             $this->automatedMessage($ticket, 'I stopped this task. No care, payment, profile, or other app record was changed.');
+
+            return true;
+        }
+
+        if (! $active && $draft && $stopRequested) {
+            $this->drafts->discard($actor, $ticket);
+            $this->automatedMessage($ticket, 'I stopped the saved request draft. No care request or other app record was created.');
 
             return true;
         }
@@ -69,7 +80,6 @@ class FamilyGoalJourneyService
             return true;
         }
 
-        $draft = $this->requestDraft($actor, $ticket);
         if (! $active && $draft && preg_match('/\b(?:continue|resume|finish)\b.{0,24}\b(?:care|request|draft)\b/iu', $normalized)) {
             $active = $this->begin($actor, $ticket, 'care_request', null, [
                 'plain_goal' => 'Finish the saved care request',
@@ -87,10 +97,6 @@ class FamilyGoalJourneyService
 
         if ($active?->journey_type === 'care_request' && $draft) {
             if ($this->handleDraftModificationReply($actor, $ticket, $draft, $message)) {
-                return true;
-            }
-
-            if ($this->handleRecipientIdentityReply($actor, $ticket, $draft, $message)) {
                 return true;
             }
 
@@ -112,6 +118,14 @@ class FamilyGoalJourneyService
                     'I changed this to '.$type.'. I kept the recipient, care tasks, address, and notes that still apply. '.($question ?: 'The request is ready to review again.'),
                 );
 
+                return true;
+            }
+
+            if ($this->handleDraftCollectionReply($actor, $ticket, $draft, $message)) {
+                return true;
+            }
+
+            if ($this->handleRecipientIdentityReply($actor, $ticket, $draft, $message)) {
                 return true;
             }
         }
@@ -873,6 +887,278 @@ class FamilyGoalJourneyService
         return $draft?->isUsable() ? $draft : null;
     }
 
+    private function handleDraftCollectionReply(
+        User $actor,
+        SupportTicket $ticket,
+        AiSupportRequestDraft $draft,
+        string $message,
+    ): bool {
+        $payload = (array) $draft->payload;
+        $nextField = (string) data_get($this->drafts->validatePayload($actor, $draft), 'errors.0.field', '');
+        $patch = ['patch_fields' => []];
+        $set = static function (string $field, mixed $value) use (&$patch): void {
+            if (! in_array($field, $patch['patch_fields'], true)) {
+                $patch['patch_fields'][] = $field;
+            }
+            $patch[$field] = $value;
+        };
+
+        if (blank($payload['recipient_full_name'] ?? null)) {
+            $recipient = $this->recipientFromMessage($actor, $message, $nextField === 'recipient_full_name');
+            foreach ($recipient as $field => $value) {
+                $set($field, $value);
+            }
+        }
+
+        $taskIds = $this->careTaskIdsFromMessage($message);
+        if ($taskIds !== []) {
+            $set('task_ids', $taskIds);
+        }
+
+        if ($draft->request_type === CareRequest::TYPE_RECURRING) {
+            $mentionedDays = $this->mentionedWeekdays($message);
+            if ($mentionedDays !== []) {
+                $set('recurring_days', $mentionedDays);
+            }
+
+            $startDate = $this->dateFromMessage($message, $nextField === 'recurring_starts_on');
+            if ($startDate !== null) {
+                $set('recurring_starts_on', $startDate);
+            }
+
+            $range = $this->timeRangeFromMessage($message);
+            $startTime = $range['start_time'] ?? ($nextField === 'recurring_schedule' ? $this->startTimeFromMessage($message) : null);
+            $duration = $range['duration_minutes'] ?? $this->durationFromMessage($message);
+            $scheduleDays = $mentionedDays !== []
+                ? $mentionedDays
+                : array_values(array_unique(array_map('intval', (array) ($payload['recurring_days'] ?? []))));
+            if ($scheduleDays !== [] && ($startTime !== null || $duration !== null)) {
+                $existing = collect((array) ($payload['recurring_schedule'] ?? []))->keyBy(
+                    fn (array $slot): int => (int) ($slot['day'] ?? -1),
+                );
+                $schedule = collect($scheduleDays)->map(function (int $day) use ($existing, $startTime, $duration): array {
+                    $slot = (array) $existing->get($day, []);
+
+                    return [
+                        'day' => $day,
+                        'start_time' => $startTime ?? (string) ($slot['start_time'] ?? ''),
+                        'duration_minutes' => $duration ?? (int) ($slot['duration_minutes'] ?? 0),
+                    ];
+                })->all();
+                if (collect($schedule)->every(fn (array $slot): bool => filled($slot['start_time']))) {
+                    $set('recurring_schedule', $schedule);
+                }
+            }
+        } else {
+            $visitDate = $this->dateFromMessage($message, $nextField === 'requested_start_date');
+            if ($visitDate !== null) {
+                $set('requested_start_date', $visitDate);
+            }
+            $range = $this->timeRangeFromMessage($message);
+            $startTime = $range['start_time'] ?? ($nextField === 'requested_start_time' ? $this->startTimeFromMessage($message) : null);
+            $duration = $range['duration_minutes'] ?? $this->durationFromMessage($message);
+            if ($startTime !== null) {
+                $set('requested_start_time', $startTime);
+            }
+            if ($duration !== null) {
+                $set('duration_minutes', $duration);
+            }
+        }
+
+        $trimmed = trim($message, " \t\n\r\0\x0B.,");
+        if ($nextField === 'address_line1' && preg_match('/\d/u', $trimmed) === 1 && mb_strlen($trimmed) <= 255) {
+            $set('address_line1', $trimmed);
+        } elseif ($nextField === 'city' && preg_match('/^[\pL .\'-]{2,80}$/u', $trimmed) === 1) {
+            $set('city', $trimmed);
+        } elseif ($nextField === 'state' && preg_match('/^[A-Za-z]{2}$/', $trimmed) === 1) {
+            $set('state', strtoupper($trimmed));
+        } elseif ($nextField === 'zip' && preg_match('/^\d{5}(?:-\d{4})?$/', $trimmed) === 1) {
+            $set('zip', $trimmed);
+        }
+
+        if ($patch['patch_fields'] === []) {
+            return false;
+        }
+
+        $updated = $this->drafts->applyPatch($actor, $ticket, $patch, $draft->version);
+        $ready = $updated->state === AiSupportRequestDraft::STATE_READY_FOR_RECAP;
+        $this->syncCareDraft($actor, $ticket, $ready);
+        if ($ready) {
+            $this->recaps->issue($actor, $ticket, $updated);
+        } else {
+            $this->automatedMessage($ticket, $this->drafts->nextQuestion($actor, $updated) ?: 'Your request is ready to review.');
+        }
+
+        return true;
+    }
+
+    /** @return array<string,mixed> */
+    private function recipientFromMessage(User $actor, string $message, bool $acceptPlainName): array
+    {
+        $normalized = mb_strtolower(trim($message));
+        if (preg_match('/\b(?:care|help|support)\s+(?:is\s+)?for\s+(?:me|myself)\b|^(?:me|myself)[.!]?$/iu', $normalized) === 1) {
+            return [
+                'recipient_is_requester' => true,
+                'recipient_full_name' => $actor->name,
+                'recipient_relationship' => 'Self',
+            ];
+        }
+
+        $relationship = match (true) {
+            preg_match('/\b(?:my\s+)?(?:mother|mom|mum)\b/iu', $normalized) === 1 => 'Mother',
+            preg_match('/\b(?:my\s+)?(?:father|dad)\b/iu', $normalized) === 1 => 'Father',
+            preg_match('/\b(?:my\s+)?(?:wife|husband|spouse|partner)\b/iu', $normalized) === 1 => 'Spouse',
+            preg_match('/\b(?:my\s+)?(?:grandmother|grandma)\b/iu', $normalized) === 1 => 'Grandmother',
+            preg_match('/\b(?:my\s+)?(?:grandfather|grandpa)\b/iu', $normalized) === 1 => 'Grandfather',
+            preg_match('/\b(?:my\s+)?(?:sister|brother|sibling)\b/iu', $normalized) === 1 => 'Sibling',
+            preg_match('/\b(?:my\s+)?(?:son|daughter|child)\b/iu', $normalized) === 1 => 'Child',
+            default => null,
+        };
+
+        $name = null;
+        foreach ([
+            '/\b(?:someone|somebody)\s+else\s*[:,-]?\s*(.+?)[.!]?$/iu',
+            '/\b(?:recurring|regular|one[- ]?time)?\s*(?:care|help|support)\s+for\s+(.+?)(?=\s+(?:every|each|on|starting|beginning|from|at)\b|[,.;]|$)/iu',
+        ] as $pattern) {
+            if (preg_match($pattern, trim($message), $match) === 1 && $this->looksLikePersonName((string) $match[1])) {
+                $name = trim((string) $match[1]);
+                break;
+            }
+        }
+        if ($name === null && $acceptPlainName && $this->looksLikePersonName($message)) {
+            $name = trim($message, " \t\n\r\0\x0B.,");
+        }
+
+        $isOther = $relationship !== null
+            || $name !== null
+            || preg_match('/\b(?:someone|somebody)\s+else\b|\banother\s+person\b|\bnot\s+(?:me|myself)\b/iu', $normalized) === 1;
+        if (! $isOther) {
+            return [];
+        }
+
+        return array_filter([
+            'recipient_is_requester' => false,
+            'recipient_full_name' => $name,
+            'recipient_relationship' => $relationship ?? ($name !== null ? 'Family member' : null),
+        ], static fn (mixed $value): bool => $value !== null);
+    }
+
+    private function looksLikePersonName(string $value): bool
+    {
+        $value = trim($value, " \t\n\r\0\x0B.,");
+        if ($value === '' || mb_strlen($value) > 80 || preg_match('/^[\pL][\pL\pM\' -]{0,79}$/u', $value) !== 1) {
+            return false;
+        }
+
+        return preg_match('/\b(?:care|help|support|companionship|routine|daily|meal|housekeep|transport|medication|errand|monday|tuesday|wednesday|thursday|friday|saturday|sunday|someone|somebody|mother|father|mom|dad|hours?|minutes?)\b/iu', $value) !== 1;
+    }
+
+    /** @return list<int> */
+    private function careTaskIdsFromMessage(string $message): array
+    {
+        $normalized = mb_strtolower($message);
+        $aliases = [
+            'Companionship' => ['companionship', 'conversation', 'company'],
+            'Meal preparation' => ['meal preparation', 'meal prep', 'cooking', 'prepare meals'],
+            'Light housekeeping' => ['light housekeeping', 'housekeeping', 'light cleaning'],
+            'Transportation' => ['transportation', 'transport', 'ride to', 'rides to'],
+            'Medication reminders' => ['medication reminder', 'medicine reminder'],
+            'Errands' => ['errands', 'grocery shopping', 'shopping help'],
+            'Daily living assistance' => ['daily living', 'daily routine', 'daily routines', 'personal routine'],
+        ];
+
+        return CareTask::query()->orderBy('id')->get(['id', 'name'])
+            ->filter(function (CareTask $task) use ($normalized, $aliases): bool {
+                $needles = array_values(array_unique([
+                    mb_strtolower($task->name),
+                    ...($aliases[$task->name] ?? []),
+                ]));
+
+                return collect($needles)->contains(fn (string $needle): bool => str_contains($normalized, $needle));
+            })
+            ->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    private function dateFromMessage(string $message, bool $acceptStandalone): ?string
+    {
+        $normalized = mb_strtolower(trim($message));
+        if (preg_match('/\btoday\b/iu', $normalized) === 1) {
+            return now('America/New_York')->toDateString();
+        }
+        if (preg_match('/\btomorrow\b/iu', $normalized) === 1) {
+            return now('America/New_York')->addDay()->toDateString();
+        }
+
+        $patterns = [
+            '/\b\d{4}-\d{2}-\d{2}\b/u',
+            '/\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:st|nd|rd|th)?(?:,)?\s+\d{4}\b/iu',
+            '/\b\d{1,2}\/\d{1,2}\/\d{4}\b/u',
+        ];
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $message, $match) === 1) {
+                try {
+                    return CarbonImmutable::parse(preg_replace('/(\d)(?:st|nd|rd|th)\b/i', '$1', $match[0]), 'America/New_York')->toDateString();
+                } catch (\Throwable) {
+                    return null;
+                }
+            }
+        }
+
+        if ($acceptStandalone && preg_match('/^(?:next\s+)?(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/iu', trim($message, " \t\n\r\0\x0B.,")) === 1) {
+            try {
+                return CarbonImmutable::parse(trim($message, " \t\n\r\0\x0B.,"), 'America/New_York')->toDateString();
+            } catch (\Throwable) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    /** @return array{start_time:string,duration_minutes:int}|null */
+    private function timeRangeFromMessage(string $message): ?array
+    {
+        if (preg_match('/\b(?:from\s+)?(\d{1,2})(?::([0-5]\d))?\s*(a\.?m\.?|p\.?m\.?)\s*(?:to|until|through|-)\s*(\d{1,2})(?::([0-5]\d))?\s*(a\.?m\.?|p\.?m\.?)\b/iu', $message, $match) !== 1) {
+            return null;
+        }
+
+        $start = $this->timePartsToMinutes((int) $match[1], (int) ($match[2] ?? 0), (string) $match[3]);
+        $end = $this->timePartsToMinutes((int) $match[4], (int) ($match[5] ?? 0), (string) $match[6]);
+        if ($start === null || $end === null) {
+            return null;
+        }
+        if ($end <= $start) {
+            $end += 24 * 60;
+        }
+        $duration = $end - $start;
+        if ($duration < 60 || $duration > 720 || $duration % 30 !== 0) {
+            return null;
+        }
+
+        return [
+            'start_time' => sprintf('%02d:%02d', intdiv($start, 60), $start % 60),
+            'duration_minutes' => $duration,
+        ];
+    }
+
+    private function timePartsToMinutes(int $hour, int $minute, string $period): ?int
+    {
+        if ($hour < 1 || $hour > 12 || $minute < 0 || $minute > 59) {
+            return null;
+        }
+        $period = str_replace('.', '', mb_strtolower($period));
+        if ($period === 'am' && $hour === 12) {
+            $hour = 0;
+        } elseif ($period === 'pm' && $hour !== 12) {
+            $hour += 12;
+        }
+
+        return ($hour * 60) + $minute;
+    }
+
     private function handleRecipientIdentityReply(
         User $actor,
         SupportTicket $ticket,
@@ -991,6 +1277,11 @@ class FamilyGoalJourneyService
 
     private function startTimeFromMessage(string $message): ?string
     {
+        if (preg_match('/^\s*(\d{1,2})(?::([0-5]\d))?\s*(a\.?m\.?|p\.?m\.?)\s*[.!]?\s*$/iu', $message, $match) === 1) {
+            $minutes = $this->timePartsToMinutes((int) $match[1], (int) ($match[2] ?? 0), (string) $match[3]);
+
+            return $minutes === null ? null : sprintf('%02d:%02d', intdiv($minutes, 60), $minutes % 60);
+        }
         if (preg_match('/\b(?:at|to|is|start(?:ing)?(?:\s+time)?(?:\s+to)?|time\s+(?:to|is))\s*(\d{1,2})(?::([0-5]\d))?\s*(a\.?m\.?|p\.?m\.?)\b/iu', $message, $match) === 1) {
             $hour = (int) $match[1];
             if ($hour < 1 || $hour > 12) {
@@ -1016,6 +1307,12 @@ class FamilyGoalJourneyService
 
     private function durationFromMessage(string $message): ?int
     {
+        if (preg_match('/^\s*(\d{1,2}(?:\.5)?)\s*(?:hours?|hrs?)\s*[.!]?\s*$/iu', $message, $match) === 1) {
+            return (int) round(((float) $match[1]) * 60);
+        }
+        if (preg_match('/^\s*(\d{2,3})\s*(?:minutes?|mins?)\s*[.!]?\s*$/iu', $message, $match) === 1) {
+            return (int) $match[1];
+        }
         if (preg_match('/\b(?:duration|last|lasting|for)\b.{0,16}\b(\d{1,2}(?:\.5)?)\s*(?:hours?|hrs?)\b/iu', $message, $match) === 1) {
             return (int) round(((float) $match[1]) * 60);
         }

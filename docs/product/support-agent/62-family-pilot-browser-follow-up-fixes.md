@@ -1,6 +1,6 @@
 # Family Pilot Browser Follow-up Fixes
 
-Status: Implemented and verified in source; production deployment and authenticated retest pending
+Status: Second production browser audit completed; deterministic follow-up corrections implemented and verified in source; deployment and final authenticated retest pending
 
 Date: August 28, 2026
 
@@ -88,3 +88,36 @@ Use a pilot Family account and keep **Live for everyone** off:
 - Use the Admin **Emergency stop** for immediate AI shutdown.
 - Keep **Pilot only** selected to prevent access beyond the two configured pilot users.
 - Disable `capability.care_request_publish_v1`, `commit.one_time`, `commit.recurring`, and the two request-publication tools to return to recap-only request preparation.
+
+## Second production browser audit
+
+The August 28 production retest started from an automated pilot conversation and used the signed-in Family account without confirming or publishing a request.
+
+Verified in production:
+
+- Enter submitted the message.
+- The composer cleared immediately while the response was processing.
+- Care-profile navigation reached the current Care profiles page and displayed the active guide.
+- Notification-preference guidance reached Notifications, highlighted the exact Delivery preferences section, and gave the correct floating instruction.
+- A cancellation-policy question did not start care intake and did not replace the notification guide.
+- No care request was created.
+
+The retest also exposed four deterministic gaps:
+
+1. `Stop this task` with no active goal fell through to the model and transferred the conversation to a person.
+2. A Livewire refresh could remove the `open` state from the highlighted Delivery preferences `<details>` element after arrival was recorded.
+3. A complete recurring-care sentence was not applied to the new private draft after the user accepted the recommended care type, causing the assistant to repeat questions already answered.
+4. A subsequent weekday answer depended on a provider extraction and transferred after a repeated provider/contract failure.
+
+The source correction now handles a no-task Stop request without a provider or handoff. It also extracts the ordinary request-intake fields deterministically from the user's message, including recipient, recognized care tasks, weekdays, start date, start time, duration or time range, and simple step-by-step address answers. The exact production sentence now reaches a complete recurring recap with zero provider calls and still creates no live request until the Family explicitly confirms.
+
+The frontend now reopens a guided `<details>` target after any Livewire morph and reinitializes the target after the server records arrival. This preserves the expanded Delivery preferences panel as well as its highlight and instruction.
+
+The useful care-profile article was present in source but the production answer still reflected the previously published version. The KB realignment publication command remains required after this deployment.
+
+### Second-audit automated verification
+
+- Full AI Support, Support chat, and Family notification regression selection: 276 tests and 6,236 assertions passed.
+- Exact complete recurring production sentence: ready-for-recap, correct recipient, both care tasks, Monday schedule, October 19 start, 9:00 AM–12:00 PM, zero provider calls, and zero care requests.
+- No-active-task Stop: automated reply retained, zero provider calls, zero handoff, and zero care requests.
+- Production asset build passed.
