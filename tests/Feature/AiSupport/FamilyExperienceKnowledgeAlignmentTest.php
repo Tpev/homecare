@@ -19,13 +19,16 @@ class FamilyExperienceKnowledgeAlignmentTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_alignment_package_revises_published_knowledge_and_is_idempotent(): void
+    public function test_alignment_package_creates_missing_knowledge_revises_published_knowledge_and_is_idempotent(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $workflow = app(KnowledgeBaseWorkflowService::class);
         $catalog = app(FamilyExperienceKnowledgeBaseCatalog::class);
 
         foreach ($catalog->definitions() as $definition) {
+            if ($definition['stable_id'] === 'KB-FOP-ORI-001') {
+                continue;
+            }
             $payload = $definition['payload'];
             if ($definition['stable_id'] === 'KB-FAM-001') {
                 $payload['title'] = 'Your Family dashboard';
@@ -51,16 +54,20 @@ class FamilyExperienceKnowledgeAlignmentTest extends TestCase
         }
 
         $importer = app(FamilyExperienceKnowledgeBaseImportService::class);
+        $this->assertSame(1, $importer->plan()['counts']['creates']);
         $this->assertSame(1, $importer->plan()['counts']['revisions']);
         $this->assertSame(1, $importer->plan()['counts']['updates']);
-        $this->assertSame(count(FamilyExperienceKnowledgeBaseCatalog::STABLE_IDS) - 2, $importer->plan()['counts']['noops']);
+        $this->assertSame(count(FamilyExperienceKnowledgeBaseCatalog::STABLE_IDS) - 3, $importer->plan()['counts']['noops']);
 
         $result = $importer->publishPackage($admin, 'Publish current Family experience guidance.');
-        $this->assertCount(2, $result['published']);
+        $this->assertCount(3, $result['published']);
+        $this->assertSame('What LoLo helps Families do', KnowledgeBaseEntry::query()
+            ->where('stable_id', 'KB-FOP-ORI-001')->firstOrFail()->publishedVersion->title);
         $this->assertSame('Your Family Care overview', KnowledgeBaseEntry::query()
             ->where('stable_id', 'KB-FAM-001')->firstOrFail()->publishedVersion->title);
 
         $again = $importer->plan();
+        $this->assertSame(0, $again['counts']['creates']);
         $this->assertSame(0, $again['counts']['revisions']);
         $this->assertSame(0, $again['counts']['updates']);
         $this->assertSame(count(FamilyExperienceKnowledgeBaseCatalog::STABLE_IDS), $again['counts']['noops']);

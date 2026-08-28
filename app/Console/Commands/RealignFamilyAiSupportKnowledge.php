@@ -30,6 +30,7 @@ class RealignFamilyAiSupportKnowledge extends Command
 
         $this->info('Family experience KB package: '.$plan['manifest_version']);
         $this->table(['Result', 'Count'], [
+            ['Would create a missing package entry', $plan['counts']['creates']],
             ['Would update an unpublished draft', $plan['counts']['updates']],
             ['Would revise', $plan['counts']['revisions']],
             ['Exact no-op', $plan['counts']['noops']],
@@ -68,7 +69,7 @@ class RealignFamilyAiSupportKnowledge extends Command
             return self::FAILURE;
         }
 
-        $this->info(count($result['updated']).' unpublished drafts updated; '.count($result['revised']).' revisions created.');
+        $this->info(count($result['created']).' missing entries created; '.count($result['updated']).' unpublished drafts updated; '.count($result['revised']).' revisions created.');
         if ($publish) {
             $this->info(count($result['published']).' revisions published; '.count($result['already_published']).' exact published no-ops.');
         }

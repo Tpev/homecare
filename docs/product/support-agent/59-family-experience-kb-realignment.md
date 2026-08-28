@@ -45,12 +45,13 @@ The source catalogs were audited entry by entry. The realignment package contain
 
 The package reads the canonical definitions from the existing source catalogs rather than duplicating them. On production it:
 
-1. updates the never-published legacy pricing draft in place;
-2. creates a new governed version for each changed published entry;
-3. refuses to overwrite any unrelated Admin draft already in progress;
-4. validates every changed version;
-5. publishes the package in one transaction;
-6. becomes an exact no-op when run again.
+1. creates any canonical package entry that is absent from an older production import;
+2. updates the never-published legacy pricing draft in place;
+3. creates a new governed version for each changed published entry;
+4. refuses to restore deleted entries or overwrite any unrelated Admin draft already in progress;
+5. validates every changed version;
+6. publishes the package in one transaction;
+7. becomes an exact no-op when run again.
 
 It never changes AI availability, pilot grants, users, care records, payment records, or notification records.
 

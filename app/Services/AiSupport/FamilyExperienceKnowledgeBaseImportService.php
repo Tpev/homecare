@@ -19,7 +19,7 @@ class FamilyExperienceKnowledgeBaseImportService
     /** @return array<string,mixed> */
     public function plan(): array
     {
-        $updates = $revisions = $noops = $conflicts = [];
+        $creates = $updates = $revisions = $noops = $conflicts = [];
         $definitions = collect($this->catalog->definitions())->keyBy('stable_id');
         $existing = KnowledgeBaseEntry::query()
             ->with(['workingVersion.sources', 'publishedVersion.sources'])
@@ -29,7 +29,9 @@ class FamilyExperienceKnowledgeBaseImportService
 
         foreach (FamilyExperienceKnowledgeBaseCatalog::STABLE_IDS as $stableId) {
             $entry = $existing->get($stableId);
-            if (! $entry || $entry->deleted_at || ! $entry->workingVersion) {
+            if (! $entry) {
+                $creates[] = $stableId;
+            } elseif ($entry->deleted_at || ! $entry->workingVersion) {
                 $conflicts[] = ['stable_id' => $stableId, 'reason' => 'source_is_missing_or_unavailable'];
             } elseif ($this->matches($definitions->get($stableId), $entry->workingVersion)) {
                 $noops[] = $stableId;
@@ -45,11 +47,12 @@ class FamilyExperienceKnowledgeBaseImportService
 
         return [
             'manifest_version' => FamilyExperienceKnowledgeBaseCatalog::VERSION,
+            'creates' => $creates,
             'updates' => $updates,
             'revisions' => $revisions,
             'noops' => $noops,
             'conflicts' => $conflicts,
-            'counts' => ['updates' => count($updates), 'revisions' => count($revisions), 'noops' => count($noops), 'conflicts' => count($conflicts)],
+            'counts' => ['creates' => count($creates), 'updates' => count($updates), 'revisions' => count($revisions), 'noops' => count($noops), 'conflicts' => count($conflicts)],
         ];
     }
 
@@ -65,6 +68,20 @@ class FamilyExperienceKnowledgeBaseImportService
             }
 
             $publishedBefore = KnowledgeBaseEntry::query()->whereNotNull('published_version_id')->count();
+            $created = [];
+            foreach ($plan['creates'] as $stableId) {
+                $definition = $this->catalog->definition($stableId);
+                $entry = $this->workflow->createDraftWithStableId(
+                    $actor,
+                    $stableId,
+                    $definition['payload'],
+                    $definition['sources'],
+                );
+                if (! $this->workflow->validateAndStore($actor, $entry->workingVersion)['passed']) {
+                    throw new DomainException($stableId.' failed knowledge validation.');
+                }
+                $created[] = ['stable_id' => $stableId, 'version_number' => 1];
+            }
             $updated = [];
             foreach ($plan['updates'] as $stableId) {
                 $definition = $this->catalog->definition($stableId);
@@ -109,6 +126,7 @@ class FamilyExperienceKnowledgeBaseImportService
 
             return [
                 'manifest_version' => FamilyExperienceKnowledgeBaseCatalog::VERSION,
+                'created' => $created,
                 'updated' => $updated,
                 'revised' => $revised,
                 'noops' => $plan['noops'],
