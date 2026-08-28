@@ -13,6 +13,26 @@ use Throwable;
 
 class ActivateAiSupportBatch5Pilot extends Command
 {
+    private const REQUIRED_CAPABILITIES = [
+        'family_lifecycle_action_v1',
+        'care_request_publish_v1',
+    ];
+
+    private const REQUIRED_CONTROLS = [
+        'capability.family_lifecycle_action_v1',
+        'capability.care_request_publish_v1',
+        'commit.one_time',
+        'commit.recurring',
+        'tool.care-request.publish.one-time',
+        'tool.care-request.publish.recurring',
+        'tool.family-profile.save-draft',
+        'tool.family-profile.make-ready',
+        'tool.family-profile.make-default',
+        'tool.family-profile.archive',
+        'tool.family-profile.restore',
+        'tool.care-request.withdraw',
+    ];
+
     protected $signature = 'ai-support:activate-batch5-pilot {--actor-email= : Full Administrator email}';
 
     protected $description = 'Enable Batch 5 profile/request actions and confirmed care-request creation for the existing two-user pilot.';
@@ -47,7 +67,7 @@ class ActivateAiSupportBatch5Pilot extends Command
                 foreach ($grants as $grant) {
                     $locked = AiSupportPilotGrant::query()->lockForUpdate()->findOrFail($grant->id);
                     $capabilities = collect((array) $locked->capability_ids)
-                        ->push('family_lifecycle_action_v1', 'care_request_publish_v1')->unique()->values()->all();
+                        ->push(...self::REQUIRED_CAPABILITIES)->unique()->values()->all();
                     if ($capabilities !== $locked->capability_ids) {
                         $locked->forceFill(['capability_ids' => $capabilities])->save();
                         $now = now();
@@ -72,20 +92,7 @@ class ActivateAiSupportBatch5Pilot extends Command
                 }
 
                 $reason = 'Enable approved Batch 5 actions for the exact two-user pilot.';
-                foreach ([
-                    'capability.family_lifecycle_action_v1',
-                    'capability.care_request_publish_v1',
-                    'commit.one_time',
-                    'commit.recurring',
-                    'tool.care-request.publish.one-time',
-                    'tool.care-request.publish.recurring',
-                    'tool.family-profile.save-draft',
-                    'tool.family-profile.make-ready',
-                    'tool.family-profile.make-default',
-                    'tool.family-profile.archive',
-                    'tool.family-profile.restore',
-                    'tool.care-request.withdraw',
-                ] as $control) {
+                foreach (self::REQUIRED_CONTROLS as $control) {
                     if (! $controls->enabled($control)) {
                         $controls->set($actor, $control, true, $reason);
                     }
@@ -93,6 +100,18 @@ class ActivateAiSupportBatch5Pilot extends Command
 
                 if ($controls->enabled('general_release_enabled')) {
                     throw new RuntimeException('General release changed during activation.');
+                }
+                $verifiedGrants = AiSupportPilotGrant::query()->effectiveAt()->orderBy('user_id')->get();
+                if ($verifiedGrants->count() !== 2 || ! $verifiedGrants->every(
+                    fn (AiSupportPilotGrant $grant): bool => collect(self::REQUIRED_CAPABILITIES)
+                        ->every(fn (string $capability): bool => $grant->includesCapability($capability)),
+                )) {
+                    throw new RuntimeException('One or more pilot grants are missing a required Batch 5 capability.');
+                }
+                $disabledControls = collect(self::REQUIRED_CONTROLS)
+                    ->reject(fn (string $control): bool => $controls->enabled($control));
+                if ($disabledControls->isNotEmpty()) {
+                    throw new RuntimeException('Required controls remained disabled: '.$disabledControls->implode(', ').'.');
                 }
             }, 3);
         } catch (Throwable $exception) {
@@ -106,6 +125,8 @@ class ActivateAiSupportBatch5Pilot extends Command
             ['Pilot users', $approvedIds->implode(', ')],
             ['Batch 5 capabilities', 'Lifecycle and confirmed request creation enabled'],
             ['Batch 5 tools', '8 enabled'],
+            ['One-time request confirmation', 'Enabled'],
+            ['Recurring request confirmation', 'Enabled'],
             ['Live for everyone', 'Off'],
         ]);
         $this->info('Batch 5 is active for the existing two-user pilot only.');

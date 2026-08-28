@@ -145,7 +145,7 @@
         </section>
 
         <aside class="xl:col-span-4">
-            <details class="group overflow-hidden rounded-3xl border border-[#E4DDD3] bg-white shadow-sm">
+            <details data-ai-target="family.notifications.preferences" tabindex="-1" class="group overflow-hidden rounded-3xl border border-[#E4DDD3] bg-white shadow-sm outline-none">
                 <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 sm:px-5">
                     <div>
                         <h2 class="font-display text-lg font-semibold text-[#17313F]">Delivery preferences</h2>

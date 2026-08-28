@@ -368,6 +368,17 @@ class FamilyAdministrationActionService
             return true;
         }
         if (in_array($number, [13, 15], true)) {
+            if ($this->isNotificationPreferencesLocationQuestion($message)) {
+                $this->offerRead(
+                    $actor,
+                    $ticket,
+                    'Open Notifications and use Delivery preferences to change your personal email and in-app settings.',
+                    $intentId,
+                    'family.notifications.preferences',
+                );
+
+                return true;
+            }
             $channels = $this->channelsFromMessage($message, $number);
             $eventKey = $this->eventKeyFromMessage($message);
             $events = $eventKey ? [$eventKey] : MarketplaceNotificationPresentation::eventsForRole('family');
@@ -845,6 +856,16 @@ class FamilyAdministrationActionService
             'email' => $mentionsInApp && ! $mentionsEmail ? true : ! $turnOff,
             'in_app' => $mentionsEmail && ! $mentionsInApp ? true : ! $turnOff,
         ];
+    }
+
+    private function isNotificationPreferencesLocationQuestion(string $message): bool
+    {
+        $value = mb_strtolower($message);
+
+        return preg_match(
+            '/\b(?:where|how)\b.{0,80}\bnotifications?\s+(?:preferences?|settings?)\b|\b(?:open|show|find|take me to|go to)\b.{0,48}\bnotifications?\s+(?:preferences?|settings?)\b|\bnotifications?\s+(?:preferences?|settings?)\b.{0,48}\b(?:where|how)\b/iu',
+            $value,
+        ) === 1;
     }
 
     private function eventKeyFromMessage(string $message): ?string

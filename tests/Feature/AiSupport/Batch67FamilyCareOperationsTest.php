@@ -3,6 +3,7 @@
 namespace Tests\Feature\AiSupport;
 
 use App\Models\AiSupportConfirmedActionEvidence;
+use App\Models\AiSupportGuidedTask;
 use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportPilotGrant;
 use App\Models\CareBooking;
@@ -18,7 +19,9 @@ use App\Models\Skill;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\AiSupport\AiSupportControlService;
+use App\Services\AiSupport\AiSupportGuidedTaskService;
 use App\Services\AiSupport\AiSupportPilotGrantService;
+use App\Services\AiSupport\AiSupportRuntimeService;
 use App\Services\AiSupport\FamilyCareOperationsActionService;
 use App\Services\AiSupport\FamilyIntentCatalog;
 use App\Services\AiSupport\FamilyIntentResolver;
@@ -72,6 +75,41 @@ class Batch67FamilyCareOperationsTest extends TestCase
         $this->assertStringNotContainsString('Tell me which scheduled visit and the cancellation reason', $body);
         $this->assertSame(SupportTicket::RESPONDER_MODE_AUTOMATED, $ticket->fresh()->responder_mode);
         $this->assertDatabaseCount('ai_support_confirmed_action_evidence', 0);
+    }
+
+    public function test_cancellation_policy_question_answers_without_replacing_an_active_guide(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $ticket = $this->ticket($family, 'Update my payment method.');
+        $guidedTasks = app(AiSupportGuidedTaskService::class);
+        $task = $guidedTasks->offerPaymentMethod($family, $ticket);
+        $action = AiSupportMessageAction::query()
+            ->where('support_ticket_id', $ticket->id)
+            ->where('action_type', AiSupportMessageAction::TYPE_GUIDED_TASK)
+            ->sole();
+        $guidedTasks->startFromAction($family, $ticket, $action->id);
+        Http::fake();
+
+        app(AiSupportRuntimeService::class)->respond(
+            $family,
+            $ticket,
+            'What is the cancellation policy for care visits?',
+        );
+
+        Http::assertNothingSent();
+        $this->assertSame(AiSupportGuidedTask::STATE_NAVIGATING, $task->fresh()->state);
+        $this->assertDatabaseCount('ai_support_guided_tasks', 1);
+        $this->assertTrue($ticket->publicMessages()->get()->contains(
+            fn ($message): bool => str_contains($message->body, '24-hour late-cancellation window'),
+        ));
+        $this->assertDatabaseHas('ai_support_interaction_events', [
+            'event_type' => 'intent_completed',
+            'result_code' => 'policy_answered_guide_preserved',
+        ]);
+        $this->assertDatabaseMissing('ai_support_message_actions', [
+            'support_ticket_id' => $ticket->id,
+            'action_type' => AiSupportMessageAction::TYPE_PATH_CHOICES,
+        ]);
     }
 
     public function test_all_eighty_six_batch_six_seven_catalog_intents_resolve_from_every_registered_phrase(): void

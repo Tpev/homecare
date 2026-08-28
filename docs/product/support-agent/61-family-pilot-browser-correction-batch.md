@@ -24,7 +24,7 @@ This batch closes the defects found during the authenticated current-layout audi
 
 ## Knowledge publication
 
-`family-experience-alignment-v1` now includes 53 entries, including the two canonical pricing entries that were previously outside the one-command realignment package. After deployment, one command updates and publishes all changed Family guidance:
+`family-experience-alignment-v1` now includes 55 entries, including the two canonical pricing entries and both care-profile overview articles. After deployment, one command updates and publishes all changed Family guidance:
 
 ```bash
 php artisan ai-support:realign-family-kb \
@@ -60,7 +60,7 @@ Keep **Live for everyone** off and test with a pilot Family account:
 - AI Support and Support feature suites: **278 tests / 6,229 assertions passed**.
 - Focused correction suite: **119 tests / 3,443 assertions passed**.
 - Family intent plan: **324 / 324** catalog records, **324 / 324** explicit KB mappings, **1,296** phrases, and routing precheck passed with zero provider calls.
-- `FamilyExperienceKnowledgeAlignmentTest` verifies the expanded 53-entry realignment package and idempotent publication behavior in an isolated database.
+- `FamilyExperienceKnowledgeAlignmentTest` verifies the expanded 55-entry realignment package and idempotent publication behavior in an isolated database.
 
 ## Rollback
 

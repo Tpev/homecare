@@ -453,6 +453,26 @@ class FamilyCareOperationsActionService
                         ? 'This scheduled visit is inside the 24-hour late-cancellation window. The exact booking and payment record determines any authorization release, reconciliation, fee, or refund.'
                         : 'This scheduled visit is outside the 24-hour late-cancellation window. The exact booking and payment record determines the final authorization release, reconciliation, fee, or refund.')
                     : 'Visit cancellation depends on the exact scheduled visit and timing. LoLo shows whether it is inside the 24-hour late-cancellation window, and the booking and payment record determines any authorization release, reconciliation, fee, or refund. I will not guess an amount.';
+                $activeGuide = AiSupportGuidedTask::query()
+                    ->open()
+                    ->where('actor_user_id', $actor->id)
+                    ->where('support_ticket_id', $ticket->id)
+                    ->latest('started_at')
+                    ->first();
+                if ($activeGuide) {
+                    $response = $this->automatedMessage($ticket, $body);
+                    $this->events->record($ticket, 'intent_completed', [
+                        'support_ticket_message_id' => $response->id,
+                        'capability_id' => self::CAPABILITY,
+                        'result_code' => 'policy_answered_guide_preserved',
+                        'safe_metadata' => [
+                            'intent_id' => $intentId,
+                            'task_state' => (string) $activeGuide->state,
+                        ],
+                    ], $actor);
+
+                    return true;
+                }
                 $this->offerRead(
                     $actor,
                     $ticket,

@@ -13,6 +13,7 @@ use App\Services\AiSupport\AiSupportGuidedTaskService;
 use App\Services\AiSupport\AiSupportHandoffService;
 use App\Services\AiSupport\AiSupportPilotGrantService;
 use App\Services\AiSupport\AiSupportRuntimeService;
+use App\Services\AiSupport\FamilyCareTypeDecisionService;
 use App\Services\AiSupport\NavigationTargetRegistry;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use Carbon\CarbonImmutable;
@@ -90,6 +91,10 @@ class GuidedPaymentMethodTest extends TestCase
 
         $this->assertFalse($handled);
         $this->assertContains($task->fresh()->state, AiSupportGuidedTask::OPEN_STATES);
+        $this->assertNull(app(FamilyCareTypeDecisionService::class)->decide('What happens if I need to cancel a booked visit?'));
+        $this->assertNull(app(FamilyCareTypeDecisionService::class)->decide('What happens if I need to cancel a booked visit?', true));
+        $this->assertNull(app(FamilyCareTypeDecisionService::class)->decide('What is the cancellation policy for care visits?'));
+        $this->assertNull(app(FamilyCareTypeDecisionService::class)->decide('What is the cancellation policy for care visits?', true));
     }
 
     public function test_owner_wanting_to_use_another_credit_card_gets_the_update_action_without_a_model_call(): void

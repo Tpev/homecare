@@ -613,6 +613,8 @@ class Batch5FamilyLifecycleTest extends TestCase
         });
 
         $this->artisan('ai-support:activate-batch5-pilot', ['--actor-email' => $admin->email])
+            ->expectsOutputToContain('One-time request confirmation')
+            ->expectsOutputToContain('Recurring request confirmation')
             ->expectsOutputToContain('Batch 5 is active for the existing two-user pilot only')
             ->assertSuccessful();
 

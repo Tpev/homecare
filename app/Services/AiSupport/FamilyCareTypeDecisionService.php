@@ -78,7 +78,8 @@ class FamilyCareTypeDecisionService
 
     private function looksLikeCareNeed(string $value): bool
     {
-        if (preg_match('/\b(?:payment|card|password|receipt|invoice|message|notification|timesheet|submitted hours|family member|profile|care plan|history|report|applicant|invite|hire|status|current visit|next visit|upcoming visit|visit issues?)\b/iu', $value)
+        if ($this->looksLikeIndependentAppTask($value)
+            || preg_match('/\b(?:care plan|history|report|status|current visit|next visit|upcoming visit|visit issues?)\b/iu', $value)
             || preg_match('/\b(?:when\s+is|show|open|review)\b.{0,64}\b(?:care|visit|hours?|step|plan)\b/iu', $value)) {
             return false;
         }
@@ -90,6 +91,9 @@ class FamilyCareTypeDecisionService
     {
         return preg_match(
             '/\b(?:payment|billing|card|receipt|invoice|password|login|notification|message|timesheet|submitted hours|care profile|profile|family member|applicant|invite|hire|care history|payment history|refund|charge|failed payment)\b/iu',
+            $value,
+        ) === 1 || preg_match(
+            '/\b(?:cancel|cancellation|reschedule|move|change|approve|review)\w*\b.{0,48}\b(?:booked\s+|scheduled\s+|current\s+|upcoming\s+)?(?:care\s+)?visits?\b|\b(?:booked\s+|scheduled\s+|current\s+|upcoming\s+)?(?:care\s+)?visits?\b.{0,48}\b(?:cancel|cancellation|reschedule|move|change|approve|review)\w*\b/iu',
             $value,
         ) === 1;
     }

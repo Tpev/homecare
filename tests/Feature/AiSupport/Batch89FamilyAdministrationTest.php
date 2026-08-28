@@ -3,6 +3,7 @@
 namespace Tests\Feature\AiSupport;
 
 use App\Models\AiSupportConfirmedActionEvidence;
+use App\Models\AiSupportGuidedTask;
 use App\Models\AiSupportMessageAction;
 use App\Models\AiSupportPilotGrant;
 use App\Models\CareBooking;
@@ -44,6 +45,8 @@ class Batch89FamilyAdministrationTest extends TestCase
             'Cancel the family invitation.' => 'FAM-ACCESS-008',
             'Remove this family member.' => 'FAM-ACCESS-012',
             'Mark all notifications as read.' => 'FAM-COMMS-010',
+            'Where do I change notification preferences?' => 'FAM-COMMS-013',
+            'Open my notification settings.' => 'FAM-COMMS-013',
             'Turn off email notifications.' => 'FAM-COMMS-015',
             'How many hours and how much did I spend in care history?' => 'FAM-HISTORY-004',
             'I need 24/7 care.' => 'FAM-COVERAGE-001',
@@ -184,6 +187,26 @@ class Batch89FamilyAdministrationTest extends TestCase
         app(FamilyLifecycleActionService::class)->confirm($family, $preferences, $this->latestRecap($preferences)->id);
         $this->assertGreaterThan(40, UserNotificationPreference::query()->where('user_id', $family->id)->where('email_enabled', false)->count());
         $this->assertSame(0, AiSupportConfirmedActionEvidence::query()->where('tool_id', 'notification.mark-read')->count());
+    }
+
+    public function test_notification_preference_location_opens_the_exact_panel_without_preparing_a_change(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $ticket = $this->ticket($family, 'Where do I change notification preferences?');
+
+        $this->respond($family, $ticket, 'FAM-COMMS-013', $ticket->description);
+
+        $task = AiSupportGuidedTask::query()->sole();
+        $action = AiSupportMessageAction::query()
+            ->where('action_type', AiSupportMessageAction::TYPE_GUIDED_TASK)
+            ->sole();
+        $this->assertSame('family.notifications.preferences', $task->navigation_target_id);
+        $this->assertSame('Notification preferences', $action->payload['label']);
+        $this->assertStringContainsString('Delivery preferences', $ticket->publicMessages()->latest()->firstOrFail()->body);
+        $this->assertDatabaseMissing('ai_support_message_actions', [
+            'support_ticket_id' => $ticket->id,
+            'action_type' => AiSupportMessageAction::TYPE_DOMAIN_RECAP,
+        ]);
     }
 
     public function test_history_reads_exact_authorized_totals_and_never_other_family_records(): void

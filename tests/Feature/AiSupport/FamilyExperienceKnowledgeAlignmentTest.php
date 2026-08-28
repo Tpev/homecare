@@ -122,6 +122,7 @@ class FamilyExperienceKnowledgeAlignmentTest extends TestCase
         $this->assertSame(route('family.care.actions'), $navigation->urlFor($family, 'family.care_actions'));
         $this->assertSame(route('family.care.schedule'), $navigation->urlFor($family, 'family.care_schedule'));
         $this->assertSame(route('family.care.index'), $navigation->urlFor($family, 'family.care_arrangements'));
+        $this->assertSame(route('family.notifications.index'), $navigation->urlFor($family, 'family.notifications.preferences'));
         $this->assertSame(
             route('family.care.journey', ['resourceType' => 'request', 'resourceId' => $request->id]),
             $navigation->urlFor($family, 'family.request.journey', ['resource_type' => 'care_request', 'resource_id' => $request->id]),
@@ -159,6 +160,24 @@ class FamilyExperienceKnowledgeAlignmentTest extends TestCase
             $this->actingAs($family)->get(route($routeName))
                 ->assertOk()
                 ->assertSee('data-ai-target="'.$marker.'"', false);
+        }
+
+        $this->actingAs($family)->get(route('family.notifications.index'))
+            ->assertOk()
+            ->assertSee('data-ai-target="family.notifications.preferences"', false)
+            ->assertSee('Delivery preferences');
+    }
+
+    public function test_care_profile_guidance_names_useful_content_and_safe_boundaries(): void
+    {
+        $catalog = app(FamilyExperienceKnowledgeBaseCatalog::class);
+
+        foreach (['KB-FOP-PRO-001', 'KB-B5-PROFILE-001'] as $stableId) {
+            $answer = mb_strtolower((string) data_get($catalog->definition($stableId), 'payload.answer_body'));
+            foreach (['communication', 'routine', 'mobility', 'comfort', 'safety', 'daily assistance'] as $expected) {
+                $this->assertStringContainsString($expected, $answer, $stableId);
+            }
+            $this->assertStringContainsString('clinical instructions', $answer, $stableId);
         }
     }
 }

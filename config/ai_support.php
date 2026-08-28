@@ -554,6 +554,13 @@ return [
             'label' => 'Notifications',
             'instruction' => 'Review the highlighted notification and preference controls.',
         ],
+        'family.notifications.preferences' => [
+            'route' => 'family.notifications.index',
+            'roles' => ['family'],
+            'client_target_id' => 'family.notifications.preferences',
+            'label' => 'Notification preferences',
+            'instruction' => 'Use the highlighted Delivery preferences section.',
+        ],
         'family.message' => [
             'route' => 'messages.show',
             'roles' => ['family'],

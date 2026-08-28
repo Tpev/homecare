@@ -307,6 +307,9 @@ class FamilyIntentResolver
         if (preg_match('/\bmark\b.*\b(?:latest|this)\b.*\bnotification\b.*\bread\b/', $value)) {
             return 'FAM-COMMS-009';
         }
+        if (preg_match('/\b(?:where|how)\b.{0,80}\bnotifications?\s+(?:preferences?|settings?)\b|\b(?:open|show|find|take me to|go to)\b.{0,48}\bnotifications?\s+(?:preferences?|settings?)\b|\bnotifications?\s+(?:preferences?|settings?)\b.{0,48}\b(?:where|how)\b/', $value)) {
+            return 'FAM-COMMS-013';
+        }
         if (preg_match('/\b(?:turn|switch|disable|enable|stop)\b.*\b(?:email|in[- ]app)?\s*notifications?\b/', $value)) {
             return str_contains($value, 'email') ? 'FAM-COMMS-015' : 'FAM-COMMS-013';
         }

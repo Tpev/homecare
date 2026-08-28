@@ -561,6 +561,9 @@ document.addEventListener('alpine:init', () => {
             }
 
             this.clearGuidedHighlight();
+            if (target instanceof HTMLDetailsElement) {
+                target.open = true;
+            }
             target.classList.add('ai-guide-target-highlight');
             target.dataset.aiGuided = 'true';
             const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
