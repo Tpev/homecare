@@ -108,7 +108,7 @@ class BrowseCareRequests extends Component
         $prelaunchMode = CaregiverPrelaunch::enabled();
         $caregiverId = (int) auth()->id();
 
-        $query = $this->filteredOpenRequestsQuery($prelaunchMode);
+        $query = $this->filteredOpenRequestsQuery($prelaunchMode, $caregiverId);
         $scopeCounts = $this->scopeCounts($query, $caregiverId);
 
         $this->applyScope($query, $caregiverId);
@@ -188,9 +188,11 @@ class BrowseCareRequests extends Component
         return $preview !== '' ? Str::limit($preview, 220) : null;
     }
 
-    private function filteredOpenRequestsQuery(bool $prelaunchMode): Builder
+    private function filteredOpenRequestsQuery(bool $prelaunchMode, int $caregiverId): Builder
     {
-        $query = CareRequest::query()->where('status', CareRequest::STATUS_OPEN);
+        $query = CareRequest::query()
+            ->where('status', CareRequest::STATUS_OPEN)
+            ->visibleToCaregiver($caregiverId);
 
         if ($prelaunchMode) {
             $query->whereRaw('1 = 0');

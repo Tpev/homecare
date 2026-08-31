@@ -97,6 +97,9 @@
                             <p class="text-xs text-slate-500">{{ $request->request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Recurring' : 'One-time' }} · #{{ $request->id }}</p>
                         </div>
                         <x-badge :text="strtoupper((string) $request->status)" :color="$requestTone" />
+                        @if ($request->is_private)
+                            <x-badge text="PRIVATE" color="indigo" />
+                        @endif
                     </div>
 
                     <div class="mt-3 flex flex-wrap gap-2">
@@ -185,6 +188,9 @@
                             <td class="px-4 py-3 align-top">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <x-badge :text="strtoupper((string) $request->status)" :color="$requestTone" />
+                                    @if ($request->is_private)
+                                        <x-badge text="PRIVATE" color="indigo" />
+                                    @endif
                                     @if($request->booking)
                                         <x-badge :text="'BOOKING #'.$request->booking->id.' '.strtoupper((string) $request->booking->status)" :color="$bookingTone" />
                                     @endif

@@ -38,6 +38,9 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <x-badge :text="'REQUEST '.strtoupper((string) $careRequest->status)" color="blue" />
+                    @if ($careRequest->is_private)
+                        <x-badge text="PRIVATE" color="indigo" />
+                    @endif
                     @if($careRequest->booking)
                         <x-badge :text="'SHIFT '.strtoupper((string) $careRequest->booking->status)" color="green" />
                     @endif

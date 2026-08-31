@@ -113,6 +113,8 @@ class ApplyToCareRequest extends Component
 
         $this->refreshExistingApplication();
 
+        abort_unless(auth()->user()->can('view', $this->requestItem), 403);
+
         if ($this->requestItem->status === CareRequest::STATUS_OPEN && ! $this->existingApplication) {
             abort_unless(auth()->user()->can('apply', $this->requestItem), 403);
         } elseif (! $this->existingApplication) {
@@ -289,6 +291,12 @@ class ApplyToCareRequest extends Component
 
             return;
         }
+
+        $this->refreshExistingApplication();
+        abort_unless(auth()->user()->can(
+            $this->existingApplication ? 'view' : 'apply',
+            $this->requestItem,
+        ), 403);
 
         $this->validate([
             'cover_note' => ['nullable', 'string', 'max:2500'],

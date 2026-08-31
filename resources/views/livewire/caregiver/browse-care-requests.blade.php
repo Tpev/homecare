@@ -118,6 +118,9 @@
                                 @if ($pendingInvitation)
                                     <x-badge text="INVITED" color="green" />
                                 @endif
+                                @if ($request->is_private)
+                                    <x-badge text="PRIVATE" color="indigo" />
+                                @endif
                                 @if ($request->request_type === \App\Models\CareRequest::TYPE_RECURRING)
                                     <x-badge text="RECURRING" color="green" />
                                 @endif

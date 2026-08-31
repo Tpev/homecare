@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToFamilyAccount;
 use App\Support\WeeklySchedule;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -45,6 +46,7 @@ class CareRequest extends Model
         'home_access_notes',
         'preferred_response_hours',
         'status',
+        'is_private',
         'first_applicant_at',
         'first_shortlist_at',
         'first_hire_at',
@@ -74,6 +76,7 @@ class CareRequest extends Model
             'budget_min' => 'decimal:2',
             'budget_max' => 'decimal:2',
             'preferred_response_hours' => 'integer',
+            'is_private' => 'boolean',
             'requested_start_at' => 'datetime',
             'requested_end_at' => 'datetime',
             'first_applicant_at' => 'datetime',
@@ -139,6 +142,33 @@ class CareRequest extends Model
     public function invitations(): HasMany
     {
         return $this->hasMany(CareRequestInvitation::class);
+    }
+
+    public function scopeVisibleToCaregiver(Builder $query, User|int $caregiver): Builder
+    {
+        $caregiverId = $caregiver instanceof User ? (int) $caregiver->id : $caregiver;
+
+        return $query->where(function (Builder $visibility) use ($caregiverId): void {
+            $visibility
+                ->where('is_private', false)
+                ->orWhereHas('invitations', function (Builder $invitations) use ($caregiverId): void {
+                    $invitations
+                        ->where('caregiver_user_id', $caregiverId)
+                        ->where(function (Builder $state): void {
+                            $state
+                                ->where('status', CareRequestInvitation::STATUS_ACCEPTED)
+                                ->orWhere(function (Builder $pending): void {
+                                    $pending
+                                        ->where('status', CareRequestInvitation::STATUS_PENDING)
+                                        ->where(function (Builder $expiry): void {
+                                            $expiry->whereNull('expires_at')->orWhere('expires_at', '>=', now());
+                                        });
+                                });
+                        });
+                })
+                ->orWhereHas('applications', fn (Builder $applications) => $applications
+                    ->where('caregiver_user_id', $caregiverId));
+        });
     }
 
     public function isRecurring(): bool

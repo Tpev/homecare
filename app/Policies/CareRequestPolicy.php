@@ -4,8 +4,8 @@ namespace App\Policies;
 
 use App\Models\CareRequest;
 use App\Models\User;
-use App\Support\CaregiverPrelaunch;
 use App\Services\FamilyAccounts\FamilyAccountContext;
+use App\Support\CaregiverPrelaunch;
 
 class CareRequestPolicy
 {
@@ -22,8 +22,15 @@ class CareRequestPolicy
             return true;
         }
 
-        if ($user->role === 'caregiver' && $careRequest->status === CareRequest::STATUS_OPEN) {
-            return true;
+        if ($user->role === 'caregiver') {
+            if ($careRequest->status === CareRequest::STATUS_OPEN
+                && CareRequest::query()->whereKey($careRequest->id)->visibleToCaregiver($user)->exists()) {
+                return true;
+            }
+
+            return $careRequest->applications()
+                ->where('caregiver_user_id', $user->id)
+                ->exists();
         }
 
         return $user->isAdministrator();
@@ -69,6 +76,7 @@ class CareRequestPolicy
             && ! CaregiverPrelaunch::enabled()
             && $careRequest->status === CareRequest::STATUS_OPEN
             && $profile?->status === 'active'
-            && $profile->isMarketplaceReady();
+            && $profile->isMarketplaceReady()
+            && CareRequest::query()->whereKey($careRequest->id)->visibleToCaregiver($user)->exists();
     }
 }

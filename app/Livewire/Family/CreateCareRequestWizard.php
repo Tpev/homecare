@@ -65,6 +65,8 @@ class CreateCareRequestWizard extends Component
 
     public int $preferred_response_hours = 12;
 
+    public bool $is_private = false;
+
     public string $request_type = CareRequest::TYPE_ONE_TIME;
 
     public string $requested_start_at = '';
@@ -694,6 +696,7 @@ class CreateCareRequestWizard extends Component
                 'home_access_notes' => trim($this->home_access_notes) !== '' ? trim($this->home_access_notes) : 'Home access details will be shared after hire.',
                 'preferred_response_hours' => $this->preferred_response_hours,
                 'status' => CareRequest::STATUS_OPEN,
+                'is_private' => $this->is_private,
                 'request_type' => $this->request_type,
                 'requested_start_at' => $this->request_type === CareRequest::TYPE_ONE_TIME ? $this->requested_start_at : null,
                 'requested_end_at' => $this->request_type === CareRequest::TYPE_ONE_TIME ? $this->requested_end_at : null,
@@ -746,9 +749,18 @@ class CreateCareRequestWizard extends Component
         FunnelTracker::track('care_request_published', auth()->user(), $careRequest, [
             'request_type' => $careRequest->request_type,
             'tasks_count' => count($this->selectedTasks),
+            'is_private' => $careRequest->is_private,
         ]);
 
-        $this->redirect(route('family.requests.show', $careRequest->id, false), navigate: true);
+        $destination = $careRequest->is_private
+            ? route('family.requests.show', [
+                'careRequest' => $careRequest->id,
+                'tab' => 'applicants',
+                'invite' => 1,
+            ], false)
+            : route('family.requests.show', $careRequest->id, false);
+
+        $this->redirect($destination, navigate: true);
     }
 
     private function validateAll(): void

@@ -187,6 +187,13 @@ class ManageCareRequest extends Component
             }
             $this->aiPrepared = true;
         }
+
+        if ($this->requestItem->is_private
+            && $this->requestItem->status === CareRequest::STATUS_OPEN
+            && request()->boolean('invite')) {
+            $this->activeTab = 'applicants';
+            $this->showCaregiverInvitePanel = true;
+        }
     }
 
     public function setActiveTab(string $tab): void

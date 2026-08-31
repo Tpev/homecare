@@ -237,6 +237,7 @@ class CaregiverWorkInboxBuilder
                 ])
                 ->withCount('applications')
                 ->where('status', CareRequest::STATUS_OPEN)
+                ->where('is_private', false)
                 ->when($excludedRequestIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $excludedRequestIds))
                 ->latest()
                 ->limit(30)

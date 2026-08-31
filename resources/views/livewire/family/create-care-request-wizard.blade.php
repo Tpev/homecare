@@ -569,6 +569,25 @@
                         </div>
                     </x-slot:header>
 
+                    <label for="private-care-request" class="mb-4 flex cursor-pointer items-start gap-3 rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4 text-[#17313F]">
+                        <input
+                            id="private-care-request"
+                            type="checkbox"
+                            wire:model.live="is_private"
+                            class="mt-1 rounded border-[#8FB7AB] text-[#0F3D3E] focus:ring-[#0F3D3E]"
+                        >
+                        <span>
+                            <span class="block font-semibold">Make this request private</span>
+                            <span class="mt-1 block text-sm leading-6 text-[#4B5B6B]">
+                                @if ($is_private)
+                                    This request won’t appear in the caregiver marketplace. Only caregivers you invite can view and respond to it. You’ll choose invitees after creating the request.
+                                @else
+                                    Leave this unchecked to let eligible caregivers discover and apply to the request. You can still invite specific caregivers.
+                                @endif
+                            </span>
+                        </span>
+                    </label>
+
                     <div class="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
                         <div class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-4">
                             <p class="text-xs uppercase tracking-[0.12em] text-[#7B8794]">For</p>
@@ -619,7 +638,7 @@
                         <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <a href="{{ route('family.requests.index') }}" wire:navigate class="hc-secondary-button w-full sm:w-auto">Cancel</a>
                             <button type="submit" class="hc-primary-button w-full sm:w-auto" wire:loading.attr="disabled" wire:target="publish">
-                                Publish request
+                                {{ $is_private ? 'Create private request' : 'Publish request' }}
                             </button>
                         </div>
                     </x-slot:footer>

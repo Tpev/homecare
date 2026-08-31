@@ -16,6 +16,12 @@
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
 
+    @if ($requestItem->is_private && $requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $requestItem->invitations->isEmpty())
+        <x-alert color="amber">
+            This request is private and cannot be discovered in the caregiver marketplace. Invite at least one caregiver when you are ready.
+        </x-alert>
+    @endif
+
     @php
         $booking = $requestItem->booking;
         $pricing = app(\App\Support\MarketplacePricing::class);
@@ -386,6 +392,9 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <h1 class="text-2xl font-display font-semibold text-[#17313F]">{{ $recordHeadline }}</h1>
                         <x-badge :text="strtoupper($requestItem->status)" color="blue" />
+                    @if ($requestItem->is_private)
+                        <x-badge text="PRIVATE" color="indigo" />
+                    @endif
                     @if ($booking)
                         <x-badge :text="'VISIT '.$visitStatusLabel" :color="$shiftBadgeColor" />
                     @endif

@@ -33,7 +33,12 @@
                 <x-card>
                     <div class="flex items-start justify-between gap-4">
                         <div class="space-y-1">
-                            <p class="font-display font-semibold text-[#17313F]">{{ $invitation->careRequest?->title }}</p>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p class="font-display font-semibold text-[#17313F]">{{ $invitation->careRequest?->title }}</p>
+                                @if ($invitation->careRequest?->is_private)
+                                    <x-badge text="PRIVATE" color="indigo" />
+                                @endif
+                            </div>
                             <p class="text-sm text-[#607080]">
                                 From {{ $invitation->family?->name }}
                                  -  {{ $invitation->careRequest?->city }}, {{ $invitation->careRequest?->state }}
