@@ -290,6 +290,11 @@ new class extends Component
                 'active' => request()->routeIs('admin.analytics.*'),
                 'items' => [
                     [
+                        'label' => 'Care Coverage Calendar',
+                        'href' => route('admin.analytics.care-coverage-calendar'),
+                        'active' => request()->routeIs('admin.analytics.care-coverage-calendar'),
+                    ],
+                    [
                         'label' => 'Usage Analytics',
                         'href' => route('admin.analytics.usage'),
                         'active' => request()->routeIs('admin.analytics.usage'),

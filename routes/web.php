@@ -34,6 +34,7 @@ use App\Livewire\Admin\AiSupport\Overview as AiSupportOverview;
 use App\Livewire\Admin\AiSupport\PilotsIndex as AiSupportPilotsIndex;
 use App\Livewire\Admin\AiSupport\Settings as AiSupportSettings;
 use App\Livewire\Admin\CaregiverCoverageMap;
+use App\Livewire\Admin\CareCoverageCalendar;
 use App\Livewire\Admin\CaregiverReviewsQueue;
 use App\Livewire\Admin\CarePlanShow;
 use App\Livewire\Admin\CarePlansIndex;
@@ -159,6 +160,7 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/analytics/usage', UsageAnalytics::class)->name('analytics.usage');
         Route::get('/analytics/funnel', FunnelAnalytics::class)->name('analytics.funnel');
         Route::get('/analytics/caregiver-map', CaregiverCoverageMap::class)->name('analytics.caregiver-map');
+        Route::get('/analytics/care-coverage-calendar', CareCoverageCalendar::class)->name('analytics.care-coverage-calendar');
         Route::get('/users', UsersIndex::class)->name('users.index');
         Route::get('/users/{user}', UserShow::class)->name('users.show');
         Route::get('/requests', CareRequestsIndex::class)->name('requests.index');
