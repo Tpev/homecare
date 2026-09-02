@@ -65,7 +65,7 @@ class SdrOutreachTest extends TestCase
             ->assertSee('SDR call list');
     }
 
-    public function test_sdr_role_only_accesses_calling_workspace(): void
+    public function test_sdr_role_only_accesses_calling_workspaces(): void
     {
         $sdr = User::factory()->create([
             'email' => 'caller@example.com',
@@ -75,13 +75,14 @@ class SdrOutreachTest extends TestCase
 
         $this->actingAs($sdr)
             ->get(route('dashboard'))
-            ->assertRedirect(route('sdr.calling', absolute: false));
+            ->assertRedirect(route('sdr.family-calling', absolute: false));
 
         $this->actingAs($sdr)
             ->get(route('sdr.calling'))
             ->assertOk()
             ->assertSee('Provider calling queue')
-            ->assertSee('Call queue')
+            ->assertSee('Family leads')
+            ->assertSee('Referral outreach')
             ->assertSee('Validate that the office sees seniors/families who need support')
             ->assertSee('Is that something your team sees with patients or families?')
             ->assertSee('We also do not have hourly minimums')

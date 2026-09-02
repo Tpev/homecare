@@ -18,6 +18,7 @@ Schedule::command('homecare:generate-regular-care-visits')->dailyAt('02:15')->wi
 Schedule::command('homecare:prepare-regular-care-payments')->hourly()->withoutOverlapping();
 Schedule::command('homecare:process-continuous-coverage')->hourly()->withoutOverlapping();
 Schedule::command('content:publish-scheduled')->everyMinute()->withoutOverlapping();
+Schedule::command('family-leads:escalate-uncalled')->everyMinute()->withoutOverlapping();
 Schedule::command('content:verify-public --fail-on-issues')->dailyAt('09:20')->withoutOverlapping()->appendOutputTo(storage_path('logs/content-public-verification.log'));
 Schedule::command('content:audit')->weeklyOn(1, '08:00')->withoutOverlapping()->appendOutputTo(storage_path('logs/content-audit.log'));
 Schedule::command('content:prune-events')->dailyAt('03:20')->withoutOverlapping();

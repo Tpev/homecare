@@ -22,10 +22,16 @@ class Lead extends Model
 
     public const FAMILY_STAGES = [
         'new' => 'New',
-        'contacted' => 'Reached out',
+        'attempting_contact' => 'Trying to reach',
+        'callback_scheduled' => 'Callback scheduled',
+        'contacted' => 'Contacted',
         'qualified' => 'Qualified',
+        'assessment_scheduled' => 'Assessment scheduled',
         'intake_scheduled' => 'Intake scheduled',
         'converted' => 'Converted',
+        'nurture' => 'Nurture',
+        'unreachable' => 'Unreachable after 7',
+        'not_fit' => 'Not a fit',
         'lost' => 'Lost',
         'closed' => 'Closed',
     ];
@@ -62,9 +68,17 @@ class Lead extends Model
         'external_source',
         'external_id',
         'contact_role',
+        'submitted_at',
+        'first_call_at',
+        'first_connected_at',
+        'call_attempt_count',
+        'unanswered_attempt_count',
         'last_contacted_at',
         'next_follow_up_at',
         'converted_at',
+        'do_not_contact_at',
+        'new_lead_alerted_at',
+        'first_call_escalated_at',
         'closed_reason',
         'source_url',
         'referrer_url',
@@ -74,9 +88,17 @@ class Lead extends Model
 
     protected $casts = [
         'data' => 'array',
+        'submitted_at' => 'datetime',
+        'first_call_at' => 'datetime',
+        'first_connected_at' => 'datetime',
+        'call_attempt_count' => 'integer',
+        'unanswered_attempt_count' => 'integer',
         'last_contacted_at' => 'datetime',
         'next_follow_up_at' => 'datetime',
         'converted_at' => 'datetime',
+        'do_not_contact_at' => 'datetime',
+        'new_lead_alerted_at' => 'datetime',
+        'first_call_escalated_at' => 'datetime',
     ];
 
     public function assignedAdmin(): BelongsTo

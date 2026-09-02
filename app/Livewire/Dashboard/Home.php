@@ -41,7 +41,7 @@ class Home extends Component
         }
 
         if ($user && $user->role === 'sdr') {
-            $this->redirect(route('sdr.calling', absolute: false), navigate: true);
+            $this->redirect(route('sdr.family-calling', absolute: false), navigate: true);
 
             return;
         }

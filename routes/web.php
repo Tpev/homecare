@@ -33,8 +33,8 @@ use App\Livewire\Admin\AiSupport\KnowledgeIndex as AiSupportKnowledgeIndex;
 use App\Livewire\Admin\AiSupport\Overview as AiSupportOverview;
 use App\Livewire\Admin\AiSupport\PilotsIndex as AiSupportPilotsIndex;
 use App\Livewire\Admin\AiSupport\Settings as AiSupportSettings;
-use App\Livewire\Admin\CaregiverCoverageMap;
 use App\Livewire\Admin\CareCoverageCalendar;
+use App\Livewire\Admin\CaregiverCoverageMap;
 use App\Livewire\Admin\CaregiverReviewsQueue;
 use App\Livewire\Admin\CarePlanShow;
 use App\Livewire\Admin\CarePlansIndex;
@@ -45,6 +45,8 @@ use App\Livewire\Admin\Content\MediaLibrary as ContentMediaLibrary;
 use App\Livewire\Admin\Content\PostEditor as ContentPostEditor;
 use App\Livewire\Admin\Content\PostsIndex as ContentPostsIndex;
 use App\Livewire\Admin\ContinuousCoverageIndex as AdminContinuousCoverageIndex;
+use App\Livewire\Admin\FamilyAcquisitionOverview;
+use App\Livewire\Admin\FamilyLeadsIndex;
 use App\Livewire\Admin\FunnelAnalytics;
 use App\Livewire\Admin\LeadsIndex;
 use App\Livewire\Admin\NotificationsCenter as AdminNotificationsCenter;
@@ -98,6 +100,7 @@ use App\Livewire\Family\RegularCareShow;
 use App\Livewire\Family\RequestsIndex;
 use App\Livewire\Messaging\Inbox;
 use App\Livewire\Sdr\CallingConsole;
+use App\Livewire\Sdr\FamilyCallingConsole;
 use App\Livewire\Support\TicketConversation;
 use App\Livewire\Support\TicketsCenter;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -109,6 +112,7 @@ Route::middleware(['web', 'auth', 'crm.access'])
     ->group(function () {
         Route::get('/crm', LeadsIndex::class)->name('crm.index');
         Route::get('/leads', LeadsIndex::class)->name('leads.index');
+        Route::get('/family-leads', FamilyLeadsIndex::class)->name('family-acquisition.leads');
     });
 
 Route::middleware(['web', 'auth', 'sdr.access'])
@@ -116,6 +120,7 @@ Route::middleware(['web', 'auth', 'sdr.access'])
     ->name('sdr.')
     ->group(function () {
         Route::get('/calling', CallingConsole::class)->name('calling');
+        Route::get('/family-calling', FamilyCallingConsole::class)->name('family-calling');
     });
 
 Route::middleware(['web', 'auth', 'content.access'])
@@ -159,6 +164,7 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/payments/ops', PaymentsQueue::class)->name('payments.ops');
         Route::get('/analytics/usage', UsageAnalytics::class)->name('analytics.usage');
         Route::get('/analytics/funnel', FunnelAnalytics::class)->name('analytics.funnel');
+        Route::get('/family-acquisition', FamilyAcquisitionOverview::class)->name('family-acquisition.overview');
         Route::get('/analytics/caregiver-map', CaregiverCoverageMap::class)->name('analytics.caregiver-map');
         Route::get('/analytics/care-coverage-calendar', CareCoverageCalendar::class)->name('analytics.care-coverage-calendar');
         Route::get('/users', UsersIndex::class)->name('users.index');

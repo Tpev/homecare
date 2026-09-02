@@ -3,12 +3,12 @@
 namespace Database\Seeders;
 
 use App\Models\CareTask;
+use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Language;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -57,5 +57,6 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(HomeCareDemoSeeder::class);
+        $this->call(FamilyAcquisitionDemoSeeder::class);
     }
 }
