@@ -83,6 +83,10 @@ return [
         'webhook_secret' => env('GOOGLE_SHEETS_LEADS_WEBHOOK_SECRET'),
     ],
 
+    'zapier_facebook_leads' => [
+        'webhook_secret' => env('ZAPIER_FACEBOOK_LEADS_WEBHOOK_SECRET'),
+    ],
+
     'maptiler' => [
         'key' => env('MAPTILER_KEY'),
     ],

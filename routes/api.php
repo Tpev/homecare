@@ -2,8 +2,13 @@
 
 use App\Http\Controllers\Api\Content\V1\ContentController;
 use App\Http\Controllers\Internal\VoiceAgentController;
+use App\Http\Controllers\ZapierFacebookLeadWebhookController;
 use App\Models\ContentApiToken;
 use Illuminate\Support\Facades\Route;
+
+Route::post('/webhooks/zapier/facebook-leads', ZapierFacebookLeadWebhookController::class)
+    ->middleware('throttle:60,1')
+    ->name('api.webhooks.zapier.facebook-leads');
 
 Route::middleware('voice.agent')
     ->prefix('internal/voice')
