@@ -45,41 +45,7 @@ class FamilyCallingConsole extends Component
             return;
         }
 
-        $lead = DB::transaction(function (): ?Lead {
-            $lead = $this->callableQuery()
-                ->whereNull('assigned_admin_id')
-                ->orderByRaw("case priority when 'urgent' then 1 when 'high' then 2 when 'normal' then 3 else 4 end")
-                ->orderByRaw('next_follow_up_at is null desc')
-                ->orderBy('next_follow_up_at')
-                ->oldest('submitted_at')
-                ->lockForUpdate()
-                ->first();
-
-            if (! $lead) {
-                return null;
-            }
-
-            $oldStatus = $lead->status;
-            $lead->forceFill([
-                'assigned_admin_id' => auth()->id(),
-                'status' => $lead->status === 'new' ? 'attempting_contact' : $lead->status,
-            ])->save();
-
-            $lead->activities()->create([
-                'actor_user_id' => auth()->id(),
-                'type' => LeadActivity::TYPE_ASSIGNMENT,
-                'summary' => 'Claimed for family call',
-                'body' => 'Claimed by '.auth()->user()?->name.'.',
-                'occurred_at' => now(),
-                'metadata' => [
-                    'source' => 'family_calling_console',
-                    'from' => $oldStatus,
-                    'to' => $lead->status,
-                ],
-            ]);
-
-            return $lead->fresh();
-        });
+        $lead = $this->claimAvailableLead();
 
         if (! $lead) {
             $this->dispatch('toast', [
@@ -231,14 +197,17 @@ class FamilyCallingConsole extends Component
         }
 
         $this->resetOutcomeForm();
-        $this->activeLeadId = $this->nextOwnedLead()?->id;
+        $nextLead = $this->nextOwnedLead($lead->id) ?: $this->claimAvailableLead();
+        $this->activeLeadId = $nextLead?->id;
 
         $this->dispatch('toast', [
             'type' => 'success',
             'title' => 'Outcome saved',
-            'message' => $stage === 'unreachable'
+            'message' => $nextLead
+                ? 'The next family is ready to call.'
+                : ($stage === 'unreachable'
                 ? 'Seven attempts are complete. The lead is now marked unreachable.'
-                : ($followUpAt ? 'The lead will return to the queue at the scheduled time.' : 'The CRM and family funnel were updated.'),
+                : ($followUpAt ? 'The lead will return to the queue at the scheduled time.' : 'The CRM and family funnel were updated.')),
         ]);
     }
 
@@ -254,6 +223,7 @@ class FamilyCallingConsole extends Component
             'outcomeOptions' => FamilyLeadOutreach::outcomeOptions(),
             'recentCalls' => $this->recentCalls(),
             'telHref' => FamilyLeadOutreach::telHref($activeLead?->phone),
+            'zoomHref' => FamilyLeadOutreach::zoomCallHref($activeLead?->phone),
         ]);
     }
 
@@ -269,21 +239,61 @@ class FamilyCallingConsole extends Component
             : null;
     }
 
-    private function nextOwnedLead(): ?Lead
+    private function nextOwnedLead(?int $excludeLeadId = null): ?Lead
     {
         return $this->callableQuery()
             ->where('assigned_admin_id', auth()->id())
+            ->when($excludeLeadId, fn (Builder $query) => $query->whereKeyNot($excludeLeadId))
             ->orderByRaw("case priority when 'urgent' then 1 when 'high' then 2 when 'normal' then 3 else 4 end")
             ->orderBy('next_follow_up_at')
             ->oldest('submitted_at')
             ->first();
     }
 
+    private function claimAvailableLead(): ?Lead
+    {
+        return DB::transaction(function (): ?Lead {
+            $lead = $this->callableQuery()
+                ->whereNull('assigned_admin_id')
+                ->orderByRaw("case priority when 'urgent' then 1 when 'high' then 2 when 'normal' then 3 else 4 end")
+                ->orderByRaw('next_follow_up_at is null desc')
+                ->orderBy('next_follow_up_at')
+                ->oldest('submitted_at')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $lead) {
+                return null;
+            }
+
+            $oldStatus = $lead->status;
+            $lead->forceFill([
+                'assigned_admin_id' => auth()->id(),
+                'status' => $lead->status === 'new' ? 'attempting_contact' : $lead->status,
+            ])->save();
+
+            $lead->activities()->create([
+                'actor_user_id' => auth()->id(),
+                'type' => LeadActivity::TYPE_ASSIGNMENT,
+                'summary' => 'Claimed for family call',
+                'body' => 'Claimed by '.auth()->user()?->name.'.',
+                'occurred_at' => now(),
+                'metadata' => [
+                    'source' => 'family_calling_console',
+                    'from' => $oldStatus,
+                    'to' => $lead->status,
+                ],
+            ]);
+
+            return $lead->fresh();
+        });
+    }
+
     private function callableQuery(): Builder
     {
         return Lead::query()
             ->where('lead_type', Lead::TYPE_FAMILY)
-            ->whereNotIn('status', FamilyLeadOutreach::TERMINAL_STAGES)
+            ->whereIn('status', FamilyLeadOutreach::CALLABLE_STAGES)
             ->where('unanswered_attempt_count', '<', FamilyLeadOutreach::MAX_ATTEMPTS)
             ->whereNull('do_not_contact_at')
             ->whereNotNull('phone')

@@ -9,6 +9,13 @@ class FamilyLeadOutreach
 {
     public const MAX_ATTEMPTS = 7;
 
+    public const CALLABLE_STAGES = [
+        'new',
+        'attempting_contact',
+        'callback_scheduled',
+        'nurture',
+    ];
+
     public const TERMINAL_STAGES = [
         'converted',
         'unreachable',
@@ -142,15 +149,34 @@ class FamilyLeadOutreach
     {
         return $lead->lead_type === Lead::TYPE_FAMILY
             && filled($lead->phone)
-            && ! in_array($lead->status, self::TERMINAL_STAGES, true)
+            && in_array($lead->status, self::CALLABLE_STAGES, true)
+            && $lead->unanswered_attempt_count < self::MAX_ATTEMPTS
             && $lead->do_not_contact_at === null
             && ($lead->next_follow_up_at === null || $lead->next_follow_up_at->isPast());
     }
 
+    public static function zoomCallHref(?string $phone): ?string
+    {
+        $clean = self::cleanPhone($phone);
+
+        return $clean !== '' ? 'zoomphonecall://'.$clean : null;
+    }
+
     public static function telHref(?string $phone): ?string
+    {
+        $clean = self::cleanPhone($phone);
+
+        return $clean !== '' ? 'tel:'.$clean : null;
+    }
+
+    public static function cleanPhone(?string $phone): string
     {
         $clean = preg_replace('/[^\d+]/', '', (string) $phone) ?: '';
 
-        return $clean !== '' ? 'tel:'.$clean : null;
+        if (str_starts_with($clean, '00')) {
+            $clean = '+'.substr($clean, 2);
+        }
+
+        return $clean;
     }
 }

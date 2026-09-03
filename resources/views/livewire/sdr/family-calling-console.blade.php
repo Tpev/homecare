@@ -242,10 +242,14 @@
                         <h2 class="mt-1 text-2xl font-bold text-slate-950">{{ $activeLead->phone }}</h2>
                         <p class="mt-1 text-sm text-slate-500">Pressing call starts the first-response clock.</p>
 
-                        @if($telHref)
-                            <a href="{{ $telHref }}" wire:click="startCall" class="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-5 py-3 text-base font-bold text-white shadow-sm hover:bg-emerald-800">
-                                <span aria-hidden="true">☎</span> {{ $callStarted ? 'Call in progress' : 'Start phone call' }}
+                        @if($zoomHref)
+                            <a href="{{ $zoomHref }}" data-phone-fallback="{{ $telHref }}" wire:click="startCall" class="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-5 py-3 text-base font-bold text-white shadow-sm hover:bg-emerald-800">
+                                <span aria-hidden="true">☎</span> {{ $callStarted ? 'Call in progress' : 'Open in Zoom Phone' }}
                             </a>
+                        @endif
+
+                        @if($telHref)
+                            <a href="{{ $telHref }}" wire:click="startCall" class="mt-2 flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50">Phone fallback</a>
                         @endif
 
                         @if($callStarted)

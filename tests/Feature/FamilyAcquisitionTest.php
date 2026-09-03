@@ -136,13 +136,59 @@ class FamilyAcquisitionTest extends TestCase
             ->set('activeLeadId', $lead->id)
             ->set('note', 'Family needs weekday companionship and is ready for an assessment.')
             ->call('logOutcome', 'connected_qualified')
-            ->assertHasNoErrors();
+            ->assertHasNoErrors()
+            ->assertSet('activeLeadId', null);
 
         $lead->refresh();
         $this->assertSame('qualified', $lead->status);
         $this->assertSame(0, $lead->unanswered_attempt_count);
         $this->assertNotNull($lead->first_connected_at);
         $this->assertNull($lead->next_follow_up_at);
+    }
+
+    public function test_family_calling_console_opens_zoom_phone_with_a_phone_fallback(): void
+    {
+        $sdr = User::factory()->create(['role' => 'sdr']);
+        $this->familyLead($sdr, ['phone' => '(919) 555-0100']);
+
+        Livewire::actingAs($sdr)
+            ->test(FamilyCallingConsole::class)
+            ->assertSee('Open in Zoom Phone')
+            ->assertSee('zoomphonecall://9195550100', false)
+            ->assertSee('Phone fallback')
+            ->assertSee('tel:9195550100', false);
+    }
+
+    public function test_saving_a_family_outcome_claims_and_displays_the_next_available_family(): void
+    {
+        $sdr = User::factory()->create(['role' => 'sdr']);
+        $currentLead = $this->familyLead($sdr, ['name' => 'Current Family']);
+        $nextLead = $this->familyLead($sdr, [
+            'name' => 'Next Family',
+            'status' => 'new',
+            'assigned_admin_id' => null,
+            'priority' => 'urgent',
+            'submitted_at' => now()->subHour(),
+        ]);
+
+        Livewire::actingAs($sdr)
+            ->test(FamilyCallingConsole::class)
+            ->set('activeLeadId', $currentLead->id)
+            ->call('logOutcome', 'connected_qualified')
+            ->assertHasNoErrors()
+            ->assertSet('activeLeadId', $nextLead->id)
+            ->assertSee('Next Family')
+            ->assertDispatched('toast');
+
+        $this->assertSame('qualified', $currentLead->fresh()->status);
+        $nextLead->refresh();
+        $this->assertSame($sdr->id, $nextLead->assigned_admin_id);
+        $this->assertSame('attempting_contact', $nextLead->status);
+        $this->assertDatabaseHas('lead_activities', [
+            'lead_id' => $nextLead->id,
+            'type' => 'assignment',
+            'summary' => 'Claimed for family call',
+        ]);
     }
 
     public function test_management_can_enter_a_manual_family_lead_into_the_same_queue(): void
