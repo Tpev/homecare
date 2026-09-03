@@ -33,6 +33,57 @@
             </div>
         </header>
 
+        <section class="rounded-[1.75rem] border border-[#D9CEC0] bg-white p-5 shadow-sm sm:p-6">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">Live CRM pipeline</p>
+                    <h2 class="mt-1 text-2xl font-bold text-slate-950">Current family stages</h2>
+                    <p class="mt-1 text-sm text-slate-500">Updates as soon as a stage is saved, regardless of when the lead first entered the funnel.</p>
+                </div>
+                <p class="text-sm font-bold text-slate-700">{{ number_format($livePipeline['total']) }} total family leads</p>
+            </div>
+
+            <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                @foreach([
+                    ['New', $livePipeline['new'], 'bg-sky-50 text-sky-900'],
+                    ['Calling / follow-up', $livePipeline['calling'], 'bg-amber-50 text-amber-900'],
+                    ['Qualified', $livePipeline['qualified'], 'bg-emerald-50 text-emerald-900'],
+                    ['Assessment scheduled', $livePipeline['assessment'], 'bg-violet-50 text-violet-900'],
+                    ['Care started', $livePipeline['care_started'], 'bg-[#FFF4EF] text-[#8C493B]'],
+                ] as [$label, $value, $style])
+                    <article class="rounded-2xl px-4 py-4 {{ $style }}">
+                        <p class="text-xs font-bold uppercase tracking-[0.12em] opacity-70">{{ $label }}</p>
+                        <p class="mt-2 text-3xl font-bold">{{ number_format($value) }}</p>
+                    </article>
+                @endforeach
+            </div>
+
+            @if($recentStageChanges->isNotEmpty())
+                <div class="mt-5 border-t border-slate-100 pt-5">
+                    <div class="flex items-center justify-between gap-3">
+                        <h3 class="text-sm font-bold text-slate-950">Recent stage changes</h3>
+                        <a href="{{ route('admin.family-acquisition.leads', ['status' => 'all']) }}" wire:navigate class="text-xs font-bold text-emerald-700 hover:text-emerald-900">Open family CRM</a>
+                    </div>
+                    <div class="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                        @foreach($recentStageChanges as $change)
+                            @if($change->lead)
+                                <a href="{{ route('admin.family-acquisition.leads', ['q' => $change->lead->name, 'status' => 'all']) }}" wire:navigate class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 transition hover:border-emerald-300 hover:bg-emerald-50/50">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div class="min-w-0">
+                                            <p class="truncate text-sm font-bold text-slate-950">{{ $change->lead->name }}</p>
+                                            <p class="mt-1 text-xs font-semibold text-emerald-700">{{ $change->lead->stageLabel() }}</p>
+                                        </div>
+                                        <span class="shrink-0 text-xs text-slate-400">{{ $change->occurred_at?->diffForHumans() }}</span>
+                                    </div>
+                                    <p class="mt-2 text-xs text-slate-500">Updated by {{ $change->actor?->name ?: 'System' }}</p>
+                                </a>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        </section>
+
         @if($showAlertSettings)
             <section class="rounded-[1.75rem] border border-[#D9CEC0] bg-white p-5 shadow-lg sm:p-6">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

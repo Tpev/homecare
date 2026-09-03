@@ -216,6 +216,38 @@ class FamilyAcquisitionTest extends TestCase
         $this->assertSame(['Companionship', 'Meal preparation'], data_get($lead->data, 'form_answers.care_needs'));
     }
 
+    public function test_manual_stage_changes_appear_in_the_live_dashboard_without_remaining_due_for_calls(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-09-03 12:00:00'));
+        $admin = User::factory()->create(['role' => 'admin']);
+        $lead = $this->familyLead($admin, [
+            'name' => 'Paul Anderson',
+            'status' => 'attempting_contact',
+            'submitted_at' => now()->subDays(45),
+            'next_follow_up_at' => null,
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(FamilyLeadsIndex::class)
+            ->call('openLead', $lead->id)
+            ->set('selectedStatus', 'assessment_scheduled')
+            ->call('saveLead')
+            ->assertHasNoErrors()
+            ->assertSee('No family call due')
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['due'] === 0);
+
+        Livewire::actingAs($admin)
+            ->test(FamilyAcquisitionOverview::class)
+            ->assertSee('Live CRM pipeline')
+            ->assertSee('Paul Anderson')
+            ->assertSee('Assessment scheduled')
+            ->assertViewHas('metrics', fn (array $metrics): bool => $metrics['leads'] === 0)
+            ->assertViewHas('livePipeline', fn (array $pipeline): bool => $pipeline['total'] === 1
+                && $pipeline['assessment'] === 1
+                && $pipeline['calling'] === 0
+            );
+    }
+
     public function test_seeded_review_accounts_and_all_three_surfaces_render(): void
     {
         $this->seed(FamilyAcquisitionDemoSeeder::class);

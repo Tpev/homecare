@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Models\Lead;
 use App\Models\LeadActivity;
 use App\Models\User;
+use App\Support\FamilyLeadOutreach;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -315,7 +316,11 @@ class FamilyLeadsIndex extends Component
         return [
             'new' => (clone $query)->where('status', 'new')->count(),
             'due' => (clone $query)
-                ->whereNotIn('status', ['converted', 'unreachable', 'not_fit', 'lost', 'closed'])
+                ->whereIn('status', FamilyLeadOutreach::CALLABLE_STAGES)
+                ->where('unanswered_attempt_count', '<', FamilyLeadOutreach::MAX_ATTEMPTS)
+                ->whereNull('do_not_contact_at')
+                ->whereNotNull('phone')
+                ->where('phone', '!=', '')
                 ->where(fn (Builder $q) => $q->whereNull('next_follow_up_at')->orWhere('next_follow_up_at', '<=', now()))
                 ->count(),
             'callbacks' => (clone $query)->where('status', 'callback_scheduled')->count(),

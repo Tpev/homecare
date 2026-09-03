@@ -95,6 +95,21 @@ class FamilyAcquisitionOverview extends Component
         $start = now()->subDays(((int) $this->range) - 1)->startOfDay();
         $end = now()->endOfDay();
 
+        $liveLeads = Lead::query()
+            ->where('lead_type', Lead::TYPE_FAMILY)
+            ->get(['id', 'status', 'converted_at']);
+
+        $recentStageChanges = LeadActivity::query()
+            ->where('type', LeadActivity::TYPE_STAGE_CHANGE)
+            ->whereHas('lead', fn ($query) => $query->where('lead_type', Lead::TYPE_FAMILY))
+            ->with([
+                'lead:id,name,status',
+                'actor:id,name,email',
+            ])
+            ->latest('occurred_at')
+            ->limit(6)
+            ->get();
+
         $leads = Lead::query()
             ->where('lead_type', Lead::TYPE_FAMILY)
             ->where(function ($query) use ($start, $end): void {
@@ -162,7 +177,16 @@ class FamilyAcquisitionOverview extends Component
                 'conversion_rate' => $leadCount > 0 ? ($customerCount / $leadCount) * 100 : 0,
                 'sla_breaches' => $slaBreaches,
             ],
+            'livePipeline' => [
+                'total' => $liveLeads->count(),
+                'new' => $liveLeads->where('status', 'new')->count(),
+                'calling' => $liveLeads->whereIn('status', ['attempting_contact', 'callback_scheduled', 'contacted', 'nurture'])->count(),
+                'qualified' => $liveLeads->where('status', 'qualified')->count(),
+                'assessment' => $liveLeads->whereIn('status', ['assessment_scheduled', 'intake_scheduled'])->count(),
+                'care_started' => $liveLeads->whereNotNull('converted_at')->count(),
+            ],
             'outcomes' => $this->outcomeDistribution($leads),
+            'recentStageChanges' => $recentStageChanges,
             'sdrRows' => $this->sdrRows($leads),
             'speed' => [
                 'median' => $this->percentile($responses, 50),

@@ -120,7 +120,8 @@
                         <tbody class="divide-y divide-slate-100">
                             @forelse($leads as $lead)
                                 @php
-                                    $isDue = !$lead->next_follow_up_at || $lead->next_follow_up_at->isPast();
+                                    $callableStage = in_array($lead->status, \App\Support\FamilyLeadOutreach::CALLABLE_STAGES, true);
+                                    $isDue = $callableStage && (!$lead->next_follow_up_at || $lead->next_follow_up_at->isPast());
                                     $terminal = in_array($lead->status, ['converted', 'unreachable', 'not_fit', 'lost', 'closed'], true);
                                 @endphp
                                 <tr wire:key="family-lead-{{ $lead->id }}" class="group cursor-pointer transition hover:bg-emerald-50/40 {{ $selectedLeadId === $lead->id ? 'bg-emerald-50/70' : '' }}" wire:click="openLead({{ $lead->id }})">
@@ -143,10 +144,12 @@
                                     <td class="whitespace-nowrap px-4 py-4">
                                         @if($terminal)
                                             <span class="text-xs font-semibold text-slate-400">Sequence complete</span>
-                                        @elseif($lead->next_follow_up_at)
+                                        @elseif($callableStage && $lead->next_follow_up_at)
                                             <span class="text-xs font-bold {{ $isDue ? 'text-rose-700' : 'text-slate-700' }}">{{ $isDue ? 'Due ' : '' }}{{ $lead->next_follow_up_at->format('M j, g:i A') }}</span>
-                                        @else
+                                        @elseif($isDue)
                                             <span class="text-xs font-bold text-rose-700">Call now</span>
+                                        @else
+                                            <span class="text-xs font-semibold text-slate-400">No family call due</span>
                                         @endif
                                     </td>
                                     <td class="max-w-48 px-4 py-4">
