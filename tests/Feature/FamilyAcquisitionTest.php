@@ -216,6 +216,45 @@ class FamilyAcquisitionTest extends TestCase
         $this->assertSame(['Companionship', 'Meal preparation'], data_get($lead->data, 'form_answers.care_needs'));
     }
 
+    public function test_management_overview_defaults_to_all_time_and_keeps_shorter_cohort_filters(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-09-03 12:00:00'));
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->familyLead($admin, ['submitted_at' => now()->subDays(45)]);
+        $this->familyLead($admin, ['submitted_at' => now()->subDays(5)]);
+
+        Livewire::actingAs($admin)
+            ->test(FamilyAcquisitionOverview::class)
+            ->assertSet('range', 'all')
+            ->assertSee('All-time lead cohort')
+            ->assertViewHas('metrics', fn (array $metrics): bool => $metrics['leads'] === 2)
+            ->set('range', '30')
+            ->assertViewHas('metrics', fn (array $metrics): bool => $metrics['leads'] === 1);
+    }
+
+    public function test_management_can_delete_a_family_lead_and_its_timeline_from_the_lead_list(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $lead = $this->familyLead($admin, ['name' => 'Lead To Delete']);
+        $activity = $lead->activities()->create([
+            'actor_user_id' => $admin->id,
+            'type' => 'note',
+            'summary' => 'Delete with lead',
+            'occurred_at' => now(),
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(FamilyLeadsIndex::class)
+            ->assertSee('Delete')
+            ->call('openLead', $lead->id)
+            ->call('deleteLead', $lead->id)
+            ->assertSet('selectedLeadId', null)
+            ->assertDispatched('toast');
+
+        $this->assertDatabaseMissing('leads', ['id' => $lead->id]);
+        $this->assertDatabaseMissing('lead_activities', ['id' => $activity->id]);
+    }
+
     public function test_manual_stage_changes_appear_in_the_live_dashboard_without_remaining_due_for_calls(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-09-03 12:00:00'));
@@ -241,7 +280,7 @@ class FamilyAcquisitionTest extends TestCase
             ->assertSee('Live CRM pipeline')
             ->assertSee('Paul Anderson')
             ->assertSee('Assessment scheduled')
-            ->assertViewHas('metrics', fn (array $metrics): bool => $metrics['leads'] === 0)
+            ->assertViewHas('metrics', fn (array $metrics): bool => $metrics['leads'] === 1)
             ->assertViewHas('livePipeline', fn (array $pipeline): bool => $pipeline['total'] === 1
                 && $pipeline['assessment'] === 1
                 && $pipeline['calling'] === 0

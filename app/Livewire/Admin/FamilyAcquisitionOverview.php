@@ -14,7 +14,7 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class FamilyAcquisitionOverview extends Component
 {
-    public string $range = '30';
+    public string $range = 'all';
 
     public string $campaign = 'all';
 
@@ -92,7 +92,8 @@ class FamilyAcquisitionOverview extends Component
 
     public function render(): View
     {
-        $start = now()->subDays(((int) $this->range) - 1)->startOfDay();
+        $rangeDays = in_array($this->range, ['30', '60', '90'], true) ? (int) $this->range : null;
+        $start = $rangeDays ? now()->subDays($rangeDays - 1)->startOfDay() : null;
         $end = now()->endOfDay();
 
         $liveLeads = Lead::query()
@@ -112,11 +113,13 @@ class FamilyAcquisitionOverview extends Component
 
         $leads = Lead::query()
             ->where('lead_type', Lead::TYPE_FAMILY)
-            ->where(function ($query) use ($start, $end): void {
-                $query->whereBetween('submitted_at', [$start, $end])
-                    ->orWhere(function ($fallback) use ($start, $end): void {
-                        $fallback->whereNull('submitted_at')->whereBetween('created_at', [$start, $end]);
-                    });
+            ->when($start, function ($query) use ($start, $end): void {
+                $query->where(function ($dateQuery) use ($start, $end): void {
+                    $dateQuery->whereBetween('submitted_at', [$start, $end])
+                        ->orWhere(function ($fallback) use ($start, $end): void {
+                            $fallback->whereNull('submitted_at')->whereBetween('created_at', [$start, $end]);
+                        });
+                });
             })
             ->with(['activities.actor:id,name,email', 'assignedAdmin:id,name,email'])
             ->get();
@@ -125,7 +128,8 @@ class FamilyAcquisitionOverview extends Component
             $leads = $leads->filter(fn (Lead $lead): bool => (string) data_get($lead->data, 'meta.campaign_id', 'manual') === $this->campaign)->values();
         }
 
-        $spendQuery = MarketingSpendDaily::query()->whereBetween('spend_date', [$start->toDateString(), $end->toDateString()]);
+        $spendQuery = MarketingSpendDaily::query()
+            ->when($start, fn ($query) => $query->whereBetween('spend_date', [$start->toDateString(), $end->toDateString()]));
         if ($this->campaign !== 'all' && $this->campaign !== 'manual') {
             $spendQuery->where('campaign_id', $this->campaign);
         } elseif ($this->campaign === 'manual') {
@@ -134,7 +138,7 @@ class FamilyAcquisitionOverview extends Component
         $spend = $spendQuery->get();
 
         $campaignOptions = MarketingSpendDaily::query()
-            ->whereBetween('spend_date', [$start->toDateString(), $end->toDateString()])
+            ->when($start, fn ($query) => $query->whereBetween('spend_date', [$start->toDateString(), $end->toDateString()]))
             ->orderBy('campaign_name')
             ->pluck('campaign_name', 'campaign_id')
             ->unique()

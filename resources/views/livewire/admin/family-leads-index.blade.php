@@ -114,7 +114,7 @@
                                 <th class="px-4 py-3">Next action</th>
                                 <th class="px-4 py-3">Source</th>
                                 <th class="px-4 py-3">Owner</th>
-                                <th class="px-4 py-3"><span class="sr-only">Open</span></th>
+                                <th class="px-4 py-3"><span class="sr-only">Lead actions</span></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -157,7 +157,18 @@
                                         <p class="mt-0.5 truncate text-xs text-slate-400">{{ data_get($lead->data, 'meta.campaign_name', $lead->source_detail) }}</p>
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-4 text-xs font-semibold text-slate-600">{{ $lead->assignedAdmin?->name ?: 'Unassigned' }}</td>
-                                    <td class="px-4 py-4 text-right text-sm font-bold text-emerald-700">View</td>
+                                    <td class="px-4 py-4">
+                                        <div class="flex items-center justify-end gap-3 text-sm font-bold">
+                                            <span class="text-emerald-700">View</span>
+                                            <button
+                                                type="button"
+                                                wire:click.stop="deleteLead({{ $lead->id }})"
+                                                wire:confirm="Delete {{ $lead->name }} permanently? The lead and its complete activity timeline will be removed."
+                                                class="rounded-lg px-2 py-1 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                                                aria-label="Delete {{ $lead->name }}"
+                                            >Delete</button>
+                                        </div>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr><td colspan="7" class="px-6 py-16 text-center text-sm text-slate-500">No family leads match these filters.</td></tr>

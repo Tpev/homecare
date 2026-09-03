@@ -221,6 +221,27 @@ class FamilyLeadsIndex extends Component
         $this->dispatch('toast', ['type' => 'success', 'title' => 'Lead saved', 'message' => 'Ownership, timing, and stage are up to date.']);
     }
 
+    public function deleteLead(int $leadId): void
+    {
+        $lead = Lead::query()
+            ->where('lead_type', Lead::TYPE_FAMILY)
+            ->findOrFail($leadId);
+        $leadName = $lead->name;
+
+        $lead->delete();
+
+        if ($this->selectedLeadId === $leadId) {
+            $this->closeLead();
+        }
+
+        $this->resetPage();
+        $this->dispatch('toast', [
+            'type' => 'success',
+            'title' => 'Family lead deleted',
+            'message' => $leadName.' and its activity timeline were permanently removed.',
+        ]);
+    }
+
     public function addNote(): void
     {
         $lead = $this->selectedLead;

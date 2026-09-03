@@ -20,6 +20,7 @@
             </div>
             <div class="grid gap-3 border-t border-white/10 bg-black/10 px-6 py-4 sm:grid-cols-[190px_minmax(220px,360px)_1fr] lg:px-8">
                 <select wire:model.live="range" aria-label="Cohort date range" class="min-h-11 rounded-xl border-white/10 bg-white/10 text-sm font-bold text-white focus:border-white/30 focus:ring-white/20">
+                    <option class="text-slate-900" value="all">All time</option>
                     <option class="text-slate-900" value="30">Last 30 days</option>
                     <option class="text-slate-900" value="60">Last 60 days</option>
                     <option class="text-slate-900" value="90">Last 90 days</option>
@@ -29,7 +30,14 @@
                     @foreach($campaignOptions as $id => $name)<option class="text-slate-900" value="{{ $id }}">{{ $name }}</option>@endforeach
                     <option class="text-slate-900" value="manual">Manual CRM / community</option>
                 </select>
-                <p class="self-center text-xs leading-5 text-white/60 sm:text-right">Lead cohort: {{ $start->format('M j') }}–{{ $end->format('M j, Y') }}. Later outcomes remain attributed to the original lead.</p>
+                <p class="self-center text-xs leading-5 text-white/60 sm:text-right">
+                    @if($start)
+                        Lead cohort: {{ $start->format('M j') }}–{{ $end->format('M j, Y') }}.
+                    @else
+                        All-time lead cohort through {{ $end->format('M j, Y') }}.
+                    @endif
+                    Later outcomes remain attributed to the original lead.
+                </p>
             </div>
         </header>
 
