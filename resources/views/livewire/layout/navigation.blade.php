@@ -153,9 +153,11 @@ new class extends Component
         ];
 
         $adminNavGroups = [
-            [
-                'label' => 'Family acquisition',
-                'active' => request()->routeIs('admin.family-acquisition.*') || request()->routeIs('sdr.family-calling'),
+            'acquisition' => [
+                'label' => 'Acquire families',
+                'active' => request()->routeIs('admin.family-acquisition.*')
+                    || request()->routeIs('sdr.family-calling')
+                    || request()->routeIs('admin.sdr-outreach.*'),
                 'items' => [
                     [
                         'label' => 'Management overview',
@@ -165,69 +167,22 @@ new class extends Component
                     [
                         'label' => 'Family leads CRM',
                         'href' => route('admin.family-acquisition.leads'),
-                        'active' => request()->routeIs('admin.family-acquisition.leads'),
+                        'active' => request()->routeIs('admin.family-acquisition.leads') || request()->routeIs('admin.leads.*'),
                     ],
                     [
                         'label' => 'Family calling console',
                         'href' => route('sdr.family-calling'),
                         'active' => request()->routeIs('sdr.family-calling'),
                     ],
-                ],
-            ],
-            [
-                'label' => 'AI Support',
-                'active' => request()->routeIs('admin.ai-support.*'),
-                'items' => [
                     [
-                        'label' => 'Overview',
-                        'href' => route('admin.ai-support.index'),
-                        'active' => request()->routeIs('admin.ai-support.index'),
-                    ],
-                    [
-                        'label' => 'Pilot Users',
-                        'href' => route('admin.ai-support.pilots.index'),
-                        'active' => request()->routeIs('admin.ai-support.pilots.*'),
-                    ],
-                    [
-                        'label' => 'Knowledge Base',
-                        'href' => route('admin.ai-support.knowledge.index'),
-                        'active' => request()->routeIs('admin.ai-support.knowledge.*'),
-                    ],
-                    [
-                        'label' => 'Activity',
-                        'href' => route('admin.ai-support.activity.index'),
-                        'active' => request()->routeIs('admin.ai-support.activity.*'),
-                    ],
-                    [
-                        'label' => 'Availability',
-                        'href' => route('admin.ai-support.settings'),
-                        'active' => request()->routeIs('admin.ai-support.settings'),
+                        'label' => 'SDR Outreach',
+                        'href' => route('admin.sdr-outreach.index'),
+                        'active' => request()->routeIs('admin.sdr-outreach.*'),
                     ],
                 ],
             ],
-            [
-                'label' => 'Content',
-                'active' => request()->routeIs('admin.content.*'),
-                'items' => [
-                    [
-                        'label' => 'Articles',
-                        'href' => route('admin.content.posts.index'),
-                        'active' => request()->routeIs('admin.content.posts.*'),
-                    ],
-                    [
-                        'label' => 'Media Library',
-                        'href' => route('admin.content.media.index'),
-                        'active' => request()->routeIs('admin.content.media.*'),
-                    ],
-                    [
-                        'label' => 'Authors & Taxonomy',
-                        'href' => route('admin.content.settings'),
-                        'active' => request()->routeIs('admin.content.settings'),
-                    ],
-                ],
-            ],
-            [
-                'label' => 'Care ops',
+            'care' => [
+                'label' => 'Care operations',
                 'active' => request()->routeIs('admin.requests.*')
                     || request()->routeIs('admin.care-plans.*')
                     || request()->routeIs('admin.caregivers.reviews')
@@ -261,7 +216,7 @@ new class extends Component
                     ],
                 ],
             ],
-            [
+            'people' => [
                 'label' => 'People',
                 'active' => request()->routeIs('admin.users.*')
                     || request()->routeIs('admin.caregivers.moderation_logs'),
@@ -278,18 +233,52 @@ new class extends Component
                     ],
                 ],
             ],
-            [
-                'label' => 'Comms & money',
-                'active' => request()->routeIs('admin.sms.*')
+            'content_ai' => [
+                'label' => 'Content & AI',
+                'active' => request()->routeIs('admin.content.*')
+                    || request()->routeIs('admin.ai-support.*')
                     || request()->routeIs('admin.voice-ai.*')
-                    || request()->routeIs('admin.provider-outreach-ai.*')
-                    || request()->routeIs('admin.sdr-outreach.*')
-                    || request()->routeIs('admin.payments.ops'),
+                    || request()->routeIs('admin.provider-outreach-ai.*'),
                 'items' => [
                     [
-                        'label' => 'Admin SMS',
-                        'href' => route('admin.sms.index'),
-                        'active' => request()->routeIs('admin.sms.*'),
+                        'label' => 'Articles',
+                        'href' => route('admin.content.posts.index'),
+                        'active' => request()->routeIs('admin.content.posts.*'),
+                    ],
+                    [
+                        'label' => 'Media Library',
+                        'href' => route('admin.content.media.index'),
+                        'active' => request()->routeIs('admin.content.media.*'),
+                    ],
+                    [
+                        'label' => 'Authors & Taxonomy',
+                        'href' => route('admin.content.settings'),
+                        'active' => request()->routeIs('admin.content.settings'),
+                    ],
+                    [
+                        'label' => 'AI Support overview',
+                        'href' => route('admin.ai-support.index'),
+                        'active' => request()->routeIs('admin.ai-support.index'),
+                    ],
+                    [
+                        'label' => 'AI Pilot Users',
+                        'href' => route('admin.ai-support.pilots.index'),
+                        'active' => request()->routeIs('admin.ai-support.pilots.*'),
+                    ],
+                    [
+                        'label' => 'AI Knowledge Base',
+                        'href' => route('admin.ai-support.knowledge.index'),
+                        'active' => request()->routeIs('admin.ai-support.knowledge.*'),
+                    ],
+                    [
+                        'label' => 'AI Support activity',
+                        'href' => route('admin.ai-support.activity.index'),
+                        'active' => request()->routeIs('admin.ai-support.activity.*'),
+                    ],
+                    [
+                        'label' => 'AI Availability',
+                        'href' => route('admin.ai-support.settings'),
+                        'active' => request()->routeIs('admin.ai-support.settings'),
                     ],
                     [
                         'label' => 'Voice AI Test',
@@ -301,10 +290,17 @@ new class extends Component
                         'href' => route('admin.provider-outreach-ai.index'),
                         'active' => request()->routeIs('admin.provider-outreach-ai.*'),
                     ],
+                ],
+            ],
+            'communications' => [
+                'label' => 'Communications & money',
+                'active' => request()->routeIs('admin.sms.*')
+                    || request()->routeIs('admin.payments.ops'),
+                'items' => [
                     [
-                        'label' => 'SDR Outreach',
-                        'href' => route('admin.sdr-outreach.index'),
-                        'active' => request()->routeIs('admin.sdr-outreach.*'),
+                        'label' => 'Admin SMS',
+                        'href' => route('admin.sms.index'),
+                        'active' => request()->routeIs('admin.sms.*'),
                     ],
                     [
                         'label' => 'Admin Payments',
@@ -313,7 +309,7 @@ new class extends Component
                     ],
                 ],
             ],
-            [
+            'analytics' => [
                 'label' => 'Analytics',
                 'active' => request()->routeIs('admin.analytics.*'),
                 'items' => [
@@ -366,13 +362,37 @@ new class extends Component
             : (($isCaregiver && ! $caregiverOnboardingMode) ? route('caregiver.notifications.index') : null);
 
         if ($isAdmin && $continuousCoverageVisible) {
-            $adminNavGroups[2]['active'] = $adminNavGroups[2]['active'] || request()->routeIs('admin.continuous-coverage.*');
-            $adminNavGroups[2]['items'][] = [
+            $adminNavGroups['care']['active'] = $adminNavGroups['care']['active'] || request()->routeIs('admin.continuous-coverage.*');
+            $adminNavGroups['care']['items'][] = [
                 'label' => 'Continuous Coverage',
                 'href' => route('admin.continuous-coverage.index'),
                 'active' => request()->routeIs('admin.continuous-coverage.*'),
             ];
         }
+
+        $adminWorkQueueItems = $isAdmin
+            ? array_merge(
+                array_slice($adminNavGroups['acquisition']['items'], 1),
+                $adminNavGroups['care']['items'],
+                [$adminNavGroups['communications']['items'][1]],
+            )
+            : [];
+        $adminInsightItems = $isAdmin
+            ? array_merge(
+                [$adminNavGroups['acquisition']['items'][0]],
+                $adminNavGroups['analytics']['items'],
+            )
+            : [];
+        $hasActiveAdminItem = fn (array $items): bool => collect($items)->contains(
+            fn (array $item): bool => $item['active'],
+        );
+        $adminWorkQueuesActive = $isAdmin && $hasActiveAdminItem($adminWorkQueueItems);
+        $adminInsightsActive = $isAdmin && $hasActiveAdminItem($adminInsightItems);
+        $adminDashboardActive = $isAdmin && request()->routeIs('admin.crm.index');
+        $adminAllToolsActive = $isAdmin
+            && collect($adminNavGroups)->contains(fn (array $group): bool => $group['active'])
+            && ! $adminWorkQueuesActive
+            && ! $adminInsightsActive;
 
         $primaryLinks = [];
 
@@ -486,7 +506,7 @@ new class extends Component
                 </a>
             </div>
 
-            <div class="hidden min-w-0 flex-1 items-center gap-2 lg:ml-8 lg:mr-72 lg:flex">
+            <div class="hidden min-w-0 flex-1 items-center gap-2 lg:flex {{ $isAdmin ? 'lg:ml-6 lg:mr-36 xl:mr-72' : 'lg:ml-8 lg:mr-72' }}">
                 @if ($isContentTeam && ! $isAdmin)
                     <div class="relative" x-data="{ open: false }">
                         <button type="button" @click="open = !open" class="inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-semibold transition {{ request()->routeIs('admin.content.*') ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#547067] hover:bg-[#F8F0E2] hover:text-[#23483F]' }}">
@@ -498,36 +518,48 @@ new class extends Component
                     </div>
                 @endif
                 @if ($canAccessCrm)
-                    <x-nav-link :href="$adminCrmLink['href']" :active="$adminCrmLink['active']" wire:navigate>
-                        {{ __($adminCrmLink['label']) }}
-                    </x-nav-link>
-
                     @if ($isAdmin)
-                        @foreach ($adminNavGroups as $group)
-                            <div class="relative" x-data="{ open: false }">
+                        <div data-admin-compact-navigation class="flex min-w-0 items-center gap-1">
+                            <a
+                                href="{{ $adminCrmLink['href'] }}"
+                                wire:navigate
+                                class="inline-flex items-center rounded-full px-3 py-2 text-sm font-semibold transition {{ $adminDashboardActive ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#547067] hover:bg-[#F8F0E2] hover:text-[#23483F]' }}"
+                            >
+                                Dashboard
+                            </a>
+
+                            <div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false">
                                 <button
                                     type="button"
                                     @click="open = !open"
-                                    class="inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-semibold transition {{ $group['active'] ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#547067] hover:bg-[#F8F0E2] hover:text-[#23483F]' }}"
+                                    :aria-expanded="open"
+                                    aria-controls="admin-work-queues-menu"
+                                    class="inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-semibold transition {{ $adminWorkQueuesActive ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#547067] hover:bg-[#F8F0E2] hover:text-[#23483F]' }}"
                                 >
-                                    <span>{{ $group['label'] }}</span>
+                                    <span>Work queues</span>
                                     <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.12l3.71-3.89a.75.75 0 111.08 1.04l-4.25 4.46a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                                     </svg>
                                 </button>
 
                                 <div
+                                    id="admin-work-queues-menu"
                                     x-cloak
                                     x-show="open"
                                     x-transition
                                     @click.outside="open = false"
-                                    class="absolute left-0 z-50 mt-2 w-56 rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] p-2 shadow-xl"
+                                    class="absolute left-0 z-50 mt-2 max-h-[calc(100dvh-6rem)] w-72 overflow-y-auto rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.99)] p-2 shadow-xl"
                                     style="display: none;"
                                 >
-                                    @foreach ($group['items'] as $item)
+                                    <div class="px-3 pb-2 pt-1">
+                                        <p class="text-xs font-bold uppercase tracking-[0.14em] text-[#6E746F]">Work queues</p>
+                                        <p class="mt-1 text-xs leading-5 text-[#6E746F]">The places that may need action now.</p>
+                                    </div>
+                                    @foreach ($adminWorkQueueItems as $item)
                                         <a
                                             href="{{ $item['href'] }}"
                                             wire:navigate
+                                            @click="open = false"
                                             class="block rounded-xl px-3 py-2 text-sm font-medium {{ $item['active'] ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#23483F] hover:bg-[#F8F0E2]' }}"
                                         >
                                             {{ __($item['label']) }}
@@ -535,7 +567,127 @@ new class extends Component
                                     @endforeach
                                 </div>
                             </div>
-                        @endforeach
+
+                            <div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false">
+                                <button
+                                    type="button"
+                                    @click="open = !open"
+                                    :aria-expanded="open"
+                                    aria-controls="admin-insights-menu"
+                                    class="inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-semibold transition {{ $adminInsightsActive ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#547067] hover:bg-[#F8F0E2] hover:text-[#23483F]' }}"
+                                >
+                                    <span>Insights</span>
+                                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.12l3.71-3.89a.75.75 0 111.08 1.04l-4.25 4.46a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+
+                                <div
+                                    id="admin-insights-menu"
+                                    x-cloak
+                                    x-show="open"
+                                    x-transition
+                                    @click.outside="open = false"
+                                    class="absolute left-0 z-50 mt-2 w-64 rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.99)] p-2 shadow-xl"
+                                    style="display: none;"
+                                >
+                                    <div class="px-3 pb-2 pt-1">
+                                        <p class="text-xs font-bold uppercase tracking-[0.14em] text-[#6E746F]">Insights</p>
+                                        <p class="mt-1 text-xs leading-5 text-[#6E746F]">Performance, acquisition, and coverage.</p>
+                                    </div>
+                                    @foreach ($adminInsightItems as $item)
+                                        <a
+                                            href="{{ $item['href'] }}"
+                                            wire:navigate
+                                            @click="open = false"
+                                            class="block rounded-xl px-3 py-2 text-sm font-medium {{ $item['active'] ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#23483F] hover:bg-[#F8F0E2]' }}"
+                                        >
+                                            {{ __($item['label']) }}
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <div class="relative" x-data="{ open: false, query: '' }" @keydown.escape.window="open = false; query = ''">
+                                <button
+                                    type="button"
+                                    data-admin-all-tools
+                                    @click="open = !open; if (open) { $nextTick(() => $refs.adminToolSearch.focus()) }"
+                                    :aria-expanded="open"
+                                    aria-controls="admin-all-tools-menu"
+                                    class="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold transition {{ $adminAllToolsActive ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#547067] hover:bg-[#F8F0E2] hover:text-[#23483F]' }}"
+                                >
+                                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                                        <path stroke-linecap="round" d="M3.5 5.5h13M3.5 10h13M3.5 14.5h13" />
+                                    </svg>
+                                    <span>All tools</span>
+                                </button>
+
+                                <div
+                                    id="admin-all-tools-menu"
+                                    x-cloak
+                                    x-show="open"
+                                    x-transition
+                                    @click.outside="open = false; query = ''"
+                                    class="fixed left-1/2 top-[4.75rem] z-50 w-[60rem] max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-hidden rounded-[1.5rem] border border-[#E3D6C5] bg-[rgba(255,253,250,0.995)] shadow-2xl"
+                                    style="display: none;"
+                                >
+                                    <div class="flex items-start justify-between gap-6 border-b border-[#E3D6C5] px-5 py-4">
+                                        <div>
+                                            <p class="font-serif text-xl font-semibold text-[#173F36]">All admin tools</p>
+                                            <p class="mt-1 text-sm text-[#6E746F]">Search or browse every admin destination.</p>
+                                        </div>
+                                        <button type="button" @click="open = false; query = ''" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[#6E746F] hover:bg-[#F8F0E2] hover:text-[#23483F]" aria-label="Close all tools">
+                                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" d="M5 5l10 10M15 5L5 15" /></svg>
+                                        </button>
+                                    </div>
+
+                                    <div class="border-b border-[#E3D6C5] px-5 py-4">
+                                        <label for="admin-tool-search" class="sr-only">Search admin tools</label>
+                                        <div class="relative">
+                                            <svg class="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6E746F]" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.25" /><path stroke-linecap="round" d="m12.5 12.5 4 4" /></svg>
+                                            <input
+                                                id="admin-tool-search"
+                                                x-ref="adminToolSearch"
+                                                x-model.debounce.100ms="query"
+                                                type="search"
+                                                autocomplete="off"
+                                                placeholder="Search admin tools…"
+                                                class="h-11 w-full rounded-xl border border-[#D8CBB9] bg-white pl-11 pr-4 text-sm text-[#23483F] placeholder:text-[#8A8F8B] focus:border-[#0F6B5B] focus:ring-[#0F6B5B]"
+                                            >
+                                        </div>
+                                    </div>
+
+                                    <div class="grid max-h-[calc(100dvh-15rem)] grid-cols-3 gap-x-3 gap-y-5 overflow-y-auto p-5">
+                                        @foreach ($adminNavGroups as $group)
+                                            <section
+                                                x-show="query === '' || Array.from($el.querySelectorAll('[data-admin-tool]')).some((item) => item.dataset.adminTool.includes(query.toLowerCase()))"
+                                            >
+                                                <p class="px-3 text-xs font-bold uppercase tracking-[0.14em] text-[#6E746F]">{{ $group['label'] }}</p>
+                                                <div class="mt-1 space-y-0.5">
+                                                    @foreach ($group['items'] as $item)
+                                                        <a
+                                                            href="{{ $item['href'] }}"
+                                                            wire:navigate
+                                                            data-admin-tool="{{ Illuminate\Support\Str::lower($group['label'].' '.$item['label']) }}"
+                                                            x-show="query === '' || $el.dataset.adminTool.includes(query.toLowerCase())"
+                                                            @click="open = false; query = ''"
+                                                            class="block rounded-xl px-3 py-2 text-sm font-medium {{ $item['active'] ? 'bg-[#23483F] text-[#FFFBF4]' : 'text-[#23483F] hover:bg-[#F8F0E2]' }}"
+                                                        >
+                                                            {{ __($item['label']) }}
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            </section>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <x-nav-link :href="$adminCrmLink['href']" :active="$adminCrmLink['active']" wire:navigate>
+                            {{ __($adminCrmLink['label']) }}
+                        </x-nav-link>
                     @endif
                 @elseif ($isSdr)
                     @foreach ($sdrNavLinks as $link)
@@ -719,6 +871,7 @@ new class extends Component
                     @click="accountOpen = !accountOpen; supportOpen = false"
                     :aria-expanded="accountOpen"
                     aria-controls="account-navigation-menu"
+                    @if ($isAdmin) aria-label="Account menu for {{ $user->name }}" @endif
                     class="inline-flex items-center gap-3 rounded-2xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.98)] px-3 py-2 text-sm text-[#23483F] shadow-sm transition hover:border-[#23483F]/12 hover:bg-[#F8F0E2]"
                 >
                     @if ($avatarUrl)
@@ -729,7 +882,7 @@ new class extends Component
                         </span>
                     @endif
 
-                    <span class="hidden md:block text-left">
+                    <span class="text-left {{ $isAdmin ? 'hidden xl:block' : 'hidden md:block' }}">
                         <span class="block text-sm font-semibold leading-tight text-[#23483F]">{{ $user->name }}</span>
                         <span class="block text-xs text-[#6E746F] leading-tight">{{ ucfirst((string) $user->role) }}</span>
                     </span>
@@ -842,7 +995,7 @@ new class extends Component
             @endif
             @if ($canAccessCrm)
                 <x-responsive-nav-link :href="$adminCrmLink['href']" :active="$adminCrmLink['active']" wire:navigate>
-                    {{ __($adminCrmLink['label']) }}
+                    {{ __($isAdmin ? 'Dashboard' : $adminCrmLink['label']) }}
                 </x-responsive-nav-link>
 
                 @if ($isAdmin)

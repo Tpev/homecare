@@ -87,6 +87,19 @@ class AuthenticationTest extends TestCase
             ->assertSee("gtag('config', 'G-WJG3HG6EG6');", false);
     }
 
+    public function test_compact_admin_navigation_is_not_rendered_for_family_caregiver_or_sdr_users(): void
+    {
+        foreach (['family', 'caregiver', 'sdr'] as $role) {
+            $user = User::factory()->create(['role' => $role]);
+
+            $this->actingAs($user);
+
+            Volt::test('layout.navigation')
+                ->assertDontSeeHtml('data-admin-compact-navigation')
+                ->assertDontSeeHtml('data-admin-all-tools');
+        }
+    }
+
     public function test_users_can_logout(): void
     {
         $user = User::factory()->create();

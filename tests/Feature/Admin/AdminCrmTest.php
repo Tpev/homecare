@@ -15,7 +15,7 @@ class AdminCrmTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_can_view_crm_and_grouped_admin_navigation(): void
+    public function test_admin_can_view_crm_and_compact_admin_navigation(): void
     {
         $admin = User::factory()->create([
             'email' => 'test@test.com',
@@ -29,9 +29,16 @@ class AdminCrmTest extends TestCase
         $response->assertSee('Lead command center');
         $response->assertSee('Family / care receiver leads');
         $response->assertSee('Referral source recruiting');
-        $response->assertSee('Care ops');
+        $response->assertSee('data-admin-compact-navigation', false);
+        $response->assertSee('data-admin-all-tools', false);
+        $response->assertSee('Dashboard');
+        $response->assertSee('Work queues');
+        $response->assertSee('Insights');
+        $response->assertSee('All tools');
+        $response->assertSee('Search admin tools');
+        $response->assertSee('Care operations');
         $response->assertSee('People');
-        $response->assertSee('Comms &amp; money', false);
+        $response->assertSee('Communications &amp; money', false);
         $response->assertSee('Analytics');
         $response->assertSee('Admin Requests');
         $response->assertSee('Admin Users');
@@ -126,9 +133,12 @@ class AdminCrmTest extends TestCase
             ->assertOk()
             ->assertSee('Lead command center')
             ->assertSee('CRM')
+            ->assertDontSee('data-admin-compact-navigation', false)
+            ->assertDontSee('data-admin-all-tools', false)
+            ->assertDontSee('Work queues')
             ->assertDontSee('Admin Users')
             ->assertDontSee('Admin Requests')
-            ->assertDontSee('Comms &amp; money', false);
+            ->assertDontSee('Communications &amp; money', false);
 
         $this->actingAs($sales)->get(route('admin.leads.index'))->assertOk();
         $this->actingAs($sales)->get(route('admin.users.index'))->assertForbidden();
