@@ -5,22 +5,30 @@ namespace Tests\Feature\Caregiver;
 use App\Livewire\Caregiver\ApplyToCareRequest;
 use App\Livewire\Caregiver\WorkInbox;
 use App\Models\CareBooking;
+use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
 use App\Models\CareRequestConversation;
 use App\Models\CareRequestInvitation;
 use App\Models\CareTask;
-use App\Models\CaregiverProfile;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Tests\TestCase;
 
 class CaregiverWorkInboxTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
 
     public function test_caregiver_can_open_work_inbox_and_see_offer_states(): void
     {
@@ -128,6 +136,90 @@ class CaregiverWorkInboxTest extends TestCase
             ->assertSee('New requests are available.')
             ->assertSee($request->title)
             ->assertSee('Apply now');
+    }
+
+    public function test_one_time_opportunities_close_at_their_projected_end_while_recurring_requests_stay_open(): void
+    {
+        Carbon::setTestNow('2026-09-04 12:00:00');
+
+        $family = User::factory()->create(['role' => 'family', 'city' => 'Raleigh', 'state' => 'NC']);
+        $caregiver = $this->createReadyCaregiver();
+
+        $endedRequest = $this->createOneTimeRequest($family->id, 'Ended one-time opportunity');
+        $endedRequest->update([
+            'requested_start_at' => now()->subHours(3),
+            'requested_end_at' => now()->subMinute(),
+        ]);
+
+        $activeRequest = $this->createOneTimeRequest($family->id, 'In-progress one-time opportunity');
+        $activeRequest->update([
+            'requested_start_at' => now()->subHour(),
+            'requested_end_at' => now()->addHour(),
+        ]);
+
+        $recurringRequest = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Ongoing recurring opportunity',
+            'status' => CareRequest::STATUS_OPEN,
+            'request_type' => CareRequest::TYPE_RECURRING,
+            'requested_start_at' => now()->subWeek(),
+            'requested_end_at' => now()->subWeek()->addHours(3),
+            'recurring_days' => [1, 3, 5],
+            'recurring_start_time' => '09:00',
+            'recurring_end_time' => '12:00',
+            'recurring_starts_on' => now()->subMonth()->toDateString(),
+            'address_line1' => '202 Recurring Lane',
+            'city' => 'Raleigh',
+            'state' => 'NC',
+            'zip' => '27601',
+        ]);
+
+        $newRequestTitles = app(\App\Support\CaregiverWorkInboxBuilder::class)
+            ->buildForUser($caregiver, 'new_requests')
+            ->pluck('title');
+
+        $this->assertFalse($newRequestTitles->contains($endedRequest->title));
+        $this->assertTrue($newRequestTitles->contains($activeRequest->title));
+        $this->assertTrue($newRequestTitles->contains($recurringRequest->title));
+
+        $this->actingAs($caregiver)
+            ->get('/care-requests')
+            ->assertOk()
+            ->assertDontSee($endedRequest->title)
+            ->assertSee($activeRequest->title)
+            ->assertSee($recurringRequest->title);
+
+        $this->actingAs($caregiver)
+            ->get(route('care-requests.apply', $endedRequest->id))
+            ->assertForbidden();
+    }
+
+    public function test_application_is_rejected_if_a_one_time_shift_ends_after_the_page_was_opened(): void
+    {
+        Carbon::setTestNow('2026-09-04 10:00:00');
+
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = $this->createReadyCaregiver();
+        $request = $this->createOneTimeRequest($family->id, 'Closing application window');
+        $request->update([
+            'requested_start_at' => now()->subHour(),
+            'requested_end_at' => now()->addHour(),
+        ]);
+
+        $component = Livewire::actingAs($caregiver)
+            ->test(ApplyToCareRequest::class, ['careRequest' => $request->id])
+            ->set('cover_note', 'I can help with this shift.');
+
+        Carbon::setTestNow('2026-09-04 11:00:00');
+
+        $component
+            ->call('submit')
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('care_request_applications', [
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+        ]);
     }
 
     public function test_caregiver_open_request_detail_is_decision_first_before_applying(): void
@@ -358,8 +450,7 @@ class CaregiverWorkInboxTest extends TestCase
         string $title,
         string $status = CareRequest::STATUS_OPEN,
         array $recipientOverrides = []
-    ): CareRequest
-    {
+    ): CareRequest {
         $request = CareRequest::query()->create([
             'family_user_id' => $familyUserId,
             'title' => $title,

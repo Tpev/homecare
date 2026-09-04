@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToFamilyAccount;
 use App\Support\WeeklySchedule;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -169,6 +170,45 @@ class CareRequest extends Model
                 ->orWhereHas('applications', fn (Builder $applications) => $applications
                     ->where('caregiver_user_id', $caregiverId));
         });
+    }
+
+    public function scopeAcceptingApplications(Builder $query, ?CarbonInterface $at = null): Builder
+    {
+        $at ??= now();
+
+        return $query->where(function (Builder $availability) use ($at): void {
+            $availability
+                ->where('request_type', '!=', self::TYPE_ONE_TIME)
+                ->orWhere(function (Builder $oneTime) use ($at): void {
+                    $oneTime
+                        ->where('request_type', self::TYPE_ONE_TIME)
+                        ->where(function (Builder $schedule) use ($at): void {
+                            $schedule
+                                ->where('requested_end_at', '>', $at)
+                                ->orWhere(function (Builder $withoutEnd) use ($at): void {
+                                    $withoutEnd
+                                        ->whereNull('requested_end_at')
+                                        ->where('requested_start_at', '>', $at);
+                                });
+                        });
+                });
+        });
+    }
+
+    public function isAcceptingApplications(?CarbonInterface $at = null): bool
+    {
+        if ($this->request_type !== self::TYPE_ONE_TIME) {
+            return true;
+        }
+
+        $endsAt = $this->requested_end_at ?: $this->requested_start_at;
+
+        return $endsAt !== null && $endsAt->gt($at ?? now());
+    }
+
+    public function applicationWindowHasEnded(?CarbonInterface $at = null): bool
+    {
+        return ! $this->isAcceptingApplications($at);
     }
 
     public function isRecurring(): bool

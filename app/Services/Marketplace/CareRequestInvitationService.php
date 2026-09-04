@@ -71,9 +71,7 @@ class CareRequestInvitationService
                 );
             }
 
-            $oneTimeEndsAt = $lockedRequest->requested_end_at ?: $lockedRequest->requested_start_at;
-            if ($lockedRequest->request_type === CareRequest::TYPE_ONE_TIME
-                && (! $oneTimeEndsAt || $oneTimeEndsAt->lte(now()))) {
+            if (! $lockedRequest->isAcceptingApplications()) {
                 return new CareRequestInvitationResult(
                     self::STATE_REQUEST_UNAVAILABLE,
                     'This one-time care request has ended.'

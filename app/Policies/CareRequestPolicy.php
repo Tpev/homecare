@@ -24,7 +24,11 @@ class CareRequestPolicy
 
         if ($user->role === 'caregiver') {
             if ($careRequest->status === CareRequest::STATUS_OPEN
-                && CareRequest::query()->whereKey($careRequest->id)->visibleToCaregiver($user)->exists()) {
+                && CareRequest::query()
+                    ->whereKey($careRequest->id)
+                    ->acceptingApplications()
+                    ->visibleToCaregiver($user)
+                    ->exists()) {
                 return true;
             }
 
@@ -77,6 +81,10 @@ class CareRequestPolicy
             && $careRequest->status === CareRequest::STATUS_OPEN
             && $profile?->status === 'active'
             && $profile->isMarketplaceReady()
-            && CareRequest::query()->whereKey($careRequest->id)->visibleToCaregiver($user)->exists();
+            && CareRequest::query()
+                ->whereKey($careRequest->id)
+                ->acceptingApplications()
+                ->visibleToCaregiver($user)
+                ->exists();
     }
 }

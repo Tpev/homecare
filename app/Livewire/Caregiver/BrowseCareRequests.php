@@ -192,6 +192,7 @@ class BrowseCareRequests extends Component
     {
         $query = CareRequest::query()
             ->where('status', CareRequest::STATUS_OPEN)
+            ->acceptingApplications()
             ->visibleToCaregiver($caregiverId);
 
         if ($prelaunchMode) {

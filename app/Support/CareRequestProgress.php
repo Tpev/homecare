@@ -16,9 +16,11 @@ class CareRequestProgress
             return false;
         }
 
-        $endsAt = $request->requested_end_at ?: $request->requested_start_at;
+        if (! $request->requested_end_at && ! $request->requested_start_at) {
+            return false;
+        }
 
-        return $endsAt !== null && $endsAt->lt($at ?? now());
+        return $request->applicationWindowHasEnded($at);
     }
 
     public static function postedAgoLabel(CareRequest $request): string

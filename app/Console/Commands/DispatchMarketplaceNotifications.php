@@ -54,6 +54,7 @@ class DispatchMarketplaceNotifications extends Command
     ): void {
         $requests = CareRequest::query()
             ->where('status', CareRequest::STATUS_OPEN)
+            ->acceptingApplications()
             ->where('is_private', false)
             ->where('created_at', '>=', now()->subHours(2))
             ->whereDoesntHave('applications')

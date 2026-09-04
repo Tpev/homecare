@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Models\CaregiverProfile;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
-use App\Models\CaregiverProfile;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -23,8 +23,7 @@ class InjectPrelaunchStaffApplication implements ShouldQueue
         public int $careRequestId,
         public string $caregiverEmail,
         public int $delayMinutes = 0
-    ) {
-    }
+    ) {}
 
     public function handle(): void
     {
@@ -33,7 +32,9 @@ class InjectPrelaunchStaffApplication implements ShouldQueue
         }
 
         $careRequest = CareRequest::query()->find($this->careRequestId);
-        if (! $careRequest || $careRequest->status !== CareRequest::STATUS_OPEN) {
+        if (! $careRequest
+            || $careRequest->status !== CareRequest::STATUS_OPEN
+            || ! $careRequest->isAcceptingApplications()) {
             return;
         }
 
@@ -78,4 +79,3 @@ class InjectPrelaunchStaffApplication implements ShouldQueue
         return round($tierRate > 0 ? $tierRate : 27, 2);
     }
 }
-
