@@ -153,8 +153,9 @@ class SdrOutreachCenter extends Component
 
     public function render(): View
     {
-        $days = max(1, min(30, (int) $this->metricsWindow));
-        $start = now()->subDays($days - 1)->startOfDay();
+        $start = $this->metricsWindow === 'all'
+            ? null
+            : now()->subDays(max(1, min(30, (int) $this->metricsWindow)) - 1)->startOfDay();
         $activities = $this->sdrCallActivities($start);
         $recentCallActivities = $activities
             ->when(
@@ -169,6 +170,7 @@ class SdrOutreachCenter extends Component
             'dailyStats' => $this->dailyStats($activities),
             'ownerOptions' => $this->sdrOwnerOptions(),
             'outcomeOptions' => SdrOutreach::outcomeOptions(),
+            'outcomeStats' => $this->outcomeStats($activities),
             'poolStats' => $this->poolStats($activities),
             'priorityOptions' => $this->priorityOptions(),
             'hasMoreRecentCalls' => $recentCallActivities->count() > $this->recentCallsLimit,
@@ -348,15 +350,43 @@ class SdrOutreachCenter extends Component
             ->all();
     }
 
-    private function sdrCallActivities(Carbon $start): \Illuminate\Support\Collection
+    private function sdrCallActivities(?Carbon $start): \Illuminate\Support\Collection
     {
         return LeadActivity::query()
             ->with(['actor:id,name,email,role', 'lead:id,lead_type,name,company,phone,status'])
             ->where('type', LeadActivity::TYPE_CALL)
-            ->where('occurred_at', '>=', $start)
+            ->whereNotNull('metadata->sdr_outcome')
+            ->when($start, fn (Builder $query) => $query->where('occurred_at', '>=', $start))
             ->latest('occurred_at')
-            ->get()
-            ->filter(fn (LeadActivity $activity): bool => filled(data_get($activity->metadata, 'sdr_outcome')));
+            ->get();
+    }
+
+    private function outcomeStats(\Illuminate\Support\Collection $activities): \Illuminate\Support\Collection
+    {
+        $total = $activities->count();
+        $counts = $activities->countBy(
+            fn (LeadActivity $activity): string => (string) data_get($activity->metadata, 'sdr_outcome')
+        );
+        $labels = collect(SdrOutreach::outcomeOptions());
+
+        foreach ($counts->keys() as $outcome) {
+            if (! $labels->has($outcome)) {
+                $labels->put($outcome, SdrOutreach::outcomeLabel((string) $outcome));
+            }
+        }
+
+        return $labels
+            ->map(fn (string $label, string $outcome): array => [
+                'outcome' => $outcome,
+                'label' => $label,
+                'count' => (int) $counts->get($outcome, 0),
+                'share' => $total > 0 ? round(((int) $counts->get($outcome, 0) / $total) * 100, 1) : 0,
+            ])
+            ->sortBy([
+                ['count', 'desc'],
+                ['label', 'asc'],
+            ])
+            ->values();
     }
 
     private function dailyStats(\Illuminate\Support\Collection $activities): \Illuminate\Support\Collection

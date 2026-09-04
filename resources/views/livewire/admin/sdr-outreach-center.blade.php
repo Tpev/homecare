@@ -149,6 +149,7 @@
                         <p class="text-sm text-slate-500">Volume and outcomes by SDR.</p>
                     </div>
                     <select wire:model.live="metricsWindow" class="min-h-11 rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                        <option value="all">All time</option>
                         <option value="1">Today</option>
                         <option value="7">7 days</option>
                         <option value="14">14 days</option>
@@ -187,6 +188,39 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+
+                <div class="mt-6 border-t border-slate-200 pt-5">
+                    <div class="flex items-end justify-between gap-3">
+                        <div>
+                            <h3 class="font-bold text-slate-950">Volume by call outcome</h3>
+                            <p class="text-sm text-slate-500">Saved outcomes in the selected time range.</p>
+                        </div>
+                        <span class="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
+                            {{ $poolStats['calls'] }} total
+                        </span>
+                    </div>
+
+                    <div class="mt-3 overflow-x-auto rounded-xl border border-slate-200">
+                        <table class="min-w-full text-sm">
+                            <thead class="bg-slate-50 text-xs uppercase tracking-[0.12em] text-slate-500">
+                                <tr>
+                                    <th class="px-3 py-2.5 text-left">Outcome</th>
+                                    <th class="px-3 py-2.5 text-right">Calls</th>
+                                    <th class="px-3 py-2.5 text-right">Share</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 bg-white">
+                                @foreach ($outcomeStats as $row)
+                                    <tr wire:key="outcome-volume-{{ $row['outcome'] }}">
+                                        <td class="px-3 py-2.5 font-medium text-slate-800">{{ $row['label'] }}</td>
+                                        <td class="px-3 py-2.5 text-right font-bold text-slate-950">{{ $row['count'] }}</td>
+                                        <td class="px-3 py-2.5 text-right text-slate-600">{{ number_format($row['share'], 1) }}%</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
         </section>

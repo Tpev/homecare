@@ -281,13 +281,46 @@ class SdrOutreachTest extends TestCase
             ],
         ]);
 
+        $oldLead = Lead::query()->create([
+            'lead_type' => Lead::TYPE_REFERRAL,
+            'name' => 'Old Wrong Number Practice',
+            'company' => 'Old Wrong Number Practice',
+            'phone' => '+19195557777',
+            'status' => 'not_fit',
+            'priority' => Lead::PRIORITY_NORMAL,
+            'source' => SdrOutreach::SOURCE,
+        ]);
+        $oldLead->activities()->create([
+            'actor_user_id' => $sdr->id,
+            'type' => LeadActivity::TYPE_CALL,
+            'summary' => 'SDR call: Wrong number',
+            'occurred_at' => now()->subDays(45),
+            'metadata' => [
+                'sdr_outcome' => 'wrong_number',
+                'sdr_outcome_label' => 'Wrong number',
+            ],
+        ]);
+
         Livewire::actingAs($admin)
             ->test(SdrOutreachCenter::class)
             ->assertSee('All outcomes')
+            ->assertSee('All time')
+            ->assertSee('Volume by call outcome')
             ->assertSee('Material drop-offs')
+            ->assertViewHas('outcomeStats', fn ($rows): bool => $rows->contains(
+                fn (array $row): bool => $row['outcome'] === 'no_answer' && $row['count'] === 13
+            ))
+            ->assertViewHas('outcomeStats', fn ($rows): bool => $rows->contains(
+                fn (array $row): bool => $row['outcome'] === 'wrong_number' && $row['count'] === 0
+            ))
             ->assertViewHas('poolStats', fn (array $stats): bool => $stats['material_drop_agreed'] === 1)
             ->assertViewHas('dailyStats', fn ($rows): bool => $rows->contains(
                 fn (array $row): bool => $row['sdr'] === 'SDR Caller' && $row['material_drop_agreed'] === 1
+            ))
+            ->set('metricsWindow', 'all')
+            ->assertViewHas('poolStats', fn (array $stats): bool => $stats['calls'] === 16)
+            ->assertViewHas('outcomeStats', fn ($rows): bool => $rows->contains(
+                fn (array $row): bool => $row['outcome'] === 'wrong_number' && $row['count'] === 1
             ))
             ->set('outcomeFilter', 'no_answer')
             ->assertSet('recentCallsLimit', 12)
