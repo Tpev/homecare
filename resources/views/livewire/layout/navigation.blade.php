@@ -624,13 +624,24 @@ new class extends Component
                                 </button>
 
                                 <div
+                                    x-cloak
+                                    x-show="open"
+                                    x-transition.opacity
+                                    @click="open = false; query = ''"
+                                    data-admin-tools-backdrop
+                                    class="fixed inset-x-0 bottom-0 top-[4.5rem] z-40 bg-[#173F36]/20 backdrop-blur-[1px]"
+                                    style="display: none; background-color: rgba(23, 63, 54, 0.2);"
+                                    aria-hidden="true"
+                                ></div>
+
+                                <div
                                     id="admin-all-tools-menu"
                                     x-cloak
                                     x-show="open"
                                     x-transition
                                     @click.outside="open = false; query = ''"
-                                    class="fixed left-1/2 top-[4.75rem] z-50 w-[60rem] max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-hidden rounded-[1.5rem] border border-[#E3D6C5] bg-[rgba(255,253,250,0.995)] shadow-2xl"
-                                    style="display: none;"
+                                    class="fixed left-1/2 top-[4.75rem] z-50 w-[60rem] max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-hidden rounded-[1.5rem] border border-[#D8CBB9] bg-[#FFFDFA] shadow-[0_24px_70px_rgba(23,63,54,0.24)]"
+                                    style="display: none; background-color: #FFFDFA; box-shadow: 0 24px 70px rgba(23, 63, 54, 0.24);"
                                 >
                                     <div class="flex items-start justify-between gap-6 border-b border-[#E3D6C5] px-5 py-4">
                                         <div>
