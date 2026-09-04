@@ -13,6 +13,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 #[Layout('layouts.app')]
 class LeadsIndex extends Component
@@ -136,6 +137,104 @@ class LeadsIndex extends Component
         );
 
         $this->boardStageLimits[$stage] = $currentLimit + self::BOARD_STAGE_LOAD_MORE_COUNT;
+    }
+
+    public function exportStage(string $stage): StreamedResponse
+    {
+        $stageOptions = $this->currentStageOptions();
+
+        abort_unless(array_key_exists($stage, $stageOptions), 404);
+
+        $pipelineLabel = $this->pipeline === Lead::TYPE_REFERRAL ? 'referral-sources' : 'family-leads';
+        $filename = implode('-', [
+            $pipelineLabel,
+            Str::slug($stageOptions[$stage]),
+            now()->format('Y-m-d-His'),
+        ]).'.csv';
+
+        return response()->streamDownload(function () use ($stage): void {
+            $stream = fopen('php://output', 'wb');
+
+            if ($stream === false) {
+                return;
+            }
+
+            fwrite($stream, "\xEF\xBB\xBF");
+            fputcsv($stream, [
+                'Lead ID',
+                'Pipeline',
+                'Stage',
+                'Priority',
+                'Contact name',
+                'Role / relationship',
+                'Organization',
+                'Email',
+                'Phone',
+                'Location',
+                'ZIP',
+                'Owner',
+                'Source',
+                'Source detail',
+                'Submitted at',
+                'First call at',
+                'First connected at',
+                'Last contacted at',
+                'Next follow-up at',
+                'Converted at',
+                'Do not contact at',
+                'Call attempts',
+                'Unanswered attempts',
+                'Closed reason',
+                'Created at',
+                'Updated at',
+                'Activity history and comments',
+                'Additional lead data',
+            ]);
+
+            $this->baseQuery(applyStatus: false)
+                ->where('status', $stage)
+                ->with([
+                    'assignedAdmin:id,name,email',
+                    'activities.actor:id,name,email',
+                ])
+                ->orderBy('id')
+                ->chunkById(200, function ($leads) use ($stream): void {
+                    foreach ($leads as $lead) {
+                        fputcsv($stream, array_map($this->csvCell(...), [
+                            $lead->id,
+                            $lead->pipelineLabel(),
+                            $lead->stageLabel(),
+                            ucfirst((string) ($lead->priority ?: Lead::PRIORITY_NORMAL)),
+                            $lead->name,
+                            $lead->contact_role,
+                            $lead->company,
+                            $lead->email,
+                            $lead->phone,
+                            $lead->location,
+                            $lead->zip,
+                            $lead->assignedAdmin?->name ?: 'Unassigned',
+                            $lead->sourceLabel(),
+                            $lead->source_detail,
+                            $this->exportDate($lead->submitted_at),
+                            $this->exportDate($lead->first_call_at),
+                            $this->exportDate($lead->first_connected_at),
+                            $this->exportDate($lead->last_contacted_at),
+                            $this->exportDate($lead->next_follow_up_at),
+                            $this->exportDate($lead->converted_at),
+                            $this->exportDate($lead->do_not_contact_at),
+                            $lead->call_attempt_count,
+                            $lead->unanswered_attempt_count,
+                            $lead->closed_reason,
+                            $this->exportDate($lead->created_at),
+                            $this->exportDate($lead->updated_at),
+                            $this->exportActivityHistory($lead),
+                            $lead->data ? json_encode($lead->data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : '',
+                        ]));
+                    }
+                });
+
+            fclose($stream);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function setSort(string $field): void
@@ -444,6 +543,45 @@ class LeadsIndex extends Component
     private function resetBoardStageLimits(): void
     {
         $this->boardStageLimits = [];
+    }
+
+    private function exportActivityHistory(Lead $lead): string
+    {
+        return $lead->activities
+            ->map(function (LeadActivity $activity): string {
+                $parts = [
+                    $this->exportDate($activity->occurred_at ?: $activity->created_at),
+                    strtoupper((string) $activity->type),
+                    $activity->actor?->name ?: 'System',
+                    $activity->summary ?: ucfirst((string) $activity->type),
+                ];
+
+                if (filled($activity->body)) {
+                    $parts[] = trim((string) $activity->body);
+                }
+
+                if (! empty($activity->metadata)) {
+                    $parts[] = 'Metadata: '.json_encode(
+                        $activity->metadata,
+                        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+                    );
+                }
+
+                return implode(' | ', $parts);
+            })
+            ->implode("\n");
+    }
+
+    private function exportDate(mixed $value): string
+    {
+        return $value instanceof \DateTimeInterface ? Carbon::instance($value)->format('Y-m-d H:i:s T') : '';
+    }
+
+    private function csvCell(mixed $value): string
+    {
+        $cell = str_replace(["\r\n", "\r"], "\n", (string) ($value ?? ''));
+
+        return preg_match('/^[=+\-@\t]/u', $cell) === 1 ? "'".$cell : $cell;
     }
 
     private function baseQuery(bool $applyStatus = true): Builder

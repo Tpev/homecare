@@ -8,6 +8,7 @@ use App\Models\LeadActivity;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -311,6 +312,79 @@ class AdminCrmTest extends TestCase
             ->assertSet('boardStageLimits.need_to_drop_material', 16)
             ->assertViewHas('boardLeads', fn ($stages): bool => $stages->get('need_to_drop_material')->count() === 10)
             ->assertDontSee('Load more · showing 8 of 10');
+    }
+
+    public function test_admin_can_export_every_filtered_lead_in_a_referral_stage_with_full_activity_history(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'test@test.com',
+            'role' => 'admin',
+            'name' => 'Ops Admin',
+        ]);
+        $otherOwner = User::factory()->create([
+            'role' => 'sales',
+            'name' => 'Other Owner',
+        ]);
+
+        foreach (range(1, 10) as $index) {
+            $lead = Lead::query()->create([
+                'lead_type' => Lead::TYPE_REFERRAL,
+                'name' => 'Export Practice '.$index,
+                'email' => "contact{$index}@example.com",
+                'phone' => '+1919555'.str_pad((string) $index, 4, '0', STR_PAD_LEFT),
+                'company' => 'Practice '.$index,
+                'contact_role' => 'Office manager',
+                'location' => 'Raleigh, NC',
+                'zip' => '27601',
+                'status' => 'outreach',
+                'priority' => Lead::PRIORITY_HIGH,
+                'source' => 'sdr_import',
+                'source_detail' => 'September provider list',
+                'assigned_admin_id' => $index === 10 ? $otherOwner->id : $admin->id,
+                'data' => ['sdr' => ['tags' => ['pcp', 'raleigh']]],
+            ]);
+
+            $lead->activities()->create([
+                'actor_user_id' => $admin->id,
+                'type' => LeadActivity::TYPE_NOTE,
+                'summary' => 'Internal note',
+                'body' => $index === 1 ? '=Important spreadsheet-safe comment' : 'Comment for lead '.$index,
+                'occurred_at' => now()->subMinutes($index),
+                'metadata' => ['source' => 'test'],
+            ]);
+        }
+
+        Lead::query()->create([
+            'lead_type' => Lead::TYPE_REFERRAL,
+            'name' => 'Different Stage Practice',
+            'status' => 'qualified',
+            'priority' => Lead::PRIORITY_NORMAL,
+        ]);
+
+        $component = Livewire::actingAs($admin)
+            ->test(LeadsIndex::class, ['pipeline' => Lead::TYPE_REFERRAL])
+            ->set('assigned', (string) $admin->id)
+            ->assertSee('Export all Outreach leads')
+            ->assertViewHas('boardLeads', fn ($stages): bool => $stages->get('outreach')->count() === 8);
+
+        $response = $component->instance()->exportStage('outreach');
+
+        ob_start();
+        $response->sendContent();
+        $csv = (string) ob_get_clean();
+
+        $this->assertStringContainsString('Activity history and comments', $csv);
+        $this->assertStringContainsString('Additional lead data', $csv);
+        $this->assertStringContainsString('Export Practice 1', $csv);
+        $this->assertStringContainsString('Export Practice 9', $csv);
+        $this->assertStringNotContainsString('Export Practice 10', $csv);
+        $this->assertStringNotContainsString('Different Stage Practice', $csv);
+        $this->assertStringContainsString("'+19195550001", $csv);
+        $this->assertStringContainsString('=Important spreadsheet-safe comment', $csv);
+        $this->assertStringContainsString('Internal note', $csv);
+        $this->assertStringContainsString('Ops Admin', $csv);
+        $this->assertSame(9, substr_count($csv, 'Export Practice '));
+        $this->assertTrue(Str::startsWith($csv, "\xEF\xBB\xBF"));
     }
 
     public function test_admin_can_drag_move_lead_across_board_stages(): void
