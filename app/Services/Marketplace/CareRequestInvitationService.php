@@ -71,12 +71,12 @@ class CareRequestInvitationService
                 );
             }
 
-            $oneTimeEndsAt = $lockedRequest->requested_end_at ?? $lockedRequest->requested_start_at;
+            $oneTimeEndsAt = $lockedRequest->requested_end_at ?: $lockedRequest->requested_start_at;
             if ($lockedRequest->request_type === CareRequest::TYPE_ONE_TIME
-                && (! $oneTimeEndsAt || $oneTimeEndsAt->isPast())) {
+                && (! $oneTimeEndsAt || $oneTimeEndsAt->lte(now()))) {
                 return new CareRequestInvitationResult(
                     self::STATE_REQUEST_UNAVAILABLE,
-                    'This one-time care request is in the past.'
+                    'This one-time care request has ended.'
                 );
             }
 
@@ -186,7 +186,7 @@ class CareRequestInvitationService
                     'care_request_application_id' => null,
                     'status' => CareRequestInvitation::STATUS_PENDING,
                     'message' => $cleanMessage,
-                    'expires_at' => now()->addHours(72),
+                    'expires_at' => CareRequestInvitation::expirationFor($lockedRequest),
                     'responded_at' => null,
                 ])->save();
 
@@ -209,7 +209,7 @@ class CareRequestInvitationService
                     'invited_by_user_id' => $family->id,
                     'status' => CareRequestInvitation::STATUS_PENDING,
                     'message' => $cleanMessage,
-                    'expires_at' => now()->addHours(72),
+                    'expires_at' => CareRequestInvitation::expirationFor($lockedRequest),
                 ]
             );
 

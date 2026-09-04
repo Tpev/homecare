@@ -18,8 +18,7 @@ class CareRequestInvitationResponseService
     public function __construct(
         private readonly MarketplaceNotificationService $notifications,
         private readonly MarketplacePricing $pricing,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{ok: bool, message: string, conversation?: CareRequestConversation}
@@ -125,6 +124,12 @@ class CareRequestInvitationResponseService
     {
         if ((int) $invitation->caregiver_user_id !== (int) $caregiver->id) {
             abort(404);
+        }
+
+        if ($invitation->isExpired()) {
+            $invitation->update(['status' => CareRequestInvitation::STATUS_EXPIRED]);
+
+            return ['ok' => false, 'message' => 'Invitation expired.'];
         }
 
         if ($invitation->status !== CareRequestInvitation::STATUS_PENDING) {

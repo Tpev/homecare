@@ -18,10 +18,13 @@ use App\Models\Skill;
 use App\Models\User;
 use App\Notifications\MarketplaceEventNotification;
 use App\Services\Marketplace\CaregiverInvitationDiscoveryService;
+use App\Services\Marketplace\CareRequestInvitationResponseService;
 use App\Services\Marketplace\CareRequestInvitationService;
+use App\Support\CaregiverWorkInboxBuilder;
 use App\Support\MarketplaceEvent;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -29,6 +32,12 @@ use Tests\TestCase;
 class CaregiverInvitationExperienceTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
+    }
 
     public function test_family_can_open_search_and_invite_a_named_caregiver_without_leaving_request(): void
     {
@@ -59,7 +68,103 @@ class CaregiverInvitationExperienceTest extends TestCase
         $this->assertSame($caregiver->id, $invitation->caregiver_user_id);
         $this->assertSame(CareRequestInvitation::STATUS_PENDING, $invitation->status);
         $this->assertSame('Please review this care request for our family.', $invitation->message);
-        $this->assertTrue($invitation->expires_at->between(now()->addHours(71), now()->addHours(73)));
+        $this->assertTrue($invitation->expires_at->equalTo($request->requested_end_at));
+    }
+
+    public function test_same_day_invitation_deadline_is_capped_at_shift_end_and_used_in_the_notification(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-09-04 06:02:00', 'America/New_York'));
+        Notification::fake();
+
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = $this->createReadyCaregiver('Same Day Caregiver', 'Apex');
+        $visitStart = Carbon::parse('2026-09-04 11:00:00', 'America/New_York');
+        $request = $this->createOpenRequest($family, [
+            'preferred_response_hours' => 72,
+            'requested_start_at' => $visitStart,
+            'requested_end_at' => $visitStart->copy()->addHours(8),
+            'city' => 'Apex',
+        ]);
+
+        $result = app(CareRequestInvitationService::class)->send($family, $request, $caregiver);
+        $invitation = $result->invitation?->fresh();
+        $expectedDeadline = $visitStart->copy()->addHours(8);
+
+        $this->assertTrue($result->sentNow);
+        $this->assertNotNull($invitation);
+        $this->assertTrue($invitation->expires_at->equalTo($expectedDeadline));
+        $this->assertTrue($invitation->responseDueAt()->equalTo($expectedDeadline));
+
+        Notification::assertSentTo(
+            $caregiver,
+            MarketplaceEventNotification::class,
+            function (MarketplaceEventNotification $notification) use ($caregiver): bool {
+                $details = collect((array) data_get($notification->toArray($caregiver), 'payload.email_details', []));
+                $renderedDetails = $details->pluck('value', 'label');
+
+                return $renderedDetails->get('Urgency') === 'Urgent — care is needed today. Respond as soon as you can.'
+                    && ! $renderedDetails->has('Please respond by');
+            }
+        );
+    }
+
+    public function test_invitation_remains_actionable_after_start_until_the_projected_shift_end(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = $this->createReadyCaregiver('Mid Shift Caregiver');
+        $request = $this->createOpenRequest($family, [
+            'requested_start_at' => now()->subHour(),
+            'requested_end_at' => now()->addHours(7),
+        ]);
+        $invitation = CareRequestInvitation::query()->create([
+            'care_request_id' => $request->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestInvitation::STATUS_PENDING,
+            'expires_at' => now()->addDays(3),
+            'created_at' => now()->subHours(2),
+            'updated_at' => now()->subHours(2),
+        ]);
+
+        $inbox = app(CaregiverWorkInboxBuilder::class)->buildForUser($caregiver, 'needs_response');
+        $result = app(CareRequestInvitationResponseService::class)->accept($invitation, $caregiver);
+
+        $this->assertTrue($inbox->contains('id', 'invite-'.$invitation->id));
+        $this->assertTrue($result['ok']);
+        $this->assertSame(CareRequestInvitation::STATUS_ACCEPTED, $invitation->fresh()->status);
+        $this->assertDatabaseHas('care_request_applications', [
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+        ]);
+    }
+
+    public function test_legacy_invitation_cannot_be_accepted_or_remain_in_the_inbox_after_shift_end(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $caregiver = $this->createReadyCaregiver('Legacy Deadline Caregiver');
+        $request = $this->createOpenRequest($family, [
+            'requested_start_at' => now()->subHours(8),
+            'requested_end_at' => now()->subMinute(),
+        ]);
+        $invitation = CareRequestInvitation::query()->create([
+            'care_request_id' => $request->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $caregiver->id,
+            'status' => CareRequestInvitation::STATUS_PENDING,
+            'expires_at' => now()->addDays(3),
+        ]);
+
+        $result = app(CareRequestInvitationResponseService::class)->accept($invitation, $caregiver);
+        $inbox = app(CaregiverWorkInboxBuilder::class)->buildForUser($caregiver, 'needs_response');
+
+        $this->assertFalse($result['ok']);
+        $this->assertSame('Invitation expired.', $result['message']);
+        $this->assertSame(CareRequestInvitation::STATUS_EXPIRED, $invitation->fresh()->status);
+        $this->assertFalse($inbox->contains('id', 'invite-'.$invitation->id));
+        $this->assertDatabaseMissing('care_request_applications', [
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $caregiver->id,
+        ]);
     }
 
     public function test_search_exposes_only_eligible_caregiver_public_card_fields(): void

@@ -35,7 +35,7 @@ class CaregiverWorkInboxBuilder
         $pendingInvitations = CareRequestInvitation::query()
             ->with([
                 'family:id,name',
-                'careRequest:id,family_user_id,title,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,city,state,status',
+                'careRequest:id,family_user_id,title,request_type,preferred_response_hours,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,city,state,status',
                 'careRequest.family:id,email',
                 'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
             ])
@@ -49,7 +49,7 @@ class CaregiverWorkInboxBuilder
 
         foreach ($pendingInvitations as $invitation) {
             $request = $invitation->careRequest;
-            if (! $request) {
+            if (! $request || $invitation->isExpired()) {
                 continue;
             }
 

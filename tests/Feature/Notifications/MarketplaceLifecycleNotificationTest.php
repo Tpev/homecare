@@ -48,6 +48,8 @@ class MarketplaceLifecycleNotificationTest extends TestCase
                     && $renderedDetails->has('When')
                     && $renderedDetails->has('Expected duration')
                     && $renderedDetails->has('Care requested')
+                    && $renderedDetails->has('Please respond by')
+                    && ! $renderedDetails->has('Urgency')
                     && ! str_contains($details->toJson(), '100 Main St');
             }
         );

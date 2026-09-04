@@ -1286,7 +1286,7 @@ class ManageCareRequest extends Component
                 'caregiver_user_id' => $hiredApplication->caregiver_user_id,
                 'status' => CareRequestInvitation::STATUS_PENDING,
                 'message' => 'Rebooking request based on previous completed care.',
-                'expires_at' => now()->addHours(72),
+                'expires_at' => CareRequestInvitation::expirationFor($newRequest),
             ]);
 
             return $newRequest;

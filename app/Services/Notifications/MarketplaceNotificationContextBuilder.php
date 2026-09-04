@@ -100,9 +100,12 @@ class MarketplaceNotificationContextBuilder
             }
         }
 
-        $responseDue = $invitation->expires_at ?: $invitation->responseDueAt();
-        if ($responseDue) {
-            $details->push($this->detail('Please respond by', $this->formatDateTime($responseDue, $this->requestTimezone($request))));
+        $timezone = $this->requestTimezone($request);
+        $responseDue = $invitation->effectiveExpiresAt() ?: $invitation->responseDueAt();
+        if ($this->isSameDayRequest($request, $timezone)) {
+            $details->push($this->detail('Urgency', 'Urgent — care is needed today. Respond as soon as you can.'));
+        } elseif ($responseDue) {
+            $details->push($this->detail('Please respond by', $this->formatDateTime($responseDue, $timezone)));
         }
 
         return $details;
@@ -394,6 +397,13 @@ class MarketplaceNotificationContextBuilder
     private function requestTimezone(CareRequest $request): string
     {
         return $request->carePlan?->timezone ?: (string) config('app.timezone', 'America/New_York');
+    }
+
+    private function isSameDayRequest(CareRequest $request, string $timezone): bool
+    {
+        return $request->request_type === CareRequest::TYPE_ONE_TIME
+            && $request->requested_start_at
+            && $request->requested_start_at->copy()->setTimezone($timezone)->isSameDay(now($timezone));
     }
 
     private function bookingLocation(CareBooking $booking): string

@@ -216,7 +216,7 @@ class BookAgain extends Component
                 'caregiver_user_id' => $hiredApplication->caregiver_user_id,
                 'status' => CareRequestInvitation::STATUS_PENDING,
                 'message' => trim($this->message) ?: 'We would like to book you again for one more visit.',
-                'expires_at' => now()->addHours(72),
+                'expires_at' => CareRequestInvitation::expirationFor($newRequest),
             ]);
 
             return $newRequest;

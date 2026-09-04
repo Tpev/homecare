@@ -51,7 +51,7 @@ class InvitationsIndex extends Component
         return CareRequestInvitation::query()
             ->where('caregiver_user_id', auth()->id())
             ->with([
-                'careRequest:id,title,request_type,is_private,city,state,requested_start_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule',
+                'careRequest:id,title,request_type,preferred_response_hours,is_private,city,state,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule',
                 'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
                 'family:id,name',
                 'application:id',
@@ -65,13 +65,16 @@ class InvitationsIndex extends Component
         CareRequestInvitation::query()
             ->where('caregiver_user_id', auth()->id())
             ->where('status', CareRequestInvitation::STATUS_PENDING)
-            ->whereNotNull('expires_at')
-            ->where('expires_at', '<', now())
-            ->update(['status' => CareRequestInvitation::STATUS_EXPIRED]);
+            ->with('careRequest:id,request_type,preferred_response_hours,requested_start_at,requested_end_at')
+            ->get()
+            ->filter(fn (CareRequestInvitation $invitation): bool => $invitation->isExpired())
+            ->each(fn (CareRequestInvitation $invitation) => $invitation->update([
+                'status' => CareRequestInvitation::STATUS_EXPIRED,
+            ]));
 
         $invitations = CareRequestInvitation::query()
             ->with([
-                'careRequest:id,title,request_type,is_private,city,state,requested_start_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule',
+                'careRequest:id,title,request_type,preferred_response_hours,is_private,city,state,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule',
                 'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
                 'family:id,name',
                 'application:id',
