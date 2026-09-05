@@ -96,15 +96,21 @@ class StripeWebhookController extends Controller
             }
 
             if (in_array($type, ['transfer.reversed', 'transfer.reversal.created'], true)) {
-                $payments->handleTransferReversalWebhook($object);
+                if (! $payments->handleTransferReversalWebhook($object, $type)) {
+                    throw new \RuntimeException('Stripe transfer reversal dependencies are not ready yet.');
+                }
             }
 
             if ($type === 'charge.refunded') {
-                $payments->handleChargeRefundWebhook($object);
+                if (! $payments->handleChargeRefundWebhook($object)) {
+                    throw new \RuntimeException('Stripe charge refund classification or dependencies are not ready yet.');
+                }
             }
 
             if (in_array($type, ['refund.updated', 'refund.failed'], true)) {
-                $payments->handleRefundWebhook($object);
+                if (! $payments->handleRefundWebhook($object)) {
+                    throw new \RuntimeException('Stripe refund classification or dependencies are not ready yet.');
+                }
             }
 
             if (in_array($type, ['charge.dispute.created', 'charge.dispute.updated', 'charge.dispute.closed'], true)) {

@@ -218,6 +218,10 @@ class CaregiverEarningsService
         $netAmount = $booking->payoutItem
             ? (float) $booking->payoutItem->amount
             : max(0, $grossAmount - $processingFeeAmount);
+        $settlementAdjustmentAmount = max(0, round(
+            $grossAmount - $processingFeeAmount - $netAmount,
+            2,
+        ));
 
         $statusKey = $this->resolveStatusKey($booking, $booking->payoutItem);
         $referenceAt = $booking->completed_at ?: $booking->started_at ?: $booking->scheduled_start_at ?: $booking->updated_at;
@@ -237,6 +241,7 @@ class CaregiverEarningsService
             'worked_label' => sprintf('%02d:%02d', intdiv($workedMinutes, 60), $workedMinutes % 60),
             'gross_amount' => $grossAmount,
             'processing_fee_amount' => $processingFeeAmount,
+            'settlement_adjustment_amount' => $settlementAdjustmentAmount,
             'net_amount' => $netAmount,
             'financial_reference' => $booking->financial_reference,
             'scheduled_start_at' => $booking->scheduled_start_at,

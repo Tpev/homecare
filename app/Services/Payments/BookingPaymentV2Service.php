@@ -142,6 +142,15 @@ class BookingPaymentV2Service
             return $payment;
         }
 
+        if (! $this->classifyStoredRefundOperations($payment)) {
+            $payment->forceFill([
+                'last_error' => 'Stripe refund accounting classification is not available yet.',
+            ])->save();
+            $this->syncPayoutRecord($payment, false);
+
+            return $payment->fresh();
+        }
+
         $this->refreshMissingFees($payment);
         $charges = $payment->operations()
             ->where('type', CareBookingPaymentOperation::TYPE_CHARGE)
@@ -149,10 +158,7 @@ class BookingPaymentV2Service
             ->orderBy('id')
             ->get();
         $capturedCents = (int) $charges->sum('amount_cents');
-        $feeCents = (int) $payment->operations()
-            ->where('type', CareBookingPaymentOperation::TYPE_PROCESSING_FEE)
-            ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
-            ->sum('amount_cents');
+        $feeCents = $this->processingFeeCents($payment);
         $feesFinalized = $charges->isNotEmpty()
             && $charges->every(fn (CareBookingPaymentOperation $charge): bool => $payment->operations()
                 ->where('type', CareBookingPaymentOperation::TYPE_PROCESSING_FEE)
@@ -205,7 +211,13 @@ class BookingPaymentV2Service
             return $payment->fresh();
         }
 
-        return $this->transferEarnings($payment->fresh(), $charges);
+        $payment = $this->transferEarnings($payment->fresh(), $charges);
+        $transferCompleted = $payment->status === CareBookingPayment::STATUS_TRANSFERRED;
+        $this->reconcileStoredRefundTransferReversals($payment->fresh());
+        $this->refreshRefundTotals($payment->fresh());
+        $this->syncPayoutRecord($payment->fresh(), $transferCompleted);
+
+        return $payment->fresh();
     }
 
     public function refund(
@@ -250,6 +262,15 @@ class BookingPaymentV2Service
             }
 
             $reasonKey = $operationReference ?: 'refund-'.$targetRefundTotal;
+            $plannedCaregiverReversal = null;
+            if ($caregiverReversalLeft !== null) {
+                $plannedCaregiverReversal = $part === $left
+                    ? $caregiverReversalLeft
+                    : min(
+                        $caregiverReversalLeft,
+                        (int) round($caregiverReversalCents * ($part / max(1, $requestedCents))),
+                    );
+            }
             $key = $this->key($payment, $reasonKey.'-'.$charge->id, $part);
             $operation = $this->pendingOperation(
                 $payment,
@@ -257,7 +278,13 @@ class BookingPaymentV2Service
                 $part,
                 $key,
                 $charge,
-                ['reason' => $reason, 'adjustment_reference' => $operationReference],
+                [
+                    'reason' => $reason,
+                    'adjustment_reference' => $operationReference,
+                    'classification' => 'customer_refund',
+                    'caregiver_reversal_cents' => $plannedCaregiverReversal,
+                    'reversal_policy' => $plannedCaregiverReversal === null ? 'proportional' : 'exact',
+                ],
             );
             if ($operation->status !== CareBookingPaymentOperation::STATUS_SUCCEEDED) {
                 $refund = $this->stripe->createRefundForCharge(
@@ -281,21 +308,12 @@ class BookingPaymentV2Service
                 // The family refund is already final at this point. Persist that fact before
                 // attempting the independently retryable caregiver transfer reversal.
                 $this->refreshRefundTotals($payment->fresh());
-                $exactReversal = null;
-                if ($caregiverReversalLeft !== null) {
-                    $exactReversal = $part === $left
-                        ? $caregiverReversalLeft
-                        : min(
-                            $caregiverReversalLeft,
-                            (int) round($caregiverReversalCents * ($part / max(1, $requestedCents))),
-                        );
-                }
                 $actualReversal = $this->reverseTransferForCharge(
                     $payment,
                     $charge,
                     $part,
                     $reasonKey,
-                    $exactReversal,
+                    $plannedCaregiverReversal,
                 );
                 if ($caregiverReversalLeft !== null) {
                     $caregiverReversalLeft = max(0, $caregiverReversalLeft - $actualReversal);
@@ -304,10 +322,7 @@ class BookingPaymentV2Service
             }
         }
 
-        $feeCents = (int) $payment->operations()
-            ->where('type', CareBookingPaymentOperation::TYPE_PROCESSING_FEE)
-            ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
-            ->sum('amount_cents');
+        $feeCents = $this->processingFeeCents($payment);
         $quote = $this->pricing->quoteForCurrentBooking(
             $booking,
             (int) ($booking->worked_minutes ?: $payment->worked_minutes ?: $this->estimatedMinutes($booking)),
@@ -483,20 +498,22 @@ class BookingPaymentV2Service
             return false;
         }
 
-        $refunds = [];
+        $handled = true;
+        $changed = false;
         foreach ((array) data_get($object, 'refunds.data', []) as $refund) {
             if (is_array($refund)) {
-                $this->recordRefundWebhookObject($charge, $refund);
-                $refunds[] = $refund;
+                $result = $this->recordClassifiedRefundWebhookObject($charge, $refund);
+                $handled = $handled && $result['handled'];
+                $changed = $changed || $result['changed'];
             }
         }
-        $this->refreshRefundTotals($charge->payment);
-        foreach ($refunds as $refund) {
-            $this->ensureRefundTransferReversal($charge, $refund);
+        if ($changed) {
+            $this->refreshRefundTotals($charge->payment);
+            $this->finalizeFeesAndTransfers($charge->payment->fresh());
         }
         $this->syncPayoutRecord($charge->payment->fresh(), false);
 
-        return true;
+        return $handled;
     }
 
     public function handleRefund(array $object): bool
@@ -512,12 +529,14 @@ class BookingPaymentV2Service
             return false;
         }
 
-        $this->recordRefundWebhookObject($charge, $object);
-        $this->refreshRefundTotals($charge->payment);
-        $this->ensureRefundTransferReversal($charge, $object);
+        $result = $this->recordClassifiedRefundWebhookObject($charge, $object);
+        if ($result['changed']) {
+            $this->refreshRefundTotals($charge->payment);
+            $this->finalizeFeesAndTransfers($charge->payment->fresh());
+        }
         $this->syncPayoutRecord($charge->payment->fresh(), false);
 
-        return true;
+        return $result['handled'];
     }
 
     public function retryPendingTransferReversals(CareBookingPayment $payment): CareBookingPayment
@@ -597,7 +616,7 @@ class BookingPaymentV2Service
 
     public function usesV2(CareBookingPayment $payment): bool
     {
-        return (string) $payment->pricing_version === $this->pricing->currentVersion();
+        return trim((string) $payment->pricing_version) !== '';
     }
 
     public function recordAuthorization(CareBookingPayment $payment): void
@@ -672,13 +691,19 @@ class BookingPaymentV2Service
             ->where('parent_operation_id', $charge->id)
             ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
             ->exists())->values();
-        $allocationBase = max(1, (int) $untransferredCharges->sum('amount_cents'));
+        // A later Stripe fee credit can increase caregiver net after the first transfer.
+        // In that case all charges already have a transfer, so use the primary charge for
+        // an idempotent top-up instead of silently leaving the caregiver short.
+        $transferCharges = $untransferredCharges->isNotEmpty()
+            ? $untransferredCharges
+            : $charges->take(1)->values();
+        $allocationBase = max(1, (int) $transferCharges->sum('amount_cents'));
         $transferIds = $payment->operations()
             ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)
             ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
             ->pluck('stripe_object_id')->filter()->values()->all();
-        foreach ($untransferredCharges as $index => $charge) {
-            $allocation = $index === $untransferredCharges->count() - 1
+        foreach ($transferCharges as $index => $charge) {
+            $allocation = $index === $transferCharges->count() - 1
                 ? $remaining
                 : min($remaining, (int) floor($transferRemainingTarget * ((int) $charge->amount_cents / $allocationBase)));
             $remaining -= $allocation;
@@ -686,7 +711,7 @@ class BookingPaymentV2Service
                 continue;
             }
 
-            $key = $this->key($payment, 'transfer-'.$charge->id, $allocation);
+            $key = $this->key($payment, 'transfer-'.$charge->id.'-target-'.$netCents, $allocation);
             $operation = $this->pendingOperation(
                 $payment,
                 CareBookingPaymentOperation::TYPE_TRANSFER,
@@ -754,14 +779,6 @@ class BookingPaymentV2Service
             ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
             ->get();
         foreach ($charges as $charge) {
-            if ($payment->operations()
-                ->where('type', CareBookingPaymentOperation::TYPE_PROCESSING_FEE)
-                ->where('parent_operation_id', $charge->id)
-                ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
-                ->exists()) {
-                continue;
-            }
-
             $intentId = (string) data_get($charge->metadata, 'payment_intent_id', '');
             if ($intentId === '') {
                 continue;
@@ -834,19 +851,28 @@ class BookingPaymentV2Service
             return;
         }
 
-        CareBookingPaymentOperation::query()->firstOrCreate(
-            ['type' => CareBookingPaymentOperation::TYPE_PROCESSING_FEE, 'stripe_object_id' => $balanceTransactionId],
-            array_merge($this->baseOperationAttributes($payment), [
-                'parent_operation_id' => $charge->id,
-                'status' => CareBookingPaymentOperation::STATUS_SUCCEEDED,
-                'amount_cents' => max(0, (int) $result['processing_fee_cents']),
-                'stripe_parent_object_id' => (string) $charge->stripe_object_id,
-                'idempotency_key' => $this->key($payment, 'ledger-fee-'.$charge->id, (int) $result['processing_fee_cents']),
-                'metadata' => ['policy' => 'successful_charge_balance_transaction'],
-                'occurred_at' => now(),
-                'processed_at' => now(),
-            ]),
-        );
+        $operation = CareBookingPaymentOperation::query()->firstOrNew([
+            'type' => CareBookingPaymentOperation::TYPE_PROCESSING_FEE,
+            'stripe_object_id' => $balanceTransactionId,
+        ]);
+        $attributes = array_merge($this->baseOperationAttributes($payment), [
+            'parent_operation_id' => $charge->id,
+            'status' => CareBookingPaymentOperation::STATUS_SUCCEEDED,
+            'amount_cents' => max(0, (int) $result['processing_fee_cents']),
+            'stripe_parent_object_id' => (string) $charge->stripe_object_id,
+            'metadata' => [
+                'policy' => 'final_charge_and_refund_balance_transactions',
+                'components' => (array) ($result['processing_fee_components'] ?? []),
+            ],
+            'occurred_at' => $operation->occurred_at ?: now(),
+            'processed_at' => now(),
+            'failed_at' => null,
+            'last_error' => null,
+        ]);
+        if (! $operation->exists) {
+            $attributes['idempotency_key'] = $this->key($payment, 'ledger-fee-'.$charge->id);
+        }
+        $operation->forceFill($attributes)->save();
     }
 
     private function reverseTransferForCharge(
@@ -856,97 +882,239 @@ class BookingPaymentV2Service
         string $reasonKey,
         ?int $exactReversalCents = null,
     ): int {
-        $transfer = $payment->operations()
+        $transfers = $payment->operations()
             ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)
             ->where('parent_operation_id', $charge->id)
             ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
-            ->first();
-        if (! $transfer || $familyAdjustmentCents <= 0 || (int) $charge->amount_cents <= 0) {
+            ->orderBy('id')
+            ->get();
+        if ($transfers->isEmpty() || $familyAdjustmentCents <= 0 || (int) $charge->amount_cents <= 0) {
             return 0;
         }
 
-        $alreadyReversed = (int) $payment->operations()
-            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL)
-            ->where('parent_operation_id', $transfer->id)
-            ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
-            ->sum('amount_cents');
+        $transferredCents = (int) $transfers->sum('amount_cents');
         $target = $exactReversalCents === null
-            ? (int) round((int) $transfer->amount_cents * ($familyAdjustmentCents / (int) $charge->amount_cents))
+            ? (int) round($transferredCents * ($familyAdjustmentCents / (int) $charge->amount_cents))
             : max(0, $exactReversalCents);
-        $amount = min(max(0, (int) $transfer->amount_cents - $alreadyReversed), max(0, $target));
-        if ($amount <= 0) {
-            return 0;
-        }
-
-        $key = $this->key($payment, 'reversal-'.$reasonKey.'-'.$transfer->id, $amount);
-        $operation = $this->pendingOperation(
-            $payment,
-            CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL,
-            $amount,
-            $key,
-            $transfer,
-            ['reason' => $reasonKey],
+        $transferIds = $transfers->pluck('id');
+        $existingReversals = $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL)
+            ->whereIn('parent_operation_id', $transferIds)
+            ->get();
+        $reasonReversals = $existingReversals->filter(
+            fn (CareBookingPaymentOperation $operation): bool => data_get($operation->metadata, 'reason') === $reasonKey,
         );
-        if ($operation->status === CareBookingPaymentOperation::STATUS_SUCCEEDED) {
-            return (int) $operation->amount_cents;
-        }
+        $reservedForReason = (int) $reasonReversals
+            ->whereIn('status', [
+                CareBookingPaymentOperation::STATUS_SUCCEEDED,
+                CareBookingPaymentOperation::STATUS_PENDING,
+                CareBookingPaymentOperation::STATUS_FAILED,
+            ])
+            ->sum('amount_cents');
+        $remaining = max(0, min($transferredCents, max(0, $target)) - $reservedForReason);
+        $allocated = $reservedForReason;
+        foreach ($transfers as $transfer) {
+            if ($remaining <= 0) {
+                break;
+            }
+            $alreadyReserved = (int) $existingReversals
+                ->where('parent_operation_id', $transfer->id)
+                ->whereIn('status', [
+                    CareBookingPaymentOperation::STATUS_SUCCEEDED,
+                    CareBookingPaymentOperation::STATUS_PENDING,
+                    CareBookingPaymentOperation::STATUS_FAILED,
+                ])
+                ->sum('amount_cents');
+            $amount = min(max(0, (int) $transfer->amount_cents - $alreadyReserved), $remaining);
+            if ($amount <= 0) {
+                continue;
+            }
 
-        try {
-            $reversal = $this->stripe->createTransferReversal(
-                (string) $transfer->stripe_object_id,
+            $key = $this->key($payment, 'reversal-'.$reasonKey.'-'.$transfer->id, $amount);
+            $operation = $this->pendingOperation(
+                $payment,
+                CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL,
                 $amount,
-                $this->stripeMetadata($payment, 'earnings_adjustment'),
                 $key,
+                $transfer,
+                ['reason' => $reasonKey],
             );
-        } catch (PaymentException $exception) {
-            $operation->forceFill([
-                'status' => CareBookingPaymentOperation::STATUS_FAILED,
-                'failed_at' => now(),
-                'last_error' => $exception->userMessage,
-            ])->save();
+            if ($operation->status !== CareBookingPaymentOperation::STATUS_SUCCEEDED) {
+                try {
+                    $reversal = $this->stripe->createTransferReversal(
+                        (string) $transfer->stripe_object_id,
+                        $amount,
+                        $this->stripeMetadata($payment, 'earnings_adjustment'),
+                        $key,
+                    );
+                } catch (PaymentException $exception) {
+                    $operation->forceFill([
+                        'status' => CareBookingPaymentOperation::STATUS_FAILED,
+                        'failed_at' => now(),
+                        'last_error' => $exception->userMessage,
+                    ])->save();
 
-            throw $exception;
-        }
-        $operation->forceFill([
-            'status' => (string) ($reversal['status'] ?? '') === 'succeeded'
-                ? CareBookingPaymentOperation::STATUS_SUCCEEDED
-                : CareBookingPaymentOperation::STATUS_PENDING,
-            'stripe_object_id' => (string) ($reversal['id'] ?? ''),
-            'stripe_parent_object_id' => (string) $transfer->stripe_object_id,
-            'processed_at' => (string) ($reversal['status'] ?? '') === 'succeeded' ? now() : null,
-        ])->save();
-        if ((string) ($reversal['id'] ?? '') !== '') {
-            $payment->forceFill([
-                'stripe_last_transfer_reversal_id' => (string) $reversal['id'],
-            ])->save();
+                    throw $exception;
+                }
+                $operation->forceFill([
+                    'status' => (string) ($reversal['status'] ?? '') === 'succeeded'
+                        ? CareBookingPaymentOperation::STATUS_SUCCEEDED
+                        : CareBookingPaymentOperation::STATUS_PENDING,
+                    'stripe_object_id' => (string) ($reversal['id'] ?? ''),
+                    'stripe_parent_object_id' => (string) $transfer->stripe_object_id,
+                    'processed_at' => (string) ($reversal['status'] ?? '') === 'succeeded' ? now() : null,
+                ])->save();
+                if ((string) ($reversal['id'] ?? '') !== '') {
+                    $payment->forceFill([
+                        'stripe_last_transfer_reversal_id' => (string) $reversal['id'],
+                    ])->save();
+                }
+            }
+
+            $allocated += (int) $operation->amount_cents;
+            $remaining -= (int) $operation->amount_cents;
         }
 
-        return $operation->fresh()->status === CareBookingPaymentOperation::STATUS_SUCCEEDED
-            ? (int) $operation->amount_cents
-            : 0;
+        return $allocated;
     }
 
     private function refreshRefundTotals(CareBookingPayment $payment): void
     {
-        $refunded = (int) $payment->operations()
+        $refunds = $payment->operations()
             ->where('type', CareBookingPaymentOperation::TYPE_REFUND)
             ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
-            ->sum('amount_cents');
+            ->orderBy('id')
+            ->get()
+            ->filter(fn (CareBookingPaymentOperation $operation): bool => $this->isConfirmedCustomerRefund($operation));
+        $refunded = (int) $refunds->sum('amount_cents');
         $captured = (int) $payment->amount_captured_cents;
+        $status = $payment->status;
+        if ($refunded >= $captured && $captured > 0) {
+            $status = CareBookingPayment::STATUS_REFUNDED;
+        } elseif ($refunded > 0) {
+            $status = CareBookingPayment::STATUS_PARTIALLY_REFUNDED;
+        } elseif (in_array($status, [
+            CareBookingPayment::STATUS_PARTIALLY_REFUNDED,
+            CareBookingPayment::STATUS_REFUNDED,
+        ], true)) {
+            $status = $payment->operations()
+                ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)
+                ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
+                ->exists()
+                    ? CareBookingPayment::STATUS_TRANSFERRED
+                    : CareBookingPayment::STATUS_CAPTURED;
+        }
         $payment->forceFill([
             'amount_refunded_cents' => $refunded,
-            'status' => $refunded >= $captured
-                ? CareBookingPayment::STATUS_REFUNDED
-                : ($refunded > 0 ? CareBookingPayment::STATUS_PARTIALLY_REFUNDED : $payment->status),
-            'stripe_last_refund_id' => (string) $payment->operations()
-                ->where('type', CareBookingPaymentOperation::TYPE_REFUND)
-                ->latest('id')
-                ->value('stripe_object_id'),
+            'status' => $status,
+            'stripe_last_refund_id' => $refunds->last()?->stripe_object_id,
         ])->save();
     }
 
-    private function recordRefundWebhookObject(CareBookingPaymentOperation $charge, array $refund): void
-    {
+    /** @return array{handled:bool,changed:bool} */
+    private function recordClassifiedRefundWebhookObject(
+        CareBookingPaymentOperation $charge,
+        array $refund,
+    ): array {
+        $refundId = (string) ($refund['id'] ?? '');
+        if ($refundId === '') {
+            return ['handled' => true, 'changed' => false];
+        }
+
+        $existing = CareBookingPaymentOperation::query()
+            ->where('type', CareBookingPaymentOperation::TYPE_REFUND)
+            ->where('stripe_object_id', $refundId)
+            ->first();
+        if ((string) ($refund['status'] ?? '') !== 'succeeded') {
+            if ($existing && $this->isConfirmedCustomerRefund($existing)) {
+                $this->recordRefundWebhookObject($charge, $refund, [
+                    'classification' => 'customer_refund',
+                    'reporting_category' => (string) data_get($existing->metadata, 'reporting_category', 'refund'),
+                    'balance_transaction_id' => (string) data_get($existing->metadata, 'balance_transaction_id', ''),
+                    'fee_impact_cents' => null,
+                ]);
+
+                return ['handled' => true, 'changed' => true];
+            }
+
+            return ['handled' => true, 'changed' => false];
+        }
+        if ($existing && $this->isConfirmedCustomerRefund($existing)) {
+            $classification = [
+                'classification' => 'customer_refund',
+                'reporting_category' => (string) data_get($existing->metadata, 'reporting_category', 'refund'),
+                'balance_transaction_id' => (string) data_get($existing->metadata, 'balance_transaction_id', ''),
+                'fee_impact_cents' => null,
+            ];
+        } else {
+            $classification = $this->stripe->refundFinancialClassification($refund);
+        }
+
+        if ($classification['classification'] === 'authorization_release') {
+            if ($existing) {
+                $existing->forceFill([
+                    'metadata' => array_merge((array) $existing->metadata, [
+                        'classification' => 'authorization_release',
+                        'reporting_category' => $classification['reporting_category'],
+                        'balance_transaction_id' => $classification['balance_transaction_id'],
+                        'fee_impact_cents' => $classification['fee_impact_cents'],
+                    ]),
+                ])->save();
+            }
+            $this->recordAuthorizationReleaseWebhookObject($charge, $refund, $classification);
+
+            return [
+                'handled' => $this->reconcileProcessingFeeForCharge($charge),
+                'changed' => true,
+            ];
+        }
+
+        if ($classification['classification'] !== 'customer_refund') {
+            return ['handled' => false, 'changed' => false];
+        }
+
+        $this->recordRefundWebhookObject($charge, $refund, $classification);
+
+        return ['handled' => true, 'changed' => true];
+    }
+
+    /** @param array{classification:string,reporting_category:string,balance_transaction_id:string,fee_impact_cents:?int} $classification */
+    private function recordAuthorizationReleaseWebhookObject(
+        CareBookingPaymentOperation $charge,
+        array $refund,
+        array $classification,
+    ): void {
+        $refundId = (string) ($refund['id'] ?? '');
+        CareBookingPaymentOperation::query()->updateOrCreate(
+            [
+                'type' => CareBookingPaymentOperation::TYPE_AUTHORIZATION_RELEASE,
+                'stripe_object_id' => $refundId,
+            ],
+            array_merge($this->baseOperationAttributes($charge->payment), [
+                'parent_operation_id' => $charge->id,
+                'status' => CareBookingPaymentOperation::STATUS_SUCCEEDED,
+                'amount_cents' => max(0, (int) ($refund['amount'] ?? 0)),
+                'stripe_parent_object_id' => (string) $charge->stripe_object_id,
+                'metadata' => [
+                    'classification' => 'authorization_release',
+                    'reporting_category' => $classification['reporting_category'],
+                    'balance_transaction_id' => $classification['balance_transaction_id'],
+                    'fee_impact_cents' => $classification['fee_impact_cents'],
+                ],
+                'occurred_at' => now(),
+                'processed_at' => now(),
+                'failed_at' => null,
+                'last_error' => null,
+            ]),
+        );
+    }
+
+    /** @param array{classification:string,reporting_category:string,balance_transaction_id:string,fee_impact_cents:?int} $classification */
+    private function recordRefundWebhookObject(
+        CareBookingPaymentOperation $charge,
+        array $refund,
+        array $classification,
+    ): void {
         $refundId = (string) ($refund['id'] ?? '');
         if ($refundId === '') {
             return;
@@ -958,55 +1126,70 @@ class BookingPaymentV2Service
             'failed', 'canceled' => CareBookingPaymentOperation::STATUS_FAILED,
             default => CareBookingPaymentOperation::STATUS_PENDING,
         };
-        CareBookingPaymentOperation::query()->updateOrCreate(
-            ['type' => CareBookingPaymentOperation::TYPE_REFUND, 'stripe_object_id' => $refundId],
-            array_merge($this->baseOperationAttributes($charge->payment), [
-                'parent_operation_id' => $charge->id,
-                'status' => $status,
-                'amount_cents' => max(0, (int) ($refund['amount'] ?? 0)),
-                'stripe_parent_object_id' => (string) $charge->stripe_object_id,
-                'metadata' => ['stripe_status' => $stripeStatus],
-                'occurred_at' => now(),
-                'processed_at' => $status === CareBookingPaymentOperation::STATUS_SUCCEEDED ? now() : null,
-                'failed_at' => $status === CareBookingPaymentOperation::STATUS_FAILED ? now() : null,
-                'last_error' => $status === CareBookingPaymentOperation::STATUS_FAILED
-                    ? (string) ($refund['failure_reason'] ?? 'Stripe refund failed.')
-                    : null,
+        $operation = CareBookingPaymentOperation::query()->firstOrNew([
+            'type' => CareBookingPaymentOperation::TYPE_REFUND,
+            'stripe_object_id' => $refundId,
+        ]);
+        $operation->forceFill(array_merge($this->baseOperationAttributes($charge->payment), [
+            'parent_operation_id' => $charge->id,
+            'status' => $status,
+            'amount_cents' => max(0, (int) ($refund['amount'] ?? 0)),
+            'stripe_parent_object_id' => (string) $charge->stripe_object_id,
+            'metadata' => array_merge((array) $operation->metadata, [
+                'stripe_status' => $stripeStatus,
+                'classification' => 'customer_refund',
+                'reporting_category' => $classification['reporting_category'],
+                'balance_transaction_id' => $classification['balance_transaction_id'],
             ]),
-        );
+            'occurred_at' => $operation->occurred_at ?: now(),
+            'processed_at' => $status === CareBookingPaymentOperation::STATUS_SUCCEEDED ? now() : null,
+            'failed_at' => $status === CareBookingPaymentOperation::STATUS_FAILED ? now() : null,
+            'last_error' => $status === CareBookingPaymentOperation::STATUS_FAILED
+                ? (string) ($refund['failure_reason'] ?? 'Stripe refund failed.')
+                : null,
+        ]))->save();
     }
 
-    private function ensureRefundTransferReversal(
-        CareBookingPaymentOperation $charge,
-        array $refund,
-    ): void {
-        if ((string) ($refund['status'] ?? '') !== 'succeeded') {
-            return;
-        }
-
-        $refundId = (string) ($refund['id'] ?? '');
+    private function ensureRefundTransferReversal(CareBookingPaymentOperation $charge): bool
+    {
         $payment = $charge->payment;
-        $transfer = $payment->operations()
-            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)
-            ->where('parent_operation_id', $charge->id)
-            ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
-            ->first();
-        if ($refundId === '' || ! $transfer || (int) $charge->amount_cents <= 0) {
-            return;
-        }
-
-        $refundedCents = (int) $payment->operations()
+        $refunds = $payment->operations()
             ->where('type', CareBookingPaymentOperation::TYPE_REFUND)
             ->where('parent_operation_id', $charge->id)
             ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
-            ->sum('amount_cents');
-        $targetReversalCents = (int) round(
-            (int) $transfer->amount_cents
-            * (min($refundedCents, (int) $charge->amount_cents) / (int) $charge->amount_cents)
-        );
+            ->get()
+            ->filter(fn (CareBookingPaymentOperation $operation): bool => $this->isConfirmedCustomerRefund($operation));
+        if ($refunds->isEmpty()) {
+            return true;
+        }
+
+        $transfers = $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)
+            ->where('parent_operation_id', $charge->id)
+            ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
+            ->get();
+        if ($transfers->isEmpty() || (int) $charge->amount_cents <= 0) {
+            return false;
+        }
+
+        $exactTargetCents = 0;
+        $proportionalRefundCents = 0;
+        foreach ($refunds as $refund) {
+            $exact = data_get($refund->metadata, 'caregiver_reversal_cents');
+            if (is_numeric($exact)) {
+                $exactTargetCents += max(0, (int) $exact);
+            } else {
+                $proportionalRefundCents += max(0, (int) $refund->amount_cents);
+            }
+        }
+        $transferredCents = (int) $transfers->sum('amount_cents');
+        $targetReversalCents = min($transferredCents, $exactTargetCents + (int) round(
+            $transferredCents
+            * (min($proportionalRefundCents, (int) $charge->amount_cents) / (int) $charge->amount_cents)
+        ));
         $reversalQuery = $payment->operations()
             ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL)
-            ->where('parent_operation_id', $transfer->id);
+            ->whereIn('parent_operation_id', $transfers->pluck('id'));
         $alreadyReversedCents = (int) (clone $reversalQuery)
             ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
             ->sum('amount_cents');
@@ -1021,16 +1204,118 @@ class BookingPaymentV2Service
             $targetReversalCents - $alreadyReversedCents - $reservedReversalCents,
         );
         if ($reversalCents <= 0) {
-            return;
+            return true;
         }
 
         $this->reverseTransferForCharge(
             $payment,
             $charge,
-            max(1, $refundedCents),
-            'refund-'.$refundId,
+            max(1, (int) $refunds->sum('amount_cents')),
+            'confirmed-refunds-charge-'.$charge->id.'-target-'.$targetReversalCents,
             $reversalCents,
         );
+
+        return true;
+    }
+
+    private function reconcileStoredRefundTransferReversals(CareBookingPayment $payment): bool
+    {
+        $handled = true;
+        $charges = $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_CHARGE)
+            ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
+            ->get();
+        foreach ($charges as $charge) {
+            $handled = $this->ensureRefundTransferReversal($charge) && $handled;
+        }
+
+        return $handled;
+    }
+
+    private function reconcileProcessingFeeForCharge(CareBookingPaymentOperation $charge): bool
+    {
+        $intentId = (string) data_get($charge->metadata, 'payment_intent_id', '');
+        if ($intentId === '') {
+            return false;
+        }
+
+        $financials = $this->stripe->retrievePaymentIntentFinancials($intentId, (int) $charge->amount_cents);
+        if (! ($financials['fee_finalized'] ?? false)) {
+            return false;
+        }
+        $this->recordProcessingFee($charge->payment, $charge, $financials);
+
+        return true;
+    }
+
+    private function classifyStoredRefundOperations(CareBookingPayment $payment): bool
+    {
+        $refunds = $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_REFUND)
+            ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
+            ->get();
+        foreach ($refunds as $refund) {
+            $knownClassification = (string) data_get($refund->metadata, 'classification', '');
+            if (in_array($knownClassification, ['customer_refund', 'authorization_release'], true)) {
+                continue;
+            }
+            if (trim((string) $refund->idempotency_key) !== '') {
+                $refund->forceFill([
+                    'metadata' => array_merge((array) $refund->metadata, [
+                        'classification' => 'customer_refund',
+                        'classification_source' => 'application_idempotency_key',
+                    ]),
+                ])->save();
+
+                continue;
+            }
+
+            $charge = $refund->parent()
+                ->where('type', CareBookingPaymentOperation::TYPE_CHARGE)
+                ->first();
+            $refundId = (string) $refund->stripe_object_id;
+            if (! $charge || $refundId === '') {
+                return false;
+            }
+
+            $classification = $this->stripe->refundFinancialClassification(['id' => $refundId]);
+            if ($classification['classification'] === 'unknown') {
+                return false;
+            }
+            $refund->forceFill([
+                'metadata' => array_merge((array) $refund->metadata, [
+                    'classification' => $classification['classification'],
+                    'reporting_category' => $classification['reporting_category'],
+                    'balance_transaction_id' => $classification['balance_transaction_id'],
+                    'fee_impact_cents' => $classification['fee_impact_cents'],
+                    'classification_source' => 'stripe_balance_transaction',
+                ]),
+            ])->save();
+            if ($classification['classification'] === 'authorization_release') {
+                $this->recordAuthorizationReleaseWebhookObject($charge, [
+                    'id' => $refundId,
+                    'amount' => (int) $refund->amount_cents,
+                ], $classification);
+            }
+        }
+
+        return true;
+    }
+
+    private function isConfirmedCustomerRefund(CareBookingPaymentOperation $operation): bool
+    {
+        $classification = (string) data_get($operation->metadata, 'classification', '');
+
+        return $classification === 'customer_refund'
+            || ($classification === '' && trim((string) $operation->idempotency_key) !== '');
+    }
+
+    private function processingFeeCents(CareBookingPayment $payment): int
+    {
+        return max(0, (int) $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_PROCESSING_FEE)
+            ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
+            ->sum('amount_cents'));
     }
 
     private function syncPayoutRecord(CareBookingPayment $payment, bool $transferred): void
@@ -1052,14 +1337,18 @@ class BookingPaymentV2Service
             ? max(0, $transferredCents - $reversedCents)
             : max(0, (int) $payment->caregiver_amount_cents);
         $fullyReversed = $transferredCents > 0 && $netCents === 0;
-        $hasUnresolvedTransfer = $payment->operations()
-            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)
+        $hasUnresolvedSettlement = $payment->operations()
+            ->whereIn('type', [
+                CareBookingPaymentOperation::TYPE_TRANSFER,
+                CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL,
+            ])
             ->whereIn('status', [
                 CareBookingPaymentOperation::STATUS_PENDING,
                 CareBookingPaymentOperation::STATUS_FAILED,
             ])
             ->exists();
-        $settled = $fullyReversed || ($transferredCents > 0 && ! $hasUnresolvedTransfer) || $transferred;
+        $settled = ! $hasUnresolvedSettlement
+            && ($fullyReversed || $transferredCents > 0 || $transferred);
         $transferIds = $payment->operations()
             ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)
             ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)

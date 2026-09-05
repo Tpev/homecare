@@ -195,6 +195,9 @@
 
                         <p class="mt-2 text-[11px] text-[#7B8794]">
                             Gross rate ${{ number_format((float) $item['hourly_rate'], 2) }}/hr · Processing fees −${{ number_format((float) $item['processing_fee_amount'], 2) }}
+                            @if ((float) ($item['settlement_adjustment_amount'] ?? 0) > 0)
+                                · Refunds and settlement adjustments −${{ number_format((float) $item['settlement_adjustment_amount'], 2) }}
+                            @endif
                         </p>
 
                         <div class="mt-3 flex items-center justify-between">

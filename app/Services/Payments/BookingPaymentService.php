@@ -1363,11 +1363,15 @@ class BookingPaymentService
     /**
      * @param  array<string, mixed>  $object
      */
-    public function handleTransferReversalWebhook(array $object): void
+    public function handleTransferReversalWebhook(array $object, string $eventType = 'transfer.reversed'): bool
     {
-        $transferId = (string) ($object['transfer'] ?? '');
+        $isTransferObject = $eventType === 'transfer.reversed'
+            || (string) ($object['object'] ?? '') === 'transfer';
+        $transferId = $isTransferObject
+            ? (string) ($object['id'] ?? '')
+            : (string) ($object['transfer'] ?? '');
         if ($transferId === '') {
-            return;
+            return true;
         }
 
         $operation = CareBookingPaymentOperation::query()
@@ -1375,28 +1379,49 @@ class BookingPaymentService
             ->where('stripe_object_id', $transferId)
             ->first();
         if ($operation) {
-            CareBookingPaymentOperation::query()->updateOrCreate(
-                [
-                    'type' => CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL,
-                    'stripe_object_id' => (string) ($object['id'] ?? ''),
-                ],
-                [
-                    'care_booking_payment_id' => $operation->care_booking_payment_id,
-                    'care_booking_id' => $operation->care_booking_id,
-                    'family_account_id' => $operation->family_account_id,
-                    'parent_operation_id' => $operation->id,
-                    'financial_reference' => $operation->financial_reference,
-                    'status' => CareBookingPaymentOperation::STATUS_SUCCEEDED,
-                    'amount_cents' => max(0, (int) ($object['amount'] ?? 0)),
-                    'currency' => $operation->currency,
-                    'stripe_parent_object_id' => $transferId,
-                    'occurred_at' => now(),
-                    'processed_at' => now(),
-                ],
-            );
+            $reversals = $isTransferObject
+                ? array_values(array_filter(
+                    (array) data_get($object, 'reversals.data', []),
+                    static fn ($value): bool => is_array($value),
+                ))
+                : [$object];
+            if ($isTransferObject && (bool) data_get($object, 'reversals.has_more', false)) {
+                $reversals = $this->stripe->retrieveTransferReversals($transferId);
+            }
+            if ($reversals === []) {
+                return false;
+            }
+            foreach ($reversals as $reversal) {
+                $reversalId = (string) ($reversal['id'] ?? '');
+                if ($reversalId === '') {
+                    continue;
+                }
+                CareBookingPaymentOperation::query()->updateOrCreate(
+                    [
+                        'type' => CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL,
+                        'stripe_object_id' => $reversalId,
+                    ],
+                    [
+                        'care_booking_payment_id' => $operation->care_booking_payment_id,
+                        'care_booking_id' => $operation->care_booking_id,
+                        'family_account_id' => $operation->family_account_id,
+                        'parent_operation_id' => $operation->id,
+                        'financial_reference' => $operation->financial_reference,
+                        'status' => CareBookingPaymentOperation::STATUS_SUCCEEDED,
+                        'amount_cents' => max(0, (int) ($reversal['amount'] ?? 0)),
+                        'currency' => $operation->currency,
+                        'stripe_parent_object_id' => $transferId,
+                        'metadata' => array_merge((array) ($reversal['metadata'] ?? []), [
+                            'source' => 'stripe_webhook',
+                        ]),
+                        'occurred_at' => now(),
+                        'processed_at' => now(),
+                    ],
+                );
+            }
             $this->paymentsV2->finalizeFeesAndTransfers($operation->payment);
 
-            return;
+            return true;
         }
 
         $payment = CareBookingPayment::query()
@@ -1404,27 +1429,47 @@ class BookingPaymentService
             ->first();
 
         if (! $payment) {
-            return;
+            return true;
+        }
+        if ($this->paymentsV2->usesV2($payment)) {
+            return false;
+        }
+
+        $legacyReversalId = $isTransferObject
+            ? (string) data_get($object, 'reversals.data.0.id', '')
+            : (string) ($object['id'] ?? '');
+        if ($legacyReversalId === '') {
+            return false;
         }
 
         $payment->forceFill([
-            'stripe_last_transfer_reversal_id' => (string) ($object['id'] ?? null),
+            'stripe_last_transfer_reversal_id' => $legacyReversalId,
         ])->save();
         $this->reconcilePaymentPlan($payment);
+
+        return true;
     }
 
     /**
      * @param  array<string, mixed>  $object
      */
-    public function handleChargeRefundWebhook(array $object): void
+    public function handleChargeRefundWebhook(array $object): bool
     {
         if ($this->paymentsV2->handleChargeRefund($object)) {
-            return;
+            return true;
+        }
+
+        $chargeId = (string) ($object['id'] ?? '');
+        if ($chargeId !== '' && CareBookingPaymentOperation::query()
+            ->where('type', CareBookingPaymentOperation::TYPE_CHARGE)
+            ->where('stripe_object_id', $chargeId)
+            ->exists()) {
+            return false;
         }
 
         $paymentIntentId = (string) ($object['payment_intent'] ?? '');
         if ($paymentIntentId === '') {
-            return;
+            return true;
         }
 
         $payment = CareBookingPayment::query()
@@ -1432,7 +1477,10 @@ class BookingPaymentService
             ->first();
 
         if (! $payment) {
-            return;
+            return true;
+        }
+        if ($this->paymentsV2->usesV2($payment)) {
+            return false;
         }
 
         $refunded = (int) ($object['amount_refunded'] ?? 0);
@@ -1445,12 +1493,40 @@ class BookingPaymentService
             'amount_refunded_cents' => max((int) $payment->amount_refunded_cents, $refunded),
             'status' => $captured > 0 ? $status : $payment->status,
         ])->save();
+
+        return true;
     }
 
     /** @param array<string, mixed> $object */
-    public function handleRefundWebhook(array $object): void
+    public function handleRefundWebhook(array $object): bool
     {
-        $this->paymentsV2->handleRefund($object);
+        if ($this->paymentsV2->handleRefund($object)) {
+            return true;
+        }
+
+        $chargeId = is_array($object['charge'] ?? null)
+            ? (string) data_get($object, 'charge.id', '')
+            : (string) ($object['charge'] ?? '');
+        if ($chargeId !== '' && CareBookingPaymentOperation::query()
+            ->where('type', CareBookingPaymentOperation::TYPE_CHARGE)
+            ->where('stripe_object_id', $chargeId)
+            ->exists()) {
+            return false;
+        }
+        $paymentIntentId = is_array($object['payment_intent'] ?? null)
+            ? (string) data_get($object, 'payment_intent.id', '')
+            : (string) ($object['payment_intent'] ?? '');
+        if ($paymentIntentId !== '') {
+            $payment = CareBookingPayment::query()
+                ->where('stripe_payment_intent_id', $paymentIntentId)
+                ->orWhere('stripe_overage_payment_intent_id', $paymentIntentId)
+                ->first();
+            if ($payment && $this->paymentsV2->usesV2($payment)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /** @param array<string, mixed> $object */

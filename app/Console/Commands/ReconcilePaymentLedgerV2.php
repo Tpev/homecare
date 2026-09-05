@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Models\CareBookingPayment;
 use App\Models\CareBookingPaymentOperation;
 use App\Services\Payments\BookingPaymentV2Service;
-use App\Support\MarketplacePricing;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -16,16 +15,18 @@ class ReconcilePaymentLedgerV2 extends Command
 
     protected $description = 'Finalize Stripe processing fees and source-linked caregiver transfers for pricing v2 payments';
 
-    public function handle(BookingPaymentV2Service $payments, MarketplacePricing $pricing): int
+    public function handle(BookingPaymentV2Service $payments): int
     {
         $limit = max(1, min(500, (int) $this->option('limit')));
         $candidates = CareBookingPayment::query()
-            ->where('pricing_version', $pricing->currentVersion())
+            ->whereNotNull('pricing_version')
             ->where(function ($query): void {
                 $query->where(function ($unfinishedPayment): void {
                     $unfinishedPayment->whereIn('status', [
                         CareBookingPayment::STATUS_CAPTURED,
                         CareBookingPayment::STATUS_TRANSFER_FAILED,
+                        CareBookingPayment::STATUS_PARTIALLY_REFUNDED,
+                        CareBookingPayment::STATUS_REFUNDED,
                     ])->where(function ($unfinishedLedger): void {
                         $unfinishedLedger->where('fee_finalization_status', '!=', 'finalized')
                             ->orWhereNull('fee_finalization_status')
@@ -57,7 +58,11 @@ class ReconcilePaymentLedgerV2 extends Command
                 $updated = $hasPendingReversal
                     ? $payments->retryPendingTransferReversals($payment)
                     : $payments->finalizeFeesAndTransfers($payment);
-                if ($hasPendingReversal || $updated->status === CareBookingPayment::STATUS_TRANSFERRED) {
+                if ($hasPendingReversal || in_array($updated->status, [
+                    CareBookingPayment::STATUS_TRANSFERRED,
+                    CareBookingPayment::STATUS_PARTIALLY_REFUNDED,
+                    CareBookingPayment::STATUS_REFUNDED,
+                ], true)) {
                     $completed++;
                 }
             } catch (Throwable $exception) {

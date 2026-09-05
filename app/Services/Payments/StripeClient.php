@@ -623,7 +623,10 @@ class StripeClient
 
         try {
             $intent = $this->client()->paymentIntents->retrieve($paymentIntentId, [
-                'expand' => ['latest_charge.balance_transaction'],
+                'expand' => [
+                    'latest_charge.balance_transaction',
+                    'latest_charge.refunds.data.balance_transaction',
+                ],
             ]);
         } catch (ApiErrorException $e) {
             throw new PaymentException('Unable to verify card authorization right now.', $e->getMessage());
@@ -665,7 +668,10 @@ class StripeClient
 
         try {
             $intent = $this->client()->paymentIntents->retrieve($paymentIntentId, [
-                'expand' => ['latest_charge.balance_transaction'],
+                'expand' => [
+                    'latest_charge.balance_transaction',
+                    'latest_charge.refunds.data.balance_transaction',
+                ],
             ]);
         } catch (Throwable) {
             // Capture already succeeded. The reconciliation worker will finalize fees before transfer.
@@ -923,6 +929,62 @@ class StripeClient
     }
 
     /**
+     * Resolve the accounting meaning of a Stripe Refund from its balance transaction.
+     * Stripe uses type=refund for both customer refunds and pre-Basil partial-capture
+     * releases, so reporting_category is the only safe discriminator.
+     *
+     * @param  array<string, mixed>  $refund
+     * @return array{classification:string,reporting_category:string,balance_transaction_id:string,fee_impact_cents:?int}
+     */
+    public function refundFinancialClassification(array $refund): array
+    {
+        $refundId = (string) ($refund['id'] ?? '');
+        $balanceTransaction = $refund['balance_transaction'] ?? null;
+
+        if (! is_array($balanceTransaction) && ! $this->isBypass() && $refundId !== '') {
+            try {
+                $retrieved = $this->client()->refunds->retrieve($refundId, [
+                    'expand' => ['balance_transaction'],
+                ]);
+                $payload = json_decode(json_encode($retrieved), true) ?: [];
+                $balanceTransaction = $payload['balance_transaction'] ?? $balanceTransaction;
+            } catch (Throwable $e) {
+                throw new PaymentException('Unable to classify the Stripe refund safely yet.', $e->getMessage());
+            }
+        }
+
+        if (is_string($balanceTransaction) && $balanceTransaction !== '' && ! $this->isBypass()) {
+            try {
+                $retrieved = $this->client()->balanceTransactions->retrieve($balanceTransaction, []);
+                $balanceTransaction = json_decode(json_encode($retrieved), true) ?: [];
+            } catch (Throwable $e) {
+                throw new PaymentException('Unable to classify the Stripe refund safely yet.', $e->getMessage());
+            }
+        }
+
+        $reportingCategory = is_array($balanceTransaction)
+            ? (string) ($balanceTransaction['reporting_category'] ?? '')
+            : '';
+        $classification = match ($reportingCategory) {
+            'partial_capture_reversal' => 'authorization_release',
+            'refund' => 'customer_refund',
+            default => 'unknown',
+        };
+        $feeImpact = is_array($balanceTransaction) && is_numeric($balanceTransaction['fee'] ?? null)
+            ? (int) $balanceTransaction['fee']
+            : null;
+
+        return [
+            'classification' => $classification,
+            'reporting_category' => $reportingCategory,
+            'balance_transaction_id' => is_array($balanceTransaction)
+                ? (string) ($balanceTransaction['id'] ?? '')
+                : (is_string($balanceTransaction) ? $balanceTransaction : ''),
+            'fee_impact_cents' => $feeImpact,
+        ];
+    }
+
+    /**
      * @return array{id:string,status:string,amount_received:int,latest_charge_id?:string,balance_transaction_id?:string,processing_fee_cents?:int,fee_finalized?:bool}
      */
     public function retrievePaymentIntentFinancials(string $paymentIntentId, int $fallbackAmountCents = 0): array
@@ -937,7 +999,10 @@ class StripeClient
 
         try {
             $intent = $this->client()->paymentIntents->retrieve($paymentIntentId, [
-                'expand' => ['latest_charge.balance_transaction'],
+                'expand' => [
+                    'latest_charge.balance_transaction',
+                    'latest_charge.refunds.data.balance_transaction',
+                ],
             ]);
         } catch (Throwable $e) {
             throw new PaymentException('Unable to finalize payment processing fees right now.', $e->getMessage());
@@ -1034,6 +1099,28 @@ class StripeClient
             'status' => 'succeeded',
             'amount' => (int) ($reversal->amount ?? $amountCents),
         ];
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    public function retrieveTransferReversals(string $transferId): array
+    {
+        if ($transferId === '') {
+            return [];
+        }
+        if ($this->isBypass()) {
+            return [];
+        }
+
+        try {
+            $reversals = $this->client()->transfers->allReversals($transferId, ['limit' => 100]);
+
+            return array_values(array_filter(
+                json_decode(json_encode($reversals->data), true) ?: [],
+                static fn ($value): bool => is_array($value),
+            ));
+        } catch (Throwable $e) {
+            throw new PaymentException('Unable to reconcile the Stripe transfer reversal safely yet.', $e->getMessage());
+        }
     }
 
     public function availableBalanceCents(?string $currency = null): int
@@ -1177,7 +1264,7 @@ class StripeClient
     }
 
     /**
-     * @return array{latest_charge_id?:string,balance_transaction_id?:string,processing_fee_cents?:int,fee_finalized:bool}
+     * @return array{latest_charge_id?:string,balance_transaction_id?:string,processing_fee_cents?:int,processing_fee_components?:array<int,array<string,mixed>>,fee_finalized:bool}
      */
     private function financialDetailsFromPaymentIntent(PaymentIntent $intent): array
     {
@@ -1189,14 +1276,77 @@ class StripeClient
             ? (string) ($balanceTransaction['id'] ?? '')
             : (is_string($balanceTransaction) ? $balanceTransaction : '');
         $fee = is_array($balanceTransaction) && is_numeric($balanceTransaction['fee'] ?? null)
-            ? max(0, (int) $balanceTransaction['fee'])
+            ? (int) $balanceTransaction['fee']
             : null;
+        $components = [];
+        if ($fee !== null) {
+            $components[] = [
+                'balance_transaction_id' => $balanceTransactionId,
+                'reporting_category' => (string) ($balanceTransaction['reporting_category'] ?? 'charge'),
+                'fee_cents' => $fee,
+            ];
+        }
+
+        $refundList = is_array($charge) && is_array($charge['refunds'] ?? null)
+            ? $charge['refunds']
+            : [];
+        $partialCaptureReleaseCents = 0;
+        $refundFinancialsComplete = ! (bool) ($refundList['has_more'] ?? false);
+        foreach ((array) ($refundList['data'] ?? []) as $refund) {
+            if (! is_array($refund)) {
+                $refundFinancialsComplete = false;
+
+                continue;
+            }
+            $refundBalanceTransaction = $refund['balance_transaction'] ?? null;
+            if (! is_array($refundBalanceTransaction)) {
+                $refundFinancialsComplete = false;
+
+                continue;
+            }
+            $reportingCategory = (string) ($refundBalanceTransaction['reporting_category'] ?? '');
+            $refundFee = is_numeric($refundBalanceTransaction['fee'] ?? null)
+                ? (int) $refundBalanceTransaction['fee']
+                : null;
+            if ($reportingCategory === '' || $refundFee === null) {
+                $refundFinancialsComplete = false;
+
+                continue;
+            }
+            if (in_array($reportingCategory, ['partial_capture_reversal', 'refund'], true)) {
+                $fee = ($fee ?? 0) + $refundFee;
+                $components[] = [
+                    'balance_transaction_id' => (string) ($refundBalanceTransaction['id'] ?? ''),
+                    'reporting_category' => $reportingCategory,
+                    'fee_cents' => $refundFee,
+                ];
+            }
+            if ($reportingCategory === 'partial_capture_reversal') {
+                $partialCaptureReleaseCents += abs((int) ($refundBalanceTransaction['amount'] ?? $refund['amount'] ?? 0));
+            }
+        }
+
+        $authorizedCents = max(0, (int) ($payload['amount'] ?? 0));
+        $capturedCents = max(0, (int) ($payload['amount_received'] ?? 0));
+        $chargeBalanceCents = is_array($balanceTransaction) && is_numeric($balanceTransaction['amount'] ?? null)
+            ? abs((int) $balanceTransaction['amount'])
+            : 0;
+        $requiresLegacyPartialCaptureAdjustment = $authorizedCents > $capturedCents
+            && ($chargeBalanceCents === 0 || $chargeBalanceCents > $capturedCents);
+        $expectedReleaseCents = max(0, $chargeBalanceCents - $capturedCents);
+        $partialCaptureAdjustmentComplete = ! $requiresLegacyPartialCaptureAdjustment
+            || ($refundFinancialsComplete && $partialCaptureReleaseCents >= $expectedReleaseCents);
+        $feeFinalized = $fee !== null
+            && $chargeId !== ''
+            && $refundFinancialsComplete
+            && $partialCaptureAdjustmentComplete;
 
         return array_filter([
             'latest_charge_id' => $chargeId !== '' ? $chargeId : null,
             'balance_transaction_id' => $balanceTransactionId !== '' ? $balanceTransactionId : null,
-            'processing_fee_cents' => $fee,
-            'fee_finalized' => $fee !== null && $chargeId !== '',
+            'processing_fee_cents' => $fee === null ? null : max(0, $fee),
+            'processing_fee_components' => $components,
+            'fee_finalized' => $feeFinalized,
         ], static fn ($value): bool => $value !== null);
     }
 

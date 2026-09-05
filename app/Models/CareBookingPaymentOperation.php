@@ -16,6 +16,8 @@ class CareBookingPaymentOperation extends Model
 
     public const TYPE_PROCESSING_FEE = 'processing_fee';
 
+    public const TYPE_AUTHORIZATION_RELEASE = 'authorization_release';
+
     public const TYPE_EARNING = 'earning';
 
     public const TYPE_TRANSFER = 'transfer';

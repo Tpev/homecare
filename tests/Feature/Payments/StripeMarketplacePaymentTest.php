@@ -618,6 +618,11 @@ class StripeMarketplacePaymentTest extends TestCase
             'charge' => $charge->stripe_object_id,
             'status' => 'succeeded',
             'amount' => 3100,
+            'balance_transaction' => [
+                'id' => 'txn_dashboard_partial_'.$payment->id,
+                'reporting_category' => 'refund',
+                'fee' => 0,
+            ],
         ];
 
         $this->assertTrue($payments->handleRefund($refund));
@@ -640,6 +645,384 @@ class StripeMarketplacePaymentTest extends TestCase
         $this->assertDatabaseHas('caregiver_payout_items', [
             'care_booking_id' => $booking->id,
             'amount' => 25.95,
+        ]);
+    }
+
+    public function test_v2_partial_capture_release_never_reverses_caregiver_and_reconciles_final_fee(): void
+    {
+        config()->set('services.stripe.bypass', true);
+        [$family, $request, $application, $caregiverProfile] = $this->seedScenario(returnProfile: true);
+        $request->update([
+            'requested_start_at' => now()->addDay()->setTime(9, 0),
+            'requested_end_at' => now()->addDay()->setTime(21, 0),
+        ]);
+        $caregiverProfile->update([
+            'stripe_connect_account_id' => 'acct_partial_capture_release',
+            'stripe_charges_enabled' => true,
+            'stripe_payouts_enabled' => true,
+            'stripe_connect_onboarding_completed_at' => now(),
+        ]);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $booking->update([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'timesheet_submitted_at' => now(),
+            'worked_minutes' => 714,
+        ]);
+
+        $stripe = new class extends StripeClient
+        {
+            public bool $releaseVisible = false;
+
+            public function capturePaymentIntent(string $paymentIntentId, int $amountToCaptureCents, ?string $idempotencyKey = null): array
+            {
+                return $this->financials($paymentIntentId, $amountToCaptureCents);
+            }
+
+            public function retrievePaymentIntentFinancials(string $paymentIntentId, int $fallbackAmountCents = 0): array
+            {
+                return $this->financials($paymentIntentId, $fallbackAmountCents);
+            }
+
+            private function financials(string $paymentIntentId, int $amountCents): array
+            {
+                $finalFee = $this->releaseVisible ? 1100 : 1325;
+
+                return [
+                    'id' => $paymentIntentId,
+                    'status' => 'succeeded',
+                    'amount_received' => $amountCents,
+                    'latest_charge_id' => 'ch_partial_capture_release',
+                    'balance_transaction_id' => 'txn_partial_capture_charge',
+                    'processing_fee_cents' => $finalFee,
+                    'processing_fee_components' => $this->releaseVisible
+                        ? [
+                            ['balance_transaction_id' => 'txn_partial_capture_charge', 'reporting_category' => 'charge', 'fee_cents' => 1325],
+                            ['balance_transaction_id' => 'txn_partial_capture_release', 'reporting_category' => 'partial_capture_reversal', 'fee_cents' => -225],
+                        ]
+                        : [['balance_transaction_id' => 'txn_partial_capture_charge', 'reporting_category' => 'charge', 'fee_cents' => 1325]],
+                    'fee_finalized' => true,
+                ];
+            }
+        };
+        app()->instance(StripeClient::class, $stripe);
+
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('completeBooking');
+
+        $payment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->firstOrFail();
+        $charge = $payment->operations()->where('type', CareBookingPaymentOperation::TYPE_CHARGE)->firstOrFail();
+        $this->assertSame(30805, (int) $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)
+            ->sum('amount_cents'));
+
+        $legacyRefund = $payment->operations()->create([
+            'care_booking_id' => $booking->id,
+            'family_account_id' => $payment->family_account_id,
+            'parent_operation_id' => $charge->id,
+            'financial_reference' => $payment->financial_reference,
+            'type' => CareBookingPaymentOperation::TYPE_REFUND,
+            'status' => CareBookingPaymentOperation::STATUS_SUCCEEDED,
+            'amount_cents' => 7750,
+            'currency' => $payment->currency,
+            'stripe_object_id' => 're_partial_capture_release',
+            'stripe_parent_object_id' => $charge->stripe_object_id,
+            'metadata' => ['stripe_status' => 'succeeded'],
+            'occurred_at' => now(),
+            'processed_at' => now(),
+        ]);
+        $payment->forceFill([
+            'amount_refunded_cents' => 7750,
+            'status' => CareBookingPayment::STATUS_PARTIALLY_REFUNDED,
+        ])->save();
+
+        $stripe->releaseVisible = true;
+        $releaseEvent = [
+            'id' => $charge->stripe_object_id,
+            'payment_intent' => $payment->stripe_payment_intent_id,
+            'refunds' => ['data' => [[
+                'id' => 're_partial_capture_release',
+                'status' => 'succeeded',
+                'amount' => 7750,
+                'balance_transaction' => [
+                    'id' => 'txn_partial_capture_release',
+                    'reporting_category' => 'partial_capture_reversal',
+                    'amount' => -7750,
+                    'fee' => -225,
+                ],
+            ]]],
+        ];
+        $handled = app(BookingPaymentV2Service::class)->handleChargeRefund($releaseEvent);
+        $replayed = app(BookingPaymentV2Service::class)->handleChargeRefund($releaseEvent);
+
+        $payment->refresh();
+        $this->assertTrue($handled);
+        $this->assertTrue($replayed);
+        $this->assertSame(CareBookingPayment::STATUS_TRANSFERRED, $payment->status);
+        $this->assertSame(1100, (int) $payment->stripe_processing_fee_cents);
+        $this->assertSame(31030, (int) $payment->caregiver_amount_cents);
+        $this->assertSame(0, (int) $payment->amount_refunded_cents);
+        $this->assertSame(31030, (int) $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)
+            ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
+            ->sum('amount_cents'));
+        $this->assertSame(0, $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL)
+            ->count());
+        $this->assertDatabaseHas('care_booking_payment_operations', [
+            'care_booking_payment_id' => $payment->id,
+            'type' => CareBookingPaymentOperation::TYPE_AUTHORIZATION_RELEASE,
+            'stripe_object_id' => 're_partial_capture_release',
+            'amount_cents' => 7750,
+        ]);
+        $this->assertSame('authorization_release', data_get($legacyRefund->fresh()->metadata, 'classification'));
+        $this->assertSame(1, $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_AUTHORIZATION_RELEASE)
+            ->where('stripe_object_id', 're_partial_capture_release')
+            ->count());
+        $this->assertDatabaseHas('caregiver_payout_items', [
+            'care_booking_id' => $booking->id,
+            'processing_fee_amount' => 11.00,
+            'amount' => 310.30,
+        ]);
+
+        $genuineRefundCents = (int) $charge->amount_cents;
+        $genuineRefund = [
+            'id' => 're_genuine_after_fee_topup',
+            'charge' => $charge->stripe_object_id,
+            'status' => 'succeeded',
+            'amount' => $genuineRefundCents,
+            'balance_transaction' => [
+                'id' => 'txn_genuine_after_fee_topup',
+                'reporting_category' => 'refund',
+                'fee' => 0,
+            ],
+        ];
+        $this->assertTrue(app(BookingPaymentV2Service::class)->handleRefund($genuineRefund));
+        $this->assertTrue(app(BookingPaymentV2Service::class)->handleRefund($genuineRefund));
+        $this->assertSame(31030, (int) $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL)
+            ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
+            ->sum('amount_cents'));
+        $this->assertSame(2, $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL)
+            ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
+            ->count());
+        $this->assertDatabaseHas('caregiver_payout_items', [
+            'care_booking_id' => $booking->id,
+            'amount' => 0.00,
+        ]);
+    }
+
+    public function test_payment_intent_financials_net_partial_capture_fee_credit(): void
+    {
+        $method = new \ReflectionMethod(StripeClient::class, 'financialDetailsFromPaymentIntent');
+        $pendingIntent = \Stripe\PaymentIntent::constructFrom([
+            'id' => 'pi_partial_capture_pending',
+            'amount' => 44640,
+            'amount_received' => 36890,
+            'latest_charge' => [
+                'id' => 'ch_partial_capture_pending',
+                'balance_transaction' => [
+                    'id' => 'txn_charge_pending',
+                    'amount' => 44640,
+                    'fee' => 1325,
+                    'reporting_category' => 'charge',
+                ],
+                'refunds' => ['has_more' => false, 'data' => []],
+            ],
+        ]);
+        $pending = $method->invoke(new StripeClient, $pendingIntent);
+        $this->assertFalse($pending['fee_finalized']);
+
+        $intent = \Stripe\PaymentIntent::constructFrom([
+            'id' => 'pi_partial_capture_financials',
+            'amount' => 44640,
+            'amount_received' => 36890,
+            'latest_charge' => [
+                'id' => 'ch_partial_capture_financials',
+                'balance_transaction' => [
+                    'id' => 'txn_charge_financials',
+                    'amount' => 44640,
+                    'fee' => 1325,
+                    'reporting_category' => 'charge',
+                ],
+                'refunds' => [
+                    'has_more' => false,
+                    'data' => [[
+                        'id' => 're_partial_capture_financials',
+                        'amount' => 7750,
+                        'balance_transaction' => [
+                            'id' => 'txn_release_financials',
+                            'amount' => -7750,
+                            'fee' => -225,
+                            'reporting_category' => 'partial_capture_reversal',
+                        ],
+                    ]],
+                ],
+            ],
+        ]);
+        $result = $method->invoke(new StripeClient, $intent);
+
+        $this->assertTrue($result['fee_finalized']);
+        $this->assertSame(1100, $result['processing_fee_cents']);
+        $this->assertCount(2, $result['processing_fee_components']);
+    }
+
+    public function test_real_refund_before_connect_transfer_is_reconciled_after_account_becomes_ready(): void
+    {
+        config()->set('services.stripe.bypass', true);
+        config()->set('services.stripe.bypass_processing_fee_percent', 2.9);
+        config()->set('services.stripe.bypass_processing_fee_fixed_cents', 30);
+        [$family, $request, $application, $caregiverProfile] = $this->seedScenario(returnProfile: true);
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('hire', $application->id);
+        $booking = CareBooking::query()->where('care_request_id', $request->id)->firstOrFail();
+        $booking->update([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'completed_at' => now(),
+            'timesheet_submitted_at' => now(),
+            'worked_minutes' => 120,
+        ]);
+        Livewire::actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('completeBooking');
+
+        $payment = CareBookingPayment::query()->where('care_booking_id', $booking->id)->firstOrFail();
+        $charge = $payment->operations()->where('type', CareBookingPaymentOperation::TYPE_CHARGE)->firstOrFail();
+        $this->assertSame(CareBookingPayment::STATUS_TRANSFER_FAILED, $payment->status);
+        $this->assertTrue(app(BookingPaymentV2Service::class)->handleRefund([
+            'id' => 're_before_transfer_'.$payment->id,
+            'charge' => $charge->stripe_object_id,
+            'status' => 'succeeded',
+            'amount' => 3100,
+            'balance_transaction' => [
+                'id' => 'txn_before_transfer_'.$payment->id,
+                'reporting_category' => 'refund',
+                'fee' => 0,
+            ],
+        ]));
+        $this->assertSame(CareBookingPayment::STATUS_PARTIALLY_REFUNDED, $payment->fresh()->status);
+        $this->assertSame(0, $payment->operations()->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)->count());
+
+        $caregiverProfile->update([
+            'stripe_connect_account_id' => 'acct_refund_before_transfer',
+            'stripe_charges_enabled' => true,
+            'stripe_payouts_enabled' => true,
+            'stripe_connect_onboarding_completed_at' => now(),
+        ]);
+        $this->artisan('homecare:reconcile-payment-ledger-v2 --limit=10')->assertSuccessful();
+
+        $transfer = $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)
+            ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)
+            ->firstOrFail();
+        $this->assertSame(5190, (int) $transfer->amount_cents);
+        $this->assertSame(2595, (int) $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL)
+            ->where('parent_operation_id', $transfer->id)
+            ->sum('amount_cents'));
+        $this->assertDatabaseHas('caregiver_payout_items', [
+            'care_booking_id' => $booking->id,
+            'amount' => 25.95,
+        ]);
+    }
+
+    public function test_existing_v2_payment_keeps_ledger_routing_after_pricing_version_advances(): void
+    {
+        [, $payment] = $this->completeV2TransferredBooking();
+        config()->set('marketplace.pricing_v2.version', '2026-10-v3');
+
+        $this->assertTrue(app(BookingPaymentV2Service::class)->usesV2($payment->fresh()));
+    }
+
+    public function test_unclassified_refund_webhook_fails_safely_then_retries_once_classified(): void
+    {
+        [$booking, $payment, $charge, $transfer] = $this->completeV2TransferredBooking();
+        $payload = [
+            'id' => 'evt_refund_requires_classification_'.$payment->id,
+            'object' => 'event',
+            'type' => 'charge.refunded',
+            'data' => ['object' => [
+                'id' => $charge->stripe_object_id,
+                'payment_intent' => data_get($charge->metadata, 'payment_intent_id'),
+                'refunds' => ['data' => [[
+                    'id' => 're_requires_classification_'.$payment->id,
+                    'status' => 'succeeded',
+                    'amount' => 1000,
+                ]]],
+            ]],
+        ];
+
+        $this->postJson(route('webhooks.stripe'), $payload)->assertStatus(500);
+        $this->assertDatabaseHas('stripe_webhook_events', [
+            'stripe_event_id' => $payload['id'],
+            'status' => 'failed',
+            'attempts' => 1,
+        ]);
+        $this->assertDatabaseMissing('care_booking_payment_operations', [
+            'type' => CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL,
+            'parent_operation_id' => $transfer->id,
+        ]);
+
+        $payload['data']['object']['refunds']['data'][0]['balance_transaction'] = [
+            'id' => 'txn_requires_classification_'.$payment->id,
+            'reporting_category' => 'refund',
+            'fee' => 0,
+        ];
+        $this->postJson(route('webhooks.stripe'), $payload)->assertOk();
+
+        $this->assertDatabaseHas('stripe_webhook_events', [
+            'stripe_event_id' => $payload['id'],
+            'status' => 'processed',
+            'attempts' => 2,
+        ]);
+        $this->assertSame(1, $payment->operations()
+            ->where('type', CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL)
+            ->where('parent_operation_id', $transfer->id)
+            ->count());
+    }
+
+    public function test_transfer_reversed_webhook_records_nested_reversal_object(): void
+    {
+        [$booking, $payment, , $transfer] = $this->completeV2TransferredBooking();
+        $payload = [
+            'id' => 'evt_transfer_reversed_'.$payment->id,
+            'object' => 'event',
+            'type' => 'transfer.reversed',
+            'data' => ['object' => [
+                'id' => $transfer->stripe_object_id,
+                'object' => 'transfer',
+                'amount' => $transfer->amount_cents,
+                'reversals' => [
+                    'has_more' => false,
+                    'data' => [[
+                        'id' => 'trr_external_'.$payment->id,
+                        'object' => 'transfer_reversal',
+                        'amount' => 100,
+                    ]],
+                ],
+            ]],
+        ];
+
+        $this->postJson(route('webhooks.stripe'), $payload)->assertOk();
+
+        $this->assertDatabaseHas('care_booking_payment_operations', [
+            'care_booking_payment_id' => $payment->id,
+            'parent_operation_id' => $transfer->id,
+            'type' => CareBookingPaymentOperation::TYPE_TRANSFER_REVERSAL,
+            'stripe_object_id' => 'trr_external_'.$payment->id,
+            'amount_cents' => 100,
+        ]);
+        $this->assertDatabaseHas('caregiver_payout_items', [
+            'care_booking_id' => $booking->id,
+            'amount' => round(((int) $transfer->amount_cents - 100) / 100, 2),
         ]);
     }
 
