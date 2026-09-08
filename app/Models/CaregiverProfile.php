@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\Marketplace\CaregiverCertificationPresenter;
 use App\Support\CaregiverCertificationCriteria;
 use App\Support\MarketplacePricing;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -121,6 +122,16 @@ class CaregiverProfile extends Model
             if (! $profile->insurance_status) {
                 $profile->insurance_status = self::INSURANCE_NOT_PROVIDED;
             }
+        });
+    }
+
+    public function scopeDiscoverable(Builder $query): Builder
+    {
+        $excludedSlugs = config('marketplace.caregiver_discovery_excluded_slugs', []);
+
+        return $query->where(function (Builder $query) use ($excludedSlugs): void {
+            $query->whereNull('caregiver_profiles.slug')
+                ->orWhereNotIn('caregiver_profiles.slug', $excludedSlugs);
         });
     }
 

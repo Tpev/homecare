@@ -153,6 +153,7 @@ class BrowseCaregivers extends Component
         $certificationFilter = app(CaregiverCertificationFilter::class);
 
         $query = CaregiverProfile::query()
+            ->discoverable()
             ->with([
                 'user',
                 'skills',

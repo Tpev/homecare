@@ -32,6 +32,7 @@ class CaregiverSuggestionService
             ->values();
 
         $profileQuery = CaregiverProfile::query()
+            ->discoverable()
             ->with([
                 'user:id,name,city,state',
                 'availabilities',

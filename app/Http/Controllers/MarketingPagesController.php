@@ -125,6 +125,7 @@ class MarketingPagesController extends Controller
         }
 
         return CaregiverProfile::query()
+            ->discoverable()
             ->with(['user', 'skills', 'languages', 'availabilities'])
             ->where('status', 'active')
             ->where('is_accepting_new_clients', true)

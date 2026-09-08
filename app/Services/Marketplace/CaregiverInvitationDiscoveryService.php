@@ -158,6 +158,7 @@ class CaregiverInvitationDiscoveryService
     {
         $criteria ??= CaregiverCertificationCriteria::empty();
         $query = CaregiverProfile::query()
+            ->discoverable()
             ->select([
                 'id',
                 'user_id',

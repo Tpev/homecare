@@ -3,6 +3,10 @@
 return [
     'family_estimate_hourly_rate' => 30.00,
     'caregiver_prelaunch_mode' => filter_var(env('MARKETPLACE_CAREGIVER_PRELAUNCH_MODE', false), FILTER_VALIDATE_BOOL),
+    // Manual discovery exclusions. Profiles and existing care relationships remain available.
+    'caregiver_discovery_excluded_slugs' => [
+        'charles-petrini-poli-17',
+    ],
     'family_prelaunch_auto_applicants' => [
         'enabled' => filter_var(env('MARKETPLACE_FAMILY_PRELAUNCH_AUTO_APPLICANTS_ENABLED', false), FILTER_VALIDATE_BOOL),
         'emails' => array_values(array_filter(array_map(

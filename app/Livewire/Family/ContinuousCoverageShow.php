@@ -993,6 +993,7 @@ class ContinuousCoverageShow extends Component
     {
         $criteria ??= CaregiverCertificationCriteria::empty();
         $query = CaregiverProfile::query()
+            ->discoverable()
             ->select([
                 'caregiver_profiles.id', 'caregiver_profiles.user_id', 'caregiver_profiles.slug',
                 'caregiver_profiles.profile_photo_path', 'caregiver_profiles.status', 'caregiver_profiles.bio',
