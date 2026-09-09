@@ -56,6 +56,7 @@ class DonLegacyPricingService
         return CareBooking::query()
             ->where('family_account_id', $source->family_account_id)
             ->where('caregiver_user_id', $source->caregiver_user_id)
+            ->where('id', '>=', $source->id)
             ->where(function ($query) use ($source): void {
                 $query->whereKey($source->id)
                     ->orWhere(function ($future): void {
@@ -118,6 +119,9 @@ class DonLegacyPricingService
             if ($agreement && (! $agreement->active || $agreement->only(array_keys($this->agreedRates())) !== $this->agreedRates())) {
                 throw ValidationException::withMessages(['agreement' => 'A different agreement already exists; review it before making changes.']);
             }
+            if ($agreement && (int) $agreement->source_booking_id !== (int) $source->id) {
+                throw ValidationException::withMessages(['booking' => 'The agreement already starts at booking #'.$agreement->source_booking_id.'. Rerun with --booking='.$agreement->source_booking_id.' to preserve that cutoff.']);
+            }
             $agreement ??= CarePricingAgreement::query()->create(array_merge($this->agreedRates(), [
                 'family_account_id' => $source->family_account_id,
                 'caregiver_user_id' => $source->caregiver_user_id,
@@ -159,6 +163,7 @@ class DonLegacyPricingService
                 $this->trust->recordEvent($booking, $admin->id, 'admin', 'legacy_pricing_agreement_applied', [
                     'reason' => self::REASON,
                     'pricing_agreement_id' => $agreement->id,
+                    'from_booking_id' => $agreement->source_booking_id,
                     'before' => $before,
                     'after' => $attributes,
                     'money_moved' => false,

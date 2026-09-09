@@ -20,6 +20,12 @@ class CarePricingAgreement extends Model
         ];
     }
 
+    public function appliesToBooking(CareBooking $booking): bool
+    {
+        // The source visit is also the inclusive booking-ID boundary; unsaved visits are new care.
+        return ! $booking->getKey() || (int) $booking->getKey() >= (int) $this->source_booking_id;
+    }
+
     /** @return array<string, int|string> */
     public function snapshotAttributes(): array
     {

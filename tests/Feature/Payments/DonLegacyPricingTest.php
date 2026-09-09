@@ -16,6 +16,7 @@ use App\Services\Booking\BookingCorrectionService;
 use App\Services\Payments\BookingPaymentService;
 use App\Services\Payments\BookingPaymentV2Service;
 use App\Services\Payments\DonLegacyPricingService;
+use App\Support\MarketplacePricing;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
@@ -126,6 +127,76 @@ class DonLegacyPricingTest extends TestCase
         $this->assertSame(1575, $future->fresh()->family_care_rate_cents);
         $this->assertSame(2, CareBookingEvent::query()->where('event_type', 'legacy_pricing_agreement_applied')->count());
         $this->assertDatabaseCount('care_pricing_agreements', 1);
+    }
+
+    public function test_cutoff_excludes_lower_ids_even_when_scheduled_in_the_future_and_keeps_their_payments_working(): void
+    {
+        [$earlierFuture, $admin] = $this->scenario();
+        $earlierFuture->update(['scheduled_start_at' => now()->addWeek(), 'status' => CareBooking::STATUS_SCHEDULED]);
+        $earlierPast = $this->visit($earlierFuture->family, $earlierFuture->caregiver);
+        $source = $this->visit($earlierFuture->family, $earlierFuture->caregiver);
+        $laterFuture = $this->visit($source->family, $source->caregiver);
+        $laterFuture->update(['scheduled_start_at' => now()->addWeek(), 'status' => CareBooking::STATUS_SCHEDULED]);
+        $payments = app(BookingPaymentService::class);
+        $payment = $payments->authorizeForBooking($earlierFuture, notify: false);
+        $originalPayment = $payment->fresh()->getAttributes();
+        $originalFuture = $earlierFuture->fresh()->getAttributes();
+        $originalPast = $earlierPast->fresh()->getAttributes();
+
+        $this->artisan('homecare:repair-don-pricing', ['--booking' => $source->id])
+            ->expectsOutput('Scope: booking #'.$source->id.' and higher IDs only. Lower booking IDs are excluded, even when scheduled in the future.')
+            ->expectsTable(['Booking', 'Minutes', 'Current total', 'Correct total', 'Caregiver receives', 'Repair status'], [
+                [$source->id, 133, '$68.72', '$34.91', '$33.25', 'Eligible'],
+                [$laterFuture->id, 133, '$68.72', '$34.91', '$33.25', 'Eligible'],
+            ])
+            ->doesntExpectOutputToContain('Other historical visits to audit separately:')
+            ->assertSuccessful();
+        $this->artisan('homecare:repair-don-pricing', [
+            '--booking' => $source->id, '--apply' => true, '--admin' => $admin->id, '--caregiver' => $source->caregiver_user_id,
+        ])->expectsOutput('Agreement #1 saved. Repaired bookings: '.$source->id.', '.$laterFuture->id)
+            ->assertSuccessful();
+
+        $this->assertSame($originalFuture, $earlierFuture->fresh()->getAttributes());
+        $this->assertSame($originalPast, $earlierPast->fresh()->getAttributes());
+        $this->assertSame($originalPayment, $payment->fresh()->getAttributes());
+        $this->assertSame(1575, $source->fresh()->family_care_rate_cents);
+        $this->assertSame(1575, $laterFuture->fresh()->family_care_rate_cents);
+        $this->assertSame([$source->id, $laterFuture->id], CareBookingEvent::query()
+            ->where('event_type', 'legacy_pricing_agreement_applied')->orderBy('care_booking_id')->pluck('care_booking_id')->all());
+        $pricing = app(MarketplacePricing::class);
+        foreach ([$earlierPast, $earlierFuture] as $excluded) {
+            $this->assertFalse($pricing->hasUnappliedAgreement($excluded->fresh()));
+            $this->assertSame(3000, $pricing->currentSnapshotAttributes($excluded->fresh())['family_care_rate_cents']);
+        }
+        $retried = $payments->authorizeForBooking($earlierFuture->fresh(), notify: false);
+        $this->assertSame($originalPayment, $retried->getAttributes());
+        $earlierFuture->update(['status' => CareBooking::STATUS_COMPLETED, 'family_confirmed_at' => now()]);
+        $captured = $payments->captureForBooking($earlierFuture->fresh(), notify: false);
+        $this->assertSame(CareBookingPayment::STATUS_TRANSFERRED, $captured->status);
+        $this->assertSame(6872, (int) $captured->amount_captured_cents);
+        $this->assertNull($captured->pricing_agreement_id);
+    }
+
+    public function test_repeat_repair_cannot_change_the_registered_cutoff(): void
+    {
+        [$earlier, $admin] = $this->scenario();
+        $source = $this->visit($earlier->family, $earlier->caregiver);
+        $later = $this->visit($source->family, $source->caregiver);
+        $repair = app(DonLegacyPricingService::class);
+        $result = $repair->apply($source, $admin, $source->caregiver_user_id);
+        $original = $result['agreement']->fresh()->getAttributes();
+
+        foreach ([$earlier, $later] as $differentCutoff) {
+            try {
+                $repair->apply($differentCutoff, $admin, $source->caregiver_user_id);
+                $this->fail('A repeat run must preserve the registered cutoff.');
+            } catch (ValidationException $exception) {
+                $this->assertStringContainsString('--booking='.$source->id, $exception->getMessage());
+                $this->assertSame($original, $result['agreement']->fresh()->getAttributes());
+                $this->assertSame(3000, $differentCutoff->fresh()->family_care_rate_cents);
+            }
+        }
+        $this->assertDatabaseCount('care_booking_events', 1);
     }
 
     public function test_captured_visit_is_reported_and_left_untouched_while_future_agreement_is_saved(): void

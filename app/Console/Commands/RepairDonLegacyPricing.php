@@ -12,7 +12,7 @@ use Illuminate\Console\Command;
 class RepairDonLegacyPricing extends Command
 {
     protected $signature = 'homecare:repair-don-pricing
-        {--booking=159 : Existing Don visit identifying the agreed caregiver}
+        {--booking=159 : First booking ID to repair, also identifying Don and the agreed caregiver}
         {--apply : Save the agreement and repair eligible uncaptured booking snapshots}
         {--admin= : Administrator user ID recorded in the audit}
         {--caregiver= : Caregiver user ID verified in the preview}';
@@ -25,6 +25,7 @@ class RepairDonLegacyPricing extends Command
         $repair->assertSource($source);
         $this->info('Family: '.$source->family->name.'; caregiver: '.$source->caregiver->name.' (user #'.$source->caregiver_user_id.')');
         $this->line('Don pays $15.75/hour total; caregiver receives $15/hour; LoLo pays processing costs.');
+        $this->line('Scope: booking #'.$source->id.' and higher IDs only. Lower booking IDs are excluded, even when scheduled in the future.');
         $rows = [];
         foreach ($repair->affectedBookings($source) as $booking) {
             $minutes = max(1, (int) ($booking->worked_minutes ?: $booking->expected_minutes ?: 60));
@@ -39,6 +40,7 @@ class RepairDonLegacyPricing extends Command
         $this->table(['Booking', 'Minutes', 'Current total', 'Correct total', 'Caregiver receives', 'Repair status'], $rows);
         $historical = CareBooking::query()->where('family_account_id', $source->family_account_id)
             ->where('caregiver_user_id', $source->caregiver_user_id)->whereKeyNot($source->id)
+            ->where('id', '>=', $source->id)
             ->where('scheduled_start_at', '<', now())->where('status', '!=', CareBooking::STATUS_CANCELLED)
             ->pluck('id')->all();
         if ($historical) {

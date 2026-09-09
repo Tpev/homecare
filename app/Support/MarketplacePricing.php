@@ -28,7 +28,7 @@ class MarketplacePricing
 
         if ($booking?->family_account_id && $booking->caregiver_user_id) {
             $agreement = $this->agreementForPair($booking->family_account_id, $booking->caregiver_user_id);
-            if ($agreement) {
+            if ($agreement?->appliesToBooking($booking)) {
                 $attributes = array_merge($attributes, $agreement->snapshotAttributes());
             }
         }
@@ -54,10 +54,12 @@ class MarketplacePricing
 
     public function hasUnappliedAgreement(CareBooking $booking): bool
     {
-        return ! $booking->pricing_agreement_id
-            && $booking->family_account_id
-            && $booking->caregiver_user_id
-            && $this->agreementForPair($booking->family_account_id, $booking->caregiver_user_id) !== null;
+        if ($booking->pricing_agreement_id || ! $booking->family_account_id || ! $booking->caregiver_user_id) {
+            return false;
+        }
+
+        return $this->agreementForPair($booking->family_account_id, $booking->caregiver_user_id)
+            ?->appliesToBooking($booking) ?? false;
     }
 
     /** @return array<string, mixed> */
