@@ -105,7 +105,7 @@
                         <p class="text-xs uppercase tracking-[0.12em] text-emerald-700">Hourly price</p>
                         <p class="mt-1 font-display text-2xl font-semibold text-emerald-950">${{ number_format((float) $platformRate, 2) }}/hr*</p>
                         <p class="mt-1 text-sm text-emerald-800">Care ${{ number_format((float) $platformRate, 2) }} + processing fee ${{ number_format((float) $processingFeeRate, 2) }} = <strong>${{ number_format((float) $platformRate + (float) $processingFeeRate, 2) }}/hour total</strong>.</p>
-                        <p class="mt-2 text-xs text-emerald-800">*A ${{ number_format((float) $processingFeeRate, 2) }}/hour processing fee is added to every completed visit.</p>
+                        <p class="mt-2 text-xs text-emerald-800">{{ (float) $processingFeeRate > 0 ? '*A $'.number_format((float) $processingFeeRate, 2).'/hour processing fee is added to every completed visit.' : 'Your agreed rate includes all fees. LoLo covers payment processing costs.' }}</p>
                     </div>
 
                     <x-textarea label="Care notes" wire:model="careNotes" />

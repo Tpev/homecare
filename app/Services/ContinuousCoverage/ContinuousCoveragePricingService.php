@@ -42,7 +42,7 @@ class ContinuousCoveragePricingService
             'caregiver_user_id' => $caregiver->id,
             'expected_minutes' => max(1, $workedMinutes),
         ]);
-        $booking->forceFill($this->pricing->currentSnapshotAttributes());
+        $booking->forceFill($this->pricing->currentSnapshotAttributes($booking));
         $booking->setRelation('application', $application);
         $booking->setRelation('family', $plan->family);
         $booking->setRelation('caregiver', $caregiver);
@@ -85,7 +85,10 @@ class ContinuousCoveragePricingService
         $quote = $this->quoteForPlan($plan, $caregiver, $workedMinutes);
 
         return '$'.number_format($quote['caregiver_gross_amount_cents'] / 100, 2)
-            .' gross for '.$this->duration($workedMinutes).' before Stripe processing fees';
+            .' gross for '.$this->duration($workedMinutes)
+            .($quote['caregiver_fee_policy'] === \App\Models\CarePricingAgreement::PLATFORM_PAYS_PROCESSING
+                ? '; LoLo covers payment processing costs'
+                : ' before Stripe processing fees');
     }
 
     private function duration(int $minutes): string

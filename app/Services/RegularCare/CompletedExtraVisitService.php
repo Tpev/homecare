@@ -651,7 +651,14 @@ class CompletedExtraVisitService
     /** @return array<string,mixed> */
     private function financialPreview(CarePlan $plan, int $workedMinutes): array
     {
-        return array_merge($this->pricing->currentQuoteForMinutes($workedMinutes), ['currency' => 'usd']);
+        $booking = new CareBooking([
+            'family_account_id' => $plan->family_account_id,
+            'family_user_id' => $plan->family_user_id,
+            'caregiver_user_id' => $plan->caregiver_user_id,
+        ]);
+        $booking->forceFill($this->pricing->currentSnapshotAttributes($booking));
+
+        return array_merge($this->pricing->quoteForCurrentBooking($booking, $workedMinutes), ['currency' => 'usd']);
     }
 
     private function assertFamily(CompletedExtraVisitRequest $request, User $family): void

@@ -53,6 +53,28 @@ class CompletedExtraVisitTest extends TestCase
         parent::tearDown();
     }
 
+    public function test_don_extra_visit_preview_and_payment_use_the_agreed_split(): void
+    {
+        [$family, $caregiver, $plan] = $this->establishedPlan();
+        $family->update(['email' => \App\Services\Payments\DonLegacyPricingService::FAMILY_EMAIL]);
+        app(\App\Services\Payments\DonLegacyPricingService::class)->apply(
+            CareBooking::query()->findOrFail($plan->source_care_booking_id),
+            User::factory()->create(['role' => 'admin']), $caregiver->id,
+        );
+        config()->set('services.stripe.bypass_processing_fee_percent', 2.9);
+        config()->set('services.stripe.bypass_processing_fee_fixed_cents', 30);
+        $report = $this->submit($plan->fresh(), $caregiver);
+        $minutes = (int) $report->proposed_worked_minutes;
+        $familyCents = (int) round(1575 * $minutes / 60);
+        $caregiverCents = (int) round(1500 * $minutes / 60);
+        $this->assertSame($familyCents, data_get($report->financial_preview, 'total_charge_cents'));
+        $this->assertSame($caregiverCents, data_get($report->financial_preview, 'caregiver_amount_cents'));
+        $applied = app(CompletedExtraVisitService::class)->approve($report, $family);
+        $this->assertSame(CompletedExtraVisitRequest::STATUS_APPLIED, $applied->status);
+        $this->assertSame($familyCents, (int) $applied->booking->payment->amount_captured_cents);
+        $this->assertSame($caregiverCents, (int) $applied->booking->payment->caregiver_amount_cents);
+    }
+
     public function test_established_caregiver_can_submit_without_creating_a_booking_or_payment(): void
     {
         [$family, $caregiver, $plan] = $this->establishedPlan();

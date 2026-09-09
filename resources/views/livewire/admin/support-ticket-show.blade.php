@@ -277,6 +277,18 @@
                                             <dt class="text-slate-600">Rate used</dt>
                                             <dd class="font-semibold text-slate-900">&#36;{{ number_format((float) $correctionPreview['hourly_rate'], 2) }}/hr</dd>
                                         </div>
+                                        @if ($booking->pricing_agreement_id)
+                                            <div class="flex items-center justify-between gap-4">
+                                                <dt class="text-slate-600">Agreed caregiver rate</dt>
+                                                <dd class="font-semibold text-slate-900">&#36;{{ number_format($booking->caregiver_gross_rate_cents / 100, 2) }}/hr</dd>
+                                            </div>
+                                            @if ($booking->caregiver_fee_policy === \App\Models\CarePricingAgreement::PLATFORM_PAYS_PROCESSING)
+                                                <div class="flex items-center justify-between gap-4 text-xs text-slate-600">
+                                                    <dt>Processing costs (agreement #{{ $booking->pricing_agreement_id }})</dt>
+                                                    <dd>Covered by LoLo</dd>
+                                                </div>
+                                            @endif
+                                        @endif
                                     </dl>
                                 @endif
                             @else

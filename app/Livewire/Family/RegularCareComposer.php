@@ -123,11 +123,19 @@ class RegularCareComposer extends Component
 
     public function render(CarePlanService $plans)
     {
+        $quote = app(\App\Support\MarketplacePricing::class)->quoteForPair(
+            $this->requestItem->family_account_id,
+            (int) $this->hiredApplication?->caregiver_user_id,
+            60,
+        );
+
         return view('livewire.family.regular-care-composer', [
             'scheduleService' => $plans,
             'hiredApplication' => $this->hiredApplication,
-            'platformRate' => $plans->hourlyRateForFamily(auth()->user()),
-            'processingFeeRate' => app(\App\Support\MarketplacePricing::class)->familyProcessingFeeHourlyCents() / 100,
+            'platformRate' => $quote['pricing_agreement_id']
+                ? $quote['hourly_rate']
+                : $plans->hourlyRateForFamily(auth()->user()),
+            'processingFeeRate' => $quote['family_processing_fee_rate_cents'] / 100,
         ]);
     }
 

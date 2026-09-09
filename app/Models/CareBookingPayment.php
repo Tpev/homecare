@@ -44,6 +44,8 @@ class CareBookingPayment extends Model
         'care_booking_id',
         'financial_reference',
         'pricing_version',
+        'pricing_agreement_id',
+        'caregiver_fee_policy',
         'worked_minutes',
         'family_care_rate_cents',
         'family_processing_fee_rate_cents',

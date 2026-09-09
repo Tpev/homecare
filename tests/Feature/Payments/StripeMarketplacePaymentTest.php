@@ -482,7 +482,7 @@ class StripeMarketplacePaymentTest extends TestCase
         });
     }
 
-    public function test_new_shift_uses_v2_snapshot_instead_of_legacy_family_override(): void
+    public function test_family_only_override_does_not_discount_an_unregistered_caregiver_pair(): void
     {
         config()->set('services.stripe.bypass', true);
         config()->set('marketplace.family_pricing_overrides', [

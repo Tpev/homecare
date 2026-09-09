@@ -33,6 +33,7 @@ class CareBooking extends Model
     protected $fillable = [
         'financial_reference',
         'pricing_version',
+        'pricing_agreement_id',
         'family_care_rate_cents',
         'family_processing_fee_rate_cents',
         'caregiver_gross_rate_cents',
@@ -279,19 +280,14 @@ class CareBooking extends Model
         static::creating(function (CareBooking $booking): void {
             $booking->financial_reference ??= 'SHIFT-'.Str::upper((string) Str::ulid());
 
-            if (! config('marketplace.pricing_v2.enabled', true) || $booking->pricing_version) {
+            if ($booking->pricing_version) {
                 return;
             }
 
-            $booking->pricing_version = (string) config('marketplace.pricing_v2.version', '2026-08-v2');
-            $booking->family_care_rate_cents = max(0, (int) config('marketplace.pricing_v2.family_care_hourly_cents', 3000));
-            $booking->family_processing_fee_rate_cents = max(0, (int) config('marketplace.pricing_v2.family_processing_fee_hourly_cents', 100));
-            $booking->caregiver_gross_rate_cents = max(0, (int) config('marketplace.pricing_v2.caregiver_gross_hourly_cents', 2700));
-            $booking->caregiver_fee_policy = (string) config(
-                'marketplace.pricing_v2.caregiver_fee_policy',
-                'successful_charge_balance_transaction'
-            );
-            $booking->pricing_snapshotted_at = now();
+            $pricing = app(\App\Support\MarketplacePricing::class);
+            if ($pricing->currentPricingEnabled() || $pricing->hasUnappliedAgreement($booking)) {
+                $booking->forceFill($pricing->currentSnapshotAttributes($booking));
+            }
         });
     }
 }

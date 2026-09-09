@@ -87,6 +87,9 @@ class BookingPaymentService
         ], true)) {
             return $existing;
         }
+        if ($this->pricing->hasUnappliedAgreement($booking)) {
+            throw new PaymentException('This visit needs its agreed pricing restored before payment. Contact LoLo support.');
+        }
         if ($existing?->status === CareBookingPayment::STATUS_AUTHORIZED) {
             if (! $this->isAuthorizationExpired($existing)) {
                 return $existing;
@@ -616,6 +619,9 @@ class BookingPaymentService
 
     public function captureForBooking(CareBooking $booking, bool $notify = true): CareBookingPayment
     {
+        if ($this->pricing->hasUnappliedAgreement($booking)) {
+            throw new PaymentException('This visit needs its agreed pricing restored before payment. Contact LoLo support.');
+        }
         $booking->loadMissing([
             'application',
             'family',

@@ -24,6 +24,9 @@ class BookingPaymentV2Service
 
     public function capture(CareBooking $booking, CareBookingPayment $payment): CareBookingPayment
     {
+        if ($this->pricing->hasUnappliedAgreement($booking)) {
+            throw new PaymentException('This visit needs its agreed pricing restored before payment. Contact LoLo support.');
+        }
         $booking->loadMissing(['caregiver.caregiverProfile']);
         $workedMinutes = (int) ($booking->worked_minutes ?: $this->estimatedMinutes($booking));
         $quote = $this->pricing->quoteForCurrentBooking($booking, $workedMinutes);
@@ -195,9 +198,12 @@ class BookingPaymentV2Service
                     'status' => CareBookingPaymentOperation::STATUS_SUCCEEDED,
                     'amount_cents' => $grossCents,
                     'metadata' => [
-                        'processing_fee_cents' => $feeCents,
+                        'processing_fee_cents' => $this->pricing->caregiverProcessingFeeCents($booking, $feeCents),
+                        'stripe_processing_fee_cents' => $feeCents,
                         'net_earnings_cents' => (int) $quote['caregiver_amount_cents'],
-                        'policy' => 'caregiver_gross_less_successful_charge_processing_fees',
+                        'policy' => $booking->caregiver_fee_policy === \App\Models\CarePricingAgreement::PLATFORM_PAYS_PROCESSING
+                            ? 'platform_pays_processing'
+                            : 'caregiver_gross_less_successful_charge_processing_fees',
                     ],
                     'occurred_at' => now(),
                     'processed_at' => now(),
@@ -653,6 +659,8 @@ class BookingPaymentV2Service
         return [
             'financial_reference' => (string) $booking->financial_reference,
             'pricing_version' => (string) $booking->pricing_version,
+            'pricing_agreement_id' => $booking->pricing_agreement_id,
+            'caregiver_fee_policy' => $booking->caregiver_fee_policy,
             'family_care_rate_cents' => (int) $booking->family_care_rate_cents,
             'family_processing_fee_rate_cents' => (int) $booking->family_processing_fee_rate_cents,
             'caregiver_gross_rate_cents' => (int) $booking->caregiver_gross_rate_cents,
@@ -1386,7 +1394,7 @@ class BookingPaymentV2Service
                         : ($settled ? CaregiverPayoutItem::STATUS_PAID : CaregiverPayoutItem::STATUS_SCHEDULED),
                     'currency' => strtoupper((string) $payment->currency),
                     'gross_amount' => round((int) $payment->caregiver_gross_amount_cents / 100, 2),
-                    'processing_fee_amount' => round((int) $payment->stripe_processing_fee_cents / 100, 2),
+                    'processing_fee_amount' => round($this->pricing->caregiverProcessingFeeCents($booking, (int) $payment->stripe_processing_fee_cents) / 100, 2),
                     'amount' => round($netCents / 100, 2),
                     'stripe_transfer_ids' => $transferIds,
                     'included_at' => now(),

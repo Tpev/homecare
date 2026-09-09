@@ -46,8 +46,16 @@ class CarePlanService
         return $this->pricing->rateForTier((string) config('marketplace.default_pricing_tier', 'standard'));
     }
 
-    public function hourlyRateForFamily(User $family): float
+    public function hourlyRateForFamily(User $family, ?int $caregiverUserId = null): float
     {
+        if ($caregiverUserId) {
+            $account = app(FamilyAccountContext::class)->account($family);
+            $agreement = $this->pricing->agreementForPair($account->id, $caregiverUserId);
+            if ($agreement) {
+                return $agreement->family_care_rate_cents / 100;
+            }
+        }
+
         return $this->pricing->hourlyRateForFamily($family, $this->platformHourlyRate());
     }
 
@@ -146,9 +154,9 @@ class CarePlanService
             'schedule_end_time' => substr($endTime, 0, 5),
             'schedule_slots' => $slots,
             'starts_on' => (string) $startsOn,
-            'hourly_rate' => $this->pricing->hourlyRateForFamily(
+            'hourly_rate' => $this->hourlyRateForFamily(
                 $source->family,
-                $this->platformHourlyRate()
+                $caregiver?->id
             ),
             'care_notes' => $source->recipient?->care_notes ?: $source->scope_of_work,
             'family_message' => 'We would love to make this a regular visit.',
@@ -199,7 +207,7 @@ class CarePlanService
         }
 
         $schedule = $this->normalizeSchedulePayload($payload);
-        $hourlyRate = $this->hourlyRateForFamily($family);
+        $hourlyRate = $this->hourlyRateForFamily($family, $caregiver->id);
 
         try {
             [$plan, $created] = DB::transaction(function () use ($source, $family, $caregiver, $payload, $schedule, $hourlyRate): array {
@@ -338,7 +346,7 @@ class CarePlanService
             'ends_on' => $source->recurring_ends_on?->toDateString(),
         ]);
         $schedule['starts_on'] = $this->alignStartDateToSchedule($schedule['starts_on'], $schedule['days']);
-        $hourlyRate = $this->hourlyRateForFamily($family);
+        $hourlyRate = $this->hourlyRateForFamily($family, $caregiver->id);
 
         try {
             $plan = DB::transaction(function () use (

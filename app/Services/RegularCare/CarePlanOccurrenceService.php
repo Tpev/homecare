@@ -375,7 +375,10 @@ class CarePlanOccurrenceService
 
                 $address = $plan->address_snapshot ?? [];
                 $recipient = $plan->recipient_snapshot ?? [];
-                $hourlyRate = $this->pricing->hourlyRateForFamily($plan->family, (float) $plan->hourly_rate);
+                $agreement = $this->pricing->agreementForPair($plan->family_account_id, $plan->caregiver_user_id);
+                $hourlyRate = $agreement
+                    ? $agreement->family_care_rate_cents / 100
+                    : $this->pricing->hourlyRateForFamily($plan->family, (float) $plan->hourly_rate);
 
                 $request = CareRequest::query()->create([
                     'family_account_id' => $plan->family_account_id,

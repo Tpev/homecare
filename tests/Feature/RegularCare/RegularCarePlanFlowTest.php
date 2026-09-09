@@ -44,6 +44,32 @@ class RegularCarePlanFlowTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_don_agreement_survives_recurring_offer_acceptance_and_future_generation(): void
+    {
+        config()->set('services.stripe.bypass', true);
+        [$family, $caregiver, $request] = $this->seedCompletedCareRelationship();
+        $family->update(['email' => \App\Services\Payments\DonLegacyPricingService::FAMILY_EMAIL]);
+        app(\App\Services\Payments\DonLegacyPricingService::class)->apply(
+            $request->booking, User::factory()->create(['role' => 'admin']), $caregiver->id,
+        );
+        $firstVisit = now()->addDay();
+        Livewire::actingAs($family)
+            ->test(RegularCareComposer::class, ['careRequest' => $request->id])
+            ->set('scheduleDays', [(string) $firstVisit->dayOfWeek])
+            ->set('scheduleStartTime', '09:00')->set('scheduleEndTime', '12:00')
+            ->set('startsOn', $firstVisit->toDateString())->call('sendOffer')->assertHasNoErrors();
+        $plan = CarePlan::query()->firstOrFail();
+        Livewire::actingAs($caregiver)->test(RegularClients::class)->call('acceptOffer', $plan->id)->assertHasNoErrors();
+        $bookings = CareBooking::query()->where('care_plan_id', $plan->id)->get();
+        $this->assertGreaterThan(1, $bookings->count());
+        foreach ($bookings as $booking) {
+            $quote = app(BookingPaymentService::class)->quoteForWorkedMinutes($booking, 180);
+            $this->assertSame(4725, $quote['total_charge_cents']);
+            $this->assertSame(4500, $quote['caregiver_amount_cents']);
+            $this->assertNotNull($booking->pricing_agreement_id);
+        }
+    }
+
     public function test_family_offer_and_caregiver_acceptance_generates_real_booking_with_payment(): void
     {
         config()->set('services.stripe.bypass', true);
@@ -105,6 +131,41 @@ class RegularCarePlanFlowTest extends TestCase
             'pricing_version' => '2026-08-v2',
             'financial_reference' => $booking->financial_reference,
         ]);
+    }
+
+    public function test_another_familys_existing_custom_rate_is_preserved_without_a_pair_agreement(): void
+    {
+        config()->set('services.stripe.bypass', true);
+        [$family, $caregiver, $request] = $this->seedCompletedCareRelationship();
+        config()->set('marketplace.family_pricing_overrides', [
+            $family->email => ['hourly_rate' => 22.50, 'platform_fee_percent' => 0],
+        ]);
+        Livewire::actingAs($family)->test(RegularCareComposer::class, ['careRequest' => $request->id])
+            ->assertViewHas('platformRate', 22.50)
+            ->assertViewHas('processingFeeRate', 1.00);
+        $plan = $this->activateDirectPlan($family, $caregiver, $request, now()->addDays(2));
+        $this->assertSame(22.50, (float) $plan->hourly_rate);
+        foreach ($plan->generatedBookings()->with('careRequest', 'application')->get() as $booking) {
+            $this->assertSame(22.50, (float) $booking->careRequest->budget_min);
+            $this->assertSame(22.50, (float) $booking->application->proposed_rate);
+            $this->assertNull($booking->pricing_agreement_id);
+            // Preserve the existing v2 payment snapshot as well as legacy plan terms.
+            $this->assertSame(3000, $booking->family_care_rate_cents);
+            $this->assertSame(2700, $booking->caregiver_gross_rate_cents);
+        }
+    }
+
+    public function test_another_existing_plan_keeps_its_saved_rate_when_generating_an_extra_visit(): void
+    {
+        [$family, $caregiver, $request] = $this->seedCompletedCareRelationship();
+        $first = now()->addDays(2)->startOfDay();
+        $plan = $this->activateDirectPlan($family, $caregiver, $request, $first);
+        $plan->update(['hourly_rate' => 24.75]);
+        $start = $first->copy()->addDay()->setTime(15, 0);
+        $booking = app(CarePlanOccurrenceService::class)->createExtraVisit($plan->fresh(), $start, $start->copy()->addHours(2));
+        $this->assertSame(24.75, (float) $booking->careRequest->budget_min);
+        $this->assertSame(24.75, (float) $booking->application->proposed_rate);
+        $this->assertNull($booking->pricing_agreement_id);
     }
 
     public function test_mixed_weekly_times_are_preserved_when_plan_visits_are_generated(): void

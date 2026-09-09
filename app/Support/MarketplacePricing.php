@@ -3,17 +3,18 @@
 namespace App\Support;
 
 use App\Models\CareBooking;
+use App\Models\CarePricingAgreement;
 use App\Models\CareRequest;
 use App\Models\User;
 
 class MarketplacePricing
 {
     /**
-     * @return array{pricing_version:string,family_care_rate_cents:int,family_processing_fee_rate_cents:int,caregiver_gross_rate_cents:int,caregiver_fee_policy:string,pricing_snapshotted_at:\Illuminate\Support\Carbon}
+     * @return array<string, mixed>
      */
-    public function currentSnapshotAttributes(): array
+    public function currentSnapshotAttributes(?CareBooking $booking = null): array
     {
-        return [
+        $attributes = [
             'pricing_version' => $this->currentVersion(),
             'family_care_rate_cents' => $this->familyCareHourlyCents(),
             'family_processing_fee_rate_cents' => $this->familyProcessingFeeHourlyCents(),
@@ -24,6 +25,51 @@ class MarketplacePricing
             ),
             'pricing_snapshotted_at' => now(),
         ];
+
+        if ($booking?->family_account_id && $booking->caregiver_user_id) {
+            $agreement = $this->agreementForPair($booking->family_account_id, $booking->caregiver_user_id);
+            if ($agreement) {
+                $attributes = array_merge($attributes, $agreement->snapshotAttributes());
+            }
+        }
+
+        return $attributes;
+    }
+
+    public function agreementForPair(int $familyAccountId, int $caregiverUserId): ?CarePricingAgreement
+    {
+        return CarePricingAgreement::query()
+            ->where('family_account_id', $familyAccountId)
+            ->where('caregiver_user_id', $caregiverUserId)
+            ->where('active', true)
+            ->first();
+    }
+
+    public function caregiverProcessingFeeCents(CareBooking $booking, int $stripeProcessingFeeCents): int
+    {
+        return $booking->caregiver_fee_policy === CarePricingAgreement::PLATFORM_PAYS_PROCESSING
+            ? 0
+            : max(0, $stripeProcessingFeeCents);
+    }
+
+    public function hasUnappliedAgreement(CareBooking $booking): bool
+    {
+        return ! $booking->pricing_agreement_id
+            && $booking->family_account_id
+            && $booking->caregiver_user_id
+            && $this->agreementForPair($booking->family_account_id, $booking->caregiver_user_id) !== null;
+    }
+
+    /** @return array<string, mixed> */
+    public function quoteForPair(int $familyAccountId, int $caregiverUserId, int $workedMinutes): array
+    {
+        $booking = new CareBooking([
+            'family_account_id' => $familyAccountId,
+            'caregiver_user_id' => $caregiverUserId,
+        ]);
+        $booking->forceFill($this->currentSnapshotAttributes($booking));
+
+        return $this->quoteForCurrentBooking($booking, $workedMinutes);
     }
 
     public function currentPricingEnabled(): bool
@@ -53,7 +99,8 @@ class MarketplacePricing
 
     public function usesCurrentPricing(CareBooking $booking): bool
     {
-        return (string) $booking->pricing_version === $this->currentVersion();
+        return (string) $booking->pricing_version === $this->currentVersion()
+            || ($booking->pricing_agreement_id && filled($booking->pricing_version));
     }
 
     public function ensureCurrentSnapshot(CareBooking $booking): CareBooking
@@ -66,7 +113,7 @@ class MarketplacePricing
             return $booking;
         }
 
-        $booking->forceFill($this->currentSnapshotAttributes())->saveQuietly();
+        $booking->forceFill($this->currentSnapshotAttributes($booking))->saveQuietly();
 
         return $booking->refresh();
     }
@@ -111,7 +158,7 @@ class MarketplacePricing
     }
 
     /**
-     * @return array<string, int|float|string>
+     * @return array<string, mixed>
      */
     public function quoteForCurrentBooking(CareBooking $booking, int $workedMinutes, int $stripeProcessingFeeCents = 0): array
     {
@@ -127,13 +174,16 @@ class MarketplacePricing
 
         return [
             'pricing_version' => (string) ($booking->pricing_version ?: $this->currentVersion()),
+            'pricing_agreement_id' => $booking->pricing_agreement_id,
+            'caregiver_fee_policy' => $booking->caregiver_fee_policy,
             'worked_minutes' => $workedMinutes,
             'hourly_rate' => $familyCareRate / 100,
             'subtotal_cents' => $familyCare,
             'platform_fee_percent' => 0.0,
             'platform_fee_cents' => max(0, $total - $caregiverGross),
             'total_charge_cents' => $total,
-            'caregiver_amount_cents' => max(0, $caregiverGross - $stripeProcessingFeeCents),
+            'caregiver_amount_cents' => max(0, $caregiverGross - $this->caregiverProcessingFeeCents($booking, $stripeProcessingFeeCents)),
+            'caregiver_processing_fee_cents' => $this->caregiverProcessingFeeCents($booking, $stripeProcessingFeeCents),
             'family_care_rate_cents' => $familyCareRate,
             'family_processing_fee_rate_cents' => $familyFeeRate,
             'caregiver_gross_rate_cents' => $caregiverGrossRate,
