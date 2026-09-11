@@ -53,7 +53,7 @@ new #[Layout('layouts.guest')] class extends Component
         </div>
 
         <div class="pt-1">
-            <x-button color="blue" class="auth-primary w-full justify-center">
+            <x-button type="submit" color="blue" class="auth-primary w-full justify-center">
                 {{ __('Send reset link') }}
             </x-button>
         </div>
