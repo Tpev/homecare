@@ -32,6 +32,7 @@
     x-on:support-chat-guidance-failed.window="guidanceFailed($event.detail)"
     x-on:support-chat-guidance-completed.window="guidanceCompleted()"
     x-on:support-chat-focus-composer.window="$nextTick(() => $refs.composer?.focus())"
+    x-on:open-care-support-chat.window="showPanel()"
     x-on:keydown.window="handleKeydown($event)"
     x-on:online.window="wentOnline()"
     x-on:offline.window="wentOffline()"

@@ -1,11 +1,10 @@
-<div>
+<div class="hc-care-workspace mx-auto outline-none" data-ai-target="family.care_requests" tabindex="-1">
     <div class="hc-page space-y-5 pb-28 pt-5 sm:space-y-6 sm:pb-24 sm:pt-8">
         @if (session('status'))
             <x-alert color="green">{{ session('status') }}</x-alert>
         @endif
 
         @php
-            $familyFirstName = str(trim((string) auth()->user()?->name))->before(' ')->value() ?: 'there';
             $toneClasses = [
                 'green' => 'bg-emerald-100 text-emerald-800',
                 'blue' => 'bg-sky-100 text-sky-800',
@@ -17,33 +16,26 @@
             $isCurrentVisit = $nextVisit && in_array($nextVisit['status']['label'], ['Happening now', 'Paused'], true);
         @endphp
 
-        <section data-ai-target="family.care_requests" tabindex="-1" class="overflow-hidden rounded-[2rem] border border-[#D8D0C5] bg-[#FFFCF8] shadow-sm outline-none">
-            <div class="p-5 sm:p-7 lg:p-8">
-                <p class="hc-brand-kicker">Care overview</p>
-                <h1 class="mt-2 max-w-3xl font-display text-3xl font-semibold leading-tight text-[#17313F] sm:text-4xl">Hi, {{ $familyFirstName }}.</h1>
-                <p class="mt-2 max-w-2xl text-sm leading-6 text-[#607080] sm:text-base">Here’s an overview of your care.</p>
-                <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button mt-5 min-h-12 w-full sm:w-auto">Request care</a>
-            </div>
-        </section>
-
-        <x-family-care-nav active="overview" />
+        <h1 class="sr-only">Care</h1>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <x-family-care-nav active="overview" />
+            <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button min-h-11 self-end shrink-0">Request new care</a>
+        </div>
 
         <section id="care-actions" class="scroll-mt-28 rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm sm:p-5">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#C96B55]">Do now</p>
-                    <h2 class="mt-1 font-display text-2xl font-semibold text-[#17313F]">Needs your attention</h2>
-                    <p class="mt-1 text-sm text-[#607080]">The most urgent decisions across all care.</p>
+                    <h2 class="font-display text-2xl font-semibold text-[#17313F]">Needs your attention</h2>
                 </div>
                 @if ($attentionCount > 0)
                     <a href="{{ route('family.care.actions') }}" wire:navigate class="hc-link shrink-0">View all {{ $attentionCount }}</a>
                 @endif
             </div>
 
-            <div class="mt-4 grid gap-3 xl:grid-cols-3">
+            <div @class(['mt-4 grid gap-3', 'xl:grid-cols-2' => $familyActions->count() === 2, 'xl:grid-cols-3' => $familyActions->count() >= 3])>
                 @forelse ($familyActions as $action)
                     <div @class(['hidden sm:block' => $loop->index > 0])>
-                        <x-family-action-card :item="$action" compact />
+                        <x-family-action-card :item="$action" compact show-caregiver-photo />
                     </div>
                 @empty
                     <div class="rounded-2xl border border-[#D8E1D7] bg-[#F2F8F4] p-5 xl:col-span-3">
@@ -54,70 +46,40 @@
             </div>
         </section>
 
-        <div class="grid gap-5 lg:grid-cols-2">
-            <section aria-labelledby="next-care-heading" class="rounded-3xl border border-[#D8E1D7] bg-[#F7FBF8] p-4 shadow-sm sm:p-5">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#2F6F62]">{{ $isCurrentVisit ? 'Current' : 'Next' }}</p>
-                        <h2 id="next-care-heading" class="mt-1 font-display text-2xl font-semibold text-[#17313F]">{{ $isCurrentVisit ? 'Current visit' : 'Next visit' }}</h2>
-                    </div>
-                    <a href="{{ route('family.care.schedule') }}" wire:navigate class="hc-link shrink-0">Schedule{{ $upcomingCount > 0 ? ' ('.$upcomingCount.')' : '' }}</a>
+        <section aria-labelledby="next-care-heading" class="rounded-3xl border border-[#D8E1D7] bg-[#F7FBF8] p-4 shadow-sm sm:p-5">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h2 id="next-care-heading" class="font-display text-2xl font-semibold text-[#17313F]">{{ $isCurrentVisit ? 'Current visit' : 'Next visit' }}</h2>
                 </div>
+                <a href="{{ route('family.care.schedule') }}" wire:navigate class="hc-link shrink-0">Schedule{{ $upcomingCount > 0 ? ' ('.$upcomingCount.')' : '' }}</a>
+            </div>
 
-                @if ($nextVisit)
-                    <div class="mt-5">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="text-[11px] font-bold uppercase tracking-[0.14em] text-[#2F6F62]">{{ $nextVisit['type_label'] }}</span>
-                            <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $nextTone }}">{{ $nextVisit['status']['label'] }}</span>
+            @if ($nextVisit)
+                <div class="mt-5">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-[11px] font-bold uppercase tracking-[0.14em] text-[#2F6F62]">{{ $nextVisit['type_label'] }}</span>
+                        <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $nextTone }}">{{ $nextVisit['status']['label'] }}</span>
+                    </div>
+                    <h3 class="mt-2 font-display text-2xl font-semibold text-[#17313F]">{{ $nextVisit['headline'] }}</h3>
+                    <p class="mt-2 text-base font-semibold text-[#324457]">{{ $nextVisit['starts_at']?->format('g:i A') }}@if($nextVisit['ends_at'])–{{ $nextVisit['ends_at']->format('g:i A') }}@endif</p>
+                    <div class="mt-3 flex items-center gap-2.5">
+                        @if ($nextVisit['caregiver_user'] ?? null)
+                            <x-caregiver-identity :caregiver="$nextVisit['caregiver_user']" avatar-only class="shrink-0" />
+                        @endif
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-[#17313F]">{{ $nextVisit['caregiver'] }}</p>
+                            @if($nextVisit['location'])<p class="text-xs text-[#607080]">{{ $nextVisit['location'] }}</p>@endif
                         </div>
-                        <h3 class="mt-2 font-display text-2xl font-semibold text-[#17313F]">{{ $nextVisit['headline'] }}</h3>
-                        <p class="mt-2 text-base font-semibold text-[#324457]">{{ $nextVisit['starts_at']?->format('g:i A') }}@if($nextVisit['ends_at'])–{{ $nextVisit['ends_at']->format('g:i A') }}@endif</p>
-                        <p class="mt-1 text-sm text-[#607080]">{{ $nextVisit['caregiver'] }}@if($nextVisit['location']) · {{ $nextVisit['location'] }}@endif</p>
-                        <a href="{{ $nextVisit['details_url'] }}" wire:navigate class="hc-secondary-button mt-5 w-full sm:w-auto">Open visit</a>
                     </div>
-                @else
-                    <div class="mt-5 rounded-2xl border border-dashed border-[#C7D5CA] bg-white/70 px-4 py-7 text-center">
-                        <p class="font-display text-xl font-semibold text-[#17313F]">No confirmed visit yet.</p>
-                        <p class="mt-1 text-sm text-[#607080]">Care being arranged remains available in Arrangements.</p>
-                    </div>
-                @endif
-            </section>
-
-            <section id="care-arrangements" aria-labelledby="arrangements-heading" class="rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm sm:p-5">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#C96B55]">Your care</p>
-                        <h2 id="arrangements-heading" class="mt-1 font-display text-2xl font-semibold text-[#17313F]">Arrangements</h2>
-                    </div>
-                    <a href="{{ route('family.care.index') }}" wire:navigate class="hc-link shrink-0">View all{{ $arrangementCount > 0 ? ' ('.$arrangementCount.')' : '' }}</a>
+                    <a href="{{ $nextVisit['details_url'] }}" wire:navigate class="hc-secondary-button mt-5 w-full sm:w-auto">Open visit</a>
                 </div>
-
-                <div class="mt-4 divide-y divide-[#E4DDD3] overflow-hidden rounded-2xl border border-[#E4DDD3] bg-white">
-                    <a href="{{ route('family.care.index', ['view' => 'arranging']) }}" wire:navigate class="flex min-h-20 items-center justify-between gap-4 px-4 py-3 transition hover:bg-[#F8F4ED]">
-                        <div>
-                            <p class="font-semibold text-[#17313F]">Being arranged</p>
-                            <p class="mt-0.5 text-sm text-[#607080]">Open one-time and recurring care requests</p>
-                        </div>
-                        <span class="text-2xl font-semibold text-[#17313F]">{{ $beingArrangedCount }}</span>
-                    </a>
-                    <a href="{{ route('family.care.index', ['view' => 'ongoing', 'type' => 'regular']) }}" wire:navigate class="flex min-h-20 items-center justify-between gap-4 px-4 py-3 transition hover:bg-[#F8F4ED]">
-                        <div>
-                            <p class="font-semibold text-[#17313F]">Ongoing recurring care</p>
-                            <p class="mt-0.5 text-sm text-[#607080]">Active or paused schedules</p>
-                        </div>
-                        <span class="text-2xl font-semibold text-[#17313F]">{{ $ongoingPlanCount }}</span>
-                    </a>
-                    @if ($continuousCoverageVisible)
-                        <a href="{{ route('family.continuous-coverage.index') }}" wire:navigate class="flex min-h-20 items-center justify-between gap-4 px-4 py-3 transition hover:bg-[#F8F4ED]">
-                            <div>
-                                <p class="font-semibold text-[#17313F]">Continuous care</p>
-                                <p class="mt-0.5 text-sm text-[#607080]">Around-the-clock and overnight plans</p>
-                            </div>
-                            <span class="text-2xl font-semibold text-[#17313F]">{{ $continuousPlanCount }}</span>
-                        </a>
-                    @endif
+            @else
+                <div class="mt-5 rounded-2xl border border-dashed border-[#C7D5CA] bg-white/70 px-4 py-7 text-center">
+                    <p class="font-display text-xl font-semibold text-[#17313F]">No confirmed visit yet.</p>
+                    <a href="{{ route('family.care.index') }}" wire:navigate class="hc-link mt-1 inline-block text-sm">View care requests</a>
                 </div>
-            </section>
-        </div>
+            @endif
+        </section>
+
     </div>
 </div>

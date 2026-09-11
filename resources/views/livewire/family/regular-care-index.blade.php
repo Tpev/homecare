@@ -1,4 +1,4 @@
-<div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
+<div class="hc-care-workspace hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
@@ -13,19 +13,12 @@
         ];
     @endphp
 
-    <section data-ai-target="family.care_arrangements" tabindex="-1" class="hc-brand-panel outline-none">
-        <span data-ai-target="family.regular_care" tabindex="-1" class="sr-only">Care arrangements</span>
-        <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-                <p class="hc-brand-kicker text-[#E8E0FF]">Arrangements</p>
-                <h1 class="mt-1 font-display text-2xl font-semibold leading-tight sm:text-3xl">Every care arrangement, in one place.</h1>
-                <p class="mt-2 hidden max-w-2xl text-base text-[#F7F1E8]/82 sm:block">See care still being arranged and ongoing caregiver relationships. Confirmed dates belong in Schedule.</p>
-            </div>
-            <a href="{{ route('family.requests.create') }}" wire:navigate class="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#23483F] shadow-sm transition hover:bg-[#F7F2EA] sm:w-auto">Request care</a>
-        </div>
-    </section>
-
-    <x-family-care-nav active="arrangements" />
+    <h1 data-ai-target="family.care_arrangements" tabindex="-1" class="sr-only">Care requests</h1>
+    <span data-ai-target="family.regular_care" tabindex="-1" class="sr-only">Care requests</span>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <x-family-care-nav active="arrangements" />
+        <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button min-h-11 self-end shrink-0">Request new care</a>
+    </div>
 
     <section class="rounded-2xl border border-[#E4DDD3] bg-[#FFFCF8] p-3 shadow-sm sm:p-4">
         <div class="grid gap-3 sm:grid-cols-2 {{ count($recipientOptions ?? []) > 2 ? 'lg:grid-cols-3' : '' }}">
@@ -55,6 +48,9 @@
                         <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $itemTone }}">{{ $item['status']['label'] }}</span>
                     </div>
                     <h3 class="mt-2 font-display text-xl font-semibold text-[#17313F]">{{ $item['headline'] }}</h3>
+                    @if (($item['kind'] ?? null) === 'plan' && ! empty($item['caregiver']))
+                        <p class="mt-1 text-sm text-[#485E53]">Caregiver: <span class="font-semibold text-[#23483F]">{{ $item['caregiver'] }}</span></p>
+                    @endif
                     <p class="mt-2 text-sm font-medium leading-6 text-[#324457]">{{ $item['schedule'] }}</p>
                     @if (($item['kind'] ?? null) === 'plan' && $item['next_label'])
                         <p class="mt-1 text-sm text-[#607080]">Next visit: {{ $item['next_label'] }}</p>

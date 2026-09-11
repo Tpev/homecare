@@ -1,23 +1,16 @@
-<div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
-    <section data-ai-target="family.care_schedule" tabindex="-1" class="rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm outline-none sm:p-6">
-        <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-                <p class="hc-brand-kicker">Care schedule</p>
-                <h1 class="mt-2 font-display text-3xl font-semibold leading-tight text-[#17313F] sm:text-4xl">Your visits, organized by when they happen.</h1>
-                <p class="mt-2 hidden max-w-2xl text-sm leading-6 text-[#607080] sm:block sm:text-base">One-time, regular, extra, and continuous care share one schedule. Start with today, then look ahead.</p>
-            </div>
-            <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button min-h-12 w-full sm:w-auto">Request care</a>
-        </div>
-    </section>
-
-    <x-family-care-nav active="schedule" />
+<div class="hc-care-workspace hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
+    <h1 data-ai-target="family.care_schedule" tabindex="-1" class="sr-only">Care schedule</h1>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <x-family-care-nav active="schedule" />
+        <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button min-h-11 self-end shrink-0">Request new care</a>
+    </div>
 
     <section class="rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm sm:p-5">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
                 <h2 class="font-display text-xl font-semibold text-[#17313F]">{{ $totalVisitCount }} upcoming {{ $totalVisitCount === 1 ? 'visit' : 'visits' }}</h2>
-                <p class="mt-1 text-sm text-[#607080]">Filter by person or care type without changing the underlying schedule.</p>
-                @if ($totalVisitCount > $visits->count())
+                <p class="mt-1 text-sm text-[#607080]">Your confirmed care, by person and date.</p>
+                @if ($scheduleView === 'list' && $totalVisitCount > $visits->count())
                     <p class="mt-1 text-xs font-medium text-[#7B8794]">Showing the next {{ $visits->count() }} visits.</p>
                 @endif
             </div>
@@ -26,14 +19,32 @@
                 <x-native-select-field label="Care type" wire:model.live="careType" :options="$careTypeOptions" id="care-schedule-type" />
             </div>
         </div>
+        <div class="hc-schedule-view-row">
+            <div class="hc-schedule-toggle" role="group" aria-label="Schedule view">
+                <button type="button" wire:click="setView('list')" aria-pressed="{{ $scheduleView === 'list' ? 'true' : 'false' }}">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 5h10M7 10h10M7 15h10M3 5h.01M3 10h.01M3 15h.01" stroke-linecap="round" /></svg>
+                    List
+                </button>
+                <button type="button" wire:click="setView('calendar')" aria-pressed="{{ $scheduleView === 'calendar' ? 'true' : 'false' }}">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="4" width="14" height="13" rx="2" /><path d="M6 2v4m8-4v4M3 8h14m-10 3h2m2 0h2m-6 3h2" stroke-linecap="round" /></svg>
+                    Calendar
+                </button>
+            </div>
+            <p class="hc-schedule-view-hint">{{ $scheduleView === 'calendar' ? 'Select a date to see every visit.' : 'Visits are shown in date order.' }}</p>
+        </div>
     </section>
 
+    @if ($scheduleView === 'calendar')
+        @include('livewire.family.partials.care-schedule-calendar')
+    @else
     <section class="space-y-8" aria-label="Upcoming care timeline">
         @forelse ($visitSections as $sectionKey => $section)
             <div>
                 <div class="mb-4 flex items-end justify-between gap-3 border-b border-[#D8D0C5] pb-3">
                     <div>
-                        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#C96B55]">{{ $sectionKey === 'today' ? 'Right now' : 'Looking ahead' }}</p>
+                        @if ($sectionKey === 'today')
+                            <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#C96B55]">Right now</p>
+                        @endif
                         <h2 class="mt-1 font-display text-2xl font-semibold text-[#17313F]">{{ $section['label'] }}</h2>
                         <p class="mt-1 text-sm text-[#607080]">{{ $section['description'] }}</p>
                     </div>
@@ -101,4 +112,5 @@
             </div>
         @endif
     </section>
+    @endif
 </div>

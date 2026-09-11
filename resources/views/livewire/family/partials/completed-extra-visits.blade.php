@@ -87,7 +87,7 @@
                     @elseif ($report->status === \App\Models\CompletedExtraVisitRequest::STATUS_APPLIED)
                         <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                             <a href="{{ route('family.care.history', ['plan' => $report->care_plan_id]) }}" wire:navigate class="hc-primary-button min-h-12">View in care history</a>
-                            @if ($report->booking)<a href="{{ route('family.requests.show', $report->booking->care_request_id) }}" wire:navigate class="hc-secondary-button min-h-12">Open full visit record</a>@endif
+                            @if ($report->booking)<a href="{{ $this->visitUrl($report->booking) }}" wire:navigate class="hc-secondary-button min-h-12">Open full visit record</a>@endif
                         </div>
                     @elseif (in_array($report->status, [\App\Models\CompletedExtraVisitRequest::STATUS_DISPUTED, \App\Models\CompletedExtraVisitRequest::STATUS_ESCALATED, \App\Models\CompletedExtraVisitRequest::STATUS_FAILED], true))
                         <p class="mt-4 rounded-xl border border-rose-200 bg-white p-4 font-semibold text-rose-950">No new payment will be made while LoLo Care reviews this report.</p>

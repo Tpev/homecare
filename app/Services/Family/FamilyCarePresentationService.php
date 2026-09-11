@@ -8,6 +8,7 @@ use App\Models\CareRequest;
 use App\Models\FamilyAccount;
 use App\Support\CareRequestProgress;
 use App\Support\WeeklySchedule;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -52,6 +53,36 @@ class FamilyCarePresentationService
             $careType,
             $recipient,
         )->count();
+    }
+
+    /** All actual upcoming visits overlapping the calendar's half-open date range. */
+    public function upcomingVisitsInRange(
+        FamilyAccount $account,
+        CarbonInterface $from,
+        CarbonInterface $until,
+        ?string $careType = null,
+        ?string $recipient = null,
+    ): Collection {
+        return $this->applyUpcomingFilters($this->upcomingBookingsQuery($account), $careType, $recipient)
+            ->where('scheduled_start_at', '<', $until)
+            ->where(function (Builder $query) use ($from): void {
+                $query->where('scheduled_end_at', '>', $from)
+                    ->orWhere(function (Builder $withoutEnd) use ($from): void {
+                        $withoutEnd->whereNull('scheduled_end_at')->where('scheduled_start_at', '>=', $from);
+                    });
+            })
+            ->with([
+                'careRequest:id,title,care_plan_id,request_type,city,state',
+                'careRequest.recipient:id,care_request_id,full_name',
+                'carePlan:id,title,recipient_snapshot,caregiver_user_id',
+                'caregiver:id,name',
+                'caregiver.caregiverProfile:id,user_id,profile_photo_path',
+                'payment:id,care_booking_id,status,last_error',
+            ])
+            ->orderBy('scheduled_start_at')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (CareBooking $booking): array => $this->visit($booking));
     }
 
     public function upcomingRecipientNames(FamilyAccount $account): Collection
@@ -177,7 +208,7 @@ class FamilyCarePresentationService
         return [
             'id' => (int) $plan->id,
             'type_label' => 'Recurring care',
-            'headline' => $recipient.' with '.$caregiver,
+            'headline' => 'Recurring care for '.$recipient,
             'recipient' => $recipient,
             'caregiver' => $caregiver,
             'schedule' => WeeklySchedule::label($plan->weeklyScheduleSlots()) ?: 'Schedule not set',
@@ -230,15 +261,16 @@ class FamilyCarePresentationService
             'recipient' => $recipient,
             'caregiver' => $caregiver,
             'starts_at' => $booking->scheduled_start_at,
+            'caregiver_user' => $booking->caregiver,
             'ends_at' => $booking->scheduled_end_at,
             'schedule' => $this->dateTimeLabel($booking->scheduled_start_at, $booking->scheduled_end_at),
             'location' => trim(collect([$request?->city, $request?->state])->filter()->implode(', ')),
             'status' => $status,
             'payment_needs_action' => $paymentNeedsAction,
             'action_label' => $paymentNeedsAction ? 'Fix payment' : 'Open visit',
-            'action_url' => $plan?->id
-                ? route('family.care.show', $plan->id)
-                : ($request?->id ? route('family.requests.show', $request->id) : route('family.requests.index')),
+            'action_url' => $request?->id
+                ? route('family.requests.show', ['careRequest' => $request->id, 'tab' => 'shift'])
+                : ($plan?->id ? route('family.care.show', $plan->id) : route('family.requests.index')),
             'details_url' => $plan?->id
                 ? route('family.care.journey', ['resourceType' => 'regular', 'resourceId' => $plan->id])
                 : ($request?->id

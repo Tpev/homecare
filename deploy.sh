@@ -313,6 +313,7 @@ prepare_repository() {
 create_release() {
   local current="$1"
   local release_name
+  local compiled_views
 
   release_name="$(date -u +%Y%m%d%H%M%S)-${DEPLOY_COMMIT:0:12}"
   NEW_RELEASE="$RELEASES_DIR/$release_name"
@@ -331,8 +332,9 @@ create_release() {
   ln -s "$SHARED_STORAGE" "$NEW_RELEASE/storage"
   ln -s "$SHARED_ENV" "$NEW_RELEASE/.env"
 
-  mkdir -p "$NEW_RELEASE/bootstrap/cache" "$NEW_RELEASE/voice-agent/bin"
-  chmod 775 "$NEW_RELEASE/bootstrap/cache" "$NEW_RELEASE/voice-agent/bin"
+  compiled_views="$NEW_RELEASE/bootstrap/cache/views"
+  mkdir -p "$compiled_views" "$NEW_RELEASE/voice-agent/bin"
+  chmod 775 "$NEW_RELEASE/bootstrap/cache" "$compiled_views" "$NEW_RELEASE/voice-agent/bin"
 
   log "Installing PHP dependencies in the inactive release..."
   (cd "$NEW_RELEASE" && "$COMPOSER_BIN" install \
@@ -373,7 +375,9 @@ create_release() {
   run_artisan "$NEW_RELEASE" caregiver-photos:generate-variants --no-interaction
 
   log "Building Laravel caches in the inactive release..."
-  run_artisan "$NEW_RELEASE" config:cache
+  # view:cache starts by clearing compiled views. Persist a release-local path
+  # so warming this release cannot delete templates still used by live workers.
+  VIEW_COMPILED_PATH="$compiled_views" run_artisan "$NEW_RELEASE" config:cache
   run_artisan "$NEW_RELEASE" route:cache
   run_artisan "$NEW_RELEASE" view:cache
 

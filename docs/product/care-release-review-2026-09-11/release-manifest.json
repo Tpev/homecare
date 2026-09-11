@@ -1,0 +1,215 @@
+{
+  "createdAt": "2026-09-11T13:25:17.728Z",
+  "baseCommit": "d966d945e3683fbed02ce07ec8b56232f722296d",
+  "description": "Reviewed care UI/runtime files and deployment safeguards. Blob hashes use Git filters so Windows/Linux line endings do not create false mismatches.",
+  "files": [
+    {
+      "path": ".gitignore",
+      "blob": "7da573fe01512deef8c55a9d6857b6ed7b96df26"
+    },
+    {
+      "path": "app/Livewire/Family/CareJourney.php",
+      "blob": "2b1b85ace1c9d86a7e73c39ef93edf53e9da06d1"
+    },
+    {
+      "path": "app/Livewire/Family/CareSchedule.php",
+      "blob": "84fbaef7ae8cca7b22b7c166a76c0202ef661017"
+    },
+    {
+      "path": "app/Livewire/Family/CreateCareRequestWizard.php",
+      "blob": "0c73161a3739e2ed1787b493dbcdfc9207ac6514"
+    },
+    {
+      "path": "app/Livewire/Family/ManageCareRequest.php",
+      "blob": "4e4ec4f52df952e16ace4b342c65a6c97ddb23b3"
+    },
+    {
+      "path": "app/Livewire/Family/RegularCareShow.php",
+      "blob": "a1dde66fc84dc761077500d009a611a5c447d225"
+    },
+    {
+      "path": "app/Services/Family/FamilyCarePresentationService.php",
+      "blob": "7a71de5c6f6d766ddacae9a060acf3aaf9662077"
+    },
+    {
+      "path": "app/Support/FamilyActionInboxBuilder.php",
+      "blob": "9448cd13383e09d215dc600f2975d1d551f3fc17"
+    },
+    {
+      "path": "deploy.sh",
+      "blob": "40dd03150c5f786de7f5740fbb371e4e3afcf957"
+    },
+    {
+      "path": "public/fonts/Inter-OFL.txt",
+      "blob": "21f6aff961064c2e429f570995e446bcdd555422"
+    },
+    {
+      "path": "public/fonts/Inter-Variable.woff",
+      "blob": "ac89b9661668bac8273dc1f5f0c045005cfbc8c1"
+    },
+    {
+      "path": "public/fonts/README.md",
+      "blob": "585920fe27eaa851b33fb3d39282f38e86dfd168"
+    },
+    {
+      "path": "public/fonts/SourceSerif4-OFL.txt",
+      "blob": "318074ec9d43c936a56ee1dae92999f4df073ce8"
+    },
+    {
+      "path": "public/fonts/SourceSerif4-Variable.woff",
+      "blob": "4dbc517d6f3823915f090fba5d48d2b976f2427c"
+    },
+    {
+      "path": "resources/css/app.css",
+      "blob": "2bab0d604cf04c5003d7928661c651e05ccdafbe"
+    },
+    {
+      "path": "resources/css/care-creation.css",
+      "blob": "fc66757de6a5eec92476425e16d2e07a2f5cc9f2"
+    },
+    {
+      "path": "resources/css/care-recruitment.css",
+      "blob": "9bba7217e729ddeba924334d1d03538c7ad894d1"
+    },
+    {
+      "path": "resources/css/care-schedule.css",
+      "blob": "c1bed5b74b14c3f1668a44e18fdf9abf9175daa7"
+    },
+    {
+      "path": "resources/css/care-workspace.css",
+      "blob": "c9042ccde123ef62dc4c353a19b73b489fafc718"
+    },
+    {
+      "path": "resources/views/components/caregiver-identity.blade.php",
+      "blob": "76c2cccb2e11de564529ca147c12e75cffe6d46e"
+    },
+    {
+      "path": "resources/views/components/family-action-card.blade.php",
+      "blob": "6ab2a4d8b3f9174d1e98040e2af89e046ad6809a"
+    },
+    {
+      "path": "resources/views/components/family-care-nav.blade.php",
+      "blob": "3d88d7fff93e368d4e9e44a24dc0cf858616b9df"
+    },
+    {
+      "path": "resources/views/layouts/app.blade.php",
+      "blob": "6df5f7c1507c314d63742e1d6d073f6f319de487"
+    },
+    {
+      "path": "resources/views/livewire/family/care-history.blade.php",
+      "blob": "d2e6b1c442408407386bee3b10fee495df7c6edf"
+    },
+    {
+      "path": "resources/views/livewire/family/care-journey.blade.php",
+      "blob": "068f0322bf2c69096be8827ea956c925acf4c31f"
+    },
+    {
+      "path": "resources/views/livewire/family/care-schedule.blade.php",
+      "blob": "d9c72972d75ca722af78adeee349abc2d200f320"
+    },
+    {
+      "path": "resources/views/livewire/family/create-care-request-wizard.blade.php",
+      "blob": "cce582cbd63fa0d6d767e970017416dfc64d084e"
+    },
+    {
+      "path": "resources/views/livewire/family/manage-care-request.blade.php",
+      "blob": "7c600782916a9b2e914b77df09f83a7ca76ec0c9"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/care-decision-review.blade.php",
+      "blob": "aa246e84e97f273bafaff1297c922a0c6fe20d33"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/care-request-review.blade.php",
+      "blob": "5d2d0a3778fd42248f91a609b28fcc52f14072d8"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/care-schedule-calendar.blade.php",
+      "blob": "64cb5a329f5994662fe11bce7651a40c4167db9f"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/care-workspace-header.blade.php",
+      "blob": "9c4b0a138204c4b5459d58f8d9726f8d930bd12c"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/caregiver-invitations.blade.php",
+      "blob": "fdb7407755e35bdf59cbd2b666c2284e070f4f03"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/caregiver-invite-card.blade.php",
+      "blob": "5e50a4826197e23775c4815aff921e3e0a9d54f3"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/caregiver-invite-panel.blade.php",
+      "blob": "2ef822ebf218a49a4b09be1945e010c97c8e2387"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/completed-extra-visits.blade.php",
+      "blob": "6386f42cbcac2e787180937b19e4ccff5a376cbb"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/live-visit-record.blade.php",
+      "blob": "4255efc1d33f4e249db18aa1145de6b99226a996"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/recruitment-applicants.blade.php",
+      "blob": "7b973cc856211c056bb0ab25c8af20dfa3331aa5"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/recruitment-discovery.blade.php",
+      "blob": "76e97a97844ff8048141ff77eacbbfada2ff2b83"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/recruitment-header.blade.php",
+      "blob": "44ce750ae674a51aa9db3fec297be3508325b9ba"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/regular-care-caregivers.blade.php",
+      "blob": "ccaf4272581914b52f86f8d6e2869d2f1cd917c1"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/regular-care-details.blade.php",
+      "blob": "16ea6061c128d30c6db4ba0cf9f6292a3d6c789c"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/regular-care-management.blade.php",
+      "blob": "fb2040ddd292b22934b416cbea4bb6e62a291bd7"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/regular-care-next-visit.blade.php",
+      "blob": "ea216188fb9082a4ed382be3f55b9c6bde5ccea1"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/regular-care-overview.blade.php",
+      "blob": "66099fd89721f5e1f50f21a308a44d547328d953"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/regular-care-visit-card.blade.php",
+      "blob": "5a4375e30c0d035bb0e81e95601df5043f380bc8"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/regular-care-visits.blade.php",
+      "blob": "4df3bfb6c9de4024b12b3b11f8f5ffbb2d7a8b9a"
+    },
+    {
+      "path": "resources/views/livewire/family/partials/visit-care-essentials.blade.php",
+      "blob": "f8631b59617bea49d825cf9d3c62a0d575a5456e"
+    },
+    {
+      "path": "resources/views/livewire/family/regular-care-index.blade.php",
+      "blob": "7a774cd52e0668beef2b8745ee2127a5cf3ee0d6"
+    },
+    {
+      "path": "resources/views/livewire/family/regular-care-show.blade.php",
+      "blob": "fe900e7e02aed24eb7f273785df8a2949df634c8"
+    },
+    {
+      "path": "resources/views/livewire/family/requests-index.blade.php",
+      "blob": "2219863207f2ad874a58b93fe62cc537741cfcd0"
+    },
+    {
+      "path": "resources/views/livewire/support/chat-widget.blade.php",
+      "blob": "4070a7d3103dd3db41546e7002c5f5c2ae7ced82"
+    }
+  ]
+}

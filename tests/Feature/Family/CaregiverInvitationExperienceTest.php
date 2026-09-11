@@ -54,7 +54,7 @@ class CaregiverInvitationExperienceTest extends TestCase
             ->set('caregiverSearch', 'Char')
             ->assertSee('Charles Helpful')
             ->call('beginCaregiverInvitation', $caregiver->id)
-            ->assertSee('Invite Charles to')
+            ->assertSee('Invite Charles?')
             ->set('caregiverInviteMessage', 'Please review this care request for our family.')
             ->call('sendCaregiverInvitation')
             ->assertSet('showCaregiverInvitePanel', true)

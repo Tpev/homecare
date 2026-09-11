@@ -9,6 +9,7 @@ use App\Models\CareBooking;
 use App\Models\CarePlan;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
+use App\Models\CareRequestInvitation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -28,9 +29,9 @@ class FamilyCareExperienceTest extends TestCase
         $this->actingAs($family)
             ->get(route('family.requests.index'))
             ->assertOk()
-            ->assertSee('Care overview')
-            ->assertSee('Hi, Barbara.')
-            ->assertSee('Here’s an overview of your care.')
+            ->assertDontSee('Care overview')
+            ->assertDontSee('Hi, Barbara.')
+            ->assertDontSee('Here’s an overview of your care.')
             ->assertSee('Caregivers')
             ->assertDontSee('Find Caregivers')
             ->assertDontSee('What matters next.')
@@ -81,7 +82,8 @@ class FamilyCareExperienceTest extends TestCase
         $this->actingAs($family)
             ->get(route('family.care.schedule'))
             ->assertOk()
-            ->assertSee('Your visits, organized by when they happen.')
+            ->assertDontSee('Your visits, organized by when they happen.')
+            ->assertSee('Request new care')
             ->assertSee('This week')
             ->assertSee('Mary Villano')
             ->assertSee('Amy Ten Broek')
@@ -89,7 +91,7 @@ class FamilyCareExperienceTest extends TestCase
             ->assertSee('Visit #')
             ->assertSee('View care')
             ->assertSee('Overview')
-            ->assertSee('Arrangements')
+            ->assertSee('Care request')
             ->assertSee('History')
             ->assertDontSee('24/7 Coverage');
     }
@@ -179,7 +181,7 @@ class FamilyCareExperienceTest extends TestCase
         $this->actingAs($family)
             ->get(route('family.care.journey', ['resourceType' => 'request', 'resourceId' => $request->id]))
             ->assertOk()
-            ->assertSee('The complete story')
+            ->assertSee('Care timeline')
             ->assertSee('Mary Villano with Amy Ten Broek')
             ->assertSeeInOrder([
                 'Care requested',
@@ -221,7 +223,13 @@ class FamilyCareExperienceTest extends TestCase
             ->assertOk()
             ->assertDontSee('Whose care?')
             ->assertDontSee('Care recipient')
-            ->assertSee('View all (2)');
+            ->assertSee('Care request')
+            ->assertDontSee('id="care-arrangements"', false);
+
+        Livewire::withQueryParams(['person' => 'Mary Villano'])
+            ->actingAs($family)
+            ->test(RequestsIndex::class)
+            ->assertViewHas('arrangementCount', 2);
 
         $this->actingAs($family)
             ->get(route('family.care.index', ['person' => 'Mary Villano']))
@@ -404,14 +412,14 @@ class FamilyCareExperienceTest extends TestCase
 
         $this->get(route('family.care.index'))
             ->assertOk()
-            ->assertSee('Mary Current with')
-            ->assertDontSee('Linda Past with');
+            ->assertSee('Recurring care for Mary Current')
+            ->assertDontSee('Recurring care for Linda Past');
 
         $this->get(route('family.care.index', ['view' => 'past']))
             ->assertOk()
-            ->assertSee('Linda Past with')
+            ->assertSee('Recurring care for Linda Past')
             ->assertSee('This arrangement is closed.')
-            ->assertDontSee('Mary Current with');
+            ->assertDontSee('Recurring care for Mary Current');
     }
 
     public function test_arrangements_filters_cover_one_time_regular_and_every_plan_lifecycle_group(): void
@@ -468,34 +476,202 @@ class FamilyCareExperienceTest extends TestCase
             ->assertOk()
             ->assertSee('One Time Person ·')
             ->assertSee('Recurring care for Repeating Request Person')
-            ->assertSee('Pending Plan Person with Care Helper')
-            ->assertSee('Countered Plan Person with Care Helper')
-            ->assertDontSee('Active Plan Person with Care Helper')
-            ->assertDontSee('Past Plan Person with Care Helper');
+            ->assertSee('Recurring care for Pending Plan Person')
+            ->assertSee('Caregiver:')
+            ->assertSee('Care Helper')
+            ->assertSee('Recurring care for Countered Plan Person')
+            ->assertDontSee('Recurring care for Active Plan Person')
+            ->assertDontSee('Recurring care for Past Plan Person');
 
         $this->get(route('family.care.index', ['view' => 'ongoing', 'type' => 'regular']))
             ->assertOk()
-            ->assertSee('Active Plan Person with Care Helper')
-            ->assertSee('Payment Plan Person with Care Helper')
-            ->assertSee('Paused Plan Person with Care Helper')
-            ->assertDontSee('Pending Plan Person with Care Helper')
+            ->assertSee('Recurring care for Active Plan Person')
+            ->assertSee('Caregiver:')
+            ->assertSee('Care Helper')
+            ->assertSee('Recurring care for Payment Plan Person')
+            ->assertSee('Recurring care for Paused Plan Person')
+            ->assertDontSee('Recurring care for Pending Plan Person')
             ->assertDontSee('One Time Person ·');
 
         $this->get(route('family.care.index', ['view' => 'active']))
             ->assertOk()
-            ->assertSee('Active Plan Person with Care Helper')
-            ->assertSee('Payment Plan Person with Care Helper')
-            ->assertDontSee('Paused Plan Person with Care Helper');
+            ->assertSee('Recurring care for Active Plan Person')
+            ->assertSee('Recurring care for Payment Plan Person')
+            ->assertDontSee('Recurring care for Paused Plan Person');
 
         $this->get(route('family.care.index', ['view' => 'past']))
             ->assertOk()
-            ->assertSee('Past Plan Person with Care Helper')
-            ->assertDontSee('Active Plan Person with Care Helper');
+            ->assertSee('Recurring care for Past Plan Person')
+            ->assertDontSee('Recurring care for Active Plan Person');
 
         $this->get(route('family.care.index', ['view' => 'current', 'type' => 'one_time']))
             ->assertOk()
             ->assertSee('One Time Person ·')
             ->assertDontSee('Recurring care for Repeating Request Person')
-            ->assertDontSee('Active Plan Person with Care Helper');
+            ->assertDontSee('Recurring care for Active Plan Person');
+    }
+
+    public function test_accepted_invitation_explains_that_family_hiring_is_still_required(): void
+    {
+        foreach ([CareRequest::TYPE_ONE_TIME, CareRequest::TYPE_RECURRING] as $type) {
+            auth()->logout();
+            $family = User::factory()->create(['role' => 'family']);
+            $request = $this->applicantAttentionRequest($family, $type);
+            $application = $this->applicantAttentionApplication($request, 'Morgan Accepted');
+            $invitation = $this->applicantAttentionInvitation($request, $application);
+            $beforeRequest = $request->fresh()->getRawOriginal();
+            $beforeApplication = $application->fresh()->getRawOriginal();
+            $beforeInvitation = $invitation->fresh()->getRawOriginal();
+            $reviewUrl = route('family.requests.show', ['careRequest' => $request->id, 'tab' => 'applicants']);
+
+            Livewire::actingAs($family)
+                ->test(RequestsIndex::class)
+                ->assertViewHas('attentionCount', 1)
+                ->assertSee('Morgan Accepted accepted your invitation')
+                ->assertSee('Review the response, then choose Hire and confirm your caregiver.')
+                ->assertSee('Review & hire')
+                ->assertSee($reviewUrl, false)
+                ->assertDontSee('applied to your care request')
+                ->assertDontSee('A caregiver is waiting for your review');
+
+            $this->assertSame($beforeRequest, $request->fresh()->getRawOriginal());
+            $this->assertSame($beforeApplication, $application->fresh()->getRawOriginal());
+            $this->assertSame($beforeInvitation, $invitation->fresh()->getRawOriginal());
+            $this->assertDatabaseCount('care_bookings', 0);
+            $this->assertDatabaseCount('care_plans', 0);
+        }
+    }
+
+    public function test_shortlisting_and_invitation_message_do_not_mean_a_caregiver_accepted(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $request = $this->applicantAttentionRequest($family);
+        $application = $this->applicantAttentionApplication($request, 'Taylor Applicant');
+        $application->update(['cover_note' => 'Accepted invitation from family.']);
+        $invitation = $this->applicantAttentionInvitation($request, $application, [
+            'status' => CareRequestInvitation::STATUS_PENDING,
+            'responded_at' => null,
+        ]);
+        $beforeApplication = $application->fresh()->getRawOriginal();
+        $beforeInvitation = $invitation->fresh()->getRawOriginal();
+
+        Livewire::actingAs($family)
+            ->test(RequestsIndex::class)
+            ->assertViewHas('attentionCount', 1)
+            ->assertSee('Taylor Applicant applied to your care request')
+            ->assertSee('Review the response, then choose Hire and confirm your caregiver.')
+            ->assertSee('Review & hire')
+            ->assertSee(route('family.requests.show', ['careRequest' => $request->id, 'tab' => 'applicants']), false)
+            ->assertDontSee('accepted your invitation');
+
+        $this->assertSame($beforeApplication, $application->fresh()->getRawOriginal());
+        $this->assertSame($beforeInvitation, $invitation->fresh()->getRawOriginal());
+        $this->assertSame(CareRequest::STATUS_OPEN, $request->fresh()->status);
+        $this->assertDatabaseCount('care_bookings', 0);
+    }
+
+    public function test_mixed_replies_count_only_active_applications_and_matching_accepted_invitations(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $request = $this->applicantAttentionRequest($family);
+        $otherRequest = $this->applicantAttentionRequest($family);
+        $firstAccepted = $this->applicantAttentionApplication($request, 'First Invited');
+        $this->applicantAttentionInvitation($request, $firstAccepted);
+        $secondAccepted = $this->applicantAttentionApplication($request, 'Second Invited');
+        $secondInvitation = $this->applicantAttentionInvitation($request, $secondAccepted, [
+            'status' => CareRequestInvitation::STATUS_PENDING,
+            'responded_at' => null,
+        ]);
+        $this->applicantAttentionApplication($request, 'Organic Applicant', CareRequestApplication::STATUS_APPLIED);
+
+        foreach ([
+            CareRequestInvitation::STATUS_DECLINED,
+            CareRequestInvitation::STATUS_EXPIRED,
+            CareRequestInvitation::STATUS_CANCELLED,
+        ] as $status) {
+            $application = $this->applicantAttentionApplication($request, 'Inactive Invitation '.$status);
+            $this->applicantAttentionInvitation($request, $application, ['status' => $status]);
+        }
+        $wrongRequestApplication = $this->applicantAttentionApplication($request, 'Different Request');
+        $this->applicantAttentionInvitation($otherRequest, $wrongRequestApplication);
+        $wrongCaregiverApplication = $this->applicantAttentionApplication($request, 'Different Caregiver');
+        $unrelatedCaregiver = User::factory()->create(['role' => 'caregiver']);
+        $this->applicantAttentionInvitation($request, $wrongCaregiverApplication, [
+            'caregiver_user_id' => $unrelatedCaregiver->id,
+        ]);
+        foreach ([
+            CareRequestApplication::STATUS_WITHDRAWN,
+            CareRequestApplication::STATUS_REJECTED,
+            CareRequestApplication::STATUS_NOT_SELECTED,
+            CareRequestApplication::STATUS_HIRED,
+        ] as $status) {
+            $application = $this->applicantAttentionApplication($request, 'Past Applicant '.$status, $status);
+            $this->applicantAttentionInvitation($request, $application);
+        }
+
+        $component = Livewire::actingAs($family)
+            ->test(RequestsIndex::class)
+            ->assertViewHas('attentionCount', 1)
+            ->assertSee('8 caregivers replied to your care request')
+            ->assertSee('1 accepted your invitation. Review the responses, then choose Hire and confirm your caregiver.')
+            ->assertSee('Review & hire')
+            ->assertSee(route('family.requests.show', ['careRequest' => $request->id, 'tab' => 'applicants']), false);
+
+        $secondInvitation->update(['status' => CareRequestInvitation::STATUS_ACCEPTED, 'responded_at' => now()]);
+        $beforeApplications = $request->applications()->orderBy('id')->get()->map->getRawOriginal()->all();
+        $beforeInvitations = CareRequestInvitation::query()->orderBy('id')->get()->map->getRawOriginal()->all();
+        $component->call('$refresh')
+            ->assertViewHas('attentionCount', 1)
+            ->assertSee('8 caregivers replied to your care request')
+            ->assertSee('2 accepted your invitations. Review the responses, then choose Hire and confirm your caregiver.');
+
+        $this->assertSame($beforeApplications, $request->applications()->orderBy('id')->get()->map->getRawOriginal()->all());
+        $this->assertSame($beforeInvitations, CareRequestInvitation::query()->orderBy('id')->get()->map->getRawOriginal()->all());
+        $this->assertSame(CareRequest::STATUS_OPEN, $request->fresh()->status);
+        $this->assertDatabaseCount('care_bookings', 0);
+        $this->assertDatabaseCount('care_plans', 0);
+    }
+
+    private function applicantAttentionRequest(User $family, string $type = CareRequest::TYPE_ONE_TIME): CareRequest
+    {
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Applicant attention request',
+            'request_type' => $type,
+            'status' => CareRequest::STATUS_OPEN,
+            'requested_start_at' => now()->addDays(2)->setTime(9, 0),
+            'requested_end_at' => now()->addDays(2)->setTime(11, 0),
+            'city' => 'Apex',
+            'state' => 'NC',
+            'zip' => '27502',
+            'address_line1' => '100 Main Street',
+        ]);
+        $request->recipient()->create(['full_name' => 'Mary Villano', 'relationship_to_family' => 'Mother']);
+
+        return $request;
+    }
+
+    private function applicantAttentionApplication(CareRequest $request, string $name, string $status = CareRequestApplication::STATUS_SHORTLISTED): CareRequestApplication
+    {
+        $caregiver = User::factory()->create(['role' => 'caregiver', 'name' => $name]);
+
+        return $request->applications()->create([
+            'caregiver_user_id' => $caregiver->id,
+            'status' => $status,
+            'proposed_rate' => 30,
+        ]);
+    }
+
+    private function applicantAttentionInvitation(CareRequest $request, CareRequestApplication $application, array $overrides = []): CareRequestInvitation
+    {
+        return CareRequestInvitation::query()->create(array_merge([
+            'care_request_id' => $request->id,
+            'care_request_application_id' => $application->id,
+            'family_user_id' => $request->family_user_id,
+            'caregiver_user_id' => $application->caregiver_user_id,
+            'status' => CareRequestInvitation::STATUS_ACCEPTED,
+            'responded_at' => now(),
+            'expires_at' => now()->addDay(),
+        ], $overrides));
     }
 }

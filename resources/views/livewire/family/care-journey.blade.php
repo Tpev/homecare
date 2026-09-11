@@ -15,7 +15,8 @@
     <section class="overflow-hidden rounded-[2rem] border border-[#D8D0C5] bg-[#FFFCF8] shadow-sm">
         <div class="grid lg:grid-cols-[minmax(0,1fr)_21rem]">
             <div class="p-5 sm:p-7 lg:p-8">
-                <a href="{{ route('family.requests.index') }}" wire:navigate class="hc-link text-sm">← Back to Care</a>
+                <a href="{{ $journey['manage_url'] }}" wire:navigate class="hc-link text-sm">← {{ ($journey['kind'] ?? 'request') === 'regular' ? 'Back to recurring care' : 'Back to request' }}</a>
+                <p class="mt-4 hc-brand-kicker">Care timeline</p>
                 <div class="mt-4 flex flex-wrap items-center gap-2">
                     <span class="hc-brand-kicker">{{ $journey['type_label'] }}</span>
                     <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusTone }}">{{ $journey['status'] }}</span>
@@ -36,9 +37,9 @@
 
     <section class="rounded-3xl border border-[#E4DDD3] bg-[#FFFCF8] p-4 shadow-sm sm:p-6">
         <div class="max-w-2xl">
-            <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#C96B55]">The complete story</p>
+            <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#C96B55]">Progress at a glance</p>
             <h2 class="mt-1 font-display text-2xl font-semibold text-[#17313F]">How this care is progressing</h2>
-            <p class="mt-1 text-sm leading-6 text-[#607080]">Requests, caregiver selection, visits, hours, and payment stay connected here without changing how each workflow operates.</p>
+            <p class="mt-1 text-sm leading-6 text-[#607080]">{{ ($journey['kind'] ?? 'request') === 'regular' ? 'See caregiver confirmation, upcoming and completed visits, and payment status.' : 'Follow this request from caregiver selection through scheduled visits, reviewed hours, and payment.' }}</p>
         </div>
 
         <ol class="mt-6 grid gap-0 {{ $timelineGrid }}">

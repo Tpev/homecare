@@ -84,9 +84,19 @@ if [[ "${1:-}" != "artisan" ]]; then
   exit 0
 fi
 case "${2:-}" in
-  config:cache) touch bootstrap/cache/config.php ;;
+  config:cache)
+    touch bootstrap/cache/config.php
+    printf '%s\n' "${VIEW_COMPILED_PATH:-$(pwd -P)/storage/framework/views}" > bootstrap/cache/view-path
+    ;;
   route:cache) touch bootstrap/cache/routes.php ;;
-  view:cache) mkdir -p storage/framework/views ;;
+  view:cache)
+    # Model Laravel using the persisted config even after the environment
+    # override ends, including its destructive view:clear before recompiling.
+    compiled_views="$(cat bootstrap/cache/view-path)"
+    mkdir -p "$compiled_views"
+    find "$compiled_views" -maxdepth 1 -type f -delete
+    cp VERSION "$compiled_views/compiled.php"
+    ;;
   list) exit 0 ;;
 esac
 exit 0
@@ -102,9 +112,14 @@ cat > "$MOCK_BIN/npm" <<'EOF'
 #!/usr/bin/env bash
 set -Eeuo pipefail
 if [[ "${1:-}" == "run" && "${2:-}" == "build" ]]; then
-  mkdir -p public/build/assets
-  printf '{}\n' > public/build/manifest.json
-  printf 'new asset\n' > public/build/assets/app-new.js
+  if [[ "$PWD" == */integrations/lolo-content-mcp ]]; then
+    mkdir -p dist
+    printf '// mocked Content MCP build\n' > dist/http.js
+  else
+    mkdir -p public/build/assets
+    printf '{}\n' > public/build/manifest.json
+    printf 'new asset\n' > public/build/assets/app-new.js
+  fi
 fi
 exit 0
 EOF
@@ -145,12 +160,14 @@ mkdir -p \
   "$APP_DIR/storage/framework/testing" \
   "$APP_DIR/storage/framework/views" \
   "$APP_DIR/storage/logs" \
+  "$APP_DIR/integrations/lolo-content-mcp" \
   "$APP_DIR/voice-agent/cmd/server"
 cp "$PROJECT_DIR/deploy.sh" "$APP_DIR/deploy.sh"
 chmod 775 "$APP_DIR/deploy.sh"
 printf '#!/usr/bin/env php\n' > "$APP_DIR/artisan"
 printf '{}\n' > "$APP_DIR/composer.json"
 printf '{}\n' > "$APP_DIR/package.json"
+printf '{}\n' > "$APP_DIR/integrations/lolo-content-mcp/package.json"
 printf 'package main\n' > "$APP_DIR/voice-agent/cmd/server/main.go"
 printf 'old asset\n' > "$APP_DIR/public/build/assets/app-old.js"
 printf '{}\n' > "$APP_DIR/public/build/manifest.json"
@@ -161,6 +178,7 @@ git -C "$APP_DIR" push -u origin master >/dev/null
 
 printf 'APP_ENV=production\nAPP_KEY=base64:test\n' > "$APP_DIR/.env"
 printf 'durable session\n' > "$APP_DIR/storage/framework/sessions/preserved-session"
+printf 'legacy compiled view\n' > "$APP_DIR/storage/framework/views/legacy-preserved.php"
 
 deploy() {
   HOMECARE_APP_DIR="$APP_DIR" \
@@ -182,10 +200,13 @@ fi
 [[ -L "$APP_DIR" ]]
 [[ -f "$APP_DIR/storage/framework/sessions/preserved-session" ]]
 [[ -f "$APP_DIR/public/build/assets/app-old.js" ]]
+[[ "$(cat "$APP_DIR/storage/framework/views/legacy-preserved.php")" == 'legacy compiled view' ]]
 grep -q 'No Laravel maintenance mode or deployment-long 503 was used.' "$SANDBOX/first-deploy.log"
 ! grep -q 'Entering maintenance mode' "$SANDBOX/first-deploy.log"
 
 first_release="$(readlink -f "$APP_DIR")"
+[[ "$(cat "$first_release/bootstrap/cache/view-path")" == "$first_release/bootstrap/cache/views" ]]
+[[ "$(cat "$first_release/bootstrap/cache/views/compiled.php")" == 'release one' ]]
 git clone "$ORIGIN_DIR" "$AUTHOR_DIR" >/dev/null
 git -C "$AUTHOR_DIR" config user.name "Deployment Test"
 git -C "$AUTHOR_DIR" config user.email "deployment-test@example.invalid"
@@ -202,12 +223,18 @@ second_release="$(readlink -f "$APP_DIR")"
 [[ "$second_release" != "$first_release" ]]
 [[ "$(readlink -f "$DEPLOY_ROOT/previous")" == "$first_release" ]]
 [[ -f "$APP_DIR/storage/framework/sessions/preserved-session" ]]
+[[ "$(cat "$second_release/bootstrap/cache/view-path")" == "$second_release/bootstrap/cache/views" ]]
+[[ "$(cat "$second_release/bootstrap/cache/views/compiled.php")" == 'release two' ]]
+[[ "$(cat "$first_release/bootstrap/cache/views/compiled.php")" == 'release one' ]]
+[[ -f "$APP_DIR/storage/framework/views/legacy-preserved.php" ]]
 
 if ! deploy --rollback > "$SANDBOX/rollback.log" 2>&1; then
   cat "$SANDBOX/rollback.log" >&2
   exit 1
 fi
 [[ "$(readlink -f "$APP_DIR")" == "$first_release" ]]
+[[ "$(cat "$APP_DIR/bootstrap/cache/view-path")" == "$first_release/bootstrap/cache/views" ]]
+[[ "$(cat "$APP_DIR/bootstrap/cache/views/compiled.php")" == 'release one' ]]
 grep -q 'Rollback complete.' "$SANDBOX/rollback.log"
 
 printf 'release three\n' > "$AUTHOR_DIR/VERSION"
@@ -221,6 +248,7 @@ if MOCK_HEALTH_FAIL=1 deploy > "$SANDBOX/failed-deploy.log" 2>&1; then
   exit 1
 fi
 [[ "$(readlink -f "$APP_DIR")" == "$before_failed_deploy" ]]
+[[ "$(cat "$APP_DIR/bootstrap/cache/views/compiled.php")" == 'release one' ]]
 grep -q 'Rolling the application symlink back' "$SANDBOX/failed-deploy.log"
 
 deploy --status > "$SANDBOX/status.log"

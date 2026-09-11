@@ -1,5 +1,9 @@
 @import "tailwindcss";
 @import "../../vendor/tallstackui/tallstackui/css/v4.css";
+@import "./care-workspace.css";
+@import "./care-creation.css";
+@import "./care-recruitment.css";
+@import "./care-schedule.css";
 
 @plugin "@tailwindcss/forms";
 
@@ -8,6 +12,7 @@
 @source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
 
 @theme {
+    --font-sans: "Inter", sans-serif;
     --color-hc-bg: #fff7ea;
     --color-hc-bg-warm: #f5ecde;
     --color-hc-ink: #23483f;
@@ -17,6 +22,22 @@
     --color-hc-accent: #c96b55;
     --color-hc-card: #fffaf0;
     --color-hc-border: #e3d6c5;
+}
+
+@font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url("/fonts/Inter-Variable.woff") format("woff");
+}
+
+@font-face {
+    font-family: "Source Serif 4";
+    font-style: normal;
+    font-weight: 200 900;
+    font-display: swap;
+    src: url("/fonts/SourceSerif4-Variable.woff") format("woff");
 }
 
 @layer base {

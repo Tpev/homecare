@@ -9,6 +9,7 @@ use App\Models\CareBookingTimeCorrection;
 use App\Models\CarePlan;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
+use App\Models\CareRequestInvitation;
 use App\Models\CompletedExtraVisitRequest;
 use App\Models\FamilyAccount;
 use App\Services\Booking\CareBookingTimeCorrectionService;
@@ -392,12 +393,20 @@ class FamilyActionInboxBuilder
         }
 
         $requests = CareRequest::query()
-            ->with('recipient')
-            ->withCount(['applications as pending_candidate_count' => fn ($query) => $query
-                ->whereIn('status', [
-                    CareRequestApplication::STATUS_APPLIED,
-                    CareRequestApplication::STATUS_SHORTLISTED,
-                ])])
+            ->with([
+                'recipient',
+                'applications' => fn ($query) => $query
+                    ->whereIn('status', [
+                        CareRequestApplication::STATUS_APPLIED,
+                        CareRequestApplication::STATUS_SHORTLISTED,
+                    ])
+                    ->with([
+                        'caregiver:id,name',
+                        'caregiver.caregiverProfile:id,user_id,profile_photo_path',
+                        'invitations' => fn ($invitations) => $invitations
+                            ->where('status', CareRequestInvitation::STATUS_ACCEPTED),
+                    ]),
+            ])
             ->forFamilyAccount($account)
             ->where('is_system_generated', false)
             ->where('status', CareRequest::STATUS_OPEN)
@@ -414,7 +423,23 @@ class FamilyActionInboxBuilder
                 continue;
             }
 
-            $count = (int) $request->pending_candidate_count;
+            $count = $request->applications->count();
+            $acceptedInvitationCount = $request->applications->filter(fn ($application) => $application->invitations
+                ->contains(fn ($invitation) => (int) $invitation->care_request_id === (int) $request->id
+                    && (int) $invitation->caregiver_user_id === (int) $application->caregiver_user_id))
+                ->count();
+            $caregiverName = trim((string) $request->applications->first()?->caregiver?->name) ?: 'A caregiver';
+            $replyTitle = $count === 1
+                ? $caregiverName.($acceptedInvitationCount ? ' accepted your invitation' : ' applied to your care request')
+                : $count.' caregivers replied to your care request';
+            $nextStep = $count === 1
+                ? 'Review the response, then choose Hire and confirm your caregiver.'
+                : 'Review the responses, then choose Hire and confirm your caregiver.';
+            if ($count > 1 && $acceptedInvitationCount > 0) {
+                $nextStep = ($acceptedInvitationCount === 1
+                    ? '1 accepted your invitation. '
+                    : $acceptedInvitationCount.' accepted your invitations. ').$nextStep;
+            }
             $recipient = trim((string) ($request->recipient?->full_name ?? '')) ?: 'Care recipient';
             $careLabel = $request->request_type === CareRequest::TYPE_RECURRING
                 ? 'Recurring care for '.$recipient
@@ -423,12 +448,13 @@ class FamilyActionInboxBuilder
                 'key' => 'request-applicants-'.$request->id,
                 'type' => 'applicants',
                 'priority' => 30,
-                'eyebrow' => 'Caregiver response',
-                'title' => $count === 1 ? 'A caregiver is waiting for your review' : $count.' caregivers are waiting for your review',
+                'eyebrow' => $count === 1 ? 'Caregiver reply' : 'Caregiver replies',
+                'title' => $replyTitle,
+                'title_caregiver' => $count === 1 ? $request->applications->first()?->caregiver : null,
                 'subject' => $careLabel,
-                'body' => 'Compare profiles, message caregivers, and choose the right fit.',
+                'body' => $nextStep,
                 'meta' => 'Request #'.$request->id,
-                'label' => 'Review caregivers',
+                'label' => 'Review & hire',
                 'navigation_target_id' => 'family.request.applicants',
                 'resource_type' => 'care_request',
                 'resource_id' => (int) $request->id,

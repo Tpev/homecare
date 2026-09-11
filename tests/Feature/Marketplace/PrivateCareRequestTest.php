@@ -36,9 +36,9 @@ class PrivateCareRequestTest extends TestCase
             ->test(CreateCareRequestWizard::class)
             ->assertSet('is_private', false)
             ->assertSee('Make this request private')
-            ->assertSee('Leave this unchecked to let eligible caregivers discover and apply to the request.')
+            ->assertSee('Otherwise, eligible caregivers can find and apply.')
             ->set('is_private', true)
-            ->assertSee('Only caregivers you invite can view and respond to it.')
+            ->assertSee('Only caregivers you invite can view and apply.')
             ->set('selectedTasks', [$task->id])
             ->set('requested_start_date', $start->toDateString())
             ->set('requested_start_time', $start->format('H:i'))
@@ -56,9 +56,15 @@ class PrivateCareRequestTest extends TestCase
         $this->assertTrue($request->is_private);
         $component->assertRedirect(route('family.requests.show', [
             'careRequest' => $request->id,
-            'tab' => 'applicants',
-            'invite' => 1,
+            'tab' => 'invite',
         ], false));
+
+        Livewire::withQueryParams(['tab' => 'invite'])
+            ->actingAs($family)
+            ->test(\App\Livewire\Family\ManageCareRequest::class, ['careRequest' => $request->id])
+            ->assertSet('activeTab', 'invite')
+            ->assertSet('showCaregiverInvitePanel', false)
+            ->assertSee('Search profiles, send invitations and track replies.');
 
         Livewire::withQueryParams(['tab' => 'applicants', 'invite' => 1])
             ->actingAs($family)
@@ -66,7 +72,7 @@ class PrivateCareRequestTest extends TestCase
             ->assertSet('activeTab', 'applicants')
             ->assertSet('showCaregiverInvitePanel', true)
             ->assertSee('This request is private and cannot be discovered in the caregiver marketplace.')
-            ->assertSee('PRIVATE');
+            ->assertSee('By invitation');
     }
 
     public function test_private_request_is_visible_only_to_invited_caregiver(): void

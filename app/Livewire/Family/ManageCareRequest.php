@@ -31,6 +31,7 @@ use App\Support\CaregiverPrelaunch;
 use App\Support\CareRequestProgress;
 use App\Support\FunnelTracker;
 use App\Support\MarketplaceEvent;
+use App\Support\MarketplacePricing;
 use App\Support\WeeklySchedule;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -44,8 +45,26 @@ class ManageCareRequest extends Component
 {
     public CareRequest $requestItem;
 
-    #[Url(as: 'tab')]
+    #[Url(as: 'tab', history: true)]
     public string $activeTab = 'overview';
+
+    #[Url(as: 'visit_filter')]
+    public string $returnVisitFilter = 'upcoming';
+
+    #[Url(as: 'return_tab')]
+    public string $returnCareTab = 'visits';
+
+    #[Url(as: 'return_page')]
+    public int $returnVisitPage = 1;
+
+    public ?int $reviewingApplicationId = null;
+
+    public bool $reviewingCompletion = false;
+
+    #[Url(as: 'view', history: true)]
+    public string $caregiverView = 'search';
+
+    private array $recruitmentQuoteCache = [];
 
     public string $applicationStatus = 'all';
 
@@ -110,7 +129,7 @@ class ManageCareRequest extends Component
     public array $applicationStatusOptions = [
         ['label' => 'All caregivers', 'value' => 'all'],
         ['label' => 'Interested', 'value' => CareRequestApplication::STATUS_APPLIED],
-        ['label' => 'Saved', 'value' => CareRequestApplication::STATUS_SHORTLISTED],
+        ['label' => 'Shortlisted', 'value' => CareRequestApplication::STATUS_SHORTLISTED],
         ['label' => 'Hired', 'value' => CareRequestApplication::STATUS_HIRED],
         ['label' => 'Declined', 'value' => CareRequestApplication::STATUS_REJECTED],
         ['label' => 'Not selected', 'value' => CareRequestApplication::STATUS_NOT_SELECTED],
@@ -127,6 +146,7 @@ class ManageCareRequest extends Component
                 'tasks',
                 'booking',
                 'booking.payment',
+                'booking.caregiver:id,name',
                 'booking.carePlan:id,timezone',
                 'booking.timeCorrections' => fn ($query) => $query
                     ->with(['requester:id,name', 'approvedBy:id,name', 'supportTicket:id,status'])
@@ -155,7 +175,7 @@ class ManageCareRequest extends Component
             $this->refreshRequestItem(preferLifecyclePrimary: true);
         }
 
-        $lifecycle = CareRequestProgress::familyLifecycleStage($this->requestItem);
+        $lifecycle = $this->workspaceLifecycle();
         $visibleTabs = collect($lifecycle['tabs'])->pluck('key')->all();
         $requestedTab = request()->query->has('tab')
             ? trim((string) request()->query('tab'))
@@ -198,7 +218,7 @@ class ManageCareRequest extends Component
 
     public function setActiveTab(string $tab): void
     {
-        $visibleTabs = collect(CareRequestProgress::familyLifecycleStage($this->requestItem)['tabs'])
+        $visibleTabs = collect($this->workspaceLifecycle()['tabs'])
             ->pluck('key')
             ->all();
 
@@ -207,12 +227,163 @@ class ManageCareRequest extends Component
         }
 
         if ($tab === 'shift' && ! $this->requestItem->booking) {
-            $this->activeTab = CareRequestProgress::familyLifecycleStage($this->requestItem)['primary_tab'];
+            $this->activeTab = $this->workspaceLifecycle()['primary_tab'];
 
             return;
         }
 
         $this->activeTab = $tab;
+        $this->reviewingApplicationId = null;
+        $this->reviewingCompletion = false;
+        $this->dispatch('care-workspace-tab-changed');
+    }
+
+    public function setCaregiverView(string $view): void
+    {
+        if (! in_array($view, ['search', 'invited', 'saved'], true)) {
+            return;
+        }
+        $this->caregiverView = $view;
+        $this->setActiveTab('invite');
+    }
+
+    public function setApplicantView(string $view): void
+    {
+        if (! in_array($view, ['all', 'shortlisted', 'past'], true)) {
+            return;
+        }
+        $this->applicationStatus = $view;
+        $this->setActiveTab('applicants');
+    }
+
+    /** Read-only family-facing pricing, using the same agreement/snapshot as hiring. */
+    private function recruitmentQuote(int $caregiverId, float $fallbackRate = 0, int $minutes = 60): array
+    {
+        $key = $caregiverId.':'.$fallbackRate.':'.$minutes;
+        if (isset($this->recruitmentQuoteCache[$key])) {
+            return $this->recruitmentQuoteCache[$key];
+        }
+        $pricing = app(MarketplacePricing::class);
+        $booking = $this->requestItem->booking;
+        if ($booking && (int) $booking->caregiver_user_id === $caregiverId && $pricing->usesCurrentPricing($booking)) {
+            $quote = $pricing->quoteForCurrentBooking($booking, max(1, $minutes));
+        } elseif ($pricing->currentPricingEnabled()) {
+            $accountId = (int) ($this->requestItem->family_account_id
+                ?: app(FamilyAccountContext::class)->membershipFor(auth()->user(), false)?->family_account_id);
+            $quote = $pricing->quoteForPair($accountId, $caregiverId, max(1, $minutes));
+        } else {
+            $application = $this->requestItem->applications->firstWhere('caregiver_user_id', $caregiverId);
+            $fallbackRate = $fallbackRate > 0 ? $fallbackRate
+                : (float) ($application?->caregiver?->caregiverProfile?->resolvePlatformHourlyRate()
+                    ?: config('marketplace.family_estimate_hourly_rate', 30));
+            $rate = $pricing->hourlyRateForRequest($this->requestItem, $fallbackRate);
+            $care = (int) round($rate * max(1, $minutes) / 60 * 100);
+            $percent = $pricing->platformFeePercentForFamily($this->requestItem->family, max(0, (float) config('marketplace.payments.platform_fee_percent', 0)));
+            $fee = (int) round($care * $percent / 100);
+            $quote = ['family_care_rate_cents' => (int) round($rate * 100), 'family_processing_fee_rate_cents' => null,
+                'family_care_amount_cents' => $care, 'family_processing_fee_cents' => $fee,
+                'total_charge_cents' => $care + $fee, 'worked_minutes' => max(1, $minutes)];
+        }
+
+        return $this->recruitmentQuoteCache[$key] = [
+            'rate_cents' => (int) $quote['family_care_rate_cents'],
+            'fee_rate_cents' => $quote['family_processing_fee_rate_cents'],
+            'care_cents' => (int) $quote['family_care_amount_cents'],
+            'fee_cents' => (int) $quote['family_processing_fee_cents'],
+            'total_cents' => (int) $quote['total_charge_cents'],
+            'minutes' => (int) $quote['worked_minutes'],
+            'currency' => strtoupper((string) config('services.stripe.currency', 'usd')),
+        ];
+    }
+
+    /** Preview the same first future occurrence that recurring activation will book. */
+    private function firstRecurringHireVisit(): ?array
+    {
+        if (! $this->requestItem->recurring_starts_on) {
+            return null;
+        }
+
+        $timezone = (string) config('app.timezone', 'America/New_York');
+        $previewPlan = new \App\Models\CarePlan([
+            'status' => \App\Models\CarePlan::STATUS_ACTIVE,
+            'starts_on' => $this->requestItem->recurring_starts_on,
+            'ends_on' => $this->requestItem->recurring_ends_on,
+            'timezone' => $timezone,
+            'schedule_days' => $this->requestItem->recurring_days,
+            'schedule_start_time' => $this->requestItem->recurring_start_time,
+            'schedule_end_time' => $this->requestItem->recurring_end_time,
+            'schedule_slots' => $this->requestItem->recurringScheduleSlots(),
+        ]);
+        $through = now($timezone)->addWeeks(max(1, min(12, (int) config('marketplace.regular_care.visit_window_weeks', 6))));
+        $occurrence = app(\App\Services\RegularCare\CarePlanOccurrenceService::class)
+            ->scheduledOccurrences($previewPlan, $through)[0] ?? null;
+
+        return $occurrence ? [$occurrence['start'], $occurrence['end']] : null;
+    }
+
+    /** Presentation only: legacy tab keys and all existing actions remain available. */
+    private function workspaceLifecycle(): array
+    {
+        $stage = CareRequestProgress::familyLifecycleStage($this->requestItem);
+        $booking = $this->requestItem->booking;
+        $recurring = (bool) ($this->requestItem->care_plan_id || $booking?->care_plan_id)
+            || $this->requestItem->request_type === CareRequest::TYPE_RECURRING;
+        $stage['tabs'] = [
+            ['key' => $booking ? 'shift' : 'home', 'label' => 'Overview', 'description' => 'Current care and next steps'],
+            ['key' => 'applicants', 'label' => 'Caregivers', 'description' => 'Replies, invitations and conversations'],
+            ['key' => 'invite', 'label' => 'Find caregivers', 'description' => 'Discovery and invitation history', 'hidden' => true],
+            ...(! $booking ? [['key' => 'start', 'label' => 'Get started', 'description' => 'Prepare to choose and confirm a caregiver', 'hidden' => true]] : []),
+            ...($recurring && ! $booking ? [['key' => 'visits', 'label' => 'Visits', 'description' => 'Requested weekly pattern']] : []),
+            ['key' => 'overview', 'label' => 'Care details', 'description' => 'Instructions, contacts and request'],
+            ['key' => 'support', 'label' => 'Help', 'description' => 'Changes and support'],
+        ];
+        if (! $booking) {
+            $stage['primary_tab'] = 'home';
+        }
+        if (! $booking && $this->requestItem->status === CareRequest::STATUS_OPEN && $this->requestItem->is_private) {
+            $stage['title'] = 'Finding a caregiver by invitation';
+            $stage['body'] = 'Only caregivers you invite can see this request. Review their replies here and invite more people when you need more choices.';
+        }
+
+        return $stage;
+    }
+
+    public function reviewHire(int $applicationId): void
+    {
+        $this->findOwnedApplication($applicationId);
+        $this->reviewingApplicationId = $applicationId;
+        $this->reviewingCompletion = false;
+        $this->dispatch('care-decision-opened');
+    }
+
+    public function reviewCompletion(): void
+    {
+        abort_unless($this->requestItem->booking, 404);
+        $this->reviewingCompletion = true;
+        $this->reviewingApplicationId = null;
+        $this->dispatch('care-decision-opened');
+    }
+
+    public function closeDecisionReview(): void
+    {
+        $this->reviewingApplicationId = null;
+        $this->reviewingCompletion = false;
+        $this->dispatch('care-decision-closed');
+    }
+
+    public function confirmReviewedHire(): void
+    {
+        abort_unless($this->reviewingApplicationId, 403);
+        $applicationId = $this->reviewingApplicationId;
+        $this->reviewingApplicationId = null;
+        $this->hire($applicationId);
+    }
+
+    public function confirmReviewedCompletion(): void
+    {
+        abort_unless($this->reviewingCompletion, 403);
+        $this->reviewingCompletion = false;
+        $this->completeBooking();
     }
 
     public function shortlist(int $applicationId): void
@@ -248,9 +419,12 @@ class ManageCareRequest extends Component
     {
         try {
             app(CareRequestLifecycleService::class)->withdraw(auth()->user(), $this->requestItem);
+            $this->closeDecisionReview();
+            $this->closeCaregiverInvitePanel();
             $this->refreshRequestItem(preferLifecyclePrimary: true);
+            $this->dispatch('care-workspace-tab-changed');
             session()->flash('status', 'Request withdrawn. Caregivers can no longer apply.');
-        } catch (ValidationException $exception) {
+        } catch (\Illuminate\Validation\ValidationException $exception) {
             session()->flash('status', (string) collect($exception->errors())->flatten()->first());
         }
     }
@@ -300,6 +474,11 @@ class ManageCareRequest extends Component
                 'care_request_id' => $this->requestItem->id,
                 'caregiver_user_id' => $application->caregiver_user_id,
             ]);
+
+            // Keep secure card confirmation on the exact first visit when required.
+            if ($payment?->status !== CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED) {
+                $this->redirectRoute('family.care.show', ['carePlan' => $plan->id], navigate: true);
+            }
 
             return;
         }
@@ -1372,8 +1551,10 @@ class ManageCareRequest extends Component
         $this->confirmingReinvite = false;
         $this->caregiverInviteMessage = '';
         $this->caregiverInviteFeedback = null;
-        $this->certificationTypes = [];
-        $this->certificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
+        if ($this->activeTab !== 'invite') {
+            $this->certificationTypes = [];
+            $this->certificationVerification = CaregiverCertificationCriteria::VERIFICATION_ANY_CURRENT;
+        }
         $this->resetValidation('caregiverInviteMessage');
         $this->dispatch('caregiver-invite-panel-closed');
     }
@@ -1476,6 +1657,7 @@ class ManageCareRequest extends Component
             return;
         }
 
+        $this->showCaregiverInvitePanel = true;
         $this->confirmingCaregiverId = $caregiverUserId;
         $this->confirmingReinvite = $reinvite;
         $this->caregiverInviteMessage = 'Hi '.$card['first_name'].', we would like to invite you to review “'.$this->requestItem->title.'”.';
@@ -1490,7 +1672,12 @@ class ManageCareRequest extends Component
         $this->confirmingReinvite = false;
         $this->caregiverInviteMessage = '';
         $this->resetValidation('caregiverInviteMessage');
-        $this->dispatch('caregiver-invite-content-top');
+        if ($this->activeTab === 'invite') {
+            $this->showCaregiverInvitePanel = false;
+            $this->dispatch('caregiver-invite-panel-closed');
+        } else {
+            $this->dispatch('caregiver-invite-content-top');
+        }
     }
 
     public function sendCaregiverInvitation(): void
@@ -1553,7 +1740,13 @@ class ManageCareRequest extends Component
         $this->confirmingReinvite = false;
         $this->caregiverInviteMessage = '';
         $this->refreshRequestItem();
-        $this->dispatch('caregiver-invite-content-top');
+        if ($this->activeTab === 'invite' && $result->sentNow) {
+            $this->showCaregiverInvitePanel = false;
+            $this->caregiverView = 'invited';
+            $this->dispatch('caregiver-invite-panel-closed');
+        } else {
+            $this->dispatch('caregiver-invite-content-top');
+        }
     }
 
     private function deriveScheduledStartAt(): ?Carbon
@@ -1648,6 +1841,7 @@ class ManageCareRequest extends Component
             'tasks',
             'booking',
             'booking.payment',
+            'booking.caregiver:id,name',
             'booking.carePlan:id,timezone',
             'booking.timeCorrections' => fn ($query) => $query
                 ->with(['requester:id,name', 'approvedBy:id,name', 'supportTicket:id,status'])
@@ -1677,6 +1871,7 @@ class ManageCareRequest extends Component
                 'tasks',
                 'booking',
                 'booking.payment',
+                'booking.caregiver:id,name',
                 'booking.carePlan:id,timezone',
                 'booking.timeCorrections' => fn ($query) => $query
                     ->with(['requester:id,name', 'approvedBy:id,name', 'supportTicket:id,status'])
@@ -1699,12 +1894,12 @@ class ManageCareRequest extends Component
             ]);
         }
 
-        $visibleTabs = collect(CareRequestProgress::familyLifecycleStage($this->requestItem)['tabs'])
+        $visibleTabs = collect($this->workspaceLifecycle()['tabs'])
             ->pluck('key')
             ->all();
 
         if ($preferLifecyclePrimary || ! in_array($this->activeTab, $visibleTabs, true)) {
-            $this->activeTab = CareRequestProgress::familyLifecycleStage($this->requestItem)['primary_tab'];
+            $this->activeTab = $this->workspaceLifecycle()['primary_tab'];
         }
     }
 
@@ -1793,7 +1988,12 @@ class ManageCareRequest extends Component
     {
         $applications = $this->requestItem->applications;
 
-        if ($this->applicationStatus !== 'all') {
+        if ($this->applicationStatus === 'past') {
+            $applications = $applications->whereIn('status', [
+                CareRequestApplication::STATUS_REJECTED, CareRequestApplication::STATUS_WITHDRAWN,
+                CareRequestApplication::STATUS_NOT_SELECTED,
+            ]);
+        } elseif ($this->applicationStatus !== 'all') {
             $applications = $applications->where('status', $this->applicationStatus);
         }
 
@@ -1809,14 +2009,15 @@ class ManageCareRequest extends Component
 
         return match ($this->applicationSort) {
             'oldest' => $applications->sortBy('created_at')->values(),
-            'rate_high' => $applications->sortByDesc('proposed_rate')->values(),
-            'rate_low' => $applications->sortBy('proposed_rate')->values(),
             default => $applications->sortByDesc('created_at')->values(),
         };
     }
 
     public function render()
     {
+        if (! in_array($this->caregiverView, ['search', 'invited', 'saved'], true)) {
+            $this->caregiverView = 'search';
+        }
         $certificationCriteria = $this->certificationCriteria();
         $applicationCertificationCriteria = $this->applicationCertificationCriteria();
         $suggestedCaregivers = collect();
@@ -1825,7 +2026,7 @@ class ManageCareRequest extends Component
                 ->topMatchesForRequest($this->requestItem, 3, $certificationCriteria);
         }
 
-        $lifecycleStage = CareRequestProgress::familyLifecycleStage($this->requestItem);
+        $lifecycleStage = $this->workspaceLifecycle();
 
         if (! collect($lifecycleStage['tabs'])->pluck('key')->contains($this->activeTab)) {
             $this->activeTab = $lifecycleStage['primary_tab'];
@@ -1834,7 +2035,7 @@ class ManageCareRequest extends Component
         $caregiverSearchResults = collect();
         $caregiverInitialSections = [];
         $confirmingCaregiver = null;
-        if ($this->showCaregiverInvitePanel) {
+        if ($this->showCaregiverInvitePanel || $this->activeTab === 'invite') {
             $family = auth()->user();
             $discovery = app(CaregiverInvitationDiscoveryService::class);
             $search = trim($this->caregiverSearch);
@@ -1855,7 +2056,47 @@ class ManageCareRequest extends Component
             }
         }
 
+        $savedDiscoveryCaregivers = collect();
+        $savedDiscoveryLimitReached = false;
+        $invitationCards = [];
+        if ($this->activeTab === 'invite') {
+            $family = auth()->user();
+            $discovery = app(CaregiverInvitationDiscoveryService::class);
+            if ($this->caregiverView === 'saved') {
+                $favorites = \App\Models\FamilyCaregiverFavorite::query()
+                    ->forFamilyAccount(app(FamilyAccountContext::class)->account($family))
+                    ->latest('created_at')->limit(13)->pluck('caregiver_user_id');
+                $savedDiscoveryLimitReached = $favorites->count() > 12;
+                $savedDiscoveryCaregivers = $favorites->take(12)->map(fn ($id) => $discovery->caregiver($this->requestItem, $family, (int) $id, $certificationCriteria))->filter()->values();
+            }
+            if ($this->caregiverView === 'invited') {
+                foreach ($this->requestItem->invitations->pluck('caregiver_user_id')->unique() as $id) {
+                    $invitationCards[$id] = $discovery->caregiver($this->requestItem, $family, (int) $id, $certificationCriteria);
+                }
+            }
+        }
+        $decisionApplication = $this->requestItem->applications->firstWhere('id', $this->reviewingApplicationId);
+        $hireDecisionStart = null;
+        $hireDecisionEnd = null;
+        $hireDecisionQuote = null;
+        if ($decisionApplication) {
+            $range = $this->requestItem->request_type === CareRequest::TYPE_RECURRING && ! $this->requestItem->booking
+                ? $this->firstRecurringHireVisit()
+                : [$this->requestItem->booking?->scheduled_start_at ?: $this->deriveScheduledStartAt(), $this->requestItem->booking?->scheduled_end_at ?: $this->deriveScheduledEndAt()];
+            if ($range !== null) {
+                [$hireDecisionStart, $hireDecisionEnd] = $range;
+                $decisionMinutes = $hireDecisionStart && $hireDecisionEnd ? max(1, (int) $hireDecisionStart->diffInMinutes($hireDecisionEnd, false)) : 60;
+                $hireDecisionQuote = $this->recruitmentQuote((int) $decisionApplication->caregiver_user_id, (float) $decisionApplication->proposed_rate, $decisionMinutes);
+            }
+        }
+
         return view('livewire.family.manage-care-request', [
+            'savedDiscoveryCaregivers' => $savedDiscoveryCaregivers,
+            'savedDiscoveryLimitReached' => $savedDiscoveryLimitReached,
+            'invitationCards' => $invitationCards,
+            'hireDecisionQuote' => $hireDecisionQuote,
+            'hireDecisionStart' => $hireDecisionStart,
+            'hireDecisionEnd' => $hireDecisionEnd,
             'suggestedCaregivers' => $suggestedCaregivers,
             'lifecycleStage' => $lifecycleStage,
             'caregiverSearchResults' => $caregiverSearchResults,

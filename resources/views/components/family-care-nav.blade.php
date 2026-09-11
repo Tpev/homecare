@@ -3,7 +3,7 @@
 @php
     $items = [
         ['key' => 'overview', 'label' => 'Overview', 'href' => route('family.requests.index')],
-        ['key' => 'arrangements', 'label' => 'Arrangements', 'href' => route('family.care.index')],
+        ['key' => 'arrangements', 'label' => 'Care request', 'href' => route('family.care.index')],
         ['key' => 'schedule', 'label' => 'Schedule', 'href' => route('family.care.schedule')],
         ['key' => 'history', 'label' => 'History', 'href' => route('family.care.history')],
     ];
@@ -15,7 +15,7 @@
             <a
                 href="{{ $item['href'] }}"
                 wire:navigate
-                @class([$item['key'] === $active ? 'hc-tab-active' : 'hc-tab', 'min-h-11 min-w-0 whitespace-nowrap !px-1.5 !text-xs sm:!px-3 sm:!text-sm inline-flex items-center justify-center'])
+                @class([$item['key'] === $active ? 'hc-tab-active' : 'hc-tab', 'min-h-11 min-w-0 whitespace-normal text-center !px-1.5 !text-xs sm:!px-3 sm:!text-sm inline-flex items-center justify-center'])
                 @if ($item['key'] === $active) aria-current="page" @endif
             >
                 {{ $item['label'] }}

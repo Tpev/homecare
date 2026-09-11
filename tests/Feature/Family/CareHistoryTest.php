@@ -291,7 +291,7 @@ class CareHistoryTest extends TestCase
         $this->actingAs($family)->get(route('family.requests.index'))->assertOk()->assertSee($historyUrl, false);
         $this->actingAs($family)->get(route('family.care.show', $plan))->assertOk()
             ->assertSee(route('family.care.history', ['plan' => $plan->id]), false)
-            ->assertSee('View past visits');
+            ->assertSee('All past visits & payments', false);
         $this->actingAs($family)->get(route('family.billing.show'))->assertOk()
             ->assertSee(route('family.care.history', ['payment' => 'charged']), false)
             ->assertSee('View payment history');

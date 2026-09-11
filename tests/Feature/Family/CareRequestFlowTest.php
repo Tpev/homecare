@@ -22,9 +22,11 @@ use App\Models\User;
 use App\Services\Payments\BookingPaymentService;
 use App\Support\CareRequestProgress;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 use Mockery;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class CareRequestFlowTest extends TestCase
@@ -163,7 +165,7 @@ class CareRequestFlowTest extends TestCase
         $this->actingAs($family)
             ->get(route('family.requests.index'))
             ->assertOk()
-            ->assertSee('Review caregivers')
+            ->assertSee('Review & hire')
             ->assertSee('Open visit')
             ->assertSee('Review hours')
             ->assertDontSee('>Open</a>', false);
@@ -220,7 +222,7 @@ class CareRequestFlowTest extends TestCase
         $this->actingAs($family)
             ->get(route('family.requests.show', ['careRequest' => $request, 'tab' => 'applicants']))
             ->assertOk()
-            ->assertSee('Caregivers who replied')
+            ->assertSee('Selected caregiver')
             ->assertSee('Charles Petrini-Poli')
             ->assertSee('Hired')
             ->assertSee('/storage/caregiver-photos/charles.jpg', false);
@@ -246,24 +248,24 @@ class CareRequestFlowTest extends TestCase
 
         Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $openRequest->id])
-            ->assertSet('activeTab', 'applicants')
-            ->assertSee('Finding care')
-            ->assertSee('Your request is live.')
-            ->assertSee('Find matching caregivers')
-            ->assertSee('Suggested caregivers')
-            ->assertSee('Invite one or two caregivers')
-            ->assertSee('After a caregiver replies, this screen changes to compare, chat, and hire.')
-            ->assertSee('Caregivers')
-            ->assertSee('Invite matching people')
-            ->assertSee('Care details')
-            ->assertDontSee('At a glance')
-            ->assertDontSee('Invite, chat, hire')
+            ->assertSet('activeTab', 'home')
+            ->assertSee('Find the right caregiver')
+            ->assertSee('Your request is posted.')
+            ->assertSee('Find caregivers')
+            ->assertSee('Your care request')
+            ->assertSee('Care request')
+            ->assertSee('Review applicants')
+            ->assertSee('Full care details')
+            ->assertSee('Get help')
+            ->assertDontSee('Hire Caroline')
+            ->call('setCaregiverView', 'search')
+            ->assertSet('activeTab', 'invite')
+            ->assertSee('Search caregivers by name, city, or certification')
+            ->call('setCaregiverView', 'invited')
+            ->assertSee('People you invited')
+            ->assertSee('No invitations sent yet')
             ->assertDontSee('No caregivers have replied yet.')
-            ->assertDontSee('Filter or sort caregivers')
-            ->assertDontSee('More timing details')
-            ->assertDontSee('Need to stop this request?')
-            ->assertDontSee('Request options')
-            ->assertDontSee('Time, location, payment');
+            ->assertDontSee('Need to stop this request?');
 
         $reviewRequest = CareRequest::query()->create([
             'family_user_id' => $family->id,
@@ -286,20 +288,19 @@ class CareRequestFlowTest extends TestCase
 
         Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $reviewRequest->id])
-            ->assertSet('activeTab', 'applicants')
-            ->assertSee('Choose caregiver')
-            ->assertSee('Caregivers are ready for review.')
-            ->assertSee('Ready to choose')
+            ->assertSet('activeTab', 'home')
+            ->assertSee('Meet your applicants')
+            ->assertSee('Compare their experience, read application notes and chat before choosing.')
+            ->assertSeeHtml('hc-recruit-count"><span class="sr-only">Active applicants: </span>1</span>')
+            ->call('setActiveTab', 'applicants')
+            ->assertSee('Review applicants')
             ->assertSee('Hire Caroline')
-            ->assertSee('Chat first')
-            ->assertDontSee('Save & chat')
-            ->assertDontSee('Filter or sort caregivers')
-            ->assertSee('Need more choices?')
-            ->assertSee('Invite more caregivers')
-            ->assertSee('Review, chat, hire')
-            ->assertDontSee('At a glance')
-            ->assertDontSee('Request options')
-            ->assertDontSee('Invite, chat, hire');
+            ->assertSee('Shortlist & chat')
+            ->assertSee('All caregivers')
+            ->call('setCaregiverView', 'search')
+            ->assertSee('Search caregivers by name, city, or certification')
+            ->call('setCaregiverView', 'invited')
+            ->assertSee('People you invited');
 
         $secondCaregiver = User::factory()->create(['role' => 'caregiver', 'name' => 'Michael Rivera']);
         $multiReviewRequest = CareRequest::query()->create([
@@ -329,14 +330,13 @@ class CareRequestFlowTest extends TestCase
 
         Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $multiReviewRequest->id])
-            ->assertSet('activeTab', 'applicants')
-            ->assertSee('2 caregivers replied')
-            ->assertSee('Review each card below')
-            ->assertDontSee('Compare caregivers')
-            ->assertDontSee('Filter or sort caregivers')
+            ->assertSet('activeTab', 'home')
+            ->assertSeeHtml('hc-recruit-count"><span class="sr-only">Active applicants: </span>2</span>')
+            ->call('setActiveTab', 'applicants')
+            ->assertSee('Review applicants')
+            ->assertSee('All caregivers')
             ->assertSee('Hire Caroline')
-            ->assertSee('Hire Michael')
-            ->assertDontSee('Ready to choose');
+            ->assertSee('Hire Michael');
 
         $scheduledRequest = CareRequest::query()->create([
             'family_user_id' => $family->id,
@@ -371,16 +371,15 @@ class CareRequestFlowTest extends TestCase
             ->assertSet('activeTab', 'shift')
             ->assertSee('Visit scheduled')
             ->assertSee('Your visit is scheduled.')
-            ->assertSee('Right now')
-            ->assertSee('Caroline is coming')
+            ->assertSee('Caroline is scheduled to come.')
             ->assertSee('Message caregiver')
             ->assertSee('Change or cancel')
             ->assertSee('Before the visit')
             ->assertSee('Visit plan')
             ->assertSee('Map and visit record')
-            ->assertSee('Profile, chat')
-            ->assertSee('Time, location, payment')
-            ->assertSee('Change or get help')
+            ->assertSee('Caregivers')
+            ->assertSee('Care details')
+            ->assertSee('Help')
             ->assertDontSee('At a glance')
             ->assertDontSee('Invite, chat, hire')
             ->assertSee('If the caregiver is late')
@@ -429,13 +428,14 @@ class CareRequestFlowTest extends TestCase
             ->assertSet('activeTab', 'shift')
             ->assertSee('Review hours')
             ->assertSee('Caregiver hours need your review.')
-            ->assertSee('Submitted hours')
-            ->assertSee('Estimated payment')
-            ->assertSee('Approve hours and pay')
-            ->assertSee('Question hours')
+            ->assertSee('Review hours & payment')
+            ->call('reviewCompletion')
+            ->assertSee('Submitted')
+            ->assertSee('Estimated total')
+            ->assertSee('Question these hours')
             ->assertSee('Visit details before approval')
             ->assertDontSee('Review hours and payment')
-            ->assertSee('Profile, chat')
+            ->assertSee('Caregivers')
             ->assertDontSee('At a glance')
             ->assertDontSee('Review caregiver timesheet')
             ->assertDontSee('Invite, chat, hire');
@@ -515,7 +515,7 @@ class CareRequestFlowTest extends TestCase
             ->assertDontSee('Payment status:')
             ->assertDontSee('Visit service location map')
             ->assertSee('Book Caroline again')
-            ->assertSee('Profile, chat')
+            ->assertSee('Caregivers')
             ->assertDontSee('At a glance')
             ->assertDontSee('Invite, chat, hire')
             ->assertDontSee('More timing details')
@@ -832,11 +832,15 @@ class CareRequestFlowTest extends TestCase
 
         Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $request->id])
-            ->assertSee('Caregivers are ready for review.')
+            ->assertSee('Meet your applicants')
+            ->call('setActiveTab', 'applicants')
             ->assertSee('Hire Charles')
-            ->call('hire', $application->id)
+            ->call('reviewHire', $application->id)
+            ->assertSee('Confirm hire')
+            ->call('confirmReviewedHire')
             ->assertSee('Add a payment method before hiring.')
-            ->assertSee('Caregivers are ready for review.')
+            ->assertSee('Meet your applicants')
+            ->call('setActiveTab', 'applicants')
             ->assertSee('Hire Charles')
             ->assertDontSee('Caregiver selected. Visit setup is next.');
 
@@ -902,7 +906,7 @@ class CareRequestFlowTest extends TestCase
         Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $request->id])
             ->assertSee('Your visit is scheduled.')
-            ->assertSee('VISIT Scheduled')
+            ->assertSee('Scheduled')
             ->assertDontSee('Hire Charles');
 
         $this->assertDatabaseHas('care_requests', [
@@ -943,8 +947,8 @@ class CareRequestFlowTest extends TestCase
 
         $component = Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $request->id])
-            ->assertSee('Chat first')
-            ->assertDontSee('Save & chat')
+            ->call('setActiveTab', 'applicants')
+            ->assertSee('Shortlist & chat')
             ->assertDontSee('Caregiver selection')
             ->call('startConversation', $application->id);
 
@@ -1018,10 +1022,11 @@ class CareRequestFlowTest extends TestCase
         Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $request->id])
             ->call('setActiveTab', 'applicants')
-            ->assertSee('Caroline Hill is hired for this visit')
+            ->assertSee('Hired')
+            ->assertSee('Caroline Hill')
             ->assertSee('Caroline has deep experience with calm morning routines')
             ->assertSee('Companionship')
-            ->assertSee('Languages: English')
+            ->assertSeeText('Languages: English')
             ->assertSee('View profile')
             ->assertSee(route('caregivers.show', 'caroline-hill'), false);
     }
@@ -1067,7 +1072,7 @@ class CareRequestFlowTest extends TestCase
 
         Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $request->id])
-            ->assertDontSee('Withdraw request')
+            ->assertSee('Withdraw request')
             ->call('setActiveTab', 'overview')
             ->assertSee('Withdraw request')
             ->call('withdrawRequest')
@@ -1260,15 +1265,18 @@ class CareRequestFlowTest extends TestCase
 
         Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->assertSee('Review hours & payment')
+            ->call('reviewCompletion')
             ->assertSee('Approve hours and pay')
-            ->assertSee('capture payment')
+            ->assertSee('Your approval starts payment processing')
             ->assertSee('3h 00m')
             ->assertSee('$93.00')
             ->assertSee('$90.00')
-            ->assertSee('$3.00 processing fee')
+            ->assertSee('Processing fee')
+            ->assertSee('$3.00')
             ->assertDontSee('Review caregiver timesheet')
             ->assertDontSee('Leave a caregiver review')
-            ->call('completeBooking');
+            ->call('confirmReviewedCompletion');
 
         $this->assertNotNull($booking->fresh()?->family_confirmed_at);
     }
@@ -1353,7 +1361,7 @@ class CareRequestFlowTest extends TestCase
 
         $task = CareTask::query()->create(['name' => 'Companionship']);
 
-        Livewire::actingAs($family)
+        $component = Livewire::actingAs($family)
             ->test(CreateCareRequestWizard::class)
             ->set('request_type', CareRequest::TYPE_RECURRING)
             ->set('title', 'Recurring weekday morning support')
@@ -1392,6 +1400,13 @@ class CareRequestFlowTest extends TestCase
         $this->assertNotNull($careRequest->recurring_ends_on);
         $this->assertNull($careRequest->requested_start_at);
         $this->assertNull($careRequest->requested_end_at);
+        $component->assertRedirect(route('family.requests.show', ['careRequest' => $careRequest->id, 'tab' => 'invite'], false));
+
+        Livewire::withQueryParams(['tab' => 'invite'])
+            ->actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $careRequest->id])
+            ->assertSet('activeTab', 'invite')
+            ->assertSee('Search profiles, send invitations and track replies.');
     }
 
     public function test_recurring_request_moves_first_day_to_selected_weekday_and_estimates_one_visit(): void
@@ -1521,6 +1536,82 @@ class CareRequestFlowTest extends TestCase
         $this->assertNotNull($careRequest);
         $this->assertSame($start->format('Y-m-d H:i:s'), $careRequest->requested_start_at?->format('Y-m-d H:i:s'));
         $this->assertSame($start->copy()->addMinutes(210)->format('Y-m-d H:i:s'), $careRequest->requested_end_at?->format('Y-m-d H:i:s'));
+    }
+
+    #[DataProvider('sameDayOneTimeSchedules')]
+    public function test_same_day_one_time_request_keeps_selected_date_after_publish_and_refresh(
+        string $currentTime,
+        string $startTime,
+        string $expectedEnd,
+        string $scheduleLabel,
+    ): void {
+        config(['app.timezone' => 'America/New_York']);
+        $originalTimezone = date_default_timezone_get();
+        date_default_timezone_set('America/New_York');
+        $this->travelTo(Carbon::parse($currentTime, 'America/New_York'));
+
+        try {
+            $family = User::factory()->create([
+                'role' => 'family',
+                'city' => 'Raleigh',
+                'state' => 'NC',
+            ]);
+            $task = CareTask::query()->create(['name' => 'Companionship']);
+
+            Livewire::actingAs($family)
+                ->test(CreateCareRequestWizard::class)
+                ->set('request_type', CareRequest::TYPE_ONE_TIME)
+                ->set('selectedTasks', [$task->id])
+                ->set('requested_start_date', '2026-09-08')
+                ->set('requested_start_time', $startTime)
+                ->set('requested_duration_minutes', '60')
+                ->set('address_line1', '100 Main St')
+                ->set('city', 'Raleigh')
+                ->set('state', 'NC')
+                ->set('zip', '27601')
+                ->set('recipient_full_name', 'Don Johnson')
+                ->call('publish')
+                ->assertHasNoErrors();
+
+            $request = CareRequest::query()->sole();
+            $expectedSchedule = [
+                'id' => $request->id,
+                'requested_start_at' => '2026-09-08 '.$startTime.':00',
+                'requested_end_at' => $expectedEnd,
+            ];
+            $this->assertDatabaseHas('care_requests', $expectedSchedule);
+
+            $this->actingAs($family)
+                ->get(route('family.requests.show', $request->id))
+                ->assertOk()
+                ->assertSee('Don Johnson · Tue, Sep 8')
+                ->assertSee($scheduleLabel);
+
+            Livewire::actingAs($family)
+                ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+                ->assertSee('Don Johnson · Tue, Sep 8')
+                ->assertSee($scheduleLabel)
+                ->call('$refresh')
+                ->assertSee('Don Johnson · Tue, Sep 8')
+                ->assertSee($scheduleLabel);
+
+            $this->assertDatabaseHas('care_requests', $expectedSchedule);
+        } finally {
+            $this->travelBack();
+            date_default_timezone_set($originalTimezone);
+        }
+    }
+
+    public static function sameDayOneTimeSchedules(): array
+    {
+        return [
+            'morning request for today' => [
+                '2026-09-08 07:32:00', '10:00', '2026-09-08 11:00:00', 'Sep 08, 10:00 AM',
+            ],
+            'evening request after UTC midnight with overnight end' => [
+                '2026-09-08 21:32:00', '23:00', '2026-09-09 00:00:00', 'Sep 08, 11:00 PM',
+            ],
+        ];
     }
 
     public function test_family_can_save_and_reuse_household_and_recipient_profiles_in_one_click(): void
@@ -1674,6 +1765,11 @@ class CareRequestFlowTest extends TestCase
 
     public function test_family_sees_one_time_estimated_cost_preview(): void
     {
+        config([
+            'marketplace.pricing_v2.family_care_hourly_cents' => 3000,
+            'marketplace.pricing_v2.family_processing_fee_hourly_cents' => 100,
+        ]);
+
         $family = User::factory()->create([
             'role' => 'family',
             'city' => 'Raleigh',
@@ -1692,15 +1788,21 @@ class CareRequestFlowTest extends TestCase
             ->set('requested_start_at', $startAt)
             ->set('requested_end_at', $endAt)
             ->call('nextStep')
-            ->assertSee('Review and publish')
+            ->assertSee('Cost breakdown')
             ->assertSee('Estimated one-time cost')
             ->assertSee('4.00h')
             ->assertSee('$30.00/hr')
             ->assertSee('$120.00')
+            ->assertSee('Processing fee')
+            ->assertSee('$1.00/hr')
+            ->assertSee('$4.00')
+            ->assertSee('$124.00')
+            ->assertSee('Publish request')
+            ->assertDontSee('Review and publish')
             ->assertDontSee('Request summary');
     }
 
-    public function test_create_request_shows_plain_language_publish_checklist(): void
+    public function test_create_request_footer_preserves_privacy_publish_and_validation(): void
     {
         $family = User::factory()->create([
             'role' => 'family',
@@ -1711,15 +1813,25 @@ class CareRequestFlowTest extends TestCase
 
         $task = CareTask::query()->create(['name' => 'Companionship']);
 
-        Livewire::actingAs($family)
+        $component = Livewire::actingAs($family)
             ->test(CreateCareRequestWizard::class)
-            ->assertSee('Before publishing')
-            ->assertSee('0 of 4 essentials ready')
-            ->assertSee('Person')
-            ->assertSee('Help')
-            ->assertSee('Time')
-            ->assertSee('Address')
-            ->assertSee('Needed')
+            ->assertSet('is_private', false)
+            ->assertSee('Make this request private')
+            ->assertSee('Publish request')
+            ->assertSee('Cancel')
+            ->assertDontSee('Before publishing')
+            ->assertDontSee('0 of 4 essentials ready')
+            ->set('is_private', true)
+            ->assertSee('Create private request')
+            ->set('is_private', false)
+            ->call('publish')
+            ->assertHasErrors(['selectedTasks', 'requested_start_date', 'address_line1', 'recipient_full_name'])
+            ->assertSee('Choose at least one kind of help.')
+            ->assertSee('Enter the care address.');
+
+        $this->assertDatabaseCount('care_requests', 0);
+
+        $component
             ->set('care_for', CreateCareRequestWizard::CARE_FOR_SELF)
             ->set('selectedTasks', [$task->id])
             ->set('requested_start_date', now()->addDay()->toDateString())
@@ -1729,11 +1841,33 @@ class CareRequestFlowTest extends TestCase
             ->set('city', 'Durham')
             ->set('state', 'NC')
             ->set('zip', '27703')
-            ->assertSee('All essentials are ready. Review once, then publish.')
-            ->assertSee('Don Johnson')
-            ->assertSee('Companionship')
-            ->assertSee('Durham, NC 27703')
-            ->assertSee('Ready');
+            ->assertSet('is_private', false)
+            ->assertSet('address_line1', '1520 Home Creek Drive')
+            ->assertSet('selectedTasks', [$task->id])
+            ->assertSee('Estimated one-time cost')
+            ->call('publish')
+            ->assertHasNoErrors();
+
+        $request = CareRequest::query()->sole();
+
+        $this->assertFalse($request->is_private);
+        $this->assertSame('Don Johnson', $request->recipient->full_name);
+        $this->assertSame([$task->id], $request->tasks->modelKeys());
+        $this->assertDatabaseHas('care_requests', [
+            'id' => $request->id,
+            'family_user_id' => $family->id,
+            'address_line1' => '1520 Home Creek Drive',
+            'city' => 'Durham',
+            'state' => 'NC',
+            'zip' => '27703',
+        ]);
+        $component->assertRedirect(route('family.requests.show', ['careRequest' => $request->id, 'tab' => 'invite'], false));
+
+        Livewire::withQueryParams(['tab' => 'invite'])
+            ->actingAs($family)
+            ->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->assertSet('activeTab', 'invite')
+            ->assertSee('Search profiles, send invitations and track replies.');
     }
 
     private function createCompletedRebookSource(User $family, User $caregiver, string $title, \Illuminate\Support\Carbon $startAt): CareRequest

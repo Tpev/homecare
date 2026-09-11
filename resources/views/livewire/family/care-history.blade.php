@@ -1,4 +1,4 @@
-<div class="hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
+<div class="hc-care-workspace hc-page space-y-5 py-5 sm:space-y-6 sm:py-8">
     @php
         $workedHours = intdiv((int) $summary['worked_minutes'], 60);
         $workedRemainingMinutes = (int) $summary['worked_minutes'] % 60;
@@ -20,25 +20,11 @@
         ];
     @endphp
 
-    <section data-ai-target="family.care_history" tabindex="-1" class="relative overflow-hidden rounded-3xl bg-[#23483F] p-5 text-white shadow-sm outline-none sm:p-7">
-        <div class="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-[#7C5DDC]/20 blur-3xl"></div>
-        <div class="pointer-events-none absolute -bottom-24 -left-10 h-56 w-56 rounded-full bg-[#C96B55]/20 blur-3xl"></div>
-        <div class="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div class="max-w-3xl">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#D8E8D4]">Care history</p>
-                <h1 class="mt-2 font-display text-3xl font-semibold leading-tight text-white sm:text-4xl">Care history</h1>
-                <p class="mt-3 hidden max-w-2xl text-base leading-7 text-[#F7F1E8] sm:block">
-                    Every previous visit, caregiver, worked hour, and charge in one place.
-                </p>
-            </div>
-            <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                <a href="{{ route('family.care.schedule') }}" wire:navigate class="inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-5 text-sm font-semibold text-[#23483F] shadow-sm transition hover:bg-[#F8F0E2]">Upcoming schedule</a>
-                <a href="{{ route('family.requests.create') }}" wire:navigate class="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/35 px-5 text-sm font-semibold text-white transition hover:bg-white/10">Request care</a>
-            </div>
-        </div>
-    </section>
-
-    <x-family-care-nav active="history" />
+    <h1 data-ai-target="family.care_history" tabindex="-1" class="sr-only">Care history</h1>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <x-family-care-nav active="history" />
+        <a href="{{ route('family.requests.create') }}" wire:navigate class="hc-primary-button min-h-11 self-end shrink-0">Request new care</a>
+    </div>
 
     <section aria-labelledby="history-summary-heading" class="space-y-3">
         <div class="flex items-end justify-between gap-3">

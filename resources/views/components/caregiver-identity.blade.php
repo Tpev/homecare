@@ -1,6 +1,7 @@
 @props([
     'caregiver',
     'label' => 'Assigned caregiver',
+    'avatarOnly' => false,
 ])
 
 @php
@@ -32,9 +33,11 @@
                 <span aria-hidden="true">{{ $initials }}</span>
             @endif
         </div>
-        <div class="min-w-0">
-            <p class="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7B8794]">{{ $label }}</p>
-            <p class="truncate text-sm font-semibold text-[#17313F]">{{ $caregiverName }}</p>
-        </div>
+        @unless ($avatarOnly)
+            <div class="min-w-0">
+                <p class="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7B8794]">{{ $label }}</p>
+                <p class="truncate text-sm font-semibold text-[#17313F]">{{ $caregiverName }}</p>
+            </div>
+        @endunless
     </div>
 @endif

@@ -9,9 +9,8 @@
 
         <x-site-icons />
 
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:wght@500;600;700&display=swap" rel="stylesheet">
+        <link rel="preload" href="{{ asset('fonts/Inter-Variable.woff') }}" as="font" type="font/woff" crossorigin>
+        <link rel="preload" href="{{ asset('fonts/SourceSerif4-Variable.woff') }}" as="font" type="font/woff" crossorigin>
 
         <x-analytics.google-tag />
 

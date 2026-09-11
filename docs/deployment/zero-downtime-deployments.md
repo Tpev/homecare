@@ -4,7 +4,7 @@ Status: Current production deployment procedure
 
 Owner: Engineering
 
-Last updated: August 19, 2026
+Last updated: September 11, 2026
 
 ## Outcome
 
@@ -19,12 +19,17 @@ Nginx, the Laravel scheduler, queue configuration, and the voice-agent service m
 /var/www/homecare-deploy/
   repository.git/       local deployment mirror
   releases/             prepared and retained application releases
+    <release>/bootstrap/cache/views/  compiled Blade views for that release
   shared/.env           production environment file
   shared/storage -> ... durable uploads, logs, sessions, and framework state
   previous -> ...       immediately preceding release
 ```
 
 The deployment keeps at least five recent releases. It never deletes the active release, the previous release, or a directory containing non-symlinked durable storage.
+
+Compiled Blade views are stored separately for each release. During `config:cache`, the script sets `VIEW_COMPILED_PATH` to that release's `bootstrap/cache/views` directory; Laravel saves the absolute path in its configuration cache. Subsequent web requests and Artisan commands use that cached path without changing the shared `.env`. Directory ownership and permissions follow the existing `bootstrap/cache` rules so PHP-FPM workers can compile views when needed.
+
+This isolation matters because `view:cache` first runs `view:clear`. Preparing a new release must not clear templates used by the active release. Existing sessions, uploads, application cache and logs remain in shared storage; the legacy shared compiled-view directory is left intact for any previous release that still uses it. Rollback restores the previous release and its own cached view path. Avoid clearing the production configuration cache outside this deployment procedure, because an uncached application falls back to the shared environment's configured view path.
 
 ## First deployment
 
@@ -71,7 +76,7 @@ The script performs these operations in order:
 6. builds frontend, hosted Content MCP, and voice-agent artifacts;
 7. retains the previous hashed frontend assets for in-flight browser requests;
 8. runs database migrations and photo generation while the old release remains live;
-9. builds Laravel configuration, route, and view caches inside the inactive release;
+9. builds Laravel configuration, route, and view caches inside the inactive release, with a release-specific compiled-view path;
 10. validates Laravel routes, migration state, the Vite manifest, the voice binary, and Nginx configuration;
 11. atomically changes the active symlink;
 12. gracefully reloads PHP-FPM, signals queue workers after their current jobs, restarts the voice agent, and restarts the Content MCP when its additive systemd unit is installed;
@@ -117,3 +122,7 @@ The voice agent and hosted Content MCP are still restarted after the application
 ## Configuration
 
 Defaults match the current production host. Operators may override them with scoped environment variables such as `HOMECARE_KEEP_RELEASES`, `HOMECARE_FPM_SERVICE`, or `HOMECARE_GO_BIN`. Do not repurpose system environment variables or put secrets in the script; production secrets remain only in the shared `.env`.
+
+## Offline deployment regression check
+
+`bash tests/Deployment/atomic-deploy-smoke.sh` uses temporary repositories and mocked PHP, npm, Composer, Go, service and health commands. It does not connect to production. It checks the first atomic conversion, a later release, manual rollback and automatic rollback after failed health checks. It also models Laravel clearing compiled views and verifies that preparing a new release leaves both the legacy compiled views and the prior release's compiled views intact.

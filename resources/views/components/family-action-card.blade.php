@@ -1,9 +1,11 @@
 @props([
     'item',
     'compact' => false,
+    'showCaregiverPhoto' => false,
 ])
 
 @php
+    $showTitleAvatar = $showCaregiverPhoto && ($item['title_caregiver'] ?? null);
     $tone = match ($item['tone'] ?? 'blue') {
         'amber' => [
             'card' => 'border-amber-300 bg-amber-50 text-amber-950',
@@ -56,11 +58,16 @@
             @if (filled($item['eyebrow'] ?? null))
                 <p class="text-[11px] font-bold uppercase tracking-[0.14em] {{ $tone['eyebrow'] }}">{{ $item['eyebrow'] }}</p>
             @endif
-            <p class="mt-1 font-display font-semibold {{ $compact ? 'text-lg' : 'text-xl' }}">{{ $item['title'] }}</p>
+            <div class="mt-1 flex items-start gap-2.5">
+                @if ($showTitleAvatar)
+                    <x-caregiver-identity :caregiver="$item['title_caregiver']" avatar-only class="shrink-0" />
+                @endif
+                <p class="min-w-0 font-display font-semibold {{ $compact ? 'text-lg' : 'text-xl' }} {{ $showTitleAvatar ? 'pt-1' : '' }}">{{ $item['title'] }}</p>
+            </div>
             @if (filled($item['subject'] ?? null))
                 <p class="mt-1 font-semibold">{{ $item['subject'] }}</p>
             @endif
-            @if (filled($item['body'] ?? null) && ! $compact)
+            @if (filled($item['body'] ?? null) && (! $compact || ($item['type'] ?? null) === 'applicants'))
                 <p class="mt-1 text-sm leading-6 {{ $tone['muted'] }}">{{ $item['body'] }}</p>
             @endif
             @if (filled($item['meta'] ?? null))

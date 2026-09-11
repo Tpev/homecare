@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\AiSupport;
 
-use App\Models\AiSupportGuidedTask;
 use App\Models\AiSupportGoalJourney;
+use App\Models\AiSupportGuidedTask;
 use App\Models\AiSupportMessageAction;
 use App\Models\CareBooking;
 use App\Models\CareBookingChangeRequest;
@@ -160,7 +160,7 @@ class FamilyGuidedAssistanceTest extends TestCase
         $message = $ticket->publicMessages()->reorder()->latest()->firstOrFail();
         $this->assertStringContainsString('I found 4 items that need attention', $message->body);
         $this->assertStringContainsString('Add a payment method to the Family account', $message->body);
-        $this->assertStringContainsString('caregiver is waiting for your review', $message->body);
+        $this->assertStringContainsString('Jamie Care applied to your care request', $message->body);
         $this->assertStringContainsString("Finish Pat's care receiver profile", $message->body);
         $this->assertStringContainsString('message from Jamie Care is unread', $message->body);
         $this->assertSame(4, AiSupportGuidedTask::query()->count());

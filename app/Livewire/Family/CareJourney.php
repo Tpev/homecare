@@ -10,6 +10,7 @@ use App\Models\CareRequestApplication;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Support\FamilyActionInboxBuilder;
 use App\Support\WeeklySchedule;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -68,6 +69,7 @@ class CareJourney extends Component
 
         $hired = $request->applications->firstWhere('status', CareRequestApplication::STATUS_HIRED);
         $booking = $request->booking;
+        $closedUnbooked = ! $booking && in_array($request->status, [CareRequest::STATUS_CANCELLED, CareRequest::STATUS_EXPIRED], true);
         $payment = $booking?->payment;
         $recipient = trim((string) ($request->recipient?->full_name ?? '')) ?: 'Care recipient';
         $caregiver = trim((string) ($hired?->caregiver?->name ?? $booking?->caregiver?->name ?? '')) ?: null;
@@ -79,15 +81,17 @@ class CareJourney extends Component
             $this->stage(
                 'Caregiver selected',
                 $hired || $booking ? 'complete' : ($request->status === CareRequest::STATUS_OPEN ? 'current' : 'pending'),
-                $caregiver ? $caregiver.' was selected.' : 'Waiting for the family to choose a caregiver.',
+                $caregiver ? $caregiver.' was selected.' : ($closedUnbooked
+                    ? 'This request closed before a caregiver was selected.'
+                    : 'Waiting for the family to choose a caregiver.'),
                 $request->first_hire_at,
             ),
             $this->stage(
                 'Visit scheduled',
-                $booking ? 'complete' : ($request->status === CareRequest::STATUS_OPEN ? 'pending' : 'current'),
+                $booking ? 'complete' : 'pending',
                 $booking?->scheduled_start_at
                     ? $booking->scheduled_start_at->format('l, F j · g:i A').'–'.$booking->scheduled_end_at?->format('g:i A')
-                    : 'A confirmed date will appear here after a caregiver is selected.',
+                    : ($closedUnbooked ? 'No visit was booked for this request.' : 'A confirmed date will appear here after a caregiver is selected.'),
                 $booking?->created_at,
             ),
             $this->deliveryStage($booking),
@@ -118,7 +122,7 @@ class CareJourney extends Component
                 'url' => route('family.requests.show', $request->id),
                 'consequence' => $booking
                     ? 'See the visit, messages, submitted hours, and payment in one place.'
-                    : 'Review replies and move this request toward confirmed care.',
+                    : ($closedUnbooked ? 'View this request and its caregiver history.' : 'Review replies and move this request toward confirmed care.'),
                 'urgent' => false,
             ],
         ];
@@ -138,22 +142,28 @@ class CareJourney extends Component
             'caregiver:id,name',
             'payment:id,care_booking_id,status,amount_authorized_cents,amount_captured_cents,authorized_at,captured_at,last_error',
         ];
-        $canHaveUpcomingVisits = in_array($plan->status, [
-            CarePlan::STATUS_ACTIVE,
-            CarePlan::STATUS_PAYMENT_ATTENTION,
-            CarePlan::STATUS_PAUSED,
-        ], true);
-        $upcomingBookings = $canHaveUpcomingVisits
-            ? CareBooking::query()
-                ->with($bookingRelations)
-                ->forFamilyAccount($account)
-                ->where('care_plan_id', $plan->id)
-                ->whereIn('status', [CareBooking::STATUS_SCHEDULED, CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED])
-                ->where('scheduled_start_at', '>=', now()->subMinutes(CareBooking::regularCareCheckInGraceMinutes()))
-                ->orderBy('scheduled_start_at')
-                ->limit(12)
-                ->get()
-            : collect();
+        // A plan can end while keeping its next confirmed visit.
+        $upcomingBookings = CareBooking::query()
+            ->with($bookingRelations)
+            ->forFamilyAccount($account)
+            ->where('care_plan_id', $plan->id)
+            ->where(function (Builder $bookings): void {
+                $bookings->where(function (Builder $live): void {
+                    $recentCutoff = now()->subDay();
+                    $live->whereIn('status', [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED])
+                        ->where(function (Builder $recent) use ($recentCutoff): void {
+                            $recent->where('scheduled_end_at', '>=', $recentCutoff)
+                                ->orWhere(fn (Builder $withoutEnd) => $withoutEnd
+                                    ->whereNull('scheduled_end_at')
+                                    ->where('scheduled_start_at', '>=', $recentCutoff));
+                        });
+                })->orWhere(fn (Builder $scheduled) => $scheduled
+                    ->where('status', CareBooking::STATUS_SCHEDULED)
+                    ->where('scheduled_start_at', '>=', now()->subMinutes(CareBooking::regularCareCheckInGraceMinutes())));
+            })
+            ->orderBy('scheduled_start_at')
+            ->limit(12)
+            ->get();
         $recentBookings = CareBooking::query()
             ->with($bookingRelations)
             ->forFamilyAccount($account)

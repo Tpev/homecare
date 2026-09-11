@@ -1,6 +1,6 @@
 <div
     x-data
-    x-init="$nextTick(() => $refs.search?.focus())"
+    x-init="$nextTick(() => ($refs.inviteReview || $refs.search)?.focus())"
     x-trap.inert.noscroll="true"
     x-on:keydown.escape.window.prevent="$wire.closeCaregiverInvitePanel()"
     x-on:caregiver-invite-content-top.window="$nextTick(() => $refs.panelScroll?.scrollTo({ top: 0, behavior: 'smooth' }))"
@@ -32,7 +32,7 @@
             <div class="rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4" aria-label="Request summary">
                 <p class="break-words font-display text-lg font-semibold">{{ $requestItem->title }}</p>
                 <dl class="mt-2 grid grid-cols-1 gap-2 text-sm text-[#4B5B6B] sm:grid-cols-3">
-                    <div><dt class="font-semibold text-[#17313F]">When</dt><dd>{{ $plainSchedule }}</dd></div>
+                    <div><dt class="font-semibold text-[#17313F]">When</dt><dd>{{ $recruitmentSchedule }}</dd></div>
                     <div><dt class="font-semibold text-[#17313F]">Where</dt><dd>{{ $requestItem->city }}, {{ $requestItem->state }}</dd></div>
                     @if ($requestItem->recipient?->full_name)
                         <div><dt class="font-semibold text-[#17313F]">Care for</dt><dd>{{ $requestItem->recipient->full_name }}</dd></div>
@@ -61,11 +61,11 @@
                     </button>
 
                     <div class="mt-2 rounded-2xl border border-[#BDD4F7] bg-white p-4 sm:p-5">
-                        <h3 class="break-words font-display text-xl font-semibold">
-                            {{ $confirmingReinvite ? 'Invite '.$confirmingCaregiver['first_name'].' again' : 'Invite '.$confirmingCaregiver['first_name'] }} to “{{ $requestItem->title }}”?
+                        <h3 x-ref="inviteReview" tabindex="-1" class="break-words font-display text-xl font-semibold">
+                            {{ $confirmingReinvite ? 'Invite '.$confirmingCaregiver['first_name'].' again' : 'Invite '.$confirmingCaregiver['first_name'] }}?
                         </h3>
                         <p class="mt-2 text-sm leading-6 text-[#607080]">
-                            {{ $plainSchedule }} in {{ $requestItem->city }}, {{ $requestItem->state }}. The caregiver can review the request before replying.
+                            The caregiver can review the request before replying.
                         </p>
 
                         <x-caregiver-certification-tags :summary="$confirmingCaregiver['certification_summary']" class="mt-4" />
@@ -166,7 +166,7 @@
                                 <section aria-labelledby="invite-section-{{ $section['key'] }}">
                                     <h3 id="invite-section-{{ $section['key'] }}" class="font-display text-lg font-semibold">{{ $section['title'] }}</h3>
                                     <p class="mt-1 text-sm text-[#607080]">{{ $section['description'] }}</p>
-                                    <div class="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+                                    <div class="mt-3">
                                         @foreach ($section['caregivers'] as $caregiver)
                                             @include('livewire.family.partials.caregiver-invite-card', ['caregiver' => $caregiver])
                                         @endforeach
@@ -218,7 +218,7 @@
                                     <p class="mt-1 text-sm text-[#607080]">{{ $caregiverSearchResults->count() }} caregiver{{ $caregiverSearchResults->count() === 1 ? '' : 's' }} found</p>
                                 </div>
                             </div>
-                            <div class="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+                            <div class="mt-3">
                                 @foreach ($caregiverSearchResults as $caregiver)
                                     @include('livewire.family.partials.caregiver-invite-card', ['caregiver' => $caregiver])
                                 @endforeach

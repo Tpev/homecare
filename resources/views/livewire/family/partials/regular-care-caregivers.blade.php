@@ -1,0 +1,18 @@
+<div class="space-y-6">
+    <section class="hc-surface p-5 sm:p-6">
+        <p class="hc-care-eyebrow">{{ $isPending ? 'Caregiver for this offer' : 'Your recurring caregiver' }}</p>
+        <div class="mt-4 flex flex-col gap-5 sm:flex-row sm:items-start">
+            @if($caregiverProfile?->profile_photo_path)<img src="{{ Storage::disk('public')->url($caregiverProfile->profile_photo_path) }}" alt="{{ $plan->caregiver?->name }}" class="h-20 w-20 rounded-2xl object-cover">@else<div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-[#E8F1E9] text-3xl font-semibold text-[#23483F]" aria-hidden="true">{{ mb_substr($plan->caregiver?->name ?: 'C', 0, 1) }}</div>@endif
+            <div class="min-w-0 flex-1"><h2 class="hc-care-title">{{ $plan->caregiver?->name ?: 'Caregiver not selected' }}</h2><p class="mt-1 hc-care-subtitle">{{ collect([$plan->caregiver?->city, $plan->caregiver?->state])->filter()->join(', ') }}</p><div class="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">@if($caregiverProfile?->years_experience !== null)<span>{{ $caregiverProfile->years_experience }} years of experience</span>@endif @if($caregiverProfile?->reviews_count)<span>{{ number_format((float)$caregiverProfile->average_rating, 1) }} / 5 · {{ $caregiverProfile->reviews_count }} {{ Str::plural('review', $caregiverProfile->reviews_count) }}</span>@endif<span>${{ number_format((float)$plan->hourly_rate, 2) }}/hour {{ $isPending ? 'proposed rate' : 'agreed rate' }}</span></div></div>
+        </div>
+        @if($caregiverProfile?->bio)<p class="mt-5 whitespace-pre-line leading-relaxed">{{ $caregiverProfile->bio }}</p>@endif
+        @if($caregiverProfile?->skills->isNotEmpty())<div class="mt-5"><h3 class="font-semibold">Skills</h3><ul class="mt-2 flex flex-wrap gap-2">@foreach($caregiverProfile->skills as $skill)<li class="rounded-full border border-[#A4B3A7] px-3 py-1.5 text-sm">{{ $skill->name }}</li>@endforeach</ul></div>@endif
+        @if($caregiverProfile?->languages->isNotEmpty())<p class="mt-4"><span class="font-semibold">Languages:</span> {{ $caregiverProfile->languages->pluck('name')->join(', ') }}</p>@endif
+        <div class="mt-6 flex flex-wrap gap-3">@if($messageUrl)<a href="{{ $messageUrl }}" wire:navigate class="hc-primary-button">Message caregiver</a>@endif @if($profileUrl)<a href="{{ $profileUrl }}" wire:navigate class="hc-secondary-button">View full profile</a>@endif</div>
+        @if($plan->caregiver_note)<div class="mt-5 rounded-xl border border-[#A4B3A7] p-4"><h3 class="font-semibold">Caregiver’s response</h3><p class="mt-2 whitespace-pre-line">{{ $plan->caregiver_note }}</p></div>@endif
+        @if($plan->family_message)<div class="mt-4 rounded-xl border border-[#A4B3A7] p-4"><h3 class="font-semibold">Your offer message</h3><p class="mt-2 whitespace-pre-line">{{ $plan->family_message }}</p></div>@endif
+    </section>
+    @if ($source)
+        <section class="hc-surface p-5 sm:p-6"><h2 class="hc-care-title">How this care started</h2><p class="mt-2 hc-care-subtitle">Applications, invitations and conversations stay with your original care request.</p><dl class="mt-4 grid gap-4 sm:grid-cols-2"><div><dt class="text-sm">Applications</dt><dd class="mt-1 font-semibold">{{ $source->applications->count() }}</dd></div><div><dt class="text-sm">Invitations</dt><dd class="mt-1 font-semibold">{{ $source->invitations->count() }}</dd></div></dl><a href="{{ route('family.requests.show', ['careRequest' => $source->id, 'tab' => 'applicants']) }}" wire:navigate class="hc-secondary-button mt-5">View applications & invitations</a></section>
+    @endif
+</div>

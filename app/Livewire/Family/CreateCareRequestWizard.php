@@ -752,13 +752,10 @@ class CreateCareRequestWizard extends Component
             'is_private' => $careRequest->is_private,
         ]);
 
-        $destination = $careRequest->is_private
-            ? route('family.requests.show', [
-                'careRequest' => $careRequest->id,
-                'tab' => 'applicants',
-                'invite' => 1,
-            ], false)
-            : route('family.requests.show', $careRequest->id, false);
+        $destination = route('family.requests.show', [
+            'careRequest' => $careRequest->id,
+            'tab' => 'invite',
+        ], false);
 
         $this->redirect($destination, navigate: true);
     }

@@ -688,7 +688,7 @@ class CareBookingTimeCorrectionTest extends TestCase
 
         Livewire::actingAs($family)
             ->test(RegularCareShow::class, ['carePlan' => $plan->id])
-            ->assertSee('recurring care visit')
+            ->assertSee('visit to follow up')
             ->assertSee('Review corrected hours');
 
         app(CareBookingTimeCorrectionService::class)->approve($correction, $family);

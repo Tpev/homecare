@@ -20,6 +20,9 @@
 /storage/pail
 /playwright-report
 /test-results
+/.tmp
+/.codex-temp
+/.playwright-mcp
 /database/playwright.sqlite
 /vendor
 Homestead.json
