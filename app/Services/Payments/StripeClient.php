@@ -152,6 +152,8 @@ class StripeClient
         try {
             $session = $this->client()->checkout->sessions->create([
                 'mode' => 'setup',
+                // Dynamic payment methods require a currency even when no payment is collected.
+                'currency' => $this->currency(),
                 'customer' => $customerId,
                 'success_url' => $successUrl,
                 'cancel_url' => $cancelUrl,
