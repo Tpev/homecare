@@ -17,6 +17,10 @@
         <x-alert color="amber">{{ session('warning') }}</x-alert>
     @endif
 
+    @if ($errors->has('billing'))
+        <x-alert color="red">{{ $errors->first('billing') }}</x-alert>
+    @endif
+
     @if (session('status'))
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif

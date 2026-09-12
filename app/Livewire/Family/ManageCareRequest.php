@@ -26,6 +26,7 @@ use App\Services\Marketplace\CareRequestInvitationService;
 use App\Services\Matching\CaregiverSuggestionService;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
+use App\Services\Payments\FamilyBillingService;
 use App\Support\CaregiverCertificationCriteria;
 use App\Support\CaregiverPrelaunch;
 use App\Support\CareRequestProgress;
@@ -65,6 +66,8 @@ class ManageCareRequest extends Component
     public string $caregiverView = 'search';
 
     private array $recruitmentQuoteCache = [];
+
+    private ?array $hirePaymentReadiness = null;
 
     public string $applicationStatus = 'all';
 
@@ -213,6 +216,13 @@ class ManageCareRequest extends Component
             && request()->boolean('invite')) {
             $this->activeTab = 'applicants';
             $this->showCaregiverInvitePanel = true;
+        }
+
+        $resumeApplicationId = request()->integer('review_hire');
+        if ($resumeApplicationId > 0 && $this->requestItem->status === CareRequest::STATUS_OPEN
+            && $this->requestItem->applications->contains('id', $resumeApplicationId)) {
+            $this->activeTab = 'applicants';
+            $this->reviewingApplicationId = $resumeApplicationId;
         }
     }
 
@@ -374,6 +384,9 @@ class ManageCareRequest extends Component
     public function confirmReviewedHire(): void
     {
         abort_unless($this->reviewingApplicationId, 403);
+        if (! $this->paymentReadinessForHire()['ready']) {
+            return;
+        }
         $applicationId = $this->reviewingApplicationId;
         $this->reviewingApplicationId = null;
         $this->hire($applicationId);
@@ -2091,6 +2104,10 @@ class ManageCareRequest extends Component
         }
 
         return view('livewire.family.manage-care-request', [
+            'hirePayment' => $this->requestItem->status === CareRequest::STATUS_OPEN
+                && ($this->activeTab === 'applicants' || $this->reviewingApplicationId)
+                ? $this->paymentReadinessForHire()
+                : ['ready' => false, 'unavailable' => false],
             'savedDiscoveryCaregivers' => $savedDiscoveryCaregivers,
             'savedDiscoveryLimitReached' => $savedDiscoveryLimitReached,
             'invitationCards' => $invitationCards,
@@ -2108,6 +2125,26 @@ class ManageCareRequest extends Component
             'careProfileSnapshot' => app(CareRecipientProfilePresenter::class)
                 ->forCareRequest(auth()->user(), $this->requestItem),
         ]);
+    }
+
+    private function paymentReadinessForHire(): array
+    {
+        // Cache only within this Livewire request; re-check on the next interaction.
+        if ($this->hirePaymentReadiness !== null) {
+            return $this->hirePaymentReadiness;
+        }
+
+        if ((bool) config('services.stripe.bypass', false)) {
+            return $this->hirePaymentReadiness = ['ready' => true, 'unavailable' => false];
+        }
+
+        try {
+            $summary = app(FamilyBillingService::class)->summaryFor(auth()->user());
+
+            return $this->hirePaymentReadiness = ['ready' => (bool) $summary['ready'], 'unavailable' => false];
+        } catch (PaymentException) {
+            return $this->hirePaymentReadiness = ['ready' => false, 'unavailable' => true];
+        }
     }
 
     private function certificationCriteria(): CaregiverCertificationCriteria

@@ -1,5 +1,5 @@
 @if ($reviewingApplicationId || $reviewingCompletion)
-<section id="care-decision-review" x-ref="decisionReview" tabindex="-1" class="hc-surface border-2 border-hc-primary p-5 sm:p-7" aria-labelledby="decision-title">
+<section id="care-decision-review" x-ref="decisionReview" x-init="$nextTick(() => { $el.focus(); $el.scrollIntoView({ block: 'start' }); })" tabindex="-1" class="hc-surface border-2 border-hc-primary p-5 sm:p-7" aria-labelledby="decision-title">
     @if ($reviewingApplicationId)
         @php $decisionApplication = $requestItem->applications->firstWhere('id', $reviewingApplicationId); @endphp
         <div class="hc-hire-review">
@@ -40,7 +40,15 @@
             </div>
             <div class="hc-hire-actions">
                 <p>Confirming selects this caregiver, saves the care agreement and prepares card authorization. Other open applications will be marked not selected. {{ $requestItem->request_type === 'recurring' ? 'Your recurring care home will show booked visits and any payment action needed.' : 'Your visit will show any payment action needed.' }}</p>
-                <div class="hc-candidate-actions"><button type="button" wire:click="confirmReviewedHire" wire:loading.attr="disabled" class="hc-primary-button">Confirm hire</button><button type="button" wire:click="closeDecisionReview" class="hc-secondary-button">Back to caregivers</button></div>
+                @if(! $hirePayment['ready'] && $decisionApplication)
+                    <x-family-hire-payment-prompt :care-request="$requestItem" :application="$decisionApplication" :unavailable="$hirePayment['unavailable']" id="hire-review-payment" />
+                @endif
+                <div class="hc-candidate-actions">
+                    <button type="button" wire:click="confirmReviewedHire" wire:loading.attr="disabled" @disabled(! $hirePayment['ready'])
+                        @if(! $hirePayment['ready']) aria-describedby="hire-review-payment" @endif
+                        class="{{ $hirePayment['ready'] ? 'hc-primary-button' : 'hc-secondary-button !border-slate-200 !bg-slate-100 !text-slate-400 !shadow-none cursor-not-allowed' }}">Confirm hire</button>
+                    <button type="button" wire:click="closeDecisionReview" class="hc-secondary-button">Back to caregivers</button>
+                </div>
             </div>
         </div>
     @elseif ($reviewingCompletion)

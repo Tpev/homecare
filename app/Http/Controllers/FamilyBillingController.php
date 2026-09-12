@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\Payments\PaymentException;
+use App\Models\CareRequest;
 use App\Services\AiSupport\AiSupportGuidedTaskService;
 use App\Services\Payments\FamilyBillingService;
 use Illuminate\Http\RedirectResponse;
@@ -18,6 +19,8 @@ class FamilyBillingController extends Controller
     ): View|RedirectResponse {
         $user = auth()->user();
         abort_unless($user && $user->role === 'family', 403);
+        $hireContext = $this->hireReturnContext($request);
+        $returnUrl = $this->returnUrl($hireContext);
 
         if ($request->query('checkout') === 'cancel') {
             try {
@@ -27,7 +30,7 @@ class FamilyBillingController extends Controller
             }
 
             return redirect()
-                ->route('family.billing.show')
+                ->to($returnUrl)
                 ->with('status', 'No payment-method changes were made.');
         }
 
@@ -43,7 +46,7 @@ class FamilyBillingController extends Controller
                 }
 
                 return redirect()
-                    ->route('family.billing.show')
+                    ->to($returnUrl)
                     ->withErrors(['billing' => $e->userMessage]);
             }
 
@@ -54,8 +57,10 @@ class FamilyBillingController extends Controller
             }
 
             return redirect()
-                ->route('family.billing.show')
-                ->with('status', 'Billing method updated successfully.');
+                ->to($returnUrl)
+                ->with('status', $hireContext !== []
+                    ? 'Payment method saved. Review the details below to confirm your hire.'
+                    : 'Billing method updated successfully.');
         }
 
         $billingUnavailable = false;
@@ -86,8 +91,9 @@ class FamilyBillingController extends Controller
         $user = auth()->user();
         abort_unless($user && $user->role === 'family', 403);
 
-        $successUrl = route('family.billing.show').'?checkout=success&checkout_session_id={CHECKOUT_SESSION_ID}';
-        $cancelUrl = route('family.billing.show').'?checkout=cancel';
+        $hireContext = $this->hireReturnContext($request);
+        $successUrl = route('family.billing.show', [...$hireContext, 'checkout' => 'success']).'&checkout_session_id={CHECKOUT_SESSION_ID}';
+        $cancelUrl = route('family.billing.show', [...$hireContext, 'checkout' => 'cancel']);
 
         try {
             try {
@@ -103,9 +109,36 @@ class FamilyBillingController extends Controller
                 report($guidedException);
             }
 
-            return back()->withErrors(['billing' => $e->userMessage]);
+            return redirect()->to($this->returnUrl($hireContext))->withErrors(['billing' => $e->userMessage]);
         }
 
         return redirect()->away($url);
+    }
+
+    /** Only accept an authorized request/application pair, never an arbitrary return URL. */
+    private function hireReturnContext(Request $request): array
+    {
+        if (! $request->hasAny(['care_request_id', 'application_id'])) {
+            return [];
+        }
+
+        $context = $request->validate([
+            'care_request_id' => ['required', 'integer', 'min:1'],
+            'application_id' => ['required', 'integer', 'min:1'],
+        ]);
+        $careRequest = CareRequest::query()->findOrFail($context['care_request_id']);
+        abort_unless($request->user()->can('manageApplicants', $careRequest), 403);
+        $application = $careRequest->applications()->findOrFail($context['application_id']);
+
+        return ['care_request_id' => $careRequest->id, 'application_id' => $application->id];
+    }
+
+    private function returnUrl(array $hireContext): string
+    {
+        return $hireContext === [] ? route('family.billing.show') : route('family.requests.show', [
+            'careRequest' => $hireContext['care_request_id'],
+            'tab' => 'applicants',
+            'review_hire' => $hireContext['application_id'],
+        ]);
     }
 }
