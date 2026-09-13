@@ -1315,7 +1315,11 @@
                 confirmParams.payment_method = detail.paymentMethodId;
             }
 
-            const result = await stripe.confirmCardPayment(detail.clientSecret, confirmParams);
+            const result = await stripe.confirmPayment({
+                clientSecret: detail.clientSecret,
+                confirmParams,
+                redirect: 'if_required',
+            });
 
             if (result.error) {
                 const paymentIntentId = result.error.payment_intent?.id || detail.paymentIntentId || '';

@@ -39,6 +39,7 @@ class FamilyBillingController extends Controller
             try {
                 $billing->syncSetupCheckoutSession($user, $sessionId);
             } catch (PaymentException $e) {
+                report($e);
                 try {
                     $guidedTasks->paymentSetupFailed($user, 'secure_checkout_verification_failed');
                 } catch (\Throwable $guidedException) {
@@ -103,6 +104,7 @@ class FamilyBillingController extends Controller
             }
             $url = $billing->createSetupCheckoutUrl($user, $successUrl, $cancelUrl);
         } catch (PaymentException $e) {
+            report($e);
             try {
                 $guidedTasks->paymentSetupFailed($user, 'secure_checkout_start_failed');
             } catch (\Throwable $guidedException) {

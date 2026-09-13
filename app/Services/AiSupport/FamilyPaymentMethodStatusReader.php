@@ -20,7 +20,7 @@ class FamilyPaymentMethodStatusReader
      *   can_manage:bool,
      *   attention:string,
      *   ready:bool,
-     *   card:array{brand:string,last4:string,exp_month:int,exp_year:int}|null,
+     *   card:array{type?:string,brand:string,last4:?string,exp_month:?int,exp_year:?int}|null,
      *   checked_at:string,
      *   state_hash:string
      * }
@@ -43,9 +43,13 @@ class FamilyPaymentMethodStatusReader
         );
     }
 
-    /** @param array<string,mixed> $card @return array{brand:string,last4:string,exp_month:int,exp_year:int}|null */
+    /** @param array<string,mixed> $card @return array{type?:string,brand:string,last4:?string,exp_month:?int,exp_year:?int}|null */
     private function safeCard(array $card): ?array
     {
+        if (($card['type'] ?? 'card') === 'link') {
+            return ['type' => 'link', 'brand' => 'link', 'last4' => null, 'exp_month' => null, 'exp_year' => null];
+        }
+
         $brand = strtolower(trim((string) ($card['brand'] ?? '')));
         $last4 = trim((string) ($card['last4'] ?? ''));
         $month = (int) ($card['exp_month'] ?? 0);
@@ -64,9 +68,13 @@ class FamilyPaymentMethodStatusReader
         ];
     }
 
-    /** @param array{brand:string,last4:string,exp_month:int,exp_year:int} $card */
+    /** @param array{type?:string,brand:string,last4:?string,exp_month:?int,exp_year:?int} $card */
     private function attentionFor(array $card): string
     {
+        if (($card['type'] ?? 'card') === 'link') {
+            return 'ready';
+        }
+
         $expiresAt = CarbonImmutable::create(
             $card['exp_year'],
             $card['exp_month'],
@@ -85,8 +93,8 @@ class FamilyPaymentMethodStatusReader
     }
 
     /**
-     * @param  array{brand:string,last4:string,exp_month:int,exp_year:int}|null  $card
-     * @return array{can_manage:bool,attention:string,ready:bool,card:array{brand:string,last4:string,exp_month:int,exp_year:int}|null,checked_at:string,state_hash:string}
+     * @param  array{type?:string,brand:string,last4:?string,exp_month:?int,exp_year:?int}|null  $card
+     * @return array{can_manage:bool,attention:string,ready:bool,card:array{type?:string,brand:string,last4:?string,exp_month:?int,exp_year:?int}|null,checked_at:string,state_hash:string}
      */
     private function normalized(bool $canManage, string $attention, bool $ready, ?array $card): array
     {

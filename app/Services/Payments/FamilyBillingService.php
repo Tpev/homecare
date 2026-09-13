@@ -10,14 +10,13 @@ class FamilyBillingService
 {
     public function __construct(
         private readonly StripeClient $stripe,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{
      *   ready: bool,
      *   customer_id: string|null,
-     *   card: array{id:string,brand:string,last4:string,exp_month:int,exp_year:int}|null
+     *   card: array{id:string,type?:string,brand:string,last4:?string,exp_month:?int,exp_year:?int}|null
      * }
      */
     public function summaryFor(User $family): array

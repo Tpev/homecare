@@ -332,6 +332,33 @@ class GuidedPaymentMethodTest extends TestCase
             ->assertDontSee('data-testid="ai-guided-task-strip"', false);
     }
 
+    public function test_saved_link_guidance_and_completion_do_not_invent_card_details(): void
+    {
+        [, $family] = $this->eligibleFamily();
+        $this->mock(\App\Services\Payments\FamilyBillingService::class)->shouldReceive('summaryFor')->andReturn([
+            'ready' => true,
+            'customer_id' => 'cus_link_guidance',
+            'card' => ['id' => 'pm_link_guidance', 'type' => 'link', 'brand' => 'link', 'last4' => null, 'exp_month' => null, 'exp_year' => null],
+        ]);
+        $ticket = $this->automatedTicket($family, 'Update my payment method.');
+        $service = app(AiSupportGuidedTaskService::class);
+        $task = $service->offerPaymentMethod($family, $ticket);
+        $message = $ticket->publicMessages()->reorder()->latest()->firstOrFail();
+        $this->assertStringContainsString('saved Link payment method is ready', $message->body);
+        $this->assertStringNotContainsString('expires', $message->body);
+        $this->assertStringNotContainsString('ends in', $message->body);
+
+        $action = AiSupportMessageAction::query()->where('action_type', AiSupportMessageAction::TYPE_GUIDED_TASK)->sole();
+        $service->startFromAction($family, $ticket, $action->id);
+        $service->markPaymentSetupStarted($family);
+        $service->paymentSetupCompleted($family);
+        $this->assertSame(AiSupportGuidedTask::STATE_COMPLETED, $task->fresh()->state);
+        $message = $ticket->publicMessages()->reorder()->latest()->firstOrFail();
+        $this->assertStringContainsString('Link payment method is now on file', $message->body);
+        $this->assertStringNotContainsString('expires', $message->body);
+        $this->assertStringNotContainsString('ending in', $message->body);
+    }
+
     public function test_cancelled_checkout_keeps_recovery_guidance_and_never_claims_success(): void
     {
         [, $family] = $this->eligibleFamily();

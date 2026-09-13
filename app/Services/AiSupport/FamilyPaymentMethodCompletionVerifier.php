@@ -39,10 +39,12 @@ class FamilyPaymentMethodCompletionVerifier implements AiSupportCompletionVerifi
         return new CompletionVerificationResult(
             'verified',
             'payment_method_verified',
-            sprintf(
-                'Your saved payment method ending in %s is ready. The card details stayed in the secure payment page.',
-                $status['card']['last4'],
-            ),
+            ($status['card']['type'] ?? 'card') === 'link'
+                ? 'Your saved Link payment method is ready. Your payment details stayed in the secure payment page.'
+                : sprintf(
+                    'Your saved payment method ending in %s is ready. The card details stayed in the secure payment page.',
+                    $status['card']['last4'],
+                ),
             $status['state_hash'],
         );
     }

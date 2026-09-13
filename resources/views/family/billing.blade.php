@@ -1,5 +1,6 @@
 <x-app-layout>
     @php($billingUnavailable = $billingUnavailable ?? false)
+    @php($isLink = ($billing['card']['type'] ?? 'card') === 'link')
 
     <x-slot name="header">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -48,10 +49,15 @@
                     </div>
                 @elseif ($billing['ready'] && $billing['card'])
                     <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-                        <p class="font-semibold">
-                            {{ strtoupper($billing['card']['brand']) }} ending in {{ $billing['card']['last4'] }}
-                        </p>
-                        <p class="mt-1">Expires {{ str_pad((string) $billing['card']['exp_month'], 2, '0', STR_PAD_LEFT) }}/{{ $billing['card']['exp_year'] }}</p>
+                        @if ($isLink)
+                            <p class="font-semibold">Link</p>
+                            <p class="mt-1">Your payment method is saved securely with Link and ready to use.</p>
+                        @else
+                            <p class="font-semibold">
+                                {{ strtoupper($billing['card']['brand']) }} ending in {{ $billing['card']['last4'] }}
+                            </p>
+                            <p class="mt-1">Expires {{ str_pad((string) $billing['card']['exp_month'], 2, '0', STR_PAD_LEFT) }}/{{ $billing['card']['exp_year'] }}</p>
+                        @endif
                     </div>
                 @else
                     <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
@@ -67,7 +73,7 @@
                         data-ai-target="family.billing.manage_payment_method"
                         data-testid="family-billing-manage-payment-method"
                     >
-                        {{ $billingUnavailable ? 'Add or update card securely' : ($billing['ready'] ? 'Update card' : 'Add card securely') }}
+                        {{ $billingUnavailable ? 'Add or update card securely' : ($billing['ready'] ? ($isLink ? 'Update payment method' : 'Update card') : 'Add card securely') }}
                     </x-button>
                 </form>
             </div>

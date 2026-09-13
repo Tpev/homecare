@@ -88,7 +88,7 @@ class StripeClient
     }
 
     /**
-     * @return array{id:string, brand:string, last4:string, exp_month:int, exp_year:int}|null
+     * @return array{id:string, type?:string, brand:string, last4:?string, exp_month:?int, exp_year:?int}|null
      */
     public function defaultPaymentMethodForCustomer(string $customerId): ?array
     {
@@ -124,7 +124,24 @@ class StripeClient
         }
 
         if (is_string($defaultPm)) {
-            $defaultPm = $this->client()->paymentMethods->retrieve($defaultPm);
+            try {
+                $defaultPm = $this->client()->paymentMethods->retrieve($defaultPm);
+            } catch (Throwable $e) {
+                throw new PaymentException('Unable to load billing method right now.', $e->getMessage());
+            }
+        }
+
+        // Link is reusable for both on-session authorization and later off-session payments.
+        // Its underlying card details are not exposed as a card PaymentMethod.
+        if (($defaultPm->type ?? null) === 'link') {
+            return [
+                'id' => (string) $defaultPm->id,
+                'type' => 'link',
+                'brand' => 'link',
+                'last4' => null,
+                'exp_month' => null,
+                'exp_year' => null,
+            ];
         }
 
         if (! $defaultPm || ($defaultPm->type ?? null) !== 'card' || ! $defaultPm->card) {

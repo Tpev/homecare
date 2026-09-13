@@ -728,13 +728,15 @@ class AiSupportGuidedTaskService
             $card = $status['card'];
             $message = $this->createAutomatedMessage(
                 $lockedTicket,
-                sprintf(
-                    'Your %s payment method ending in %s is now on file. It expires %02d/%d.',
-                    $this->displayBrand($card['brand']),
-                    $card['last4'],
-                    $card['exp_month'],
-                    $card['exp_year'],
-                ),
+                ($card['type'] ?? 'card') === 'link'
+                    ? 'Your Link payment method is now on file and ready to use.'
+                    : sprintf(
+                        'Your %s payment method ending in %s is now on file. It expires %02d/%d.',
+                        $this->displayBrand($card['brand']),
+                        $card['last4'],
+                        $card['exp_month'],
+                        $card['exp_year'],
+                    ),
             );
             $this->events->record($lockedTicket, 'guided_task_completed', [
                 'support_ticket_message_id' => $message->id,
@@ -1020,6 +1022,10 @@ class AiSupportGuidedTaskService
         }
 
         $card = $status['card'];
+        if (($card['type'] ?? 'card') === 'link') {
+            return 'Your saved Link payment method is ready to use. I can take you to the exact button to update it.';
+        }
+
         $attention = match ($status['attention']) {
             'expired' => ' This card is expired.',
             'expiring_soon' => ' This card expires soon.',

@@ -94,6 +94,31 @@ class HirePaymentSetupTest extends TestCase
     }
 
     #[DataProvider('familyActors')]
+    public function test_saved_link_enables_hire_for_owner_and_member_without_repeating_setup(bool $asMember): void
+    {
+        [$family, $request, $application] = $this->fixture();
+        $account = app(FamilyAccountContext::class)->account($family);
+        $account->update(['stripe_customer_id' => 'cus_link_hire']);
+        if ($asMember) {
+            $family = User::factory()->create(['role' => 'family']);
+            $account->memberships()->create([
+                'user_id' => $family->id, 'access_level' => FamilyAccountMember::ACCESS_MEMBER,
+                'status' => FamilyAccountMember::STATUS_ACTIVE, 'joined_at' => now(),
+            ]);
+        }
+        $this->partialMock(\App\Services\Payments\StripeClient::class)->shouldReceive('defaultPaymentMethodForCustomer')
+            ->with('cus_link_hire')->andReturn([
+                'id' => 'pm_link_hire', 'type' => 'link', 'brand' => 'link', 'last4' => null, 'exp_month' => null, 'exp_year' => null,
+            ]);
+        $component = Livewire::actingAs($family)->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('setActiveTab', 'applicants')->assertDontSee('Add a card to hire');
+        $this->assertButtonDisabled($component->html(), 'reviewHire('.$application->id.')', false);
+        $component->call('reviewHire', $application->id);
+        $this->assertButtonDisabled($component->html(), 'confirmReviewedHire', false);
+        $this->assertUnhired($request, $application);
+    }
+
+    #[DataProvider('familyActors')]
     public function test_successful_setup_returns_to_the_same_hire_review_without_hiring(bool $asMember): void
     {
         [$family, $request, $application] = $this->fixture();
