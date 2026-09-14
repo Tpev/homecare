@@ -143,7 +143,11 @@ class CareBookingTimeCorrectionService
         array $input,
         string $clientRequestId,
         ?int $supersedesId = null,
+        ?User $supportAdmin = null,
     ): CareBookingTimeCorrection {
+        if ($supportAdmin && ! $supportAdmin->isAdministrator()) {
+            throw new AuthorizationException;
+        }
         $this->assertEnabled();
         $this->assertCaregiver($booking, $caregiver);
         $this->assertBookingAcceptsProposal($booking);
@@ -226,15 +230,17 @@ class CareBookingTimeCorrectionService
             ]);
         });
 
-        $this->trust->recordEvent($booking, $caregiver->id, 'caregiver', $correction->version > 1
-            ? 'time_correction_resubmitted_by_caregiver'
-            : 'time_correction_requested_by_caregiver', [
+        $this->trust->recordEvent($booking, $supportAdmin?->id ?? $caregiver->id, $supportAdmin ? 'admin' : 'caregiver', $supportAdmin
+            ? 'time_correction_reported_by_support'
+            : ($correction->version > 1 ? 'time_correction_resubmitted_by_caregiver' : 'time_correction_requested_by_caregiver'), [
                 'time_correction_id' => $correction->id,
                 'version' => $correction->version,
                 'reason_code' => $correction->reason_code,
                 'proposed_worked_minutes' => $correction->proposed_worked_minutes,
             ]);
-        $this->notifySubmitted($correction, $correction->version > 1);
+        if (! $supportAdmin) {
+            $this->notifySubmitted($correction, $correction->version > 1);
+        }
 
         return $correction->fresh(['requester:id,name']);
     }
