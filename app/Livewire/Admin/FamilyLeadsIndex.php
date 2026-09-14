@@ -27,6 +27,12 @@ class FamilyLeadsIndex extends Component
 
     public string $assigned = 'all';
 
+    public string $welcome = 'all';
+
+    public string $cohort = 'all';
+
+    public string $campaign = 'all';
+
     public ?int $selectedLeadId = null;
 
     public bool $showCreateForm = false;
@@ -49,14 +55,26 @@ class FamilyLeadsIndex extends Component
         'status' => ['except' => 'active'],
         'source' => ['except' => 'all'],
         'assigned' => ['except' => 'all'],
+        'welcome' => ['except' => 'all'],
+        'cohort' => ['except' => 'all'],
+        'campaign' => ['except' => 'all'],
+        'selectedLeadId' => ['as' => 'lead', 'except' => null],
     ];
 
     public function mount(): void
     {
         $this->resetLeadForm();
+        if ($this->selectedLeadId && $this->selectedLead) {
+            $this->loadSelectedFields($this->selectedLead);
+        }
     }
 
     public function updatedQ(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedWelcome(): void
     {
         $this->resetPage();
     }
@@ -268,6 +286,7 @@ class FamilyLeadsIndex extends Component
                 ->where('lead_type', Lead::TYPE_FAMILY)
                 ->with([
                     'assignedAdmin:id,name,email',
+                    'welcomeEmail',
                     'activities' => fn ($query) => $query->with('actor:id,name,email')->latest('occurred_at')->limit(40),
                 ])
                 ->find($this->selectedLeadId)
@@ -279,7 +298,7 @@ class FamilyLeadsIndex extends Component
         return view('livewire.admin.family-leads-index', [
             'assigneeOptions' => $this->assigneeOptions(),
             'leads' => $this->baseQuery()
-                ->with('assignedAdmin:id,name,email')
+                ->with(['assignedAdmin:id,name,email', 'welcomeEmail'])
                 ->orderByRaw("case priority when 'urgent' then 1 when 'high' then 2 when 'normal' then 3 else 4 end")
                 ->orderByRaw('next_follow_up_at is null')
                 ->orderBy('next_follow_up_at')
@@ -305,8 +324,23 @@ class FamilyLeadsIndex extends Component
             $query->where('status', $this->status);
         }
 
-        if ($this->source !== 'all') {
+        if ($this->source === 'facebook' || $this->source === 'meta_lead_ads') {
+            $query->facebook();
+        } elseif ($this->source !== 'all') {
             $query->where('source', $this->source);
+        }
+
+        if (in_array($this->cohort, ['30', '60', '90'], true)) {
+            $query->whereRaw('COALESCE(submitted_at, created_at) >= ?', [now()->subDays((int) $this->cohort - 1)->startOfDay()]);
+        }
+        if ($this->campaign !== 'all') {
+            $query->where(fn ($q) => $q->where('data->meta->campaign_id', $this->campaign)->orWhere('data->facebook->campaign_id', $this->campaign));
+        }
+        if (in_array($this->welcome, ['sent', 'account', 'request', 'previewed'], true)) {
+            $column = ['sent' => 'sent_at', 'account' => 'account_created_at', 'request' => 'request_posted_at', 'previewed' => 'previewed_at'][$this->welcome];
+            $query->whereHas('welcomeEmail', fn ($q) => $q->whereNotNull($column));
+        } elseif ($this->welcome === 'failed') {
+            $query->whereHas('welcomeEmail', fn ($q) => $q->whereIn('status', ['failed', 'retrying', 'unconfirmed']));
         }
 
         if ($this->assigned === 'unassigned') {

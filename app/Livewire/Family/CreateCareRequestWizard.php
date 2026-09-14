@@ -229,6 +229,13 @@ class CreateCareRequestWizard extends Component
         $this->loadSavedProfiles();
         $this->applyHomepageQuickRequestDraft();
 
+        $welcomeService = app(\App\Services\FamilyAcquisition\LeadWelcomeService::class);
+        if ($welcomeService->continueFor($user) && ($welcome = $welcomeService->sessionMessage())) {
+            $this->zip = $this->zip ?: (string) $welcome->lead?->zip;
+            $this->additional_info = $this->additional_info ?: (string) data_get($welcome->lead?->data, 'care_preferences.help_needed', '');
+            $this->modeChosen = true;
+        }
+
         $lastRequest = CareRequest::query()
             ->forFamilyAccount(app(FamilyAccountContext::class)->account($user))
             ->where('is_system_generated', false)

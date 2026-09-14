@@ -233,6 +233,7 @@ class FamilyCallingConsole extends Component
             ? Lead::query()
                 ->with([
                     'assignedAdmin:id,name,email',
+                    'welcomeEmail',
                     'activities' => fn ($query) => $query->with('actor:id,name,email')->latest('occurred_at')->limit(20),
                 ])
                 ->find($this->activeLeadId)

@@ -46,7 +46,7 @@
         @if($activeLead)
             @php
                 $form = data_get($activeLead->data, 'form_answers', []);
-                $meta = data_get($activeLead->data, 'meta', []);
+                $meta = data_get($activeLead->data, 'meta', data_get($activeLead->data, 'facebook', []));
                 $lastCall = $activeLead->activities->first(fn($activity) => $activity->type === \App\Models\LeadActivity::TYPE_CALL);
                 $attemptNumber = min(7, ((int) $activeLead->unanswered_attempt_count) + 1);
             @endphp
@@ -94,7 +94,7 @@
                             </div>
                             <div class="py-3">
                                 <dt class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Source</dt>
-                                <dd class="mt-1 text-sm font-semibold text-slate-900">{{ $activeLead->source === 'meta_lead_ads' ? ucfirst((string) data_get($meta, 'platform', 'Meta')).' lead form' : 'Manual CRM entry' }}</dd>
+                                <dd class="mt-1 text-sm font-semibold text-slate-900">{{ $activeLead->isFacebookLead() ? 'Facebook / Meta lead form' : $activeLead->sourceLabel() }}</dd>
                                 <dd class="mt-1 text-xs leading-5 text-slate-500">{{ data_get($meta, 'campaign_name', $activeLead->source_detail) }}</dd>
                             </div>
                         </dl>
@@ -114,6 +114,7 @@
                 </aside>
 
                 <main class="min-w-0 space-y-4">
+                    <x-lead-welcome-progress :lead="$activeLead" />
                     <article class="rounded-[1.6rem] border border-[#D9CEC0] bg-white p-5 shadow-sm sm:p-6">
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>

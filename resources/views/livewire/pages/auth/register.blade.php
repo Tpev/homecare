@@ -23,6 +23,16 @@ new #[Layout('layouts.guest')] class extends Component
 
     public bool $accept_terms = false;
 
+    public function mount(): void
+    {
+        $welcome = app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->sessionMessage();
+        if ($welcome) {
+            $this->name = (string) $welcome->lead?->name;
+            $this->email = (string) $welcome->email;
+            $this->phone = (string) $welcome->lead?->phone;
+        }
+    }
+
     public function register(): void
     {
         $validated = $this->validate([
@@ -34,12 +44,18 @@ new #[Layout('layouts.guest')] class extends Component
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
+        $validated['role'] = 'family';
         unset($validated['accept_terms']);
 
         event(new Registered($user = User::create($validated)));
 
         Auth::login($user);
         session()->flash('google_ads_family_signup_conversion', true);
+
+        if (app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->continueFor($user)) {
+            $this->redirect(route('family.requests.create', absolute: false), navigate: true);
+            return;
+        }
 
         if (FamilyQuickRequestDraft::has()) {
             session()->flash('status', 'Your request draft is waiting. Review it and publish from your new account.');
@@ -55,8 +71,14 @@ new #[Layout('layouts.guest')] class extends Component
 <div class="space-y-7">
     <div class="space-y-2">
         <p class="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-[#B95745]">Family account</p>
-        <h1 class="font-semibold tracking-tight">Create your family account</h1>
-        <p class="text-sm leading-6 text-[#68756F]">Find care, coordinate visits, and keep your family informed from one place.</p>
+        @if(app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->sessionMessage())
+            <h1 class="font-semibold tracking-tight">Create your free account</h1>
+            <p class="text-sm leading-6 text-[#68756F]">You’re about 2 minutes away from posting your care request. We’ve filled in the details you shared with LoLo Care.</p>
+            <div class="flex flex-wrap gap-2 pt-2 text-xs font-semibold"><span class="rounded-full bg-emerald-100 px-3 py-2 text-emerald-900">1 · Free account</span><span class="rounded-full bg-stone-100 px-3 py-2 text-stone-600">2 · Post your request</span></div>
+        @else
+            <h1 class="font-semibold tracking-tight">Create your family account</h1>
+            <p class="text-sm leading-6 text-[#68756F]">Find care, coordinate visits, and keep your family informed from one place.</p>
+        @endif
     </div>
 
     <div class="auth-role-switch">

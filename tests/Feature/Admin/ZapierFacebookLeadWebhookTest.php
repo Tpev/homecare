@@ -89,7 +89,8 @@ class ZapierFacebookLeadWebhookTest extends TestCase
 
         $this->assertSame('+19195559999', $lead->phone);
         $this->assertSame('As soon as possible', data_get($lead->data, 'care_preferences.start_timing'));
-        $this->assertSame(2, LeadActivity::query()->where('lead_id', $lead->id)->count());
+        $this->assertSame(2, LeadActivity::query()->where('lead_id', $lead->id)
+            ->where('metadata->source', 'zapier_facebook_lead_webhook')->count());
         $this->assertDatabaseHas('lead_activities', [
             'lead_id' => $lead->id,
             'summary' => 'Facebook Lead Ads lead updated via Zapier',

@@ -91,7 +91,7 @@
                 </select>
                 <select wire:model.live="source" aria-label="Filter by source" class="min-h-11 rounded-xl border-slate-200 text-sm focus:border-emerald-600 focus:ring-emerald-100">
                     <option value="all">All sources</option>
-                    <option value="meta_lead_ads">Meta lead ads</option>
+                    <option value="facebook">Facebook / Meta lead ads</option>
                     <option value="manual_crm">Manual CRM</option>
                 </select>
                 <select wire:model.live="assigned" aria-label="Filter by owner" class="min-h-11 rounded-xl border-slate-200 text-sm focus:border-emerald-600 focus:ring-emerald-100">
@@ -103,6 +103,11 @@
         </section>
 
         <section class="grid items-start gap-5 {{ $selectedLead ? '2xl:grid-cols-[minmax(720px,1fr)_480px]' : '' }}">
+            <div class="col-span-full flex flex-wrap items-center gap-3">
+                <label class="text-xs font-bold text-slate-600" for="welcome-progress-filter">Email & online progress</label>
+                <select id="welcome-progress-filter" wire:model.live="welcome" class="rounded-xl border-stone-300 text-sm"><option value="all">All progress</option><option value="sent">Email sent</option><option value="account">Account created</option><option value="request">Request posted</option><option value="failed">Email needs attention</option><option value="previewed">Local previews</option></select>
+                @if($cohort !== 'all' || $campaign !== 'all')<span class="text-xs text-slate-500">{{ $cohort === 'all' ? 'All time' : 'Last '.$cohort.' days' }}{{ $campaign !== 'all' ? ' · Selected campaign' : '' }}</span><a href="{{ route('admin.family-acquisition.leads') }}" class="text-xs font-semibold underline">Clear cohort filters</a>@endif
+            </div>
             <div class="min-w-0 overflow-hidden rounded-[1.6rem] border border-[#D9CEC0] bg-white shadow-sm">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-left">
@@ -110,6 +115,7 @@
                             <tr class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
                                 <th class="px-5 py-3">Family</th>
                                 <th class="px-4 py-3">Stage</th>
+                                <th class="px-4 py-3">Email & online progress</th>
                                 <th class="px-4 py-3">Reach attempts</th>
                                 <th class="px-4 py-3">Next action</th>
                                 <th class="px-4 py-3">Source</th>
@@ -135,6 +141,7 @@
                                         </div>
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-4"><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">{{ $lead->stageLabel() }}</span></td>
+                                    <td class="min-w-52 px-4 py-4"><x-lead-welcome-progress :lead="$lead" compact /></td>
                                     <td class="whitespace-nowrap px-4 py-4">
                                         <div class="flex items-center gap-2">
                                             <span class="text-sm font-bold text-slate-800">{{ $lead->unanswered_attempt_count }}/7</span>
@@ -153,7 +160,7 @@
                                         @endif
                                     </td>
                                     <td class="max-w-48 px-4 py-4">
-                                        <p class="truncate text-xs font-bold text-slate-700">{{ $lead->source === 'meta_lead_ads' ? 'Meta · '.ucfirst((string) data_get($lead->data, 'meta.platform', 'lead ad')) : 'Manual CRM' }}</p>
+                                        <p class="truncate text-xs font-bold text-slate-700">{{ $lead->isFacebookLead() ? 'Facebook / Meta' : $lead->sourceLabel() }}</p>
                                         <p class="mt-0.5 truncate text-xs text-slate-400">{{ data_get($lead->data, 'meta.campaign_name', $lead->source_detail) }}</p>
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-4 text-xs font-semibold text-slate-600">{{ $lead->assignedAdmin?->name ?: 'Unassigned' }}</td>
@@ -171,7 +178,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="px-6 py-16 text-center text-sm text-slate-500">No family leads match these filters.</td></tr>
+                                <tr><td colspan="8" class="px-6 py-16 text-center text-sm text-slate-500">No family leads match these filters.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -182,7 +189,7 @@
             @if($selectedLead)
                 @php
                     $form = data_get($selectedLead->data, 'form_answers', []);
-                    $meta = data_get($selectedLead->data, 'meta', []);
+                    $meta = data_get($selectedLead->data, 'meta', data_get($selectedLead->data, 'facebook', []));
                     $responseMinutes = $selectedLead->first_call_at && $selectedLead->submitted_at ? (int) $selectedLead->submitted_at->diffInMinutes($selectedLead->first_call_at) : null;
                 @endphp
                 <aside class="overflow-hidden rounded-[1.6rem] border border-[#D9CEC0] bg-white shadow-lg 2xl:sticky 2xl:top-24 2xl:max-h-[calc(100vh-7rem)] 2xl:overflow-y-auto">
@@ -203,6 +210,7 @@
                     </div>
 
                     <div class="space-y-5 p-5">
+                        <x-lead-welcome-progress :lead="$selectedLead" />
                         <section>
                             <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Lead management</p>
                             <div class="mt-3 grid grid-cols-2 gap-3">
@@ -227,7 +235,7 @@
                         </section>
 
                         <section class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="flex items-center justify-between"><p class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Attribution</p><span class="text-xs font-bold text-slate-600">{{ $selectedLead->source === 'meta_lead_ads' ? 'Meta' : 'Manual' }}</span></div>
+                            <div class="flex items-center justify-between"><p class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Attribution</p><span class="text-xs font-bold text-slate-600">{{ $selectedLead->isFacebookLead() ? 'Facebook / Meta' : $selectedLead->sourceLabel() }}</span></div>
                             <p class="mt-2 text-sm font-bold text-slate-900">{{ data_get($meta, 'campaign_name', $selectedLead->source_detail) }}</p>
                             @if($meta)
                                 <p class="mt-1 text-xs leading-5 text-slate-500">{{ data_get($meta, 'ad_set_name') }}<br>{{ data_get($meta, 'ad_name') }}<br>Form: {{ data_get($meta, 'form_name') }}</p>

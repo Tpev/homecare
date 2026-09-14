@@ -226,7 +226,7 @@ class FamilyAcquisitionTest extends TestCase
         Livewire::actingAs($admin)
             ->test(FamilyAcquisitionOverview::class)
             ->assertSet('range', 'all')
-            ->assertSee('All-time lead cohort')
+            ->assertSee('Through Sep 3, 2026')
             ->assertViewHas('metrics', fn (array $metrics): bool => $metrics['leads'] === 2)
             ->set('range', '30')
             ->assertViewHas('metrics', fn (array $metrics): bool => $metrics['leads'] === 1);
@@ -297,7 +297,7 @@ class FamilyAcquisitionTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.family-acquisition.overview'))
             ->assertOk()
-            ->assertSee('From ad spend to care started.');
+            ->assertSee('Family acquisition');
 
         $this->actingAs($admin)
             ->get(route('admin.family-acquisition.leads'))

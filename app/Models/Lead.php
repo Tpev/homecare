@@ -111,6 +111,27 @@ class Lead extends Model
         return $this->hasMany(LeadActivity::class)->latest('occurred_at')->latest();
     }
 
+    public function welcomeEmail(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(LeadWelcomeEmail::class);
+    }
+
+    public function scopeFacebook(\Illuminate\Database\Eloquent\Builder $query): void
+    {
+        $query->where('lead_type', self::TYPE_FAMILY)->where(function ($query) {
+            $query->whereIn('source', ['meta_lead_ads', 'facebook_lead_ad', 'facebook_lead_ads'])
+                ->orWhere('external_source', 'facebook_lead_ads');
+        });
+    }
+
+    public function isFacebookLead(): bool
+    {
+        return $this->lead_type === self::TYPE_FAMILY && (
+            in_array($this->source, ['meta_lead_ads', 'facebook_lead_ad', 'facebook_lead_ads'], true)
+            || $this->external_source === 'facebook_lead_ads'
+        );
+    }
+
     public function isReferralPipeline(): bool
     {
         return in_array($this->lead_type, [self::TYPE_REFERRAL, 'pcp', 'case_manager'], true);

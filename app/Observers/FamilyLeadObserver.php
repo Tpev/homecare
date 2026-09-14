@@ -21,5 +21,6 @@ class FamilyLeadObserver implements ShouldHandleEventsAfterCommit
         }
 
         $this->alerts->notifyNewLead($lead->fresh() ?? $lead);
+        app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->capture($lead->fresh() ?? $lead);
     }
 }

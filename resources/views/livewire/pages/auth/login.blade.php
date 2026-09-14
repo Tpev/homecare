@@ -11,6 +11,14 @@ new #[Layout('layouts.guest')] class extends Component
 {
     public LoginForm $form;
 
+    public function mount(): void
+    {
+        $welcome = app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->sessionMessage();
+        if ($welcome) {
+            $this->form->email = (string) $welcome->email;
+        }
+    }
+
     public function login(): void
     {
         $this->validate();
@@ -33,6 +41,11 @@ new #[Layout('layouts.guest')] class extends Component
             session()->flash('status', 'Your quick request draft is ready. Finish review and publish it now.');
             $this->redirect(route('family.requests.create', absolute: false), navigate: true);
 
+            return;
+        }
+
+        if ($user && app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->continueFor($user)) {
+            $this->redirect(route('family.requests.create', absolute: false), navigate: true);
             return;
         }
 

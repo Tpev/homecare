@@ -3,19 +3,11 @@
         <header class="overflow-hidden rounded-[2rem] border border-[#1A3D35] bg-[#23483F] shadow-xl">
             <div class="grid gap-6 px-6 py-6 text-white lg:grid-cols-[1fr_auto] lg:items-end lg:px-8">
                 <div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <span class="rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#F3D4C9]">Management</span>
-                        <span class="text-xs font-semibold text-white/60">Family acquisition intelligence</span>
-                    </div>
-                    <h1 class="mt-3 text-4xl font-bold tracking-tight text-white">From ad spend to care started.</h1>
-                    <p class="mt-2 max-w-3xl text-sm leading-6 text-white/70">A cohort view of response speed, call performance, conversion, CPL, and CAC—not just a snapshot of today’s pipeline.</p>
+                    <h1 class="text-2xl font-bold tracking-tight text-white">Family acquisition</h1>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <button type="button" wire:click="toggleAlertSettings" class="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 px-4 py-2 text-sm font-bold text-white hover:bg-white/10">
-                        {{ $alertsEnabled ? 'Alerts on' : 'Alerts off' }} · Settings
-                    </button>
-                    <a href="{{ route('admin.family-acquisition.leads') }}" wire:navigate class="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 px-4 py-2 text-sm font-bold text-white hover:bg-white/10">Open family CRM</a>
-                    <a href="{{ route('sdr.family-calling') }}" wire:navigate class="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#C96B55] px-4 py-2 text-sm font-bold text-white hover:bg-[#B85C49]">Review calling console</a>
+                    <a href="{{ route('admin.family-acquisition.leads') }}" wire:navigate class="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 px-4 py-2 text-sm font-bold text-white hover:bg-white/10">Leads</a>
+                    <a href="{{ route('sdr.family-calling') }}" wire:navigate class="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#C96B55] px-4 py-2 text-sm font-bold text-white hover:bg-[#B85C49]">Calling console</a>
                 </div>
             </div>
             <div class="grid gap-3 border-t border-white/10 bg-black/10 px-6 py-4 sm:grid-cols-[190px_minmax(220px,360px)_1fr] lg:px-8">
@@ -32,14 +24,20 @@
                 </select>
                 <p class="self-center text-xs leading-5 text-white/60 sm:text-right">
                     @if($start)
-                        Lead cohort: {{ $start->format('M j') }}–{{ $end->format('M j, Y') }}.
+                        {{ $start->format('M j') }}–{{ $end->format('M j, Y') }}
                     @else
-                        All-time lead cohort through {{ $end->format('M j, Y') }}.
+                        Through {{ $end->format('M j, Y') }}
                     @endif
-                    Later outcomes remain attributed to the original lead.
                 </p>
             </div>
         </header>
+
+        <livewire:admin.welcome-email-panel :range="$range" :campaign="$campaign" />
+
+        <details class="group" @if($showAlertSettings) open @endif>
+            <summary class="cursor-pointer rounded-xl border border-[#D9CEC0] bg-white px-5 py-4 text-sm font-semibold text-[#23483F]">Acquisition reports</summary>
+            <div class="mt-5 space-y-6">
+                <button type="button" wire:click="toggleAlertSettings" class="rounded-xl border border-[#D9CEC0] bg-white px-4 py-2 text-sm font-semibold text-[#23483F]">SDR alert settings</button>
 
         <section class="rounded-[1.75rem] border border-[#D9CEC0] bg-white p-5 shadow-sm sm:p-6">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -302,7 +300,7 @@
 
             <aside class="rounded-[1.75rem] border border-[#E8C8BE] bg-[#FFF4EF] p-5 shadow-sm sm:p-6">
                 <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-[#A55343]">Metric definitions</p>
-                <h2 class="mt-1 text-xl font-bold text-slate-950">Numbers everyone can trust</h2>
+                <h2 class="mt-1 text-xl font-bold text-slate-950">Definitions</h2>
                 <dl class="mt-5 space-y-4 text-sm leading-6 text-slate-700">
                     <div><dt class="font-bold text-slate-950">CPL</dt><dd>Meta spend divided by valid leads received in the cohort.</dd></div>
                     <div><dt class="font-bold text-slate-950">Paid CAC</dt><dd>Meta spend divided by leads that reached “care started.”</dd></div>
@@ -311,5 +309,7 @@
                 </dl>
             </aside>
         </section>
+            </div>
+        </details>
     </div>
 </div>

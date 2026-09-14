@@ -13,10 +13,15 @@ class FamilyAcquisitionSetting extends Model
         'escalation_alert_emails',
         'first_call_sla_minutes',
         'updated_by_user_id',
+        'welcome_email_enabled',
+        'welcome_email_subject',
+        'welcome_email_body',
+        'welcome_email_reply_to',
     ];
 
     protected $casts = [
         'alerts_enabled' => 'boolean',
+        'welcome_email_enabled' => 'boolean',
         'first_call_sla_minutes' => 'integer',
     ];
 

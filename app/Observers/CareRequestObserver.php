@@ -18,7 +18,16 @@ class CareRequestObserver implements ShouldHandleEventsAfterCommit
     {
         $careRequest = $careRequest->fresh() ?? $careRequest;
 
+        app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->requestPosted($careRequest);
+
         $this->opsAlertService->notifyCareRequestCreated($careRequest);
         $this->slackNotifications->queueCareRequestCreated($careRequest);
+    }
+
+    public function updated(CareRequest $careRequest): void
+    {
+        if ($careRequest->wasChanged('status')) {
+            app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->requestPosted($careRequest);
+        }
     }
 }

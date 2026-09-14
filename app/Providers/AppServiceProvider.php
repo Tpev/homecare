@@ -83,6 +83,9 @@ class AppServiceProvider extends ServiceProvider
 
         Event::listen(Registered::class, SendOpsUserRegisteredAlert::class);
         Event::listen(Registered::class, AttributeContentRegistration::class);
+        Event::listen(Registered::class, function (Registered $event): void {
+            app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->accountRegistered($event->user);
+        });
         Event::listen(Logout::class, InvalidateAiSupportConfirmationsOnLogout::class);
     }
 }
