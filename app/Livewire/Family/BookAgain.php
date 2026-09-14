@@ -146,6 +146,12 @@ class BookAgain extends Component
                 auth()->user(),
                 (float) config('marketplace.family_estimate_hourly_rate', 30.00)
             );
+            $agreement = app(MarketplacePricing::class)->agreementForPair(
+                (int) $ownership['family_account_id'], (int) $hiredApplication->caregiver_user_id,
+            );
+            if ($agreement) {
+                $hourlyRate = $agreement->family_care_rate_cents / 100;
+            }
 
             $newRequest = CareRequest::query()->create([
                 ...$ownership,
@@ -251,6 +257,11 @@ class BookAgain extends Component
 
         return view('livewire.family.book-again', [
             'hiredApplication' => $hiredApplication,
+            'bookAgainQuote' => app(MarketplacePricing::class)->quoteForPair(
+                (int) $this->sourceRequest->family_account_id,
+                (int) $hiredApplication?->caregiver_user_id,
+                max(1, (int) $this->durationMinutes),
+            ),
             'caregiverName' => trim((string) ($hiredApplication?->caregiver?->name ?? 'Your caregiver')),
             'caregiverFirstName' => $this->firstName((string) ($hiredApplication?->caregiver?->name ?? 'caregiver')),
         ]);

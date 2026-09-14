@@ -14,6 +14,7 @@ use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\RegularCare\CarePlanService;
 use App\Services\RegularCare\CompletedExtraVisitService;
+use App\Support\MarketplacePricing;
 use App\Support\WeeklySchedule;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -287,6 +288,12 @@ class RegularCareShow extends Component
     public function render(CarePlanService $plans, CompletedExtraVisitService $completedExtraVisits)
     {
         $this->normalizeNavigation();
+        $agreement = in_array($this->plan->status, [
+            CarePlan::STATUS_DRAFT, CarePlan::STATUS_PENDING_CAREGIVER, CarePlan::STATUS_COUNTERED,
+            CarePlan::STATUS_ACTIVE, CarePlan::STATUS_PAYMENT_ATTENTION, CarePlan::STATUS_PAUSED,
+        ], true) ? app(MarketplacePricing::class)->agreementForPair(
+            (int) $this->plan->family_account_id, (int) $this->plan->caregiver_user_id,
+        ) : null;
         $upcomingVisits = $this->upcomingQuery($this->visitQuery())->orderBy('scheduled_start_at')->get();
         $nextVisit = $upcomingVisits->first(fn (CareBooking $booking): bool => in_array($booking->status, [CareBooking::STATUS_IN_PROGRESS, CareBooking::STATUS_PAUSED], true))
             ?? $upcomingVisits->first();
@@ -312,6 +319,7 @@ class RegularCareShow extends Component
             : null;
 
         return view('livewire.family.regular-care-show', [
+            'planCareRate' => $agreement ? $agreement->family_care_rate_cents / 100 : (float) $this->plan->hourly_rate,
             'upcomingVisits' => $upcomingVisits,
             'nextVisit' => $nextVisit,
             'attentionVisits' => $attentionVisits,

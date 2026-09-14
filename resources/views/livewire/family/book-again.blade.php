@@ -14,8 +14,6 @@
             $sourceRequest->address_line2,
             trim($sourceRequest->city.', '.$sourceRequest->state.' '.$sourceRequest->zip),
         ])->filter()->implode(', '));
-        $pricing = app(\App\Support\MarketplacePricing::class);
-        $bookAgainQuote = $pricing->currentQuoteForMinutes(max(1, (int) $durationMinutes));
     @endphp
 
     <section class="rounded-3xl border border-[#E4DDD3] bg-[#23483F] p-5 text-white shadow-sm sm:p-7">
@@ -58,7 +56,14 @@
 
                 <div class="rounded-2xl border border-[#CFE1D8] bg-[#F2F8F4] p-4 text-sm text-[#3C4A5B]">
                     <div class="flex items-start justify-between gap-4"><div><p class="font-semibold text-[#17313F]">Estimated visit total</p><p class="mt-1">Care ${{ number_format((int) $bookAgainQuote['family_care_amount_cents'] / 100, 2) }} + ${{ number_format((int) $bookAgainQuote['family_processing_fee_cents'] / 100, 2) }} processing fee</p></div><p class="font-display text-2xl font-semibold text-[#0F3D3E]">${{ number_format((int) $bookAgainQuote['total_charge_cents'] / 100, 2) }}</p></div>
-                    <p class="mt-2 text-xs text-[#607080]">$30/hour care* plus a $1/hour processing fee.</p>
+                    <p class="mt-2 text-xs text-[#607080]">
+                        ${{ number_format($bookAgainQuote['family_care_rate_cents'] / 100, 2) }}/hour care.
+                        @if ($bookAgainQuote['family_processing_fee_rate_cents'] > 0)
+                            Plus a ${{ number_format($bookAgainQuote['family_processing_fee_rate_cents'] / 100, 2) }}/hour processing fee.
+                        @else
+                            No additional processing fee.
+                        @endif
+                    </p>
                 </div>
 
                 <x-textarea label="Message to caregiver" wire:model="message" />

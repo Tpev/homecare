@@ -38,6 +38,10 @@ After registration, an unpaid booking for this pair at or above the source booki
 
 The new-request form shows the sole active caregiver agreement for the signed-in family, explicitly naming that caregiver and stating that the estimate applies when they are hired. For Don, a one-hour request shows $15.75 with Madison and no additional processing fee. Other caregivers' standard hourly total remains visible. Families with no active agreement, or multiple caregiver agreements requiring a choice, retain the standard estimate. This display does not select a caregiver, create a booking, or change billing. Weekly agreement estimates sum the rounded amounts for each visit separately.
 
+“Book again” quotes the current agreement for the exact family/caregiver pair and uses that care rate in the new invitation's request budget. Existing visit details and the approval screen display the booking's saved care and processing rates, including when the active agreement has since changed. Open recurring plans display the current pair agreement; closed plans retain their historical rate label. These presentation fixes require only a normal deployment, with no additional repair command or migration.
+
+For Don and Madison, two hours is $31.50 total and $30.00 caregiver payout. With the configured 20% authorization buffer, the temporary card hold is $37.80. That buffer is not tax or an added hourly fee; final capture follows approved minutes. Old authorizations created before the repair keep their original amounts until captured, cancelled, or expired.
+
 If Don reports two visits or payments at the same time, inspect the actual bookings before repairing either one:
 
 ```bash

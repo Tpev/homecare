@@ -2,13 +2,17 @@
 
 namespace Tests\Feature\Payments;
 
+use App\Livewire\Family\BookAgain;
 use App\Livewire\Family\CreateCareRequestWizard;
+use App\Livewire\Family\ManageCareRequest;
+use App\Livewire\Family\RegularCareShow;
 use App\Models\CareBooking;
 use App\Models\CareBookingEvent;
 use App\Models\CareBookingPayment;
 use App\Models\CareBookingPaymentOperation;
 use App\Models\CaregiverPayoutItem;
 use App\Models\CaregiverProfile;
+use App\Models\CarePlan;
 use App\Models\CarePricingAgreement;
 use App\Models\CareRequest;
 use App\Models\CareRequestApplication;
@@ -223,6 +227,119 @@ class DonLegacyPricingTest extends TestCase
         $this->assertSame('platform_pays_processing', data_get($earning->metadata, 'policy'));
         app(BookingPaymentV2Service::class)->finalizeFeesAndTransfers($payment->fresh());
         $this->assertSame(3325, (int) $payment->operations()->where('type', CareBookingPaymentOperation::TYPE_TRANSFER)->sum('amount_cents'));
+    }
+
+    public function test_book_again_estimate_and_invitation_use_the_current_pair_agreement(): void
+    {
+        [$source, $admin] = $this->scenario();
+        app(DonLegacyPricingService::class)->apply($source, $admin, $source->caregiver_user_id);
+        $source->update(['status' => CareBooking::STATUS_COMPLETED, 'family_confirmed_at' => now()]);
+        $before = $source->fresh()->getRawOriginal();
+
+        Livewire::actingAs($source->family)->test(BookAgain::class, ['careRequest' => $source->care_request_id])
+            ->set('durationMinutes', '60')
+            ->assertSee('$15.75')
+            ->assertSee('No additional processing fee.')
+            ->assertDontSee('$30/hour')
+            ->assertDontSee('$1/hour')
+            ->set('durationMinutes', '120')
+            ->assertSee('$31.50')
+            ->set('visitDate', now()->addWeek()->toDateString())
+            ->set('startTime', '10:00')
+            ->call('sendOneTimeInvite')
+            ->assertHasNoErrors();
+
+        $request = CareRequest::query()->latest('id')->firstOrFail();
+        $this->assertNotSame($source->care_request_id, $request->id);
+        $this->assertSame(15.75, (float) $request->budget_max);
+        $this->assertSame($source->caregiver_user_id, $request->invitations()->firstOrFail()->caregiver_user_id);
+        $this->assertSame($before, $source->fresh()->getRawOriginal());
+        $this->assertDatabaseCount('care_booking_payments', 0);
+    }
+
+    public function test_book_again_keeps_standard_estimates_for_other_caregivers_and_inactive_agreements(): void
+    {
+        [$source, $admin] = $this->scenario();
+        $agreement = app(DonLegacyPricingService::class)->apply($source, $admin, $source->caregiver_user_id)['agreement'];
+        $other = $this->visit($source->family, User::factory()->create(['role' => 'caregiver']));
+        foreach ([$source, $other] as $booking) {
+            $booking->update(['status' => CareBooking::STATUS_COMPLETED, 'family_confirmed_at' => now()]);
+        }
+
+        Livewire::actingAs($source->family)->test(BookAgain::class, ['careRequest' => $other->care_request_id])
+            ->set('durationMinutes', '120')->assertSee('$62.00')->assertDontSee('$31.50');
+        $agreement->update(['active' => false]);
+        Livewire::actingAs($source->family)->test(BookAgain::class, ['careRequest' => $source->care_request_id])
+            ->set('durationMinutes', '120')->assertSee('$62.00')->assertDontSee('$31.50');
+    }
+
+    public function test_visit_details_and_timesheet_show_saved_pricing_instead_of_application_rates(): void
+    {
+        [$booking, $admin] = $this->scenario();
+        $agreement = app(DonLegacyPricingService::class)->apply($booking, $admin, $booking->caregiver_user_id)['agreement'];
+        $booking->update(['status' => CareBooking::STATUS_COMPLETED, 'timesheet_submitted_at' => now()]);
+        // Existing visits retain their snapshot even if the agreement for new care changes.
+        $agreement->update(['family_care_rate_cents' => 2000]);
+        $before = $booking->fresh()->getRawOriginal();
+
+        Livewire::actingAs($booking->family)->test(ManageCareRequest::class, ['careRequest' => $booking->care_request_id])
+            ->call('setActiveTab', 'overview')
+            ->assertSee('Care rate: $15.75/hr')
+            ->assertSee('No additional processing fee.')
+            ->assertDontSee('Care rate: $30.00')
+            ->call('setActiveTab', 'shift')
+            ->assertSee('$34.91')
+            ->call('reviewCompletion')
+            ->assertSee('Care · $15.75/hour')
+            ->assertSee('Approve hours and pay $34.91')
+            ->assertDontSee('Care · $30.00/hour')
+            ->assertDontSee(' + processing fee');
+        $this->assertSame($before, $booking->fresh()->getRawOriginal());
+        $this->assertDatabaseCount('care_booking_payments', 0);
+    }
+
+    public function test_active_plan_displays_pair_agreement_without_rewriting_historical_plan_terms(): void
+    {
+        [$source, $admin] = $this->scenario();
+        app(DonLegacyPricingService::class)->apply($source, $admin, $source->caregiver_user_id);
+        $plan = CarePlan::query()->create([
+            'family_user_id' => $source->family_user_id, 'caregiver_user_id' => $source->caregiver_user_id,
+            'source_care_request_id' => $source->care_request_id, 'source_care_booking_id' => $source->id,
+            'status' => CarePlan::STATUS_ACTIVE, 'title' => 'Existing regular care', 'hourly_rate' => 30,
+            'starts_on' => now()->toDateString(), 'timezone' => 'America/New_York',
+            'schedule_days' => [2, 4], 'schedule_start_time' => '10:00', 'schedule_end_time' => '12:00',
+        ]);
+        $before = $plan->fresh()->getRawOriginal();
+        Livewire::actingAs($source->family)->test(RegularCareShow::class, ['carePlan' => $plan->id])
+            ->call('setActiveTab', 'caregivers')
+            ->assertSee('$15.75/hour agreed rate')
+            ->assertDontSee('$30.00/hour agreed rate');
+        $this->assertSame($before, $plan->fresh()->getRawOriginal());
+
+        $plan->update(['status' => CarePlan::STATUS_ENDED]);
+        Livewire::actingAs($source->family)->test(RegularCareShow::class, ['carePlan' => $plan->id])
+            ->call('setActiveTab', 'caregivers')->assertSee('$30.00/hour');
+        $plan->update(['status' => CarePlan::STATUS_ACTIVE, 'hourly_rate' => 24.75,
+            'caregiver_user_id' => User::factory()->create(['role' => 'caregiver'])->id]);
+        Livewire::actingAs($source->family)->test(RegularCareShow::class, ['carePlan' => $plan->id])
+            ->call('setActiveTab', 'caregivers')->assertSee('$24.75/hour agreed rate');
+    }
+
+    public function test_new_two_hour_visit_authorizes_buffer_and_captures_only_agreed_total(): void
+    {
+        [$source, $admin] = $this->scenario();
+        app(DonLegacyPricingService::class)->apply($source, $admin, $source->caregiver_user_id);
+        $booking = $this->visit($source->family, $source->caregiver);
+        $booking->update(['expected_minutes' => 120, 'worked_minutes' => 120,
+            'scheduled_end_at' => $booking->scheduled_start_at->copy()->addHours(2),
+            'completed_at' => $booking->started_at->copy()->addHours(2), 'status' => CareBooking::STATUS_SCHEDULED]);
+        $payments = app(BookingPaymentService::class);
+        $payment = $payments->authorizeForBooking($booking->fresh(), notify: false);
+        $this->assertSame(3780, (int) $payment->amount_authorized_cents);
+        $booking->update(['status' => CareBooking::STATUS_COMPLETED, 'family_confirmed_at' => now()]);
+        $payment = $payments->captureForBooking($booking->fresh(), notify: false);
+        $this->assertSame(3150, (int) $payment->amount_captured_cents);
+        $this->assertSame(3000, (int) $payment->caregiver_amount_cents);
     }
 
     public function test_new_visits_match_the_family_and_caregiver_pair_and_keep_their_snapshot(): void

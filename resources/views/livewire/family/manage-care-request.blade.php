@@ -105,6 +105,7 @@
             ? round(($workedMinutes / 60) * $shiftRate, 2)
             : 0;
         $usesPricingV2 = $booking && $pricing->usesCurrentPricing($booking);
+        $shiftRate = $usesPricingV2 ? $pricing->quoteForCurrentBooking($booking, 60)['hourly_rate'] : $shiftRate;
         $shiftQuote = $usesPricingV2 && $workedMinutes > 0
             ? $pricing->quoteForCurrentBooking($booking, $workedMinutes)
             : null;
@@ -508,13 +509,26 @@
                         $requestItem->family,
                         (float) ($hiredApplication->proposed_rate ?: $selectedCaregiverProfile?->resolvePlatformHourlyRate() ?: config('marketplace.family_estimate_hourly_rate', 30.00))
                     );
+                    $selectedCaregiverQuote = $usesPricingV2
+                        ? $pricing->quoteForCurrentBooking($booking, 60)
+                        : (! $booking && $pricing->currentPricingEnabled()
+                            ? $pricing->quoteForPair((int) $requestItem->family_account_id, (int) $hiredApplication->caregiver_user_id, 60)
+                            : null);
+                    $selectedCaregiverRate = $selectedCaregiverQuote['hourly_rate'] ?? $selectedCaregiverRate;
+                    $selectedProcessingFeeRate = ($selectedCaregiverQuote['family_processing_fee_rate_cents']
+                        ?? $pricing->familyProcessingFeeHourlyCents()) / 100;
                 @endphp
                 <div class="rounded-lg border border-green-200 bg-green-50 p-4">
                     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
                             <p class="font-display text-lg font-semibold text-[#23483F]">{{ $hiredApplication->caregiver->name }}</p>
                             <p class="text-sm text-[#485E53]">
-                                Care rate: ${{ number_format($selectedCaregiverRate, 2) }}/hr* · processing fee ${{ number_format($pricing->familyProcessingFeeHourlyCents() / 100, 2) }}/hr
+                                Care rate: ${{ number_format($selectedCaregiverRate, 2) }}/hr
+                                @if ($selectedProcessingFeeRate > 0)
+                                    · processing fee ${{ number_format($selectedProcessingFeeRate, 2) }}/hr
+                                @else
+                                    · No additional processing fee.
+                                @endif
                             </p>
                             @if ($selectedCaregiverProfile)
                                 <p class="mt-1 text-sm text-[#485E53]">
@@ -886,7 +900,7 @@
                                     <div>
                                         <p class="text-xs uppercase tracking-[0.12em] text-[#485E53]">Estimated visit total</p>
                                         <p class="mt-1 text-base font-semibold text-[#23483F]">${{ number_format($estimatedPaymentTotal, 2) }}</p>
-                                        <p class="text-xs text-[#485E53]">{{ '$'.number_format($shiftRate, 2) }}/hr care{{ $usesPricingV2 ? ' + processing fee' : '' }}</p>
+                                        <p class="text-xs text-[#485E53]">{{ '$'.number_format($shiftRate, 2) }}/hr care{{ $usesPricingV2 ? ($processingFeeAmount > 0 ? ' + processing fee' : ' · No additional processing fee.') : '' }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs uppercase tracking-[0.12em] text-[#485E53]">Timesheet</p>
