@@ -179,6 +179,30 @@ class LeadWelcomeEmailTest extends TestCase
         $this->assertNull($lead->fresh()->do_not_contact_at);
     }
 
+    public function test_admin_can_send_a_test_to_a_custom_recipient_without_creating_lead_activity(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        Livewire::actingAs($admin)->test(WelcomeEmailPanel::class)
+            ->assertSet('testRecipient', $admin->email)
+            ->set('testRecipient', ' review@example.test ')->call('sendTest')->assertHasNoErrors()
+            ->assertSee('Test email sent to review@example.test.');
+        Mail::assertSent(FamilyLeadWelcomeMail::class, fn ($mail) => $mail->hasTo('review@example.test')
+            && ! $mail->hasTo($admin->email) && str_starts_with($mail->emailSubject, '[Test] ')
+            && $mail->startUrl === route('register'));
+        Mail::assertSentCount(1);
+        Queue::assertNothingPushed();
+        $this->assertDatabaseCount('lead_welcome_emails', 0);
+    }
+
+    public function test_test_send_requires_one_valid_recipient(): void
+    {
+        $panel = Livewire::actingAs(User::factory()->create(['role' => 'admin']))->test(WelcomeEmailPanel::class);
+        foreach (['', 'invalid', 'one@example.test,two@example.test', "one@example.test\r\nBcc: two@example.test"] as $recipient) {
+            $panel->set('testRecipient', $recipient)->call('sendTest')->assertHasErrors('testRecipient');
+        }
+        Mail::assertNothingSent();
+    }
+
     public function test_settings_preview_filters_and_permissions(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

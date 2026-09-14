@@ -32,10 +32,15 @@ class WelcomeEmailPanel extends Component
 
     public string $feedback = '';
 
+    public bool $showTestForm = false;
+
+    public string $testRecipient = '';
+
     public function mount(): void
     {
         $this->authorizeAdmin();
         $this->loadSettings();
+        $this->testRecipient = (string) auth()->user()->email;
     }
 
     private function authorizeAdmin(): void
@@ -86,13 +91,20 @@ class WelcomeEmailPanel extends Component
     public function sendTest(): void
     {
         $this->authorizeAdmin();
+        $this->showTestForm = true;
+        $this->feedback = '';
+        $this->resetValidation('test');
+        $this->testRecipient = trim($this->testRecipient);
+        $this->validate([
+            'testRecipient' => ['required', 'email', 'max:255', 'not_regex:/[\r\n]/'],
+        ], [], ['testRecipient' => 'test recipient']);
         $this->validatedContent();
         $service = app(LeadWelcomeService::class);
         try {
-            Mail::mailer($service->mailer())->to(auth()->user()->email)->send($this->previewMail(true));
+            Mail::mailer($service->mailer())->to($this->testRecipient)->send($this->previewMail(true));
             $this->feedback = $service->capturesMail()
-                ? 'Test captured locally.'
-                : 'Test email sent to '.auth()->user()->email.'.';
+                ? 'Test for '.$this->testRecipient.' captured locally.'
+                : 'Test email sent to '.$this->testRecipient.'.';
         } catch (\Throwable $exception) {
             report($exception);
             $this->addError('test', 'The test could not be sent. Check your mail configuration.');

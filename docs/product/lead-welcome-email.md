@@ -4,7 +4,7 @@ New Facebook family leads get one invitation to create a free account and post a
 
 ## Controls and local review
 
-The feature defaults to paused. Edit the subject, body, reply address, and automatic sending switch in the welcome panel. Saving applies to future leads only. Preview and test use the same Blade email as the queued send. Test emails go to the signed-in administrator.
+The feature defaults to paused. Edit the subject, body, reply address, and automatic sending switch in the welcome panel. Saving applies to future leads only. Preview and test use the same Blade email as the queued send. Select **Send test**, edit the recipient (prefilled with the signed-in administrator's email), then select **Send**. Test recipients do not change the saved reply address or automatic lead delivery.
 
 In `APP_ENV=local`, this feature always uses the log mailer. Captures have status `previewed`; they never count as sent. Other log/array mail configurations are also treated as captures. Preview links are inert; a test email links to ordinary registration without attributing a sample signup to a real lead.
 

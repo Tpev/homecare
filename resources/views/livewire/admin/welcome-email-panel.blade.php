@@ -5,7 +5,7 @@
             <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $savedEnabled ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-100 text-stone-600' }}">{{ $savedEnabled ? 'On' : 'Paused' }}</span>
         </div>
         <div class="flex items-center gap-2">
-            <button type="button" wire:click="sendTest" wire:loading.attr="disabled" class="rounded-lg px-3 py-2 text-sm font-semibold text-[#23483F] hover:bg-stone-50">Send test</button>
+            <button type="button" wire:click="$toggle('showTestForm')" aria-expanded="{{ $showTestForm ? 'true' : 'false' }}" aria-controls="welcome-test-form" class="rounded-lg px-3 py-2 text-sm font-semibold text-[#23483F] hover:bg-stone-50">Send test</button>
             @unless($editing)<button type="button" wire:click="$set('editing', true)" class="rounded-lg border border-stone-200 px-3 py-2 text-sm font-semibold text-[#23483F] hover:bg-stone-50">Edit</button>@endunless
         </div>
     </header>
@@ -14,6 +14,16 @@
         <span>New Facebook leads · Immediately</span>
         @if($localCapture)<span class="font-medium text-amber-800">Local preview · No delivery</span>@endif
     </div>
+    @if($showTestForm)
+        <form id="welcome-test-form" wire:submit="sendTest" class="mx-5 mb-4">
+            <label for="welcome-test-recipient" class="mb-1.5 block text-xs font-semibold text-slate-600">Send test to</label>
+            <div class="flex flex-wrap gap-2">
+                <input id="welcome-test-recipient" type="email" wire:model="testRecipient" required maxlength="255" autocomplete="email" @error('testRecipient') aria-invalid="true" aria-describedby="welcome-test-recipient-error" @enderror class="min-w-0 flex-1 rounded-lg border-stone-300 text-sm">
+                <button type="submit" wire:loading.attr="disabled" class="rounded-lg bg-[#23483F] px-4 py-2 text-sm font-semibold text-white">Send</button>
+            </div>
+            @error('testRecipient')<p id="welcome-test-recipient-error" role="alert" class="mt-1.5 text-xs text-rose-700">{{ $message }}</p>@enderror
+        </form>
+    @endif
     @if($feedback)<p role="status" class="mx-5 mb-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900">{{ $feedback }}</p>@endif
     @error('test')<p role="alert" class="mx-5 mb-4 text-sm text-rose-700">{{ $message }}</p>@enderror
 
