@@ -17,6 +17,7 @@ use App\Support\MarketplaceEvent;
 use Carbon\Carbon;
 use DateTimeZone;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -66,6 +67,39 @@ class CareBookingTimeCorrectionService
             ->where('care_booking_id', $booking->id)
             ->latest('version')
             ->first();
+    }
+
+    public function overlappingVisits(CareBooking $booking, Carbon $startedAt, Carbon $completedAt): Builder
+    {
+        return CareBooking::query()
+            ->where('caregiver_user_id', $booking->caregiver_user_id)
+            ->whereKeyNot($booking->id)
+            ->where('status', '!=', CareBooking::STATUS_CANCELLED)
+            // A scheduled slot alone is not evidence that care was provided.
+            ->where(function (Builder $activity): void {
+                $activity->where('status', '!=', CareBooking::STATUS_SCHEDULED)
+                    ->orWhereNotNull('started_at')
+                    ->orWhereNotNull('completed_at')
+                    ->orWhereNotNull('paused_at')
+                    ->orWhere('total_paused_seconds', '>', 0)
+                    ->orWhereNotNull('timesheet_submitted_at')
+                    ->orWhere('worked_minutes', '>', 0)
+                    ->orWhereHas('timeCorrections', fn (Builder $corrections) => $corrections->active());
+            })
+            ->where(function (Builder $query) use ($startedAt, $completedAt): void {
+                $query->where(function (Builder $recorded) use ($startedAt, $completedAt): void {
+                    $recorded->whereNotNull('started_at')
+                        ->whereNotNull('completed_at')
+                        ->where('started_at', '<', $completedAt)
+                        ->where('completed_at', '>', $startedAt);
+                })->orWhere(function (Builder $scheduled) use ($startedAt, $completedAt): void {
+                    $scheduled->where(function (Builder $missingRecorded): void {
+                        $missingRecorded->whereNull('started_at')->orWhereNull('completed_at');
+                    })
+                        ->where('scheduled_start_at', '<', $completedAt)
+                        ->where('scheduled_end_at', '>', $startedAt);
+                });
+            });
     }
 
     /** @return array<string, mixed> */
@@ -790,32 +824,9 @@ class CareBookingTimeCorrectionService
             }
         }
 
-        $overlap = CareBooking::query()
-            ->where('caregiver_user_id', $booking->caregiver_user_id)
-            ->whereKeyNot($booking->id)
-            ->where('status', '!=', CareBooking::STATUS_CANCELLED)
-            ->where(function ($query) use ($startedAt, $completedAt): void {
-                $query
-                    ->where(function ($recorded) use ($startedAt, $completedAt): void {
-                        $recorded
-                            ->whereNotNull('started_at')
-                            ->whereNotNull('completed_at')
-                            ->where('started_at', '<', $completedAt)
-                            ->where('completed_at', '>', $startedAt);
-                    })
-                    ->orWhere(function ($scheduled) use ($startedAt, $completedAt): void {
-                        $scheduled
-                            ->where(function ($missingRecorded): void {
-                                $missingRecorded->whereNull('started_at')->orWhereNull('completed_at');
-                            })
-                            ->where('scheduled_start_at', '<', $completedAt)
-                            ->where('scheduled_end_at', '>', $startedAt);
-                    });
-            })
-            ->exists();
-        if ($overlap) {
+        if ($this->overlappingVisits($booking, $startedAt, $completedAt)->exists()) {
             throw ValidationException::withMessages([
-                'timeCorrectionStartedAt' => 'These hours overlap another scheduled visit. Contact LoLo Care if both records need correction.',
+                'timeCorrectionStartedAt' => 'These hours overlap care recorded or reported for another visit. Contact LoLo Care if both records need correction.',
             ]);
         }
     }

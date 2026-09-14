@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class CareBookingTimeCorrectionTest extends TestCase
@@ -537,34 +538,120 @@ class CareBookingTimeCorrectionTest extends TestCase
             }
         }
 
-        $otherRequest = CareRequest::query()->create([
-            'family_user_id' => $family->id,
-            'title' => 'Overlapping visit',
-            'status' => CareRequest::STATUS_FILLED,
-            'request_type' => CareRequest::TYPE_ONE_TIME,
-            'requested_start_at' => $booking->scheduled_start_at->copy()->addHour(),
-            'requested_end_at' => $booking->scheduled_end_at->copy()->addHour(),
-            'address_line1' => '456 Overlap Street',
-            'city' => 'Durham', 'state' => 'NC', 'zip' => '27703',
-        ]);
-        $otherApplication = CareRequestApplication::query()->create([
-            'care_request_id' => $otherRequest->id,
-            'caregiver_user_id' => $caregiver->id,
-            'status' => CareRequestApplication::STATUS_HIRED,
-            'proposed_rate' => 30,
-        ]);
-        CareBooking::query()->create([
-            'care_request_id' => $otherRequest->id,
-            'care_request_application_id' => $otherApplication->id,
-            'family_user_id' => $family->id,
-            'caregiver_user_id' => $caregiver->id,
-            'status' => CareBooking::STATUS_SCHEDULED,
-            'scheduled_start_at' => $otherRequest->requested_start_at,
-            'scheduled_end_at' => $otherRequest->requested_end_at,
+        $this->otherVisit($booking, [
+            'status' => CareBooking::STATUS_COMPLETED,
+            'started_at' => $booking->scheduled_start_at->copy()->addHour(),
+            'completed_at' => $booking->scheduled_end_at->copy()->addHour(),
         ]);
 
         $this->expectException(ValidationException::class);
         $service->preview($booking, $this->input($booking));
+    }
+
+    public function test_unworked_scheduled_visit_does_not_block_actual_time_correction_or_get_changed(): void
+    {
+        $this->travelTo(Carbon::parse('2026-09-15 09:00:00', 'America/New_York'));
+        [$family, $caregiver, $booking] = $this->scenario();
+        $booking->forceFill([
+            'status' => CareBooking::STATUS_COMPLETED,
+            'scheduled_start_at' => now()->subDay()->setTime(11, 45),
+            'scheduled_end_at' => now()->subDay()->setTime(15, 45),
+            'started_at' => now()->subDay()->setTime(12, 16, 57),
+            'completed_at' => now()->subDay()->setTime(17, 18, 51),
+            'worked_minutes' => 301,
+            'timesheet_submitted_at' => now()->subDay()->setTime(17, 18, 51),
+        ])->save();
+        $other = $this->otherVisit($booking, [
+            'scheduled_start_at' => now()->subDay()->setTime(14, 0),
+            'scheduled_end_at' => now()->subDay()->setTime(16, 0),
+        ]);
+        $otherBefore = $other->fresh()->getAttributes();
+        $input = array_merge($this->input($booking), [
+            'started_at' => '2026-09-14T11:46',
+            'completed_at' => '2026-09-14T17:18',
+        ]);
+        $service = app(CareBookingTimeCorrectionService::class);
+
+        $correction = $service->submit($booking, $caregiver, $input, (string) Str::uuid());
+
+        $this->assertSame(CareBookingTimeCorrection::STATUS_PENDING_FAMILY, $correction->status);
+        $this->assertSame(332, $correction->proposed_worked_minutes);
+        $this->assertSame(301, $booking->fresh()->worked_minutes);
+        $this->assertDatabaseMissing('care_booking_payments', ['care_booking_id' => $booking->id]);
+
+        $applied = $service->approve($correction, $family);
+
+        $this->assertSame(CareBookingTimeCorrection::STATUS_APPLIED, $applied->status);
+        $this->assertSame(332, $booking->fresh()->worked_minutes);
+        $this->assertSame($otherBefore, $other->fresh()->getAttributes());
+        $this->assertDatabaseMissing('care_booking_payments', ['care_booking_id' => $other->id]);
+        $this->assertDatabaseMissing('care_booking_time_corrections', ['care_booking_id' => $other->id]);
+    }
+
+    #[DataProvider('overlappingCareActivity')]
+    public function test_other_visits_with_care_activity_still_block_corrections(string $status, ?string $field): void
+    {
+        [, $caregiver, $booking] = $this->scenario();
+        $activity = ['status' => $status];
+        if ($field) {
+            $activity[$field] = in_array($field, ['worked_minutes', 'total_paused_seconds'], true)
+                ? 60
+                : $booking->scheduled_start_at->copy()->addHour();
+        }
+        $this->otherVisit($booking, $activity);
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('These hours overlap care recorded or reported for another visit.');
+        $this->submit($booking, $caregiver);
+    }
+
+    public static function overlappingCareActivity(): array
+    {
+        return [
+            'in progress' => [CareBooking::STATUS_IN_PROGRESS, null],
+            'paused' => [CareBooking::STATUS_PAUSED, null],
+            'completed without timestamps' => [CareBooking::STATUS_COMPLETED, null],
+            'reviewed without timestamps' => [CareBooking::STATUS_REVIEWED, null],
+            'disputed' => [CareBooking::STATUS_DISPUTED, null],
+            'start only' => [CareBooking::STATUS_SCHEDULED, 'started_at'],
+            'end only' => [CareBooking::STATUS_SCHEDULED, 'completed_at'],
+            'pause timestamp' => [CareBooking::STATUS_SCHEDULED, 'paused_at'],
+            'pause duration' => [CareBooking::STATUS_SCHEDULED, 'total_paused_seconds'],
+            'submitted timesheet' => [CareBooking::STATUS_SCHEDULED, 'timesheet_submitted_at'],
+            'worked minutes' => [CareBooking::STATUS_SCHEDULED, 'worked_minutes'],
+        ];
+    }
+
+    public function test_active_manual_hours_still_block_until_withdrawn(): void
+    {
+        [, $caregiver, $booking] = $this->scenario();
+        $other = $this->otherVisit($booking);
+        $service = app(CareBookingTimeCorrectionService::class);
+        $reported = $this->submit($other, $caregiver);
+
+        try {
+            $this->submit($booking, $caregiver);
+            $this->fail('Expected conflicting reported care hours to block submission.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('timeCorrectionStartedAt', $exception->errors());
+            $this->assertDatabaseCount('care_booking_time_corrections', 1);
+        }
+
+        $service->withdraw($reported, $caregiver);
+
+        $this->assertSame(CareBookingTimeCorrection::STATUS_PENDING_FAMILY, $this->submit($booking, $caregiver)->status);
+    }
+
+    public function test_scheduled_overlap_does_not_override_nonoverlapping_recorded_hours(): void
+    {
+        [, $caregiver, $booking] = $this->scenario();
+        $this->otherVisit($booking, [
+            'status' => CareBooking::STATUS_COMPLETED,
+            'started_at' => $booking->scheduled_start_at->copy()->subHour(),
+            'completed_at' => $booking->scheduled_start_at,
+        ]);
+
+        $this->assertSame(CareBookingTimeCorrection::STATUS_PENDING_FAMILY, $this->submit($booking, $caregiver)->status);
     }
 
     public function test_admin_can_finish_a_family_approved_settled_correction_with_linked_audit(): void
@@ -854,6 +941,37 @@ class CareBookingTimeCorrectionTest extends TestCase
         ]);
 
         return [$family, $caregiver, $booking, $request];
+    }
+
+    private function otherVisit(CareBooking $booking, array $attributes = []): CareBooking
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $request = CareRequest::query()->create([
+            'family_user_id' => $family->id,
+            'title' => 'Other family visit',
+            'status' => CareRequest::STATUS_FILLED,
+            'request_type' => CareRequest::TYPE_ONE_TIME,
+            'requested_start_at' => $attributes['scheduled_start_at'] ?? $booking->scheduled_start_at->copy()->addHour(),
+            'requested_end_at' => $attributes['scheduled_end_at'] ?? $booking->scheduled_end_at->copy()->addHour(),
+            'address_line1' => '456 Overlap Street',
+            'city' => 'Durham', 'state' => 'NC', 'zip' => '27703',
+        ]);
+        $application = CareRequestApplication::query()->create([
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $booking->caregiver_user_id,
+            'status' => CareRequestApplication::STATUS_HIRED,
+            'proposed_rate' => 30,
+        ]);
+
+        return CareBooking::query()->create(array_merge([
+            'care_request_id' => $request->id,
+            'care_request_application_id' => $application->id,
+            'family_user_id' => $family->id,
+            'caregiver_user_id' => $booking->caregiver_user_id,
+            'status' => CareBooking::STATUS_SCHEDULED,
+            'scheduled_start_at' => $request->requested_start_at,
+            'scheduled_end_at' => $request->requested_end_at,
+        ], $attributes));
     }
 
     /** @return array<string, mixed> */

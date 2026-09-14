@@ -21,6 +21,7 @@ if (! defined('LARAVEL_START')) {
 
     $timezone = 'America/New_York';
     $appTimezone = (string) config('app.timezone', 'America/New_York');
+    $service = app(\App\Services\Booking\CareBookingTimeCorrectionService::class);
     // Match CareBookingTimeCorrectionService::parseLocalDate, including its seconds handling.
     $parse = fn (string $value) => \Carbon\Carbon::createFromFormat('Y-m-d\TH:i', $value, $timezone)->setTimezone($appTimezone);
     $start = $parse('2026-09-14T11:46');
@@ -44,7 +45,7 @@ if (! defined('LARAVEL_START')) {
             'recorded_local' => [$format($booking->started_at), $format($booking->completed_at)],
             'raw_database_times' => collect(['scheduled_start_at', 'scheduled_end_at', 'started_at', 'completed_at'])
                 ->mapWithKeys(fn ($field) => [$field => $booking->getRawOriginal($field)])->all(),
-            'overlap_check_uses' => $recorded ? 'recorded times' : 'scheduled times (at least one recorded time is missing)',
+            'available_time_range' => $recorded ? 'recorded times' : 'scheduled times (only checked when there is care activity)',
             'worked_minutes' => $booking->worked_minutes,
             'total_paused_seconds' => $booking->total_paused_seconds,
         ];
@@ -60,20 +61,10 @@ if (! defined('LARAVEL_START')) {
         }
     })->orderBy('scheduled_start_at')->get();
 
-    $results = $visits->map(function ($visit) use ($base, $describe, $start, $end): array {
-        // Same predicate as validateTimeRange; no date/family restriction on conflicting visits.
-        $conflicts = $base()->with('family:id,name')
-            ->whereKeyNot($visit->id)
-            ->where('status', '!=', \App\Models\CareBooking::STATUS_CANCELLED)
-            ->where(function ($query) use ($start, $end): void {
-                $query->where(function ($recorded) use ($start, $end): void {
-                    $recorded->whereNotNull('started_at')->whereNotNull('completed_at')
-                        ->where('started_at', '<', $end)->where('completed_at', '>', $start);
-                })->orWhere(function ($scheduled) use ($start, $end): void {
-                    $scheduled->where(fn ($q) => $q->whereNull('started_at')->orWhereNull('completed_at'))
-                        ->where('scheduled_start_at', '<', $end)->where('scheduled_end_at', '>', $start);
-                });
-            })->orderBy('scheduled_start_at')->get();
+    $results = $visits->map(function ($visit) use ($service, $describe, $start, $end): array {
+        // Use the application's query so this audit stays aligned with the correction form.
+        $conflicts = $service->overlappingVisits($visit, $start, $end)
+            ->with('family:id,name')->orderBy('scheduled_start_at')->get();
 
         return [
             'if_editing_this_visit' => $describe($visit),
