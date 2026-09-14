@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Family;
 
+use App\Models\CarePricingAgreement;
 use App\Models\CareRecipientProfile;
 use App\Models\CareRequest;
 use App\Models\CareTask;
@@ -12,6 +13,7 @@ use App\Services\CareRecipientProfiles\CareRecipientProfileService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Support\FamilyQuickRequestDraft;
 use App\Support\FunnelTracker;
+use App\Support\MarketplacePricing;
 use App\Support\WeeklySchedule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -302,12 +304,34 @@ class CreateCareRequestWizard extends Component
 
     public function getEstimateHourlyRateProperty(): float
     {
-        return round(app(\App\Support\MarketplacePricing::class)->familyCareHourlyCents() / 100, 2);
+        return ($this->estimateAgreement?->family_care_rate_cents
+            ?? app(MarketplacePricing::class)->familyCareHourlyCents()) / 100;
     }
 
     public function getProcessingFeeHourlyRateProperty(): float
     {
-        return round(app(\App\Support\MarketplacePricing::class)->familyProcessingFeeHourlyCents() / 100, 2);
+        return ($this->estimateAgreement?->family_processing_fee_rate_cents
+            ?? app(MarketplacePricing::class)->familyProcessingFeeHourlyCents()) / 100;
+    }
+
+    public function getEstimateAgreementProperty(): ?CarePricingAgreement
+    {
+        $account = app(FamilyAccountContext::class)->account(auth()->user());
+        $agreements = CarePricingAgreement::query()
+            ->where('family_account_id', $account->id)
+            ->where('active', true)
+            ->with('caregiver:id,name')
+            ->limit(2)->get();
+
+        // No caregiver has been selected yet, so name a rate only when it is unambiguous.
+        return $agreements->count() === 1 ? $agreements->first() : null;
+    }
+
+    public function getStandardHourlyTotalProperty(): float
+    {
+        $pricing = app(MarketplacePricing::class);
+
+        return ($pricing->familyCareHourlyCents() + $pricing->familyProcessingFeeHourlyCents()) / 100;
     }
 
     public function getEstimatedHoursProperty(): ?float
@@ -340,7 +364,9 @@ class CreateCareRequestWizard extends Component
             return null;
         }
 
-        return round($this->estimatedHours * $this->estimateHourlyRate, 2);
+        return $this->estimateAgreement
+            ? $this->agreementEstimateAmount($this->estimateAgreement->family_care_rate_cents)
+            : round($this->estimatedHours * $this->estimateHourlyRate, 2);
     }
 
     public function getEstimatedProcessingFeeProperty(): ?float
@@ -349,7 +375,24 @@ class CreateCareRequestWizard extends Component
             return null;
         }
 
-        return round($this->estimatedHours * $this->processingFeeHourlyRate, 2);
+        return $this->estimateAgreement
+            ? $this->agreementEstimateAmount($this->estimateAgreement->family_processing_fee_rate_cents)
+            : round($this->estimatedHours * $this->processingFeeHourlyRate, 2);
+    }
+
+    private function agreementEstimateAmount(int $hourlyCents): float
+    {
+        $pricing = app(MarketplacePricing::class);
+        if ($this->request_type === CareRequest::TYPE_RECURRING) {
+            // Each visit is billed separately, including rounding to the nearest cent.
+            return collect($this->normalizedRecurringSchedule())->sum(
+                fn (array $slot): int => $pricing->prorateHourlyCents($hourlyCents, WeeklySchedule::durationMinutes($slot))
+            ) / 100;
+        }
+
+        [$start, $end] = $this->oneTimeScheduleRange();
+
+        return $pricing->prorateHourlyCents($hourlyCents, (int) $start->diffInMinutes($end)) / 100;
     }
 
     public function getEstimatedTotalProperty(): ?float

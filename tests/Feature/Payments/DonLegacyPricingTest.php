@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Payments;
 
+use App\Livewire\Family\CreateCareRequestWizard;
 use App\Models\CareBooking;
 use App\Models\CareBookingEvent;
 use App\Models\CareBookingPayment;
@@ -16,10 +17,14 @@ use App\Services\Booking\BookingCorrectionService;
 use App\Services\Payments\BookingPaymentService;
 use App\Services\Payments\BookingPaymentV2Service;
 use App\Services\Payments\DonLegacyPricingService;
+use App\Services\Payments\StripeClient;
 use App\Support\MarketplacePricing;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
+use Livewire\Livewire;
+use Mockery;
 use Tests\TestCase;
 
 class DonLegacyPricingTest extends TestCase
@@ -46,6 +51,140 @@ class DonLegacyPricingTest extends TestCase
         $this->assertDatabaseCount('care_booking_events', 0);
         $this->assertDatabaseCount('care_booking_payments', 0);
         $this->assertSame(3000, $booking->fresh()->family_care_rate_cents);
+    }
+
+    public function test_audit_includes_overlapping_visits_below_the_cutoff_and_reads_payment_states_without_writes(): void
+    {
+        [$earlier, $admin] = $this->scenario();
+        $source = $this->visit($earlier->family, $earlier->caregiver);
+        $later = $this->visit($source->family, $source->caregiver);
+        $start = now()->addDay()->setTime(10, 0);
+        foreach ([$earlier, $later] as $booking) {
+            $booking->update(['scheduled_start_at' => $start, 'scheduled_end_at' => $start->copy()->addHours(2), 'status' => CareBooking::STATUS_SCHEDULED]);
+        }
+        $otherFamily = $this->visit(User::factory()->create(['role' => 'family']), $source->caregiver);
+        $otherFamily->update(['scheduled_start_at' => $start, 'scheduled_end_at' => $start->copy()->addHours(2)]);
+        $repair = app(DonLegacyPricingService::class);
+        $repair->apply($source, $admin, $source->caregiver_user_id);
+        CareBookingPayment::query()->create([
+            'care_booking_id' => $earlier->id, 'family_user_id' => $source->family_user_id,
+            'caregiver_user_id' => $source->caregiver_user_id, 'status' => CareBookingPayment::STATUS_AUTHORIZED,
+            'currency' => 'usd', 'amount_authorized_cents' => 6200, 'amount_captured_cents' => 0,
+            'amount_refunded_cents' => 0, 'stripe_payment_intent_id' => 'pi_earlier_hold',
+        ]);
+        CareBookingPayment::query()->create([
+            'care_booking_id' => $later->id, 'family_user_id' => $source->family_user_id,
+            'caregiver_user_id' => $source->caregiver_user_id, 'status' => CareBookingPayment::STATUS_CAPTURED,
+            'currency' => 'usd', 'amount_authorized_cents' => 3150, 'amount_captured_cents' => 3150,
+            'amount_refunded_cents' => 0, 'stripe_payment_intent_id' => 'pi_later_charge',
+        ]);
+        app()->instance(StripeClient::class, Mockery::mock(StripeClient::class));
+        $writes = [];
+        DB::listen(function ($query) use (&$writes): void {
+            if (preg_match('/^\s*(insert|update|delete|replace|create|alter|drop|truncate)\b/i', $query->sql)) {
+                $writes[] = $query->sql;
+            }
+        });
+        $name = $source->caregiver->name.' (#'.$source->caregiver_user_id.')';
+
+        $this->artisan('homecare:audit-don-visits', [
+            '--booking' => $source->id, '--from' => $start->toDateString(), '--to' => $start->toDateString(),
+        ])->expectsTable(['Booking', 'Start', 'End', 'Caregiver', 'Request', 'Plan', 'Visit status', 'Family/hr', 'Agreement', 'Possible overlaps'], [
+            [$earlier->id, $start->format('Y-m-d H:i'), '12:00', $name, $earlier->care_request_id, '-', 'scheduled', '31.00', '-', (string) $later->id],
+            [$later->id, $start->format('Y-m-d H:i'), '12:00', $name, $later->care_request_id, '-', 'scheduled', '15.75', 1, (string) $earlier->id],
+        ])->expectsTable(['Booking', 'Payment status', 'Currency', 'Authorized', 'Captured', 'Refunded', 'PaymentIntent'], [
+            [$earlier->id, 'authorized', 'USD', '62.00', '0.00', '0.00', 'pi_earlier_hold'],
+            [$later->id, 'captured', 'USD', '31.50', '31.50', '0.00', 'pi_later_charge'],
+        ])->assertSuccessful();
+        $this->assertSame([], $writes);
+    }
+
+    public function test_request_estimate_names_the_agreed_caregiver_and_updates_with_visit_duration(): void
+    {
+        [$source, $admin] = $this->scenario();
+        $source->caregiver->update(['name' => 'Madison Fragnito']);
+        app(DonLegacyPricingService::class)->apply($source, $admin, $source->caregiver_user_id);
+
+        Livewire::actingAs($source->family)->test(CreateCareRequestWizard::class)
+            ->set('requested_start_date', now()->addDay()->toDateString())
+            ->set('requested_start_time', '10:00')
+            ->set('requested_duration_minutes', '60')
+            ->assertSet('estimatedTotal', 15.75)
+            ->assertSet('estimatedProcessingFee', 0.0)
+            ->assertSee('Estimated one-time cost with Madison Fragnito')
+            ->assertSee('Your agreed rate with Madison Fragnito: $15.75/hour.')
+            ->assertSee('This estimate applies when you hire Madison Fragnito.')
+            ->assertSee('Standard rate for other caregivers: $31.00/hour')
+            ->assertSee('No additional processing fee.')
+            ->assertDontSee('A $1.00/hour processing fee is added')
+            ->set('requested_duration_minutes', '120')
+            ->assertSet('estimatedTotal', 31.5)
+            ->assertSee('$31.50');
+
+        $this->assertDatabaseCount('care_bookings', 1);
+        $this->assertDatabaseCount('care_booking_payments', 0);
+        $this->assertDatabaseCount('care_pricing_agreements', 1);
+    }
+
+    public function test_recurring_request_estimate_adds_separately_rounded_agreement_visits(): void
+    {
+        [$source, $admin] = $this->scenario();
+        $source->caregiver->update(['name' => 'Madison Fragnito']);
+        app(DonLegacyPricingService::class)->apply($source, $admin, $source->caregiver_user_id);
+
+        Livewire::actingAs($source->family)->test(CreateCareRequestWizard::class)
+            ->set('request_type', CareRequest::TYPE_RECURRING)
+            ->set('recurring_days', [2, 4])
+            ->set('recurring_schedule', [
+                '2' => ['start_time' => '10:00', 'duration_minutes' => '90', 'end_time' => ''],
+                '4' => ['start_time' => '11:00', 'duration_minutes' => '90', 'end_time' => ''],
+            ])
+            ->assertSet('estimatedHours', 3.0)
+            ->assertSet('estimatedTotal', 47.26)
+            ->assertSet('estimatedProcessingFee', 0.0)
+            ->assertSee('Estimated recurring care each week with Madison Fragnito')
+            ->assertSee('$47.26');
+    }
+
+    public function test_unrelated_and_inactive_agreements_do_not_change_request_estimates(): void
+    {
+        [$source, $admin] = $this->scenario();
+        $source->caregiver->update(['name' => 'Madison Fragnito']);
+        $result = app(DonLegacyPricingService::class)->apply($source, $admin, $source->caregiver_user_id);
+        $otherFamily = User::factory()->create(['role' => 'family']);
+
+        Livewire::actingAs($otherFamily)->test(CreateCareRequestWizard::class)
+            ->set('requested_start_date', now()->addDay()->toDateString())
+            ->set('requested_start_time', '10:00')
+            ->set('requested_duration_minutes', '60')
+            ->assertSet('estimatedTotal', 31.0)
+            ->assertSee('$31.00')
+            ->assertDontSee('Madison Fragnito')
+            ->assertDontSee('Your agreed rate');
+
+        $result['agreement']->update(['active' => false]);
+        Livewire::actingAs($source->family)->test(CreateCareRequestWizard::class)
+            ->set('requested_start_date', now()->addDay()->toDateString())
+            ->set('requested_start_time', '10:00')
+            ->set('requested_duration_minutes', '60')
+            ->assertSet('estimatedTotal', 31.0)
+            ->assertDontSee('Your agreed rate');
+    }
+
+    public function test_request_estimate_does_not_choose_between_multiple_agreed_caregivers(): void
+    {
+        [$source, $admin] = $this->scenario();
+        $result = app(DonLegacyPricingService::class)->apply($source, $admin, $source->caregiver_user_id);
+        $secondAgreement = $result['agreement']->replicate();
+        $secondAgreement->caregiver_user_id = User::factory()->create(['role' => 'caregiver'])->id;
+        $secondAgreement->save();
+
+        Livewire::actingAs($source->family)->test(CreateCareRequestWizard::class)
+            ->set('requested_start_date', now()->addDay()->toDateString())
+            ->set('requested_start_time', '10:00')
+            ->set('requested_duration_minutes', '60')
+            ->assertSet('estimatedTotal', 31.0)
+            ->assertDontSee('Your agreed rate');
     }
 
     public function test_repair_and_billing_honor_both_rates_and_lolo_pays_actual_processing_fees(): void

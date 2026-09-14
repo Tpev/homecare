@@ -3,12 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CarePricingAgreement extends Model
 {
     public const PLATFORM_PAYS_PROCESSING = 'platform_pays_processing';
 
     protected $guarded = ['id'];
+
+    public function caregiver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'caregiver_user_id');
+    }
 
     protected function casts(): array
     {

@@ -34,6 +34,20 @@ After registration, an unpaid booking for this pair at or above the source booki
 4. Reopen support ticket #52 and verify **133 minutes, $15.75/hour, $34.91 family charge, $33.25 caregiver payout**. Keep the verified visit times. Confirm actual payment status before applying the existing correction flow. If nothing has been captured, the target is a $34.91 capture, not a $33.81 refund. If money has since settled, reconcile it through the existing audited correction process with the right rates before notifying or resolving the ticket.
 5. Audit any in-scope historical booking IDs printed by the command for incorrect charges. Bookings below #159 are outside this repair. The repair deliberately does not rewrite settled history. Verify a newly generated future visit has family rate 1575 cents, processing fee rate 0, caregiver rate 1500 cents, and policy `platform_pays_processing`.
 
+## Request estimates and duplicate-visit reports
+
+The new-request form shows the sole active caregiver agreement for the signed-in family, explicitly naming that caregiver and stating that the estimate applies when they are hired. For Don, a one-hour request shows $15.75 with Madison and no additional processing fee. Other caregivers' standard hourly total remains visible. Families with no active agreement, or multiple caregiver agreements requiring a choice, retain the standard estimate. This display does not select a caregiver, create a booking, or change billing. Weekly agreement estimates sum the rounded amounts for each visit separately.
+
+If Don reports two visits or payments at the same time, inspect the actual bookings before repairing either one:
+
+```bash
+php artisan homecare:audit-don-visits --booking=159
+```
+
+This read-only report covers seven days ago through fourteen days ahead. To inspect a particular date, supply both `--from=2026-09-15 --to=2026-09-15`. It includes IDs below #159, all caregivers for the family, linked requests and recurring plans, possible overlaps for the same caregiver, saved rates, and payment authorization/capture/refund amounts. It makes no Stripe calls, database changes, or notifications. Recorded payment values must be reconciled with the processor if uncertain.
+
+The #159 cutoff did not cancel duplicate visits or reprice lower-ID future visits, and the pricing repair did not change existing authorization amounts. A displayed estimate, an authorization, and a captured charge are distinct evidence. Use the booking IDs, plan IDs, and payment states to identify any duplicate visit and its source before cancelling or refunding. Do not broaden the pricing cutoff or reprice both visits as a duplicate-booking remedy.
+
 ## Verification
 
 Run the focused agreement tests and payment/recurring regression suites against the isolated test database and Stripe bypass configured in `phpunit.xml`:

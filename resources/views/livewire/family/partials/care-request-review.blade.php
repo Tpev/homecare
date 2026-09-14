@@ -21,10 +21,14 @@
 
     <div class="hc-create-checkout-bar">
         <div class="hc-create-estimate">
-            <p>{{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated recurring care each week' : 'Estimated one-time cost' }}</p>
+            <p>{{ ($request_type === \App\Models\CareRequest::TYPE_RECURRING ? 'Estimated recurring care each week' : 'Estimated one-time cost').($this->estimateAgreement ? ' with '.$this->estimateAgreement->caregiver->name : '') }}</p>
+            @if ($this->estimateAgreement)
+                <p class="hc-create-estimate-note">Your agreed rate with {{ $this->estimateAgreement->caregiver->name }}: ${{ number_format($this->estimateHourlyRate + $this->processingFeeHourlyRate, 2) }}/hour. This estimate applies when you hire {{ $this->estimateAgreement->caregiver->name }}.</p>
+                <p class="hc-create-estimate-note">Standard rate for other caregivers: ${{ number_format($this->standardHourlyTotal, 2) }}/hour, including the processing fee.</p>
+            @endif
             @if ($this->estimatedTotal !== null && $this->estimatedHours !== null)
                 <p class="hc-create-estimate-total">${{ number_format($this->estimatedTotal, 2) }}<span>{{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? '/ week' : 'total' }}</span></p>
-                <p class="hc-create-estimate-note">Includes the processing fee.{{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? ' Each visit is charged separately.' : '' }}</p>
+                <p class="hc-create-estimate-note">{{ $this->processingFeeHourlyRate > 0 ? 'Includes the processing fee.' : 'No additional processing fee.' }}{{ $request_type === \App\Models\CareRequest::TYPE_RECURRING ? ' Each visit is charged separately.' : '' }}</p>
                 <details class="hc-create-cost-details">
                     <summary>Cost breakdown</summary>
                     <div class="hc-create-cost-breakdown">
@@ -32,7 +36,9 @@
                             <div><dt>Care · {{ number_format($this->estimatedHours, 2) }}h × ${{ number_format($this->estimateHourlyRate, 2) }}/hr</dt><dd>${{ number_format($this->estimatedCost, 2) }}</dd></div>
                             <div><dt>Processing fee · ${{ number_format($this->processingFeeHourlyRate, 2) }}/hr</dt><dd>${{ number_format($this->estimatedProcessingFee, 2) }}</dd></div>
                         </dl>
-                        <p>A ${{ number_format($this->processingFeeHourlyRate, 2) }}/hour processing fee is added to the ${{ number_format($this->estimateHourlyRate, 2) }}/hour care rate.</p>
+                        @if ($this->processingFeeHourlyRate > 0)
+                            <p>A ${{ number_format($this->processingFeeHourlyRate, 2) }}/hour processing fee is added to the ${{ number_format($this->estimateHourlyRate, 2) }}/hour care rate.</p>
+                        @endif
                         @if ($request_type === \App\Models\CareRequest::TYPE_RECURRING)
                             <p>You are not paying for every future visit now. LoLo confirms your card before each visit and charges the final amount after that visit.</p>
                         @endif
