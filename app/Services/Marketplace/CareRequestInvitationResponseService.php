@@ -30,7 +30,7 @@ class CareRequestInvitationResponseService
         }
 
         $caregiverProfile = $caregiver->caregiverProfile;
-        if (! $caregiverProfile || ! $caregiverProfile->isMarketplaceReady()) {
+        if (! $caregiverProfile || ! $caregiverProfile->isReadyForInvitation()) {
             return ['ok' => false, 'message' => 'Complete your caregiver profile before accepting invitations.'];
         }
 

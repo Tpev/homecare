@@ -240,6 +240,124 @@ class CaregiverInvitationExperienceTest extends TestCase
             ->assertSee($recommended->name);
     }
 
+    public function test_recommendations_prioritize_completed_visits_across_families_and_ignore_saved_schedules(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $otherFamily = User::factory()->create(['role' => 'family', 'name' => 'Private other family']);
+        $request = $this->createOpenRequest($family);
+        $newcomers = collect(range(1, 14))->map(fn ($i) => $this->createReadyCaregiver('Newcomer '.$i));
+        $experienced = collect(range(1, 8))->map(function ($i) use ($otherFamily) {
+            $caregiver = $this->createReadyCaregiver('Experienced '.$i, 'Richmond', ['state' => 'VA']);
+            $caregiver->caregiverProfile->update(['average_rating' => 0, 'reviews_count' => 0, 'service_area_zip' => '23220']);
+            $caregiver->caregiverProfile->availabilities()->delete();
+            $pastRequest = $this->createOpenRequest($otherFamily, ['title' => 'Private visit history '.$i]);
+            CareBooking::query()->create([
+                'care_request_id' => $pastRequest->id, 'family_user_id' => $otherFamily->id,
+                'caregiver_user_id' => $caregiver->id,
+                'status' => $i % 2 ? CareBooking::STATUS_COMPLETED : CareBooking::STATUS_REVIEWED,
+            ]);
+
+            return $caregiver;
+        });
+        $hidden = $experienced->last();
+        $hidden->caregiverProfile->update(['status' => 'draft']);
+
+        $component = Livewire::actingAs($family)->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('setCaregiverView', 'search')
+            ->assertSee('Completed visits on LoLo')
+            ->assertDontSee('Schedule may not match')
+            ->assertDontSee('Overlaps your requested time')
+            ->assertDontSee('Why suggested')
+            ->assertDontSee('Private other family')
+            ->assertDontSee('Private visit history')
+            ->assertDontSee($hidden->name);
+        $cards = collect($component->viewData('caregiverInitialSections'))->firstWhere('key', 'recommended')['caregivers'];
+        $this->assertCount(12, $cards);
+        $this->assertSame($experienced->take(7)->pluck('id')->all(), $cards->take(7)->pluck('user_id')->all());
+        $this->assertTrue($cards->take(7)->every(fn (array $card) => $card['has_platform_visits'] && $card['can_invite']));
+        $this->assertFalse($cards->last()['has_platform_visits']);
+
+        // Changing saved hours must not change discovery order or eligibility.
+        $newcomers->first()->caregiverProfile->availabilities()->delete();
+        $before = $cards->pluck('user_id')->all();
+        $component->call('$refresh');
+        $after = collect($component->viewData('caregiverInitialSections'))->firstWhere('key', 'recommended')['caregivers']->pluck('user_id')->all();
+        $this->assertSame($before, $after);
+    }
+
+    public function test_discovery_loads_unique_stable_batches_up_to_forty_and_resets_after_search_or_filters(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $request = $this->createOpenRequest($family);
+        $caregivers = collect(range(1, 43))->map(fn ($i) => $this->createReadyCaregiver(sprintf('Paging Caregiver %02d', $i)));
+        $previous = $caregivers->last();
+        $favorite = $caregivers->get(41);
+        $pastRequest = $this->createOpenRequest($family, ['status' => CareRequest::STATUS_FILLED]);
+        CareBooking::query()->create([
+            'care_request_id' => $pastRequest->id, 'family_user_id' => $family->id,
+            'caregiver_user_id' => $previous->id, 'status' => CareBooking::STATUS_REVIEWED,
+        ]);
+        foreach ([$previous, $favorite] as $saved) {
+            FamilyCaregiverFavorite::query()->create(['family_user_id' => $family->id, 'caregiver_user_id' => $saved->id]);
+        }
+        CaregiverCertification::query()->create([
+            'caregiver_profile_id' => $caregivers->first()->caregiverProfile->id,
+            'caregiver_certification_type_id' => CaregiverCertificationType::where('slug', 'cpr')->firstOrFail()->id,
+            'verification_status' => CaregiverCertification::STATUS_VERIFIED, 'verified_at' => now(),
+        ]);
+        $component = Livewire::actingAs($family)->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('setCaregiverView', 'search')->assertSet('caregiverDiscoveryLimit', 12)
+            ->assertViewHas('caregiverDiscoveryHasMore', true)->assertViewHas('caregiverDiscoveryCount', 12);
+        $ids = fn () => collect($component->viewData('caregiverInitialSections'))->flatMap(fn (array $section) => $section['caregivers'])->pluck('user_id')->all();
+        $prior = $ids();
+        $this->assertSame([$previous->id, $favorite->id], array_slice($prior, 0, 2));
+        foreach ([[12, 24], [24, 36], [36, 40]] as [$from, $to]) {
+            $component->call('loadMoreCaregivers', $from)->assertSet('caregiverDiscoveryLimit', $to)
+                ->assertViewHas('caregiverDiscoveryCount', $to)
+                ->assertViewHas('caregiverDiscoveryHasMore', $to < 40);
+            $current = $ids();
+            $this->assertCount($to, array_unique($current));
+            $this->assertSame($prior, array_slice($current, 0, count($prior)));
+            $prior = $current;
+        }
+        $component->call('loadMoreCaregivers', 12)->call('loadMoreCaregivers', 40)
+            ->assertSet('caregiverDiscoveryLimit', 40)->assertViewHas('caregiverDiscoveryCount', 40)
+            ->assertDontSee('Show more caregivers');
+        $component->set('caregiverSearch', 'Paging')->assertSet('caregiverDiscoveryLimit', 12)
+            ->assertViewHas('caregiverDiscoveryCount', 12)->assertViewHas('caregiverDiscoveryHasMore', true);
+        $component->call('loadMoreCaregivers', 12)->assertViewHas('caregiverDiscoveryCount', 24);
+        $component->set('certificationTypes', ['cpr'])->assertSet('caregiverDiscoveryLimit', 12)
+            ->assertViewHas('caregiverDiscoveryCount', 1)->assertViewHas('caregiverDiscoveryHasMore', false)
+            ->assertSee($caregivers->first()->name)->assertDontSee($previous->name);
+        $component->call('clearCertificationFilters')->call('clearCaregiverSearch')
+            ->assertSet('caregiverDiscoveryLimit', 12)->assertViewHas('caregiverDiscoveryCount', 12);
+        $component->call('setCaregiverView', 'saved')->call('loadMoreCaregivers', 12)->assertSet('caregiverDiscoveryLimit', 12);
+
+        $service = app(CaregiverInvitationDiscoveryService::class);
+        $this->assertCount(40, $service->search($request, $family, 'Paging', limit: 1000));
+        $this->assertSame(40, collect($service->initialSections($request, $family, limit: 1000))->sum(fn (array $section) => $section['caregivers']->count()));
+    }
+
+    public function test_caregiver_without_saved_availability_can_receive_and_accept_an_invitation(): void
+    {
+        Notification::fake();
+        $family = User::factory()->create(['role' => 'family']);
+        $request = $this->createOpenRequest($family);
+        $caregiver = $this->createReadyCaregiver('No saved schedule');
+        $caregiver->caregiverProfile->availabilities()->delete();
+
+        Livewire::actingAs($family)->test(ManageCareRequest::class, ['careRequest' => $request->id])
+            ->call('setCaregiverView', 'search')->assertSee($caregiver->name)
+            ->call('beginCaregiverInvitation', $caregiver->id)->assertSet('confirmingCaregiverId', $caregiver->id)
+            ->call('sendCaregiverInvitation');
+        $invitation = CareRequestInvitation::query()->sole();
+        $this->actingAs($caregiver);
+        $result = app(CareRequestInvitationResponseService::class)->accept($invitation, $caregiver);
+        $this->assertTrue($result['ok']);
+        $this->assertSame(CareRequestInvitation::STATUS_ACCEPTED, $invitation->fresh()->status);
+        $this->assertDatabaseHas('care_request_applications', ['care_request_id' => $request->id, 'caregiver_user_id' => $caregiver->id]);
+    }
+
     public function test_duplicate_send_is_idempotent_and_notifies_or_tracks_only_once(): void
     {
         Notification::fake();

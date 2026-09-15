@@ -161,7 +161,7 @@ class CareRequestInvitationService
                 );
             }
 
-            if (! $profile || ! $profile->isMarketplaceReady()) {
+            if (! $profile || ! $profile->isReadyForInvitation()) {
                 return new CareRequestInvitationResult(
                     self::STATE_NOT_READY,
                     $caregiver->name.' is not currently available in the caregiver marketplace.'

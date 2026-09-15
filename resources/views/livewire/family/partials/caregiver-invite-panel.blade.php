@@ -226,6 +226,7 @@
                         </section>
                     @endif
                 </div>
+                @include('livewire.family.partials.caregiver-discovery-pagination')
             @endif
         </div>
     </section>

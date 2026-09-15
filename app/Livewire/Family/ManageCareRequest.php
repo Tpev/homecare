@@ -23,7 +23,6 @@ use App\Services\CareRequests\CareRequestLifecycleService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Marketplace\CaregiverInvitationDiscoveryService;
 use App\Services\Marketplace\CareRequestInvitationService;
-use App\Services\Matching\CaregiverSuggestionService;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
 use App\Services\Payments\FamilyBillingService;
@@ -38,6 +37,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -96,6 +96,12 @@ class ManageCareRequest extends Component
     public bool $showCaregiverInvitePanel = false;
 
     public string $caregiverSearch = '';
+
+    #[Locked]
+    public int $caregiverDiscoveryLimit = CaregiverInvitationDiscoveryService::SEARCH_LIMIT;
+
+    #[Locked]
+    public string $caregiverDiscoveryContext = '';
 
     public array $certificationTypes = [];
 
@@ -1578,6 +1584,33 @@ class ManageCareRequest extends Component
         $this->caregiverInviteFeedback = null;
     }
 
+    public function loadMoreCaregivers(int $expectedLimit): void
+    {
+        $this->syncCaregiverDiscoveryContext();
+        if ($expectedLimit !== $this->caregiverDiscoveryLimit
+            || $this->caregiverView !== 'search'
+            || ($this->activeTab !== 'invite' && ! $this->showCaregiverInvitePanel)) {
+            return;
+        }
+
+        $this->caregiverDiscoveryLimit = min(
+            CaregiverInvitationDiscoveryService::MAX_DISCOVERY_LIMIT,
+            $this->caregiverDiscoveryLimit + CaregiverInvitationDiscoveryService::SEARCH_LIMIT,
+        );
+    }
+
+    private function syncCaregiverDiscoveryContext(): void
+    {
+        $criteria = $this->certificationCriteria();
+        $context = hash('sha256', json_encode([
+            $this->caregiverView, trim($this->caregiverSearch), $criteria->typeSlugs(), $criteria->verification(),
+        ], JSON_THROW_ON_ERROR));
+        if ($context !== $this->caregiverDiscoveryContext) {
+            $this->caregiverDiscoveryContext = $context;
+            $this->caregiverDiscoveryLimit = CaregiverInvitationDiscoveryService::SEARCH_LIMIT;
+        }
+    }
+
     public function updatedCertificationTypes(): void
     {
         $this->normalizeCertificationFilters();
@@ -2033,11 +2066,7 @@ class ManageCareRequest extends Component
         }
         $certificationCriteria = $this->certificationCriteria();
         $applicationCertificationCriteria = $this->applicationCertificationCriteria();
-        $suggestedCaregivers = collect();
-        if ($this->requestItem->status === CareRequest::STATUS_OPEN) {
-            $suggestedCaregivers = app(CaregiverSuggestionService::class)
-                ->topMatchesForRequest($this->requestItem, 3, $certificationCriteria);
-        }
+        $this->syncCaregiverDiscoveryContext();
 
         $lifecycleStage = $this->workspaceLifecycle();
 
@@ -2047,16 +2076,32 @@ class ManageCareRequest extends Component
 
         $caregiverSearchResults = collect();
         $caregiverInitialSections = [];
+        $caregiverDiscoveryHasMore = false;
+        $caregiverDiscoveryCount = 0;
         $confirmingCaregiver = null;
         if ($this->showCaregiverInvitePanel || $this->activeTab === 'invite') {
             $family = auth()->user();
             $discovery = app(CaregiverInvitationDiscoveryService::class);
             $search = trim($this->caregiverSearch);
 
-            if ($search === '') {
-                $caregiverInitialSections = $discovery->initialSections($this->requestItem, $family, $certificationCriteria);
-            } elseif (mb_strlen($search) >= 2) {
-                $caregiverSearchResults = $discovery->search($this->requestItem, $family, $search, $certificationCriteria);
+            $limit = $this->caregiverDiscoveryLimit;
+            if ($this->caregiverView === 'search') {
+                if ($search === '') {
+                    $caregiverInitialSections = $discovery->initialSections($this->requestItem, $family, $certificationCriteria, $limit + 1);
+                    $found = collect($caregiverInitialSections)->sum(fn (array $section) => $section['caregivers']->count());
+                    $remaining = $limit;
+                    foreach ($caregiverInitialSections as &$section) {
+                        $section['caregivers'] = $section['caregivers']->take($remaining);
+                        $remaining -= $section['caregivers']->count();
+                    }
+                    unset($section);
+                } else {
+                    $caregiverSearchResults = $discovery->search($this->requestItem, $family, $search, $certificationCriteria, $limit + 1);
+                    $found = $caregiverSearchResults->count();
+                    $caregiverSearchResults = $caregiverSearchResults->take($limit);
+                }
+                $caregiverDiscoveryHasMore = $found > $limit && $limit < CaregiverInvitationDiscoveryService::MAX_DISCOVERY_LIMIT;
+                $caregiverDiscoveryCount = min($found, $limit);
             }
 
             if ($this->confirmingCaregiverId) {
@@ -2114,10 +2159,11 @@ class ManageCareRequest extends Component
             'hireDecisionQuote' => $hireDecisionQuote,
             'hireDecisionStart' => $hireDecisionStart,
             'hireDecisionEnd' => $hireDecisionEnd,
-            'suggestedCaregivers' => $suggestedCaregivers,
             'lifecycleStage' => $lifecycleStage,
             'caregiverSearchResults' => $caregiverSearchResults,
             'caregiverInitialSections' => $caregiverInitialSections,
+            'caregiverDiscoveryHasMore' => $caregiverDiscoveryHasMore,
+            'caregiverDiscoveryCount' => $caregiverDiscoveryCount,
             'confirmingCaregiver' => $confirmingCaregiver,
             'certificationOptions' => CaregiverCertificationCriteria::activeOptions(),
             'certificationCriteria' => $certificationCriteria,

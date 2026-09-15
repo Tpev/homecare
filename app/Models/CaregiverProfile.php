@@ -258,6 +258,14 @@ class CaregiverProfile extends Model
             && $this->marketplaceCompletenessPercent() >= 100;
     }
 
+    public function isReadyForInvitation(): bool
+    {
+        // The invitation contains the requested hours; saved availability is
+        // optional when the caregiver decides whether to accept that visit.
+        return $this->status === 'active'
+            && collect($this->marketplaceReadinessChecks())->except('availability')->every(fn (bool $ready) => $ready);
+    }
+
     public function insuranceIsComplete(): bool
     {
         if ($this->insurance_status === self::INSURANCE_NO) {

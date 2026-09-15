@@ -10,9 +10,7 @@ use App\Models\CareRequestInvitation;
 use App\Models\FamilyCaregiverFavorite;
 use App\Models\User;
 use App\Services\FamilyAccounts\FamilyAccountContext;
-use App\Services\Matching\CaregiverSuggestionService;
 use App\Support\CaregiverCertificationCriteria;
-use Carbon\CarbonInterface;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -22,11 +20,7 @@ class CaregiverInvitationDiscoveryService
 {
     public const SEARCH_LIMIT = 12;
 
-    public const SECTION_LIMIT = 6;
-
-    public function __construct(
-        private readonly CaregiverSuggestionService $suggestions,
-    ) {}
+    public const MAX_DISCOVERY_LIMIT = 40;
 
     /**
      * @return Collection<int, array<string, mixed>>
@@ -36,6 +30,7 @@ class CaregiverInvitationDiscoveryService
         User $family,
         string $search,
         ?CaregiverCertificationCriteria $criteria = null,
+        int $limit = self::SEARCH_LIMIT,
     ): Collection {
         $this->authorize($request, $family);
         $criteria ??= CaregiverCertificationCriteria::empty();
@@ -63,7 +58,8 @@ class CaregiverInvitationDiscoveryService
             ->orderByDesc('top_caregiver')
             ->orderByDesc('average_rating')
             ->orderByDesc('reviews_count')
-            ->limit(self::SEARCH_LIMIT)
+            ->orderBy('user_id')
+            ->limit(max(1, min(self::MAX_DISCOVERY_LIMIT, $limit)))
             ->get();
 
         return $this->cards($request, $profiles, $criteria);
@@ -76,6 +72,7 @@ class CaregiverInvitationDiscoveryService
         CareRequest $request,
         User $family,
         ?CaregiverCertificationCriteria $criteria = null,
+        int $limit = self::SEARCH_LIMIT,
     ): array {
         $this->authorize($request, $family);
         $criteria ??= CaregiverCertificationCriteria::empty();
@@ -94,33 +91,53 @@ class CaregiverInvitationDiscoveryService
             ->latest('created_at')
             ->pluck('caregiver_user_id');
 
-        $recommendedIds = $this->suggestions
-            ->topMatchesForRequest($request, self::SECTION_LIMIT, $criteria)
-            ->pluck('user_id')
-            ->diff($previousIds)
-            ->diff($favoriteIds)
-            ->values();
+        // Rank the whole eligible pool before limiting it. Saved availability
+        // does not determine who families can discover or invite.
+        $query = $this->eligibleProfilesQuery($criteria);
+        $this->prioritizeIds($query, $previousIds);
+        $this->prioritizeIds($query, $favoriteIds);
+        $query->orderByDesc('has_platform_visits');
+        $profiles = $query
+            ->orderByRaw('CASE WHEN service_area_zip = ? THEN 0 ELSE 1 END', [$request->zip])
+            ->orderByRaw('CASE WHEN EXISTS (SELECT 1 FROM users WHERE users.id = caregiver_profiles.user_id AND users.city = ? AND users.state = ?) THEN 0 ELSE 1 END', [$request->city, $request->state])
+            ->orderByRaw('CASE WHEN EXISTS (SELECT 1 FROM users WHERE users.id = caregiver_profiles.user_id AND users.state = ?) THEN 0 ELSE 1 END', [$request->state])
+            ->orderByDesc('is_accepting_new_clients')
+            ->orderByDesc('top_caregiver')
+            ->orderByDesc('average_rating')
+            ->orderByDesc('reviews_count')
+            ->orderBy('user_id')
+            ->limit(max(1, min(self::MAX_DISCOVERY_LIMIT, $limit)))
+            ->get();
+        $cards = $this->cards($request, $profiles, $criteria);
 
         return [
             [
                 'key' => 'previous',
                 'title' => 'Caregivers you hired before',
                 'description' => 'People who have already provided care for your family.',
-                'caregivers' => $this->cardsForIds($request, $previousIds, $criteria)->take(self::SECTION_LIMIT),
+                'caregivers' => $cards->filter(fn (array $card) => $previousIds->contains($card['user_id']))->values(),
             ],
             [
                 'key' => 'favorites',
                 'title' => 'Saved caregivers',
                 'description' => 'Caregivers you saved while browsing profiles.',
-                'caregivers' => $this->cardsForIds($request, $favoriteIds, $criteria)->take(self::SECTION_LIMIT),
+                'caregivers' => $cards->filter(fn (array $card) => $favoriteIds->contains($card['user_id']))->values(),
             ],
             [
                 'key' => 'recommended',
                 'title' => 'Recommended for this request',
-                'description' => 'Available caregivers whose location and schedule look like a good fit.',
-                'caregivers' => $this->cardsForIds($request, $recommendedIds, $criteria)->take(self::SECTION_LIMIT),
+                'description' => 'Caregivers with completed LoLo visits first, followed by more profiles near you.',
+                'caregivers' => $cards->reject(fn (array $card) => $previousIds->contains($card['user_id']) || $favoriteIds->contains($card['user_id']))->values(),
             ],
         ];
+    }
+
+    private function prioritizeIds(Builder $query, Collection $ids): void
+    {
+        if ($ids->isNotEmpty()) {
+            $placeholders = implode(',', array_fill(0, $ids->count(), '?'));
+            $query->orderByRaw('CASE WHEN caregiver_profiles.user_id IN ('.$placeholders.') THEN 0 ELSE 1 END', $ids->all());
+        }
     }
 
     /**
@@ -178,15 +195,25 @@ class CaregiverInvitationDiscoveryService
                 'reviews_count',
                 'reliability_score',
             ])
+            ->addSelect([
+                // Only expose whether care was completed. Other families' visit
+                // details remain private, even while ranking across the platform.
+                'has_platform_visits' => CareBooking::query()
+                    ->withoutGlobalScope('authenticated_family_account')
+                    ->selectRaw('1')
+                    ->whereColumn('caregiver_user_id', 'caregiver_profiles.user_id')
+                    ->whereIn('status', [CareBooking::STATUS_COMPLETED, CareBooking::STATUS_REVIEWED])
+                    ->limit(1),
+            ])
             ->with([
                 'user:id,name,role,city,state',
-                'availabilities:id,caregiver_profile_id,day_of_week,start_time,end_time',
                 'skills:id,name',
                 'languages:id,name',
                 'careExperiences:id,label,sort_order,active',
                 'publicSearchCertifications',
             ])
             ->where('status', 'active')
+            ->whereHas('user', fn (Builder $query) => $query->where('role', 'caregiver'))
             ->whereNotNull('bio')
             ->where('bio', '!=', '')
             ->whereNotNull('years_experience')
@@ -198,37 +225,9 @@ class CaregiverInvitationDiscoveryService
                     ->orWhere('identity_verification_status', 'approved');
             })
             ->whereHas('skills')
-            ->whereHas('languages')
-            ->whereHas('availabilities');
+            ->whereHas('languages');
 
         return app(CaregiverCertificationFilter::class)->apply($query, $criteria);
-    }
-
-    /**
-     * @param  Collection<int, int|string>  $caregiverIds
-     * @return Collection<int, array<string, mixed>>
-     */
-    private function cardsForIds(
-        CareRequest $request,
-        Collection $caregiverIds,
-        CaregiverCertificationCriteria $criteria,
-    ): Collection {
-        if ($caregiverIds->isEmpty()) {
-            return collect();
-        }
-
-        $profiles = $this->eligibleProfilesQuery($criteria)
-            ->whereIn('user_id', $caregiverIds->all())
-            ->whereHas('user', fn (Builder $query) => $query->where('role', 'caregiver'))
-            ->get()
-            ->keyBy('user_id');
-
-        $ordered = $caregiverIds
-            ->map(fn ($id) => $profiles->get((int) $id))
-            ->filter()
-            ->values();
-
-        return $this->cards($request, $ordered, $criteria);
     }
 
     /**
@@ -276,10 +275,10 @@ class CaregiverInvitationDiscoveryService
                     'slug' => $profile->slug,
                     'careRequest' => $request->id,
                 ]),
-                'availability' => $this->availabilityLabel($request, $profile),
                 'identity_verified' => $profile->hasIdentityVerifiedBadge(),
                 'background_check' => $profile->hasBackgroundCheckBadge(),
                 'top_caregiver' => $profile->hasTopCaregiverBadge(),
+                'has_platform_visits' => (bool) $profile->has_platform_visits,
                 'average_rating' => (float) $profile->average_rating,
                 'reviews_count' => (int) $profile->reviews_count,
                 'accepting_new_clients' => (bool) $profile->is_accepting_new_clients,
@@ -378,71 +377,5 @@ class CaregiverInvitationDiscoveryService
             'reply_url' => null,
             'invited_at' => null,
         ];
-    }
-
-    private function availabilityLabel(CareRequest $request, CaregiverProfile $profile): string
-    {
-        $ranges = $profile->availabilities;
-
-        if ($request->request_type === CareRequest::TYPE_ONE_TIME) {
-            $start = $request->requested_start_at;
-            $end = $request->requested_end_at;
-            if (! $start || ! $end) {
-                return 'Schedule not provided';
-            }
-
-            $matches = $ranges->contains(function ($range) use ($start, $end): bool {
-                return (int) $range->day_of_week === (int) $start->dayOfWeek
-                    && $this->timesOverlap(
-                        $this->timeToMinutes((string) $range->start_time),
-                        $this->timeToMinutes((string) $range->end_time),
-                        $this->timeToMinutes($start),
-                        $this->timeToMinutes($end),
-                    );
-            });
-
-            return $matches ? 'Matches the requested time' : 'Schedule may not match';
-        }
-
-        $slots = collect($request->recurringScheduleSlots());
-        if ($slots->isEmpty()) {
-            return 'Recurring schedule not provided';
-        }
-
-        $matchedDays = $slots->filter(function (array $slot) use ($ranges): bool {
-            return $ranges->contains(function ($range) use ($slot): bool {
-                return (int) $range->day_of_week === (int) $slot['day']
-                    && $this->timesOverlap(
-                        $this->timeToMinutes((string) $range->start_time),
-                        $this->timeToMinutes((string) $range->end_time),
-                        $this->timeToMinutes($slot['start_time']),
-                        $this->timeToMinutes($slot['end_time']),
-                    );
-            });
-        })->count();
-
-        if ($matchedDays === 0) {
-            return 'Schedule may not match';
-        }
-
-        return $matchedDays === $slots->count()
-            ? 'Matches the recurring schedule'
-            : 'Matches '.$matchedDays.' of '.$slots->count().' requested days';
-    }
-
-    private function timesOverlap(int $aStart, int $aEnd, int $bStart, int $bEnd): bool
-    {
-        return $aStart < $bEnd && $bStart < $aEnd;
-    }
-
-    private function timeToMinutes(CarbonInterface|string $value): int
-    {
-        if ($value instanceof CarbonInterface) {
-            return ($value->hour * 60) + $value->minute;
-        }
-
-        [$hour, $minute] = array_pad(explode(':', $value), 2, 0);
-
-        return ((int) $hour * 60) + (int) $minute;
     }
 }

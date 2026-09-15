@@ -43,9 +43,9 @@
             @else
                 <p class="hc-recruit-caption">Profiles saved while browsing caregivers. Your request shortlist is under Review applicants.</p>
             @endif
-            <details class="hc-recruit-filter"><summary>Filters @if ($certificationCriteria->hasSelections())<span class="hc-recruit-filter-dot" aria-label="Active filters"></span>@endif</summary><div class="hc-recruit-filter-panel"><p id="discovery-search-hint" class="hc-recruit-caption">Search from 2 characters. Schedule matches indicate overlap, not a confirmed booking.</p><x-caregiver-certification-filter :options="$certificationOptions" :selected="$certificationTypes" :verification="$certificationVerification" id-prefix="recruitment-discovery-certifications" /></div></details>
+            <details class="hc-recruit-filter"><summary>Filters @if ($certificationCriteria->hasSelections())<span class="hc-recruit-filter-dot" aria-label="Active filters"></span>@endif</summary><div class="hc-recruit-filter-panel"><p id="discovery-search-hint" class="hc-recruit-caption">Search from 2 characters.</p><x-caregiver-certification-filter :options="$certificationOptions" :selected="$certificationTypes" :verification="$certificationVerification" id-prefix="recruitment-discovery-certifications" /></div></details>
         </div>
-        <p class="sr-only" role="status" aria-live="polite"><span wire:loading wire:target="caregiverSearch,certificationTypes,certificationVerification">Searching caregivers</span><span wire:loading.remove wire:target="caregiverSearch,certificationTypes,certificationVerification">{{ $caregiverSearchResults->count() }} search results</span></p>
+        <p class="sr-only" role="status" aria-live="polite"><span wire:loading wire:target="caregiverSearch,certificationTypes,certificationVerification">Searching caregivers</span><span wire:loading.remove wire:target="caregiverSearch,certificationTypes,certificationVerification">{{ $caregiverView === 'saved' ? $savedDiscoveryCaregivers->count() : $caregiverDiscoveryCount }} caregivers shown</span></p>
         <div class="hc-candidate-list" wire:loading.class="opacity-60" wire:target="caregiverSearch,certificationTypes,certificationVerification">
             @if ($caregiverView === 'saved')
                 @forelse ($savedDiscoveryCaregivers as $caregiver)@include('livewire.family.partials.caregiver-invite-card')@empty<div class="hc-recruit-empty"><h3>No saved profiles match</h3><p>Saved profiles that match these filters will appear here. Find caregivers to explore your options.</p><button type="button" wire:click="setCaregiverView('search')" class="hc-secondary-button">Search caregivers</button></div>@endforelse
@@ -53,7 +53,7 @@
             @elseif (trim($caregiverSearch) === '')
                 @forelse ($caregiverInitialSections as $section)
                     @if ($section['caregivers']->isNotEmpty())
-                        <div class="hc-recruit-result-heading"><h3>{{ $section['title'] }}</h3><p>{{ match($section['key']) { 'recommended' => 'Based on location and overlapping schedules.', 'previous' => 'Caregivers previously booked by your family.', default => $section['description'] } }}</p></div>
+                        <div class="hc-recruit-result-heading"><h3>{{ $section['title'] }}</h3><p>{{ $section['key'] === 'previous' ? 'Caregivers previously booked by your family.' : $section['description'] }}</p></div>
                         @foreach ($section['caregivers'] as $caregiver)@include('livewire.family.partials.caregiver-invite-card')@endforeach
                     @endif
                 @empty @endforelse
@@ -61,9 +61,12 @@
             @elseif (mb_strlen(trim($caregiverSearch)) < 2)
                 <div class="hc-recruit-empty"><h3>Keep typing to search</h3><p>Enter at least 2 letters.</p></div>
             @else
-                <div class="hc-recruit-result-heading"><h3>Search results</h3><p>{{ $caregiverSearchResults->count() }} matching caregiver{{ $caregiverSearchResults->count() === 1 ? '' : 's' }}{{ $caregiverSearchResults->count() === 12 ? ' · Showing the first 12 results' : '' }}</p></div>
+                <div class="hc-recruit-result-heading"><h3>Search results</h3><p>{{ $caregiverSearchResults->count() }} matching caregiver{{ $caregiverSearchResults->count() === 1 ? '' : 's' }}</p></div>
                 @forelse ($caregiverSearchResults as $caregiver)@include('livewire.family.partials.caregiver-invite-card')@empty<div class="hc-recruit-empty"><h3>No caregivers found</h3><p>Try another name or city{{ $certificationCriteria->hasSelections() ? ', or remove a certification filter' : '' }}.</p><button type="button" wire:click="clearCaregiverSearch" class="hc-secondary-button">Clear search</button></div>@endforelse
             @endif
         </div>
+        @if ($caregiverView === 'search' && ! $showCaregiverInvitePanel)
+            @include('livewire.family.partials.caregiver-discovery-pagination')
+        @endif
     @endif
 </section>
