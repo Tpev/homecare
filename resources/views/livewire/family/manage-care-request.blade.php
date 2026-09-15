@@ -25,6 +25,10 @@
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
 
+    @error('hire') <x-alert color="red">{{ $message }}</x-alert> @enderror
+    @error('cancellationReason') <x-alert color="red">{{ $message }}</x-alert> @enderror
+    @include('livewire.family.partials.replacement-visit-history')
+
     @if ($requestItem->is_private && $requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $requestItem->invitations->isEmpty())
         <x-alert color="amber">
             This request is private and cannot be discovered in the caregiver marketplace. Invite at least one caregiver when you are ready.

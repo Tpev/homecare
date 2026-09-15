@@ -86,6 +86,7 @@ class CareBooking extends Model
         'cancelled_at',
         'cancelled_by_user_id',
         'cancellation_reason',
+        'replacement_released_at',
         'last_rescheduled_at',
         'last_reschedule_reason',
     ];
@@ -121,6 +122,7 @@ class CareBooking extends Model
             'late_cancel_flag' => 'boolean',
             'reviewed_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'replacement_released_at' => 'datetime',
             'last_rescheduled_at' => 'datetime',
         ];
     }

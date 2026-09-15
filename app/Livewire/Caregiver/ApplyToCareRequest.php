@@ -14,6 +14,7 @@ use App\Models\CareReview;
 use App\Models\SupportTicket;
 use App\Services\Booking\BookingTrustService;
 use App\Services\Booking\CareBookingTimeCorrectionService;
+use App\Services\Booking\CaregiverCancellationService;
 use App\Services\CareRecipientProfiles\CareRecipientProfilePresenter;
 use App\Services\Notifications\MarketplaceNotificationService;
 use App\Services\Payments\BookingPaymentService;
@@ -46,6 +47,8 @@ class ApplyToCareRequest extends Component
     public string $changeType = CareBookingChangeRequest::TYPE_CANCEL;
 
     public string $changeReason = '';
+
+    public string $cancellationReason = '';
 
     public string $proposedStartAt = '';
 
@@ -406,17 +409,26 @@ class ApplyToCareRequest extends Component
 
         $capturedByGps = ! is_null($this->checkInLat) && ! is_null($this->checkInLng);
 
-        $booking->update([
-            'status' => CareBooking::STATUS_IN_PROGRESS,
-            'started_at' => now(),
-            'check_in_lat' => $this->checkInLat,
-            'check_in_lng' => $this->checkInLng,
-            'check_in_accuracy_meters' => $this->checkInAccuracy,
-            'check_in_source' => $capturedByGps ? 'browser_gps' : 'manual',
-            'check_in_note' => trim($this->checkInNote) ?: null,
-            'paused_at' => null,
-            'total_paused_seconds' => (int) ($booking->total_paused_seconds ?? 0),
-        ]);
+        $started = CareBooking::query()->whereKey($booking->id)
+            ->where('status', CareBooking::STATUS_SCHEDULED)
+            ->whereNull('replacement_released_at')->update([
+                'status' => CareBooking::STATUS_IN_PROGRESS,
+                'started_at' => now(),
+                'check_in_lat' => $this->checkInLat,
+                'check_in_lng' => $this->checkInLng,
+                'check_in_accuracy_meters' => $this->checkInAccuracy,
+                'check_in_source' => $capturedByGps ? 'browser_gps' : 'manual',
+                'check_in_note' => trim($this->checkInNote) ?: null,
+                'paused_at' => null,
+                'total_paused_seconds' => (int) ($booking->total_paused_seconds ?? 0),
+            ]);
+        if (! $started) {
+            $this->refreshExistingApplication();
+            session()->flash('status', 'This visit has changed and can no longer be started.');
+
+            return;
+        }
+        $booking->refresh();
 
         app(BookingTrustService::class)->recordEvent(
             $booking,
@@ -813,6 +825,17 @@ class ApplyToCareRequest extends Component
         session()->flash('status', 'Review submitted.');
     }
 
+    public function cancelBookingForReplacement(): void
+    {
+        $booking = $this->getManagedBooking();
+        abort_unless($booking, 404);
+        app(CaregiverCancellationService::class)->cancel($booking, auth()->user(), $this->cancellationReason);
+        $this->reset(['cancellationReason', 'changeReason']);
+        $this->requestItem->refresh();
+        $this->refreshExistingApplication();
+        session()->flash('status', 'Your visit is cancelled. The same care request is open again so the family can hire another caregiver.');
+    }
+
     public function submitChangeRequest(): void
     {
         $booking = $this->getManagedBooking();
@@ -831,6 +854,14 @@ class ApplyToCareRequest extends Component
         }
 
         $this->validate($rules);
+
+        if ($this->changeType === CareBookingChangeRequest::TYPE_CANCEL
+            && $this->requestItem->request_type === CareRequest::TYPE_ONE_TIME && ! $booking->care_plan_id) {
+            $this->cancellationReason = $this->changeReason;
+            $this->cancelBookingForReplacement();
+
+            return;
+        }
 
         $changeRequest = CareBookingChangeRequest::query()->create([
             'care_booking_id' => $booking->id,
@@ -877,7 +908,7 @@ class ApplyToCareRequest extends Component
     public function resolveChangeRequest(int $changeRequestId, string $decision): void
     {
         $booking = $this->getManagedBooking();
-        if (! $booking) {
+        if (! $booking || $booking->status === CareBooking::STATUS_CANCELLED) {
             return;
         }
 

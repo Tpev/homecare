@@ -5,18 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CareRequestApplication extends Model
 {
     use HasFactory;
 
     public const STATUS_APPLIED = 'applied';
+
     public const STATUS_SHORTLISTED = 'shortlisted';
+
     public const STATUS_REJECTED = 'rejected';
+
     public const STATUS_HIRED = 'hired';
+
     public const STATUS_WITHDRAWN = 'withdrawn';
+
     public const STATUS_NOT_SELECTED = 'not_selected';
 
     protected $fillable = [
@@ -56,6 +61,6 @@ class CareRequestApplication extends Model
 
     public function booking(): HasOne
     {
-        return $this->hasOne(CareBooking::class, 'care_request_application_id');
+        return $this->hasOne(CareBooking::class, 'care_request_application_id')->latest('id');
     }
 }

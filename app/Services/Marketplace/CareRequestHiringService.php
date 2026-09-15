@@ -66,6 +66,7 @@ class CareRequestHiringService
             $lockedApplication = CareRequestApplication::query()->lockForUpdate()->findOrFail($application->id);
             if (! $this->familyAccounts->canAccessRecord($family, $lockedRequest)
                 || $lockedRequest->status !== CareRequest::STATUS_OPEN
+                || $lockedRequest->booking()->exists()
                 || ! in_array($lockedApplication->status, [CareRequestApplication::STATUS_APPLIED, CareRequestApplication::STATUS_SHORTLISTED], true)) {
                 throw ValidationException::withMessages(['hire' => 'This request or applicant changed. Review the current applicants and confirm again.']);
             }
@@ -81,9 +82,9 @@ class CareRequestHiringService
             }
             $start = $lockedRequest->requested_start_at;
             $end = $lockedRequest->requested_end_at;
-            $booking = CareBooking::query()->updateOrCreate(
-                ['care_request_id' => $lockedRequest->id],
+            $booking = CareBooking::query()->create(
                 [
+                    'care_request_id' => $lockedRequest->id,
                     ...$this->familyAccounts->ownershipAttributes($family),
                     'care_request_application_id' => $lockedApplication->id,
                     'caregiver_user_id' => (int) $lockedApplication->caregiver_user_id,
@@ -124,7 +125,7 @@ class CareRequestHiringService
             url: route('family.requests.show', $request->id),
             payload: ['care_request_id' => $request->id],
             subject: $application,
-            dedupeKey: 'hire-confirmed:request-'.$request->id.'-user-'.$family->id,
+            dedupeKey: 'hire-confirmed:booking-'.$booking->id.'-user-'.$family->id,
         );
         FunnelTracker::track('caregiver_hired', $family, $application, [
             'care_request_id' => $request->id,

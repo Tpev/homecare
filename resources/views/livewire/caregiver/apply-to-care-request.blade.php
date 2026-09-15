@@ -680,6 +680,7 @@
                     ? 'PAST VISIT'
                     : strtoupper(str_replace('_', ' ', $shiftStatus));
             @endphp
+            @include('livewire.caregiver.partials.cancel-visit-for-replacement')
             <section class="rounded-[1.9rem] border border-[#0F3D3E]/80 bg-[#0F3D3E] p-5 shadow-xl">
                 <div>
                     <div class="mb-4">
@@ -1087,7 +1088,13 @@
                                             <x-input type="datetime-local" label="Proposed end" wire:model="proposedEndAt" />
                                         </div>
                                     @endif
-                                    <x-button color="amber" wire:click="submitChangeRequest">Send request</x-button>
+                                    @if ($changeType === 'cancel' && $requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME && ! $booking->care_plan_id)
+                                        <p class="text-sm text-white">Cancelling opens this request again so the family can hire another caregiver.</p>
+                                        @error('cancellationReason') <p role="alert" class="text-sm text-white">{{ $message }}</p> @enderror
+                                        <x-button color="amber" wire:click="submitChangeRequest" wire:loading.attr="disabled" wire:confirm="Cancel your visit and let the family hire someone else?">Cancel my visit</x-button>
+                                    @else
+                                        <x-button color="amber" wire:click="submitChangeRequest">Send request</x-button>
+                                    @endif
                                 </div>
                             </div>
                         </details>
@@ -1218,13 +1225,14 @@
             <x-card>
                 <x-slot:header><h2 class="font-display text-lg font-semibold">Safety and support</h2></x-slot:header>
                 <div class="space-y-3">
+                    @include('livewire.caregiver.partials.cancel-visit-for-replacement')
                     @if (! in_array($booking->status, [\App\Models\CareBooking::STATUS_CANCELLED, \App\Models\CareBooking::STATUS_REVIEWED], true))
                         <details class="rounded border border-[#E4DDD3] p-3">
                             <summary class="cursor-pointer font-medium">Request cancellation or reschedule</summary>
                             <div class="mt-3 space-y-4">
                                 <x-native-select-field
                                     label="Change type"
-                                    wire:model="changeType"
+                                    wire:model.live="changeType"
                                     :options="[
                                         ['label' => 'Cancel visit', 'value' => 'cancel'],
                                         ['label' => 'Reschedule visit', 'value' => 'reschedule'],
@@ -1237,7 +1245,13 @@
                                         <x-input type="datetime-local" label="Proposed end" wire:model="proposedEndAt" />
                                     </div>
                                 @endif
-                                <x-button color="blue" wire:click="submitChangeRequest">Send request</x-button>
+                                @if ($changeType === 'cancel' && $requestItem->request_type === \App\Models\CareRequest::TYPE_ONE_TIME && ! $booking->care_plan_id)
+                                    <p class="text-sm">Cancelling opens this request again so the family can hire another caregiver.</p>
+                                    @error('cancellationReason') <p role="alert" class="text-sm text-red-700">{{ $message }}</p> @enderror
+                                    <x-button color="red" wire:click="submitChangeRequest" wire:loading.attr="disabled" wire:confirm="Cancel your visit and let the family hire someone else?">Cancel my visit</x-button>
+                                @else
+                                    <x-button color="blue" wire:click="submitChangeRequest">Send request</x-button>
+                                @endif
                             </div>
                         </details>
                     @endif
@@ -1404,4 +1418,3 @@
 </script>
 
 </div>
-

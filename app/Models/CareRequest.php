@@ -132,7 +132,12 @@ class CareRequest extends Model
 
     public function booking(): HasOne
     {
-        return $this->hasOne(CareBooking::class);
+        return $this->hasOne(CareBooking::class)->whereNull('replacement_released_at');
+    }
+
+    public function releasedBookings(): HasMany
+    {
+        return $this->hasMany(CareBooking::class)->whereNotNull('replacement_released_at')->latest('id');
     }
 
     public function reviews(): HasMany

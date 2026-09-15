@@ -73,13 +73,13 @@
                 <div class="hc-candidate-side">
                     <div class="hc-candidate-actions">
                         @if($profileHref)<a href="{{ $profileHref }}" wire:navigate class="hc-secondary-button">View profile</a>@endif
-                        @if($requestItem->status === \App\Models\CareRequest::STATUS_OPEN)
+                        @if($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $application->status !== \App\Models\CareRequestApplication::STATUS_WITHDRAWN)
                             <button type="button" data-testid="hire-caregiver" wire:click="reviewHire({{ $application->id }})" @disabled(! $hirePayment['ready'])
                                 @if(! $hirePayment['ready']) aria-describedby="hire-payment-{{ $application->id }}" @endif
                                 class="{{ $hirePayment['ready'] ? 'hc-primary-button' : 'hc-secondary-button !border-slate-200 !bg-slate-100 !text-slate-400 !shadow-none cursor-not-allowed' }}">{{ $isActiveApplication ? 'Hire '.$firstName : 'Reconsider & hire' }}</button>
                         @endif
                     </div>
-                    @if($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && ! $hirePayment['ready'])
+                    @if($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && $application->status !== \App\Models\CareRequestApplication::STATUS_WITHDRAWN && ! $hirePayment['ready'])
                         <x-family-hire-payment-prompt :care-request="$requestItem" :application="$application" :unavailable="$hirePayment['unavailable']" :id="'hire-payment-'.$application->id" />
                         <button type="button" wire:click="reviewHire({{ $application->id }})" class="hc-care-text-link">Review care &amp; price</button>
                     @endif

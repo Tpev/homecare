@@ -366,7 +366,10 @@ class ManageCareRequest extends Component
 
     public function reviewHire(int $applicationId): void
     {
-        $this->findOwnedApplication($applicationId);
+        $application = $this->findOwnedApplication($applicationId);
+        if ($application->status === CareRequestApplication::STATUS_WITHDRAWN) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['hire' => 'This caregiver has withdrawn from this request. Choose another caregiver.']);
+        }
         $this->reviewingApplicationId = $applicationId;
         $this->reviewingCompletion = false;
         $this->dispatch('care-decision-opened');
@@ -457,6 +460,10 @@ class ManageCareRequest extends Component
         }
 
         $application = $this->findOwnedApplication($applicationId)->loadMissing('caregiver:id,email,name');
+        if (! in_array($application->status, [CareRequestApplication::STATUS_APPLIED, CareRequestApplication::STATUS_SHORTLISTED,
+            CareRequestApplication::STATUS_NOT_SELECTED, CareRequestApplication::STATUS_REJECTED], true)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['hire' => 'This caregiver is no longer available to hire for this request.']);
+        }
         if (! CaregiverPrelaunch::familyCanProceedWithCaregiver(
             $application->caregiver?->email,
             $this->requestItem,
@@ -507,6 +514,13 @@ class ManageCareRequest extends Component
 
         try {
             DB::transaction(function () use ($application, &$paymentWarning, &$paymentConfirmationId) {
+                $this->requestItem = CareRequest::query()->lockForUpdate()->findOrFail($this->requestItem->id);
+                $application = CareRequestApplication::query()->lockForUpdate()->findOrFail($application->id);
+                if ($this->requestItem->status !== CareRequest::STATUS_OPEN || $this->requestItem->booking()->exists()
+                    || ! in_array($application->status, [CareRequestApplication::STATUS_APPLIED, CareRequestApplication::STATUS_SHORTLISTED,
+                        CareRequestApplication::STATUS_NOT_SELECTED, CareRequestApplication::STATUS_REJECTED], true)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['hire' => 'This request or applicant changed. Refresh the page before hiring.']);
+                }
                 $application->update(['status' => CareRequestApplication::STATUS_HIRED]);
 
                 CareRequestConversation::findOrCreateForApplication($application->loadMissing('careRequest'), auth()->id());
@@ -530,9 +544,9 @@ class ManageCareRequest extends Component
                     ? (int) max(0, $startAt->diffInMinutes($endAt, false))
                     : null;
 
-                $booking = CareBooking::query()->updateOrCreate(
-                    ['care_request_id' => $this->requestItem->id],
+                $booking = CareBooking::query()->create(
                     [
+                        'care_request_id' => $this->requestItem->id,
                         ...app(FamilyAccountContext::class)->ownershipAttributes(auth()->user()),
                         'care_request_application_id' => $application->id,
                         'caregiver_user_id' => (int) $application->caregiver_user_id,
@@ -590,7 +604,7 @@ class ManageCareRequest extends Component
             url: route('family.requests.show', $this->requestItem->id),
             payload: ['care_request_id' => $this->requestItem->id],
             subject: $application,
-            dedupeKey: 'hire-confirmed:request-'.$this->requestItem->id.'-user-'.auth()->id()
+            dedupeKey: 'hire-confirmed:booking-'.$this->requestItem->booking()->value('id').'-user-'.auth()->id()
         );
 
         FunnelTracker::track('caregiver_hired', auth()->user(), $application, [
@@ -1042,7 +1056,7 @@ class ManageCareRequest extends Component
     public function resolveChangeRequest(int $changeRequestId, string $decision): void
     {
         $booking = $this->requestItem->booking;
-        if (! $booking) {
+        if (! $booking || $booking->status === CareBooking::STATUS_CANCELLED) {
             return;
         }
 
@@ -1082,6 +1096,18 @@ class ManageCareRequest extends Component
 
             $this->refreshRequestItem(preferLifecyclePrimary: true);
             session()->flash('status', 'Change request rejected.');
+
+            return;
+        }
+
+        if ($decision === 'accept' && $changeRequest->type === CareBookingChangeRequest::TYPE_CANCEL
+            && (int) $changeRequest->requester_user_id === (int) $booking->caregiver_user_id
+            && $this->requestItem->request_type === CareRequest::TYPE_ONE_TIME && ! $booking->care_plan_id) {
+            app(\App\Services\Booking\CaregiverCancellationService::class)->cancel(
+                $booking, auth()->user(), $changeRequest->reason, $changeRequest->id,
+            );
+            $this->refreshRequestItem(preferLifecyclePrimary: true);
+            session()->flash('status', 'Visit cancelled. This request is open again so you can hire a replacement caregiver.');
 
             return;
         }
