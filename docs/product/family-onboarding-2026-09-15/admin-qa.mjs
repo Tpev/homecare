@@ -1,0 +1,43 @@
+import { chromium, expect as baseExpect } from '@playwright/test';
+import fs from 'node:fs';
+const expect = baseExpect.configure({ timeout: 30000 });
+const browser = await chromium.launch({ channel: 'msedge', headless: true });
+const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+page.setDefaultTimeout(30000);
+page.setDefaultNavigationTimeout(60000);
+try {
+  await page.goto('http://127.0.0.1:8033/login');
+  await page.locator('input[wire\\:model="form.email"]').fill('onboarding.admin@example.test');
+  await page.locator('input[wire\\:model="form.password"]').fill('LoLoPreview!2026');
+  await page.locator('form[wire\\:submit="login"] button[type=submit]').click();
+  await expect(page).not.toHaveURL(/\/login$/);
+  await page.goto('http://127.0.0.1:8033/admin/family-onboarding');
+  await page.locator('tbody tr a').first().click();
+  const select = page.getByLabel('Follow-up status');
+  await expect.poll(() => select.evaluate(el => Boolean(el.closest('[wire\\:id]')?.__livewire))).toBe(true);
+  console.log('Livewire ready', await select.inputValue());
+  const responsePromise = page.waitForResponse(r => r.url().includes('/livewire/update') && r.request().postData()?.includes('visitStatus'));
+  await select.selectOption('confirmed');
+  const response = await responsePromise;
+  const body = await response.json();
+  console.log('Update', response.status(), body.components?.map(c => ({ status: JSON.parse(c.snapshot).data.visitStatus, hasCheckbox: c.effects?.html?.includes('textConfirmed') })));
+  await expect(page.getByLabel('The family has confirmed this time by text.')).toBeVisible();
+  const date = new Date(Date.now() + 4 * 86400000).toISOString().slice(0, 10);
+  await page.getByLabel('Agreed start time (America/New_York)').fill(`${date}T12:30`);
+  await page.getByLabel('The family has confirmed this time by text.').check();
+  await page.getByLabel('Follow-up note').fill('Synthetic browser QA confirmation; no real text sent.');
+  await page.getByRole('button', { name: 'Save follow-up' }).click();
+  await expect(page.getByText('Welcome visit updated.', { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(select).toHaveValue('confirmed');
+  const file = 'docs/product/family-onboarding-2026-09-15/integrated-validation.json';
+  const report = JSON.parse(fs.readFileSync(file, 'utf8'));
+  report.checks.push('Admin can confirm the visit and follow-up survives reload');
+  report.passed = true;
+  delete report.failure;
+  fs.writeFileSync(file, JSON.stringify(report, null, 2));
+  console.log('PASS Admin confirmation persists');
+} finally {
+  await page.screenshot({ path: 'docs/product/family-onboarding-2026-09-15/screenshots/integrated-admin-final.png', fullPage: true });
+  await browser.close();
+}

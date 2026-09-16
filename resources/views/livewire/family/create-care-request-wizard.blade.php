@@ -1,5 +1,7 @@
 <div class="hc-care-workspace hc-care-creation mx-auto" data-inline-support>
     <div class="hc-page hc-create-page">
+        @error('onboarding')<div role="alert" class="rounded-lg bg-red-50 p-4 text-sm text-red-800">{{ $message }}</div>@enderror
+        @error('profile')<div role="alert" class="rounded-lg bg-red-50 p-4 text-sm text-red-800">{{ $message }}</div>@enderror
         @if($aiPrepared)
             <x-alert color="blue">LoLo copied these details into the form. Review and edit everything before you publish. No request was created automatically.</x-alert>
         @endif
@@ -198,11 +200,11 @@
                                     <button type="button" wire:click="$set('createQuickCareProfile', false)" class="text-sm font-semibold text-[#B54436] underline">Skip</button>
                                 </div>
                                 <div>
-                                    <x-textarea label="What should a caregiver know?" wire:model="quick_profile_about" placeholder="A few warm, useful details about the person." />
+                                    <x-textarea label="What should a caregiver know?" wire:model.blur="quick_profile_about" placeholder="A few warm, useful details about the person." />
                                     @error('quick_profile_about') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
                                 <div>
-                                    <x-textarea label="What helps care go well?" wire:model="quick_profile_good_visit" placeholder="Routines, interests, reassurance, or communication tips." />
+                                    <x-textarea label="What helps care go well?" wire:model.blur="quick_profile_good_visit" placeholder="Routines, interests, reassurance, or communication tips." />
                                     @error('quick_profile_good_visit') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
                                 <label class="flex items-start gap-3 rounded-xl border border-[#CFE1D8] bg-white p-3 text-sm">

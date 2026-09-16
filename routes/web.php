@@ -173,6 +173,9 @@ Route::middleware(['web', 'auth', 'admin.email'])
         Route::get('/analytics/caregiver-map', CaregiverCoverageMap::class)->name('analytics.caregiver-map');
         Route::get('/analytics/care-coverage-calendar', CareCoverageCalendar::class)->name('analytics.care-coverage-calendar');
         Route::get('/users', UsersIndex::class)->name('users.index');
+        Route::get('/family-onboarding', \App\Livewire\Admin\FamilyOnboardingIndex::class)->name('family-onboarding.index');
+        Route::get('/family-onboarding/{onboarding}', \App\Livewire\Admin\FamilyOnboardingShow::class)
+            ->whereNumber('onboarding')->name('family-onboarding.show');
         Route::get('/users/{user}', UserShow::class)->name('users.show');
         Route::get('/requests', CareRequestsIndex::class)->name('requests.index');
         Route::get('/requests/{careRequest}', AdminCareRequestShow::class)->name('requests.show');
@@ -269,7 +272,7 @@ Route::post('/logout', SessionLogoutController::class)
     ->name('logout');
 
 Route::get('dashboard', DashboardHome::class)
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', \App\Http\Middleware\EnsureFamilyOnboardingComplete::class])
     ->name('dashboard');
 
 Route::view('profile', 'profile')
@@ -331,6 +334,7 @@ Route::middleware(['auth', 'caregiver.role'])->group(function () {
 });
 
 Route::middleware(['auth', 'family.role'])->prefix('family')->name('family.')->group(function () {
+    Route::get('/onboarding', \App\Livewire\Family\OnboardingWizard::class)->name('onboarding');
     Route::get('/access', FamilyAccess::class)->name('access');
     Route::get('/care-profiles', CareProfiles::class)->name('care-profiles.index');
     Route::get('/care-profiles/create', CareProfileEditor::class)->name('care-profiles.create');
@@ -353,8 +357,8 @@ Route::middleware(['auth', 'family.role'])->prefix('family')->name('family.')->g
     Route::get('/care/{carePlan}', RegularCareShow::class)
         ->whereNumber('carePlan')
         ->name('care.show');
-    Route::get('/requests', RequestsIndex::class)->name('requests.index');
-    Route::get('/requests/create', CreateCareRequestWizard::class)->name('requests.create');
+    Route::get('/requests', RequestsIndex::class)->middleware(\App\Http\Middleware\EnsureFamilyOnboardingComplete::class)->name('requests.index');
+    Route::get('/requests/create', CreateCareRequestWizard::class)->middleware(\App\Http\Middleware\EnsureFamilyOnboardingComplete::class)->name('requests.create');
     Route::get('/notifications', FamilyNotificationsCenter::class)->name('notifications.index');
     Route::get('/billing', [FamilyBillingController::class, 'show'])->name('billing.show');
     Route::post('/billing/checkout', [FamilyBillingController::class, 'createCheckout'])->name('billing.checkout');

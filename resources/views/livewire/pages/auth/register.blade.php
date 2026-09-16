@@ -47,10 +47,25 @@ new #[Layout('layouts.guest')] class extends Component
         $validated['role'] = 'family';
         unset($validated['accept_terms']);
 
-        event(new Registered($user = User::create($validated)));
+        [$user, $onboarding] = \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+            $user = User::create($validated);
+            $onboarding = app(\App\Services\Family\FamilyOnboardingService::class)->enrollRegistration($user);
+
+            return [$user, $onboarding];
+        });
+
+        event(new Registered($user));
 
         Auth::login($user);
+        session()->regenerate();
         session()->flash('google_ads_family_signup_conversion', true);
+
+        if ($onboarding) {
+            app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->continueFor($user);
+            $this->redirect(route('family.onboarding', absolute: false), navigate: true);
+
+            return;
+        }
 
         if (app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->continueFor($user)) {
             $this->redirect(route('family.requests.create', absolute: false), navigate: true);
@@ -74,7 +89,7 @@ new #[Layout('layouts.guest')] class extends Component
         @if(app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->sessionMessage())
             <h1 class="font-semibold tracking-tight">Create your free account</h1>
             <p class="text-sm leading-6 text-[#68756F]">You’re about 2 minutes away from posting your care request. We’ve filled in the details you shared with LoLo Care.</p>
-            <div class="flex flex-wrap gap-2 pt-2 text-xs font-semibold"><span class="rounded-full bg-emerald-100 px-3 py-2 text-emerald-900">1 · Free account</span><span class="rounded-full bg-stone-100 px-3 py-2 text-stone-600">2 · Post your request</span></div>
+            <div class="flex flex-wrap gap-2 pt-2 text-xs font-semibold"><span class="rounded-full bg-emerald-100 px-3 py-2 text-emerald-900">1 · Free account</span><span class="rounded-full bg-stone-100 px-3 py-2 text-stone-600">2 · {{ config('family_onboarding.enrollment_enabled') ? 'Care details' : 'Post your request' }}</span></div>
         @else
             <h1 class="font-semibold tracking-tight">Create your family account</h1>
             <p class="text-sm leading-6 text-[#68756F]">Find care, coordinate visits, and keep your family informed from one place.</p>
@@ -91,7 +106,7 @@ new #[Layout('layouts.guest')] class extends Component
 
     @if (\App\Support\FamilyQuickRequestDraft::has())
         <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-            Your quick care request is saved. Create your account now and we’ll take you straight to the final review before publishing.
+            {{ config('family_onboarding.enrollment_enabled') ? 'Your care request details are saved. Create your account to continue.' : 'Your quick care request is saved. Create your account now and we’ll take you straight to the final review before publishing.' }}
         </div>
     @endif
 

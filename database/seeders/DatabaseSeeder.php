@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\CareTask;
 use App\Models\Language;
 use App\Models\Skill;
 use App\Models\User;
@@ -44,17 +43,7 @@ class DatabaseSeeder extends Seeder
             Skill::query()->firstOrCreate(['name' => $skillName]);
         }
 
-        foreach ([
-            'Companionship',
-            'Meal preparation',
-            'Light housekeeping',
-            'Transportation',
-            'Medication reminders',
-            'Errands',
-            'Daily living assistance',
-        ] as $taskName) {
-            CareTask::query()->firstOrCreate(['name' => $taskName]);
-        }
+        $this->call(CareTaskSeeder::class);
 
         $this->call(HomeCareDemoSeeder::class);
         $this->call(FamilyAcquisitionDemoSeeder::class);

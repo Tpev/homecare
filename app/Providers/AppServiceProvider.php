@@ -52,6 +52,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Livewire\Livewire::addPersistentMiddleware([\App\Http\Middleware\EnsureFamilyOnboardingComplete::class]);
         RateLimiter::for('content-api', function (Request $request): Limit {
             $identity = $request->bearerToken()
                 ? 'token:'.$request->bearerToken()

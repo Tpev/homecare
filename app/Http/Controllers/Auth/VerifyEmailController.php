@@ -18,6 +18,14 @@ class VerifyEmailController extends Controller
             ? route('family.requests.index', absolute: false)
             : route('dashboard', absolute: false);
 
+        if (app(\App\Services\Family\FamilyOnboardingService::class)->pending($request->user())) {
+            $destination = route('family.onboarding', absolute: false);
+            $intendedPath = (string) parse_url((string) $request->session()->get('url.intended', ''), PHP_URL_PATH);
+            if (! str_starts_with($intendedPath, '/family/invitations/')) {
+                $request->session()->forget('url.intended');
+            }
+        }
+
         if ($request->user()->hasVerifiedEmail()) {
             return redirect()->intended($destination.'?verified=1');
         }

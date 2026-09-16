@@ -37,6 +37,18 @@ new #[Layout('layouts.guest')] class extends Component
             return;
         }
 
+        $intendedPath = (string) parse_url((string) Session::get('url.intended', ''), PHP_URL_PATH);
+        if ($user?->role === 'family' && str_starts_with($intendedPath, '/family/invitations/')) {
+            $this->redirectIntended(default: route('family.requests.index', absolute: false), navigate: true);
+
+            return;
+        }
+        if ($user && app(\App\Services\Family\FamilyOnboardingService::class)->pending($user)) {
+            $this->redirect(route('family.onboarding', absolute: false), navigate: true);
+
+            return;
+        }
+
         if (FamilyQuickRequestDraft::has() && $user?->role === 'family') {
             session()->flash('status', 'Your quick request draft is ready. Finish review and publish it now.');
             $this->redirect(route('family.requests.create', absolute: false), navigate: true);

@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "All seven standard help options are available",
+    "Both onboarding answers are visible in the simple care profile",
+    "Profile edits survive refreshing the request form",
+    "Mobile form has no horizontal overflow"
+  ],
+  "errors": [],
+  "passed": true
+}

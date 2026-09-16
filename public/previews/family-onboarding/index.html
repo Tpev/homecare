@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#fbf8f1">
+    <title>Welcome to LoLo · Let's get started</title>
+    <link rel="icon" href="/images/marketing/lolo/lolo-app-icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./onboarding.css">
+    <script src="./onboarding.js" defer></script>
+</head>
+<body>
+    <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+        <symbol id="icon-person" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></symbol>
+        <symbol id="icon-people" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3m1-17a3 3 0 0 1 0 6m2 4a5 5 0 0 1 3 4.6V21"/></symbol>
+        <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></symbol>
+        <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+        <symbol id="icon-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7M5 9v12h14V9m-10 12v-7h6v7"/></symbol>
+        <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18m-14 5h3"/></symbol>
+        <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+        <symbol id="icon-note" viewBox="0 0 24 24"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10L13 3Zm0 0v7h7M8 14h8m-8 3h5"/></symbol>
+        <symbol id="icon-spark" viewBox="0 0 24 24"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z"/></symbol>
+    </svg>
+
+    <header class="site-header">
+        <div class="header-inner">
+            <img src="/images/marketing/lolo/lolo-wordmark-evergreen.svg" width="100" height="34" alt="LoLo" class="logo">
+        </div>
+    </header>
+
+    <main class="onboarding-layout">
+        <div class="wizard-column">
+            <section class="wizard-card" aria-label="Family onboarding">
+                <div class="card-topline"><span id="step-counter">STEP 01 OF 05</span></div>
+                <div class="progress-track" role="progressbar" aria-label="Onboarding progress" aria-valuemin="0" aria-valuemax="5" aria-valuenow="1"><span id="progress-fill"></span></div>
+
+                <form id="onboarding-form" novalidate>
+                    <section class="wizard-step" data-step="0" aria-labelledby="person-heading">
+                        <div class="step-heading"><h1 id="person-heading" tabindex="-1">Who is receiving care?</h1></div>
+                        <fieldset class="choice-grid"><legend class="sr-only">Who is receiving care?</legend>
+                            <label class="choice-card"><input type="radio" name="care_for" value="me" required><span class="choice-icon"><svg class="icon" aria-hidden="true"><use href="#icon-person"/></svg></span><span class="choice-title">Me</span><span class="radio-mark" aria-hidden="true"></span></label>
+                            <label class="choice-card"><input type="radio" name="care_for" value="family" required><span class="choice-icon"><svg class="icon" aria-hidden="true"><use href="#icon-people"/></svg></span><span class="choice-title">A family member</span><span class="radio-mark" aria-hidden="true"></span></label>
+                        </fieldset>
+                        <p class="field-error" id="care_for-error" hidden></p>
+                        <div id="family-fields" class="conditional-fields" hidden>
+                            <div class="field"><label for="recipient-name">Their full name</label><input id="recipient-name" name="recipient_name" type="text" placeholder="e.g. Susan Taylor" maxlength="100" autocomplete="off" aria-describedby="recipient_name-error" disabled><p class="field-error" id="recipient_name-error" hidden></p></div>
+                            <div class="field"><label for="relationship">Their relationship to you</label><select id="relationship" name="relationship" aria-describedby="relationship-error" disabled><option value="">Select a relationship</option><option value="parent">Parent</option><option value="spouse">Spouse or partner</option><option value="grandparent">Grandparent</option><option value="sibling">Sibling</option><option value="child">Child</option><option value="relative">Another family member</option></select><p class="field-error" id="relationship-error" hidden></p></div>
+                        </div>
+                    </section>
+
+                    <section class="wizard-step" data-step="1" aria-labelledby="address-heading" hidden>
+                        <div class="step-heading"><h1 id="address-heading" tabindex="-1">Where will care happen?</h1><p>We'll use this address to help you find care nearby.</p></div>
+                        <div class="field"><label for="address">Street address</label><input id="address" name="address_line1" autocomplete="section-care street-address" placeholder="Street number and street name" maxlength="200" required aria-describedby="address_line1-error"><p class="field-error" id="address_line1-error" hidden></p></div>
+                        <div class="field"><label for="address-line2">Apartment, suite, etc. <span class="optional">(optional)</span></label><input id="address-line2" name="address_line2" autocomplete="section-care address-line2" placeholder="Apartment or unit number" maxlength="100"></div>
+                        <div class="address-row"><div class="field"><label for="city">City</label><input id="city" name="city" autocomplete="section-care address-level2" placeholder="City" maxlength="100" required aria-describedby="city-error"><p class="field-error" id="city-error" hidden></p></div><div class="field"><label for="state">State</label><input id="state" name="state" autocomplete="section-care address-level1" placeholder="e.g. NC" maxlength="50" required aria-describedby="state-error"><p class="field-error" id="state-error" hidden></p></div><div class="field"><label for="zip">ZIP code</label><input id="zip" name="zip" autocomplete="section-care postal-code" inputmode="numeric" placeholder="e.g. 27601" maxlength="10" required aria-describedby="zip-error"><p class="field-error" id="zip-error" hidden></p></div></div>
+                    </section>
+
+                    <section class="wizard-step" data-step="2" aria-labelledby="notes-heading" hidden>
+                        <div class="step-heading"><span class="optional-badge">OPTIONAL</span><h1 id="notes-heading" tabindex="-1">Want to tell caregivers a little about this person?</h1></div>
+                        <div class="field"><label for="care-notes">What should a caregiver know?</label><p class="field-hint" id="care-notes-hint">A little about their personality, daily routine, or the support they need.</p><textarea id="care-notes" name="care_notes" rows="3" maxlength="2000" aria-describedby="care-notes-hint" placeholder="e.g. Mom loves her garden and a good conversation. She needs a little help getting around."></textarea></div>
+                        <div class="field"><label for="care-preferences">What helps care go well?</label><p class="field-hint" id="care-preferences-hint">Familiar comforts, preferences, or things that help them feel at ease.</p><textarea id="care-preferences" name="care_preferences" rows="3" maxlength="2000" aria-describedby="care-preferences-hint" placeholder="e.g. A gentle pace, explaining things as you go, and a cup of tea in the afternoon."></textarea></div>
+                    </section>
+
+                    <section class="wizard-step" data-step="3" aria-labelledby="visit-heading" hidden>
+                        <div class="step-heading"><h1 id="visit-heading" tabindex="-1">A free visit to get started</h1></div>
+                        <div class="welcome-visit"><div class="visit-icon"><svg class="icon" aria-hidden="true"><use href="#icon-home"/></svg></div><div><div class="visit-title"><h3>Meet a member of the LoLo team</h3></div><p>We'll answer your questions and guide you through getting started.</p><div class="visit-meta"><span><svg class="icon" aria-hidden="true"><use href="#icon-clock"/></svg>1 hour</span><span><svg class="icon" aria-hidden="true"><use href="#icon-home"/></svg>At your care address</span></div></div></div>
+                        <fieldset class="visit-choices"><legend>Would you like a welcome visit?</legend><label class="inline-choice"><input type="radio" name="welcome_visit" value="yes" required><span class="radio-mark" aria-hidden="true"></span><span><strong>Yes, I'd like a visit</strong><small>Choose a date and time range below</small></span></label><label class="inline-choice"><input type="radio" name="welcome_visit" value="no" required><span class="radio-mark" aria-hidden="true"></span><span><strong>No thanks</strong><small>Continue to your first request</small></span></label></fieldset>
+                        <p class="field-error" id="welcome_visit-error" hidden></p>
+                        <div id="visit-scheduling" class="conditional-fields" hidden>
+                            <div class="schedule-heading"><svg class="icon" aria-hidden="true"><use href="#icon-calendar"/></svg><h3>When works for you?</h3></div>
+                            <p class="field-hint" id="schedule-hint">Choose a range that starts at least 24 hours from now.</p>
+                            <div class="field"><label for="visit-date">Preferred date</label><input id="visit-date" name="visit_date" type="date" required disabled aria-describedby="schedule-hint visit_date-error"><p class="field-error" id="visit_date-error" hidden></p></div>
+                            <fieldset id="visit-time" class="time-range-field" disabled aria-describedby="visit_time-error schedule-hint">
+                                <legend>Preferred time</legend>
+                                <div class="time-range-options">
+                                    <label class="time-range-choice"><input type="radio" name="visit_time" value="morning" required aria-describedby="visit_time-error"><strong>Morning</strong><span>9 am – 12 pm</span></label>
+                                    <label class="time-range-choice"><input type="radio" name="visit_time" value="noon" required aria-describedby="visit_time-error"><strong>Noon</strong><span>12 pm – 2 pm</span></label>
+                                    <label class="time-range-choice"><input type="radio" name="visit_time" value="afternoon" required aria-describedby="visit_time-error"><strong>Afternoon</strong><span>2 pm – 5 pm</span></label>
+                                </div>
+                            </fieldset>
+                            <p class="field-error" id="visit_time-error" hidden></p>
+                            <p id="timezone-note" class="timezone-note">Eastern Time, at your care address.</p>
+                            <p class="visit-confirmation">Our team will confirm the final time by text.</p>
+                            <p class="field-error" id="visit_datetime-error" role="alert" hidden></p>
+                        </div>
+                    </section>
+
+                    <section class="wizard-step" data-step="4" aria-labelledby="ready-heading" hidden>
+                        <div class="step-heading"><h1 id="ready-heading" tabindex="-1">Let's post your first request</h1></div>
+                        <ol class="care-journey" aria-label="How finding care works"><li><span class="journey-icon"><svg class="icon" aria-hidden="true"><use href="#icon-note"/></svg></span><div><h3>Post a request</h3><p>Choose the help you need and when.</p></div><span class="next-badge">UP NEXT</span></li><li><span class="journey-icon"><svg class="icon" aria-hidden="true"><use href="#icon-people"/></svg></span><div><h3>Review caregivers</h3><p>Compare profiles and applications.</p></div></li><li><span class="journey-icon"><svg class="icon" aria-hidden="true"><use href="#icon-heart"/></svg></span><div><h3>Hire your caregiver</h3><p>Choose who you'd like to work with.</p></div></li><li><span class="journey-icon"><svg class="icon" aria-hidden="true"><use href="#icon-home"/></svg></span><div><h3>Your first care visit</h3><p>Your caregiver arrives at the agreed time.</p></div></li></ol>
+                        <div id="visit-summary" class="visit-summary" hidden><svg class="icon" aria-hidden="true"><use href="#icon-calendar"/></svg><div><strong>Your preferred welcome visit</strong><p id="visit-summary-date"></p><p>Our team will confirm the final time by text.</p></div><button type="button" id="edit-visit">Edit</button></div>
+                    </section>
+
+                    <footer class="wizard-footer"><button class="back-button" id="back-button" type="button" hidden><svg class="icon" aria-hidden="true"><use href="#icon-arrow"/></svg>Back</button><button class="continue-button" type="submit"><span id="continue-label">Continue</span><svg class="icon" aria-hidden="true"><use href="#icon-arrow"/></svg></button></footer>
+                </form>
+                <noscript><p class="noscript-note">Please enable JavaScript to use this onboarding wizard.</p></noscript>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

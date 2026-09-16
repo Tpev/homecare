@@ -156,6 +156,7 @@ new class extends Component
             'acquisition' => [
                 'label' => 'Acquire families',
                 'active' => request()->routeIs('admin.family-acquisition.*')
+                    || request()->routeIs('admin.family-onboarding.*')
                     || request()->routeIs('sdr.family-calling')
                     || request()->routeIs('admin.sdr-outreach.*'),
                 'items' => [
@@ -163,6 +164,11 @@ new class extends Component
                         'label' => 'Management overview',
                         'href' => route('admin.family-acquisition.overview'),
                         'active' => request()->routeIs('admin.family-acquisition.overview'),
+                    ],
+                    [
+                        'label' => 'Family onboarding',
+                        'href' => route('admin.family-onboarding.index'),
+                        'active' => request()->routeIs('admin.family-onboarding.*'),
                     ],
                     [
                         'label' => 'Family leads CRM',

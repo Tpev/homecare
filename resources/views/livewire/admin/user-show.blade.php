@@ -197,6 +197,9 @@
     @endif
 
     @if($user->role === 'family')
+        @if($familyAccount && ($familyOnboarding = \App\Models\FamilyOnboarding::query()->where('family_account_id', $familyAccount->id)->first()))
+            <div class="rounded-xl border bg-white p-4 text-sm"><a href="{{ route('admin.family-onboarding.show', $familyOnboarding) }}" class="font-semibold underline">Family onboarding: {{ str_replace('_', ' ', $familyOnboarding->status) }}</a></div>
+        @endif
         <x-card>
             <x-slot:header>
                 <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">

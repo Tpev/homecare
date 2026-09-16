@@ -117,7 +117,7 @@ class OpsAlertService
         }
     }
 
-    private function recipients(): array
+    public function recipients(): array
     {
         $configured = (array) config('marketplace.ops_alert_recipients', []);
         $replacements = collect((array) config('marketplace.ops_alert_recipient_replacements', []))

@@ -57,6 +57,12 @@ class FamilyAccountOwnershipService
             $newOwner->forceFill(['access_level' => FamilyAccountMember::ACCESS_OWNER])->save();
             $lockedAccount->forceFill(['owner_user_id' => $newOwnerId])->save();
 
+            \App\Models\FamilyOnboarding::query()->where('family_account_id', $lockedAccount->id)
+                ->where('status', 'in_progress')->update([
+                    'status' => 'exempted', 'exemption_reason' => 'ownership_transferred',
+                    'revision' => DB::raw('revision + 1'),
+                ]);
+
             foreach (FamilyAccountBackfill::FAMILY_OWNED_TABLES as $table) {
                 DB::table($table)
                     ->where('family_account_id', $lockedAccount->id)

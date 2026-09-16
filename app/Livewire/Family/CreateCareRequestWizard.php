@@ -10,6 +10,7 @@ use App\Models\FamilyHouseholdProfile;
 use App\Models\FamilyRecipientProfile;
 use App\Services\AiSupport\AiSupportPreparationService;
 use App\Services\CareRecipientProfiles\CareRecipientProfileService;
+use App\Services\Family\FamilyOnboardingService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Support\FamilyQuickRequestDraft;
 use App\Support\FunnelTracker;
@@ -25,6 +26,28 @@ use Throwable;
 #[Layout('layouts.app')]
 class CreateCareRequestWizard extends Component
 {
+    private const ONBOARDING_REQUEST_FIELDS = [
+        'step', 'modeChosen', 'request_mode', 'title', 'additional_info', 'scope_of_work',
+        'time_expectations', 'home_access_notes', 'preferred_response_hours', 'is_private', 'request_type',
+        'requested_start_at', 'requested_end_at', 'requested_start_date', 'requested_start_time', 'requested_duration_minutes',
+        'recurring_days', 'recurring_start_time', 'recurring_end_time', 'recurring_duration_minutes', 'recurring_schedule',
+        'recurring_starts_on', 'recurring_ends_on', 'recurring_end_choice', 'address_line1', 'address_line2', 'city', 'state', 'zip',
+        'selectedTasks', 'taskNotes', 'recipient_full_name', 'recipient_date_of_birth', 'recipient_gender', 'recipient_mobility_level',
+        'recipient_relationship_to_family', 'recipient_care_notes', 'care_for', 'includeThirdPartyContact',
+        'third_party_full_name', 'third_party_relationship_to_recipient', 'third_party_phone', 'third_party_email',
+        'quick_profile_about', 'quick_profile_good_visit', 'createQuickCareProfile', 'quick_profile_sharing_acknowledged',
+        'selected_care_recipient_profile_id',
+    ];
+
+    #[\Livewire\Attributes\Locked]
+    public ?int $onboardingHandoffRevision = null;
+
+    #[\Livewire\Attributes\Locked]
+    public ?int $onboardingCareProfileId = null;
+
+    #[\Livewire\Attributes\Locked]
+    public ?int $onboardingCareProfileRevision = null;
+
     public const MODE_FAST_TRACK = 'fast_track';
 
     public const MODE_COMPLETE_SETUP = 'complete_setup';
@@ -210,6 +233,11 @@ class CreateCareRequestWizard extends Component
     {
         $user = auth()->user();
         abort_unless($user && $user->can('create', CareRequest::class), 403);
+        if (app(FamilyOnboardingService::class)->pending($user)) {
+            $this->redirectRoute('family.onboarding');
+
+            return;
+        }
 
         $this->taskOptions = CareTask::query()
             ->orderBy('name')
@@ -235,6 +263,8 @@ class CreateCareRequestWizard extends Component
             $this->additional_info = $this->additional_info ?: (string) data_get($welcome->lead?->data, 'care_preferences.help_needed', '');
             $this->modeChosen = true;
         }
+
+        $this->applyOnboardingHandoff();
 
         $lastRequest = CareRequest::query()
             ->forFamilyAccount(app(FamilyAccountContext::class)->account($user))
@@ -603,11 +633,13 @@ class CreateCareRequestWizard extends Component
         $this->syncScheduleFields();
         $this->validateStep($this->step);
         $this->step = min($this->step + 1, $this->totalSteps);
+        $this->saveOnboardingRequestProgress();
     }
 
     public function previousStep(): void
     {
         $this->step = max($this->step - 1, 1);
+        $this->saveOnboardingRequestProgress();
     }
 
     public function updatedRequestType(string $value): void
@@ -675,6 +707,7 @@ class CreateCareRequestWizard extends Component
     public function updatedCareFor(string $value): void
     {
         $this->selected_care_recipient_profile_id = null;
+        $this->onboardingCareProfileId = $this->onboardingCareProfileRevision = null;
 
         if ($value === self::CARE_FOR_SELF) {
             $this->recipient_full_name = trim((string) (auth()->user()?->name ?? ''));
@@ -729,6 +762,11 @@ class CreateCareRequestWizard extends Component
 
     public function publish(): void
     {
+        if (app(FamilyOnboardingService::class)->pending(auth()->user())) {
+            $this->redirectRoute('family.onboarding');
+
+            return;
+        }
         $this->syncScheduleFields();
         $this->validateAll();
         $this->syncScheduleFields();
@@ -791,10 +829,17 @@ class CreateCareRequestWizard extends Component
                 ]);
             }
 
+            \App\Models\FamilyOnboarding::query()->where('family_account_id', $ownership['family_account_id'])
+                ->where('status', 'completed')->whereNull('request_handoff_completed_at')
+                ->update(['request_handoff_completed_at' => now(), 'request_context' => null]);
+
             return $careRequest;
         });
 
         $this->saveFamilyProfiles();
+        if ($this->onboardingHandoffRevision !== null) {
+            FamilyQuickRequestDraft::pull();
+        }
 
         FunnelTracker::track('care_request_published', auth()->user(), $careRequest, [
             'request_type' => $careRequest->request_type,
@@ -824,6 +869,8 @@ class CreateCareRequestWizard extends Component
     {
         return [
             'selectedTasks.required' => 'Choose at least one kind of help.',
+            'quick_profile_about.required' => 'Answer at least one question, or skip the care profile.',
+            'quick_profile_good_visit.required' => 'Answer at least one question, or skip the care profile.',
             'selectedTasks.min' => 'Choose at least one kind of help.',
             'requested_start_date.required' => 'Choose the day care should start.',
             'requested_start_time.required' => 'Choose the start time.',
@@ -1059,7 +1106,7 @@ class CreateCareRequestWizard extends Component
     private function rulesForRecipient(): array
     {
         $recipientNameRules = $this->recipientIsRequester
-            ? ['nullable', 'string', 'max:120']
+            ? ['nullable', 'string', 'max:255']
             : ($this->request_mode === self::MODE_FAST_TRACK
             ? ['required', 'string', 'min:2', 'max:120']
             : ['nullable', 'string', 'max:120']);
@@ -1071,11 +1118,11 @@ class CreateCareRequestWizard extends Component
             'recipient_gender' => ['nullable', Rule::in(array_column($this->genderOptions, 'value'))],
             'recipient_mobility_level' => ['nullable', Rule::in(array_column($this->mobilityOptions, 'value'))],
             'recipient_relationship_to_family' => ['nullable', 'string', 'max:120'],
-            'recipient_care_notes' => ['nullable', 'string', 'max:2000'],
+            'recipient_care_notes' => ['nullable', 'string', 'max:4100'],
             'selected_care_recipient_profile_id' => ['nullable', 'integer'],
             'createQuickCareProfile' => ['boolean'],
-            'quick_profile_about' => [Rule::requiredIf($this->createQuickCareProfile), 'nullable', 'string', 'max:1000'],
-            'quick_profile_good_visit' => [Rule::requiredIf($this->createQuickCareProfile), 'nullable', 'string', 'max:1000'],
+            'quick_profile_about' => [Rule::requiredIf($this->createQuickCareProfile && trim($this->quick_profile_good_visit) === ''), 'nullable', 'string', 'max:2000'],
+            'quick_profile_good_visit' => [Rule::requiredIf($this->createQuickCareProfile && trim($this->quick_profile_about) === ''), 'nullable', 'string', 'max:2000'],
             'quick_profile_sharing_acknowledged' => $this->createQuickCareProfile
                 ? ['required', 'accepted']
                 : ['nullable', 'boolean'],
@@ -1100,23 +1147,35 @@ class CreateCareRequestWizard extends Component
         }
 
         $service = app(CareRecipientProfileService::class);
-        $draft = $service->saveDraft($user, null, [
+        $draft = null;
+        if ($this->onboardingCareProfileId !== null) {
+            $handoff = app(FamilyOnboardingService::class)->requestHandoff($user);
+            abort_unless($handoff && (int) $handoff->care_recipient_profile_id === $this->onboardingCareProfileId, 409);
+            $draft = CareRecipientProfile::query()->forFamilyAccount($account)
+                ->lockForUpdate()->findOrFail($this->onboardingCareProfileId);
+            if ($draft->status !== CareRecipientProfile::STATUS_DRAFT) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['profile' => 'This care profile changed. Reload to review it before posting.']);
+            }
+        }
+        $data = $service->mergedData($draft, [
             'recipient_is_requester' => $this->recipientIsRequester,
             'full_name' => $this->resolvedRecipientName,
-            'preferred_name' => $this->resolvedRecipientName,
+            'preferred_name' => $draft?->preferred_name ?: mb_substr($this->resolvedRecipientName, 0, 80),
             'relationship_to_family' => $this->resolvedRecipientRelationship,
             'about_them' => $this->quick_profile_about,
             'good_visit_notes' => $this->quick_profile_good_visit,
         ]);
+        $expectedRevision = $this->onboardingCareProfileRevision;
+        if (! $draft) {
+            $draft = $service->saveDraft($user, null, $data);
+            $expectedRevision = (int) $draft->revision;
+        }
 
         return $service->makeReady(
             $user,
             $draft,
-            $draft->only([
-                'recipient_is_requester', 'full_name', 'preferred_name', 'relationship_to_family',
-                'about_them', 'good_visit_notes',
-            ]),
-            (int) $draft->revision,
+            $data,
+            (int) $expectedRevision,
             $this->quick_profile_sharing_acknowledged,
         );
     }
@@ -1200,7 +1259,11 @@ class CreateCareRequestWizard extends Component
 
     private function applyHomepageQuickRequestDraft(): void
     {
-        $draft = FamilyQuickRequestDraft::pull();
+        $handoff = app(FamilyOnboardingService::class)->requestHandoff(auth()->user());
+        if ($handoff && $handoff->source !== 'homepage_request') {
+            return;
+        }
+        $draft = $handoff ? ($handoff->request_context ?? []) : FamilyQuickRequestDraft::pull();
 
         if (! $draft) {
             return;
@@ -1231,6 +1294,98 @@ class CreateCareRequestWizard extends Component
         $this->zip = (string) ($draft['zip'] ?? '');
 
         session()->flash('status', 'Your homepage request draft is loaded. Review it, then publish when ready.');
+    }
+
+    private function applyOnboardingHandoff(): void
+    {
+        $record = app(FamilyOnboardingService::class)->requestHandoff(auth()->user());
+        if (! $record) {
+            return;
+        }
+        $this->onboardingHandoffRevision = $record->revision;
+        $answers = $record->submitted_snapshot;
+        $this->additional_info = $this->additional_info ?: (string) ($record->request_context['additional_info'] ?? '');
+        foreach (['address_line1', 'address_line2', 'city', 'state', 'zip'] as $field) {
+            $this->{$field} = (string) ($answers[$field] ?? '');
+        }
+        $this->care_for = $answers['care_for'] === 'me' ? self::CARE_FOR_SELF : self::CARE_FOR_OTHER;
+        $this->recipient_full_name = $answers['recipient_name'];
+        $this->recipient_relationship_to_family = $answers['relationship'];
+        $this->recipient_care_notes = '';
+        $this->quick_profile_about = $answers['care_notes'];
+        $this->quick_profile_good_visit = $answers['care_preferences'];
+        $profile = CareRecipientProfile::query()->where('family_account_id', $record->family_account_id)
+            ->where('status', '!=', CareRecipientProfile::STATUS_ARCHIVED)->find($record->care_recipient_profile_id);
+        if ($profile) {
+            $this->onboardingCareProfileId = $profile->id;
+            $this->onboardingCareProfileRevision = (int) $profile->revision;
+            $this->care_for = $profile->recipient_is_requester ? self::CARE_FOR_SELF : self::CARE_FOR_OTHER;
+            $this->recipient_full_name = (string) ($profile->full_name ?: $profile->preferred_name);
+            $this->recipient_relationship_to_family = (string) $profile->relationship_to_family;
+            $this->quick_profile_about = (string) $profile->about_them;
+            $this->quick_profile_good_visit = (string) $profile->good_visit_notes;
+            if ($profile->isReady()) {
+                $this->selected_care_recipient_profile_id = $profile->id;
+            }
+        }
+        $this->createQuickCareProfile = ! $this->selected_care_recipient_profile_id
+            && trim($this->quick_profile_about.$this->quick_profile_good_visit) !== '';
+        $this->prefillApplied = $this->savedProfilesApplied = $this->modeChosen = true;
+        $this->step = $record->source === 'homepage_request' ? $this->step : 1;
+        $state = $record->request_context['wizard_state'] ?? [];
+        if (! isset($record->request_context['care_profile_handoff_version'])) {
+            // Older handoffs hid the prefilled profile and copied both answers into generic notes.
+            unset($state['createQuickCareProfile']);
+            if (($state['recipient_care_notes'] ?? '') === FamilyOnboardingService::combinedNotes($answers)) {
+                unset($state['recipient_care_notes']);
+            }
+        } elseif ($profile && isset($record->request_context['care_profile_revision'])
+            && $record->request_context['care_profile_revision'] !== (int) $profile->revision) {
+            // Reload a profile edited elsewhere instead of restoring stale answers over it.
+            foreach (['care_for', 'recipient_full_name', 'recipient_relationship_to_family', 'quick_profile_about',
+                'quick_profile_good_visit', 'quick_profile_sharing_acknowledged', 'createQuickCareProfile',
+                'selected_care_recipient_profile_id'] as $field) {
+                unset($state[$field]);
+            }
+        }
+        foreach (\Illuminate\Support\Arr::only($state, self::ONBOARDING_REQUEST_FIELDS) as $key => $value) {
+            $this->{$key} = $value;
+        }
+        if ($profile && $this->recipientIsRequester !== (bool) $profile->recipient_is_requester) {
+            $this->onboardingCareProfileId = $this->onboardingCareProfileRevision = null;
+        }
+    }
+
+    private function saveOnboardingRequestProgress(): void
+    {
+        if ($this->onboardingHandoffRevision === null) {
+            return;
+        }
+        $record = app(FamilyOnboardingService::class)->requestHandoff(auth()->user());
+        abort_unless($record, 409);
+        DB::transaction(function () use ($record) {
+            $locked = \App\Models\FamilyOnboarding::query()->lockForUpdate()->findOrFail($record->id);
+            if ($locked->revision !== $this->onboardingHandoffRevision || $locked->request_handoff_completed_at) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['onboarding' => 'Your saved request changed in another tab. Reload before continuing.']);
+            }
+            $state = [];
+            foreach (self::ONBOARDING_REQUEST_FIELDS as $field) {
+                $state[$field] = $this->{$field};
+            }
+            $locked->update(['request_context' => [...($locked->request_context ?? []), 'wizard_state' => $state,
+                'care_profile_handoff_version' => 1, 'care_profile_revision' => $this->onboardingCareProfileRevision],
+                'revision' => $locked->revision + 1]);
+            $this->onboardingHandoffRevision = $locked->revision;
+        });
+    }
+
+    public function updated(string $property): void
+    {
+        // The current request screen is one page. Persist its field updates too,
+        // so resuming does not depend on the legacy Next / Back controls.
+        if ($this->onboardingHandoffRevision !== null && in_array(explode('.', $property)[0], self::ONBOARDING_REQUEST_FIELDS, true)) {
+            $this->saveOnboardingRequestProgress();
+        }
     }
 
     private function saveFamilyProfiles(): void

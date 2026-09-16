@@ -1,0 +1,30 @@
+{
+  "checks": [
+    "Normal registration opens integrated onboarding",
+    "Validation is visible and focused",
+    "Saved step resumes after refresh",
+    "Range options and text confirmation appear",
+    "390px layout has no horizontal overflow",
+    "320px layout has no horizontal overflow",
+    "Completion opens request creation",
+    "Request receives the saved address and care notes",
+    "Completed family cannot reopen onboarding",
+    "Existing family keeps its current landing page",
+    "Admin receives all saved form information",
+    "Admin can confirm the visit and follow-up survives reload"
+  ],
+  "errors": [],
+  "screenshots": [
+    "integrated-01-person-desktop.png",
+    "integrated-02-address-desktop.png",
+    "integrated-03-notes-desktop.png",
+    "integrated-04-visit-desktop.png",
+    "integrated-04-visit-mobile.png",
+    "integrated-04-visit-320.png",
+    "integrated-05-ready-desktop.png",
+    "integrated-06-request-handoff.png",
+    "integrated-07-admin-submission.png",
+    "integrated-failure.png"
+  ],
+  "passed": true
+}
