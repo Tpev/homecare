@@ -96,6 +96,8 @@
             </div>
         </div>
 
+        @include('livewire.admin.partials.customer-booked-hours')
+
         <div class="mt-6 rounded-2xl border border-slate-200 bg-white p-4 md:p-5">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>

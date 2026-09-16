@@ -10,6 +10,7 @@ use App\Models\CareRequestMessage;
 use App\Models\FunnelEvent;
 use App\Models\PageViewEvent;
 use App\Models\User;
+use App\Services\Analytics\CustomerBookedHoursReport;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
@@ -65,6 +66,8 @@ class UsageAnalytics extends Component
             'bucketRows' => $bucketRows,
             'dailyActiveUsers' => $dailyActiveUsers,
             'groupingLabel' => $this->normalizedGrouping() === 'month' ? 'Monthly' : 'Weekly',
+            'customerHours' => app(CustomerBookedHoursReport::class)->build($start, $end, $this->normalizedGrouping()),
+            'customerHoursPeriod' => $this->normalizedGrouping() === 'month' ? 'month' : 'week',
         ]);
     }
 
