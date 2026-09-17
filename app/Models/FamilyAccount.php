@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class FamilyAccount extends Model
 {
@@ -25,6 +26,11 @@ class FamilyAccount extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_user_id');
+    }
+
+    public function onboarding(): HasOne
+    {
+        return $this->hasOne(FamilyOnboarding::class);
     }
 
     public function memberships(): HasMany

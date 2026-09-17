@@ -13,6 +13,7 @@
 - Morning / Noon / Afternoon with server-side validation at least 24 elapsed hours before the window starts, using `America/New_York` by default. UTC instants preserve daylight-saving behavior independently of the app timezone.
 - Phone correction and normalization for text confirmation. Welcome visits remain free one-hour requests, separate from paid care bookings.
 - Admin queue at `/admin/family-onboarding`, linked from Acquire families and the existing family-user page. Filters include incomplete forms, visits needing contact, and email problems.
+- Admin visibility includes active family accounts without an enrollment, explicitly labeled **Not enrolled**, plus their latest non-system request. Search by name, email (including active invited members), or account ID. Missing records are not treated as completed forms or silently backfilled.
 - Staff can record contact, agreed time, confirmation by text, completion, cancellation or unavailability. Changes record actor, timestamp and an account activity event. Recording confirmation does not itself send an SMS; use the existing SMS inbox.
 
 ## Admin email delivery
@@ -35,22 +36,26 @@ Mail content is never written to application logs by the onboarding sender. Capt
 
 ## Deployment and activation
 
-Production enrollment is **off by default**. Existing accounts receive no new rows. Code and local testing do not activate production.
+Onboarding is **always on for new normal family registrations** after deployment. There is no enrollment or enforcement feature flag. Existing accounts receive no new rows, and invitation registrations remain excluded. Old `FAMILY_ONBOARDING_ENROLLMENT_ENABLED` / `FAMILY_ONBOARDING_ENFORCEMENT_ENABLED` values are ignored, including `false` values left in `.env` or cached configuration.
 
 1. Deploy the two additive migrations before serving the new code (`php artisan migrate --force`). The second migration expands full-name capacity to match signup's 255-character limit. It preserves that capacity on rollback to avoid truncating names; the preferred display name remains bounded at 80 characters.
 2. Verify `MARKETPLACE_OPS_ALERT_RECIPIENTS` and the actual production mail transport.
 3. Confirm the queue worker consumes `FAMILY_ONBOARDING_QUEUE_CONNECTION` (default `database`) on the default queue. The job timeout is 60 seconds; queue retry-after must exceed that. Restart workers after deploying job changes.
 4. Keep the Laravel scheduler running. `family-onboarding:dispatch-emails` is scheduled every minute with overlap protection. It can also be run manually.
 5. On staging, complete normal and invited registrations, verify an existing account, inspect the submitted admin record, and verify a real mail delivery using staging recipients. Automated tests use SQLite and fake mail/transports; no production email was sent during development.
-6. Enable `FAMILY_ONBOARDING_ENROLLMENT_ENABLED=true` and keep `FAMILY_ONBOARDING_ENFORCEMENT_ENABLED=true`; rebuild cached configuration as usual.
+6. Deploy using the standard atomic release process (`./deploy.sh`), which runs migrations, rebuilds cached configuration, and reloads the application. No `.env` activation step is needed.
 
-Rollback: disable enrollment to stop enrolling new signups. Disable enforcement to lift redirects for unfinished accounts. Keep schema, records, workers and recovery in place. Re-enabling does not enroll accounts created while disabled or reset completed accounts.
+Rollback uses the standard code-release rollback. Keep schema and saved onboarding data in place. Deploying this release never enrolls older accounts or resets completed accounts.
+
+### Diagnosing a missing admin record
+
+Having a request or a simple care profile does not prove that the onboarding wizard was submitted. The same details can be entered directly in request creation. Earlier releases used an enrollment flag that defaulted off, so families could register without a record. The admin list previously started from enrollment records only, hiding those families entirely; it now starts from family accounts and labels missing records accurately.
+
+Do not fabricate completion records from care requests: they cannot recover a welcome-visit choice, submission time, or original answers. Existing families and invitees remain excluded. Completed forms and profile data commit together in the same transaction; publishing a request does not delete the completed onboarding record.
 
 Configuration:
 
 ```dotenv
-FAMILY_ONBOARDING_ENROLLMENT_ENABLED=false
-FAMILY_ONBOARDING_ENFORCEMENT_ENABLED=true
 FAMILY_ONBOARDING_TIMEZONE=America/New_York
 FAMILY_ONBOARDING_QUEUE_CONNECTION=database
 ```
@@ -75,6 +80,7 @@ The isolated preview uses the same seven-option care-task catalog as the main da
 
 ## Validation artifacts
 
+- Automatic-onboarding release: **169 tests / 1,200 assertions passed**, covering registration (including stale disabled settings), login, verification, invitations, account sharing, onboarding, homepage/lead handoff, care requests/profiles, and admin/mail views. Nine browser checks passed across `admin-visibility-qa.mjs` and `profile-handoff-qa.mjs`.
 - `tests/Feature/Family/FamilyOnboardingTest.php`: focused authorization, enrollment, persistence, transaction, date/DST, request-handoff, delivery and admin tests.
 - `phpunit-onboarding.xml`: 32 focused tests and 181 assertions passed.
 - `phpunit-regression.xml`: 126 existing registration, authentication, verification, invitation/account, homepage, lead, request, recipient-profile and admin/mail tests; 910 assertions passed.
@@ -83,4 +89,4 @@ The isolated preview uses the same seven-option care-task catalog as the main da
 - Simple-profile handoff correction: 84 tests / 639 assertions passed across `FamilyOnboardingTest`, `CareRecipientProfileTest`, and `CareRequestFlowTest`. Covers the full task catalog, prefilled answers, refresh/skip behavior, optional answers, sharing acknowledgment, reuse of the existing draft, and concurrent edits.
 - `profile-handoff-qa.mjs`: browser verification of all seven help choices, both prefilled questions, saved edits after refresh, and mobile layout.
 
-No production migration, rollout flag, real welcome visit, real SMS, or external admin email was performed as part of implementation.
+Local verification does not perform production migrations, book real welcome visits, send SMS, or deliver external admin email.

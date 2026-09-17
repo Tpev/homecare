@@ -3,6 +3,7 @@
 namespace Tests\Feature\Family;
 
 use App\Jobs\SendFamilyOnboardingEmail;
+use App\Livewire\Admin\FamilyOnboardingIndex;
 use App\Livewire\Admin\FamilyOnboardingShow;
 use App\Livewire\Auth\FamilyInvitationRegister;
 use App\Livewire\Family\CreateCareRequestWizard;
@@ -11,6 +12,7 @@ use App\Mail\Ops\FamilyOnboardingCompletedMail;
 use App\Models\CareRecipientProfile;
 use App\Models\CareRequest;
 use App\Models\CareTask;
+use App\Models\FamilyAccount;
 use App\Models\FamilyAccountMember;
 use App\Models\FamilyOnboarding;
 use App\Models\FamilyWelcomeVisit;
@@ -46,8 +48,6 @@ class FamilyOnboardingTest extends TestCase
     {
         parent::setUp();
         config([
-            'family_onboarding.enrollment_enabled' => true,
-            'family_onboarding.enforcement_enabled' => true,
             'family_onboarding.timezone' => 'America/New_York',
             'marketplace.ops_alert_recipients' => ['ops@example.com', 'OPS@example.com'],
         ]);
@@ -427,17 +427,24 @@ class FamilyOnboardingTest extends TestCase
         $this->assertNull($delivery->accepted_at);
     }
 
-    public function test_rollout_flags_do_not_enroll_existing_or_reset_completed_accounts(): void
+    public function test_old_disabled_settings_cannot_disable_registration_or_pending_onboarding(): void
     {
-        $user = $this->enrolled();
+        // Old values can remain in deployed .env/config caches. Neither is read now.
         config(['family_onboarding.enforcement_enabled' => false, 'family_onboarding.enrollment_enabled' => false]);
-        $this->get(route('family.requests.create'))->assertOk();
-        $newUser = User::factory()->create(['role' => 'family']);
-        $this->assertNull(app(FamilyOnboardingService::class)->enrollRegistration($newUser));
+        Volt::test('pages.auth.register')->set('name', 'Always On Family')->set('email', 'always-on@example.test')
+            ->set('phone', '(984) 555-0100')->set('password', 'password')->set('password_confirmation', 'password')
+            ->set('accept_terms', true)->call('register')->assertHasNoErrors()
+            ->assertRedirect(route('family.onboarding', absolute: false));
+        $user = Auth::user();
+        $this->assertTrue(app(FamilyOnboardingService::class)->pending($user));
+        $this->get(route('family.requests.create'))->assertRedirect(route('family.onboarding'));
         $this->completed($user);
-        config(['family_onboarding.enforcement_enabled' => true, 'family_onboarding.enrollment_enabled' => true]);
         $this->assertFalse(app(FamilyOnboardingService::class)->pending($user));
-        $this->assertFalse(app(FamilyOnboardingService::class)->pending($newUser));
+        $this->get(route('family.requests.create'))->assertOk();
+        $existingUser = User::factory()->create(['role' => 'family']);
+        $this->actingAs($existingUser)->get(route('family.requests.create'))->assertOk();
+        $this->assertFalse(app(FamilyOnboardingService::class)->pending($existingUser));
+        $this->assertDatabaseCount('family_onboardings', 1);
     }
 
     public function test_email_sends_all_info_and_duplicate_job_is_a_noop(): void
@@ -597,6 +604,10 @@ class FamilyOnboardingTest extends TestCase
         $this->assertNotNull($record->fresh()->request_handoff_completed_at);
         $this->assertNull($record->fresh()->request_context);
         Livewire::test(CreateCareRequestWizard::class)->assertSet('onboardingHandoffRevision', null)->assertSet('address_line1', '');
+        $admin = User::factory()->create(['role' => 'admin']);
+        Livewire::actingAs($admin)->test(FamilyOnboardingIndex::class)->set('filter', 'completed')->set('search', $user->email)
+            ->assertViewHas('families', fn ($families) => $families->sole()->onboarding->id === $record->id)
+            ->assertSee('Request #'.$request->id)->assertSee('Completed');
     }
 
     public function test_interrupted_email_delivery_is_unconfirmed_and_not_retried(): void
@@ -624,5 +635,83 @@ class FamilyOnboardingTest extends TestCase
         $this->assertSame('2026-09-18T14:00:00+00:00', $visit->confirmed_start_at->toIso8601String());
         $this->assertSame($admin->id, $visit->handled_by_user_id);
         $this->assertDatabaseHas('family_account_activity_logs', ['action' => 'welcome_visit_updated', 'actor_user_id' => $admin->id]);
+    }
+
+    public function test_admin_can_find_request_details_without_an_onboarding_enrollment(): void
+    {
+        // Represents an existing account created before automatic onboarding.
+        $user = User::factory()->create(['role' => 'family', 'name' => 'Earlier Signup', 'email' => 'earlier-signup@example.test']);
+        $this->actingAs($user);
+        $task = CareTask::query()->create(['name' => 'Companionship']);
+        Livewire::test(CreateCareRequestWizard::class)->set('recipient_full_name', 'A family member')
+            ->set('createQuickCareProfile', true)->set('quick_profile_about', 'Enjoys the garden.')
+            ->set('quick_profile_sharing_acknowledged', true)->set('selectedTasks', [$task->id])
+            ->set('requested_start_date', '2026-09-25')->set('requested_start_time', '10:00')
+            ->set('address_line1', '123 Oak Street')->set('city', 'Raleigh')->set('state', 'NC')->set('zip', '27601')
+            ->call('publish')->assertHasNoErrors();
+        $request = CareRequest::query()->sole();
+        $this->assertNotNull($request->recipient->care_recipient_profile_id);
+        $this->assertDatabaseCount('family_onboardings', 0);
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        Livewire::actingAs($admin)->test(FamilyOnboardingIndex::class)->set('search', $user->email)
+            ->assertSee('Not enrolled')->assertSee('Earlier Signup')
+            ->assertSee('Request #'.$request->id)
+            ->assertViewHas('families', fn ($families) => $families->total() === 1 && $families->first()->onboarding === null);
+        $this->get(route('admin.users.show', $user))->assertOk()->assertSee('Family onboarding: Not enrolled');
+
+        Livewire::test(FamilyOnboardingIndex::class)->set('search', $user->email)
+            ->assertSee('New family signups automatically start onboarding.')->assertSee('Not enrolled');
+        $this->assertDatabaseCount('family_onboardings', 0);
+        $this->assertFalse(app(FamilyOnboardingService::class)->pending($user));
+    }
+
+    public function test_admin_can_filter_and_search_enrolled_and_non_enrolled_families(): void
+    {
+        $completed = $this->completed($this->enrolled());
+        $pendingUser = $this->enrolled();
+        $pendingAccount = app(FamilyAccountContext::class)->account($pendingUser);
+        $legacy = User::factory()->create(['role' => 'family', 'email' => 'legacy-family@example.test']);
+        $legacyAccount = app(FamilyAccountContext::class)->account($legacy);
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        Livewire::actingAs($admin)->test(FamilyOnboardingIndex::class)
+            ->assertViewHas('families', fn ($families) => $families->total() === 3)
+            ->set('filter', 'completed')->assertViewHas('families', fn ($families) => $families->sole()->id === $completed->family_account_id)
+            ->set('filter', 'in_progress')->assertViewHas('families', fn ($families) => $families->sole()->id === $pendingAccount->id)
+            ->set('filter', 'not_enrolled')->assertViewHas('families', fn ($families) => $families->sole()->id === $legacyAccount->id)
+            ->set('filter', 'all')->set('search', $legacy->email)
+            ->assertViewHas('families', fn ($families) => $families->sole()->id === $legacyAccount->id)
+            ->set('search', (string) $pendingAccount->id)
+            ->assertViewHas('families', fn ($families) => $families->sole()->id === $pendingAccount->id)
+            ->set('search', 'missing-family@example.test')->assertSee('Clear search and filters');
+        $this->assertDatabaseCount('family_onboardings', 2);
+    }
+
+    public function test_admin_can_find_shared_family_by_invited_member_without_showing_closed_temporary_account(): void
+    {
+        $owner = $this->enrolled();
+        $account = app(FamilyAccountContext::class)->account($owner);
+        $member = User::factory()->create(['role' => 'family', 'email' => 'invited-member@example.test']);
+        FamilyAccountMember::query()->create([
+            'family_account_id' => $account->id, 'user_id' => $member->id,
+            'access_level' => 'member', 'status' => 'active', 'joined_at' => now(),
+        ]);
+        FamilyAccount::query()->create(['owner_user_id' => $member->id, 'status' => FamilyAccount::STATUS_CLOSED]);
+        $admin = User::factory()->create(['role' => 'admin']);
+        Livewire::actingAs($admin)->test(FamilyOnboardingIndex::class)->set('search', $member->email)
+            ->assertViewHas('families', fn ($families) => $families->sole()->id === $account->id);
+        $this->assertDatabaseCount('family_onboardings', 1);
+        $this->assertFalse(app(FamilyOnboardingService::class)->pending($member));
+    }
+
+    public function test_admin_search_resets_pagination_and_requires_admin_access(): void
+    {
+        $user = $this->enrolled();
+        $this->get(route('admin.family-onboarding.index'))->assertForbidden();
+        Livewire::test(FamilyOnboardingIndex::class)->assertForbidden();
+        $admin = User::factory()->create(['role' => 'admin']);
+        Livewire::actingAs($admin)->test(FamilyOnboardingIndex::class)->call('setPage', 2)
+            ->set('search', $user->email)->assertSet('paginators.page', 1)->assertSee($user->email);
     }
 }

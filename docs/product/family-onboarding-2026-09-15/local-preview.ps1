@@ -21,8 +21,6 @@ $env:SESSION_COOKIE = 'lolo_onboarding_preview'
 $env:MAIL_MAILER = 'array'
 $env:QUEUE_CONNECTION = 'database'
 $env:STRIPE_BYPASS = 'true'
-$env:FAMILY_ONBOARDING_ENROLLMENT_ENABLED = 'true'
-$env:FAMILY_ONBOARDING_ENFORCEMENT_ENABLED = 'true'
 $env:MARKETPLACE_OPS_ALERT_RECIPIENTS = 'onboarding-ops@example.test'
 
 php (Join-Path $PSScriptRoot 'setup-local.php')

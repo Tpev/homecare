@@ -199,6 +199,8 @@
     @if($user->role === 'family')
         @if($familyAccount && ($familyOnboarding = \App\Models\FamilyOnboarding::query()->where('family_account_id', $familyAccount->id)->first()))
             <div class="rounded-xl border bg-white p-4 text-sm"><a href="{{ route('admin.family-onboarding.show', $familyOnboarding) }}" class="font-semibold underline">Family onboarding: {{ str_replace('_', ' ', $familyOnboarding->status) }}</a></div>
+        @else
+            <div class="rounded-xl border bg-white p-4 text-sm"><p class="font-semibold">Family onboarding: Not enrolled</p><p class="mt-1 text-slate-600">No onboarding record exists for this family. Care request details do not establish that onboarding was completed.</p><a href="{{ route('admin.family-onboarding.index', ['search' => $user->email]) }}" class="mt-2 inline-block underline">View family onboarding</a></div>
         @endif
         <x-card>
             <x-slot:header>

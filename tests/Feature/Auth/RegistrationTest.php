@@ -43,7 +43,7 @@ class RegistrationTest extends TestCase
 
         $component->call('register');
 
-        $component->assertRedirect(route('family.requests.index', absolute: false));
+        $component->assertRedirect(route('family.onboarding', absolute: false));
 
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', [
@@ -51,6 +51,7 @@ class RegistrationTest extends TestCase
             'phone' => '(984) 400-4008',
         ]);
         $familyId = User::query()->where('email', 'test@example.com')->value('id');
+        $this->assertDatabaseHas('family_onboardings', ['initiated_by_user_id' => $familyId, 'status' => 'in_progress']);
         $this->assertDatabaseHas('marketplace_notification_deliveries', [
             'user_id' => $familyId,
             'event_key' => MarketplaceEvent::FAMILY_WELCOME,

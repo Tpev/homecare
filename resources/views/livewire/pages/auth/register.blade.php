@@ -89,7 +89,7 @@ new #[Layout('layouts.guest')] class extends Component
         @if(app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->sessionMessage())
             <h1 class="font-semibold tracking-tight">Create your free account</h1>
             <p class="text-sm leading-6 text-[#68756F]">You’re about 2 minutes away from posting your care request. We’ve filled in the details you shared with LoLo Care.</p>
-            <div class="flex flex-wrap gap-2 pt-2 text-xs font-semibold"><span class="rounded-full bg-emerald-100 px-3 py-2 text-emerald-900">1 · Free account</span><span class="rounded-full bg-stone-100 px-3 py-2 text-stone-600">2 · {{ config('family_onboarding.enrollment_enabled') ? 'Care details' : 'Post your request' }}</span></div>
+            <div class="flex flex-wrap gap-2 pt-2 text-xs font-semibold"><span class="rounded-full bg-emerald-100 px-3 py-2 text-emerald-900">1 · Free account</span><span class="rounded-full bg-stone-100 px-3 py-2 text-stone-600">2 · Care details</span></div>
         @else
             <h1 class="font-semibold tracking-tight">Create your family account</h1>
             <p class="text-sm leading-6 text-[#68756F]">Find care, coordinate visits, and keep your family informed from one place.</p>
@@ -106,7 +106,7 @@ new #[Layout('layouts.guest')] class extends Component
 
     @if (\App\Support\FamilyQuickRequestDraft::has())
         <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-            {{ config('family_onboarding.enrollment_enabled') ? 'Your care request details are saved. Create your account to continue.' : 'Your quick care request is saved. Create your account now and we’ll take you straight to the final review before publishing.' }}
+            Your care request details are saved. Create your account to continue.
         </div>
     @endif
 

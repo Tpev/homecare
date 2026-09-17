@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "Automatic onboarding policy is visible",
+    "Existing family without enrollment is searchable",
+    "Completed filter does not mislabel an unenrolled family",
+    "Search and filter survive refreshing",
+    "User profile explains the missing enrollment"
+  ],
+  "errors": [],
+  "passed": true
+}

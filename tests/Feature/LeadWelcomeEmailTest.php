@@ -102,18 +102,25 @@ class LeadWelcomeEmailTest extends TestCase
         $this->assertNotNull($lead->welcomeEmail->fresh()->previewed_at);
     }
 
-    public function test_signed_link_prefills_registration_and_continues_to_request_creation(): void
+    public function test_signed_link_prefills_registration_and_continues_through_onboarding_to_request_creation(): void
     {
         $lead = $this->lead();
         $this->get($lead->welcomeEmail->startUrl())->assertRedirect(route('register'));
         Volt::test('pages.auth.register')
             ->assertSet('name', 'Sarah Example')->assertSet('email', 'sarah@example.test')->assertSet('phone', '9195550100')
             ->set('password', 'password123')->set('password_confirmation', 'password123')->set('accept_terms', true)
-            ->call('register')->assertHasNoErrors()->assertRedirect(route('family.requests.create', absolute: false));
+            ->call('register')->assertHasNoErrors()->assertRedirect(route('family.onboarding', absolute: false));
         $this->assertAuthenticated();
         $message = $lead->welcomeEmail->fresh();
         $this->assertNotNull($message->account_created_at);
         $this->assertSame(auth()->id(), $message->account_user_id);
+        Livewire::test(\App\Livewire\Family\OnboardingWizard::class)->assertSet('form.zip', '27601')
+            ->set('form.care_for', 'family')->set('form.recipient_name', 'Sarah’s mother')->set('form.relationship', 'Parent')
+            ->call('next')->assertHasNoErrors()
+            ->set('form.address_line1', '100 Example Street')->set('form.city', 'Raleigh')->set('form.state', 'NC')
+            ->call('next')->assertHasNoErrors()->call('next')->assertHasNoErrors()
+            ->set('form.welcome_visit', 'no')->call('next')->assertHasNoErrors()
+            ->call('next')->assertHasNoErrors()->assertRedirect(route('family.requests.create'));
         $task = \App\Models\CareTask::create(['name' => 'Companionship']);
         Livewire::test(CreateCareRequestWizard::class)->assertSet('zip', '27601')->assertSet('modeChosen', true)
             ->set('selectedTasks', [$task->id])->set('requested_start_date', now()->addDay()->toDateString())

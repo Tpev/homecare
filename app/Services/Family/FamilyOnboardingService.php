@@ -45,7 +45,7 @@ class FamilyOnboardingService
     /** Only called by the normal registration entry point, within its transaction. */
     public function enrollRegistration(User $user): ?FamilyOnboarding
     {
-        if (! config('family_onboarding.enrollment_enabled') || $user->isAdministrator()) {
+        if ($user->role !== 'family' || $user->isAdministrator()) {
             return null;
         }
 
@@ -91,7 +91,7 @@ class FamilyOnboardingService
 
     public function pending(User $user): bool
     {
-        return config('family_onboarding.enforcement_enabled') && $this->forOwner($user)?->status === 'in_progress';
+        return $this->forOwner($user)?->status === 'in_progress';
     }
 
     private function locked(User $user): FamilyOnboarding

@@ -215,7 +215,7 @@ class HomepageQuickRequestFlowTest extends TestCase
             ->assertSet('zip', '27601');
     }
 
-    public function test_registration_redirects_to_request_wizard_when_quick_request_draft_exists(): void
+    public function test_registration_redirects_to_onboarding_and_preserves_quick_request_draft(): void
     {
         session([
             FamilyQuickRequestDraft::SESSION_KEY => [
@@ -232,7 +232,10 @@ class HomepageQuickRequestFlowTest extends TestCase
             ->set('accept_terms', true);
 
         $component->call('register')
-            ->assertRedirect(route('family.requests.create', absolute: false));
+            ->assertRedirect(route('family.onboarding', absolute: false));
+        $onboarding = \App\Models\FamilyOnboarding::query()->sole();
+        $this->assertSame('homepage_request', $onboarding->source);
+        $this->assertSame('Margaret Johnson', $onboarding->request_context['recipient_full_name']);
     }
 
     public function test_login_redirects_to_request_wizard_when_quick_request_draft_exists_for_family(): void

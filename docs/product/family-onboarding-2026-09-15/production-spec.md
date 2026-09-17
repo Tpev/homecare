@@ -1,6 +1,6 @@
 # Family onboarding: production integration spec
 
-Status: approved and implemented locally, September 16, 2026. See [implementation and rollout notes](IMPLEMENTATION.md). Production activation remains off by default.
+Status: implemented, updated September 17, 2026. See [implementation and release notes](IMPLEMENTATION.md). New normal family registrations automatically enter onboarding; no feature flag is required.
 
 ## 1. Product contract
 
@@ -26,7 +26,7 @@ Create an onboarding enrollment record explicitly inside the successful normal f
 
 | Situation | Enrollment | Behavior |
 | --- | --- | --- |
-| New normal family signup while enrollment is enabled | Create one account enrollment | Open onboarding |
+| New normal family signup | Create one account enrollment | Open onboarding |
 | New family signup with a homepage draft or lead welcome context | Create enrollment and preserve context | Open prefilled onboarding, then request creation |
 | Existing family at rollout | No enrollment | Existing experience |
 | Existing family whose account is lazily provisioned later | No enrollment | Existing experience |
@@ -131,11 +131,11 @@ Store retry metadata and make exhausted failures visible to admins. Missing reci
 
 ## 9. Release plan and observability
 
-Deploy additive schema and code with new enrollment disabled. Do not modify or bulk-complete old accounts. Verify on staging using new normal registrations and invitation registrations, then enable enrollment for new signups only.
+Deploy additive schema before serving the new code. New normal registrations enroll automatically after deployment. Do not modify or bulk-complete old accounts. Verify on staging using new normal registrations and invitation registrations.
 
-Use separate controls for enrolling new accounts and enforcing pending onboarding. A rollback can stop new enrollments and lift redirects while retaining saved drafts, completed records, and pending admin deliveries. Re-enabling must not reset completed accounts or enroll accounts created while enrollment was disabled.
+There are no environment flags for enrollment or enforcement. Stale values from previous releases cannot disable the feature. A code rollback retains saved drafts, completed records, and pending admin deliveries; redeployment must not reset completed accounts or enroll older accounts.
 
-Verify the production queue worker, scheduled recovery process, recipient configuration, and email rendering before enabling. Monitor enrollment/completion counts, drop-off by step, validation/save failures, admin delivery failures, and unhandled welcome-visit requests. Analytics contain IDs, event names, steps, and timestamps, not care-note content.
+Verify the production queue worker, scheduled recovery process, recipient configuration, and email rendering before deployment. Monitor enrollment/completion counts, drop-off by step, validation/save failures, admin delivery failures, and unhandled welcome-visit requests. Analytics contain IDs, event names, steps, and timestamps, not care-note content. The admin list also shows families without an enrollment as Not enrolled and supports searching by name, email, or account ID.
 
 ## 10. Recommended small additions; defer the rest
 
@@ -153,4 +153,4 @@ Verify the production queue worker, scheduled recovery process, recipient config
 4. Keep the current registration email and add a separate completed-onboarding email with all submitted information.
 5. Manual staff confirmation by text for the free visit, with a durable admin follow-up record.
 
-These decisions are implemented behind the new-enrollment and enforcement controls described above.
+These decisions apply automatically to new normal family registrations after deployment.
