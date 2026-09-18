@@ -3,9 +3,11 @@
 namespace App\Livewire\Admin;
 
 use App\Models\User;
+use App\Services\Admin\AdminUserDeletionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -44,27 +46,25 @@ class UsersIndex extends Component
 
     public function deleteUser(int $userId): void
     {
-        $target = User::query()->findOrFail($userId);
-
-        if ((int) $target->id === (int) auth()->id()) {
-            $this->addError('delete', 'You cannot delete your own admin account.');
-
-            return;
-        }
-
-        if ($this->isAdminUser($target)) {
-            $this->addError('delete', 'Staff users cannot be deleted from this screen.');
-
-            return;
-        }
+        $admin = auth()->user();
+        abort_unless($admin?->isAdministrator(), 403);
+        $this->resetErrorBag('delete');
+        session()->forget('userDeleted');
 
         try {
-            $target->delete();
-        } catch (QueryException) {
-            $this->addError('delete', 'Could not delete this user because related records are protected.');
+            app(AdminUserDeletionService::class)->delete($admin, $userId);
+        } catch (QueryException $exception) {
+            Log::warning('Admin user deletion rolled back.', [
+                'admin_user_id' => $admin->id,
+                'target_user_id' => $userId,
+                'sql_state' => $exception->errorInfo[0] ?? (string) $exception->getCode(),
+            ]);
+            $this->addError('delete', 'Deletion could not be completed because linked records could not be removed. Nothing was deleted. Contact support with user ID '.$userId.'.');
 
             return;
         }
+
+        session()->flash('userDeleted', 'User account deleted.');
     }
 
     public function loginAs(int $userId): void

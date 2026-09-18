@@ -37,6 +37,9 @@
         @error('delete')
             <x-alert color="red" class="mt-3">{{ $message }}</x-alert>
         @enderror
+        @if (session('userDeleted'))
+            <x-alert color="green" class="mt-3">{{ session('userDeleted') }}</x-alert>
+        @endif
         @error('loginAs')
             <x-alert color="red" class="mt-3">{{ $message }}</x-alert>
         @enderror
@@ -95,7 +98,7 @@
                             <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs text-slate-500">Protected account</div>
                         @else
                             <x-button color="amber" light class="w-full justify-center" wire:click="loginAs({{ $user->id }})" onclick="if (!confirm('Log in as this user now?')) return false;">Login as</x-button>
-                            <x-button color="red" light class="w-full justify-center" wire:click="deleteUser({{ $user->id }})" onclick="if (!confirm('Delete this user account? This action cannot be undone.')) return false;">Delete</x-button>
+                            <x-button color="red" light class="w-full justify-center" wire:click="deleteUser({{ $user->id }})" wire:confirm="Delete this user account and its unused setup data and requests? This action cannot be undone.">Delete</x-button>
                         @endif
                     </div>
                 </article>
@@ -187,7 +190,7 @@
                                             light
                                             sm
                                             wire:click="deleteUser({{ $user->id }})"
-                                            onclick="if (!confirm('Delete this user account? This action cannot be undone.')) return false;"
+                                            wire:confirm="Delete this user account and its unused setup data and requests? This action cannot be undone."
                                         >
                                             Delete
                                         </x-button>
