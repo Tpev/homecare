@@ -1814,7 +1814,6 @@ class ManageCareRequest extends Component
         $this->refreshRequestItem();
         if ($this->activeTab === 'invite' && $result->sentNow) {
             $this->showCaregiverInvitePanel = false;
-            $this->caregiverView = 'invited';
             $this->dispatch('caregiver-invite-panel-closed');
         } else {
             $this->dispatch('caregiver-invite-content-top');

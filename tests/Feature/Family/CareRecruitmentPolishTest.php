@@ -154,10 +154,11 @@ class CareRecruitmentPolishTest extends TestCase
         Notification::assertNothingSent();
     }
 
-    public function test_sending_from_full_page_discovery_returns_to_the_sent_invitation_record(): void
+    public function test_sending_from_full_page_discovery_keeps_results_available_for_the_next_invitation(): void
     {
         [$family, $request] = $this->requestFixture();
         $caregiver = $this->readyCaregiver('Alex Invited');
+        $nextCaregiver = $this->readyCaregiver('Alex Next');
 
         Livewire::actingAs($family)->test(ManageCareRequest::class, ['careRequest' => $request->id])
             ->call('setCaregiverView', 'search')
@@ -167,12 +168,24 @@ class CareRecruitmentPolishTest extends TestCase
             ->call('sendCaregiverInvitation')
             ->assertHasNoErrors()
             ->assertSet('activeTab', 'invite')
-            ->assertSet('caregiverView', 'invited')
+            ->assertSet('caregiverView', 'search')
+            ->assertSet('caregiverSearch', 'Alex')
             ->assertSet('showCaregiverInvitePanel', false)
             ->assertSet('confirmingCaregiverId', null)
-            ->assertSee('People you invited')
+            ->assertSee('Search results')
             ->assertSee('Invitation sent')
-            ->assertSee($caregiver->name);
+            ->assertSee($caregiver->name)
+            ->assertViewHas('caregiverSearchResults', fn ($results) => $results->firstWhere('user_id', $caregiver->id)['relationship_state'] === 'pending')
+            ->assertSee($nextCaregiver->name)
+            ->call('beginCaregiverInvitation', $nextCaregiver->id)
+            ->assertSet('confirmingCaregiverId', $nextCaregiver->id)
+            ->call('sendCaregiverInvitation')
+            ->assertHasNoErrors()
+            ->assertSet('activeTab', 'invite')
+            ->assertSet('caregiverView', 'search')
+            ->assertSet('caregiverSearch', 'Alex')
+            ->assertSet('showCaregiverInvitePanel', false)
+            ->assertSee('Invitation sent to Alex Next.');
 
         $this->assertDatabaseHas('care_request_invitations', [
             'care_request_id' => $request->id,
@@ -180,7 +193,12 @@ class CareRecruitmentPolishTest extends TestCase
             'status' => CareRequestInvitation::STATUS_PENDING,
             'message' => 'Please review our morning companionship request.',
         ]);
-        $this->assertDatabaseCount('care_request_invitations', 1);
+        $this->assertDatabaseHas('care_request_invitations', [
+            'care_request_id' => $request->id,
+            'caregiver_user_id' => $nextCaregiver->id,
+            'status' => CareRequestInvitation::STATUS_PENDING,
+        ]);
+        $this->assertDatabaseCount('care_request_invitations', 2);
         $this->assertDatabaseCount('care_request_applications', 0);
         $this->assertDatabaseCount('care_bookings', 0);
     }
