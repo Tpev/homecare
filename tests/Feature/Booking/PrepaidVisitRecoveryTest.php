@@ -29,6 +29,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Mockery;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class PrepaidVisitRecoveryTest extends TestCase
@@ -56,6 +57,7 @@ class PrepaidVisitRecoveryTest extends TestCase
         $recovery = app(PrepaidVisitRecoveryService::class);
         $preview = $recovery->preview($booking->id, $ticket->id, $admin);
         $this->assertSame(37200, $preview['captured_cents_retained']);
+        $this->assertSame([], $preview['authorization_placeholders_covered_by_capture']);
         $this->assertStringContainsString('19:00:00 EDT', $preview['scheduled_start_eastern']);
         $this->assertDatabaseCount('care_booking_corrections', 0);
         $this->assertFalse($booking->payment->fresh()->hasPrepaidVisitHold());
@@ -87,6 +89,123 @@ class PrepaidVisitRecoveryTest extends TestCase
         $this->assertSame(1, CareBookingEvent::where('event_type', 'prepaid_visit_reopened_on_hold')->count());
     }
 
+    public function test_captured_authorization_placeholder_is_preserved_through_recovery_and_release_without_stripe(): void
+    {
+        [$admin, $booking, $ticket] = $this->scenario();
+        $authorization = $this->makeAuthorizationPlaceholder($booking);
+        $ledgerBefore = $booking->payment->operations()->orderBy('id')->get()->toArray();
+        $this->forbidStripe();
+        Notification::fake();
+        $service = app(PrepaidVisitRecoveryService::class);
+
+        $preview = $service->preview($booking->id, $ticket->id, $admin);
+        $this->assertSame([$authorization->id], $preview['authorization_placeholders_covered_by_capture']);
+        $this->assertSame(37200, $preview['captured_cents_retained']);
+        $this->assertSame($ledgerBefore, $booking->payment->operations()->orderBy('id')->get()->toArray());
+        $this->assertFalse($booking->payment->fresh()->hasPrepaidVisitHold());
+        $this->assertDatabaseCount('care_booking_corrections', 0);
+        $this->artisan('homecare:recover-prepaid-visit', [
+            'booking' => $booking->id, '--ticket' => $ticket->id, '--admin' => $admin->id,
+        ])->expectsOutputToContain('authorization_placeholders_covered_by_capture')->assertSuccessful();
+
+        $requestId = (string) Str::uuid();
+        $receipt = $service->apply($booking->id, $ticket->id, $admin,
+            'Caregiver confirmed no work occurred for this future visit.', $requestId, $preview['expected_state'], true, true);
+        $this->assertTrue($booking->payment->fresh()->hasPrepaidVisitHold());
+        $this->assertSame(CareBooking::STATUS_SCHEDULED, $booking->fresh()->status);
+        $this->assertSame([$authorization->id], $receipt->preview['authorization_placeholders_covered_by_capture']);
+        $this->assertSame($ledgerBefore, $booking->payment->operations()->orderBy('id')->get()->toArray());
+        $this->assertSame($receipt->before_snapshot['financial'], $receipt->after_snapshot['financial']);
+        $this->assertSame($receipt->id, $service->apply($booking->id, $ticket->id, $admin,
+            'Caregiver confirmed no work occurred for this future visit.', $requestId, $preview['expected_state'], true, true)->id);
+
+        $this->completeActualVisit($booking, true);
+        $release = $service->preview($booking->id, $ticket->id, $admin, true);
+        $this->assertSame([$authorization->id], $release['authorization_placeholders_covered_by_capture']);
+        $service->apply($booking->id, $ticket->id, $admin,
+            'The family approved the actual visit and the retained payment matches.', (string) Str::uuid(),
+            $release['expected_state'], false, true, true);
+        $this->assertFalse($booking->payment->fresh()->hasPrepaidVisitHold());
+        $this->assertSame($ledgerBefore, $booking->payment->operations()->orderBy('id')->get()->toArray());
+        $this->assertDatabaseCount('support_ticket_messages', 0);
+        Notification::assertNothingSent();
+    }
+
+    public function test_authorization_ledger_change_invalidates_the_preview(): void
+    {
+        [$admin, $booking, $ticket] = $this->scenario();
+        $authorization = $this->makeAuthorizationPlaceholder($booking);
+        $this->forbidStripe();
+        $service = app(PrepaidVisitRecoveryService::class);
+        $preview = $service->preview($booking->id, $ticket->id, $admin);
+        $authorization->update(['metadata' => array_merge($authorization->metadata, ['review_note' => 'New evidence'])]);
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Records changed after preview');
+        try {
+            $service->apply($booking->id, $ticket->id, $admin, 'Caregiver confirmed no work occurred.',
+                (string) Str::uuid(), $preview['expected_state'], true, true);
+        } finally {
+            $this->assertDatabaseCount('care_booking_corrections', 0);
+            $this->assertFalse($booking->payment->fresh()->hasPrepaidVisitHold());
+            $this->assertSame(CareBooking::STATUS_COMPLETED, $booking->fresh()->status);
+        }
+    }
+
+    #[DataProvider('unsafeAuthorizationEvidence')]
+    public function test_authorization_placeholder_needs_an_exact_successful_capture(
+        array $authorizationChanges,
+        array $chargeChanges = [],
+        array $paymentChanges = [],
+    ): void {
+        [$admin, $booking, $ticket] = $this->scenario();
+        $authorization = $this->makeAuthorizationPlaceholder($booking);
+        $authorization->forceFill($authorizationChanges)->save();
+        $charge = $booking->payment->operations()->where('type', 'charge')->firstOrFail();
+        $charge->forceFill($chargeChanges)->save();
+        $booking->payment->forceFill($paymentChanges)->save();
+        $ledgerBefore = $booking->payment->operations()->orderBy('id')->get()->toArray();
+        $this->forbidStripe();
+
+        $this->expectException(ValidationException::class);
+        try {
+            app(PrepaidVisitRecoveryService::class)->preview($booking->id, $ticket->id, $admin);
+        } finally {
+            $this->assertSame($ledgerBefore, $booking->payment->operations()->orderBy('id')->get()->toArray());
+            $this->assertFalse($booking->payment->fresh()->hasPrepaidVisitHold());
+            $this->assertDatabaseCount('care_booking_corrections', 0);
+        }
+    }
+
+    public static function unsafeAuthorizationEvidence(): array
+    {
+        return [
+            'nonzero pending authorization' => [['amount_cents' => 1]],
+            'failed authorization' => [['status' => 'failed']],
+            'reversed authorization' => [['status' => 'reversed']],
+            'different authorization intent' => [['stripe_object_id' => 'pi_other']],
+            'missing authorization intent' => [['stripe_object_id' => null]],
+            'authorization error' => [['last_error' => 'Unresolved provider error']],
+            'authorization failure timestamp' => [['failed_at' => '2026-09-23 09:00:00']],
+            'authorization already processed' => [['processed_at' => '2026-09-23 09:00:00']],
+            'different authorization currency' => [['currency' => 'eur']],
+            'not a manual authorization' => [['metadata' => ['capture_method' => 'automatic']]],
+            'pending processing fee' => [['type' => 'processing_fee']],
+            'pending earning' => [['type' => 'earning']],
+            'pending authorization release' => [['type' => 'authorization_release']],
+            'pending charge' => [[], ['status' => 'pending']],
+            'failed charge' => [[], ['status' => 'failed']],
+            'different charge intent parent' => [[], ['stripe_parent_object_id' => 'pi_other']],
+            'missing charge intent parent' => [[], ['stripe_parent_object_id' => null]],
+            'different charge metadata intent' => [[], ['metadata' => ['kind' => 'primary', 'payment_intent_id' => 'pi_other']]],
+            'missing charge metadata intent' => [[], ['metadata' => ['kind' => 'primary']]],
+            'different primary charge' => [[], ['stripe_object_id' => 'ch_other']],
+            'different charge amount' => [[], ['amount_cents' => 37199]],
+            'different payment intent' => [[], [], ['stripe_payment_intent_id' => 'pi_other']],
+            'missing payment intent' => [[], [], ['stripe_payment_intent_id' => null]],
+        ];
+    }
+
     public function test_stale_preview_does_not_apply(): void
     {
         [$admin, $booking, $ticket] = $this->scenario();
@@ -106,17 +225,20 @@ class PrepaidVisitRecoveryTest extends TestCase
     public function test_paid_or_pending_transfer_and_refund_states_are_rejected(): void
     {
         foreach ([CareBookingPaymentOperation::TYPE_TRANSFER, CareBookingPaymentOperation::TYPE_REFUND, CareBookingPaymentOperation::TYPE_DISPUTE] as $type) {
-            [$admin, $booking, $ticket] = $this->scenario();
-            $booking->payment->operations()->create([
-                'care_booking_id' => $booking->id, 'financial_reference' => $booking->financial_reference,
-                'type' => $type, 'status' => CareBookingPaymentOperation::STATUS_PENDING,
-                'amount_cents' => 100, 'currency' => 'usd', 'idempotency_key' => (string) Str::uuid(),
-            ]);
-            try {
-                app(PrepaidVisitRecoveryService::class)->preview($booking->id, $ticket->id, $admin);
-                $this->fail('Unsafe financial state must be rejected.');
-            } catch (ValidationException $exception) {
-                $this->assertStringContainsString('operation', $exception->getMessage());
+            foreach (['pending', 'failed', 'succeeded', 'reversed'] as $status) {
+                [$admin, $booking, $ticket] = $this->scenario();
+                $this->makeAuthorizationPlaceholder($booking);
+                $unsafeOperation = $booking->payment->operations()->create([
+                    'care_booking_id' => $booking->id, 'financial_reference' => $booking->financial_reference,
+                    'type' => $type, 'status' => $status,
+                    'amount_cents' => 100, 'currency' => 'usd', 'idempotency_key' => (string) Str::uuid(),
+                ]);
+                try {
+                    app(PrepaidVisitRecoveryService::class)->preview($booking->id, $ticket->id, $admin);
+                    $this->fail('Unsafe financial state must be rejected.');
+                } catch (ValidationException $exception) {
+                    $this->assertStringContainsString('operation #'.$unsafeOperation->id, $exception->getMessage());
+                }
             }
         }
         $this->assertDatabaseCount('care_booking_corrections', 0);
@@ -330,6 +452,14 @@ class PrepaidVisitRecoveryTest extends TestCase
     private function forbidStripe(): void
     {
         $this->app->instance(StripeClient::class, Mockery::mock(StripeClient::class));
+    }
+
+    private function makeAuthorizationPlaceholder(CareBooking $booking): CareBookingPaymentOperation
+    {
+        $authorization = $booking->payment->operations()->where('type', 'authorization')->sole();
+        $authorization->update(['status' => 'pending', 'amount_cents' => 0, 'processed_at' => null]);
+
+        return $authorization;
     }
 
     private function scenario(): array

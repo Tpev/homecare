@@ -157,14 +157,25 @@ class PrepaidVisitRecoveryService
         $allowedOperations = [CareBookingPaymentOperation::TYPE_AUTHORIZATION, CareBookingPaymentOperation::TYPE_CHARGE,
             CareBookingPaymentOperation::TYPE_PROCESSING_FEE, CareBookingPaymentOperation::TYPE_EARNING,
             CareBookingPaymentOperation::TYPE_AUTHORIZATION_RELEASE];
-        $this->require(! $payment->operations()->whereNotIn('type', $allowedOperations)->exists()
-            && ! $payment->operations()->where('status', '!=', CareBookingPaymentOperation::STATUS_SUCCEEDED)->exists(),
-            'A transfer, refund, dispute, failed, or pending operation requires separate review.');
-        $charges = $payment->operations()->where('type', CareBookingPaymentOperation::TYPE_CHARGE)->get();
+        $operations = $payment->operations()->orderBy('id')->get();
+        $charges = $operations->where('type', CareBookingPaymentOperation::TYPE_CHARGE);
+        $charge = $charges->first();
         $this->require($charges->count() === 1 && (int) $charges->sum('amount_cents') === (int) $payment->amount_captured_cents
-            && data_get($charges->first()?->metadata, 'kind') === 'primary'
-            && $charges->first()?->stripe_object_id === $payment->stripe_primary_charge_id,
+            && $charge?->status === CareBookingPaymentOperation::STATUS_SUCCEEDED
+            && data_get($charge?->metadata, 'kind') === 'primary'
+            && trim((string) $charge?->stripe_object_id) !== ''
+            && $charge?->stripe_object_id === $payment->stripe_primary_charge_id,
             'The original captured charge must match the ledger.');
+        $authorizationPlaceholders = [];
+        foreach ($operations as $operation) {
+            $coveredByCapture = $this->isCapturedAuthorizationPlaceholder($operation, $payment, $charge);
+            $this->require(in_array($operation->type, $allowedOperations, true)
+                && ($operation->status === CareBookingPaymentOperation::STATUS_SUCCEEDED || $coveredByCapture),
+                'Payment operation #'.$operation->id.' ('.$operation->type.', '.$operation->status.') requires separate review.');
+            if ($coveredByCapture) {
+                $authorizationPlaceholders[] = $operation->id;
+            }
+        }
         $this->require($payment->fee_finalization_status === 'finalized', 'Processing fees must be finalized before recovery.');
         $payoutItem = $booking->payoutItem()->with('payout')->first();
         $this->require(! $payoutItem || (! $payoutItem->paid_at && $payoutItem->status === CaregiverPayoutItem::STATUS_SCHEDULED
@@ -206,6 +217,7 @@ class PrepaidVisitRecoveryService
             'scheduled_start_eastern' => $booking->scheduled_start_at->copy()->setTimezone('America/New_York')->format('Y-m-d H:i:s T'),
             'scheduled_end_eastern' => $booking->scheduled_end_at->copy()->setTimezone('America/New_York')->format('Y-m-d H:i:s T'),
             'captured_cents_retained' => (int) $payment->amount_captured_cents,
+            'authorization_placeholders_covered_by_capture' => $authorizationPlaceholders,
             'currency' => $payment->currency,
             'payment_delta_cents' => 0,
             'stripe_writes' => false,
@@ -213,6 +225,31 @@ class PrepaidVisitRecoveryService
             'payout_effect' => $release ? 'Automatic transfer retries become eligible; separate approval is required to apply this release.' : 'All money movement held until separate admin release.',
             'expected_state' => $this->fingerprint($this->snapshot($booking, $payment, $ticket)),
         ];
+    }
+
+    /** Recognize the original $0 placeholder without rewriting its ledger history. */
+    private function isCapturedAuthorizationPlaceholder(
+        CareBookingPaymentOperation $operation,
+        CareBookingPayment $payment,
+        CareBookingPaymentOperation $charge,
+    ): bool {
+        $intentId = (string) $payment->stripe_payment_intent_id;
+
+        // recordAuthorization() uses firstOrCreate, so client confirmation can leave
+        // its initial pending entry untouched even after this same intent is captured.
+        return $operation->type === CareBookingPaymentOperation::TYPE_AUTHORIZATION
+            && $operation->status === CareBookingPaymentOperation::STATUS_PENDING
+            && $operation->amount_cents === 0
+            && ! $operation->processed_at && ! $operation->failed_at
+            && in_array($operation->last_error, [null, ''], true)
+            && data_get($operation->metadata, 'capture_method') === 'manual'
+            && (int) $operation->care_booking_id === (int) $payment->care_booking_id
+            && (int) $charge->care_booking_id === (int) $payment->care_booking_id
+            && $operation->financial_reference === $payment->financial_reference
+            && $operation->currency === $payment->currency && $charge->currency === $payment->currency
+            && trim($intentId) !== '' && $operation->stripe_object_id === $intentId
+            && $charge->stripe_parent_object_id === $intentId
+            && data_get($charge->metadata, 'payment_intent_id') === $intentId;
     }
 
     private function context(int $bookingId, int $ticketId): array

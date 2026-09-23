@@ -20,6 +20,10 @@ The hold is stored under `care_booking_payments.metadata.prepaid_visit_recovery`
 
 The command only supports the current one-time payment ledger, one original successful charge, finalized fees, and no refund, transfer attempt, dispute, overage, active/failed correction, paid payout, or prior recovery. Uncertain states stop for review. A reset is refused once the scheduled visit has started or if the booking is reviewed, cancelled, disputed, replaced, or marked no-show.
 
+An initial manual authorization can remain `pending` with amount zero because `recordAuthorization()` uses `firstOrCreate()` before and after client confirmation. Recovery recognizes this historical placeholder only when it has no processing/failure timestamp or error, belongs to the same booking/reference/currency, and its nonempty PaymentIntent ID matches both the payment and the successful primary charge's parent ID and metadata. The charge must be the sole charge and match the captured amount and primary Stripe charge ID. Other pending or failed operations still block recovery, as do all transfer/refund/dispute operations regardless of status.
+
+The preview lists accepted placeholder operation IDs in `authorization_placeholders_covered_by_capture`. Their rows remain unchanged and remain included in the state fingerprint, financial hold fingerprint, and correction snapshots. The exception applies to both reset and subsequent release; it does not repair the general authorization writer, change financial amounts, call Stripe, or replace the required independent Stripe verification. Blocked operations now report their exact ID, type, and status.
+
 ## Deployment and production preflight — NOT EXECUTED
 
 - Obtain approval to deploy the reviewed files and approval to apply the exact production preview. Existing unrelated working-tree changes are not part of this repair.
@@ -61,6 +65,6 @@ Do not remove the hold manually, mark the original payment uncaptured, delete it
 
 Feature tests use an in-memory SQLite database and the existing Stripe bypass or a mock that rejects every provider call. They cover the real caregiver/family component flow and unchanged-payment release, automatic jobs, stale model instances, preview drift, wrong actors/tickets, missing confirmations, unsafe ledger states, and idempotent replay. Regression tests cover existing booking corrections and payment flows.
 
-Local validation completed: **67 tests passed, 358 assertions** across `PrepaidVisitRecoveryTest`, `BookingCorrectionServiceTest`, and `StripeMarketplacePaymentTest`. Laravel Pint passed for the changed PHP files, and the tracked patch passed `git diff --check`.
+Local validation completed: **92 tests passed, 483 assertions** across `PrepaidVisitRecoveryTest`, `BookingCorrectionServiceTest`, and `StripeMarketplacePaymentTest`. This includes the stale authorization reset/release path, preserved ledger snapshots, changed-preview rejection, and mismatched or unsafe financial evidence. Laravel Pint passed for the changed PHP files, and the tracked patch passed `git diff --check`.
 
 SQLite tests verify behavior but do not simulate MySQL row-lock contention. Production worker draining, provider verification, and a freshly approved preview remain deployment prerequisites. No production verification or money movement is part of local tests.
