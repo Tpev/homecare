@@ -107,7 +107,7 @@ class CompletedExtraVisitTest extends TestCase
         });
     }
 
-    public function test_reported_extra_visit_stays_visible_on_family_home_and_care_without_a_notification(): void
+    public function test_reported_extra_visit_stays_visible_on_care_after_dashboard_redirect_without_a_notification(): void
     {
         [$family, $caregiver, $plan] = $this->establishedPlan();
         $caregiver->forceFill(['name' => 'Tammy Antonelli'])->save();
@@ -122,11 +122,7 @@ class CompletedExtraVisitTest extends TestCase
 
         $this->actingAs($family)
             ->get('/dashboard')
-            ->assertOk()
-            ->assertSee("Review Tammy Antonelli's reported extra visit")
-            ->assertSee('This does not change the regular schedule. Review before payment.')
-            ->assertSee('Review visit')
-            ->assertSee('#completed-extra-visit-'.$report->id, false);
+            ->assertRedirect(route('family.requests.index'));
 
         Livewire::actingAs($family)
             ->test(RequestsIndex::class)

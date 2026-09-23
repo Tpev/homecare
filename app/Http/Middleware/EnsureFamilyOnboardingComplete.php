@@ -15,6 +15,10 @@ class EnsureFamilyOnboardingComplete
             return redirect()->route('family.onboarding');
         }
 
+        if ($request->user()?->role === 'family' && $request->routeIs('dashboard')) {
+            return redirect()->route('family.requests.index');
+        }
+
         return $next($request);
     }
 }

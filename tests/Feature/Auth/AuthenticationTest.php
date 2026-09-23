@@ -3,7 +3,9 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use App\Services\Family\FamilyOnboardingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Volt\Volt;
 use Tests\TestCase;
 
@@ -72,13 +74,72 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_existing_family_session_visiting_login_goes_directly_to_care(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+
+        $this->actingAs($family)->get('/login')->assertRedirect(route('family.requests.index'));
+    }
+
+    public function test_remembered_family_session_visiting_login_goes_directly_to_care(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $cookieName = Auth::guard('web')->getRecallerName();
+        $cookieValue = implode('|', [$family->id, $family->remember_token, $family->getAuthPassword()]);
+
+        $this->withCookie($cookieName, $cookieValue)->get('/login')
+            ->assertRedirect(route('family.requests.index'));
+
+        $this->assertAuthenticatedAs($family);
+        $this->assertTrue(Auth::guard('web')->viaRemember());
+    }
+
+    public function test_old_family_dashboard_url_redirects_to_care(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+
+        $this->actingAs($family)->get('/dashboard')->assertRedirect(route('family.requests.index'));
+    }
+
+    public function test_family_login_preserves_a_specific_visit_destination(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $destination = route('family.requests.show', ['careRequest' => 123, 'tab' => 'visit']);
+        session(['url.intended' => $destination]);
+
+        Volt::test('pages.auth.login')
+            ->set('form.email', $family->email)
+            ->set('form.password', 'password')
+            ->call('login')
+            ->assertHasNoErrors()
+            ->assertRedirect($destination);
+    }
+
+    public function test_existing_family_session_still_requires_unfinished_onboarding(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        app(FamilyOnboardingService::class)->enrollRegistration($family);
+
+        $this->actingAs($family)->get('/login')->assertRedirect(route('family.requests.index'));
+        $this->get(route('family.requests.index'))->assertRedirect(route('family.onboarding'));
+        $this->get('/dashboard')->assertRedirect(route('family.onboarding'));
+    }
+
+    public function test_other_roles_keep_their_existing_login_fallback(): void
+    {
+        foreach (['admin', 'caregiver', 'sales', 'sdr'] as $role) {
+            $user = User::factory()->create(['role' => $role]);
+            $this->actingAs($user)->get('/login')->assertRedirect(route('dashboard'));
+        }
+    }
+
     public function test_navigation_menu_can_be_rendered(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'family']);
 
         $this->actingAs($user);
 
-        $response = $this->get('/dashboard');
+        $response = $this->get(route('family.requests.index'));
 
         $response
             ->assertOk()

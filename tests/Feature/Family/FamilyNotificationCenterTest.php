@@ -88,7 +88,7 @@ class FamilyNotificationCenterTest extends TestCase
 
         $this->createNotification($family, MarketplaceEvent::INVITATION_SENT, 'Invitation sent');
 
-        $response = $this->actingAs($family)->get('/dashboard');
+        $response = $this->actingAs($family)->get(route('family.requests.index'));
         $response->assertOk();
         $response->assertSee('Notifications (1)');
     }

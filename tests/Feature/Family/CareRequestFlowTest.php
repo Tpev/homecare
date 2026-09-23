@@ -181,13 +181,9 @@ class CareRequestFlowTest extends TestCase
         $newerCaroline = $this->createCompletedRebookSource($family, $caroline, 'Newer visit with Caroline', now()->subWeek());
         $bobVisit = $this->createCompletedRebookSource($family, $bob, 'Visit with Bob', now()->subDays(3));
 
-        $dashboardHtml = $this->actingAs($family)
+        $this->actingAs($family)
             ->get(route('dashboard'))
-            ->assertOk()
-            ->getContent();
-
-        $this->assertSame(1, substr_count($dashboardHtml, 'Book Caroline again'));
-        $this->assertSame(1, substr_count($dashboardHtml, 'Book Bob again'));
+            ->assertRedirect(route('family.requests.index'));
 
         $this->actingAs($family)
             ->get(route('family.requests.index'))

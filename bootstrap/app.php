@@ -12,6 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->redirectUsersTo(fn (\Illuminate\Http\Request $request) => $request->user()?->role === 'family'
+            ? route('family.requests.index')
+            : route('dashboard'));
+
         // Tiptap stores meaningful word-boundary whitespace inside nested text nodes.
         // Trimming those values turns "text [link] text" into joined words in HTML.
         $middleware->trimStrings(except: ['content_json.*.text', '*.content_json.*.text']);

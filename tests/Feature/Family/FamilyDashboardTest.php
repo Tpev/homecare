@@ -21,26 +21,15 @@ class FamilyDashboardTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_family_user_sees_family_dashboard_sections(): void
+    public function test_family_user_reaches_care_from_the_old_dashboard_url(): void
     {
         $family = User::factory()->create([
             'role' => 'family',
             'email_verified_at' => now(),
         ]);
 
-        $response = $this->actingAs($family)->get('/dashboard');
-
-        $response->assertOk();
-        $response->assertSee('Right now');
-        $response->assertSee('Billing is not ready yet.');
-        $response->assertSee('Next visit');
-        $response->assertSee('Book again');
-        $response->assertDontSee('Care overview');
-        $response->assertDontSee('Your care');
-        $response->assertDontSee('Needs attention');
-        $response->assertDontSee('Needs your attention');
-        $response->assertDontSee('Also needs attention');
-        $response->assertDontSee('What to do now');
+        $this->actingAs($family)->get('/dashboard')->assertRedirect(route('family.requests.index'));
+        $this->get(route('family.requests.index'))->assertOk()->assertSeeLivewire(RequestsIndex::class);
     }
 
     public function test_caregiver_user_sees_caregiver_dashboard_sections(): void
@@ -56,7 +45,7 @@ class FamilyDashboardTest extends TestCase
         $response->assertSee('Open full inbox');
     }
 
-    public function test_family_dashboard_shows_top_unread_updates_digest(): void
+    public function test_family_dashboard_redirect_preserves_unread_updates(): void
     {
         $family = User::factory()->create([
             'role' => 'family',
@@ -67,14 +56,13 @@ class FamilyDashboardTest extends TestCase
         $this->createNotification($family, MarketplaceEvent::HIRE_CONFIRMED, 'Hire confirmed');
         $this->createNotification($family, MarketplaceEvent::MESSAGE_RECEIVED, 'New message from caregiver');
 
-        $response = $this->actingAs($family)->get('/dashboard');
-
-        $response->assertOk();
-        $response->assertSee('New updates');
-        $response->assertSee('New caregiver application');
+        $this->actingAs($family)->get('/dashboard')->assertRedirect(route('family.requests.index'));
+        $this->get(route('family.requests.index'))->assertOk();
+        $this->assertSame(3, $family->unreadNotifications()->count());
+        $this->get(route('family.notifications.index'))->assertOk()->assertSee('New caregiver application');
     }
 
-    public function test_family_dashboard_next_visit_shows_who_is_coming(): void
+    public function test_family_dashboard_redirect_keeps_the_next_visit_accessible_on_care(): void
     {
         $family = User::factory()->create([
             'role' => 'family',
@@ -121,22 +109,16 @@ class FamilyDashboardTest extends TestCase
             'authorization_expires_at' => now()->addDays(5),
         ]);
 
-        $response = $this->actingAs($family)->get('/dashboard');
+        $this->actingAs($family)->get('/dashboard')->assertRedirect(route('family.requests.index'));
+        $response = $this->get(route('family.requests.index'));
 
         $response->assertOk();
         $response->assertSee('Next visit');
-        $response->assertSee('Right now');
-        $response->assertSee('You have 1 upcoming visit.');
-        $response->assertSee('Caroline Petrini-Poli is coming');
-        $response->assertSee('Payment confirmed. No action needed.');
-        $response->assertSee('Coming');
         $response->assertSee('Caroline Petrini-Poli');
-        $response->assertDontSee('Needs your attention');
-        $response->assertDontSee('Also needs attention');
-        $response->assertDontSee('What to do now');
+        $response->assertSee('Open visit');
     }
 
-    public function test_failed_visit_payment_is_a_consistent_action_on_home_and_care(): void
+    public function test_failed_visit_payment_stays_visible_on_care_after_dashboard_redirect(): void
     {
         $family = User::factory()->create([
             'role' => 'family',
@@ -179,15 +161,9 @@ class FamilyDashboardTest extends TestCase
             'failed_at' => now(),
         ]);
 
-        $visitUrl = route('family.requests.show', $request->id);
-
         $this->actingAs($family)
             ->get('/dashboard')
-            ->assertOk()
-            ->assertSee('Payment needs attention.')
-            ->assertSee('Your card was declined.')
-            ->assertSee('Fix payment')
-            ->assertSee($visitUrl, false);
+            ->assertRedirect(route('family.requests.index'));
 
         Livewire::actingAs($family)
             ->test(RequestsIndex::class)
@@ -217,7 +193,7 @@ class FamilyDashboardTest extends TestCase
         $response->assertSee('Application submitted');
     }
 
-    public function test_family_dashboard_uses_the_true_next_booking_with_more_than_twenty_five_visits(): void
+    public function test_care_and_caregiver_dashboard_use_the_true_next_booking_with_more_than_twenty_five_visits(): void
     {
         $family = User::factory()->create([
             'role' => 'family',
@@ -227,6 +203,7 @@ class FamilyDashboardTest extends TestCase
         $caregiver = User::factory()->create(['role' => 'caregiver', 'name' => 'Earliest Visit Caregiver']);
         CaregiverProfile::query()->create(['user_id' => $caregiver->id, 'status' => 'active']);
 
+        $firstBookingId = null;
         for ($day = 1; $day <= 30; $day++) {
             $request = CareRequest::query()->create([
                 'family_user_id' => $family->id,
@@ -240,7 +217,7 @@ class FamilyDashboardTest extends TestCase
                 'state' => 'NC',
                 'zip' => '27601',
             ]);
-            CareBooking::query()->create([
+            $booking = CareBooking::query()->create([
                 'care_request_id' => $request->id,
                 'family_user_id' => $family->id,
                 'caregiver_user_id' => $caregiver->id,
@@ -248,12 +225,14 @@ class FamilyDashboardTest extends TestCase
                 'scheduled_start_at' => $request->requested_start_at,
                 'scheduled_end_at' => $request->requested_end_at,
             ]);
+            if ($day === 1) {
+                $firstBookingId = $booking->id;
+            }
         }
 
-        $this->actingAs($family)
-            ->get('/dashboard')
-            ->assertOk()
-            ->assertSee('True earliest recurring visit');
+        Livewire::actingAs($family)->test(RequestsIndex::class)
+            ->assertViewHas('nextVisit', fn ($visit) => data_get($visit, 'id') === $firstBookingId)
+            ->assertSee('Earliest Visit Caregiver');
         $this->actingAs($caregiver)
             ->get('/dashboard')
             ->assertOk()

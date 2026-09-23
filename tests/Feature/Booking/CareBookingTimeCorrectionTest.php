@@ -68,7 +68,7 @@ class CareBookingTimeCorrectionTest extends TestCase
         $correction->forceFill(['explanation' => 'Changed after submission'])->save();
     }
 
-    public function test_pending_time_review_stays_visible_on_family_home_and_care_without_a_notification(): void
+    public function test_pending_time_review_stays_visible_on_care_after_dashboard_redirect_without_a_notification(): void
     {
         [$family, $caregiver, $booking] = $this->scenario();
         $caregiver->forceFill(['name' => 'Tammy Antonelli'])->save();
@@ -84,11 +84,7 @@ class CareBookingTimeCorrectionTest extends TestCase
 
         $this->actingAs($family)
             ->get('/dashboard')
-            ->assertOk()
-            ->assertSee("Review Tammy Antonelli's reported visit hours")
-            ->assertSee('Review the exact hours before any payment is made.')
-            ->assertSee('Review hours')
-            ->assertSee('#time-correction-review-'.$correction->id, false);
+            ->assertRedirect(route('family.requests.index'));
 
         Livewire::actingAs($family)
             ->test(RequestsIndex::class)
