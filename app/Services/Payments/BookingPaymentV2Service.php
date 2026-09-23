@@ -24,6 +24,19 @@ class BookingPaymentV2Service
 
     public function capture(CareBooking $booking, CareBookingPayment $payment): CareBookingPayment
     {
+        return $this->withLockedPayment($payment, function (CareBooking $booking, CareBookingPayment $payment): CareBookingPayment {
+            if ($payment->hasPrepaidVisitHold()) {
+                PrepaidVisitPaymentGuard::assertActualVisitCompleted($booking, $payment);
+
+                return $payment;
+            }
+
+            return $this->captureUnlocked($booking, $payment);
+        });
+    }
+
+    private function captureUnlocked(CareBooking $booking, CareBookingPayment $payment): CareBookingPayment
+    {
         if ($this->pricing->hasUnappliedAgreement($booking)) {
             throw new PaymentException('This visit needs its agreed pricing restored before payment. Contact LoLo support.');
         }
@@ -139,6 +152,17 @@ class BookingPaymentV2Service
 
     public function finalizeFeesAndTransfers(CareBookingPayment $payment): CareBookingPayment
     {
+        return $this->withLockedPayment($payment, function (CareBooking $booking, CareBookingPayment $payment): CareBookingPayment {
+            if ($payment->hasPrepaidVisitHold()) {
+                return $payment;
+            }
+
+            return $this->finalizeFeesAndTransfersUnlocked($payment);
+        });
+    }
+
+    private function finalizeFeesAndTransfersUnlocked(CareBookingPayment $payment): CareBookingPayment
+    {
         $payment->loadMissing(['booking.caregiver.caregiverProfile']);
         $booking = $payment->booking;
         if (! $booking || ! $this->usesV2($payment)) {
@@ -233,6 +257,21 @@ class BookingPaymentV2Service
         string $reason,
         ?int $caregiverReversalCents = null,
         ?string $operationReference = null,
+    ): CareBookingPayment {
+        return $this->withLockedPayment($payment, function (CareBooking $booking, CareBookingPayment $payment) use ($amountCents, $reason, $caregiverReversalCents, $operationReference): CareBookingPayment {
+            PrepaidVisitPaymentGuard::assertNotHeld($payment);
+
+            return $this->refundUnlocked($booking, $payment, $amountCents, $reason, $caregiverReversalCents, $operationReference);
+        });
+    }
+
+    private function refundUnlocked(
+        CareBooking $booking,
+        CareBookingPayment $payment,
+        ?int $amountCents,
+        string $reason,
+        ?int $caregiverReversalCents,
+        ?string $operationReference,
     ): CareBookingPayment {
         $remaining = max(0, (int) $payment->amount_captured_cents - (int) $payment->amount_refunded_cents);
         $requestedCents = $amountCents === null ? $remaining : min(max(0, $amountCents), $remaining);
@@ -345,6 +384,19 @@ class BookingPaymentV2Service
     }
 
     public function chargeAdjustment(
+        CareBooking $booking,
+        CareBookingPayment $payment,
+        int $amountCents,
+        string $adjustmentReference,
+    ): CareBookingPayment {
+        return $this->withLockedPayment($payment, function (CareBooking $booking, CareBookingPayment $payment) use ($amountCents, $adjustmentReference): CareBookingPayment {
+            PrepaidVisitPaymentGuard::assertNotHeld($payment);
+
+            return $this->chargeAdjustmentUnlocked($booking, $payment, $amountCents, $adjustmentReference);
+        });
+    }
+
+    private function chargeAdjustmentUnlocked(
         CareBooking $booking,
         CareBookingPayment $payment,
         int $amountCents,
@@ -1514,5 +1566,31 @@ class BookingPaymentV2Service
     private function key(CareBookingPayment $payment, string $action, int $amountCents = 0): string
     {
         return 'payment-v2:'.$payment->id.':'.$action.':'.$amountCents;
+    }
+
+    /** Serialize reset and money movement, always locking booking before payment. */
+    private function withLockedPayment(CareBookingPayment $payment, callable $action): CareBookingPayment
+    {
+        $paymentFailure = null;
+        $result = DB::transaction(function () use ($payment, $action, &$paymentFailure): CareBookingPayment {
+            $booking = CareBooking::query()->lockForUpdate()->findOrFail($payment->care_booking_id);
+            $currentPayment = $booking->payment()->lockForUpdate()->findOrFail($payment->id);
+            $currentPayment->setRelation('booking', $booking);
+
+            try {
+                return $action($booking, $currentPayment);
+            } catch (PaymentException $exception) {
+                // A provider action may have succeeded before a later action failed.
+                // Keep its idempotent ledger receipt instead of rolling it back.
+                $paymentFailure = $exception;
+
+                return $currentPayment->fresh();
+            }
+        });
+        if ($paymentFailure) {
+            throw $paymentFailure;
+        }
+
+        return $result;
     }
 }

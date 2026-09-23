@@ -619,6 +619,22 @@ class BookingPaymentService
 
     public function captureForBooking(CareBooking $booking, bool $notify = true): CareBookingPayment
     {
+        // Family confirmation records approval only while an audited prepaid reset is held.
+        // Fetch current rows: callers and scheduled jobs may have loaded them before the reset.
+        $heldPayment = DB::transaction(function () use ($booking): ?CareBookingPayment {
+            $currentBooking = CareBooking::query()->lockForUpdate()->findOrFail($booking->id);
+            $currentPayment = $currentBooking->payment()->lockForUpdate()->first();
+            if (! $currentPayment?->hasPrepaidVisitHold()) {
+                return null;
+            }
+            PrepaidVisitPaymentGuard::assertActualVisitCompleted($currentBooking, $currentPayment);
+
+            return $currentPayment;
+        });
+        if ($heldPayment) {
+            return $heldPayment;
+        }
+
         if ($this->pricing->hasUnappliedAgreement($booking)) {
             throw new PaymentException('This visit needs its agreed pricing restored before payment. Contact LoLo support.');
         }

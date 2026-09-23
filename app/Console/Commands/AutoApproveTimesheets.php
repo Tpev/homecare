@@ -46,6 +46,9 @@ class AutoApproveTimesheets extends Command
         $failed = 0;
 
         foreach ($bookings as $booking) {
+            if ($booking->payment?->hasPrepaidVisitHold()) {
+                continue;
+            }
             try {
                 $freshBooking = DB::transaction(function () use ($booking, $payments, $trust): ?CareBooking {
                     $lockedBooking = CareBooking::query()
@@ -60,6 +63,10 @@ class AutoApproveTimesheets extends Command
                         ->where('care_booking_id', $lockedBooking->id)
                         ->whereIn('status', CareBookingTimeCorrection::activeStatuses())
                         ->exists()) {
+                        return null;
+                    }
+
+                    if ($lockedBooking->payment?->hasPrepaidVisitHold()) {
                         return null;
                     }
 

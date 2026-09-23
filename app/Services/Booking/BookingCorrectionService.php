@@ -58,6 +58,11 @@ class BookingCorrectionService
         }
 
         $payment = $booking->payment;
+        if ($payment?->hasPrepaidVisitHold()) {
+            throw ValidationException::withMessages([
+                'correctionAction' => 'This prepaid visit is held for review. Use the prepaid visit recovery command; ordinary corrections cannot change its money.',
+            ]);
+        }
         $currentChargeCents = $this->effectiveChargeCents($payment);
         $currentCaregiverCents = $this->effectiveCaregiverCents($payment);
 
@@ -377,6 +382,10 @@ class BookingCorrectionService
         if (! $correction->booking_applied_at) {
             DB::transaction(function () use ($booking, $correction, $requested): void {
                 $lockedBooking = CareBooking::query()->lockForUpdate()->findOrFail($booking->id);
+                // A correction preview may predate a concurrent prepaid reset.
+                if ($lockedBooking->payment()->lockForUpdate()->first()?->hasPrepaidVisitHold()) {
+                    throw new PaymentException('This prepaid visit is held for review. The ordinary correction was not applied.');
+                }
                 $startedAt = Carbon::parse((string) $requested['started_at']);
                 $completedAt = Carbon::parse((string) $requested['completed_at']);
                 $breakMinutes = max(0, (int) ($requested['break_minutes'] ?? 0));

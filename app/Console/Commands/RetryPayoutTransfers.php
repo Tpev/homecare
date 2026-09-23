@@ -49,6 +49,12 @@ class RetryPayoutTransfers extends Command
         $balanceCheckFailed = [];
 
         foreach ($candidates as $payment) {
+            if ($payment->fresh()->hasPrepaidVisitHold()) {
+                $skipped++;
+                $this->line('Skipped payment #'.$payment->id.': prepaid visit is held for review.');
+
+                continue;
+            }
             $booking = $payment->booking;
             $profile = $booking?->caregiver?->caregiverProfile;
 

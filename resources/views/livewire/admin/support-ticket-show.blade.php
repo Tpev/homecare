@@ -95,6 +95,11 @@
         @endif
 
         @if ($booking)
+            @if ($booking->payment?->hasPrepaidVisitHold())
+                <div role="status" class="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                    <strong>Prepaid visit on hold.</strong> The existing payment is retained. Charges, refunds, and caregiver transfers are blocked while LoLo reviews the actual visit. Use the reviewed prepaid recovery command to release the hold; ordinary corrections are unavailable.
+                </div>
+            @endif
             <section class="overflow-hidden rounded-2xl border border-indigo-200 bg-white shadow-sm">
                 <div class="border-b border-indigo-100 bg-indigo-50/70 px-5 py-4">
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

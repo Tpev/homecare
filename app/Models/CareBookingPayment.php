@@ -141,4 +141,9 @@ class CareBookingPayment extends Model
     {
         return in_array($this->status, self::FAMILY_ACTION_REQUIRED_STATUSES, true);
     }
+
+    public function hasPrepaidVisitHold(): bool
+    {
+        return data_get($this->metadata, 'prepaid_visit_recovery.state') === 'held';
+    }
 }

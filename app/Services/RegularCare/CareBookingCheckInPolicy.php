@@ -21,6 +21,11 @@ class CareBookingCheckInPolicy
             return ['allowed' => false, 'reason' => 'Accept the visit agreement before check-in.', 'code' => 'agreement'];
         }
 
+        $at ??= now();
+        if ($booking->payment?->hasPrepaidVisitHold() && $booking->scheduled_start_at && $at->lt($booking->scheduled_start_at)) {
+            return ['allowed' => false, 'reason' => 'This reopened visit can be started at '.$booking->scheduled_start_at->format('M j, g:i A').'.', 'code' => 'prepaid_visit_too_early'];
+        }
+
         if (! $booking->care_plan_id || $booking->hasCheckInOverride()) {
             return ['allowed' => true, 'reason' => null, 'code' => $booking->hasCheckInOverride() ? 'admin_override' : 'one_time'];
         }

@@ -15,6 +15,10 @@ class CareBookingCorrection extends Model
 
     public const ACTION_COMPLETE_AND_BILL = 'complete_and_bill';
 
+    public const ACTION_REOPEN_PREPAID = 'reopen_prepaid';
+
+    public const ACTION_RELEASE_PREPAID = 'release_prepaid';
+
     public const STATUS_PENDING = 'pending';
 
     public const STATUS_PROCESSING = 'processing';
