@@ -261,6 +261,19 @@
                     </article>
 
                     <article class="rounded-[1.6rem] border border-[#D9CEC0] bg-white p-5 shadow-sm">
+                        <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">Schedule with Charles</p>
+                        <h2 class="mt-1 text-2xl font-bold text-slate-950">Book a welcome visit</h2>
+                        <p class="mt-2 text-sm leading-6 text-slate-500">Choose a time with the family and book using their name and email address.</p>
+
+                        <div wire:ignore x-data="googleAppointmentBooking" data-booking-url="https://calendar.google.com/calendar/appointments/schedules/AcZssZ0UMAXYuz0pHQATgOmkyVZNgvWVPH1vSPzhy2RpUATQE9Wmpk4_6FDXkj5jNWaKYDAnB-9RMqig?gv=true" class="mt-4">
+                            <span x-ref="target"></span>
+                            <a href="https://calendar.google.com/calendar/appointments/schedules/AcZssZ0UMAXYuz0pHQATgOmkyVZNgvWVPH1vSPzhy2RpUATQE9Wmpk4_6FDXkj5jNWaKYDAnB-9RMqig?gv=true" target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-emerald-800 underline underline-offset-4">Open booking page in a new tab</a>
+                        </div>
+
+                        <p class="mt-3 text-xs leading-5 text-slate-500">After Google confirms the booking, add the visit date and time to your call note and select <strong>Assessment booked</strong> below.</p>
+                    </article>
+
+                    <article class="rounded-[1.6rem] border border-[#D9CEC0] bg-white p-5 shadow-sm">
                         <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-[#A55343]">After the call</p>
                         <h2 class="mt-1 text-2xl font-bold text-slate-950">Record the outcome</h2>
                         <p class="mt-2 text-sm leading-6 text-slate-500">No answer and voicemail return in a different call window on the next business day. Connected conversations and requested callbacks reset the seven-attempt sequence.</p>

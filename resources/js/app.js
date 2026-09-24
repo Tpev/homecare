@@ -1,4 +1,5 @@
 import './bootstrap';
+import './google-appointment-booking';
 import './support-chat';
 
 document.addEventListener('alpine:init', () => {
