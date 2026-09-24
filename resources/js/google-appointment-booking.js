@@ -1,3 +1,5 @@
+import '../css/google-appointment-booking.css';
+
 let schedulingScript;
 
 const loadSchedulingButton = () => {

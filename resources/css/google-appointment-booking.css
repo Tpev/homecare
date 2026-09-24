@@ -1,0 +1,15 @@
+/* Google's booking page is transparent when its host surface variable is absent. */
+iframe[src^="https://calendar.google.com/calendar/appointments/schedules/"] {
+    background-color: #fff;
+}
+
+@media (max-width: 640px) {
+    body > div:has(> iframe[src^="https://calendar.google.com/calendar/appointments/schedules/"]) {
+        padding: 64px 12px 12px;
+    }
+
+    body > div:has(> iframe[src^="https://calendar.google.com/calendar/appointments/schedules/"]) > button {
+        top: 16px;
+        right: 12px;
+    }
+}
