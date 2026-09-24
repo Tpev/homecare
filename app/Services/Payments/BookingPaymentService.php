@@ -4,6 +4,7 @@ namespace App\Services\Payments;
 
 use App\Exceptions\Payments\PaymentException;
 use App\Models\CareBooking;
+use App\Models\CareBookingCorrection;
 use App\Models\CareBookingPayment;
 use App\Models\CareBookingPaymentAttempt;
 use App\Models\CareBookingPaymentOperation;
@@ -1131,6 +1132,18 @@ class BookingPaymentService
     {
         $paymentIntentId = (string) ($object['id'] ?? '');
         if ($paymentIntentId === '') {
+            return;
+        }
+
+        // These intents have a durable admin receipt and are reconciled explicitly while held.
+        // Delayed requires_action/canceled events must not overwrite the original captured payment.
+        $prepaidRequestId = (string) data_get($object, 'metadata.prepaid_adjustment_request_id', '');
+        if ($prepaidRequestId !== '') {
+            if (! CareBookingCorrection::query()->where('client_request_id', $prepaidRequestId)
+                ->where('action', CareBookingCorrection::ACTION_ADJUST_PREPAID)->exists()) {
+                throw new PaymentException('The prepaid adjustment receipt is not available for this Stripe event.');
+            }
+
             return;
         }
 

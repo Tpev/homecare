@@ -5,6 +5,7 @@ namespace App\Services\Payments;
 use App\Exceptions\Payments\PaymentActionRequiredException;
 use App\Exceptions\Payments\PaymentException;
 use App\Models\CareBooking;
+use App\Models\CareBookingCorrection;
 use App\Models\CareBookingPayment;
 use App\Models\CareBookingPaymentAttempt;
 use App\Models\CareBookingPaymentOperation;
@@ -396,6 +397,86 @@ class BookingPaymentV2Service
         });
     }
 
+    /** Record one explicitly authorized prepaid adjustment. Never calls Stripe or releases funds. */
+    public function recordHeldVisitAdjustment(CareBookingPayment $payment, CareBookingCorrection $receipt, array $result): CareBookingPayment
+    {
+        return $this->withLockedPayment($payment, function (CareBooking $booking, CareBookingPayment $payment) use ($receipt, $result): CareBookingPayment {
+            $receipt = $receipt->fresh();
+            if (! $payment->hasPrepaidVisitHold() || ! $this->usesV2($payment)
+                || (int) data_get($payment->metadata, 'prepaid_visit_recovery.adjustment_correction_id') !== $receipt->id
+                || (int) $receipt->care_booking_id !== $booking->id
+                || $receipt->action !== CareBookingCorrection::ACTION_ADJUST_PREPAID
+                || $receipt->status !== CareBookingCorrection::STATUS_PROCESSING
+                || (string) ($result['status'] ?? '') !== 'succeeded'
+                || (int) ($result['amount_received'] ?? 0) !== (int) $receipt->payment_delta_cents
+                || data_get($receipt->provider_payload, 'charge.id') !== ($result['id'] ?? null)
+                || (int) $receipt->payment_delta_cents <= 0
+                || empty($result['id']) || empty($result['latest_charge_id'])) {
+                throw new PaymentException('The held charge does not match its authorized correction receipt.');
+            }
+            $existing = CareBookingPaymentOperation::query()->where('type', CareBookingPaymentOperation::TYPE_CHARGE)
+                ->where('stripe_object_id', $result['latest_charge_id'])->first();
+            if ($existing && ((int) $existing->care_booking_payment_id !== $payment->id
+                || (int) $existing->amount_cents !== (int) $receipt->payment_delta_cents
+                || $existing->stripe_parent_object_id !== $result['id']
+                || data_get($existing->metadata, 'kind') !== 'prepaid-adjustment-'.$receipt->id)) {
+                throw new PaymentException('This Stripe charge already belongs to another ledger entry.');
+            }
+            $fee = CareBookingPaymentOperation::query()->where('type', CareBookingPaymentOperation::TYPE_PROCESSING_FEE)
+                ->where('stripe_object_id', $result['balance_transaction_id'] ?? '')->first();
+            if ($fee && ((int) $fee->care_booking_payment_id !== $payment->id
+                || $fee->stripe_parent_object_id !== $result['latest_charge_id'])) {
+                throw new PaymentException('This processing fee belongs to another charge.');
+            }
+            $quote = $this->pricing->quoteForCurrentBooking($booking, (int) $booking->worked_minutes);
+            if ((int) $quote['total_charge_cents'] !== (int) $receipt->target_charge_cents) {
+                throw new PaymentException('The approved price changed. Keep the payment held for review.');
+            }
+
+            $charge = $this->recordChargeResult($payment, $result, 'prepaid-adjustment-'.$receipt->id, (int) $receipt->payment_delta_cents);
+            $charges = $payment->operations()->where('type', CareBookingPaymentOperation::TYPE_CHARGE)
+                ->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)->get();
+            $feeCents = $this->processingFeeCents($payment);
+            $feesFinalized = $charges->every(fn ($entry): bool => $payment->operations()
+                ->where('type', CareBookingPaymentOperation::TYPE_PROCESSING_FEE)
+                ->where('parent_operation_id', $entry->id)->where('status', CareBookingPaymentOperation::STATUS_SUCCEEDED)->exists());
+            $quote = $this->pricing->quoteForCurrentBooking($booking, (int) $booking->worked_minutes, $feeCents);
+            $payment->forceFill(array_merge($this->snapshotAttributes($booking, $quote), [
+                'status' => CareBookingPayment::STATUS_CAPTURED,
+                'amount_captured_cents' => (int) $charges->sum('amount_cents'),
+                'amount_overage_cents' => (int) $charge->amount_cents,
+                'overage_pending_cents' => 0,
+                'stripe_overage_payment_intent_id' => $result['id'],
+                'stripe_overage_charge_id' => $charge->stripe_object_id,
+                'stripe_processing_fee_cents' => $feeCents,
+                'caregiver_amount_cents' => (int) $quote['caregiver_amount_cents'],
+                'fee_finalization_status' => $feesFinalized ? 'finalized' : 'pending',
+                'fee_finalized_at' => $feesFinalized ? now() : null,
+                'last_error' => null,
+            ]))->save();
+            if ($feesFinalized) {
+                $gross = (int) $quote['caregiver_gross_amount_cents'];
+                $payment->operations()->firstOrCreate([
+                    'idempotency_key' => $this->key($payment, 'earning-'.$gross.'-fee-'.$feeCents, (int) $quote['caregiver_amount_cents']),
+                ], array_merge($this->baseOperationAttributes($payment), [
+                    'type' => CareBookingPaymentOperation::TYPE_EARNING,
+                    'status' => CareBookingPaymentOperation::STATUS_SUCCEEDED,
+                    'amount_cents' => $gross,
+                    'metadata' => [
+                        'processing_fee_cents' => (int) $quote['caregiver_processing_fee_cents'],
+                        'stripe_processing_fee_cents' => $feeCents,
+                        'net_earnings_cents' => (int) $quote['caregiver_amount_cents'],
+                        'care_booking_correction_id' => $receipt->id,
+                    ],
+                    'occurred_at' => now(), 'processed_at' => now(),
+                ]));
+            }
+            $this->syncPayoutRecord($payment->fresh(), false);
+
+            return $payment->fresh();
+        });
+    }
+
     private function chargeAdjustmentUnlocked(
         CareBooking $booking,
         CareBookingPayment $payment,
@@ -451,6 +532,19 @@ class BookingPaymentV2Service
     }
 
     public function recordSucceededPaymentIntent(CareBookingPayment $payment, array $object): CareBookingPayment
+    {
+        return $this->withLockedPayment($payment, function (CareBooking $booking, CareBookingPayment $payment) use ($object): CareBookingPayment {
+            // The operator reconciles this reserved charge explicitly. A webhook arriving before
+            // its local charge receipt must not mistake the adjustment for the original payment.
+            if ($payment->hasPrepaidVisitHold() && data_get($payment->metadata, 'prepaid_visit_recovery.adjustment_correction_id')) {
+                return $payment;
+            }
+
+            return $this->recordSucceededPaymentIntentUnlocked($payment, $object);
+        });
+    }
+
+    private function recordSucceededPaymentIntentUnlocked(CareBookingPayment $payment, array $object): CareBookingPayment
     {
         if (! $this->usesV2($payment) || (string) ($object['status'] ?? '') !== 'succeeded') {
             return $payment;

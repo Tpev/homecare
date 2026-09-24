@@ -7,10 +7,12 @@ use App\Models\CareBookingCorrection;
 use App\Models\CareBookingEvent;
 use App\Models\CareBookingPayment;
 use App\Models\CareBookingPaymentOperation;
+use App\Models\CareBookingTimeCorrection;
 use App\Models\CaregiverPayoutItem;
 use App\Models\CareRequest;
 use App\Models\SupportTicket;
 use App\Models\User;
+use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Payments\BookingPaymentService;
 use App\Services\Payments\PrepaidVisitPaymentGuard;
 use App\Support\MarketplacePricing;
@@ -39,6 +41,18 @@ class PrepaidVisitRecoveryService
             [$booking, $payment, $ticket] = $this->context($bookingId, $ticketId);
 
             return $this->buildPreview($booking, $payment, $ticket, $release);
+        });
+    }
+
+    /** Read-only eligibility shared with the separately authorized adjustment workflow. */
+    public function previewAdjustment(int $bookingId, int $ticketId, User $admin, int $timeCorrectionId): array
+    {
+        $this->assertAdmin($admin);
+
+        return DB::transaction(function () use ($bookingId, $ticketId, $timeCorrectionId): array {
+            [$booking, $payment, $ticket] = $this->context($bookingId, $ticketId);
+
+            return $this->buildPreview($booking, $payment, $ticket, true, $timeCorrectionId);
         });
     }
 
@@ -138,8 +152,28 @@ class PrepaidVisitRecoveryService
         });
     }
 
-    private function buildPreview(CareBooking $booking, CareBookingPayment $payment, SupportTicket $ticket, bool $release): array
+    private function buildPreview(CareBooking $booking, CareBookingPayment $payment, SupportTicket $ticket, bool $release, ?int $timeCorrectionId = null): array
     {
+        $adjustmentId = data_get($payment->metadata, 'prepaid_visit_recovery.adjustment_correction_id');
+        $adjustment = $adjustmentId ? $booking->corrections()->find($adjustmentId) : null;
+        if ($adjustmentId) {
+            $this->require($release && $timeCorrectionId === null && $adjustment?->succeeded()
+                && $adjustment->action === CareBookingCorrection::ACTION_ADJUST_PREPAID
+                && (int) $adjustment->support_ticket_id === $ticket->id,
+                'The held adjustment needs review; use its existing receipt, never create another charge.');
+            $approved = $adjustment->timeCorrectionRequest;
+            $this->require($approved?->status === CareBookingTimeCorrection::STATUS_APPLIED
+                && (int) $approved->care_booking_id === $booking->id
+                && (int) $booking->timeCorrections()->orderByDesc('version')->value('id') === $approved->id
+                && (int) $approved->approved_by_user_id === (int) $adjustment->approved_by_user_id
+                && (int) $booking->family_confirmed_by_user_id === (int) $approved->approved_by_user_id
+                && $booking->family_confirmed_at?->eq($approved->approved_at)
+                && $booking->started_at?->eq($approved->proposed_started_at)
+                && $booking->completed_at?->eq($approved->proposed_completed_at)
+                && (int) $booking->worked_minutes === (int) $approved->proposed_worked_minutes
+                && (int) $booking->total_paused_seconds === (int) $approved->proposed_break_minutes * 60,
+                'The applied family correction no longer matches this visit.');
+        }
         $this->require(in_array($ticket->status, [SupportTicket::STATUS_OPEN, SupportTicket::STATUS_IN_PROGRESS], true), 'Keep the support ticket open during recovery.');
         $this->require(! $booking->care_plan_id && $booking->careRequest?->request_type === CareRequest::TYPE_ONE_TIME, 'This recovery supports one-time visits only.');
         $this->require(! $booking->cancelled_at && ! $booking->dispute_opened_at && ! $booking->no_show_flag
@@ -151,21 +185,36 @@ class PrepaidVisitRecoveryService
         $this->require(in_array($payment->status, [CareBookingPayment::STATUS_CAPTURED, CareBookingPayment::STATUS_TRANSFER_FAILED], true)
             && (int) $payment->amount_captured_cents > 0 && (int) $payment->amount_refunded_cents === 0
             && ! $payment->stripe_transfer_id && ! $payment->transferred_at
-            && ! $payment->stripe_last_refund_id && ! $payment->stripe_overage_payment_intent_id
-            && (int) $payment->overage_pending_cents === 0 && (int) $payment->amount_overage_cents === 0,
+            && ! $payment->stripe_last_refund_id
+            && (int) $payment->overage_pending_cents === 0
+            && ($adjustment
+                ? ((int) $payment->amount_overage_cents === (int) $adjustment->payment_delta_cents
+                    && $payment->stripe_overage_payment_intent_id === data_get($adjustment->provider_payload, 'charge.id')
+                    && $payment->stripe_overage_charge_id === data_get($adjustment->provider_payload, 'charge.latest_charge_id'))
+                : (! $payment->stripe_overage_payment_intent_id && (int) $payment->amount_overage_cents === 0)),
             'Payment must be captured, unrefunded, untransferred, and have no overage.');
         $allowedOperations = [CareBookingPaymentOperation::TYPE_AUTHORIZATION, CareBookingPaymentOperation::TYPE_CHARGE,
             CareBookingPaymentOperation::TYPE_PROCESSING_FEE, CareBookingPaymentOperation::TYPE_EARNING,
             CareBookingPaymentOperation::TYPE_AUTHORIZATION_RELEASE];
         $operations = $payment->operations()->orderBy('id')->get();
         $charges = $operations->where('type', CareBookingPaymentOperation::TYPE_CHARGE);
-        $charge = $charges->first();
-        $this->require($charges->count() === 1 && (int) $charges->sum('amount_cents') === (int) $payment->amount_captured_cents
+        $charge = $charges->firstWhere('stripe_object_id', $payment->stripe_primary_charge_id);
+        $this->require($charges->count() === ($adjustment ? 2 : 1) && (int) $charges->sum('amount_cents') === (int) $payment->amount_captured_cents
             && $charge?->status === CareBookingPaymentOperation::STATUS_SUCCEEDED
             && data_get($charge?->metadata, 'kind') === 'primary'
             && trim((string) $charge?->stripe_object_id) !== ''
             && $charge?->stripe_object_id === $payment->stripe_primary_charge_id,
             'The original captured charge must match the ledger.');
+        if ($adjustment) {
+            $additional = $charges->firstWhere('stripe_object_id', $payment->stripe_overage_charge_id);
+            $this->require((int) $charge->amount_cents === (int) $adjustment->previous_charge_cents
+                && $additional && $additional->id !== $charge->id
+                && (int) $additional->amount_cents === (int) $adjustment->payment_delta_cents
+                && data_get($additional->metadata, 'kind') === 'prepaid-adjustment-'.$adjustment->id
+                && $additional->stripe_parent_object_id === $payment->stripe_overage_payment_intent_id
+                && (int) $payment->amount_captured_cents === (int) $adjustment->target_charge_cents,
+                'The additional charge does not match the approved adjustment receipt.');
+        }
         $authorizationPlaceholders = [];
         foreach ($operations as $operation) {
             $coveredByCapture = $this->isCapturedAuthorizationPlaceholder($operation, $payment, $charge);
@@ -183,22 +232,28 @@ class PrepaidVisitRecoveryService
             'The payout record indicates payment or another settlement requiring review.');
         $this->require(! $booking->corrections()->whereIn('status', [CareBookingCorrection::STATUS_PENDING,
             CareBookingCorrection::STATUS_PROCESSING, CareBookingCorrection::STATUS_REQUIRES_ACTION, CareBookingCorrection::STATUS_FAILED])->exists()
-            && ! $booking->timeCorrections()->whereIn('status', \App\Models\CareBookingTimeCorrection::activeStatuses())->exists(),
+            && ! $booking->timeCorrections()->whereIn('status', CareBookingTimeCorrection::activeStatuses())
+                ->when($timeCorrectionId, fn ($query) => $query->whereKeyNot($timeCorrectionId))->exists(),
             'Finish or investigate existing corrections first.');
 
         if ($release) {
             $this->require($payment->hasPrepaidVisitHold(), 'This payment is not held for a prepaid visit recovery.');
             PrepaidVisitPaymentGuard::assertActualVisitCompleted($booking, $payment);
-            $this->require($booking->family_confirmed_at && $booking->family_confirmed_at->gte($booking->completed_at)
-                && ! $booking->family_confirmed_at->isFuture()
-                && (int) $booking->family_confirmed_by_user_id === (int) $booking->family_user_id,
-                'The owning family must explicitly approve the actual completed visit first.');
-            $this->require(hash_equals((string) data_get($payment->metadata, 'prepaid_visit_recovery.financial_fingerprint'),
+            $this->require(hash_equals((string) data_get($payment->metadata, 'prepaid_visit_recovery.'.($adjustment ? 'adjusted_financial_fingerprint' : 'financial_fingerprint')),
                 $this->fingerprint($this->financialState($payment))), 'Financial records changed during the hold. Review them before release.');
-            $quote = $this->payments->quoteForWorkedMinutes($booking, (int) $booking->worked_minutes);
-            $this->require((int) $quote['total_charge_cents'] === (int) $payment->amount_captured_cents
-                && (int) $quote['caregiver_amount_cents'] === (int) $payment->caregiver_amount_cents,
-                'Actual approved hours change the bill or earnings. Keep the hold; a separately approved adjustment is required.');
+            if ($timeCorrectionId === null) {
+                $approver = $adjustment ? User::query()->find($booking->family_confirmed_by_user_id) : null;
+                $this->require($booking->family_confirmed_at && $booking->family_confirmed_at->gte($booking->completed_at)
+                    && ! $booking->family_confirmed_at->isFuture()
+                    && ($adjustment
+                        ? ($approver?->role === 'family' && app(FamilyAccountContext::class)->canAccessRecord($approver, $booking))
+                        : (int) $booking->family_confirmed_by_user_id === (int) $booking->family_user_id),
+                    'The owning family must explicitly approve the actual completed visit first.');
+                $quote = $this->payments->quoteForWorkedMinutes($booking, (int) $booking->worked_minutes);
+                $this->require((int) $quote['total_charge_cents'] === (int) $payment->amount_captured_cents
+                    && (int) $quote['caregiver_amount_cents'] === (int) $payment->caregiver_amount_cents,
+                    'Actual approved hours change the bill or earnings. Keep the hold; a separately approved adjustment is required.');
+            }
         } else {
             $this->require(! data_get($payment->metadata, 'prepaid_visit_recovery'), 'This payment already has recovery history.');
             $this->require($booking->status === CareBooking::STATUS_COMPLETED && ! $booking->reviewed_at
@@ -220,6 +275,7 @@ class PrepaidVisitRecoveryService
             'authorization_placeholders_covered_by_capture' => $authorizationPlaceholders,
             'currency' => $payment->currency,
             'payment_delta_cents' => 0,
+            'caregiver_net_cents' => (int) $payment->caregiver_amount_cents,
             'stripe_writes' => false,
             'messages_sent' => false,
             'payout_effect' => $release ? 'Automatic transfer retries become eligible; separate approval is required to apply this release.' : 'All money movement held until separate admin release.',
@@ -280,10 +336,11 @@ class PrepaidVisitRecoveryService
             'ticket' => $ticket->only(['id', 'status', 'opener_user_id', 'care_request_id', 'care_booking_id', 'origin_path']),
             'corrections' => $booking->corrections()->orderBy('id')->get(['id', 'action', 'status', 'updated_at'])->toArray(),
             'events' => $booking->events()->orderBy('id')->get(['id', 'event_type', 'actor_user_id', 'happened_at'])->toArray(),
+            'time_corrections' => $booking->timeCorrections()->orderBy('id')->get()->map->getAttributes()->all(),
         ];
     }
 
-    private function financialState(CareBookingPayment $payment): array
+    public function financialState(CareBookingPayment $payment): array
     {
         $attributes = $payment->getAttributes();
         unset($attributes['stripe_payment_intent_client_secret'], $attributes['updated_at']);

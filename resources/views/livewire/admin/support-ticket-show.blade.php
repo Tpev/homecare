@@ -328,7 +328,8 @@
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <span class="rounded-full px-2.5 py-1 text-xs font-bold uppercase {{ $correction->status === 'succeeded' ? 'bg-emerald-100 text-emerald-800' : ($correction->status === 'requires_action' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800') }}">{{ str_replace('_', ' ', $correction->status) }}</span>
-                                        @if (in_array($correction->status, [\App\Models\CareBookingCorrection::STATUS_REQUIRES_ACTION, \App\Models\CareBookingCorrection::STATUS_FAILED], true))
+                                        @if (in_array($correction->status, [\App\Models\CareBookingCorrection::STATUS_REQUIRES_ACTION, \App\Models\CareBookingCorrection::STATUS_FAILED], true)
+                                            && in_array($correction->action, [\App\Models\CareBookingCorrection::ACTION_REOPEN, \App\Models\CareBookingCorrection::ACTION_COMPLETE_AND_BILL], true))
                                             <button type="button" wire:click="retryVisitCorrection({{ $correction->id }})" wire:confirm="Retry this correction using the family’s current saved card?" class="min-h-9 rounded-lg bg-amber-600 px-3 text-xs font-bold text-white hover:bg-amber-700">Retry</button>
                                         @endif
                                     </div>

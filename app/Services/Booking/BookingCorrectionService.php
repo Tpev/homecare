@@ -170,6 +170,7 @@ class BookingCorrectionService
             if ((int) $existing->care_booking_id !== (int) $ticket->care_booking_id) {
                 throw new AuthorizationException;
             }
+            $this->assertOrdinaryCorrection($existing);
 
             return $existing;
         }
@@ -251,6 +252,7 @@ class BookingCorrectionService
     public function retry(CareBookingCorrection $correction, User $admin): CareBookingCorrection
     {
         $this->assertAdministrator($admin);
+        $this->assertOrdinaryCorrection($correction);
         if (! in_array($correction->status, [
             CareBookingCorrection::STATUS_REQUIRES_ACTION,
             CareBookingCorrection::STATUS_FAILED,
@@ -273,6 +275,15 @@ class BookingCorrectionService
         }
 
         return $this->execute($correction->fresh(), $admin);
+    }
+
+    private function assertOrdinaryCorrection(CareBookingCorrection $correction): void
+    {
+        if (! in_array($correction->action, [CareBookingCorrection::ACTION_REOPEN, CareBookingCorrection::ACTION_COMPLETE_AND_BILL], true)) {
+            throw ValidationException::withMessages([
+                'correctionApply' => 'Prepaid recovery receipts require their dedicated review command. Do not retry or resolve them through ordinary corrections.',
+            ]);
+        }
     }
 
     private function execute(CareBookingCorrection $correction, User $admin): CareBookingCorrection
