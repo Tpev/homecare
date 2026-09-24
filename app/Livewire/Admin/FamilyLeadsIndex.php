@@ -61,6 +61,11 @@ class FamilyLeadsIndex extends Component
         'selectedLeadId' => ['as' => 'lead', 'except' => null],
     ];
 
+    public function boot(): void
+    {
+        abort_unless(in_array(auth()->user()?->role, ['admin', 'sales', 'sdr'], true), 403);
+    }
+
     public function mount(): void
     {
         $this->resetLeadForm();
@@ -225,6 +230,8 @@ class FamilyLeadsIndex extends Component
         }
 
         if ((int) $oldAssignee !== (int) $newAssignee) {
+            $lead->unsetRelation('assignedAdmin');
+
             $lead->activities()->create([
                 'actor_user_id' => auth()->id(),
                 'type' => LeadActivity::TYPE_ASSIGNMENT,
@@ -236,11 +243,14 @@ class FamilyLeadsIndex extends Component
         }
 
         $this->loadSelectedFields($lead->fresh());
+        unset($this->selectedLead);
         $this->dispatch('toast', ['type' => 'success', 'title' => 'Lead saved', 'message' => 'Ownership, timing, and stage are up to date.']);
     }
 
     public function deleteLead(int $leadId): void
     {
+        abort_unless($this->canDeleteLeads(), 403);
+
         $lead = Lead::query()
             ->where('lead_type', Lead::TYPE_FAMILY)
             ->findOrFail($leadId);
@@ -276,6 +286,7 @@ class FamilyLeadsIndex extends Component
             'occurred_at' => now(),
             'metadata' => ['source' => 'admin_family_crm'],
         ]);
+        unset($this->selectedLead);
         $this->note = '';
     }
 
@@ -297,6 +308,7 @@ class FamilyLeadsIndex extends Component
     {
         return view('livewire.admin.family-leads-index', [
             'assigneeOptions' => $this->assigneeOptions(),
+            'canDeleteLeads' => $this->canDeleteLeads(),
             'leads' => $this->baseQuery()
                 ->with(['assignedAdmin:id,name,email', 'welcomeEmail'])
                 ->orderByRaw("case priority when 'urgent' then 1 when 'high' then 2 when 'normal' then 3 else 4 end")
@@ -308,6 +320,11 @@ class FamilyLeadsIndex extends Component
             'stageOptions' => Lead::FAMILY_STAGES,
             'stats' => $this->stats(),
         ]);
+    }
+
+    private function canDeleteLeads(): bool
+    {
+        return in_array(auth()->user()?->role, ['admin', 'sales'], true);
     }
 
     private function baseQuery(bool $filters = true): Builder

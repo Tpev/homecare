@@ -48,7 +48,7 @@ class FamilyAcquisitionTest extends TestCase
             ->assertSee('Family leads')
             ->assertSee('Referral outreach');
         $this->actingAs($sdr)->get(route('admin.family-acquisition.overview'))->assertForbidden();
-        $this->actingAs($sdr)->get(route('admin.family-acquisition.leads'))->assertForbidden();
+        $this->actingAs($sdr)->get(route('admin.family-acquisition.leads'))->assertOk();
     }
 
     public function test_unsuccessful_call_returns_on_the_next_business_day(): void

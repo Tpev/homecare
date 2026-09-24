@@ -10,7 +10,9 @@
                 <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">One record from first enquiry through seven call attempts, qualification, assessment, and care start.</p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <a href="{{ route('admin.family-acquisition.overview') }}" wire:navigate class="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#D9CEC0] bg-white px-4 py-2 text-sm font-bold text-[#23483F] hover:bg-[#FFFBF4]">Management overview</a>
+                @if(auth()->user()?->isAdministrator())
+                    <a href="{{ route('admin.family-acquisition.overview') }}" wire:navigate class="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#D9CEC0] bg-white px-4 py-2 text-sm font-bold text-[#23483F] hover:bg-[#FFFBF4]">Management overview</a>
+                @endif
                 <a href="{{ route('sdr.family-calling') }}" wire:navigate class="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#23483F] bg-white px-4 py-2 text-sm font-bold text-[#23483F] hover:bg-emerald-50">Open calling console</a>
                 <button type="button" wire:click="toggleCreateForm" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#23483F] px-5 py-2 text-sm font-bold text-white shadow-sm hover:bg-[#173F35]">{{ $showCreateForm ? 'Cancel' : '+ Add family lead' }}</button>
             </div>
@@ -167,13 +169,15 @@
                                     <td class="px-4 py-4">
                                         <div class="flex items-center justify-end gap-3 text-sm font-bold">
                                             <span class="text-emerald-700">View</span>
-                                            <button
-                                                type="button"
-                                                wire:click.stop="deleteLead({{ $lead->id }})"
-                                                wire:confirm="Delete {{ $lead->name }} permanently? The lead and its complete activity timeline will be removed."
-                                                class="rounded-lg px-2 py-1 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
-                                                aria-label="Delete {{ $lead->name }}"
-                                            >Delete</button>
+                                            @if($canDeleteLeads)
+                                                <button
+                                                    type="button"
+                                                    wire:click.stop="deleteLead({{ $lead->id }})"
+                                                    wire:confirm="Delete {{ $lead->name }} permanently? The lead and its complete activity timeline will be removed."
+                                                    class="rounded-lg px-2 py-1 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                                                    aria-label="Delete {{ $lead->name }}"
+                                                >Delete</button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

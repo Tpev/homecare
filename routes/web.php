@@ -117,8 +117,11 @@ Route::middleware(['web', 'auth', 'crm.access'])
     ->group(function () {
         Route::get('/crm', LeadsIndex::class)->name('crm.index');
         Route::get('/leads', LeadsIndex::class)->name('leads.index');
-        Route::get('/family-leads', FamilyLeadsIndex::class)->name('family-acquisition.leads');
     });
+
+Route::get('/admin/family-leads', FamilyLeadsIndex::class)
+    ->middleware(['web', 'auth', 'sdr.access'])
+    ->name('admin.family-acquisition.leads');
 
 Route::middleware(['web', 'auth', 'sdr.access'])
     ->prefix('sdr')

@@ -141,9 +141,14 @@ new class extends Component
 
         $sdrNavLinks = [
             [
-                'label' => 'Family leads',
+                'label' => 'Family calling console',
                 'href' => route('sdr.family-calling'),
                 'active' => request()->routeIs('sdr.family-calling'),
+            ],
+            [
+                'label' => 'Family leads CRM',
+                'href' => route('admin.family-acquisition.leads'),
+                'active' => request()->routeIs('admin.family-acquisition.leads'),
             ],
             [
                 'label' => 'Referral outreach',
@@ -929,7 +934,8 @@ new class extends Component
                             <p class="mt-1 text-xs text-[#6E746F]">{{ $user->email }}</p>
                             <p class="mt-2 text-xs font-medium uppercase tracking-[0.14em] text-[#6E746F]">SDR account</p>
                         </div>
-                        <a href="{{ route('sdr.family-calling') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm font-semibold text-[#23483F] hover:bg-[#F8F0E2]">Family leads</a>
+                        <a href="{{ route('sdr.family-calling') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm font-semibold text-[#23483F] hover:bg-[#F8F0E2]">Family calling console</a>
+                        <a href="{{ route('admin.family-acquisition.leads') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Family leads CRM</a>
                         <a href="{{ route('sdr.calling') }}" wire:navigate class="block rounded-xl px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Referral outreach</a>
                     @else
                         @if ($isCaregiver && $caregiverOnboardingMode)
@@ -1060,7 +1066,8 @@ new class extends Component
 
                 <div class="mt-3 space-y-1 px-2">
                     @if ($isSdr)
-                        <x-responsive-nav-link :href="route('sdr.family-calling')" wire:navigate>{{ __('Family leads') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('sdr.family-calling')" wire:navigate>{{ __('Family calling console') }}</x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('admin.family-acquisition.leads')" wire:navigate>{{ __('Family leads CRM') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('sdr.calling')" wire:navigate>{{ __('Referral outreach') }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="$myProfileHref" wire:navigate>{{ __($myProfileLabel) }}</x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('profile')" wire:navigate>{{ __('Account Settings') }}</x-responsive-nav-link>

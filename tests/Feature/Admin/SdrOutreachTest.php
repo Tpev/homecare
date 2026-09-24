@@ -65,7 +65,7 @@ class SdrOutreachTest extends TestCase
             ->assertSee('SDR call list');
     }
 
-    public function test_sdr_role_only_accesses_calling_workspaces(): void
+    public function test_sdr_role_accesses_calling_and_family_lead_workspaces(): void
     {
         $sdr = User::factory()->create([
             'email' => 'caller@example.com',
@@ -90,6 +90,7 @@ class SdrOutreachTest extends TestCase
             ->assertDontSee('Admin Users');
 
         $this->actingAs($sdr)->get(route('admin.crm.index'))->assertForbidden();
+        $this->actingAs($sdr)->get(route('admin.family-acquisition.leads'))->assertOk();
         $this->actingAs($sdr)->get(route('admin.users.index'))->assertForbidden();
         $this->actingAs($sdr)->get(route('admin.sdr-outreach.index'))->assertForbidden();
     }
