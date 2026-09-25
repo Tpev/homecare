@@ -23,9 +23,9 @@ class MarketplaceEmailNotificationTest extends TestCase
 
         app(MarketplaceNotificationService::class)->notify(
             recipients: $user,
-            eventKey: MarketplaceEvent::MESSAGE_RECEIVED,
-            title: 'New message',
-            body: 'You have a new message from a caregiver.',
+            eventKey: MarketplaceEvent::SHIFT_STARTING_SOON,
+            title: 'Visit starting soon',
+            body: 'Your caregiver will arrive soon.',
             url: route('messages.index'),
             payload: ['conversation_id' => 10],
             dedupeKey: 'msg-test-1'
@@ -44,14 +44,14 @@ class MarketplaceEmailNotificationTest extends TestCase
                 && ($mail->viewData['supportUrl'] ?? null) === route('support.index')
                 && is_string($mail->viewData['openTrackingUrl'] ?? null)
                 && str_contains((string) $mail->viewData['openTrackingUrl'], '/notifications/email/open/')
-                && ($mail->viewData['ctaLabel'] ?? null) === 'Read message';
+                && ($mail->viewData['ctaLabel'] ?? null) === 'View visit';
         });
 
         $this->assertDatabaseHas('marketplace_notification_deliveries', [
             'user_id' => $user->id,
-            'event_key' => MarketplaceEvent::MESSAGE_RECEIVED,
+            'event_key' => MarketplaceEvent::SHIFT_STARTING_SOON,
             'channel' => 'email',
-            'status' => 'queued',
+            'status' => 'sent',
             'open_count' => 0,
             'click_count' => 0,
         ]);

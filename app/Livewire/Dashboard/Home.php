@@ -28,6 +28,9 @@ class Home extends Component
     public function mount(CaregiverOnboardingState $onboardingState): void
     {
         $user = auth()->user();
+        if ($user) {
+            app(\App\Services\Notifications\NotificationReadService::class)->synchronize($user);
+        }
         if ($user?->isAdministrator()) {
             $this->redirect(route('admin.crm.index', absolute: false), navigate: true);
 

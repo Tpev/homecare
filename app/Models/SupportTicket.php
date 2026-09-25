@@ -307,8 +307,14 @@ class SupportTicket extends Model
             && (! $read?->last_read_at || $this->last_public_message_at->gt($read->last_read_at));
     }
 
-    public function markReadFor(User $user): void
+    public function markReadFor(User $user): int
     {
+        if (! \Illuminate\Support\Facades\Gate::forUser($user)->allows('view', $this)) {
+            return 0;
+        }
+        $cleared = app(\App\Services\Notifications\NotificationReadService::class)
+            ->markRelated($user, 'support_ticket_id', (int) $this->id, now());
+
         if ($user->role === 'family' && $this->family_account_id) {
             FamilySupportTicketRead::query()->updateOrCreate(
                 ['support_ticket_id' => $this->id, 'user_id' => $user->id],
@@ -319,6 +325,8 @@ class SupportTicket extends Model
         if ((int) $this->opener_user_id === (int) $user->id) {
             $this->markReadForOpener();
         }
+
+        return $cleared;
     }
 
     public function timeCorrection(): HasOne
@@ -362,6 +370,11 @@ class SupportTicket extends Model
 
     public function markReadForAdmin(): void
     {
+        if (auth()->user()?->isAdministrator()) {
+            app(\App\Services\Notifications\NotificationReadService::class)
+                ->markRelated(auth()->user(), 'support_ticket_id', (int) $this->id, now());
+        }
+
         if (! $this->last_public_message_at || ! $this->isUnreadForAdmin()) {
             return;
         }

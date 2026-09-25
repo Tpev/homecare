@@ -114,7 +114,7 @@ class CaregiverOnboardingEmailsTest extends TestCase
             'user_id' => $incompleteCaregiver->id,
             'event_key' => MarketplaceEvent::CAREGIVER_ONBOARDING_REMINDER_24H,
             'channel' => 'email',
-            'status' => 'queued',
+            'status' => 'sent',
         ]);
         $this->assertDatabaseMissing('marketplace_notification_deliveries', [
             'user_id' => $completeCaregiver->id,

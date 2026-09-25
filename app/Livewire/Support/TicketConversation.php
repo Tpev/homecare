@@ -63,7 +63,9 @@ class TicketConversation extends Component
 
     public function refreshThread(): void
     {
-        $this->ticket->markReadFor(auth()->user());
+        if ($this->ticket->markReadFor(auth()->user()) > 0) {
+            $this->dispatch('notifications-read');
+        }
     }
 
     public function getTicketProperty(): SupportTicket

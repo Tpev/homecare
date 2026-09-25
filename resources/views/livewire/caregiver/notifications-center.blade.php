@@ -160,10 +160,14 @@
                                     <input type="checkbox" wire:model="preferences.{{ $eventKey }}.in_app">
                                     <span>In-app</span>
                                 </label>
-                                <label class="flex items-center gap-2 rounded-lg border border-[#DED6CA] bg-[#FFFCF8] px-2 py-2">
-                                    <input type="checkbox" wire:model="preferences.{{ $eventKey }}.email">
-                                    <span>Email</span>
-                                </label>
+                                @if (\App\Services\Notifications\NotificationDeliveryPolicy::allowsEmail($eventKey))
+                                    <label class="flex items-center gap-2 rounded-lg border border-[#DED6CA] bg-[#FFFCF8] px-2 py-2">
+                                        <input type="checkbox" wire:model="preferences.{{ $eventKey }}.email">
+                                        <span>Email</span>
+                                    </label>
+                                @else
+                                    <span class="px-2 py-2">Confirmation in app only</span>
+                                @endif
                             </div>
                         </div>
                     @endforeach
@@ -193,10 +197,14 @@
                                     <input type="checkbox" wire:model="preferences.{{ $eventKey }}.in_app">
                                     <span>In-app</span>
                                 </label>
-                                <label class="flex items-center gap-2 rounded-lg border border-[#DED6CA] bg-[#FFFCF8] px-2 py-2">
-                                    <input type="checkbox" wire:model="preferences.{{ $eventKey }}.email">
-                                    <span>Email</span>
-                                </label>
+                                @if (\App\Services\Notifications\NotificationDeliveryPolicy::allowsEmail($eventKey))
+                                    <label class="flex items-center gap-2 rounded-lg border border-[#DED6CA] bg-[#FFFCF8] px-2 py-2">
+                                        <input type="checkbox" wire:model="preferences.{{ $eventKey }}.email">
+                                        <span>Email</span>
+                                    </label>
+                                @else
+                                    <span class="px-2 py-2">Confirmation in app only</span>
+                                @endif
                             </div>
                         </div>
                     @endforeach

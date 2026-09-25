@@ -81,6 +81,7 @@ class NotificationsCenter extends Component
     public function mount(): void
     {
         abort_unless(auth()->user()?->role === 'family', 403);
+        app(\App\Services\Notifications\NotificationReadService::class)->synchronize(auth()->user());
         $this->eventKeys = MarketplaceNotificationPresentation::eventsForRole('family');
         $this->loadPreferencesFromStore();
     }
@@ -98,12 +99,14 @@ class NotificationsCenter extends Component
 
         if (! $notification->read_at) {
             $notification->markAsRead();
+            $this->dispatch('notifications-read');
         }
     }
 
     public function markAllRead(): void
     {
         auth()->user()->unreadNotifications()->update(['read_at' => now()]);
+        $this->dispatch('notifications-read');
     }
 
     public function updatingScope(): void
@@ -166,7 +169,7 @@ class NotificationsCenter extends Component
                 ],
                 [
                     'in_app_enabled' => (bool) ($row[NotificationChannels::IN_APP] ?? true),
-                    'email_enabled' => (bool) ($row[NotificationChannels::EMAIL] ?? true),
+                    'email_enabled' => \App\Services\Notifications\NotificationDeliveryPolicy::allowsEmail($eventKey) && (bool) ($row[NotificationChannels::EMAIL] ?? true),
                     'sms_enabled' => false,
                     'push_enabled' => false,
                 ]
@@ -188,7 +191,7 @@ class NotificationsCenter extends Component
             $row = $stored->get($eventKey);
             $this->preferences[$eventKey] = [
                 NotificationChannels::IN_APP => $row ? (bool) $row->in_app_enabled : true,
-                NotificationChannels::EMAIL => $row ? (bool) $row->email_enabled : true,
+                NotificationChannels::EMAIL => \App\Services\Notifications\NotificationDeliveryPolicy::allowsEmail($eventKey) && ($row ? (bool) $row->email_enabled : true),
                 NotificationChannels::SMS => $row ? (bool) $row->sms_enabled : false,
                 NotificationChannels::PUSH => $row ? (bool) $row->push_enabled : false,
             ];

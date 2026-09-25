@@ -14,7 +14,7 @@ class NotificationPreferenceResolver
     {
         $defaults = [
             NotificationChannels::IN_APP => true,
-            NotificationChannels::EMAIL => true,
+            NotificationChannels::EMAIL => NotificationDeliveryPolicy::allowsEmail($eventKey),
             NotificationChannels::SMS => false,
             NotificationChannels::PUSH => false,
         ];
@@ -30,7 +30,7 @@ class NotificationPreferenceResolver
 
         return [
             NotificationChannels::IN_APP => (bool) $preference->in_app_enabled,
-            NotificationChannels::EMAIL => (bool) $preference->email_enabled,
+            NotificationChannels::EMAIL => NotificationDeliveryPolicy::allowsEmail($eventKey) && (bool) $preference->email_enabled,
             // Provider delivery is not implemented. Never present placeholder channels as live.
             NotificationChannels::SMS => false,
             NotificationChannels::PUSH => false,

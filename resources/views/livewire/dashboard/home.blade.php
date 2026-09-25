@@ -125,7 +125,7 @@
                     </x-slot:header>
                     <div class="space-y-2">
                         @foreach ($caregiverDigest as $digest)
-                            <a href="{{ $digest['url'] ?: route('caregiver.notifications.index') }}" wire:navigate class="block rounded-xl border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:bg-slate-50">
+                            <a href="{{ route('notifications.open', $digest['id']) }}" wire:navigate class="block rounded-xl border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:bg-slate-50">
                                 <div class="flex items-start justify-between gap-3">
                                     <div>
                                         <div class="flex items-center gap-2">

@@ -2,8 +2,9 @@
 
 namespace App\Services\Notifications;
 
-use App\Models\MarketplaceNotificationDelivery;
+use App\Models\CareRequestConversation;
 use App\Models\FamilyAccount;
+use App\Models\MarketplaceNotificationDelivery;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Notifications\MarketplaceEventNotification;
@@ -150,11 +151,18 @@ class MarketplaceNotificationService
         $normalizedUrl = $this->normalizeUrl($url);
         $payload = $this->context->enrich($user, $eventKey, $title, $body, $payload, $subject);
         $channels = array_replace($this->preferences->resolve($user, $eventKey), $channelOverrides);
+        $channels[NotificationChannels::EMAIL] = ($channels[NotificationChannels::EMAIL] ?? false)
+            && NotificationDeliveryPolicy::allowsEmail($eventKey);
         $subjectType = $subject?->getMorphClass();
         $subjectId = $subject?->getKey();
         if ($channels[NotificationChannels::EMAIL] ?? false) {
+            // Operations alerts also use SUPPORT_TICKET_REPLY; they must remain immediate.
+            $deferred = NotificationDeliveryPolicy::isMessage($eventKey)
+                && ! $user->isAdministrator()
+                && ($subject instanceof CareRequestConversation || $subject instanceof SupportTicket);
             $trackingToken = Str::random(48);
             $mailPayload = array_merge($payload, [
+                'email' => ['title' => $title, 'body' => $body, 'url' => $normalizedUrl],
                 'tracking' => [
                     'token' => $trackingToken,
                     'target_url' => $normalizedUrl,
@@ -168,30 +176,11 @@ class MarketplaceNotificationService
                 subjectId: $subjectId,
                 dedupeKey: $dedupeKey,
                 payload: $mailPayload,
+                status: $deferred ? 'pending' : 'queued',
             );
 
-            if ($mailDelivery) {
-                $notificationPayload = array_merge($mailPayload, [
-                    'tracking' => [
-                        'token' => $trackingToken,
-                        'target_url' => $normalizedUrl,
-                        'delivery_id' => $mailDelivery->id,
-                    ],
-                ]);
-
-                try {
-                    Notification::sendNow($user, new MarketplaceEventNotification(
-                        eventKey: $eventKey,
-                        title: $title,
-                        body: $body,
-                        url: $normalizedUrl,
-                        channels: ['mail'],
-                        payload: $notificationPayload,
-                    ));
-                    // Queued means handed to Laravel's queue. Provider delivery is not proven here.
-                } catch (Throwable $exception) {
-                    $this->markFailed($mailDelivery, $exception);
-                }
+            if ($mailDelivery && ! $deferred) {
+                $this->sendReservedEmail($user, $mailDelivery);
             }
         }
 
@@ -208,7 +197,7 @@ class MarketplaceNotificationService
 
             if ($inAppDelivery) {
                 try {
-                    $user->notify(new MarketplaceEventNotification(
+                    Notification::sendNow($user, new MarketplaceEventNotification(
                         eventKey: $eventKey,
                         title: $title,
                         body: $body,
@@ -244,6 +233,27 @@ class MarketplaceNotificationService
             dedupeKey: $dedupeKey,
             payload: $payload
         );
+    }
+
+    public function sendReservedEmail(User $user, MarketplaceNotificationDelivery $delivery): void
+    {
+        $payload = $delivery->payload ?? [];
+        $payload['tracking']['delivery_id'] = $delivery->id;
+
+        try {
+            Notification::sendNow($user, new MarketplaceEventNotification(
+                eventKey: $delivery->event_key,
+                title: (string) data_get($payload, 'email.title'),
+                body: (string) data_get($payload, 'email.body'),
+                url: data_get($payload, 'email.url'),
+                channels: ['mail'],
+                payload: $payload,
+            ));
+            // Accepted by the configured transport; inbox delivery is not proven here.
+            $delivery->forceFill(['status' => 'sent', 'sent_at' => now()])->save();
+        } catch (Throwable $exception) {
+            $this->markFailed($delivery, $exception);
+        }
     }
 
     /**
@@ -315,13 +325,14 @@ class MarketplaceNotificationService
         ?int $subjectId,
         ?string $dedupeKey,
         array $payload,
+        string $status = 'queued',
     ): ?MarketplaceNotificationDelivery {
         $channelDedupeKey = $dedupeKey ? $dedupeKey.':'.$channel : null;
         $attributes = [
             'user_id' => $userId,
             'event_key' => $eventKey,
             'channel' => $channel,
-            'status' => 'queued',
+            'status' => $status,
             'notifiable_type' => $subjectType,
             'notifiable_id' => $subjectId,
             'dedupe_key' => $channelDedupeKey,

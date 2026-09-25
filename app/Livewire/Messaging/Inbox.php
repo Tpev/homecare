@@ -208,6 +208,11 @@ class Inbox extends Component
 
         $currentUser = auth()->user();
         $this->authorize('view', $conversation);
+        $cleared = app(\App\Services\Notifications\NotificationReadService::class)
+            ->markRelated($currentUser, 'conversation_id', (int) $conversation->id, now());
+        if ($cleared > 0) {
+            $this->dispatch('notifications-read');
+        }
 
         if ($currentUser->role === 'family') {
             $readAt = $conversation->lastReadAtFor($currentUser);
@@ -222,7 +227,7 @@ class Inbox extends Component
             if ($conversation->caregiver_last_read_at && $conversation->last_message_at && $conversation->caregiver_last_read_at->gte($conversation->last_message_at)) {
                 return;
             }
-            $conversation->forceFill(['caregiver_last_read_at' => now()])->save();
+            $conversation->markRead($currentUser);
         }
     }
 

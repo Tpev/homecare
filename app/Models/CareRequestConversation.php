@@ -123,6 +123,9 @@ class CareRequestConversation extends Model
             return;
         }
 
+        app(\App\Services\Notifications\NotificationReadService::class)
+            ->markRelated($user, 'conversation_id', (int) $this->id, now());
+
         if ($user->role === 'family') {
             FamilyConversationRead::query()->updateOrCreate(
                 ['care_request_conversation_id' => $this->id, 'user_id' => $user->id],

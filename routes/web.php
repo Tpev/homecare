@@ -106,6 +106,9 @@ use App\Livewire\Support\TicketsCenter;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/notifications/{notification}/open', \App\Http\Controllers\OpenNotificationController::class)
+    ->middleware('auth')->name('notifications.open');
+
 Route::get('/welcome/start/{welcomeEmail}', [\App\Http\Controllers\LeadWelcomeController::class, 'start'])
     ->middleware(['signed', 'throttle:30,1'])->name('lead-welcome.start');
 Route::match(['get', 'post'], '/welcome/unsubscribe/{welcomeEmail}', [\App\Http\Controllers\LeadWelcomeController::class, 'unsubscribe'])

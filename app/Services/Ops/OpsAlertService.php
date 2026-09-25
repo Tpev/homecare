@@ -49,6 +49,10 @@ class OpsAlertService
 
     public function notifyCareRequestCreated(CareRequest $careRequest): void
     {
+        if ($careRequest->is_system_generated) {
+            return;
+        }
+
         $recipients = $this->recipients();
         if ($recipients === []) {
             return;

@@ -5,6 +5,9 @@ use Livewire\Volt\Component;
 
 new class extends Component
 {
+    #[\Livewire\Attributes\On('notifications-read')]
+    public function refreshNotifications(): void {}
+
     public function logout(Logout $logout): void
     {
         $logout();

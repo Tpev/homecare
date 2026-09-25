@@ -349,7 +349,7 @@
                 <p class="mt-1 text-base font-semibold text-sky-950">{{ $familyDigest->first()['title'] }}</p>
                 <p class="mt-1 text-sm text-sky-900">{{ $familyDigest->first()['body'] }}</p>
             </div>
-            <a href="{{ $familyDigest->first()['url'] ?: route('family.notifications.index') }}" wire:navigate class="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-4 text-sm font-semibold text-sky-900 shadow-sm">
+            <a href="{{ route('notifications.open', $familyDigest->first()['id']) }}" wire:navigate class="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-4 text-sm font-semibold text-sky-900 shadow-sm">
                 Open update
             </a>
         </div>

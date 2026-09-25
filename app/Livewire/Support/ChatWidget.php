@@ -64,7 +64,14 @@ class ChatWidget extends Component
     {
         $ticket = $this->ticket;
         if ($ticket) {
-            $ticket->markReadFor(auth()->user());
+            $this->markTicketRead($ticket);
+        }
+    }
+
+    private function markTicketRead(SupportTicket $ticket): void
+    {
+        if ($ticket->markReadFor(auth()->user()) > 0) {
+            $this->dispatch('notifications-read');
         }
     }
 
@@ -85,7 +92,7 @@ class ChatWidget extends Component
         }
 
         if ($panelOpen) {
-            $ticket->markReadFor($user);
+            $this->markTicketRead($ticket);
         }
 
         if (app(AiSupportGuidedTaskService::class)->claimCompletedResult($user)) {
@@ -138,7 +145,7 @@ class ChatWidget extends Component
                 app(AiSupportRuntimeService::class)->respond($user, $ticket, trim($body));
             }
 
-            $ticket->fresh()->markReadFor($user);
+            $this->markTicketRead($ticket->fresh());
             $this->messagesLimit = 40;
             $this->resetValidation();
             $this->dispatch(

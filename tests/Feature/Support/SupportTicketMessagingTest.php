@@ -261,8 +261,14 @@ class SupportTicketMessagingTest extends TestCase
 
         $this->assertSame($first->id, $second->id);
         $this->assertDatabaseCount('support_ticket_messages', 1);
-        // One logical reply is delivered once per enabled channel (email and in-app).
-        Notification::assertSentToTimes($user, MarketplaceEventNotification::class, 2);
+        // In-app arrives immediately; one email is reserved for the unread check.
+        Notification::assertSentToTimes($user, MarketplaceEventNotification::class, 1);
+        $this->assertDatabaseHas('marketplace_notification_deliveries', [
+            'user_id' => $user->id,
+            'event_key' => MarketplaceEvent::SUPPORT_TICKET_REPLY,
+            'channel' => 'email',
+            'status' => 'pending',
+        ]);
         $this->assertSame(2, MarketplaceNotificationDelivery::query()
             ->where('user_id', $user->id)
             ->where('event_key', MarketplaceEvent::SUPPORT_TICKET_REPLY)
