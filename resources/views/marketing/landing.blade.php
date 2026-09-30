@@ -1,7 +1,7 @@
 @extends('layouts.marketing-lean')
 
-@section('title', 'LoLo Care | Trusted help at home')
-@section('meta_description', 'Find and coordinate flexible, non-medical home support for someone you love.')
+@section('title', 'Non-Medical Home Care in Raleigh, Durham & Chapel Hill | LoLo Care')
+@section('meta_description', 'Find trusted, non-medical caregivers in Raleigh, Durham, and Chapel Hill. Book by the hour and coordinate care with family, wherever you are.')
 @section('canonical', route('landing'))
 @section('og_image', asset('images/marketing/lolo-hero.jpg'))
 @section('og_image_alt', 'LoLo Care guide welcoming families looking for trusted help at home.')
@@ -180,6 +180,12 @@
         .lolo-home .hero-actions { display: flex; align-items: center; gap: 30px; margin: 34px 0 22px; }
         .lolo-home .text-link { border-bottom: 1px solid; font-weight: 600; }
         .lolo-home .reassurance { color: var(--muted); font-size: .88rem; }
+        .lolo-home .hero-press { max-width: 530px; margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--line); }
+        .lolo-home .hero-press-label { margin: 0 0 16px; color: var(--muted); font-size: .7rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+        .lolo-home .hero-press-logos { display: grid; grid-template-columns: 1.2fr .45fr .95fr 1.65fr; align-items: center; gap: 24px; margin: 0; padding: 0; list-style: none; }
+        .lolo-home .hero-press-logos li { display: flex; align-items: center; justify-content: center; min-width: 0; height: 40px; }
+        .lolo-home .hero-press-logos img { width: 100%; height: auto; max-height: 40px; object-fit: contain; filter: grayscale(1); opacity: .64; mix-blend-mode: multiply; }
+        .lolo-home .hero-press-logos .press-ap { width: 32px; }
         .lolo-home .hero-visual { position: relative; display: flex; align-items: center; justify-content: center; height: 610px; }
         .lolo-home .hero-visual::before {
             position: absolute;
@@ -432,6 +438,10 @@
             .lolo-home .mobile-menu nav { top: 72px; }
             .lolo-home .hero { padding: 48px 22px 100px; }
             .lolo-home .hero-actions { flex-direction: column; align-items: flex-start; gap: 18px; }
+            .lolo-home .hero-press-logos { grid-template-columns: 1fr 1fr; column-gap: 28px; row-gap: 14px; }
+            .lolo-home .hero-press-logos img { max-width: 160px; }
+            .lolo-home .hero-press-logos .press-yahoo { max-width: 124px; }
+            .lolo-home .hero-press-logos .press-markets { max-width: 93px; }
             .lolo-home .hero-visual { height: 370px; }
             .lolo-home .hero-visual::before { width: 330px; height: 330px; }
             .lolo-home .hero-visual img { width: 320px; height: 320px; }
@@ -505,13 +515,22 @@
         <section class="hero" id="top">
             <div class="hero-copy">
                 <p class="eyebrow">Flexible support for aging at home</p>
-                <h1>Trusted help at home, <em>without becoming</em> the care manager.</h1>
-                <p class="lede">Find and book trusted caregivers for companionship, errands, rides, meal preparation, and everyday support. Coordinate everything in one place and stay informed from wherever you are.</p>
+                <h1>Trusted help at home <em>in the Triangle.</em></h1>
+                <p class="lede">Find and book trusted caregivers for companionship, errands, rides, meal preparation, and everyday support. Coordinate care from wherever you are, without becoming the care manager.</p>
                 <div class="hero-actions">
                     <a class="button" href="{{ route('register') }}">Find care</a>
                     <a class="text-link" href="#video">Watch how LoLo works <span aria-hidden="true">↗</span></a>
                 </div>
                 <p class="reassurance">Starting at $30 per hour &nbsp;·&nbsp; Book from one hour &nbsp;·&nbsp; No long-term commitment</p>
+                <aside class="hero-press" aria-labelledby="hero-press-label">
+                    <p class="hero-press-label" id="hero-press-label">As seen in</p>
+                    <ul class="hero-press-logos" role="list">
+                        <li><img class="press-yahoo" src="{{ asset('images/marketing/press/yahoo-news.svg') }}" alt="Yahoo News" width="124" height="20" decoding="async"></li>
+                        <li><img class="press-ap" src="{{ asset('images/marketing/press/associated-press.svg') }}" alt="Associated Press" width="158" height="195" decoding="async"></li>
+                        <li><img class="press-markets" src="{{ asset('images/marketing/press/markets-insider.svg') }}" alt="Markets Insider" width="93" height="30" decoding="async"></li>
+                        <li><img src="{{ asset('images/marketing/press/north-carolina-daily.png') }}" alt="North Carolina Daily" width="871" height="146" decoding="async"></li>
+                    </ul>
+                </aside>
             </div>
 
             <div class="hero-visual">
@@ -820,7 +839,7 @@
                 <a class="brand" href="#top" aria-label="Back to the top">
                     <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo Care" width="652" height="222">
                 </a>
-                <p>The trust-and-coordination layer for aging at home.</p>
+                <p>LoLo Care helps families in Raleigh, Durham, and Chapel Hill find trusted, non-medical help at home. Book companionship, errands, and everyday support by the hour, with no long-term contract.</p>
             </div>
             <div><strong>Families</strong><a href="{{ route('register') }}">Find care</a><a href="#how">How it works</a><a href="#safety">Safety</a></div>
             <div><strong>Caregivers</strong><a href="{{ route('caregiver.register') }}">Become a caregiver</a><a href="{{ route('login') }}">Caregiver login</a></div>

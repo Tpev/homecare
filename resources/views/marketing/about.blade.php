@@ -505,7 +505,7 @@
                 <a class="brand" href="{{ route('landing') }}" aria-label="LoLo Care home">
                     <img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo Care" width="652" height="222">
                 </a>
-                <p>The trust-and-coordination layer for aging at home.</p>
+                <p>LoLo Care helps families in Raleigh, Durham, and Chapel Hill find trusted, non-medical help at home. Book companionship, errands, and everyday support by the hour, with no long-term contract.</p>
             </div>
             <div><strong>Families</strong><a href="{{ route('register') }}">Find care</a><a href="{{ route('landing') }}#how">How it works</a><a href="{{ route('landing') }}#safety">Safety</a></div>
             <div><strong>Caregivers</strong><a href="{{ route('caregiver.register') }}">Become a caregiver</a><a href="{{ route('login') }}">Caregiver login</a></div>

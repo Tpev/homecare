@@ -345,7 +345,7 @@
         </section>
 
         <footer class="landing-footer">
-            <div class="footer-brand"><a class="brand" href="#top" aria-label="Back to the top"><img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo Care" width="652" height="222"></a><p>The trust-and-coordination layer for aging at home.</p></div>
+            <div class="footer-brand"><a class="brand" href="#top" aria-label="Back to the top"><img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo Care" width="652" height="222"></a><p>LoLo Care helps families in Raleigh, Durham, and Chapel Hill find trusted, non-medical help at home. Book companionship, errands, and everyday support by the hour, with no long-term contract.</p></div>
             <div><strong>Caregivers</strong><a href="{{ route('caregiver.register') }}">Create a profile</a><a href="#how">How it works</a><a href="#requirements">Requirements</a><a href="{{ route('login') }}">Caregiver login</a></div>
             <div><strong>Families</strong><a href="{{ route('landing') }}">Find care</a><a href="{{ route('caregivers.search') }}">View caregivers</a><a href="{{ route('landing') }}#safety">Safety</a></div>
             <div><strong>Company</strong><a href="{{ route('about') }}">About LoLo</a><a href="{{ route('faq') }}">FAQs</a><a href="{{ route('blog.index') }}">Resources</a><a href="mailto:hello@carelolo.com">Contact</a><a href="{{ route('legal.index') }}">Legal & privacy</a></div>
