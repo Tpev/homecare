@@ -179,7 +179,10 @@
         .lolo-home .lede { max-width: 650px; color: #53605b; font-size: 1.15rem; line-height: 1.72; }
         .lolo-home .hero-actions { display: flex; align-items: center; gap: 30px; margin: 34px 0 22px; }
         .lolo-home .text-link { border-bottom: 1px solid; font-weight: 600; }
-        .lolo-home .reassurance { color: var(--muted); font-size: .88rem; }
+        .lolo-home .reassurance { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px; max-width: 530px; margin: 28px 0 0; padding: 0; list-style: none; color: #53605b; font-size: .86rem; line-height: 1.5; }
+        .lolo-home .reassurance li { display: flex; align-items: flex-start; gap: 9px; }
+        .lolo-home .reassurance span { text-wrap: balance; }
+        .lolo-home .reassurance svg { flex: 0 0 18px; width: 18px; height: 18px; margin-top: 1px; color: var(--green); }
         .lolo-home .hero-press { max-width: 530px; margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--line); }
         .lolo-home .hero-press-label { margin: 0 0 16px; color: var(--muted); font-size: .7rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
         .lolo-home .hero-press-logos { display: grid; grid-template-columns: 1.2fr .45fr .95fr 1.65fr; align-items: center; gap: 24px; margin: 0; padding: 0; list-style: none; }
@@ -438,6 +441,7 @@
             .lolo-home .mobile-menu nav { top: 72px; }
             .lolo-home .hero { padding: 48px 22px 100px; }
             .lolo-home .hero-actions { flex-direction: column; align-items: flex-start; gap: 18px; }
+            .lolo-home .reassurance { gap: 16px 18px; font-size: .82rem; }
             .lolo-home .hero-press-logos { grid-template-columns: 1fr 1fr; column-gap: 28px; row-gap: 14px; }
             .lolo-home .hero-press-logos img { max-width: 160px; }
             .lolo-home .hero-press-logos .press-yahoo { max-width: 124px; }
@@ -515,13 +519,30 @@
         <section class="hero" id="top">
             <div class="hero-copy">
                 <p class="eyebrow">Flexible support for aging at home</p>
-                <h1>Trusted help at home <em>in the Triangle.</em></h1>
+                <h1>Trusted help at home <em>in the Triangle, North Carolina</em></h1>
                 <p class="lede">Find and book trusted caregivers for companionship, errands, rides, meal preparation, and everyday support. Coordinate care from wherever you are, without becoming the care manager.</p>
                 <div class="hero-actions">
                     <a class="button" href="{{ route('register') }}">Find care</a>
                     <a class="text-link" href="#video">Watch how LoLo works <span aria-hidden="true">↗</span></a>
                 </div>
-                <p class="reassurance">Starting at $30 per hour &nbsp;·&nbsp; Book from one hour &nbsp;·&nbsp; No long-term commitment</p>
+                <ul class="reassurance" role="list" aria-label="Care with LoLo">
+                    <li>
+                        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-opacity=".25"/><path d="m6 10 2.5 2.5L14 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span>Starting at $30 per hour</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-opacity=".25"/><path d="m6 10 2.5 2.5L14 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span>Book from one hour</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-opacity=".25"/><path d="m6 10 2.5 2.5L14 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span>No long&#8209;term commitment</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-opacity=".25"/><path d="m6 10 2.5 2.5L14 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span>Serving North Carolina Families</span>
+                    </li>
+                </ul>
                 <aside class="hero-press" aria-labelledby="hero-press-label">
                     <p class="hero-press-label" id="hero-press-label">As seen in</p>
                     <ul class="hero-press-logos" role="list">
