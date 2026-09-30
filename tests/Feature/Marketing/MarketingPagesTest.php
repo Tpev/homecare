@@ -17,12 +17,7 @@ class MarketingPagesTest extends TestCase
     public function test_landing_pages_render_successfully(): void
     {
         $this->get(route('landing'))->assertOk();
-        $this->get(route('landing.family'))->assertOk();
-        $this->get(route('landing.family.variant', ['variant' => 'a']))->assertOk();
-        $this->get(route('landing.family.variant', ['variant' => 'b']))->assertOk();
-        $this->get(route('landing.family.variant', ['variant' => 'c']))->assertOk();
-        $this->get(route('landing.family.variant', ['variant' => 'd']))->assertOk();
-        $this->get(route('landing.family.variant', ['variant' => 'e']))->assertOk();
+        $this->get(route('landing.get-care'))->assertOk();
         $this->get(route('landing.caregiver'))->assertOk();
         $this->get(route('about'))->assertOk();
         $this->get(route('faq'))->assertOk();
@@ -95,7 +90,7 @@ class MarketingPagesTest extends TestCase
             ->assertDontSee('/build/assets/app-', false)
             ->assertDontSee('tallstackui', false);
 
-        $this->get(route('landing.family'))
+        $this->get(route('landing.get-care'))
             ->assertOk()
             ->assertSee('livewire/livewire', false)
             ->assertSee('/build/assets/app-', false);
@@ -266,13 +261,16 @@ class MarketingPagesTest extends TestCase
         $this->assertSame(1, substr_count($response->getContent(), 'Earn $27/hr*'));
     }
 
-    public function test_family_variant_pages_have_clear_primary_ctas(): void
+    public function test_retired_family_pages_redirect_permanently_and_preserve_campaign_parameters(): void
     {
-        foreach (['a', 'b', 'c', 'd', 'e'] as $variant) {
-            $this->get(route('landing.family.variant', ['variant' => $variant]))
-                ->assertSee(route('register'), false)
-                ->assertSee(route('login'), false);
+        foreach (['/families', '/families/a', '/families/b', '/families/c', '/families/d', '/families/e'] as $path) {
+            $this->get($path)->assertStatus(301)->assertRedirect(route('landing'));
+            $this->get($path.'?utm_source=newsletter&utm_campaign=fall')
+                ->assertStatus(301)
+                ->assertRedirect(route('landing').'?utm_campaign=fall&utm_source=newsletter');
         }
+
+        $this->get('/families/unknown')->assertNotFound();
     }
 
     /**

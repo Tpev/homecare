@@ -890,7 +890,7 @@
 
     <header class="cg-nav">
         <div class="cg-shell cg-nav-inner">
-            <a href="{{ route('landing.family') }}" class="cg-logo" aria-label="LoLo home">
+            <a href="{{ route('landing') }}" class="cg-logo" aria-label="LoLo home">
                 <img src="{{ $logo }}" alt="LoLo">
                 <span>Caregivers</span>
             </a>
@@ -899,7 +899,7 @@
                 <a href="#why-lolo">Why LoLo</a>
                 <a href="#pay">Pay</a>
                 <a href="#how-it-works">How it works</a>
-                <a href="{{ route('landing.family') }}">Families</a>
+                <a href="{{ route('landing') }}">Families</a>
                 <a class="cg-button cg-button-secondary cg-nav-login" href="{{ route('login') }}">Log in</a>
                 <a class="cg-button cg-button-primary" href="{{ route('caregiver.register') }}">Create profile</a>
             </nav>
@@ -1106,7 +1106,7 @@
                 </p>
                 <div class="cg-final-actions">
                     <a class="cg-button cg-button-primary" href="{{ route('caregiver.register') }}">Create your caregiver profile</a>
-                    <a class="cg-button cg-button-secondary" href="{{ route('landing.family') }}">View family page</a>
+                    <a class="cg-button cg-button-secondary" href="{{ route('landing') }}">View family page</a>
                 </div>
                 <p class="cg-privacy">
                     We use first-party analytics cookies to understand page performance and improve caregiver onboarding.

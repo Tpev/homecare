@@ -8,6 +8,7 @@ use App\Models\Skill;
 use App\Services\Marketplace\CaregiverCertificationFilter;
 use App\Support\CaregiverCertificationCriteria;
 use App\Support\CaregiverPrelaunch;
+use App\Support\CaregiverSeo;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -236,7 +237,7 @@ class BrowseCaregivers extends Component
             'languageOptions' => Language::query()->orderBy('name')->get(['id', 'name']),
             'certificationOptions' => CaregiverCertificationCriteria::activeOptions(),
             'certificationCriteria' => $certificationCriteria,
-        ]);
+        ])->layoutData(['seo' => CaregiverSeo::directory()]);
     }
 
     private function certificationCriteria(): CaregiverCertificationCriteria

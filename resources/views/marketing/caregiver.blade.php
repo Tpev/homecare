@@ -18,7 +18,8 @@
 @section('og_image_alt', 'A LoLo caregiver enjoying time with an older adult at home.')
 
 @section('structured_data')
-    <script type="application/ld+json">{!! json_encode([
+    @php
+        $faqSchema = [
         '@context' => 'https://schema.org',
         '@type' => 'FAQPage',
         'mainEntity' => collect($caregiverFaqs)->map(fn (array $faq) => [
@@ -29,7 +30,9 @@
                 'text' => $faq['answer'],
             ],
         ])->values()->all(),
-    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+        ];
+    @endphp
+    <script type="application/ld+json">{!! json_encode($faqSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
 @endsection
 
 @push('head')

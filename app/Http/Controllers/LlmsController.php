@@ -35,7 +35,7 @@ class LlmsController extends Controller
             '## Primary pages',
             '',
             '- [LoLo Care home]('.route('landing').'): Service overview.',
-            '- [For families]('.route('landing.family').'): How families arrange support.',
+            '- [Find care]('.route('landing.get-care').'): Arrange support for your family.',
             '- [For caregivers]('.route('landing.caregiver').'): Information for independent caregivers.',
             '- [Reviewed resource center]('.route('blog.index').'): Sourced and maintained care guidance.',
             '- [Atom feed]('.route('blog.feed').'): Recently published and updated guides.',

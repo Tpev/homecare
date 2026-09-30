@@ -10,6 +10,7 @@ use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\Marketplace\CaregiverInvitationDiscoveryService;
 use App\Services\Marketplace\CareRequestInvitationService;
 use App\Support\CaregiverPrelaunch;
+use App\Support\CaregiverSeo;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -266,6 +267,7 @@ class ShowCaregiver extends Component
 
     public function render()
     {
-        return view('livewire.caregiver.show-caregiver');
+        return view('livewire.caregiver.show-caregiver')
+            ->layoutData(['seo' => CaregiverSeo::profile($this->caregiver)]);
     }
 }

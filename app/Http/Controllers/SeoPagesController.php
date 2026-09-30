@@ -20,21 +20,18 @@ class SeoPagesController extends Controller
             fn (array $entry, string $slug) => [
                 'slug' => $slug,
                 'path' => $entry['path'] ?? '/'.$slug,
-                'title' => $entry['h1'] ?? ($entry['meta_title'] ?? $slug),
+                'title' => $entry['eyebrow'] ?? $entry['h1'] ?? ($entry['meta_title'] ?? $slug),
             ]
         )->values()->all();
 
         $relatedPages = collect($allPages)
             ->reject(fn (array $entry) => $entry['slug'] === $seoSlug)
-            ->take(8)
             ->values()
             ->all();
 
         return view('marketing.seo-page', [
             'page' => $page,
-            'allPages' => $allPages,
             'relatedPages' => $relatedPages,
         ]);
     }
 }
-

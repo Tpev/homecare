@@ -996,7 +996,7 @@ new class extends Component
                 </div>
             @else
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('landing.family') }}" class="inline-flex items-center rounded-xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.96)] px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Families</a>
+                    <a href="{{ route('landing') }}" class="inline-flex items-center rounded-xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.96)] px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Families</a>
                     <a href="{{ route('landing.caregiver') }}" class="inline-flex items-center rounded-xl border border-[#E3D6C5] bg-[rgba(255,253,250,0.96)] px-3 py-2 text-sm text-[#23483F] hover:bg-[#F8F0E2]">Caregivers</a>
                     <a href="{{ route('login') }}" class="inline-flex items-center rounded-xl bg-[#23483F] px-3 py-2 text-sm font-semibold text-[#FFFBF4] shadow-sm hover:bg-[#1B3D35]">Sign in</a>
                 </div>
@@ -1122,7 +1122,7 @@ new class extends Component
                 </div>
             @else
                 <div class="space-y-1 px-2">
-                    <x-responsive-nav-link :href="route('landing.family')" wire:navigate>{{ __('Families') }}</x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('landing')" wire:navigate>{{ __('Families') }}</x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('landing.caregiver')" wire:navigate>{{ __('Caregivers') }}</x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('login')" wire:navigate>{{ __('Sign in') }}</x-responsive-nav-link>
                 </div>

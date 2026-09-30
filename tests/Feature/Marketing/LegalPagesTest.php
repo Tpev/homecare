@@ -12,7 +12,7 @@ class LegalPagesTest extends TestCase
     public function test_root_and_family_routes_are_publicly_accessible(): void
     {
         $this->get('/')->assertOk();
-        $this->get('/families')->assertOk();
+        $this->get('/families')->assertStatus(301)->assertRedirect(route('landing'));
     }
 
     public function test_agency_page_is_not_exposed(): void

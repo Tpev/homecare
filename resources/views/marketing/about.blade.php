@@ -7,7 +7,8 @@
 @section('og_image_alt', 'A caregiver and an older adult sharing a joyful moment at home.')
 
 @section('structured_data')
-    <script type="application/ld+json">{!! json_encode([
+    @php
+        $aboutSchema = [
         '@context' => 'https://schema.org',
         '@type' => 'AboutPage',
         'name' => 'About LoLo Care',
@@ -18,7 +19,9 @@
             'name' => 'LoLo Care',
             'url' => route('landing'),
         ],
-    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+        ];
+    @endphp
+    <script type="application/ld+json">{!! json_encode($aboutSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
 @endsection
 
 @push('head')

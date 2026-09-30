@@ -30,7 +30,7 @@
         <header class="border-b border-[#DED6CA] bg-white/95">
             <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
                 <a href="{{ route('landing') }}" class="flex items-center gap-3"><img src="{{ asset('images/marketing/lolo/lolo-app-icon.svg') }}" alt="" class="h-10 w-10 rounded-xl"><div><div class="text-lg font-extrabold">LoLo Care</div><div class="text-xs text-[#6A7784]">Raleigh, North Carolina</div></div></a>
-                <nav class="flex items-center gap-3 text-sm font-semibold"><a href="{{ route('landing.family') }}" class="hidden text-[#526474] sm:inline">For families</a><a href="{{ route('landing.caregiver') }}" class="hidden text-[#526474] sm:inline">For caregivers</a><a href="{{ route('register') }}" class="rounded-xl bg-[#0F5B52] px-4 py-2.5 text-white">Find care</a></nav>
+                <nav class="flex items-center gap-3 text-sm font-semibold"><a href="{{ route('landing') }}" class="hidden text-[#526474] sm:inline">For families</a><a href="{{ route('landing.caregiver') }}" class="hidden text-[#526474] sm:inline">For caregivers</a><a href="{{ route('register') }}" class="rounded-xl bg-[#0F5B52] px-4 py-2.5 text-white">Find care</a></nav>
             </div>
         </header>
 

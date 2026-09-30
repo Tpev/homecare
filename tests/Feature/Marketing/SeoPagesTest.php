@@ -72,7 +72,8 @@ class SeoPagesTest extends TestCase
             ->assertOk()
             ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
             ->assertSee('# LoLo Care')
-            ->assertSee(route('landing.family'), false)
+            ->assertSee(route('landing.get-care'), false)
+            ->assertDontSee(route('landing.family'), false)
             ->assertSee(route('legal.show', ['slug' => 'privacy-policy']), false);
     }
 

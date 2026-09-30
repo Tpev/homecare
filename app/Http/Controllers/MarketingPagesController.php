@@ -6,6 +6,7 @@ use App\Models\CaregiverProfile;
 use App\Services\Analytics\PageViewTracker;
 use App\Support\CaregiverPrelaunch;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -28,14 +29,12 @@ class MarketingPagesController extends Controller
         );
     }
 
-    public function family(Request $request, PageViewTracker $tracker): View|Response
+    public function family(Request $request): RedirectResponse
     {
-        return $this->trackedLandingResponse(
-            request: $request,
-            tracker: $tracker,
-            view: 'marketing.family',
-            event: 'family'
-        );
+        // Keep old bookmarks and campaign attribution working after retiring the page.
+        $query = $request->getQueryString();
+
+        return redirect()->to(route('landing').($query ? '?'.$query : ''), 301);
     }
 
     public function getCare(Request $request, PageViewTracker $tracker): View|Response
@@ -48,16 +47,11 @@ class MarketingPagesController extends Controller
         );
     }
 
-    public function familyVariant(Request $request, PageViewTracker $tracker, string $variant): View|Response
+    public function familyVariant(Request $request, string $variant): RedirectResponse
     {
         abort_unless(in_array($variant, self::FAMILY_VARIANTS, true), 404);
 
-        return $this->trackedLandingResponse(
-            request: $request,
-            tracker: $tracker,
-            view: "marketing.family-variants.{$variant}",
-            event: 'family'
-        );
+        return $this->family($request);
     }
 
     public function caregiver(Request $request, PageViewTracker $tracker): View|Response

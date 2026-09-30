@@ -12,7 +12,7 @@
     <link rel="canonical" href="@yield('canonical', request()->url())">
 
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="LoLo">
+    <meta property="og:site_name" content="LoLo Care">
     <meta property="og:title" content="@yield('title', 'LoLo')">
     <meta property="og:description" content="@yield('meta_description', 'LoLo helps families arrange trusted, non-medical home care and companionship for an older adult at home.')">
     <meta property="og:url" content="@yield('canonical', request()->url())">

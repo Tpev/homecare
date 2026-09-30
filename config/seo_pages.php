@@ -4,11 +4,11 @@ return [
     'pages' => [
         'raleigh-home-care' => [
             'path' => '/raleigh-home-care',
-            'meta_title' => 'Home Care in Raleigh, NC | Fast, Trusted Non-Medical Help',
+            'meta_title' => 'Home Care in Raleigh, NC | LoLo Care',
             'meta_description' => 'Find trusted non-medical home care in Raleigh, NC. Post a request in minutes, chat with caregivers, and hire faster with clear expectations.',
             'eyebrow' => 'Raleigh Home Care',
             'h1' => 'Trusted home care in Raleigh, NC without the usual wait.',
-            'intro' => 'HomeCare helps Raleigh families find non-medical in-home support quickly. Post your needs, compare caregiver responses, and hire with confidence in one clear flow.',
+            'intro' => 'LoLo Care helps Raleigh families find non-medical in-home support quickly. Post your needs, compare caregiver responses, and hire with confidence in one clear flow.',
             'hero_image' => 'https://images.unsplash.com/photo-1516302752625-fcc3c50ae61f?auto=format&fit=crop&w=1600&q=80',
             'highlights' => [
                 'Fast request posting',
@@ -17,7 +17,7 @@ return [
             ],
             'sections' => [
                 [
-                    'title' => 'What HomeCare includes in Raleigh',
+                    'title' => 'What LoLo Care includes in Raleigh',
                     'body' => 'Companionship, meal preparation, light housekeeping, transportation support, errands, medication reminders, and daily routine assistance.',
                 ],
                 [
@@ -30,16 +30,16 @@ return [
                 ],
             ],
             'faqs' => [
-                ['q' => 'Is this medical care?', 'a' => 'No. HomeCare is focused on non-medical home care support.'],
+                ['q' => 'Is this medical care?', 'a' => 'No. LoLo Care is focused on non-medical home care support.'],
                 ['q' => 'How fast can I get responses in Raleigh?', 'a' => 'Families can post immediately and receive responses based on caregiver availability and fit.'],
                 ['q' => 'Can I book for a parent or another loved one?', 'a' => 'Yes. You can include recipient details and optional third-party contact details.'],
             ],
             'primary_cta' => ['label' => 'Get help now', 'route' => 'register'],
-            'secondary_cta' => ['label' => 'How it works', 'route' => 'landing.family'],
+            'secondary_cta' => ['label' => 'How it works', 'route' => 'landing'],
         ],
         'raleigh-companion-care' => [
             'path' => '/raleigh-companion-care',
-            'meta_title' => 'Companion Care in Raleigh, NC | Reliable In-Home Support',
+            'meta_title' => 'Companion Care in Raleigh, NC | LoLo Care',
             'meta_description' => 'Need companion care in Raleigh, NC? Find caregivers for conversation, safety check-ins, daily routines, and social support at home.',
             'eyebrow' => 'Companion Care Raleigh',
             'h1' => 'Companion care in Raleigh that feels personal and reliable.',
@@ -70,11 +70,11 @@ return [
                 ['q' => 'Can I choose who I hire?', 'a' => 'Yes. Families choose which caregiver to shortlist, chat with, and hire.'],
             ],
             'primary_cta' => ['label' => 'Post companion care request', 'route' => 'register'],
-            'secondary_cta' => ['label' => 'See family flow', 'route' => 'landing.family'],
+            'secondary_cta' => ['label' => 'See family flow', 'route' => 'landing'],
         ],
         'raleigh-respite-care' => [
             'path' => '/raleigh-respite-care',
-            'meta_title' => 'Respite Care in Raleigh, NC | Relief for Family Caregivers',
+            'meta_title' => 'Respite Care in Raleigh, NC | LoLo Care',
             'meta_description' => 'Find respite care in Raleigh, NC. Get temporary in-home support so family caregivers can rest, work, or handle appointments.',
             'eyebrow' => 'Respite Care Raleigh',
             'h1' => 'Respite care in Raleigh so family caregivers can breathe.',
@@ -109,7 +109,7 @@ return [
         ],
         'raleigh-overnight-caregiver' => [
             'path' => '/raleigh-overnight-caregiver',
-            'meta_title' => 'Overnight Caregiver in Raleigh, NC | Night Support at Home',
+            'meta_title' => 'Overnight Caregivers in Raleigh, NC | LoLo Care',
             'meta_description' => 'Need an overnight caregiver in Raleigh, NC? Post night-shift requests for supervision, safety, and non-medical support at home.',
             'eyebrow' => 'Overnight Care Raleigh',
             'h1' => 'Overnight caregivers in Raleigh for safer nights at home.',
@@ -137,14 +137,14 @@ return [
             'faqs' => [
                 ['q' => 'Do overnight requests support long shifts?', 'a' => 'Yes, families can define overnight start/end windows clearly.'],
                 ['q' => 'Can I post recurring overnight shifts?', 'a' => 'Yes, recurring patterns are supported.'],
-                ['q' => 'Is this clinical night nursing?', 'a' => 'No, HomeCare supports non-medical home care only.'],
+                ['q' => 'Is this clinical night nursing?', 'a' => 'No, LoLo Care supports non-medical home care only.'],
             ],
             'primary_cta' => ['label' => 'Post overnight request', 'route' => 'register'],
             'secondary_cta' => ['label' => 'See trust standards', 'route' => 'seo.page', 'params' => ['seoSlug' => 'trusted-caregiver-screening']],
         ],
         'raleigh-dementia-home-care-non-medical' => [
             'path' => '/raleigh-dementia-home-care-non-medical',
-            'meta_title' => 'Non-Medical Dementia Home Care in Raleigh, NC',
+            'meta_title' => 'Non-Medical Dementia Support in Raleigh | LoLo Care',
             'meta_description' => 'Find non-medical dementia home care support in Raleigh, NC for routine assistance, supervision, and family respite.',
             'eyebrow' => 'Dementia Support Raleigh',
             'h1' => 'Non-medical dementia home care support in Raleigh, NC.',
@@ -166,7 +166,7 @@ return [
                 ],
                 [
                     'title' => 'Non-medical scope reminder',
-                    'body' => 'HomeCare is for non-medical support and supervision, not clinical treatment or nursing procedures.',
+                    'body' => 'LoLo Care is for non-medical support and supervision, not clinical treatment or nursing procedures.',
                 ],
             ],
             'faqs' => [
@@ -179,7 +179,7 @@ return [
         ],
         'raleigh-senior-transportation-help' => [
             'path' => '/raleigh-senior-transportation-help',
-            'meta_title' => 'Senior Transportation Help in Raleigh, NC | Caregiver Support',
+            'meta_title' => 'Senior Transportation Help in Raleigh | LoLo Care',
             'meta_description' => 'Need senior transportation help in Raleigh, NC? Request caregiver support for appointments, errands, and local rides.',
             'eyebrow' => 'Transportation Support Raleigh',
             'h1' => 'Senior transportation help in Raleigh for safer appointment days.',
@@ -214,7 +214,7 @@ return [
         ],
         'raleigh-meal-prep-for-seniors' => [
             'path' => '/raleigh-meal-prep-for-seniors',
-            'meta_title' => 'Meal Prep for Seniors in Raleigh, NC | In-Home Caregiver Help',
+            'meta_title' => 'Meal Prep for Seniors in Raleigh, NC | LoLo Care',
             'meta_description' => 'Find in-home meal prep support for seniors in Raleigh, NC. Request caregivers for shopping, preparation, and routine meal assistance.',
             'eyebrow' => 'Meal Prep Support Raleigh',
             'h1' => 'Meal prep support for seniors in Raleigh, NC.',
@@ -249,7 +249,7 @@ return [
         ],
         'raleigh-post-hospital-home-help' => [
             'path' => '/raleigh-post-hospital-home-help',
-            'meta_title' => 'Post-Hospital Home Help in Raleigh, NC | Non-Medical Support',
+            'meta_title' => 'Post-Hospital Home Help in Raleigh, NC | LoLo Care',
             'meta_description' => 'Need post-hospital home help in Raleigh, NC? Request non-medical support for routines, supervision, and daily recovery assistance.',
             'eyebrow' => 'Post-Hospital Support Raleigh',
             'h1' => 'Post-hospital home help in Raleigh for smoother recovery at home.',
@@ -271,7 +271,7 @@ return [
                 ],
                 [
                     'title' => 'Non-medical scope boundary',
-                    'body' => 'HomeCare does not replace licensed medical care; it supports non-medical recovery routines at home.',
+                    'body' => 'LoLo Care does not replace licensed medical care; it supports non-medical recovery routines at home.',
                 ],
             ],
             'faqs' => [
@@ -284,11 +284,11 @@ return [
         ],
         'home-care-cost-raleigh-nc' => [
             'path' => '/home-care-cost-raleigh-nc',
-            'meta_title' => 'Home Care Cost in Raleigh, NC | What Families Should Expect',
+            'meta_title' => 'Home Care Costs in Raleigh, NC | LoLo Care',
             'meta_description' => 'Learn what influences home care cost in Raleigh, NC and how to compare caregiver rates clearly before hiring.',
             'eyebrow' => 'Raleigh Home Care Costs',
             'h1' => 'Home care cost in Raleigh, NC: what families should expect.',
-            'intro' => 'Costs vary by schedule, service mix, caregiver experience, and timing. HomeCare helps families compare rates and expectations more clearly before hiring.',
+            'intro' => 'Costs vary by schedule, service mix, caregiver experience, and timing. LoLo Care helps families compare rates and expectations more clearly before hiring.',
             'hero_image' => 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1600&q=80',
             'highlights' => [
                 'Transparent rate comparison',
@@ -315,15 +315,15 @@ return [
                 ['q' => 'Can I request recurring care with budget context?', 'a' => 'Yes, recurring requests can include timing and service details for better estimates.'],
             ],
             'primary_cta' => ['label' => 'Create budget-ready request', 'route' => 'register'],
-            'secondary_cta' => ['label' => 'How HomeCare works', 'route' => 'seo.page', 'params' => ['seoSlug' => 'how-homecare-works-raleigh']],
+            'secondary_cta' => ['label' => 'How LoLo Care works', 'route' => 'seo.page', 'params' => ['seoSlug' => 'how-homecare-works-raleigh']],
         ],
         'how-homecare-works-raleigh' => [
             'path' => '/how-homecare-works-raleigh',
-            'meta_title' => 'How HomeCare Works in Raleigh, NC | Family and Caregiver Flow',
-            'meta_description' => 'See how HomeCare works in Raleigh: post a request, receive applications or invites, chat, hire, complete shifts, and review.',
+            'meta_title' => 'How Home Care Works in Raleigh, NC | LoLo Care',
+            'meta_description' => 'See how LoLo Care works in Raleigh: post a request, receive applications or invites, chat, hire, complete shifts, and review.',
             'eyebrow' => 'How It Works Raleigh',
-            'h1' => 'How HomeCare works in Raleigh, step by step.',
-            'intro' => 'HomeCare is designed to make family and caregiver coordination simple, clear, and fast from first request to completed shift.',
+            'h1' => 'How LoLo Care works in Raleigh, step by step.',
+            'intro' => 'LoLo Care is designed to make family and caregiver coordination simple, clear, and fast from first request to completed shift.',
             'hero_image' => 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1600&q=80',
             'highlights' => [
                 'Post request in minutes',
@@ -354,11 +354,11 @@ return [
         ],
         'trusted-caregiver-screening' => [
             'path' => '/trusted-caregiver-screening',
-            'meta_title' => 'Trusted Caregiver Screening in Raleigh, NC | HomeCare Trust Layer',
-            'meta_description' => 'Learn how HomeCare trust controls work in Raleigh, including profile moderation, trust badges, reviews, and support tracking.',
+            'meta_title' => 'Caregiver Screening in Raleigh, NC | LoLo Care',
+            'meta_description' => 'Learn how LoLo Care trust controls work in Raleigh, including profile moderation, trust badges, reviews, and support tracking.',
             'eyebrow' => 'Trust and Safety Raleigh',
             'h1' => 'A trust-first caregiver marketplace for Raleigh families.',
-            'intro' => 'HomeCare combines moderation, badges, review history, and support logging so families can make better-informed caregiver decisions.',
+            'intro' => 'LoLo Care combines moderation, badges, review history, and support logging so families can make better-informed caregiver decisions.',
             'hero_image' => 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1600&q=80',
             'highlights' => [
                 'Profile moderation status',
@@ -389,14 +389,14 @@ return [
         ],
         'caregiver-jobs-raleigh-nc' => [
             'path' => '/caregiver-jobs-raleigh-nc',
-            'meta_title' => 'Caregiver Jobs in Raleigh, NC | Earn More as an Independent Caregiver',
-            'meta_description' => 'Looking for caregiver jobs in Raleigh, NC? Join HomeCare to work independently, choose clients, set rates, and build your reputation.',
+            'meta_title' => 'Caregiver Jobs in Raleigh, NC | LoLo Care',
+            'meta_description' => 'Looking for caregiver jobs in Raleigh, NC? Join LoLo Care to review local shifts, choose work that fits your schedule, and build your reputation.',
             'eyebrow' => 'Caregiver Jobs Raleigh',
             'h1' => 'Caregiver jobs in Raleigh with more control and stronger earnings.',
-            'intro' => 'HomeCare helps caregivers work independently with clear request details, flexible scheduling, and reputation growth through reviews.',
+            'intro' => 'LoLo Care helps caregivers work independently with clear request details, flexible scheduling, and reputation growth through reviews.',
             'hero_image' => 'https://images.unsplash.com/photo-1526256262350-7da7584cf5eb?auto=format&fit=crop&w=1600&q=80',
             'highlights' => [
-                'Set your own rates',
+                'See expected earnings before accepting',
                 'Choose your clients and schedule',
                 'Build a transferable reputation',
             ],
@@ -424,4 +424,3 @@ return [
         ],
     ],
 ];
-

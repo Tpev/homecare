@@ -6,6 +6,7 @@ use App\Models\BlogPost;
 use App\Models\ContentAuthor;
 use App\Models\ContentCategory;
 use App\Models\ContentTag;
+use App\Support\CaregiverPrelaunch;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 
@@ -15,21 +16,22 @@ class SitemapController extends Controller
     {
         $entries = [
             ['url' => route('landing'), 'lastmod' => null, 'priority' => '1.0', 'changefreq' => 'weekly'],
-            ['url' => route('landing.family'), 'lastmod' => null, 'priority' => '0.9', 'changefreq' => 'weekly'],
             ['url' => route('landing.caregiver'), 'lastmod' => null, 'priority' => '0.9', 'changefreq' => 'weekly'],
             ['url' => route('faq'), 'lastmod' => null, 'priority' => '0.8', 'changefreq' => 'monthly'],
             ['url' => route('about'), 'lastmod' => null, 'priority' => '0.7', 'changefreq' => 'monthly'],
             ['url' => route('blog.index'), 'lastmod' => BlogPost::published()->max('last_published_at'), 'priority' => '0.9', 'changefreq' => 'daily'],
         ];
 
+        if (! CaregiverPrelaunch::enabled()) {
+            $entries[] = ['url' => route('caregivers.search'), 'lastmod' => null, 'priority' => '0.9', 'changefreq' => 'weekly'];
+        }
+
         foreach (array_keys(config('seo_pages.pages', [])) as $slug) {
             $entries[] = ['url' => route('seo.page', ['seoSlug' => $slug]), 'lastmod' => null, 'priority' => '0.8', 'changefreq' => 'monthly'];
         }
 
         $entries[] = ['url' => route('legal.index'), 'lastmod' => null, 'priority' => '0.4', 'changefreq' => 'yearly'];
-        foreach (array_keys(config('legal_pages.pages', [])) as $slug) {
-            $entries[] = ['url' => route('legal.show', ['slug' => $slug]), 'lastmod' => null, 'priority' => '0.4', 'changefreq' => 'yearly'];
-        }
+        // Individual legal documents deliberately use noindex and do not belong here.
 
         $categories = ContentCategory::query()->get();
         $tags = ContentTag::query()->get();

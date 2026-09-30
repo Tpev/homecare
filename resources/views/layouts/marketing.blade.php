@@ -23,7 +23,7 @@
     <link rel="canonical" href="{{ $pageCanonical }}">
 
     <meta property="og:type" content="{{ $pageOgType }}">
-    <meta property="og:site_name" content="LoLo">
+    <meta property="og:site_name" content="LoLo Care">
     <meta property="og:title" content="{{ $pageOgTitle }}">
     <meta property="og:description" content="{{ $pageOgDescription }}">
     <meta property="og:url" content="{{ $pageCanonical }}">

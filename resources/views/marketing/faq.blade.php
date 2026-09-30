@@ -12,7 +12,8 @@
 @section('og_image_alt', 'A caregiver and older adult sharing a warm moment at home.')
 
 @section('structured_data')
-    <script type="application/ld+json">{!! json_encode([
+    @php
+        $faqSchema = [
         '@context' => 'https://schema.org',
         '@type' => 'FAQPage',
         'mainEntity' => $faqItems->map(fn (array $faq) => [
@@ -23,7 +24,9 @@
                 'text' => $faq['answer'],
             ],
         ])->all(),
-    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+        ];
+    @endphp
+    <script type="application/ld+json">{!! json_encode($faqSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
 @endsection
 
 @push('head')
@@ -184,8 +187,8 @@
     <main class="lolo-faq">
         <header class="nav-shell">
             <a class="brand" href="{{ route('landing') }}" aria-label="LoLo Care home"><img src="{{ asset('images/marketing/lolo/lolo-wordmark-evergreen.svg') }}" alt="LoLo Care" width="652" height="222"></a>
-            <nav class="nav-links desktop-nav" aria-label="Main navigation"><a href="{{ route('landing') }}#how">How it works</a><a href="{{ route('caregivers.search') }}">Caregivers</a><a href="{{ route('landing.family') }}">For families</a><a href="{{ route('landing') }}#safety">Safety</a><a href="{{ route('about') }}">About</a><a class="active" href="{{ route('faq') }}" aria-current="page">FAQs</a></nav>
-            <details class="mobile-menu"><summary aria-label="Open navigation menu">Menu</summary><nav aria-label="Mobile navigation"><a href="{{ route('landing') }}#how">How it works</a><a href="{{ route('caregivers.search') }}">Caregivers</a><a href="{{ route('landing.family') }}">For families</a><a href="{{ route('landing') }}#safety">Safety</a><a href="{{ route('about') }}">About</a><a href="{{ route('faq') }}" aria-current="page">FAQs</a><a href="{{ route('caregiver.register') }}">Become a caregiver</a><a href="{{ route('login') }}">Sign in</a></nav></details>
+            <nav class="nav-links desktop-nav" aria-label="Main navigation"><a href="{{ route('landing') }}#how">How it works</a><a href="{{ route('caregivers.search') }}">Caregivers</a><a href="{{ route('landing') }}">For families</a><a href="{{ route('landing') }}#safety">Safety</a><a href="{{ route('about') }}">About</a><a class="active" href="{{ route('faq') }}" aria-current="page">FAQs</a></nav>
+            <details class="mobile-menu"><summary aria-label="Open navigation menu">Menu</summary><nav aria-label="Mobile navigation"><a href="{{ route('landing') }}#how">How it works</a><a href="{{ route('caregivers.search') }}">Caregivers</a><a href="{{ route('landing') }}">For families</a><a href="{{ route('landing') }}#safety">Safety</a><a href="{{ route('about') }}">About</a><a href="{{ route('faq') }}" aria-current="page">FAQs</a><a href="{{ route('caregiver.register') }}">Become a caregiver</a><a href="{{ route('login') }}">Sign in</a></nav></details>
             <div class="nav-actions"><a class="caregiver-join" href="{{ route('caregiver.register') }}">Caregiver? Join LoLo</a><a class="sign-in" href="{{ route('login') }}">Sign in</a><a class="button small" href="{{ route('register') }}">Find care</a></div>
         </header>
 
