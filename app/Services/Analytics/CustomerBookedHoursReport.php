@@ -7,6 +7,8 @@ use Illuminate\Support\Carbon;
 
 class CustomerBookedHoursReport
 {
+    public function __construct(private readonly UsageAnalyticsExclusions $exclusions) {}
+
     /** @return array<string, mixed> */
     public function build(Carbon $start, Carbon $end, string $grouping): array
     {
@@ -25,7 +27,7 @@ class CustomerBookedHoursReport
 
         $periodMinutes = array_fill_keys(array_column($periods, 'key'), 0);
         $customers = [];
-        $bookings = CareBooking::query()
+        $bookings = $this->exclusions->familyRecords(CareBooking::query(), 'caregiver_user_id')
             ->whereIn('status', [CareBooking::STATUS_COMPLETED, CareBooking::STATUS_REVIEWED])
             ->where('worked_minutes', '>', 0)
             ->where('no_show_flag', false)

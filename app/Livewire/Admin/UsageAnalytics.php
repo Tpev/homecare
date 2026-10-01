@@ -11,6 +11,7 @@ use App\Models\FunnelEvent;
 use App\Models\PageViewEvent;
 use App\Models\User;
 use App\Services\Analytics\CustomerBookedHoursReport;
+use App\Services\Analytics\UsageAnalyticsExclusions;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
@@ -27,11 +28,18 @@ class UsageAnalytics extends Component
 
     protected array $allowedGroupings = ['week', 'month'];
 
+    protected UsageAnalyticsExclusions $exclusions;
+
     protected $queryString = [
         'startDate' => ['except' => ''],
         'endDate' => ['except' => ''],
         'grouping' => ['except' => 'week'],
     ];
+
+    public function boot(UsageAnalyticsExclusions $exclusions): void
+    {
+        $this->exclusions = $exclusions;
+    }
 
     public function mount(): void
     {
@@ -318,7 +326,7 @@ class UsageAnalytics extends Component
      */
     private function signups(string $role, Carbon $start, Carbon $end): Collection
     {
-        return User::query()
+        return $this->exclusions->users(User::query(), 'id')
             ->where('role', $role)
             ->whereBetween('created_at', [$start, $end])
             ->get(['id', 'role', 'created_at']);
@@ -329,7 +337,7 @@ class UsageAnalytics extends Component
      */
     private function postedRequests(Carbon $start, Carbon $end): Collection
     {
-        return CareRequest::query()
+        return $this->exclusions->familyRecords(CareRequest::query())
             ->where('is_system_generated', false)
             ->where('status', '!=', CareRequest::STATUS_DRAFT)
             ->whereBetween('created_at', [$start, $end])
@@ -341,7 +349,7 @@ class UsageAnalytics extends Component
      */
     private function filledRequests(Carbon $start, Carbon $end): Collection
     {
-        return CareRequest::query()
+        return $this->exclusions->familyRecords(CareRequest::query())
             ->where('is_system_generated', false)
             ->where('status', CareRequest::STATUS_FILLED)
             ->where(function ($query) use ($start, $end): void {
@@ -366,7 +374,7 @@ class UsageAnalytics extends Component
      */
     private function trackedBookings(Carbon $start, Carbon $end): Collection
     {
-        return CareBooking::query()
+        return $this->exclusions->familyRecords(CareBooking::query(), 'caregiver_user_id')
             ->whereNotNull('worked_minutes')
             ->where('worked_minutes', '>', 0)
             ->where(function ($query) use ($start, $end): void {
@@ -407,7 +415,7 @@ class UsageAnalytics extends Component
      */
     private function capturedPayments(Carbon $start, Carbon $end): Collection
     {
-        return CareBookingPayment::query()
+        return $this->exclusions->familyRecords(CareBookingPayment::query(), 'caregiver_user_id')
             ->whereNotNull('captured_at')
             ->whereBetween('captured_at', [$start, $end])
             ->get([
@@ -453,41 +461,43 @@ class UsageAnalytics extends Component
             ]);
         };
 
-        FunnelEvent::query()
+        $this->exclusions->users(FunnelEvent::query(), 'user_id')
             ->whereNotNull('user_id')
             ->whereBetween('occurred_at', [$start, $end])
             ->get(['user_id', 'occurred_at'])
             ->each(fn (FunnelEvent $event) => $push($event->user_id, $event->occurred_at));
 
-        PageViewEvent::query()
+        $this->exclusions->users(PageViewEvent::query(), 'user_id')
             ->whereNotNull('user_id')
             ->whereBetween('created_at', [$start, $end])
             ->get(['user_id', 'created_at'])
             ->each(fn (PageViewEvent $event) => $push($event->user_id, $event->created_at));
 
-        User::query()
+        $this->exclusions->users(User::query(), 'id')
             ->whereBetween('created_at', [$start, $end])
             ->get(['id', 'created_at'])
             ->each(fn (User $user) => $push($user->id, $user->created_at));
 
-        CareRequest::query()
+        $this->exclusions->familyRecords(CareRequest::query())
             ->where('is_system_generated', false)
             ->whereBetween('created_at', [$start, $end])
             ->get(['family_user_id', 'created_at'])
             ->each(fn (CareRequest $request) => $push($request->family_user_id, $request->created_at));
 
-        CareRequestApplication::query()
-            ->whereHas('careRequest', fn ($query) => $query->where('is_system_generated', false))
+        $this->exclusions->users(CareRequestApplication::query(), 'caregiver_user_id')
+            ->whereHas('careRequest', fn ($query) => $this->exclusions->familyRecords($query)
+                ->where('is_system_generated', false))
             ->whereBetween('created_at', [$start, $end])
             ->get(['caregiver_user_id', 'created_at'])
             ->each(fn (CareRequestApplication $application) => $push($application->caregiver_user_id, $application->created_at));
 
-        CareRequestMessage::query()
+        $this->exclusions->users(CareRequestMessage::query(), 'sender_user_id')
+            ->whereHas('conversation', fn ($query) => $this->exclusions->familyRecords($query, 'caregiver_user_id'))
             ->whereBetween('created_at', [$start, $end])
             ->get(['sender_user_id', 'created_at'])
             ->each(fn (CareRequestMessage $message) => $push($message->sender_user_id, $message->created_at));
 
-        CareBooking::query()
+        $this->exclusions->familyRecords(CareBooking::query(), 'caregiver_user_id')
             ->where(function ($query) use ($start, $end): void {
                 foreach (['started_at', 'completed_at', 'timesheet_submitted_at', 'family_confirmed_at'] as $field) {
                     $query->orWhereBetween($field, [$start, $end]);
@@ -512,7 +522,7 @@ class UsageAnalytics extends Component
                 }
             });
 
-        CareBookingPayment::query()
+        $this->exclusions->familyRecords(CareBookingPayment::query(), 'caregiver_user_id')
             ->where(function ($query) use ($start, $end): void {
                 $query->whereBetween('authorized_at', [$start, $end])
                     ->orWhereBetween('captured_at', [$start, $end])

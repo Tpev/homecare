@@ -147,6 +147,30 @@ class AdminCustomerBookedHoursTest extends TestCase
             ->assertViewHas('customerHours', fn ($report) => $report['customer_count'] === 0 && $report['total_hours'] == 0 && $report['average_hours_per_customer_period'] == 0);
     }
 
+    public function test_excluded_customer_legacy_visits_and_previous_owner_history_do_not_affect_averages(): void
+    {
+        $family = User::factory()->create(['role' => 'family']);
+        $formerOwner = User::factory()->create(['role' => 'family']);
+        $excluded = User::factory()->create(['role' => 'family', 'email' => 'barlsey42@gmail.com']);
+        $historicalVisit = $this->visit($formerOwner, '2026-06-01 12:00:00', 600);
+        FamilyAccount::findOrFail($historicalVisit->family_account_id)->update(['owner_user_id' => $excluded->id]);
+        $this->visit($excluded, '2026-06-02 12:00:00', 300);
+        $this->visit($excluded, '2026-06-03 12:00:00', 120)->forceFill(['family_account_id' => null])->saveQuietly();
+        $this->visit($family, '2026-06-04 12:00:00', 180);
+
+        $report = $this->report('2026-06-01', '2026-07-31');
+
+        $this->assertSame(1, $report['customer_count']);
+        $this->assertSame(1, $report['visit_count']);
+        $this->assertSame($family->id, $report['customers'][0]['user_id']);
+        $this->assertEquals(3, $report['total_hours']);
+        $this->assertEquals(3, $report['average_hours_per_customer']);
+        $this->assertEquals(1.5, $report['average_hours_per_period']);
+        $this->assertEquals(1.5, $report['average_hours_per_customer_period']);
+        $this->assertEquals(['2026-06-01' => 3, '2026-07-01' => 0], $report['period_hours']);
+        $this->assertEquals(['2026-06-01' => 3, '2026-07-01' => 0], $report['period_average_hours']);
+    }
+
     private function report(string $start, string $end, string $grouping = 'month'): array
     {
         return app(CustomerBookedHoursReport::class)->build(Carbon::parse($start)->startOfDay(), Carbon::parse($end)->endOfDay(), $grouping);
