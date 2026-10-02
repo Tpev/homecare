@@ -206,6 +206,15 @@
                             </div>
                             <button type="button" wire:click="closeLead" class="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xl text-white hover:bg-white/20" aria-label="Close lead detail">×</button>
                         </div>
+                        <a
+                            href="https://calendar.google.com/calendar/appointments/schedules/AcZssZ0UMAXYuz0pHQATgOmkyVZNgvWVPH1vSPzhy2RpUATQE9Wmpk4_6FDXkj5jNWaKYDAnB-9RMqig?gv=true"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Schedule onboarding in Google Calendar (opens in a new tab)"
+                            class="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-[#23483F] hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                        >
+                            Schedule onboarding <span aria-hidden="true">↗</span>
+                        </a>
                         <div class="mt-4 grid grid-cols-3 gap-2 text-center">
                             <div class="rounded-xl bg-white/10 p-2"><p class="text-[10px] uppercase tracking-wide text-white/60">Reach attempts</p><p class="mt-1 font-bold">{{ $selectedLead->unanswered_attempt_count }}/7</p><p class="text-[9px] text-white/50">{{ $selectedLead->call_attempt_count }} total calls</p></div>
                             <div class="rounded-xl bg-white/10 p-2"><p class="text-[10px] uppercase tracking-wide text-white/60">First call</p><p class="mt-1 font-bold">{{ $responseMinutes !== null ? $responseMinutes.'m' : '—' }}</p></div>
