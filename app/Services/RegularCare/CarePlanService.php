@@ -344,8 +344,20 @@ class CarePlanService
             'schedule_slots' => $source->recurringScheduleSlots(),
             'starts_on' => $source->recurring_starts_on?->toDateString(),
             'ends_on' => $source->recurring_ends_on?->toDateString(),
-        ]);
-        $schedule['starts_on'] = $this->alignStartDateToSchedule($schedule['starts_on'], $schedule['days']);
+        ], allowPastStart: true);
+        $firstVisit = $this->occurrences->firstScheduledOccurrence(new CarePlan([
+            'status' => CarePlan::STATUS_ACTIVE,
+            'starts_on' => $schedule['starts_on'],
+            'ends_on' => $schedule['ends_on'],
+            'timezone' => (string) config('app.timezone', 'America/New_York'),
+            'schedule_slots' => $schedule['slots'],
+        ]));
+        if (! $firstVisit) {
+            throw ValidationException::withMessages([
+                'hire' => 'This recurring schedule has no future visits. Update the request dates before hiring a caregiver.',
+            ]);
+        }
+        $schedule['starts_on'] = $firstVisit['local_date'];
         $hourlyRate = $this->hourlyRateForFamily($family, $caregiver->id);
 
         try {
@@ -1156,19 +1168,6 @@ class CarePlanService
         ];
     }
 
-    private function alignStartDateToSchedule(string $startsOn, array $days): string
-    {
-        $date = Carbon::parse($startsOn)->startOfDay();
-        for ($offset = 0; $offset < 7; $offset++) {
-            if (in_array((int) $date->dayOfWeek, $days, true)) {
-                return $date->toDateString();
-            }
-            $date->addDay();
-        }
-
-        return $startsOn;
-    }
-
     private function cancelFutureBookings(
         CarePlan $plan,
         Carbon $from,
@@ -1247,7 +1246,7 @@ class CarePlanService
      * @param  array<string,mixed>  $payload
      * @return array{days:list<int>,start_time:string,end_time:string,slots:list<array{day:int,start_time:string,end_time:string}>,starts_on:string,ends_on:string|null}
      */
-    private function normalizeSchedulePayload(array $payload): array
+    private function normalizeSchedulePayload(array $payload, bool $allowPastStart = false): array
     {
         $slots = WeeklySchedule::normalize(
             $payload['schedule_slots'] ?? null,
@@ -1281,7 +1280,7 @@ class CarePlanService
         $endTime = $this->normalizeTimeString($firstSlot['end_time']);
 
         $startsOn = Carbon::parse((string) ($payload['starts_on'] ?? now()->addDay()->toDateString()))->toDateString();
-        if (Carbon::parse($startsOn)->lt(now()->startOfDay())) {
+        if (! $allowPastStart && Carbon::parse($startsOn)->lt(now()->startOfDay())) {
             throw ValidationException::withMessages([
                 'starts_on' => 'Start date must be today or later.',
             ]);

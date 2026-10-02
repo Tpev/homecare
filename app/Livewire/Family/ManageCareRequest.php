@@ -330,9 +330,8 @@ class ManageCareRequest extends Component
             'schedule_end_time' => $this->requestItem->recurring_end_time,
             'schedule_slots' => $this->requestItem->recurringScheduleSlots(),
         ]);
-        $through = now($timezone)->addWeeks(max(1, min(12, (int) config('marketplace.regular_care.visit_window_weeks', 6))));
         $occurrence = app(\App\Services\RegularCare\CarePlanOccurrenceService::class)
-            ->scheduledOccurrences($previewPlan, $through)[0] ?? null;
+            ->firstScheduledOccurrence($previewPlan);
 
         return $occurrence ? [$occurrence['start'], $occurrence['end']] : null;
     }
@@ -366,6 +365,7 @@ class ManageCareRequest extends Component
 
     public function reviewHire(int $applicationId): void
     {
+        $this->resetValidation('hire');
         $application = $this->findOwnedApplication($applicationId);
         if ($application->status === CareRequestApplication::STATUS_WITHDRAWN) {
             throw \Illuminate\Validation\ValidationException::withMessages(['hire' => 'This caregiver has withdrawn from this request. Choose another caregiver.']);
@@ -396,9 +396,14 @@ class ManageCareRequest extends Component
         if (! $this->paymentReadinessForHire()['ready']) {
             return;
         }
-        $applicationId = $this->reviewingApplicationId;
-        $this->reviewingApplicationId = null;
-        $this->hire($applicationId);
+        $this->resetValidation('hire');
+        try {
+            $this->hire($this->reviewingApplicationId);
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'hire' => collect($exception->errors())->flatten()->all(),
+            ]);
+        }
     }
 
     public function confirmReviewedCompletion(): void
@@ -480,6 +485,7 @@ class ManageCareRequest extends Component
                     ->activateFromRecurringRequest($this->requestItem, $application, auth()->user());
             } catch (PaymentException $e) {
                 $this->refreshRequestItem(preferLifecyclePrimary: true);
+                $this->addError('hire', $e->userMessage);
                 session()->flash('warning', $e->userMessage);
 
                 return;
@@ -487,6 +493,7 @@ class ManageCareRequest extends Component
                 throw $e;
             }
 
+            $this->closeDecisionReview();
             $this->refreshRequestItem(preferLifecyclePrimary: true);
             $payment = $this->requestItem->booking?->payment;
             if ($payment?->status === CareBookingPayment::STATUS_AUTHORIZATION_REQUIRED) {
@@ -579,11 +586,13 @@ class ManageCareRequest extends Component
             });
         } catch (PaymentException $e) {
             $this->refreshRequestItem(preferLifecyclePrimary: true);
+            $this->addError('hire', $e->userMessage);
             session()->flash('warning', $e->userMessage);
 
             return;
         }
 
+        $this->closeDecisionReview();
         if ($application->caregiver) {
             app(MarketplaceNotificationService::class)->notify(
                 recipients: $application->caregiver,

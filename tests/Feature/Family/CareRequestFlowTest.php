@@ -835,7 +835,10 @@ class CareRequestFlowTest extends TestCase
             ->assertSee('Confirm hire')
             ->call('confirmReviewedHire')
             ->assertSee('Add a payment method before hiring.')
-            ->assertSee('Meet your applicants')
+            ->assertHasErrors('hire')
+            ->assertSet('reviewingApplicationId', $application->id)
+            ->assertSee('Confirm hire')
+            ->call('closeDecisionReview')
             ->call('setActiveTab', 'applicants')
             ->assertSee('Hire Charles')
             ->assertDontSee('Caregiver selected. Visit setup is next.');

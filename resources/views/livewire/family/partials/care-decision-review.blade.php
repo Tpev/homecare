@@ -39,6 +39,7 @@
                 @endif
             </div>
             <div class="hc-hire-actions">
+                @error('hire') <div role="alert"><x-alert color="red">{{ $message }}</x-alert></div> @enderror
                 <p>Confirming selects this caregiver, saves the care agreement and prepares card authorization. Other open applications will be marked not selected. {{ $requestItem->request_type === 'recurring' ? 'Your recurring care home will show booked visits and any payment action needed.' : 'Your visit will show any payment action needed.' }}</p>
                 @if(! $hirePayment['ready'] && $decisionApplication)
                     <x-family-hire-payment-prompt :care-request="$requestItem" :application="$decisionApplication" :unavailable="$hirePayment['unavailable']" id="hire-review-payment" />

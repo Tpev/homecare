@@ -141,6 +141,22 @@ class CarePlanOccurrenceService
     }
 
     /**
+     * Find the first future visit, including plans starting beyond the generation window.
+     *
+     * @return array{key:string,start:Carbon,end:Carbon,local_date:string,kind:string}|null
+     */
+    public function firstScheduledOccurrence(CarePlan $plan): ?array
+    {
+        $timezone = $plan->timezone ?: (string) config('app.timezone', 'America/New_York');
+        $from = Carbon::parse($plan->starts_on->toDateString(), $timezone)->startOfDay();
+        if ($from->lt(now($timezone)->startOfDay())) {
+            $from = now($timezone)->startOfDay();
+        }
+
+        return $this->scheduledOccurrences($plan, $from->addWeek())[0] ?? null;
+    }
+
+    /**
      * @return list<array{key:string,start:Carbon,end:Carbon,local_date:string,kind:string}>
      */
     public function scheduledOccurrences(CarePlan $plan, Carbon $through): array
@@ -255,8 +271,7 @@ class CarePlanOccurrenceService
         CareRequest $request,
         CareRequestApplication $application
     ): CareBooking {
-        $through = now($plan->timezone ?: config('app.timezone'))->addWeeks($this->visitWindowWeeks());
-        $occurrence = $this->scheduledOccurrences($plan, $through)[0] ?? null;
+        $occurrence = $this->firstScheduledOccurrence($plan);
 
         if (! $occurrence) {
             throw new \RuntimeException('No upcoming visit could be created from this regular schedule.');

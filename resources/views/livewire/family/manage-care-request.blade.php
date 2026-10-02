@@ -25,7 +25,9 @@
         <x-alert color="green">{{ session('status') }}</x-alert>
     @endif
 
-    @error('hire') <x-alert color="red">{{ $message }}</x-alert> @enderror
+    @if (! $reviewingApplicationId)
+        @error('hire') <x-alert color="red">{{ $message }}</x-alert> @enderror
+    @endif
     @error('cancellationReason') <x-alert color="red">{{ $message }}</x-alert> @enderror
     @include('livewire.family.partials.replacement-visit-history')
 
