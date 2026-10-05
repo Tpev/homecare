@@ -1536,27 +1536,9 @@ class ManageCareRequest extends Component
     public function startConversation(int $applicationId): void
     {
         $application = $this->findOwnedApplication($applicationId);
-        $application->loadMissing('careRequest');
-
-        if (! app(FamilyAccountContext::class)->canAccessRecord(auth()->user(), $application->careRequest)
-            || ! in_array($application->status, [
-                CareRequestApplication::STATUS_APPLIED,
-                CareRequestApplication::STATUS_SHORTLISTED,
-                CareRequestApplication::STATUS_HIRED,
-            ], true)) {
-            session()->flash('status', 'You can chat with active caregivers in this request.');
-
-            return;
-        }
-
-        if ($application->status === CareRequestApplication::STATUS_APPLIED) {
-            $application->update(['status' => CareRequestApplication::STATUS_SHORTLISTED]);
-            if (! $this->requestItem->first_shortlist_at) {
-                $this->requestItem->update(['first_shortlist_at' => now()]);
-            }
-        }
-
-        $conversation = CareRequestConversation::findOrCreateForApplication($application, auth()->id());
+        $conversation = app(\App\Services\Messaging\CareRequestChatService::class)->open(
+            auth()->user(), $this->requestItem, (int) $application->caregiver_user_id,
+        );
         $this->redirect(route('messages.show', $conversation->id, false), navigate: true);
     }
 
@@ -1628,10 +1610,7 @@ class ManageCareRequest extends Component
             return;
         }
 
-        $this->caregiverDiscoveryLimit = min(
-            CaregiverInvitationDiscoveryService::MAX_DISCOVERY_LIMIT,
-            $this->caregiverDiscoveryLimit + CaregiverInvitationDiscoveryService::SEARCH_LIMIT,
-        );
+        $this->caregiverDiscoveryLimit += CaregiverInvitationDiscoveryService::SEARCH_LIMIT;
     }
 
     private function syncCaregiverDiscoveryContext(): void
@@ -2134,7 +2113,7 @@ class ManageCareRequest extends Component
                     $found = $caregiverSearchResults->count();
                     $caregiverSearchResults = $caregiverSearchResults->take($limit);
                 }
-                $caregiverDiscoveryHasMore = $found > $limit && $limit < CaregiverInvitationDiscoveryService::MAX_DISCOVERY_LIMIT;
+                $caregiverDiscoveryHasMore = $found > $limit;
                 $caregiverDiscoveryCount = min($found, $limit);
             }
 

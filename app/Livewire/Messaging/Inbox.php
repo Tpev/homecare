@@ -86,6 +86,8 @@ class Inbox extends Component
         abort_unless(auth()->user()->can('sendMessage', $conversation), 403);
 
         DB::transaction(function () use ($conversation) {
+            \App\Models\CareRequest::query()->lockForUpdate()->findOrFail($conversation->care_request_id);
+            abort_unless(auth()->user()->can('sendMessage', $conversation), 403);
             CareRequestMessage::query()->create([
                 'care_request_conversation_id' => $conversation->id,
                 'sender_user_id' => auth()->id(),

@@ -70,6 +70,12 @@
                         </p>
                     @endif
 
+                    @if ($invitation->careRequest && (app(\App\Services\Messaging\CareRequestChatService::class)->closedReason($invitation->careRequest, (int) auth()->id()) === null || $invitation->careRequest->conversations()->where('caregiver_user_id', auth()->id())->exists()))
+                        <div class="mt-4">
+                            <x-care-request-chat-button :care-request-id="$invitation->care_request_id" :caregiver-id="auth()->id()" />
+                        </div>
+                    @endif
+
                     @if ($invitation->status === \App\Models\CareRequestInvitation::STATUS_PENDING)
                         <div class="mt-4 flex flex-wrap items-center gap-2">
                             <form method="POST" action="{{ route('caregiver.invitations.accept', $invitation->id) }}">
@@ -93,11 +99,7 @@
                         </div>
                     @elseif ($invitation->status === \App\Models\CareRequestInvitation::STATUS_ACCEPTED && $invitation->care_request_application_id)
                         <div class="mt-4">
-                            @if ($invitation->application?->conversation)
-                                <a href="{{ route('messages.show', $invitation->application->conversation->id) }}" wire:navigate class="hc-link">Open chat</a>
-                            @else
-                                <a href="{{ route('care-requests.apply', $invitation->care_request_id) }}" wire:navigate class="hc-link">Open application</a>
-                            @endif
+                            <a href="{{ route('care-requests.apply', $invitation->care_request_id) }}" wire:navigate class="hc-link">Open application</a>
                         </div>
                     @endif
                 </x-card>

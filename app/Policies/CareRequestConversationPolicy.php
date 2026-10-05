@@ -53,10 +53,7 @@ class CareRequestConversationPolicy
 
     public function openFromApplication(User $user, CareRequestApplication $application): bool
     {
-        if (! in_array($application->status, [
-            CareRequestApplication::STATUS_SHORTLISTED,
-            CareRequestApplication::STATUS_HIRED,
-        ], true)) {
+        if (app(\App\Services\Messaging\CareRequestChatService::class)->closedReason($application->careRequest->fresh(), (int) $application->caregiver_user_id) !== null) {
             return false;
         }
 

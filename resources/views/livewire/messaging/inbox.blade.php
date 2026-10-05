@@ -28,27 +28,34 @@
                 \App\Models\CareRequestApplication::STATUS_APPLIED,
                 \App\Models\CareRequestApplication::STATUS_SHORTLISTED,
             ], true);
-        $isHiredConversation = $activeApplication?->status === \App\Models\CareRequestApplication::STATUS_HIRED
-            || $activeRequest?->status === \App\Models\CareRequest::STATUS_FILLED;
+        $isHiredConversation = $activeApplication?->status === \App\Models\CareRequestApplication::STATUS_HIRED;
+        $isInvitationChat = $canSend && ! $activeApplication;
         $requestContextEyebrow = match (true) {
+            $isInvitationChat => 'Invitation',
             $isFamilyHireDecision => 'Hire decision',
             $isCaregiverWaitingForHire => 'Waiting for family',
             $isHiredConversation => 'Visit coordination',
             default => 'Request context',
         };
         $requestContextTitle = match (true) {
+            $isInvitationChat => 'Discuss the request before deciding.',
             $isFamilyHireDecision => 'Chat here, then hire from the request page.',
             $isCaregiverWaitingForHire => 'The family is still deciding.',
             $isHiredConversation => 'This chat is tied to a booked visit.',
             default => 'This chat is tied to a care request.',
         };
         $requestContextBody = match (true) {
+            $isInvitationChat => 'Ask questions about the care and schedule. Messaging does not accept the invitation or book a visit.',
             $isFamilyHireDecision => 'Use messages to confirm fit, then return to the request when you are ready to hire.',
-            $isCaregiverWaitingForHire => 'Reply to questions here. If they hire you, visit tools will appear on the request page.',
+            $isCaregiverWaitingForHire => 'Ask questions and confirm details here. If they hire you, visit tools will appear on the request page.',
             $isHiredConversation => 'Use this thread for simple coordination. Visit details, support, and review stay on the request page.',
             default => 'Keep request-specific questions here so both sides have the same context.',
         };
+        if ($active && ! $activeApplication && $currentUser->role === 'caregiver') {
+            $requestHref = route('caregiver.invitations.index');
+        }
         $requestContextAction = match (true) {
+            $active && ! $activeApplication && $currentUser->role === 'caregiver' => 'View invitations',
             $isFamilyHireDecision => 'Open request to hire',
             $isHiredConversation => 'Open visit',
             default => $currentUser->role === 'family' ? 'Open request' : 'Open request details',
@@ -190,7 +197,7 @@
                     <div class="sticky bottom-0 border-t border-[#DED6CA] bg-[rgba(255,252,248,0.95)] p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur sm:p-4">
                         @if (! $canSend)
                             <div class="mb-3 rounded-md border border-[#D7C8A2] bg-[#FFF7E7] px-3 py-2 text-sm text-[#7A5A15]">
-                                Chat is locked until the application is shortlisted or hired.
+                                {{ $active->messagingClosedReason() }}
                             </div>
                         @endif
 
@@ -206,7 +213,7 @@
                             ></textarea>
                             @error('messageBody') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-                            <div class="flex items-center justify-between gap-3">
+                            <div class="flex items-center justify-between gap-3 pr-16">
                                 <p class="text-xs text-[#7A8091]">Messages send when you tap Send.</p>
                                 <button type="submit" class="hc-primary-button" @disabled(! $canSend)>Send</button>
                             </div>

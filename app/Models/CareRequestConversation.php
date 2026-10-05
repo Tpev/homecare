@@ -96,7 +96,7 @@ class CareRequestConversation extends Model
             return app(\App\Services\FamilyAccounts\FamilyAccountContext::class)->canAccessRecord($user, $this);
         }
 
-        return (int) $this->caregiver_user_id === (int) $user->id;
+        return $user->role === 'caregiver' && (int) $this->caregiver_user_id === (int) $user->id;
     }
 
     public function canSendMessages(User $user): bool
@@ -105,16 +105,16 @@ class CareRequestConversation extends Model
             return false;
         }
 
-        $applicationStatus = $this->application?->status
-            ?? CareRequestApplication::query()
-                ->where('care_request_id', $this->care_request_id)
-                ->where('caregiver_user_id', $this->caregiver_user_id)
-                ->value('status');
+        return $this->messagingClosedReason() === null;
+    }
 
-        return in_array($applicationStatus, [
-            CareRequestApplication::STATUS_SHORTLISTED,
-            CareRequestApplication::STATUS_HIRED,
-        ], true);
+    public function messagingClosedReason(): ?string
+    {
+        $request = CareRequest::query()->find($this->care_request_id);
+
+        return $request
+            ? app(\App\Services\Messaging\CareRequestChatService::class)->closedReason($request, (int) $this->caregiver_user_id)
+            : 'This request is no longer available. You can still read this conversation.';
     }
 
     public function markRead(User $user): void
@@ -156,25 +156,23 @@ class CareRequestConversation extends Model
 
     public static function findOrCreateForApplication(CareRequestApplication $application, int $startedByUserId): self
     {
+        return self::findOrCreateForRequest($application->careRequest, (int) $application->caregiver_user_id, $startedByUserId, $application);
+    }
+
+    public static function findOrCreateForRequest(CareRequest $request, int $caregiverId, int $startedByUserId, ?CareRequestApplication $application = null): self
+    {
         $conversation = self::query()->firstOrCreate(
+            ['care_request_id' => $request->id, 'caregiver_user_id' => $caregiverId],
             [
-                'care_request_id' => $application->care_request_id,
-                'caregiver_user_id' => $application->caregiver_user_id,
-            ],
-            [
-                'family_account_id' => $application->careRequest->family_account_id,
-                'family_user_id' => $application->careRequest->family_user_id,
-                'care_request_application_id' => $application->id,
+                'family_account_id' => $request->family_account_id,
+                'family_user_id' => $request->family_user_id,
+                'care_request_application_id' => $application?->id,
                 'started_by_user_id' => $startedByUserId,
-                'family_last_read_at' => now(),
-                'caregiver_last_read_at' => now(),
-            ]
+            ],
         );
 
-        if (! $conversation->care_request_application_id) {
-            $conversation->forceFill([
-                'care_request_application_id' => $application->id,
-            ])->save();
+        if ($application && ! $conversation->care_request_application_id) {
+            $conversation->forceFill(['care_request_application_id' => $application->id])->save();
         }
 
         return $conversation;

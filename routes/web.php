@@ -289,6 +289,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/caregiver/certifications/{certification}/document', CaregiverCertificationDocumentController::class)
         ->whereNumber('certification')
         ->name('caregiver.certifications.document');
+    Route::post('/requests/{careRequest}/caregivers/{caregiver}/conversation', \App\Http\Controllers\CareRequestConversationController::class)
+        ->whereNumber('careRequest')->whereNumber('caregiver')->name('messages.open');
     Route::get('/messages', Inbox::class)->name('messages.index');
     Route::get('/messages/{conversation}', Inbox::class)->whereNumber('conversation')->name('messages.show');
     Route::get('/support', TicketsCenter::class)->name('support.index');

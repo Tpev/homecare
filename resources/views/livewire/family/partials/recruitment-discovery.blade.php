@@ -24,7 +24,11 @@
                         <a href="{{ $inviteCard['profile_url'] }}" wire:navigate class="hc-secondary-button">View profile</a>
                         @if ($inviteCard['reply_url'])<a href="{{ $inviteCard['reply_url'] }}" wire:navigate class="hc-primary-button">View reply</a>
                         @elseif ($inviteCard['can_reinvite'] && ! $requestDatePassed)<button type="button" data-invite-trigger wire:click="beginCaregiverInvitation({{ $inviteCard['user_id'] }}, true)" class="hc-primary-button">Invite again</button>@endif
-                    @endif</div>
+                    @endif
+                        @if (app(\App\Services\Messaging\CareRequestChatService::class)->closedReason($requestItem, (int) $invitation->caregiver_user_id) === null || $requestItem->conversations()->where('caregiver_user_id', $invitation->caregiver_user_id)->exists())
+                            <x-care-request-chat-button :care-request-id="$requestItem->id" :caregiver-id="$invitation->caregiver_user_id" label="Message caregiver" />
+                        @endif
+                    </div>
                     <details class="hc-invitation-message"><summary>Invitation details</summary>
                         @if ($invitation->message)<p><strong>Invitation message</strong></p><p>{{ $invitation->message }}</p>@endif
                         <p>Last updated {{ $invitation->updated_at?->format('M j, Y · g:i A') }}</p>

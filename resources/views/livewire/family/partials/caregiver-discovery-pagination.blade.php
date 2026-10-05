@@ -22,8 +22,6 @@
                     <span x-text="loading ? 'Loading caregivers…' : 'Show more caregivers'">Show more caregivers</span>
                 </button>
             </div>
-        @elseif ($caregiverDiscoveryCount >= \App\Services\Marketplace\CaregiverInvitationDiscoveryService::MAX_DISCOVERY_LIMIT)
-            <p class="hc-recruit-caption">Search by name, city or certification to narrow these results.</p>
         @else
             <p class="hc-recruit-caption">You’ve reached the end of these results.</p>
         @endif

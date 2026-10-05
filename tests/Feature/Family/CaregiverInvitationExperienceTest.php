@@ -285,11 +285,11 @@ class CaregiverInvitationExperienceTest extends TestCase
         $this->assertSame($before, $after);
     }
 
-    public function test_discovery_loads_unique_stable_batches_up_to_forty_and_resets_after_search_or_filters(): void
+    public function test_discovery_loads_unique_stable_batches_beyond_forty_and_resets_after_search_or_filters(): void
     {
         $family = User::factory()->create(['role' => 'family']);
         $request = $this->createOpenRequest($family);
-        $caregivers = collect(range(1, 43))->map(fn ($i) => $this->createReadyCaregiver(sprintf('Paging Caregiver %02d', $i)));
+        $caregivers = collect(range(1, 67))->map(fn ($i) => $this->createReadyCaregiver(sprintf('Paging Caregiver %02d', $i)));
         $previous = $caregivers->last();
         $favorite = $caregivers->get(41);
         $pastRequest = $this->createOpenRequest($family, ['status' => CareRequest::STATUS_FILLED]);
@@ -311,21 +311,25 @@ class CaregiverInvitationExperienceTest extends TestCase
         $ids = fn () => collect($component->viewData('caregiverInitialSections'))->flatMap(fn (array $section) => $section['caregivers'])->pluck('user_id')->all();
         $prior = $ids();
         $this->assertSame([$previous->id, $favorite->id], array_slice($prior, 0, 2));
-        foreach ([[12, 24], [24, 36], [36, 40]] as [$from, $to]) {
+        foreach ([[12, 24], [24, 36], [36, 48], [48, 60], [60, 72]] as [$from, $to]) {
             $component->call('loadMoreCaregivers', $from)->assertSet('caregiverDiscoveryLimit', $to)
-                ->assertViewHas('caregiverDiscoveryCount', $to)
-                ->assertViewHas('caregiverDiscoveryHasMore', $to < 40);
+                ->assertViewHas('caregiverDiscoveryCount', min($to, 67))
+                ->assertViewHas('caregiverDiscoveryHasMore', $to < 67);
             $current = $ids();
-            $this->assertCount($to, array_unique($current));
+            $this->assertCount(min($to, 67), array_unique($current));
             $this->assertSame($prior, array_slice($current, 0, count($prior)));
             $prior = $current;
         }
         $component->call('loadMoreCaregivers', 12)->call('loadMoreCaregivers', 40)
-            ->assertSet('caregiverDiscoveryLimit', 40)->assertViewHas('caregiverDiscoveryCount', 40)
+            ->assertSet('caregiverDiscoveryLimit', 72)->assertViewHas('caregiverDiscoveryCount', 67)
             ->assertDontSee('Show more caregivers');
         $component->set('caregiverSearch', 'Paging')->assertSet('caregiverDiscoveryLimit', 12)
             ->assertViewHas('caregiverDiscoveryCount', 12)->assertViewHas('caregiverDiscoveryHasMore', true);
-        $component->call('loadMoreCaregivers', 12)->assertViewHas('caregiverDiscoveryCount', 24);
+        foreach ([12, 24, 36, 48, 60] as $from) {
+            $component->call('loadMoreCaregivers', $from);
+        }
+        $component->assertViewHas('caregiverDiscoveryCount', 67)->assertViewHas('caregiverDiscoveryHasMore', false);
+        $this->assertCount(67, $component->viewData('caregiverSearchResults')->pluck('user_id')->unique());
         $component->set('certificationTypes', ['cpr'])->assertSet('caregiverDiscoveryLimit', 12)
             ->assertViewHas('caregiverDiscoveryCount', 1)->assertViewHas('caregiverDiscoveryHasMore', false)
             ->assertSee($caregivers->first()->name)->assertDontSee($previous->name);
@@ -334,8 +338,8 @@ class CaregiverInvitationExperienceTest extends TestCase
         $component->call('setCaregiverView', 'saved')->call('loadMoreCaregivers', 12)->assertSet('caregiverDiscoveryLimit', 12);
 
         $service = app(CaregiverInvitationDiscoveryService::class);
-        $this->assertCount(40, $service->search($request, $family, 'Paging', limit: 1000));
-        $this->assertSame(40, collect($service->initialSections($request, $family, limit: 1000))->sum(fn (array $section) => $section['caregivers']->count()));
+        $this->assertCount(67, $service->search($request, $family, 'Paging', limit: 1000));
+        $this->assertSame(67, collect($service->initialSections($request, $family, limit: 1000))->sum(fn (array $section) => $section['caregivers']->count()));
     }
 
     public function test_caregiver_without_saved_availability_can_receive_and_accept_an_invitation(): void
@@ -375,12 +379,12 @@ class CaregiverInvitationExperienceTest extends TestCase
         $this->assertDatabaseCount('care_request_invitations', 1);
         $this->assertDatabaseHas('care_request_invitations', ['message' => 'First invitation']);
         Notification::assertSentToTimes($caregiver, MarketplaceEventNotification::class, 2);
-        Notification::assertSentToTimes($family, MarketplaceEventNotification::class, 2);
+        Notification::assertSentToTimes($family, MarketplaceEventNotification::class, 1);
         Notification::assertSentTo($caregiver, MarketplaceEventNotification::class, fn (MarketplaceEventNotification $notification, array $channels): bool => $notification->toArray($caregiver)['event_key'] === MarketplaceEvent::INVITATION_RECEIVED
             && $channels === ['mail']);
         Notification::assertSentTo($caregiver, MarketplaceEventNotification::class, fn (MarketplaceEventNotification $notification, array $channels): bool => $notification->toArray($caregiver)['event_key'] === MarketplaceEvent::INVITATION_RECEIVED
             && $channels === ['database']);
-        Notification::assertSentTo($family, MarketplaceEventNotification::class, fn (MarketplaceEventNotification $notification, array $channels): bool => $notification->toArray($family)['event_key'] === MarketplaceEvent::INVITATION_SENT
+        Notification::assertNotSentTo($family, MarketplaceEventNotification::class, fn (MarketplaceEventNotification $notification, array $channels): bool => $notification->toArray($family)['event_key'] === MarketplaceEvent::INVITATION_SENT
             && $channels === ['mail']);
         Notification::assertSentTo($family, MarketplaceEventNotification::class, fn (MarketplaceEventNotification $notification, array $channels): bool => $notification->toArray($family)['event_key'] === MarketplaceEvent::INVITATION_SENT
             && $channels === ['database']);

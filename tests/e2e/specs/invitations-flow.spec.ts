@@ -39,7 +39,7 @@ test.describe('Invitations Flow', () => {
         await page.getByRole('button', { name: 'Accept' }).first().click();
         await expect(page).toHaveURL(new RegExp(`/care-requests/${SEEDED_REQUEST_ID}/apply$`));
         await expect(page.getByText('Waiting for family')).toBeVisible();
-        await page.getByRole('button', { name: 'Open chat' }).click();
+        await page.getByRole('button', { name: 'Message family' }).click();
         await expect(page).toHaveURL(/\/messages\/\d+$/);
 
         await loginAs(page, 'family');

@@ -47,7 +47,7 @@ class HirePaymentSetupTest extends TestCase
         $component = Livewire::actingAs($family)->test(ManageCareRequest::class, ['careRequest' => $request->id])
             ->call('setActiveTab', 'applicants')
             ->assertSee('Add a card to hire')->assertSee('Add card securely')
-            ->assertSee('Review care & price')->assertSee($invited ? 'Start chat' : 'Shortlist & chat');
+            ->assertSee('Review care & price')->assertSee('Message caregiver');
         $this->assertButtonDisabled($component->html(), 'reviewHire('.$application->id.')', true);
 
         $component->call('reviewHire', $application->id)

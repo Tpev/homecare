@@ -20,8 +20,6 @@ class CaregiverInvitationDiscoveryService
 {
     public const SEARCH_LIMIT = 12;
 
-    public const MAX_DISCOVERY_LIMIT = 40;
-
     /**
      * @return Collection<int, array<string, mixed>>
      */
@@ -59,7 +57,7 @@ class CaregiverInvitationDiscoveryService
             ->orderByDesc('average_rating')
             ->orderByDesc('reviews_count')
             ->orderBy('user_id')
-            ->limit(max(1, min(self::MAX_DISCOVERY_LIMIT, $limit)))
+            ->limit(max(1, $limit))
             ->get();
 
         return $this->cards($request, $profiles, $criteria);
@@ -106,7 +104,7 @@ class CaregiverInvitationDiscoveryService
             ->orderByDesc('average_rating')
             ->orderByDesc('reviews_count')
             ->orderBy('user_id')
-            ->limit(max(1, min(self::MAX_DISCOVERY_LIMIT, $limit)))
+            ->limit(max(1, $limit))
             ->get();
         $cards = $this->cards($request, $profiles, $criteria);
 

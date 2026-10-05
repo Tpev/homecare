@@ -58,15 +58,10 @@
                 \App\Models\CareRequestApplication::STATUS_APPLIED,
                 \App\Models\CareRequestApplication::STATUS_SHORTLISTED,
             ], true);
-        $applicationStateEyebrow = $applicationStatus === \App\Models\CareRequestApplication::STATUS_SHORTLISTED
-            ? 'Accepted invitation'
-            : 'Application sent';
-        $applicationStateTitle = $applicationStatus === \App\Models\CareRequestApplication::STATUS_SHORTLISTED
-            ? 'You accepted the invitation.'
-            : 'Your reply was sent.';
-        $applicationStateBody = $applicationStatus === \App\Models\CareRequestApplication::STATUS_SHORTLISTED
-            ? 'No visit is booked yet. The family can hire you now or message you if they need to confirm details.'
-            : 'No visit is booked yet. The family is reviewing replies and can hire you or send a message.';
+        $acceptedInvitation = $chatInvitation?->status === \App\Models\CareRequestInvitation::STATUS_ACCEPTED;
+        $applicationStateEyebrow = $acceptedInvitation ? 'Accepted invitation' : ($applicationStatus === 'shortlisted' ? 'Shortlisted' : 'Application sent');
+        $applicationStateTitle = $acceptedInvitation ? 'You accepted the invitation.' : ($applicationStatus === 'shortlisted' ? 'The family shortlisted you.' : 'Your reply was sent.');
+        $applicationStateBody = 'No visit is booked yet. You can message the family to ask questions and confirm the details before hiring.';
         $hasAttachedCareProfile = (bool) $requestItem->recipient?->care_recipient_profile_version_id;
         $isAssignedProfileView = is_array($careProfileSnapshot)
             && array_key_exists('full_name', $careProfileSnapshot);
@@ -132,8 +127,8 @@
                     <a href="{{ route('care-requests.index') }}" wire:navigate>
                         <x-button color="white" light>Back to requests</x-button>
                     </a>
-                    @if ($existingApplication && in_array($existingApplication->status, ['shortlisted', 'hired'], true) && ! ($isWaitingForFamilyDecision && $activeTab === 'application'))
-                        <x-button color="indigo" light wire:click="openChat">Open chat</x-button>
+                    @if ($canOpenChat && ! ($isWaitingForFamilyDecision && $activeTab === 'application'))
+                        <x-button color="indigo" light wire:click="openChat">Message family</x-button>
                     @endif
                 </div>
             </div>
@@ -142,8 +137,8 @@
                 <a href="{{ route('care-requests.index') }}" wire:navigate>
                     <x-button color="white" light sm>Back to requests</x-button>
                 </a>
-                @if ($existingApplication && in_array($existingApplication->status, ['shortlisted', 'hired'], true))
-                    <x-button color="indigo" light sm wire:click="openChat">Open chat</x-button>
+                @if ($canOpenChat)
+                    <x-button color="indigo" light sm wire:click="openChat">Message family</x-button>
                 @endif
             </div>
         @endif
@@ -408,12 +403,12 @@
                         <p class="mt-2 text-sm leading-6 text-[#4B5B6B]">{{ $applicationStateBody }}</p>
                         <div class="mt-3 rounded-2xl border border-[#CFE1D8] bg-white/80 px-4 py-3">
                             <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">Right now</p>
-                            <p class="mt-1 text-sm font-semibold text-[#17313F]">No action needed. Keep chat open in case the family has a question.</p>
+                            <p class="mt-1 text-sm font-semibold text-[#17313F]">Message the family if you have questions about the care or schedule.</p>
                         </div>
                         <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                            @if ($applicationStatus === \App\Models\CareRequestApplication::STATUS_SHORTLISTED)
+                            @if ($canOpenChat)
                                 <x-button color="indigo" light wire:click="openChat" class="w-full">
-                                    Open chat
+                                    Message family
                                 </x-button>
                             @endif
                             <a href="#caregiver-request-details-{{ $requestItem->id }}" class="inline-flex h-11 w-full items-center justify-center rounded-[1rem] border border-[#DED6CA] bg-white px-4 text-sm font-semibold text-[#0F3D3E] transition hover:bg-[#F5F1EB]">
@@ -430,8 +425,8 @@
                                 <p class="mt-1 text-xs text-[#607080]">They compare replies and profiles.</p>
                             </div>
                             <div class="rounded-xl border border-[#E4DDD3] bg-white px-3 py-2">
-                                <p class="font-semibold text-[#17313F]">2. They may chat</p>
-                                <p class="mt-1 text-xs text-[#607080]">Answer only if they ask a question.</p>
+                                <p class="font-semibold text-[#17313F]">2. Chat together</p>
+                                <p class="mt-1 text-xs text-[#607080]">Ask questions and confirm the details together.</p>
                             </div>
                             <div class="rounded-xl border border-[#E4DDD3] bg-white px-3 py-2">
                                 <p class="font-semibold text-[#17313F]">3. If hired</p>
@@ -1101,7 +1096,7 @@
                     @endif
 
                     <div class="flex flex-wrap gap-2">
-                        <x-button color="white" light wire:click="openChat">Open chat</x-button>
+                        <x-button color="white" light wire:click="openChat">Message family</x-button>
                         <x-button color="white" light wire:click="setActiveTab('support')">Open support tools</x-button>
                     </div>
                         </div>

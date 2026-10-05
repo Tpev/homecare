@@ -84,7 +84,7 @@
                         <button type="button" wire:click="reviewHire({{ $application->id }})" class="hc-care-text-link">Review care &amp; price</button>
                     @endif
                     @if($requestItem->status === \App\Models\CareRequest::STATUS_OPEN && in_array($application->status, ['applied', 'shortlisted', 'hired'], true))
-                        <button type="button" wire:click="startConversation({{ $application->id }})" class="hc-care-text-link">{{ $application->conversation ? 'Open chat' : ($application->status === 'applied' ? 'Shortlist & chat' : 'Start chat') }}</button>
+                        <button type="button" wire:click="startConversation({{ $application->id }})" class="hc-care-text-link">Message caregiver</button>
                     @elseif($application->conversation)
                         <a href="{{ route('messages.show', $application->conversation->id) }}" wire:navigate class="hc-care-text-link">Open chat</a>
                     @endif

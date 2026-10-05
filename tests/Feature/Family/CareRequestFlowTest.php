@@ -291,7 +291,7 @@ class CareRequestFlowTest extends TestCase
             ->call('setActiveTab', 'applicants')
             ->assertSee('Review applicants')
             ->assertSee('Hire Caroline')
-            ->assertSee('Shortlist & chat')
+            ->assertSee('Message caregiver')
             ->assertSee('All caregivers')
             ->call('setCaregiverView', 'search')
             ->assertSee('Search caregivers by name, city, or certification')
@@ -918,7 +918,7 @@ class CareRequestFlowTest extends TestCase
         ]);
     }
 
-    public function test_family_can_save_and_chat_with_applicant_before_hiring(): void
+    public function test_family_can_chat_with_applicant_without_shortlisting_before_hiring(): void
     {
         $family = User::factory()->create(['role' => 'family']);
         $caregiver = User::factory()->create(['role' => 'caregiver']);
@@ -947,7 +947,7 @@ class CareRequestFlowTest extends TestCase
         $component = Livewire::actingAs($family)
             ->test(ManageCareRequest::class, ['careRequest' => $request->id])
             ->call('setActiveTab', 'applicants')
-            ->assertSee('Shortlist & chat')
+            ->assertSee('Message caregiver')
             ->assertDontSee('Caregiver selection')
             ->call('startConversation', $application->id);
 
@@ -959,7 +959,7 @@ class CareRequestFlowTest extends TestCase
 
         $this->assertDatabaseHas('care_request_applications', [
             'id' => $application->id,
-            'status' => CareRequestApplication::STATUS_SHORTLISTED,
+            'status' => CareRequestApplication::STATUS_APPLIED,
         ]);
     }
 

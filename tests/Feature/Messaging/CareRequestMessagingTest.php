@@ -11,7 +11,6 @@ use App\Models\CaregiverProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class CareRequestMessagingTest extends TestCase
@@ -58,28 +57,17 @@ class CareRequestMessagingTest extends TestCase
             ->assertSee(route('family.requests.show', $request->id), false);
     }
 
-    public function test_caregiver_cannot_send_message_when_application_not_shortlisted_or_hired(): void
+    public function test_caregiver_can_send_message_before_shortlisting_or_hiring(): void
     {
         [$family, $caregiver, $request] = $this->seedRequestContext(CareRequestApplication::STATUS_APPLIED);
+        $application = $request->applications()->firstOrFail();
+        $conversation = CareRequestConversation::findOrCreateForApplication($application, $caregiver->id);
 
-        $application = CareRequestApplication::query()->where('care_request_id', $request->id)->firstOrFail();
-        $conversation = CareRequestConversation::findOrCreateForApplication($application, $family->id);
-        $this->assertFalse($caregiver->can('sendMessage', $conversation));
+        Livewire::actingAs($caregiver)->test(Inbox::class, ['conversation' => $conversation->id])
+            ->set('messageBody', 'Can we discuss the schedule?')->call('sendMessage')->assertHasNoErrors();
 
-        try {
-            Livewire::actingAs($caregiver)
-                ->test(Inbox::class, ['conversation' => $conversation->id])
-                ->set('messageBody', 'Trying to message before shortlist')
-                ->call('sendMessage');
-        } catch (HttpException $e) {
-            $this->assertSame(403, $e->getStatusCode());
-        }
-
-        $this->assertDatabaseMissing('care_request_messages', [
-            'care_request_conversation_id' => $conversation->id,
-            'sender_user_id' => $caregiver->id,
-            'body' => 'Trying to message before shortlist',
-        ]);
+        $this->assertDatabaseHas('care_request_messages', ['care_request_conversation_id' => $conversation->id, 'body' => 'Can we discuss the schedule?']);
+        $this->assertSame(CareRequestApplication::STATUS_APPLIED, $application->fresh()->status);
     }
 
     public function test_opening_conversation_marks_it_as_read_for_current_user(): void

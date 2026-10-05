@@ -35,7 +35,7 @@ class CaregiverWorkInboxBuilder
         $pendingInvitations = CareRequestInvitation::query()
             ->with([
                 'family:id,name',
-                'careRequest:id,family_user_id,title,request_type,preferred_response_hours,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,city,state,status',
+                'careRequest:id,family_user_id,title,request_type,preferred_response_hours,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,recurring_ends_on,city,state,status',
                 'careRequest.family:id,email',
                 'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
             ])
@@ -60,6 +60,7 @@ class CaregiverWorkInboxBuilder
             );
 
             $items->push([
+                'chat_request_id' => app(\App\Services\Messaging\CareRequestChatService::class)->closedReason($request, $caregiverId) === null ? $request->id : null,
                 'id' => 'invite-'.$invitation->id,
                 'scope' => 'needs_response',
                 'state' => 'invited',
@@ -138,7 +139,7 @@ class CaregiverWorkInboxBuilder
 
         $applications = CareRequestApplication::query()
             ->with([
-                'careRequest:id,family_user_id,title,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,city,state,status,created_at',
+                'careRequest:id,family_user_id,title,request_type,requested_start_at,requested_end_at,recurring_days,recurring_start_time,recurring_end_time,recurring_schedule,recurring_ends_on,city,state,status,created_at',
                 'careRequest.family:id,email',
                 'careRequest.recipient:id,care_request_id,recipient_is_requester,full_name,relationship_to_family',
                 'conversation:id,care_request_application_id',
@@ -363,6 +364,7 @@ class CaregiverWorkInboxBuilder
             $compensation = $this->compensationPayload($minutes, $rate);
 
             return [
+                'chat_request_id' => app(\App\Services\Messaging\CareRequestChatService::class)->closedReason($request, (int) $application->caregiver_user_id) === null ? $request->id : null,
                 'id' => 'application-'.$application->id,
                 'scope' => 'applied',
                 'state' => 'applied',

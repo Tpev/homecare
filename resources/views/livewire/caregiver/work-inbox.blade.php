@@ -241,6 +241,9 @@
                                     </a>
                                 @endif
                             @endif
+                            @if (!empty($item['chat_request_id']))
+                                <x-care-request-chat-button :care-request-id="$item['chat_request_id']" :caregiver-id="auth()->id()" />
+                            @endif
                         </div>
                     </div>
 

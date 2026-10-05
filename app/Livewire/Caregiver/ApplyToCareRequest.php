@@ -338,6 +338,12 @@ class ApplyToCareRequest extends Component
             ],
         );
 
+        CareRequestConversation::query()
+            ->where('care_request_id', $this->requestItem->id)
+            ->where('caregiver_user_id', auth()->id())
+            ->whereNull('care_request_application_id')
+            ->update(['care_request_application_id' => $this->existingApplication->id]);
+
         if (! $this->requestItem->first_applicant_at) {
             $this->requestItem->update(['first_applicant_at' => now()]);
         }
@@ -1048,22 +1054,9 @@ class ApplyToCareRequest extends Component
 
     public function openChat(): void
     {
-        $application = CareRequestApplication::query()
-            ->where('care_request_id', $this->requestItem->id)
-            ->where('caregiver_user_id', auth()->id())
-            ->with(['careRequest', 'conversation'])
-            ->firstOrFail();
-
-        if (! in_array($application->status, [
-            CareRequestApplication::STATUS_SHORTLISTED,
-            CareRequestApplication::STATUS_HIRED,
-        ], true)) {
-            session()->flash('status', 'Chat is available once you are shortlisted or hired.');
-
-            return;
-        }
-
-        $conversation = CareRequestConversation::findOrCreateForApplication($application, auth()->id());
+        $conversation = app(\App\Services\Messaging\CareRequestChatService::class)->open(
+            auth()->user(), $this->requestItem, (int) auth()->id(),
+        );
         $this->redirect(route('messages.show', $conversation->id, false), navigate: true);
     }
 
@@ -1209,6 +1202,9 @@ class ApplyToCareRequest extends Component
     public function render()
     {
         return view('livewire.caregiver.apply-to-care-request', [
+            'chatInvitation' => $this->requestItem->invitations()->where('caregiver_user_id', auth()->id())->first(),
+            'canOpenChat' => app(\App\Services\Messaging\CareRequestChatService::class)->closedReason($this->requestItem, (int) auth()->id()) === null
+                || $this->requestItem->conversations()->where('caregiver_user_id', auth()->id())->exists(),
             'currentRegularCareBooking' => $this->currentRegularCareBooking(),
             'careProfileSnapshot' => app(CareRecipientProfilePresenter::class)
                 ->forCareRequest(auth()->user(), $this->requestItem),
