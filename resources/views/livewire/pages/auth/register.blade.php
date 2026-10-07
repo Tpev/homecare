@@ -25,6 +25,7 @@ new #[Layout('layouts.guest')] class extends Component
 
     public function mount(): void
     {
+        app(\App\Services\FamilyAcquisition\FamilySignupAttribution::class)->capture(request());
         $welcome = app(\App\Services\FamilyAcquisition\LeadWelcomeService::class)->sessionMessage();
         if ($welcome) {
             $this->name = (string) $welcome->lead?->name;
@@ -55,6 +56,7 @@ new #[Layout('layouts.guest')] class extends Component
         });
 
         event(new Registered($user));
+        session()->forget(\App\Services\FamilyAcquisition\FamilySignupAttribution::SESSION_KEY);
 
         Auth::login($user);
         session()->regenerate();

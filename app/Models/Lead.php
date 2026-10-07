@@ -52,6 +52,7 @@ class Lead extends Model
     ];
 
     protected $fillable = [
+        'family_account_id',
         'lead_type',
         'name',
         'email',
@@ -104,6 +105,11 @@ class Lead extends Model
     public function assignedAdmin(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_admin_id');
+    }
+
+    public function familyAccount(): BelongsTo
+    {
+        return $this->belongsTo(FamilyAccount::class);
     }
 
     public function activities(): HasMany

@@ -13,6 +13,8 @@ use App\Models\User;
 use App\Services\CareRecipientProfiles\CareRecipientProfileService;
 use App\Services\FamilyAccounts\FamilyAccountContext;
 use App\Services\FamilyAccounts\FamilyAccountProvisioner;
+use App\Services\FamilyAcquisition\FamilyCrmSyncService;
+use App\Services\FamilyAcquisition\FamilySignupAttribution;
 use App\Services\FamilyAcquisition\LeadWelcomeService;
 use App\Support\FamilyQuickRequestDraft;
 use App\Support\FunnelTracker;
@@ -71,6 +73,7 @@ class FamilyOnboardingService
         if ($onboarding->wasRecentlyCreated) {
             FunnelTracker::track('family_onboarding_enrolled', $user, $onboarding);
         }
+        app(FamilyCrmSyncService::class)->sync($onboarding, app(FamilySignupAttribution::class)->current());
 
         return $onboarding;
     }
@@ -141,6 +144,8 @@ class FamilyOnboardingService
         return DB::transaction(function () use ($user, $revision) {
             $record = $this->locked($user);
             if ($record->status === 'completed') {
+                app(FamilyCrmSyncService::class)->sync($record);
+
                 return $record; // Idempotent, including a final click from an older tab.
             }
             abort_unless($record->status === 'in_progress', 409);
@@ -185,6 +190,7 @@ class FamilyOnboardingService
                 'draft' => [], 'current_step' => 5, 'revision' => $record->revision + 1,
             ])->save();
             app(FamilyOnboardingDeliveryService::class)->createIntents($record);
+            app(FamilyCrmSyncService::class)->sync($record);
             FunnelTracker::track('family_onboarding_completed', $user, $record);
 
             return $record;

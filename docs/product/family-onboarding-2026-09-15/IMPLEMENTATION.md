@@ -16,6 +16,23 @@
 - Admin visibility includes active family accounts without an enrollment, explicitly labeled **Not enrolled**, plus their latest non-system request. Search by name, email (including active invited members), or account ID. Missing records are not treated as completed forms or silently backfilled.
 - Staff can record contact, agreed time, confirmation by text, completion, cancellation or unavailability. Changes record actor, timestamp and an account activity event. Recording confirmation does not itself send an SMS; use the existing SMS inbox.
 
+## CRM visibility for website signups
+
+Normal family registration now links one CRM lead to the family account immediately, even when the family did not come through a lead-ad email. New leads use the `website_signup` source and start in **New**. Matching existing family leads by email preserves their original campaign, owner, activity, and follow-up information. Campaign parameters and a tracked landing-page referrer are retained when available; an unknown source is labeled Website signup.
+
+Submitting onboarding adds one readable timeline note containing the submitted answers, updates phone/city/ZIP, and advances early stages (New, Trying to reach, Contacted) to **Qualified**. Callback, nurture, scheduled, terminal, and do-not-contact records keep their staff-managed stage. Requested welcome visits stay unconfirmed; confirming a time in the onboarding admin page advances eligible early/qualified leads to **Assessment scheduled** and records the visit update. Neither event marks a lead Converted. Reconciliation does not reapply an already-recorded transition or overwrite subsequent staff contact edits.
+
+The family CRM shows onboarding progress and supports Website signup, Account created, and Onboarding completed filters. Onboarding answers remain readable in both CRM timelines. Invited family members and caregiver registrations do not create separate family leads.
+
+After deploying the additive `family_account_id` migration and new code, run the CRM backfill against existing onboarding records:
+
+```bash
+php artisan family-crm:sync-signups --dry-run
+php artisan family-crm:sync-signups
+```
+
+The command is safe to repeat, reuses matching leads/notes, and sends no registration or campaign emails. It skips closed accounts, exempted onboarding, and records whose original registrant is no longer the owner. It does not create onboarding records for older families who were never enrolled or infer their answers from care requests. Standard CRM follow-up/escalation rules still apply to the resulting leads.
+
 ## Admin email delivery
 
 The immutable submitted snapshot supplies every form answer and account contact detail. Emails use the existing operations recipient configuration, replacement rules and LoLo template. The existing registration alert remains separate.

@@ -95,6 +95,7 @@
                     <option value="all">All sources</option>
                     <option value="facebook">Facebook / Meta lead ads</option>
                     <option value="manual_crm">Manual CRM</option>
+                    <option value="website_signup">Website signup</option>
                 </select>
                 <select wire:model.live="assigned" aria-label="Filter by owner" class="min-h-11 rounded-xl border-slate-200 text-sm focus:border-emerald-600 focus:ring-emerald-100">
                     <option value="all">All owners</option>
@@ -107,7 +108,7 @@
         <section class="grid items-start gap-5 {{ $selectedLead ? '2xl:grid-cols-[minmax(720px,1fr)_480px]' : '' }}">
             <div class="col-span-full flex flex-wrap items-center gap-3">
                 <label class="text-xs font-bold text-slate-600" for="welcome-progress-filter">Email & online progress</label>
-                <select id="welcome-progress-filter" wire:model.live="welcome" class="rounded-xl border-stone-300 text-sm"><option value="all">All progress</option><option value="sent">Email sent</option><option value="account">Account created</option><option value="request">Request posted</option><option value="failed">Email needs attention</option><option value="previewed">Local previews</option></select>
+                <select id="welcome-progress-filter" wire:model.live="welcome" class="rounded-xl border-stone-300 text-sm"><option value="all">All progress</option><option value="sent">Email sent</option><option value="account">Account created</option><option value="onboarding">Onboarding completed</option><option value="request">Request posted</option><option value="failed">Email needs attention</option><option value="previewed">Local previews</option></select>
                 @if($cohort !== 'all' || $campaign !== 'all')<span class="text-xs text-slate-500">{{ $cohort === 'all' ? 'All time' : 'Last '.$cohort.' days' }}{{ $campaign !== 'all' ? ' · Selected campaign' : '' }}</span><a href="{{ route('admin.family-acquisition.leads') }}" class="text-xs font-semibold underline">Clear cohort filters</a>@endif
             </div>
             <div class="min-w-0 overflow-hidden rounded-[1.6rem] border border-[#D9CEC0] bg-white shadow-sm">
@@ -193,6 +194,14 @@
             @if($selectedLead)
                 @php
                     $form = data_get($selectedLead->data, 'form_answers', []);
+                    $snapshot = $selectedLead->familyAccount?->onboarding?->submitted_snapshot;
+                    if ($snapshot) {
+                        $form = array_replace($form, [
+                            'care_for' => ($snapshot['care_for'] ?? '') === 'me' ? 'Self' : ($snapshot['recipient_name'] ?? 'Family member'),
+                            'relationship' => $snapshot['relationship'] ?? '',
+                            'additional_details' => \App\Services\Family\FamilyOnboardingService::combinedNotes($snapshot),
+                        ]);
+                    }
                     $meta = data_get($selectedLead->data, 'meta', data_get($selectedLead->data, 'facebook', []));
                     $responseMinutes = $selectedLead->first_call_at && $selectedLead->submitted_at ? (int) $selectedLead->submitted_at->diffInMinutes($selectedLead->first_call_at) : null;
                 @endphp
@@ -268,8 +277,8 @@
                                 @foreach($selectedLead->activities as $activity)
                                     <article class="rounded-xl border border-slate-200 p-3">
                                         <div class="flex items-start justify-between gap-3"><p class="text-sm font-bold text-slate-900">{{ $activity->summary }}</p><p class="shrink-0 text-[10px] text-slate-400">{{ $activity->occurred_at?->format('M j, g:i A') }}</p></div>
-                                        @if($activity->body)<p class="mt-1 text-xs leading-5 text-slate-600">{{ $activity->body }}</p>@endif
-                                        <p class="mt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ $activity->actor?->name ?: 'System / Meta' }}</p>
+                                        @if($activity->body)<p class="mt-1 whitespace-pre-line text-xs leading-5 text-slate-600">{{ $activity->body }}</p>@endif
+                                        <p class="mt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ $activity->actor?->name ?: 'System' }}</p>
                                     </article>
                                 @endforeach
                             </div>

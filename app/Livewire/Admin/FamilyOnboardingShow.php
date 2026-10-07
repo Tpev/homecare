@@ -7,6 +7,7 @@ use App\Models\FamilyOnboarding;
 use App\Models\FamilyOnboardingDelivery;
 use App\Models\FamilyWelcomeVisit;
 use App\Services\Family\FamilyOnboardingDeliveryService;
+use App\Services\FamilyAcquisition\FamilyCrmSyncService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -76,6 +77,7 @@ class FamilyOnboardingShow extends Component
             ]);
             $this->visitRevision = $visit->revision;
             $this->audit('welcome_visit_updated', ['visit_id' => $visit->id, 'from' => $previous, 'to' => $visit->status]);
+            app(FamilyCrmSyncService::class)->sync($visit->onboarding);
         });
         session()->flash('status', 'Welcome visit updated.');
     }

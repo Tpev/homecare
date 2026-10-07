@@ -1,5 +1,6 @@
 @props(['lead', 'compact' => false])
 @php($welcome = $lead->welcomeEmail)
+<x-lead-family-progress :lead="$lead" :compact="$compact" />
 @if($welcome)
     <div class="{{ $compact ? 'space-y-1' : 'rounded-2xl border border-[#D9CEC0] bg-[#FFFBF4] p-4' }}">
         @unless($compact)<p class="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-[#A55343]">Email & online progress</p>@endunless
@@ -13,6 +14,6 @@
             <p class="mt-3 text-xs leading-5 text-slate-500">{{ $welcome->request_posted_at ? 'Their request is posted. Help with the next steps when you call.' : ($welcome->account_linked_at ? 'Their account is ready. Help them finish posting their request.' : 'They can get started from the email, or you can guide them on the call.') }}</p>
         @endunless
     </div>
-@else
+@elseif(! $lead->family_account_id)
     <p class="text-xs text-slate-400">{{ $lead->isFacebookLead() ? 'No welcome email recorded' : 'Welcome email applies to Facebook leads' }}</p>
 @endif

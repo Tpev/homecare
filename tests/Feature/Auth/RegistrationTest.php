@@ -56,7 +56,7 @@ class RegistrationTest extends TestCase
             'user_id' => $familyId,
             'event_key' => MarketplaceEvent::FAMILY_WELCOME,
             'channel' => 'email',
-            'status' => 'queued',
+            'status' => 'sent',
         ]);
         $this->assertDatabaseHas('marketplace_notification_deliveries', [
             'user_id' => $familyId,

@@ -482,7 +482,7 @@ class LeadsIndex extends Component
     {
         return $this->selectedLeadId
             ? Lead::query()
-                ->with(['assignedAdmin:id,name,email', 'activities.actor:id,name,email'])
+                ->with(['assignedAdmin:id,name,email', 'activities.actor:id,name,email', 'familyAccount.onboarding.welcomeVisit'])
                 ->find($this->selectedLeadId)
             : null;
     }
@@ -784,6 +784,7 @@ class LeadsIndex extends Component
             'callback_page' => 'Callback page',
             'voice_agent' => 'Voice agent',
             'website' => 'Website form',
+            'website_signup' => 'Website signup',
             'phone' => 'Phone call',
             'email' => 'Email',
             'pcp_outreach' => 'PCP outreach',

@@ -407,6 +407,7 @@
                 </div>
 
                 <div class="space-y-6 px-5 py-5">
+                    <x-lead-family-progress :lead="$selectedLead" />
                     <section class="grid gap-3 sm:grid-cols-3">
                         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3">
                             <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Stage</p>

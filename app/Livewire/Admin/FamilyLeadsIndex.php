@@ -298,6 +298,7 @@ class FamilyLeadsIndex extends Component
                 ->with([
                     'assignedAdmin:id,name,email',
                     'welcomeEmail',
+                    'familyAccount.onboarding.welcomeVisit',
                     'activities' => fn ($query) => $query->with('actor:id,name,email')->latest('occurred_at')->limit(40),
                 ])
                 ->find($this->selectedLeadId)
@@ -310,7 +311,7 @@ class FamilyLeadsIndex extends Component
             'assigneeOptions' => $this->assigneeOptions(),
             'canDeleteLeads' => $this->canDeleteLeads(),
             'leads' => $this->baseQuery()
-                ->with(['assignedAdmin:id,name,email', 'welcomeEmail'])
+                ->with(['assignedAdmin:id,name,email', 'welcomeEmail', 'familyAccount.onboarding.welcomeVisit'])
                 ->orderByRaw("case priority when 'urgent' then 1 when 'high' then 2 when 'normal' then 3 else 4 end")
                 ->orderByRaw('next_follow_up_at is null')
                 ->orderBy('next_follow_up_at')
@@ -353,8 +354,13 @@ class FamilyLeadsIndex extends Component
         if ($this->campaign !== 'all') {
             $query->where(fn ($q) => $q->where('data->meta->campaign_id', $this->campaign)->orWhere('data->facebook->campaign_id', $this->campaign));
         }
-        if (in_array($this->welcome, ['sent', 'account', 'request', 'previewed'], true)) {
-            $column = ['sent' => 'sent_at', 'account' => 'account_created_at', 'request' => 'request_posted_at', 'previewed' => 'previewed_at'][$this->welcome];
+        if ($this->welcome === 'account') {
+            $query->where(fn ($q) => $q->whereNotNull('family_account_id')
+                ->orWhereHas('welcomeEmail', fn ($welcome) => $welcome->whereNotNull('account_created_at')));
+        } elseif ($this->welcome === 'onboarding') {
+            $query->whereHas('familyAccount.onboarding', fn ($q) => $q->where('status', 'completed'));
+        } elseif (in_array($this->welcome, ['sent', 'request', 'previewed'], true)) {
+            $column = ['sent' => 'sent_at', 'request' => 'request_posted_at', 'previewed' => 'previewed_at'][$this->welcome];
             $query->whereHas('welcomeEmail', fn ($q) => $q->whereNotNull($column));
         } elseif ($this->welcome === 'failed') {
             $query->whereHas('welcomeEmail', fn ($q) => $q->whereIn('status', ['failed', 'retrying', 'unconfirmed']));
