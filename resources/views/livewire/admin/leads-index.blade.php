@@ -507,6 +507,8 @@
                         </div>
                     </form>
 
+                    <x-lead-follow-up-call :lead="$selectedLead" />
+
                     <form wire:submit.prevent="logActivity" class="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
                         <h3 class="text-lg font-bold text-slate-950">Log outreach or note</h3>
                         <div class="mt-3 grid gap-3 sm:grid-cols-3">

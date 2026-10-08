@@ -129,8 +129,8 @@
                         <tbody class="divide-y divide-slate-100">
                             @forelse($leads as $lead)
                                 @php
-                                    $callableStage = in_array($lead->status, \App\Support\FamilyLeadOutreach::CALLABLE_STAGES, true);
-                                    $isDue = $callableStage && (!$lead->next_follow_up_at || $lead->next_follow_up_at->isPast());
+                                    $callableStage = \App\Support\FamilyLeadOutreach::isInCallingQueue($lead);
+                                    $isDue = \App\Support\FamilyLeadOutreach::isCallable($lead);
                                     $terminal = in_array($lead->status, ['converted', 'unreachable', 'not_fit', 'lost', 'closed'], true);
                                 @endphp
                                 <tr wire:key="family-lead-{{ $lead->id }}" class="group cursor-pointer transition hover:bg-emerald-50/40 {{ $selectedLeadId === $lead->id ? 'bg-emerald-50/70' : '' }}" wire:click="openLead({{ $lead->id }})">
@@ -243,6 +243,8 @@
                             </div>
                             <button type="button" wire:click="saveLead" class="mt-3 min-h-10 w-full rounded-xl bg-[#23483F] px-4 py-2 text-sm font-bold text-white hover:bg-[#173F35]">Save lead</button>
                         </section>
+
+                        <x-lead-follow-up-call :lead="$selectedLead" />
 
                         <section class="rounded-2xl border border-[#E8C8BE] bg-[#FFF4EF] p-4">
                             <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-[#A55343]">Family context</p>

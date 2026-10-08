@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Models\Lead;
 use App\Models\LeadActivity;
 use App\Models\User;
+use App\Services\FamilyAcquisition\FamilyFollowUpCallService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -421,6 +422,25 @@ class LeadsIndex extends Component
         if ($this->selectedLeadId === $lead->id) {
             $this->loadLeadForm($lead->fresh());
         }
+    }
+
+    public function queueFollowUpCall(): void
+    {
+        abort_unless(in_array(auth()->user()?->role, ['admin', 'sales'], true), 403);
+
+        if (! $lead = $this->selectedLead) {
+            return;
+        }
+
+        $lead = app(FamilyFollowUpCallService::class)->queue($lead, auth()->user());
+        $this->leadForm['next_follow_up_at'] = $lead->next_follow_up_at->format('Y-m-d\TH:i');
+        unset($this->selectedLead);
+
+        $this->dispatch('toast', [
+            'type' => 'success',
+            'title' => 'Follow-up call queued',
+            'message' => 'The lead is in the family calling queue. Stage remains '.$lead->stageLabel().'.',
+        ]);
     }
 
     public function logActivity(): void

@@ -72,6 +72,13 @@
 
                         <dl class="divide-y divide-[#EEE6DC] px-5">
                             <div class="py-3">
+                                <dt class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Stage</dt>
+                                <dd class="mt-1 text-sm font-bold text-slate-950">{{ $activeLead->stageLabel() }}</dd>
+                                @if(\App\Support\FamilyLeadOutreach::hasQueuedFollowUpCall($activeLead))
+                                    <dd class="mt-1 text-xs text-emerald-700">Follow-up call · retries and callbacks keep this stage.</dd>
+                                @endif
+                            </div>
+                            <div class="py-3">
                                 <dt class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">Phone</dt>
                                 <dd class="mt-1 text-base font-bold text-slate-950">{{ $activeLead->phone }}</dd>
                                 <dd class="mt-0.5 text-xs text-slate-500">{{ $activeLead->email ?: 'No email provided' }}</dd>

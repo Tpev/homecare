@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Models\Lead;
 use App\Models\LeadActivity;
 use App\Models\User;
+use App\Services\FamilyAcquisition\FamilyFollowUpCallService;
 use App\Support\FamilyLeadOutreach;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -270,6 +271,23 @@ class FamilyLeadsIndex extends Component
         ]);
     }
 
+    public function queueFollowUpCall(): void
+    {
+        if (! $lead = $this->selectedLead) {
+            return;
+        }
+
+        $lead = app(FamilyFollowUpCallService::class)->queue($lead, auth()->user());
+        $this->selectedFollowUpAt = $lead->next_follow_up_at->format('Y-m-d\TH:i');
+        unset($this->selectedLead);
+
+        $this->dispatch('toast', [
+            'type' => 'success',
+            'title' => 'Follow-up call queued',
+            'message' => 'The lead is in the family calling queue. Stage remains '.$lead->stageLabel().'.',
+        ]);
+    }
+
     public function addNote(): void
     {
         $lead = $this->selectedLead;
@@ -393,14 +411,7 @@ class FamilyLeadsIndex extends Component
 
         return [
             'new' => (clone $query)->where('status', 'new')->count(),
-            'due' => (clone $query)
-                ->whereIn('status', FamilyLeadOutreach::CALLABLE_STAGES)
-                ->where('unanswered_attempt_count', '<', FamilyLeadOutreach::MAX_ATTEMPTS)
-                ->whereNull('do_not_contact_at')
-                ->whereNotNull('phone')
-                ->where('phone', '!=', '')
-                ->where(fn (Builder $q) => $q->whereNull('next_follow_up_at')->orWhere('next_follow_up_at', '<=', now()))
-                ->count(),
+            'due' => FamilyLeadOutreach::dueQuery(clone $query)->count(),
             'callbacks' => (clone $query)->where('status', 'callback_scheduled')->count(),
             'qualified' => (clone $query)->whereIn('status', ['qualified', 'assessment_scheduled'])->count(),
             'converted' => (clone $query)->whereNotNull('converted_at')->count(),

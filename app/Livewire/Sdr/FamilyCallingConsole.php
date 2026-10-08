@@ -64,7 +64,7 @@ class FamilyCallingConsole extends Component
     public function startCall(): void
     {
         $lead = $this->activeLead();
-        if (! $lead || (int) $lead->assigned_admin_id !== (int) auth()->id()) {
+        if (! $lead || (int) $lead->assigned_admin_id !== (int) auth()->id() || ! FamilyLeadOutreach::isCallable($lead)) {
             return;
         }
 
@@ -113,7 +113,7 @@ class FamilyCallingConsole extends Component
         }
 
         $lead = $this->activeLead();
-        if (! $lead || (int) $lead->assigned_admin_id !== (int) auth()->id()) {
+        if (! $lead || (int) $lead->assigned_admin_id !== (int) auth()->id() || ! FamilyLeadOutreach::isCallable($lead)) {
             return;
         }
 
@@ -130,12 +130,18 @@ class FamilyCallingConsole extends Component
         $unansweredAttemptNumber = FamilyLeadOutreach::isRetryable($outcome)
             ? min(FamilyLeadOutreach::MAX_ATTEMPTS, ((int) $lead->unanswered_attempt_count) + 1)
             : (FamilyLeadOutreach::isConnected($outcome) ? 0 : (int) $lead->unanswered_attempt_count);
-        $stage = FamilyLeadOutreach::stageForOutcome($outcome, $unansweredAttemptNumber);
+        $stage = FamilyLeadOutreach::stageForOutcome($outcome, $unansweredAttemptNumber, $lead);
         $oldStatus = $lead->status;
+        $sequenceComplete = FamilyLeadOutreach::isRetryable($outcome)
+            && $unansweredAttemptNumber >= FamilyLeadOutreach::MAX_ATTEMPTS;
 
         $followUpAt = filled($validated['followUpAt'])
             ? Carbon::parse($validated['followUpAt'])
             : FamilyLeadOutreach::defaultFollowUpForOutcome($outcome, $unansweredAttemptNumber, $lead);
+
+        if ($sequenceComplete || in_array($stage, FamilyLeadOutreach::TERMINAL_STAGES, true)) {
+            $followUpAt = null;
+        }
 
         $callStartedAt = data_get($lead->data, 'family_outreach.current_call_started_at');
         $firstCallAt = $lead->first_call_at
@@ -149,6 +155,13 @@ class FamilyCallingConsole extends Component
         data_forget($data, 'family_outreach.current_call_started_at');
         data_forget($data, 'family_outreach.current_call_started_by');
 
+        if ($followUpAt && in_array($stage, FamilyLeadOutreach::FOLLOW_UP_STAGES, true)) {
+            data_set($data, 'family_outreach.follow_up_call_requested_at',
+                data_get($data, 'family_outreach.follow_up_call_requested_at') ?: now()->toISOString());
+        } else {
+            data_forget($data, 'family_outreach.follow_up_call_requested_at');
+        }
+
         $lead->forceFill([
             'status' => $stage,
             'call_attempt_count' => $callNumber,
@@ -160,7 +173,9 @@ class FamilyCallingConsole extends Component
             'last_contacted_at' => now(),
             'next_follow_up_at' => $followUpAt,
             'do_not_contact_at' => $outcome === 'do_not_contact' ? now() : $lead->do_not_contact_at,
-            'closed_reason' => FamilyLeadOutreach::closedReasonForOutcome($outcome, $unansweredAttemptNumber),
+            'closed_reason' => in_array($stage, FamilyLeadOutreach::TERMINAL_STAGES, true)
+                ? FamilyLeadOutreach::closedReasonForOutcome($outcome, $unansweredAttemptNumber)
+                : null,
             'data' => $data,
         ])->save();
 
@@ -178,6 +193,7 @@ class FamilyCallingConsole extends Component
                 'family_unanswered_attempt_number' => FamilyLeadOutreach::isRetryable($outcome) ? $unansweredAttemptNumber : null,
                 'connected' => FamilyLeadOutreach::isConnected($outcome),
                 'follow_up_at' => $followUpAt?->toISOString(),
+                'sequence_complete' => $sequenceComplete,
             ],
         ]);
 
@@ -205,8 +221,10 @@ class FamilyCallingConsole extends Component
             'title' => 'Outcome saved',
             'message' => $nextLead
                 ? 'The next family is ready to call.'
-                : ($stage === 'unreachable'
-                ? 'Seven attempts are complete. The lead is now marked unreachable.'
+                : ($sequenceComplete
+                ? ($stage === 'unreachable'
+                    ? 'Seven attempts are complete. The lead is now marked unreachable.'
+                    : 'Seven follow-up attempts are complete. Stage remains '.$this->stageLabel($stage).'.')
                 : ($followUpAt ? 'The lead will return to the queue at the scheduled time.' : 'The CRM and family funnel were updated.')),
         ]);
     }
@@ -292,17 +310,7 @@ class FamilyCallingConsole extends Component
 
     private function callableQuery(): Builder
     {
-        return Lead::query()
-            ->where('lead_type', Lead::TYPE_FAMILY)
-            ->whereIn('status', FamilyLeadOutreach::CALLABLE_STAGES)
-            ->where('unanswered_attempt_count', '<', FamilyLeadOutreach::MAX_ATTEMPTS)
-            ->whereNull('do_not_contact_at')
-            ->whereNotNull('phone')
-            ->where('phone', '!=', '')
-            ->where(function (Builder $query): void {
-                $query->whereNull('next_follow_up_at')
-                    ->orWhere('next_follow_up_at', '<=', now());
-            });
+        return FamilyLeadOutreach::dueQuery();
     }
 
     private function availableCount(): int

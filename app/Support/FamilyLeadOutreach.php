@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Lead;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
 class FamilyLeadOutreach
@@ -22,6 +23,13 @@ class FamilyLeadOutreach
         'not_fit',
         'lost',
         'closed',
+    ];
+
+    public const FOLLOW_UP_STAGES = [
+        'contacted',
+        'qualified',
+        'assessment_scheduled',
+        'intake_scheduled',
     ];
 
     /** @return array<string, string> */
@@ -63,8 +71,13 @@ class FamilyLeadOutreach
         ], true);
     }
 
-    public static function stageForOutcome(string $outcome, int $unansweredAttemptNumber): string
+    public static function stageForOutcome(string $outcome, int $unansweredAttemptNumber, ?Lead $lead = null): string
     {
+        if (in_array($lead?->status, self::FOLLOW_UP_STAGES, true)
+            && (self::isRetryable($outcome) || $outcome === 'callback_requested')) {
+            return $lead->status;
+        }
+
         if (self::isRetryable($outcome)) {
             return $unansweredAttemptNumber >= self::MAX_ATTEMPTS ? 'unreachable' : 'attempting_contact';
         }
@@ -147,12 +160,55 @@ class FamilyLeadOutreach
 
     public static function isCallable(Lead $lead): bool
     {
+        return self::isInCallingQueue($lead)
+            && ($lead->next_follow_up_at === null || $lead->next_follow_up_at->lte(now()));
+    }
+
+    public static function canQueueFollowUpCall(Lead $lead): bool
+    {
         return $lead->lead_type === Lead::TYPE_FAMILY
             && filled($lead->phone)
-            && in_array($lead->status, self::CALLABLE_STAGES, true)
+            && in_array($lead->status, self::FOLLOW_UP_STAGES, true)
+            && $lead->do_not_contact_at === null;
+    }
+
+    public static function hasQueuedFollowUpCall(Lead $lead): bool
+    {
+        return self::canQueueFollowUpCall($lead)
+            && filled(data_get($lead->data, 'family_outreach.follow_up_call_requested_at'))
+            && $lead->next_follow_up_at !== null
+            && $lead->unanswered_attempt_count < self::MAX_ATTEMPTS;
+    }
+
+    public static function isInCallingQueue(Lead $lead): bool
+    {
+        return $lead->lead_type === Lead::TYPE_FAMILY
+            && filled($lead->phone)
+            && (in_array($lead->status, self::CALLABLE_STAGES, true) || self::hasQueuedFollowUpCall($lead))
             && $lead->unanswered_attempt_count < self::MAX_ATTEMPTS
-            && $lead->do_not_contact_at === null
-            && ($lead->next_follow_up_at === null || $lead->next_follow_up_at->isPast());
+            && $lead->do_not_contact_at === null;
+    }
+
+    public static function dueQuery(?Builder $query = null): Builder
+    {
+        return ($query ?? Lead::query())
+            ->where('lead_type', Lead::TYPE_FAMILY)
+            ->where(function (Builder $query): void {
+                $query->whereIn('status', self::CALLABLE_STAGES)
+                    ->orWhere(function (Builder $query): void {
+                        $query->whereIn('status', self::FOLLOW_UP_STAGES)
+                            ->whereNotNull('data->family_outreach->follow_up_call_requested_at')
+                            ->whereNotNull('next_follow_up_at');
+                    });
+            })
+            ->where('unanswered_attempt_count', '<', self::MAX_ATTEMPTS)
+            ->whereNull('do_not_contact_at')
+            ->whereNotNull('phone')
+            ->whereRaw("TRIM(phone) != ''")
+            ->where(function (Builder $query): void {
+                $query->whereNull('next_follow_up_at')
+                    ->orWhere('next_follow_up_at', '<=', now());
+            });
     }
 
     public static function zoomCallHref(?string $phone): ?string
