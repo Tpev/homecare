@@ -254,6 +254,8 @@
         .lolo-home .section { max-width: 1440px; margin: auto; padding: 140px max(5vw, 36px); }
         .lolo-home .section-head { display: grid; grid-template-columns: 1.3fr .7fr; align-items: end; gap: 80px; margin-bottom: 55px; }
         .lolo-home .section-head > p { max-width: 430px; color: var(--muted); line-height: 1.7; }
+        .lolo-home .caregiver-count { margin: 0; color: var(--green); font-size: 1.1rem; }
+        .lolo-home .caregiver-count strong { font-size: 1.25em; font-weight: 700; font-variant-numeric: tabular-nums; }
         .lolo-home .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
         .lolo-home .caregiver-card { overflow: hidden; border: 1px solid var(--line); border-radius: 24px; background: #fffaf1; }
         .lolo-home .portrait { position: relative; display: grid; place-items: center; min-height: 220px; aspect-ratio: 16 / 10; }
@@ -617,6 +619,7 @@
                 <div>
                     <p class="eyebrow">Choose with confidence</p>
                     <h2>Find someone who fits your family.</h2>
+                    <p class="caregiver-count"><strong>{{ number_format($registeredCaregiverCount) }}</strong> {{ $registeredCaregiverCount === 1 ? 'caregiver' : 'caregivers' }} on LoLo</p>
                 </div>
                 <p>Review experience, availability, ratings, verification, services, and hourly pricing before booking.</p>
             </div>

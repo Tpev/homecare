@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\DB;
 
 class MarketingPagesController extends Controller
 {
@@ -25,6 +26,8 @@ class MarketingPagesController extends Controller
             event: 'family',
             data: [
                 'featuredCaregivers' => $this->featuredCaregivers(),
+                'registeredCaregiverCount' => (int) DB::table('marketplace_statistics')
+                    ->where('name', 'registered_caregivers')->value('value'),
             ],
         );
     }
