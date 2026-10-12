@@ -254,8 +254,10 @@
         .lolo-home .section { max-width: 1440px; margin: auto; padding: 140px max(5vw, 36px); }
         .lolo-home .section-head { display: grid; grid-template-columns: 1.3fr .7fr; align-items: end; gap: 80px; margin-bottom: 55px; }
         .lolo-home .section-head > p { max-width: 430px; color: var(--muted); line-height: 1.7; }
-        .lolo-home .caregiver-count { margin: 0; color: var(--green); font-size: 1.1rem; }
-        .lolo-home .caregiver-count strong { font-size: 1.25em; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .lolo-home .caregivers .section-head { align-items: center; }
+        .lolo-home .caregiver-intro { max-width: 620px; margin-bottom: 0; color: var(--muted); line-height: 1.7; }
+        .lolo-home .section-head > .caregiver-count { justify-self: end; margin: 0; color: var(--green); font-size: 1.1rem; text-align: right; }
+        .lolo-home .caregiver-count strong { display: block; margin-bottom: 10px; font-family: 'Fraunces', serif; font-optical-sizing: auto; font-size: clamp(2.6rem, 4vw, 4.7rem); font-weight: 500; letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums; }
         .lolo-home .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
         .lolo-home .caregiver-card { overflow: hidden; border: 1px solid var(--line); border-radius: 24px; background: #fffaf1; }
         .lolo-home .portrait { position: relative; display: grid; place-items: center; min-height: 220px; aspect-ratio: 16 / 10; }
@@ -429,6 +431,8 @@
             .lolo-home .family,
             .lolo-home .economics,
             .lolo-home .trust { grid-template-columns: 1fr; }
+            .lolo-home .caregivers .section-head { gap: 28px; }
+            .lolo-home .section-head > .caregiver-count { justify-self: start; text-align: left; }
             .lolo-home .comparison { overflow-x: auto; }
             .lolo-home .comparison .row { min-width: 760px; }
             .lolo-home .family-board { margin-top: 20px; }
@@ -461,6 +465,7 @@
             .lolo-home .dark-section { padding: 95px 22px; }
             .lolo-home .section-head { gap: 12px; }
             .lolo-home .section-head h2 { font-size: 2.7rem; }
+            .lolo-home .caregiver-count strong { font-size: 2.7rem; }
             .lolo-home .family-copy ul { grid-template-columns: 1fr; }
             .lolo-home .economics,
             .lolo-home .trust { padding: 90px 22px; }
@@ -619,9 +624,9 @@
                 <div>
                     <p class="eyebrow">Choose with confidence</p>
                     <h2>Find someone who fits your family.</h2>
-                    <p class="caregiver-count"><strong>{{ number_format($registeredCaregiverCount) }}</strong> {{ $registeredCaregiverCount === 1 ? 'caregiver' : 'caregivers' }} on LoLo</p>
+                    <p class="caregiver-intro">Review experience, availability, ratings, verification, services, and hourly pricing before booking.</p>
                 </div>
-                <p>Review experience, availability, ratings, verification, services, and hourly pricing before booking.</p>
+                <p class="caregiver-count"><strong>{{ number_format($registeredCaregiverCount) }}</strong> {{ $registeredCaregiverCount === 1 ? 'caregiver' : 'caregivers' }} on LoLo</p>
             </div>
 
             <div class="profile-grid">
