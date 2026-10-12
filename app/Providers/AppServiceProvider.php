@@ -15,11 +15,13 @@ use App\Models\Lead;
 use App\Models\MediaAsset;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketMessage;
+use App\Models\User;
 use App\Observers\CareRequestApplicationObserver;
 use App\Observers\CareRequestObserver;
 use App\Observers\FamilyLeadObserver;
 use App\Observers\SupportTicketAuditObserver;
 use App\Observers\SupportTicketObserver;
+use App\Observers\UserObserver;
 use App\Policies\BlogPostPolicy;
 use App\Policies\CareRecipientProfilePolicy;
 use App\Policies\CareRecipientProfileVersionPolicy;
@@ -81,6 +83,7 @@ class AppServiceProvider extends ServiceProvider
         Lead::observe(FamilyLeadObserver::class);
         SupportTicket::observe(SupportTicketAuditObserver::class);
         SupportTicket::observe(SupportTicketObserver::class);
+        User::observe(UserObserver::class);
 
         Event::listen(Registered::class, SendOpsUserRegisteredAlert::class);
         Event::listen(Registered::class, AttributeContentRegistration::class);
