@@ -127,7 +127,7 @@ with tempfile.TemporaryDirectory(prefix='homecare-setup-fixture-') as directory:
     checks += 1
 
 # Structural regression checks for critical ordering, without invoking production paths.
-assert installer.index('flock -n 8') < installer.index('verify_original_configuration\n\nBACKUP=')
+assert installer.index('flock -n 8') < installer.index('verify_original_configuration\n\nif [[ "$RESUMING" -eq 0 ]]; then\nBACKUP=')
 assert 'exec 8</tmp/homecare-deploy.lock' in installer
 assert 'exec 8>/tmp/homecare-deploy.lock' not in installer
 assert "sudo -u ubuntu /bin/bash -c 'umask 022; set -o noclobber; : > /tmp/homecare-deploy.lock'" in installer

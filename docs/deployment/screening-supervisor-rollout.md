@@ -122,12 +122,58 @@ Do not rerun the bootstrap installer against an already installed runtime. Routi
 
 The installer deliberately avoids an automatic broad rollback of the root crontab, environment, or cached configuration. Such a rollback could undo concurrent work or reintroduce the unsafe 90-second queue reservation. A failed step reports the exact private backup directory. The active application release remains selected; background work may remain paused.
 
-- If failure happens before wrapped runtime installation, inspect the backed-up crontab and Supervisor state. Resume the old setup only after confirming the active release still predates screening, no wrapper worker is running, and restoring the old scheduler will not duplicate another trigger. Compare current files before restoring anything. The original worker's 120/90 reservation mismatch still needs correction.
+- If interruption happens after removing the old scheduler and stopping the legacy worker, but before installing runtime files, use the limited recovery procedure below. It completes runtime preparation from the verified checkpoint; it does not restart the old worker with the original 120/90 timeout/reservation mismatch.
 - If the wrapped configuration and canonical cron are installed, preserve the original `runtime.conf`, marker, and lock files. Repair the reported permission, queue configuration, or process problem. From a fresh `ubuntu` login, run the hook's `preflight`, then `resume`, only after confirming that the selected release is eligible to run.
 - If setup was interrupted halfway through, use the private backup and installed-file inventory to finish that specific stage. The installer refuses a second bootstrap attempt; it does not overwrite partially installed runtime state.
 - After the first screening activation, never recover by returning to pre-screening application code. Follow the activation boundary in the [deployment runbook](zero-downtime-deployments.md).
 
 Do not delete private backups, edit the pause marker's topology fingerprint, change lock-file inodes, restore a stale full crontab, or run `supervisorctl update` across unrelated programs as a shortcut.
+
+### Resume the stopped-worker checkpoint
+
+At this checkpoint the old Supervisor worker is STOPPED, the root application scheduler line has been removed, and no runtime files have been installed. **PHP-FPM remains active and keeps serving the existing application.** Background jobs and scheduled tasks are delayed until setup finishes. A stopped worker is not a stopped website; restoring background processing still matters for functions that rely on queued or scheduled work.
+
+The original `--screening-setup` command intentionally refuses this changed state. Do not bypass that refusal by restoring the entire old crontab, deleting files, or running a normal deployment. Recovery is limited to the checkpoint proved by the private backup: the same active release, unchanged environment/configuration/Supervisor files, the exact paused crontab, and no partial runtime installation. Other interruptions need a separate review.
+
+Deliver the reviewed recovery changes through Git first. Fetch into the deployment mirror, then extract `deploy.sh` from the exact full recovery commit; the older driver saved before these modes existed cannot run them. Substitute the reviewed commit and the exact backup directory reported by the interrupted setup:
+
+```bash
+(
+  set -eu
+  test "$(hostname)" = ip-172-31-16-32
+  test "$(id -un)" = ubuntu
+  screening_repo=/var/www/homecare-deploy/repository.git
+  screening_revision='<full reviewed recovery commit pushed to master>'
+  screening_backup='<exact /var/backups/homecare-screening-runtime/timestamp-pid directory>'
+  git --git-dir="$screening_repo" fetch origin '+refs/heads/master:refs/heads/master'
+  git --git-dir="$screening_repo" cat-file -e "$screening_revision^{commit}"
+  umask 077
+  screening_driver=$(mktemp /home/ubuntu/homecare-screening-deploy.XXXXXX)
+  git --git-dir="$screening_repo" show "$screening_revision:deploy.sh" > "$screening_driver"
+  printf 'Recovery revision: %s\nDeploy driver: %s\nPrivate backup: %s\n' \
+    "$screening_revision" "$screening_driver" "$screening_backup"
+  bash "$screening_driver" --screening-recovery-check "$screening_revision" "$screening_backup"
+)
+```
+
+This mode creates only the Git driver and private staging files; its server inspection does not change runtime state or boot Laravel. Keep its complete output, revision, and driver path. When completion of this same runtime setup is already authorized, the passing check and resume can run sequentially in one `set -eu` block. Otherwise review the check before authorizing runtime changes. A failure means the checkpoint no longer matches; do not force it or fall through to normal deployment.
+
+After the recovery check passes and resume is authorized, use those same values:
+
+```bash
+(
+  set -eu
+  test "$(hostname)" = ip-172-31-16-32
+  test "$(id -un)" = ubuntu
+  screening_revision='<full revision from the successful recovery check>'
+  screening_driver='<driver path from the successful recovery check>'
+  screening_backup='<exact backup directory from the successful recovery check>'
+  bash "$screening_driver" --screening-resume-setup "$screening_revision" "$screening_backup" \
+    --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout
+)
+```
+
+Resume acquires the setup and deployment locks, revalidates the checkpoint, and waits naturally for the old scheduler invocations and Artisan tasks before continuing runtime installation. It keeps the existing release selected and PHP-FPM active, fixes the queue reservation before the wrapped worker starts, and restores the scheduler through its new wrapper. It does not activate screening, migrate the database, import datasets, or backfill Didit. Wait for the setup-complete message, then follow **Validate setup before deploying** from a fresh SSH login. The normal application deployment remains a separate operation.
 
 Do not reboot the host during the first screening cutover. The persistent marker fences the wrapped queue and root scheduler; it does not prevent PHP-FPM from starting during boot. After a host crash, inspect the selected release and durable screening activation state before resuming services. An installed marker alone does not prove that the database boundary was activated or that HTTP requests may safely resume.
 
@@ -155,6 +201,7 @@ Dataset imports and `screening:sync --refresh-identities` are separate, delibera
 bash -n docs/deployment/screening-supervisor-setup.sh
 bash tests/Deployment/screening-git-delivery-smoke.sh
 bash tests/Deployment/screening-supervisor-setup-smoke.sh
+bash tests/Deployment/screening-supervisor-resume-smoke.sh
 bash tests/Deployment/screening-supervisor-runtime-smoke.sh
 bash tests/Deployment/atomic-deploy-smoke.sh
 bash tests/Deployment/screening-rollout-recovery-smoke.sh

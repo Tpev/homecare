@@ -26,10 +26,16 @@ touch "$APP/artisan"
 cat > "$APP/docs/deployment/screening-supervisor-setup.sh" <<'INSTALLER'
 #!/usr/bin/env bash
 set -Eeuo pipefail
-[[ "$#" -ge 2 && ( "$1" == --check || "$1" == --apply ) ]] || exit 91
+[[ "$#" -ge 2 && ( "$1" == --check || "$1" == --apply || "$1" == --resume-check || "$1" == --resume ) ]] || exit 91
 action="$1"
 bundle="$2"
 shift 2
+backup=''
+if [[ "$action" == --resume-check || "$action" == --resume ]]; then
+  [[ "$#" -ge 1 && "$1" == "$TEST_EXPECTED_BACKUP" ]] || exit 94
+  backup="$1"
+  shift
+fi
 [[ "$bundle" == "$TEST_SANDBOX/"* ]] || exit 92
 cd "$bundle"
 sha256sum -c SHA256SUMS >/dev/null
@@ -39,10 +45,11 @@ grep -Fq -- "$TEST_EXPECTED_REVISION" REVISION
 [[ "$(cat check-screening-queue.php)" == committed-queue-check ]]
 [[ "$(wc -l < SHA256SUMS)" -eq 4 ]]
 printf 'installer %s' "$action" >> "$TEST_EVENTS"
+if [[ -n "$backup" ]]; then printf ' %s' "$backup" >> "$TEST_EVENTS"; fi
 if [[ "$#" -gt 0 ]]; then printf ' %s' "$@" >> "$TEST_EVENTS"; fi
 printf '\n' >> "$TEST_EVENTS"
 printf '%s\n' "$bundle" > "$TEST_BUNDLE_PATH"
-if [[ "$action" == --check ]]; then
+if [[ "$action" == --check || "$action" == --resume-check ]]; then
   [[ "$#" -eq 0 ]] || exit 93
 else
   [[ "$#" -eq 2 ]]
@@ -147,6 +154,7 @@ export HOMECARE_APP_DIR="$APP" HOMECARE_DEPLOY_ROOT="$SANDBOX/deploy-root"
 export HOMECARE_SCREENING_STAGE_ROOT="$SANDBOX/staging"
 export HOMECARE_DEPLOY_LOCK="$SANDBOX/deploy.lock"
 export TEST_EXPECTED_REVISION="$GOOD_REVISION"
+export TEST_EXPECTED_BACKUP=/var/backups/homecare-screening-runtime/20261013T165702Z-1659597
 CHECKS=0
 
 fail() {
@@ -191,6 +199,37 @@ run_case setup success --screening-setup "$GOOD_REVISION" \
   --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout
 [[ "$(grep -c '^sudo ' "$TEST_EVENTS")" -eq 1 ]] || fail 'Setup did not call the installer exactly once.'
 grep -q '^installer --apply ' "$TEST_EVENTS" || fail 'Setup did not select --apply.'
+
+run_case recovery-check success --screening-recovery-check "$GOOD_REVISION" "$TEST_EXPECTED_BACKUP"
+[[ "$(grep -c '^sudo ' "$TEST_EVENTS")" -eq 1 ]] || fail 'Recovery check did not call the installer exactly once.'
+grep -Fxq "installer --resume-check $TEST_EXPECTED_BACKUP" "$TEST_EVENTS" || fail 'Recovery check changed the backup argument or action.'
+! grep -Eq '^installer --(apply|resume) ' "$TEST_EVENTS" || fail 'Recovery check attempted a mutation.'
+
+run_case resume-setup success --screening-resume-setup "$GOOD_REVISION" "$TEST_EXPECTED_BACKUP" \
+  --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout
+grep -Fxq "installer --resume $TEST_EXPECTED_BACKUP --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout" "$TEST_EVENTS" \
+  || fail 'Resume did not pass the exact checkpoint and confirmations.'
+
+TEST_INSTALLER_EXIT=72 run_case recovery-refusal failure --screening-recovery-check "$GOOD_REVISION" "$TEST_EXPECTED_BACKUP"
+[[ "$LAST_EXIT" -eq 72 ]] || fail 'Recovery refusal exit status was not preserved.'
+run_case recovery-missing-backup failure --screening-recovery-check "$GOOD_REVISION"
+assert_no_privilege
+run_case recovery-extra-flag failure --screening-recovery-check "$GOOD_REVISION" "$TEST_EXPECTED_BACKUP" --confirm-single-host-runtime
+assert_no_privilege
+for invalid_backup in relative-backup /tmp/backup --help /var/backups/homecare-screening-runtime/../elsewhere /var/backups/homecare-screening-runtime/not-a-checkpoint; do
+  run_case "recovery-bad-backup-$CHECKS" failure --screening-recovery-check "$GOOD_REVISION" "$invalid_backup"
+  assert_no_privilege
+done
+run_case resume-no-confirmations failure --screening-resume-setup "$GOOD_REVISION" "$TEST_EXPECTED_BACKUP"
+assert_no_privilege
+run_case resume-one-confirmation failure --screening-resume-setup "$GOOD_REVISION" "$TEST_EXPECTED_BACKUP" --confirm-single-host-runtime
+assert_no_privilege
+run_case resume-unknown-argument failure --screening-resume-setup "$GOOD_REVISION" "$TEST_EXPECTED_BACKUP" \
+  --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout --unexpected
+assert_no_privilege
+run_case resume-invalid-backup failure --screening-resume-setup "$GOOD_REVISION" /tmp/backup \
+  --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout
+assert_no_privilege
 
 TEST_INSTALLER_EXIT=71 run_case installer-failure failure --screening-check "$GOOD_REVISION"
 [[ "$LAST_EXIT" -eq 71 ]] || fail 'Installer exit status was not preserved.'

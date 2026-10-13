@@ -62,6 +62,10 @@ Usage:
                          Stage runtime files from Git REV and inspect server setup only.
   ./deploy.sh --screening-setup REV --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout
                          Apply the reviewed runtime setup without deploying application code.
+  ./deploy.sh --screening-recovery-check REV BACKUP
+                         Inspect an interrupted setup checkpoint without changing runtime state.
+  ./deploy.sh --screening-resume-setup REV BACKUP --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout
+                         Resume a verified setup checkpoint without deploying application code.
   ./deploy.sh --help      Show this help.
 
 The first normal deployment converts /var/www/homecare from an in-place checkout
@@ -77,6 +81,7 @@ require_command() {
 
 screening_runtime_from_git() {
   local action="$1" revision="$2" commit driver_path expected_driver actual_driver
+  local backup="${3:-}"
   local stage_root app_real deploy_real forbidden stage mode source entry
   local -a sources=(
     docs/deployment/screening-supervisor-setup.sh
@@ -88,6 +93,10 @@ screening_runtime_from_git() {
   for command_name in git readlink mktemp sha256sum stat sudo; do
     require_command "$command_name"
   done
+  if [[ "$action" == recovery-check || "$action" == resume-setup ]]; then
+    [[ "$backup" =~ ^/var/backups/homecare-screening-runtime/[0-9]{8}T[0-9]{6}Z-[0-9]+$ ]] \
+      || die "Supply the exact private screening backup directory printed by setup."
+  fi
   [[ -n "$revision" && "$revision" != -* ]] || die "Supply a locally available Git revision."
   [[ "$APP_DIR" == /* && "$DEPLOY_ROOT" == /* && -f "$APP_DIR/artisan" ]] \
     || die "Screening setup requires the existing application and absolute deployment paths."
@@ -139,13 +148,25 @@ screening_runtime_from_git() {
   bash -n "$stage/screening-runtime-entrypoint.sh"
   log "Screening Git revision: $commit"
   log "Screening Git staging directory: $stage"
-  if [[ "$action" == check ]]; then
-    log "Inspecting server setup only; application code, configuration and services stay unchanged."
-    sudo bash "$stage/screening-supervisor-setup.sh" --check "$stage"
-  else
-    sudo bash "$stage/screening-supervisor-setup.sh" --apply "$stage" \
-      --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout
-  fi
+  case "$action" in
+    check)
+      log "Inspecting server setup only; application code, configuration and services stay unchanged."
+      sudo bash "$stage/screening-supervisor-setup.sh" --check "$stage"
+      ;;
+    setup)
+      sudo bash "$stage/screening-supervisor-setup.sh" --apply "$stage" \
+        --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout
+      ;;
+    recovery-check)
+      log "Inspecting the interrupted setup checkpoint only; runtime state stays unchanged."
+      sudo bash "$stage/screening-supervisor-setup.sh" --resume-check "$stage" "$backup"
+      ;;
+    resume-setup)
+      sudo bash "$stage/screening-supervisor-setup.sh" --resume "$stage" "$backup" \
+        --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout
+      ;;
+    *) die "Unknown screening runtime action." ;;
+  esac
 }
 
 resolved_path() {
@@ -790,6 +811,17 @@ case "$MODE" in
     [[ "$#" -eq 4 && "$3" == --confirm-single-host-runtime && "$4" == --accept-existing-supervisor-stop-timeout ]] \
       || die "Usage: deploy.sh --screening-setup REV --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout"
     screening_runtime_from_git setup "$2"
+    exit 0
+    ;;
+  --screening-recovery-check)
+    [[ "$#" -eq 3 ]] || die "Usage: deploy.sh --screening-recovery-check REV BACKUP"
+    screening_runtime_from_git recovery-check "$2" "$3"
+    exit 0
+    ;;
+  --screening-resume-setup)
+    [[ "$#" -eq 5 && "$4" == --confirm-single-host-runtime && "$5" == --accept-existing-supervisor-stop-timeout ]] \
+      || die "Usage: deploy.sh --screening-resume-setup REV BACKUP --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout"
+    screening_runtime_from_git resume-setup "$2" "$3"
     exit 0
     ;;
   --help|-h)

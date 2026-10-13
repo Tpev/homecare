@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-time, operator-reviewed setup for the inspected production host.
-# --check reads configuration only. --apply changes runtime configuration, not releases.
+# --check/--resume-check read only. --apply/--resume change runtime, not releases.
 set -Eeuo pipefail
 umask 077
 
@@ -22,7 +22,9 @@ OLD_CRON='* * * * * cd /var/www/homecare && php artisan schedule:run >> /dev/nul
 NEW_CRON='* * * * * /usr/local/libexec/homecare-runtime-entrypoint scheduler /var/www/homecare >> /var/log/homecare-scheduler.log 2>&1'
 OLD_COMMAND='/usr/bin/php /var/www/homecare/artisan queue:work database --queue=default --sleep=1 --tries=3 --timeout=120 --max-time=3600'
 BACKUP=''
+BACKUP_ROOT=/var/backups/homecare-screening-runtime
 CHANGED=0
+RESUMING=0
 
 fail() { printf 'Setup: %s\n' "$*" >&2; exit 1; }
 log() { printf 'Setup: %s\n' "$*"; }
@@ -64,12 +66,17 @@ Usage:
   sudo bash screening-supervisor-setup.sh --check /absolute/reviewed/bundle
   sudo bash screening-supervisor-setup.sh --apply /absolute/reviewed/bundle \
     --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout
+  sudo bash screening-supervisor-setup.sh --resume-check /absolute/reviewed/bundle /absolute/private/backup
+  sudo bash screening-supervisor-setup.sh --resume /absolute/reviewed/bundle /absolute/private/backup \
+    --confirm-single-host-runtime --accept-existing-supervisor-stop-timeout
 
 The bundle must contain screening-runtime-entrypoint.sh,
 screening-supervisor-runtime-control.sh, and check-screening-queue.php.
 Apply temporarily pauses scheduled work and gracefully stops the current worker.
 Its EXISTING Supervisor settings permit SIGKILL after 3600 seconds. Do not use
 apply if a job may exceed that limit. New runtime drains never force-kill work.
+Resume accepts only the unchanged checkpoint after the old scheduler and worker
+were paused, before runtime installation began. Resume-check is read-only.
 This script does not deploy, change the application symlink, boot Laravel,
 run migrations, import datasets, or backfill Didit.
 EOF
@@ -78,11 +85,20 @@ EOF
 [[ "$#" -ge 1 ]] || { usage; exit 1; }
 [[ "$1" != --help ]] || { usage; exit 0; }
 MODE="$1"
-[[ "$MODE" == --check || "$MODE" == --apply ]] || fail 'Choose --check or --apply.'
+case "$MODE" in --check|--apply) ;; --resume-check|--resume) RESUMING=1 ;; *) fail 'Choose --check, --apply, --resume-check or --resume.' ;; esac
 [[ "$#" -ge 2 && "$2" == /* ]] || fail 'Supply an absolute reviewed bundle directory.'
 BUNDLE="$(readlink -f -- "$2")"
 [[ -d "$BUNDLE" ]] || fail 'Bundle directory is missing.'
-if [[ "$MODE" == --apply ]]; then
+if [[ "$RESUMING" -eq 1 ]]; then
+  [[ "$#" -ge 3 && "$3" == /* ]] || fail 'Supply the absolute private backup directory from the interrupted setup.'
+  BACKUP="$3"
+  if [[ "$MODE" == --resume ]]; then
+    [[ "$#" -eq 5 && "$4" == --confirm-single-host-runtime && "$5" == --accept-existing-supervisor-stop-timeout ]] \
+      || fail 'Resume requires both explicit inventory and existing-stop-timeout acknowledgements.'
+  else
+    [[ "$#" -eq 3 ]] || fail 'Unexpected resume-check arguments.'
+  fi
+elif [[ "$MODE" == --apply ]]; then
   [[ "$#" -eq 4 && "$3" == --confirm-single-host-runtime && "$4" == --accept-existing-supervisor-stop-timeout ]] \
     || fail 'Apply requires both explicit inventory and existing-stop-timeout acknowledgements.'
 else
@@ -92,6 +108,54 @@ fi
 for command in python3 php supervisorctl systemctl crontab sudo install stat readlink flock getent id; do
   command -v "$command" >/dev/null || fail "Missing command: $command"
 done
+
+verify_resume_checkpoint() {
+  python3 - "$BACKUP_ROOT" "$BACKUP" "$BUNDLE" "$APP_REAL" "$SUPERVISOR_CONFIG" "$SHARED_ENV" \
+    "$APP_DIR/bootstrap/cache/config.php" "$OLD_CRON" "$FPM_SERVICE" "$DUPLICATE_UNIT" <<'PY'
+import hashlib, pathlib, re, stat, subprocess, sys
+root_name, backup_name, bundle_name, release, supervisor, environment, cache, old_cron, fpm, duplicate = sys.argv[1:]
+root, backup, bundle = map(pathlib.Path, (root_name, backup_name, bundle_name))
+assert root.is_absolute() and root.resolve(strict=True) == root, 'Backup root must be canonical without symlink ancestors.'
+root_stat = root.lstat()
+assert stat.S_ISDIR(root_stat.st_mode) and root_stat.st_uid == 0 and not (stat.S_IMODE(root_stat.st_mode) & 0o022), 'Backup root must be root-owned and protected against other writers.'
+assert backup.is_absolute() and backup.parent == root and backup.resolve(strict=True) == backup, 'Backup must be a canonical direct child of the private backup root.'
+backup_stat = backup.lstat()
+assert stat.S_ISDIR(backup_stat.st_mode) and backup_stat.st_uid == 0 and stat.S_IMODE(backup_stat.st_mode) == 0o700, 'Backup directory must be root-owned mode 0700.'
+required = ('supervisor.conf', 'shared.env', 'config.php', 'root.crontab', 'root.paused.crontab',
+            'fpm-properties', 'duplicate-worker-enabled', 'deploy-account', 'active-release', 'bundle.sha256')
+for name in required:
+    assert stat.S_ISREG((backup / name).lstat().st_mode), 'Expected a regular backup file without symlinks: ' + name
+for saved, current in (('supervisor.conf', supervisor), ('shared.env', environment), ('config.php', cache)):
+    current = pathlib.Path(current)
+    assert stat.S_ISREG(current.lstat().st_mode), 'Current checkpoint file must be regular: ' + saved
+    assert (backup / saved).read_bytes() == current.read_bytes(), 'Current file differs from the interrupted checkpoint: ' + saved
+assert (backup / 'active-release').read_bytes() == (release + '\n').encode(), 'Active application release differs from the backup.'
+original = (backup / 'root.crontab').read_bytes().splitlines(keepends=True)
+assert sum(line.rstrip(b'\r\n') == old_cron.encode() for line in original) == 1, 'Backup must contain the exact original scheduler once.'
+assert not [line for line in original if line.rstrip(b'\r\n') != old_cron.encode() and not line.lstrip().startswith(b'#')
+            and (b'schedule:run' in line or b'schedule:work' in line)], 'Backup contains another scheduler.'
+paused = b''.join(line for line in original if line.rstrip(b'\r\n') != old_cron.encode())
+assert (backup / 'root.paused.crontab').read_bytes() == paused, 'Paused backup does not preserve the original cron table exactly.'
+assert subprocess.check_output(['crontab', '-u', 'root', '-l']) == paused, 'Live root cron differs from the paused checkpoint.'
+properties = subprocess.check_output(['systemctl', 'show', fpm, '-p', 'FragmentPath', '-p', 'DropInPaths', '-p', 'KillSignal', '-p', 'KillMode', '-p', 'SendSIGKILL', '-p', 'TimeoutStopUSec'])
+assert (backup / 'fpm-properties').read_bytes() == properties, 'PHP-FPM properties differ from the original checkpoint.'
+enabled = subprocess.run(['systemctl', 'is-enabled', duplicate], check=False, stdout=subprocess.PIPE)
+assert enabled.returncode in (0, 1) and (backup / 'duplicate-worker-enabled').read_bytes() == enabled.stdout, 'Duplicate worker enablement differs from the checkpoint.'
+assert (backup / 'deploy-account').read_bytes() == subprocess.check_output(['id', 'ubuntu']), 'Deploy account differs from the checkpoint.'
+expected = {'screening-runtime-entrypoint.sh', 'screening-supervisor-runtime-control.sh', 'check-screening-queue.php'}
+seen = set()
+for line in (backup / 'bundle.sha256').read_text().splitlines():
+    match = re.fullmatch(r'([0-9a-f]{64}) [ *](/[^\r\n]+)', line)
+    assert match, 'Malformed original helper checksum inventory.'
+    digest, original_path = match.groups()
+    name = pathlib.PurePosixPath(original_path).name
+    assert name in expected and name not in seen, 'Unexpected or duplicate helper checksum.'
+    assert hashlib.sha256((bundle / name).read_bytes()).hexdigest() == digest, 'Runtime helper changed since interruption: ' + name
+    seen.add(name)
+assert seen == expected, 'Original helper checksum inventory is incomplete.'
+PY
+  log "Interrupted checkpoint matches the private backup: $BACKUP"
+}
 
 verify_original_configuration() {
   [[ -L "$APP_DIR" && -f "$APP_DIR/artisan" ]] || fail 'Expected the inspected atomic application layout.'
@@ -105,9 +169,12 @@ verify_original_configuration() {
   for source in screening-runtime-entrypoint.sh screening-supervisor-runtime-control.sh check-screening-queue.php; do
     [[ -f "$BUNDLE/$source" && ! -L "$BUNDLE/$source" ]] || fail "Missing regular reviewed bundle file: $source"
   done
-  [[ ! -e "$STATE_DIR" && ! -e "$ENTRYPOINT" && ! -e "$CONTROL" && ! -e "$QUEUE_CHECK" && ! -e "$RUNTIME_CONFIG" ]] \
+  [[ ! -e "$STATE_DIR" && ! -L "$STATE_DIR" && ! -e "$ENTRYPOINT" && ! -L "$ENTRYPOINT" \
+    && ! -e "$CONTROL" && ! -L "$CONTROL" && ! -e "$QUEUE_CHECK" && ! -L "$QUEUE_CHECK" \
+    && ! -e "$RUNTIME_CONFIG" && ! -L "$RUNTIME_CONFIG" ]] \
     || fail 'Runtime setup already exists or is partially installed; inspect the prior private backup instead of rerunning bootstrap.'
-  [[ ! -e /etc/systemd/system/php8.3-fpm.service.d/60-homecare-screening-drain.conf ]] \
+  [[ ! -e /etc/systemd/system/php8.3-fpm.service.d/60-homecare-screening-drain.conf \
+    && ! -L /etc/systemd/system/php8.3-fpm.service.d/60-homecare-screening-drain.conf ]] \
     || fail 'The proposed FPM drop-in already exists; inspect before changing it.'
   getent passwd ubuntu >/dev/null && getent group www-data >/dev/null || fail 'Expected ubuntu and www-data accounts.'
   /usr/bin/php -r 'exit(extension_loaded("pcntl") ? 0 : 1);' || fail 'The worker PHP binary needs pcntl.'
@@ -120,9 +187,9 @@ verify_original_configuration() {
     || fail 'Unexpected FPM stop command or activation source needs separate review.'
   assert_duplicate_inactive
   [[ -f /sys/fs/cgroup/cgroup.controllers ]] || fail 'Expected Linux cgroup v2 on the inspected host.'
-  python3 - "$SUPERVISOR_CONFIG" "$OLD_COMMAND" "$OLD_CRON" <<'PY'
+  python3 - "$SUPERVISOR_CONFIG" "$OLD_COMMAND" "$OLD_CRON" "$RESUMING" <<'PY'
 import configparser, pathlib, subprocess, sys
-path, expected_command, expected_cron = sys.argv[1:]
+path, expected_command, expected_cron, resuming = sys.argv[1:]
 c = configparser.ConfigParser(interpolation=None, strict=True)
 with open(path) as f:
     c.read_file(f)
@@ -135,15 +202,22 @@ assert all(p.get(k, '').strip().lower() == v.lower() for k, v in expected.items(
 assert p.get('process_name', '%(program_name)s_%(process_num)02d') == '%(program_name)s_%(process_num)02d', 'Unexpected Supervisor process naming.'
 assert p.get('stopsignal', 'TERM').upper() in ('TERM', 'SIGTERM'), 'Existing worker stop must use graceful TERM.'
 assert 'environment' not in p, 'Review Supervisor environment overrides before applying.'
-cron = subprocess.check_output(['crontab', '-u', 'root', '-l'], text=True)
-assert cron.splitlines().count(expected_cron) == 1, 'The exact inspected scheduler line must occur once.'
-other = [line for line in cron.splitlines() if line != expected_cron and not line.lstrip().startswith('#')
-         and ('schedule:run' in line or 'schedule:work' in line)]
-assert not other, 'Unexpected additional root scheduler needs review.'
+if resuming == '0':
+    cron = subprocess.check_output(['crontab', '-u', 'root', '-l'], text=True)
+    assert cron.splitlines().count(expected_cron) == 1, 'The exact inspected scheduler line must occur once.'
+    other = [line for line in cron.splitlines() if line != expected_cron and not line.lstrip().startswith('#')
+             and ('schedule:run' in line or 'schedule:work' in line)]
+    assert not other, 'Unexpected additional root scheduler needs review.'
 PY
-  [[ "$(supervisorctl status "$PROCESS" | awk '{print $2}')" == RUNNING ]] || fail 'Expected the inspected Supervisor worker to be running.'
-  LEGACY_PID="$(supervisorctl pid "$PROCESS")"
-  [[ "$LEGACY_PID" =~ ^[1-9][0-9]*$ ]] || fail 'Cannot identify the current worker PID.'
+  if [[ "$RESUMING" -eq 1 ]]; then
+    [[ "$(supervisorctl status "$PROCESS" | awk '{print $2}')" == STOPPED && "$(supervisorctl pid "$PROCESS")" == 0 ]] \
+      || fail 'Resume requires the original Supervisor worker to remain STOPPED/PID 0.'
+    verify_resume_checkpoint
+  else
+    [[ "$(supervisorctl status "$PROCESS" | awk '{print $2}')" == RUNNING ]] || fail 'Expected the inspected Supervisor worker to be running.'
+    LEGACY_PID="$(supervisorctl pid "$PROCESS")"
+    [[ "$LEGACY_PID" =~ ^[1-9][0-9]*$ ]] || fail 'Cannot identify the current worker PID.'
+  fi
   STORAGE_REAL="$(readlink -f -- "$APP_DIR/storage")"
   [[ -d "$STORAGE_REAL" && "$(readlink -f -- "$DEPLOY_ROOT/shared/storage")" == "$STORAGE_REAL" ]] || fail 'Shared durable storage targets differ.'
   [[ ! -L "$STORAGE_REAL/app" && ! -L "$STORAGE_REAL/app/private" && ! -L "$STORAGE_REAL/app/private/screening" ]] \
@@ -164,7 +238,7 @@ PY
 }
 
 verify_original_configuration
-[[ "$MODE" == --apply ]] || { log 'Read-only check complete; no files or service state changed.'; exit 0; }
+[[ "$MODE" == --apply || "$MODE" == --resume ]] || { log 'Read-only check complete; no files or service state changed.'; exit 0; }
 
 exec 9>/var/lock/homecare-screening-setup.lock
 flock -n 9 || fail 'Another setup is already running.'
@@ -192,8 +266,9 @@ exec 8</tmp/homecare-deploy.lock
 flock -n 8 || fail 'An application deployment is already running.'
 verify_original_configuration
 
-BACKUP="/var/backups/homecare-screening-runtime/$(date -u +%Y%m%dT%H%M%SZ)-$$"
-install -d -m 0700 /var/backups/homecare-screening-runtime "$BACKUP"
+if [[ "$RESUMING" -eq 0 ]]; then
+BACKUP="$BACKUP_ROOT/$(date -u +%Y%m%dT%H%M%SZ)-$$"
+install -d -m 0700 "$BACKUP_ROOT" "$BACKUP"
 cp -a -- "$SUPERVISOR_CONFIG" "$BACKUP/supervisor.conf"
 cp -a -- "$SHARED_ENV" "$BACKUP/shared.env"
 cp -a -- "$APP_DIR/bootstrap/cache/config.php" "$BACKUP/config.php"
@@ -203,6 +278,7 @@ systemctl is-enabled "$DUPLICATE_UNIT" > "$BACKUP/duplicate-worker-enabled" || t
 id ubuntu > "$BACKUP/deploy-account"
 printf '%s\n' "$APP_REAL" > "$BACKUP/active-release"
 sha256sum "$BUNDLE/screening-runtime-entrypoint.sh" "$BUNDLE/screening-supervisor-runtime-control.sh" "$BUNDLE/check-screening-queue.php" > "$BACKUP/bundle.sha256"
+fi
 
 on_failure() {
   local status=$?
@@ -213,9 +289,18 @@ on_failure() {
   fi
   exit "$status"
 }
+on_signal() {
+  log "Received $1; setup is interrupted and the private recovery inventory is $BACKUP."
+  exit "$2"
+}
 trap on_failure EXIT
+trap 'on_signal INT 130' INT
+trap 'on_signal TERM 143' TERM
+trap 'on_signal HUP 129' HUP
+log "Private recovery inventory: $BACKUP"
 CHANGED=1
 
+if [[ "$RESUMING" -eq 0 ]]; then
 # Preserve every unrelated root crontab line byte-for-byte.
 python3 - "$BACKUP/root.crontab" "$BACKUP/root.paused.crontab" "$OLD_CRON" <<'PY'
 import pathlib, sys
@@ -226,16 +311,18 @@ pathlib.Path(target).write_bytes(b''.join(line for line in lines if line.rstrip(
 PY
 crontab -u root "$BACKUP/root.paused.crontab"
 CRON_REMOVED_AT=$SECONDS
+fi
 wait_for_legacy_tasks() {
   local reload_wait="$1"
   log 'Waiting naturally for old cron shells and all application Artisan tasks.'
 # Foreground schedule:run retains its child tasks; also wait for independent Artisan tasks.
 # Never dump process environment or arbitrary command arguments.
 python3 - "$APP_DIR" "$APP_REAL" "$reload_wait" <<'PY'
-import os, pathlib, sys, time
+import math, os, pathlib, re, sys, time
 app, real, minimum = sys.argv[1:]
 deadline = time.monotonic() + 1800
 reload_after = time.monotonic() + int(minimum)
+next_progress = 0
 while True:
     found = []
     for p in pathlib.Path('/proc').iterdir():
@@ -247,17 +334,25 @@ while True:
             for i, arg in enumerate(args):
                 old_shell = b'schedule:run' in arg and (app.encode() in arg or real.encode() in arg)
                 if old_shell or arg in ((app + '/artisan').encode(), (real + '/artisan').encode()) or (arg == b'artisan' and cwd in (app, real)):
-                    found.append(p.name)
+                    label = re.sub(r'[^A-Za-z0-9_.-]', '?', (p / 'comm').read_text(errors='replace').strip())[:32]
+                    found.append((p.name, label))
                     break
         except (FileNotFoundError, ProcessLookupError, PermissionError):
             continue
     if not found and time.monotonic() >= reload_after:
+        print('Setup: Old scheduler and Artisan tasks have drained.', flush=True)
         break
+    if time.monotonic() >= next_progress:
+        remaining = max(0, math.ceil(reload_after - time.monotonic()))
+        labels = ', '.join(pid + '/' + label for pid, label in found) or 'none'
+        print('Setup: Waiting naturally; minimum cron reload wait: ' + str(remaining) + 's; matching PID/command labels: ' + labels, flush=True)
+        next_progress = time.monotonic() + 10
     if time.monotonic() >= deadline:
-        raise SystemExit('Artisan tasks remain (PIDs ' + ','.join(found) + '); scheduler remains paused, no task was killed.')
+        raise SystemExit('Artisan tasks remain (PIDs ' + ','.join(pid for pid, _ in found) + '); scheduler remains paused, no task was killed.')
     time.sleep(2)
 PY
 }
+if [[ "$RESUMING" -eq 0 ]]; then
 log 'Stopping the legacy worker gracefully with its existing 3600-second Supervisor stop limit.'
 supervisorctl stop "$PROCESS"
 [[ "$(supervisorctl status "$PROCESS" | awk '{print $2}')" == STOPPED && "$(supervisorctl pid "$PROCESS")" == 0 ]] \
@@ -267,7 +362,12 @@ supervisorctl stop "$PROCESS"
 # No PID is exempt: a worker that restarted before the stop is included as well.
 cron_reload_wait=$((65 - (SECONDS - CRON_REMOVED_AT)))
 if (( cron_reload_wait < 0 )); then cron_reload_wait=0; fi
+else
+  log 'Continuing the verified interrupted checkpoint; the original worker and scheduler remain paused.'
+  cron_reload_wait=65
+fi
 wait_for_legacy_tasks "$cron_reload_wait"
+if [[ "$RESUMING" -eq 1 ]]; then verify_original_configuration; fi
 
 # Prepare a persistent admission barrier before exposing any wrapped entrypoints.
 usermod -a -G www-data ubuntu
