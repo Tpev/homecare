@@ -417,10 +417,16 @@ class CaregiverScreeningQueueTest extends TestCase
         $next = $this->makeCase('legacy', ['screening_legacy_access' => true]);
         $admin = User::factory()->create(['role' => 'admin']);
 
-        Livewire::actingAs($admin)->test(CaregiverReviewsQueue::class)
+        $component = Livewire::actingAs($admin)->test(CaregiverReviewsQueue::class)
             ->call('claim')->call('search')->assertHasNoErrors()
-            ->assertDontSee('aria-label="Potential matches"', false)
-            ->call('decide', 'approve')->assertHasNoErrors()->assertSet('selectedId', $next->id);
+            ->assertDontSee('aria-label="Potential matches"', false);
+        // SQLite preserves insertion order; simulate MySQL normalizing the stored JSON object.
+        $snapshot = $case->fresh()->identity_snapshot;
+        ksort($snapshot);
+        $case->update(['identity_snapshot' => $snapshot]);
+        $this->assertNotSame(app(DiditVerifiedIdentityService::class)->snapshot($profile), $case->fresh()->identity_snapshot);
+
+        $component->call('decide', 'approve')->assertHasNoErrors()->assertSet('selectedId', $next->id);
 
         $this->assertSame('completed', $case->fresh()->status);
         $this->assertSame('approve', $case->fresh()->decision);

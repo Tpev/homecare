@@ -174,7 +174,7 @@ class CaregiverScreeningService
             $this->assertOpen($case);
             $this->assertClaim($case, $admin, $expectedVersion);
             $identity = $this->identity->snapshot($profile);
-            if (! $identity || $identity !== $case->identity_snapshot || $case->search_status !== 'completed') {
+            if (! $identity || ! $this->sameIdentitySnapshot($identity, $case->identity_snapshot) || $case->search_status !== 'completed') {
                 $this->fail('Complete a search using the current verified Didit identity before deciding.');
             }
             try {
@@ -280,6 +280,18 @@ class CaregiverScreeningService
                 'resolution' => $resolution, 'note' => trim($note),
             ]);
         }, 3);
+    }
+
+    private function sameIdentitySnapshot(array $current, ?array $searched): bool
+    {
+        if ($searched === null) {
+            return false;
+        }
+        // MySQL can reorder JSON object keys. Values, types and the full key set must still match.
+        ksort($current);
+        ksort($searched);
+
+        return $current === $searched;
     }
 
     private function normalizeNote(?string $note): string

@@ -13,6 +13,7 @@ use App\Services\Screening\DiditVerifiedIdentityService;
 use App\Services\Screening\ScreeningAuditService;
 use App\Services\Screening\ScreeningMatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -410,18 +411,111 @@ class CaregiverScreeningLifecycleTest extends TestCase
         app(CaregiverScreeningService::class)->decide($case->id, $admin, null, 'approve', '', $case->lock_version);
     }
 
+    public function test_completed_search_can_be_decided_after_database_json_key_reordering(): void
+    {
+        $this->mockSearch();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $service = app(CaregiverScreeningService::class);
+
+        foreach (['approve', 'suspend'] as $decision) {
+            $profile = $this->profile();
+            $case = $service->runSearch($service->enqueue($profile)->id);
+            $identity = $case->identity_snapshot;
+
+            // MySQL JSON storage can reorder object keys; persist that round trip on SQLite too.
+            DB::table('caregiver_screening_cases')->where('id', $case->id)->update([
+                'identity_snapshot' => json_encode(array_reverse($identity, true), JSON_THROW_ON_ERROR),
+            ]);
+            $case->refresh();
+            $this->assertNotSame(array_keys($identity), array_keys($case->identity_snapshot));
+            $this->assertEquals($identity, $case->identity_snapshot);
+            $this->assertSame('completed', $case->search_status);
+
+            $case = $service->claim($case->id, $admin);
+            $service->decide($case->id, $admin, null, $decision, null, $case->lock_version);
+
+            $case->refresh();
+            $this->assertSame('completed', $case->status);
+            $this->assertSame($decision, $case->decision);
+            $this->assertNull($case->outcome);
+            $this->assertSame('', $case->note);
+            $this->assertNull($case->open_profile_id);
+            $this->assertSame($decision === 'approve', app(CaregiverWorkEligibility::class)->allowsNewWork($profile->fresh()));
+            $this->assertSame(1, $case->events()->where('event_type', 'search_completed')->count());
+            $event = $case->events()->where('event_type', 'screening_decided')->sole();
+            $this->assertEquals($identity, $event->payload['identity']);
+            $this->assertSame($decision, $event->payload['decision']);
+            $this->assertNull($event->payload['outcome']);
+            $this->assertSame('', $event->payload['note']);
+        }
+    }
+
     public function test_changed_verified_identity_requires_a_new_search(): void
     {
         $this->mockSearch();
-        $profile = $this->profile();
         $admin = User::factory()->create(['role' => 'admin']);
-        $case = $this->claimedSearch($profile, $admin);
-        $verification = $profile->latestIdentityVerification;
-        $payload = $verification->provider_decision_payload;
-        $payload['decision']['id_verifications'][0]['full_name'] = 'Changed Name';
-        $verification->update(['provider_decision_payload' => $payload]);
-        $this->expectException(ValidationException::class);
-        app(CaregiverScreeningService::class)->decide($case->id, $admin, null, 'approve', '', $case->lock_version);
+
+        foreach (['didit_session_id' => 'replacement-session', 'full_name' => 'Changed Name', 'date_of_birth' => '1981-02-03'] as $field => $value) {
+            $profile = $this->profile();
+            $case = $this->claimedSearch($profile, $admin);
+            $verification = $profile->latestIdentityVerification;
+            if ($field === 'didit_session_id') {
+                $verification->update([$field => $value]);
+            } else {
+                $payload = $verification->provider_decision_payload;
+                $payload['decision']['id_verifications'][0][$field] = $value;
+                $verification->update(['provider_decision_payload' => $payload]);
+            }
+
+            $this->assertIdentityDecisionRejected($case, $profile, $admin);
+        }
+    }
+
+    public function test_identity_comparison_rejects_scalar_type_changes_missing_keys_and_extra_keys(): void
+    {
+        $this->mockSearch();
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        foreach (['scalar_type', 'missing_null_key', 'extra_key', 'null_snapshot'] as $corruption) {
+            $profile = $this->profile();
+            $verification = $profile->latestIdentityVerification;
+            $payload = $verification->provider_decision_payload;
+            $payload['decision']['id_verifications'][0]['date_of_birth'] = null;
+            $verification->update(['provider_decision_payload' => $payload]);
+            $case = $this->claimedSearch($profile, $admin);
+            $identity = array_reverse($case->identity_snapshot, true);
+            if ($corruption === 'scalar_type') {
+                $identity['verification_id'] = (string) $identity['verification_id'];
+            } elseif ($corruption === 'missing_null_key') {
+                unset($identity['date_of_birth']);
+            } elseif ($corruption === 'extra_key') {
+                $identity['unexpected'] = null;
+            } else {
+                $identity = null;
+            }
+            DB::table('caregiver_screening_cases')->where('id', $case->id)->update([
+                'identity_snapshot' => $identity === null ? null : json_encode($identity, JSON_THROW_ON_ERROR),
+            ]);
+
+            $this->assertIdentityDecisionRejected($case, $profile, $admin);
+        }
+    }
+
+    private function assertIdentityDecisionRejected(CaregiverScreeningCase $case, CaregiverProfile $profile, User $admin): void
+    {
+        foreach (['approve', 'suspend'] as $decision) {
+            try {
+                app(CaregiverScreeningService::class)->decide($case->id, $admin, null, $decision, null, $case->lock_version);
+                $this->fail('A decision was accepted without matching current identity evidence.');
+            } catch (ValidationException $exception) {
+                $this->assertSame(['screening' => ['Complete a search using the current verified Didit identity before deciding.']], $exception->errors());
+                $this->assertSame('in_review', $case->fresh()->status);
+                $this->assertNull($case->fresh()->decision);
+                $this->assertNull($case->fresh()->outcome);
+                $this->assertTrue(app(CaregiverWorkEligibility::class)->allowsNewWork($profile->fresh()));
+            }
+        }
+        $this->assertFalse($case->events()->where('event_type', 'screening_decided')->exists());
     }
 
     public function test_audit_files_retry_without_duplicates_and_survive_profile_deletion(): void
