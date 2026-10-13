@@ -37,7 +37,7 @@ with tempfile.TemporaryDirectory(prefix='homecare-resume-fixture-') as directory
     properties = b'FragmentPath=/usr/lib/systemd/system/php8.3-fpm.service\nDropInPaths=\nKillSignal=15\nKillMode=control-group\nSendSIGKILL=yes\nTimeoutStopUSec=1min 30s\n'
     account = b'uid=1000(ubuntu) gid=1000(ubuntu) groups=1000(ubuntu)\n'
     for name in ('supervisor.conf', 'shared.env', 'config.php'):
-        value = ('fixture-secret-' + name + '\n').encode()
+        value = b'APP_KEY=fixture-secret\r\nDB_QUEUE_RETRY_AFTER=90\r\n' if name == 'shared.env' else ('fixture-secret-' + name + '\n').encode()
         (backup / name).write_bytes(value)
         (live / name).write_bytes(value)
     saved = {'root.crontab': original, 'root.paused.crontab': paused,
@@ -68,6 +68,8 @@ def fixture_stat(path, *a, **k):
         values[0] = stat.S_IFMT(result.st_mode) | permissions
         override = FIXTURE.get('metadata', {}).get(path.as_posix(), {})
         if 'uid' in override: values[4] = override['uid']
+        if 'gid' in override: values[5] = override['gid']
+        if 'nlink' in override: values[3] = override['nlink']
         if 'mode' in override: values[0] = override['mode']
         return os.stat_result(values)
     return result
@@ -76,6 +78,7 @@ def check_output(command, **kwargs):
     if command == ['crontab', '-u', 'root', '-l']: return FIXTURE['cron'].encode()
     if command[:3] == ['systemctl', 'show', 'php8.3-fpm.service']: return FIXTURE['fpm'].encode()
     if command == ['id', 'ubuntu']: return FIXTURE['account'].encode()
+    if command == ['getent', 'group', 'www-data']: return FIXTURE.get('webgroup', 'www-data:x:33:\\n').encode()
     raise AssertionError('Unexpected service command: ' + repr(command))
 def run(command, **kwargs):
     assert command == ['systemctl', 'is-enabled', 'homecare-worker.service']
@@ -84,8 +87,9 @@ subprocess.check_output, subprocess.run = check_output, run
 '''
     defaults = dict(base=base.as_posix(), cron=paused.decode(), fpm=properties.decode(),
                     account=account.decode(), enabled='enabled\n')
+    runtime_paths = [live / 'runtime-state', live / 'entrypoint', live / 'control', live / 'queue-check.php', live / 'runtime.conf']
     args = [backup_root, backup, bundle, release, live / 'supervisor.conf', live / 'shared.env',
-            live / 'config.php', old, 'php8.3-fpm.service', 'homecare-worker.service']
+            live / 'config.php', old, 'php8.3-fpm.service', 'homecare-worker.service', 'preinstall', *runtime_paths]
 
     def verify(success=True, changed=None, arguments=None, message=None):
         global checks
@@ -158,10 +162,111 @@ subprocess.check_output, subprocess.run = check_output, run
     verify(False, message='deploy-account')
     missing.write_bytes(account)
 
+    # The later checkpoint is accepted only when the whole closed bootstrap gate
+    # exists, the environment contains the one intended edit, and all remaining
+    # live configuration still equals the private pre-setup backup.
+    state, entrypoint, control, queue_check, runtime_config = runtime_paths
+    state.mkdir()
+    metadata = {}
+    def installed(path, content, mode, uid=0, gid=0):
+        path.write_bytes(content)
+        metadata[path.as_posix()] = dict(mode=0o100000 | mode, uid=uid, gid=gid, nlink=1)
+    metadata[state.as_posix()] = dict(mode=0o040750, uid=1000, gid=33)
+    marker = b'bootstrap incomplete; runtime admission is closed\n'
+    for name, mode in (('start.lock', 0o640), ('run.lock', 0o640), ('operation.lock', 0o600)):
+        installed(state / name, b'', mode, 1000, 33)
+    installed(state / 'paused', marker, 0o640, 1000, 33)
+    (backup / 'paused').write_bytes(marker)
+    for name, target, mode in zip(helpers, (entrypoint, control, queue_check), (0o755, 0o755, 0o644)):
+        installed(target, (bundle / name).read_bytes(), mode)
+    config_start = installer.index("<<'EOF'\n", installer.index('cat > "$BACKUP/runtime.conf"')) + len("<<'EOF'\n")
+    config_bytes = installer[config_start:installer.index('\nEOF\n', config_start)].encode() + b'\n'
+    (backup / 'runtime.conf').write_bytes(config_bytes)
+    installed(runtime_config, config_bytes, 0o640, 0, 33)
+    (live / 'shared.env').write_bytes((backup / 'shared.env').read_bytes().replace(b'RETRY_AFTER=90', b'RETRY_AFTER=180'))
+    bootstrap_args = list(args)
+    bootstrap_args[10] = 'bootstrap'
+    bootstrap_settings = dict(account='uid=1000(ubuntu) gid=1000(ubuntu) groups=33(www-data),1000(ubuntu)\n', metadata=metadata)
+
+    def verify_bootstrap(success=True, changed=None, message=None):
+        settings = dict(bootstrap_settings, **(changed or {}))
+        return verify(success, settings, bootstrap_args, message)
+
+    lock_ids = {path.name: path.stat().st_ino for path in state.iterdir()}
+    verify_bootstrap()
+    verify_bootstrap()
+    assert {path.name: path.stat().st_ino for path in state.iterdir()} == lock_ids
+    checks += 1
+    verify_bootstrap(False, {'cron': original.decode()}, 'Live root cron differs')
+    verify_bootstrap(False, {'fpm': properties.decode() + 'DropInPaths=/changed\n'}, 'PHP-FPM properties differ')
+    verify_bootstrap(False, {'enabled': 'disabled\n', 'enabled_status': 1}, 'enablement differs')
+    for changed_account in (
+        account.decode(),
+        'uid=1001(ubuntu) gid=1000(ubuntu) groups=1000(ubuntu),33(www-data)\n',
+        'uid=1000(ubuntu) gid=1001(ubuntu) groups=1000(ubuntu),33(www-data)\n',
+        'uid=1000(ubuntu) gid=1000(ubuntu) groups=1000(ubuntu),33(www-data),99(unexpected)\n',
+        'uid=1000(ubuntu) gid=1000(ubuntu) groups=33(www-data)\n',
+        'uid=1000(ubuntu) gid=1000(ubuntu) groups=1000(ubuntu),33(www-data),33(www-data)\n',
+    ):
+        verify_bootstrap(False, {'account': changed_account}, 'Deploy account')
+    verify_bootstrap(False, {'webgroup': 'other:x:33:\n'}, 'www-data group')
+    for target, error in (
+        (live / 'supervisor.conf', 'Current file differs'),
+        (live / 'shared.env', 'Current file differs'),
+        (live / 'config.php', 'Current file differs'),
+        (entrypoint, 'Installed runtime helper differs'),
+        (control, 'Installed runtime helper differs'),
+        (queue_check, 'Installed runtime helper differs'),
+        (runtime_config, 'runtime configuration differs'),
+        (backup / 'runtime.conf', 'runtime configuration differs'),
+        (state / 'paused', 'admission marker differs'),
+        (backup / 'paused', 'admission marker differs'),
+        (state / 'start.lock', 'lock contents changed'),
+        (state / 'run.lock', 'lock contents changed'),
+        (state / 'operation.lock', 'lock contents changed'),
+    ):
+        original_bytes = target.read_bytes()
+        target.write_bytes(original_bytes + b'changed\n')
+        verify_bootstrap(False, message=error)
+        target.write_bytes(original_bytes)
+    for target, delta, error in (
+        (state, {'uid': 0}, 'ownership, mode or type differs'),
+        (state, {'mode': 0o040777}, 'ownership, mode or type differs'),
+        (state / 'start.lock', {'uid': 0}, 'ownership, mode or type differs'),
+        (state / 'run.lock', {'gid': 0}, 'ownership, mode or type differs'),
+        (state / 'operation.lock', {'mode': 0o100640}, 'ownership, mode or type differs'),
+        (state / 'paused', {'mode': 0o120640}, 'ownership, mode or type differs'),
+        (entrypoint, {'mode': 0o100777}, 'ownership, mode or type differs'),
+        (control, {'uid': 1000}, 'ownership, mode or type differs'),
+        (queue_check, {'nlink': 2}, 'unexpected hard links'),
+        (runtime_config, {'gid': 0}, 'ownership, mode or type differs'),
+        (backup / 'paused', {'mode': 0o120600}, 'private regular bootstrap backup'),
+        (backup / 'runtime.conf', {'uid': 1000}, 'private regular bootstrap backup'),
+        (live / 'shared.env', {'mode': 0o100644}, 'ownership or mode changed'),
+        (live / 'config.php', {'uid': 33}, 'ownership or mode changed'),
+    ):
+        altered_metadata = dict(metadata)
+        altered_metadata[target.as_posix()] = dict(metadata.get(target.as_posix(), {}), **delta)
+        verify_bootstrap(False, {'metadata': altered_metadata}, error)
+    for target, error in (
+        (state / 'unexpected', 'unexpected or missing entries'),
+        (live / 'config.php.screening-next-123', 'configuration candidate exists'),
+        (live / 'shared.env.screening-next-123', 'environment candidate exists'),
+    ):
+        target.write_bytes(b'leftover')
+        verify_bootstrap(False, message=error)
+        target.unlink()
+    missing = state / 'paused'
+    missing.unlink()
+    verify_bootstrap(False, message='unexpected or missing entries')
+    missing.write_bytes(marker)
+
     # Run the installer's real Bash guards; service status is mocked and no service
-    # command can reach the host. Every partially installed target must fail closed.
-    guard = re.search(r'(?ms)^  \[\[ ! -e "\$STATE_DIR".*?^    \|\| fail .*?\n', installer).group()
+    # command can reach the host. Partial state fails; a complete bootstrap shape
+    # is only eligible for the exact Python validation when explicitly resuming.
+    guard = re.search(r'(?ms)^  if \[\[ ! -e "\$STATE_DIR".*?^  fi\n', installer).group()
     environment = os.environ.copy()
+    environment['RESUMING'] = '0'
     for key in ('STATE_DIR', 'ENTRYPOINT', 'CONTROL', 'QUEUE_CHECK', 'RUNTIME_CONFIG'):
         environment[key] = (base / ('installed-' + key)).as_posix()
     shell_prefix = "set -Eeuo pipefail\nfail() { printf '%s\\n' \"$*\" >&2; exit 1; }\n"
@@ -177,6 +282,45 @@ subprocess.check_output, subprocess.run = check_output, run
         shell(guard, 1)
         target.unlink()
         checks += 1
+    pathlib.Path(environment['STATE_DIR']).mkdir()
+    for key in ('ENTRYPOINT', 'CONTROL', 'QUEUE_CHECK', 'RUNTIME_CONFIG'):
+        pathlib.Path(environment[key]).write_bytes(b'complete shape; byte guards still apply')
+    shell(guard, 1)
+    checks += 1
+    environment['RESUMING'] = '1'
+    shell(guard + '\n[[ "$RESUME_PHASE" == bootstrap ]]')
+    checks += 1
+
+    # Execute the actual continuation branch with all mutating commands poisoned.
+    # A bootstrap recovery must preserve its existing files and lock inodes and
+    # proceed directly to the cache update; recreating them would fail this test.
+    branch_start = installer.index('if [[ "$RESUME_PHASE" == preinstall ]]; then\nusermod')
+    branch_end = installer.index('# Change this one cached value', branch_start)
+    continuation = installer[branch_start:branch_end]
+    before = {path: (path.read_bytes(), path.stat().st_ino) for path in base.rglob('*') if path.is_file()}
+    poisoned = '''RESUME_PHASE=bootstrap
+log() { printf '%s\\n' "$*"; }
+for command in usermod install python3 chown chmod mv rm; do
+    eval "$command() { printf 'Unexpected mutation: %s\\\\n' '$command' >&2; exit 98; }"
+done
+'''
+    result = shell(poisoned + continuation)
+    assert 'Keeping the verified bootstrap gate' in result.stdout
+    assert before == {path: (path.read_bytes(), path.stat().st_ino) for path in base.rglob('*') if path.is_file()}
+    checks += 1
+
+    # The real shell guards pin phase and lock identities between repeated checks.
+    identity_start = installer.index('  if [[ -n "$VERIFIED_RESUME_PHASE"')
+    identity_end = installer.index('\n}\n', identity_start)
+    identity_check = 'verify_identity() {\n' + installer[identity_start:identity_end] + '\n}\nverify_identity\n'
+    identity_environment = dict(environment, STATE_DIR=state.as_posix(), BACKUP=backup.as_posix())
+    initialized = "RESUME_PHASE=bootstrap\nVERIFIED_RESUME_PHASE=''\nRESUME_LOCK_IDENTITIES=''\nlog() { :; }\n"
+    shell(initialized + identity_check + '\n' + identity_check, environment=identity_environment)
+    checks += 1
+    shell(initialized + identity_check + '\nRESUME_PHASE=preinstall\n' + identity_check, 1, identity_environment)
+    checks += 1
+    shell(initialized + identity_check + '\nRESUME_LOCK_IDENTITIES=changed\n' + identity_check, 1, identity_environment)
+    checks += 1
     worker_guard = re.search(r'(?ms)^    \[\[ "\$\(supervisorctl status.*?\n      \|\| fail \'Resume requires.*?\n', installer).group()
     for status, pid, expected in (('STOPPED', '0', 0), ('RUNNING', '12345', 1), ('STOPPED', '12345', 1), ('STARTING', '0', 1)):
         mock_worker = "PROCESS=fixture\nsupervisorctl() { if [[ $1 == status ]]; then printf 'fixture %s\\n' '" + status + "'; else printf '%s\\n' '" + pid + "'; fi; }\n"

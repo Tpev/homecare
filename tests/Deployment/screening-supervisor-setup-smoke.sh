@@ -20,7 +20,8 @@ cron_remove = block('python3 - "$BACKUP/root.crontab"')
 cron_add = block('python3 - "$BACKUP/root.paused.crontab"')
 env_update = block('python3 - "$SHARED_ENV"')
 supervisor_update = block('python3 - "$SUPERVISOR_CONFIG" "$BACKUP/supervisor.wrapped.conf"')
-cache_update = block('sudo -u www-data /usr/bin/php /dev/stdin "$CACHE"', 'PHP')
+cache_update = block('cache_update_code="$(cat', 'PHP')
+cache_invocation = installer[installer.index('cache_update_code="$(cat'):installer.index('chown --reference="$CACHE" "$CACHE_NEXT"')]
 checks = 0
 
 def run(source, args, success=True, prelude=''):
@@ -98,8 +99,25 @@ with tempfile.TemporaryDirectory(prefix='homecare-setup-fixture-') as directory:
 
     fixture = root / 'config.php'
     candidate = root / 'config-next.php'
-    transformer = root / 'transform.php'
-    transformer.write_text(cache_update)
+    # Execute the installer's real Bash/PHP invocation, including its -r argument
+    # handling. Only sudo's user switch is replaced on development hosts; stdin is
+    # unavailable to the program. The former /dev/stdin invocation must fail this.
+    php_environment = os.environ.copy()
+    php_environment.update(HOMECARE_PHP_FIXTURE=php, CACHE=fixture.as_posix(), CACHE_NEXT=candidate.as_posix())
+    sudo_fixture = '''set -Eeuo pipefail
+sudo() {
+    [[ "$#" -eq 7 && "$1" == -u && "$2" == www-data && "$3" == /usr/bin/php && "$4" == -r ]] || {
+        printf 'Unexpected cache PHP invocation.\\n' >&2; return 97;
+    }
+    shift 3
+    "$HOMECARE_PHP_FIXTURE" "$@" < /dev/null
+}
+'''
+    def run_cache():
+        result = subprocess.run([bash, '-c', sudo_fixture + cache_invocation], env=php_environment,
+                                stdin=subprocess.DEVNULL, text=True, capture_output=True)
+        assert 'fixture-secret' not in result.stdout + result.stderr, 'Cache update printed a secret.'
+        return result
     expected = {'queue': {'default': 'database', 'connections': {'database': {'driver': 'database', 'queue': 'default', 'retry_after': 90}}},
                 'view': {'compiled': '/release/specific/views'}, 'app': {'key': 'fixture-secret'},
                 'unrelated': {'boolean': True, 'nested': [1, 2, None]}}
@@ -107,7 +125,7 @@ with tempfile.TemporaryDirectory(prefix='homecare-setup-fixture-') as directory:
         encoded = json.dumps(json.dumps(value))
         fixture.write_text('<?php return json_decode(' + encoded + ', true);')
     write_config(expected)
-    result = subprocess.run([php, str(transformer), str(fixture), str(candidate)], text=True, capture_output=True)
+    result = run_cache()
     assert result.returncode == 0, result.stderr
     assert 'fixture-secret' not in result.stdout + result.stderr
     actual = subprocess.check_output([php, '-r', 'echo json_encode(require $argv[1]);', str(candidate)], text=True)
@@ -116,14 +134,25 @@ with tempfile.TemporaryDirectory(prefix='homecare-setup-fixture-') as directory:
     assert json.loads(actual) == desired
     checks += 1
     # Existing candidate files cannot be overwritten, and unexpected runtime changes fail closed.
-    result = subprocess.run([php, str(transformer), str(fixture), str(candidate)], text=True, capture_output=True)
+    result = run_cache()
     assert result.returncode != 0
     checks += 1
     candidate.unlink()
     expected['queue']['connections']['database']['retry_after'] = 30
     write_config(expected)
-    result = subprocess.run([php, str(transformer), str(fixture), str(candidate)], text=True, capture_output=True)
+    result = run_cache()
     assert result.returncode != 0 and not candidate.exists()
+    checks += 1
+    # Shell metacharacters and spaces in cache paths are data, not new commands.
+    fixture = root / 'config spaces $HOME.php'
+    candidate = root / 'next spaces $HOME.php'
+    php_environment.update(CACHE=fixture.as_posix(), CACHE_NEXT=candidate.as_posix())
+    expected['queue']['connections']['database']['retry_after'] = 180
+    write_config(expected)
+    result = run_cache()
+    assert result.returncode == 0 and candidate.is_file(), result.stdout + result.stderr
+    actual = subprocess.check_output([php, '-r', 'echo json_encode(require $argv[1]);', str(candidate)], text=True)
+    assert json.loads(actual) == expected
     checks += 1
 
 # Structural regression checks for critical ordering, without invoking production paths.
@@ -140,6 +169,7 @@ assert 'p.name == exempt' not in installer
 assert installer.index('sudo -u www-data /usr/bin/php "$QUEUE_CHECK" "$CACHE" 120') < installer.index('supervisorctl update homecare-worker')
 assert "sudo -u www-data /usr/bin/php -r '\n    $c = require $argv[1];" in installer
 assert 'umask(0077);' in cache_update
+assert '/dev/stdin' not in cache_invocation and 'sudo -u www-data /usr/bin/php -r "$cache_update_code" "$CACHE" "$CACHE_NEXT"' in cache_invocation
 assert 'systemctl reset-failed "$DUPLICATE_UNIT"' in installer
 assert not re.search(r'^\s*(?:sudo\s+)?(?:php|\$PHP_BIN|"\$PHP_BIN")\s+artisan\s', installer, re.M)
 assert 'screening:import' not in installer and '--refresh-identities' not in installer

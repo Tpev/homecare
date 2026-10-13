@@ -25,6 +25,9 @@ BACKUP=''
 BACKUP_ROOT=/var/backups/homecare-screening-runtime
 CHANGED=0
 RESUMING=0
+RESUME_PHASE=preinstall
+VERIFIED_RESUME_PHASE=''
+RESUME_LOCK_IDENTITIES=''
 
 fail() { printf 'Setup: %s\n' "$*" >&2; exit 1; }
 log() { printf 'Setup: %s\n' "$*"; }
@@ -75,8 +78,9 @@ screening-supervisor-runtime-control.sh, and check-screening-queue.php.
 Apply temporarily pauses scheduled work and gracefully stops the current worker.
 Its EXISTING Supervisor settings permit SIGKILL after 3600 seconds. Do not use
 apply if a job may exceed that limit. New runtime drains never force-kill work.
-Resume accepts only the unchanged checkpoint after the old scheduler and worker
-were paused, before runtime installation began. Resume-check is read-only.
+Resume accepts the verified paused checkpoint before runtime installation, or
+the exact bootstrap gate checkpoint before the cached queue update. It preserves
+installed admission locks and the closed gate. Resume-check is read-only.
 This script does not deploy, change the application symlink, boot Laravel,
 run migrations, import datasets, or backfill Didit.
 EOF
@@ -111,9 +115,12 @@ done
 
 verify_resume_checkpoint() {
   python3 - "$BACKUP_ROOT" "$BACKUP" "$BUNDLE" "$APP_REAL" "$SUPERVISOR_CONFIG" "$SHARED_ENV" \
-    "$APP_DIR/bootstrap/cache/config.php" "$OLD_CRON" "$FPM_SERVICE" "$DUPLICATE_UNIT" <<'PY'
+    "$APP_DIR/bootstrap/cache/config.php" "$OLD_CRON" "$FPM_SERVICE" "$DUPLICATE_UNIT" \
+    "$RESUME_PHASE" "$STATE_DIR" "$ENTRYPOINT" "$CONTROL" "$QUEUE_CHECK" "$RUNTIME_CONFIG" <<'PY'
 import hashlib, pathlib, re, stat, subprocess, sys
-root_name, backup_name, bundle_name, release, supervisor, environment, cache, old_cron, fpm, duplicate = sys.argv[1:]
+(root_name, backup_name, bundle_name, release, supervisor, environment, cache, old_cron, fpm, duplicate,
+ phase, state_name, entrypoint, control, queue_check, runtime_config) = sys.argv[1:]
+assert phase in ('preinstall', 'bootstrap'), 'Unsupported interrupted setup phase.'
 root, backup, bundle = map(pathlib.Path, (root_name, backup_name, bundle_name))
 assert root.is_absolute() and root.resolve(strict=True) == root, 'Backup root must be canonical without symlink ancestors.'
 root_stat = root.lstat()
@@ -128,7 +135,25 @@ for name in required:
 for saved, current in (('supervisor.conf', supervisor), ('shared.env', environment), ('config.php', cache)):
     current = pathlib.Path(current)
     assert stat.S_ISREG(current.lstat().st_mode), 'Current checkpoint file must be regular: ' + saved
-    assert (backup / saved).read_bytes() == current.read_bytes(), 'Current file differs from the interrupted checkpoint: ' + saved
+    expected_bytes = (backup / saved).read_bytes()
+    if phase == 'bootstrap' and saved == 'shared.env':
+        lines = expected_bytes.splitlines(keepends=True)
+        key = re.compile(rb'^\s*(?:export\s+)?DB_QUEUE_RETRY_AFTER\s*=')
+        hits = [i for i, line in enumerate(lines) if key.match(line)]
+        assert len(hits) <= 1, 'Duplicate original retry keys need review.'
+        if hits:
+            i = hits[0]
+            ending = b'\r\n' if lines[i].endswith(b'\r\n') else b'\n'
+            lines[i] = b'DB_QUEUE_RETRY_AFTER=180' + ending
+        else:
+            if lines and not lines[-1].endswith(b'\n'):
+                lines[-1] += b'\n'
+            lines.append(b'DB_QUEUE_RETRY_AFTER=180\n')
+        expected_bytes = b''.join(lines)
+    assert expected_bytes == current.read_bytes(), 'Current file differs from the interrupted checkpoint: ' + saved
+    if phase == 'bootstrap':
+        original_stat, current_stat = (backup / saved).lstat(), current.lstat()
+        assert (original_stat.st_uid, original_stat.st_gid, stat.S_IMODE(original_stat.st_mode)) == (current_stat.st_uid, current_stat.st_gid, stat.S_IMODE(current_stat.st_mode)), 'Checkpoint file ownership or mode changed: ' + saved
 assert (backup / 'active-release').read_bytes() == (release + '\n').encode(), 'Active application release differs from the backup.'
 original = (backup / 'root.crontab').read_bytes().splitlines(keepends=True)
 assert sum(line.rstrip(b'\r\n') == old_cron.encode() for line in original) == 1, 'Backup must contain the exact original scheduler once.'
@@ -141,7 +166,25 @@ properties = subprocess.check_output(['systemctl', 'show', fpm, '-p', 'FragmentP
 assert (backup / 'fpm-properties').read_bytes() == properties, 'PHP-FPM properties differ from the original checkpoint.'
 enabled = subprocess.run(['systemctl', 'is-enabled', duplicate], check=False, stdout=subprocess.PIPE)
 assert enabled.returncode in (0, 1) and (backup / 'duplicate-worker-enabled').read_bytes() == enabled.stdout, 'Duplicate worker enablement differs from the checkpoint.'
-assert (backup / 'deploy-account').read_bytes() == subprocess.check_output(['id', 'ubuntu']), 'Deploy account differs from the checkpoint.'
+original_account = (backup / 'deploy-account').read_bytes()
+current_account = subprocess.check_output(['id', 'ubuntu'])
+if phase == 'preinstall':
+    assert original_account == current_account, 'Deploy account differs from the checkpoint.'
+else:
+    def account(value):
+        match = re.fullmatch(rb'uid=(\d+)\(ubuntu\) gid=(\d+)\(([^\r\n()]+)\) groups=([^\r\n]+)\n', value)
+        assert match, 'Deploy account output does not match the inspected identity format.'
+        uid, gid, group_name, group_list = match.groups()
+        groups = group_list.split(b',')
+        assert all(re.fullmatch(rb'\d+\([^\r\n(),]+\)', item) for item in groups) and len(set(groups)) == len(groups), 'Deploy account groups are malformed.'
+        return (int(uid), int(gid), group_name), set(groups)
+    original_identity, original_groups = account(original_account)
+    current_identity, current_groups = account(current_account)
+    web_group = subprocess.check_output(['getent', 'group', 'www-data']).strip().split(b':')
+    assert len(web_group) == 4 and web_group[0] == b'www-data' and web_group[2].isdigit(), 'Cannot verify the www-data group.'
+    web_gid = int(web_group[2])
+    assert original_identity == current_identity and current_groups == original_groups | {web_group[2] + b'(www-data)'}, 'Deploy account differs beyond the expected www-data membership.'
+    deploy_uid = current_identity[0]
 expected = {'screening-runtime-entrypoint.sh', 'screening-supervisor-runtime-control.sh', 'check-screening-queue.php'}
 seen = set()
 for line in (backup / 'bundle.sha256').read_text().splitlines():
@@ -153,8 +196,58 @@ for line in (backup / 'bundle.sha256').read_text().splitlines():
     assert hashlib.sha256((bundle / name).read_bytes()).hexdigest() == digest, 'Runtime helper changed since interruption: ' + name
     seen.add(name)
 assert seen == expected, 'Original helper checksum inventory is incomplete.'
+if phase == 'bootstrap':
+    def installed(path, mode, uid, gid, directory=False):
+        path = pathlib.Path(path)
+        assert path.resolve(strict=True) == path, 'Installed checkpoint path traverses a symlink: ' + str(path)
+        metadata = path.lstat()
+        correct_type = stat.S_ISDIR(metadata.st_mode) if directory else stat.S_ISREG(metadata.st_mode)
+        assert correct_type and (metadata.st_uid, metadata.st_gid, stat.S_IMODE(metadata.st_mode)) == (uid, gid, mode), 'Installed checkpoint ownership, mode or type differs: ' + str(path)
+        if not directory:
+            assert metadata.st_nlink == 1, 'Installed checkpoint file has unexpected hard links: ' + str(path)
+        return path
+    state = installed(state_name, 0o750, deploy_uid, web_gid, directory=True)
+    assert {child.name for child in state.iterdir()} == {'start.lock', 'run.lock', 'operation.lock', 'paused'}, 'Bootstrap runtime state contains unexpected or missing entries.'
+    for name, mode in (('start.lock', 0o640), ('run.lock', 0o640), ('operation.lock', 0o600)):
+        path = installed(state / name, mode, deploy_uid, web_gid)
+        assert path.read_bytes() == b'', 'Bootstrap lock contents changed: ' + name
+    marker = b'bootstrap incomplete; runtime admission is closed\n'
+    for name in ('paused', 'runtime.conf'):
+        metadata = (backup / name).lstat()
+        assert stat.S_ISREG(metadata.st_mode) and metadata.st_uid == 0 and stat.S_IMODE(metadata.st_mode) == 0o600, 'Expected a private regular bootstrap backup: ' + name
+    assert (backup / 'paused').read_bytes() == marker and installed(state / 'paused', 0o640, deploy_uid, web_gid).read_bytes() == marker, 'Bootstrap admission marker differs from the closed checkpoint.'
+    for name, target, mode in (
+        ('screening-runtime-entrypoint.sh', entrypoint, 0o755),
+        ('screening-supervisor-runtime-control.sh', control, 0o755),
+        ('check-screening-queue.php', queue_check, 0o644),
+    ):
+        assert installed(target, mode, 0, 0).read_bytes() == (bundle / name).read_bytes(), 'Installed runtime helper differs from the original checkpoint: ' + name
+    expected_config = b'''STATE_DIR=/var/lib/homecare-runtime
+ENTRYPOINT=/usr/local/libexec/homecare-runtime-entrypoint
+PHP_BIN=/usr/bin/php
+QUEUE_CHECK=/usr/local/libexec/homecare-screening-queue-check.php
+SUPERVISOR_CONFIG=/etc/supervisor/conf.d/homecare-worker.conf
+DRAIN_TIMEOUT=1800
+DEPLOY_USER=ubuntu
+WEB_GROUP=www-data
+SUPERVISOR_AND_ROOT_CRON_CONFIRMED=yes
+'''
+    assert (backup / 'runtime.conf').read_bytes() == expected_config and installed(runtime_config, 0o640, 0, web_gid).read_bytes() == expected_config, 'Bootstrap runtime configuration differs from the checkpoint.'
+    assert not list(pathlib.Path(cache).parent.glob(pathlib.Path(cache).name + '.screening-next-*')), 'A cached configuration candidate exists; inspect it before recovery.'
+    assert not list(pathlib.Path(environment).parent.glob(pathlib.Path(environment).name + '.screening-next-*')), 'An environment candidate exists; inspect it before recovery.'
 PY
-  log "Interrupted checkpoint matches the private backup: $BACKUP"
+  if [[ -n "$VERIFIED_RESUME_PHASE" && "$VERIFIED_RESUME_PHASE" != "$RESUME_PHASE" ]]; then
+    fail 'Interrupted checkpoint phase changed while recovery was checking it.'
+  fi
+  VERIFIED_RESUME_PHASE="$RESUME_PHASE"
+  if [[ "$RESUME_PHASE" == bootstrap ]]; then
+    local identities
+    identities="$(stat -c '%d:%i' -- "$STATE_DIR/start.lock" "$STATE_DIR/run.lock" "$STATE_DIR/operation.lock" "$STATE_DIR/paused")"
+    [[ -z "$RESUME_LOCK_IDENTITIES" || "$RESUME_LOCK_IDENTITIES" == "$identities" ]] \
+      || fail 'Bootstrap admission lock or marker identities changed during recovery.'
+    RESUME_LOCK_IDENTITIES="$identities"
+  fi
+  log "Interrupted $RESUME_PHASE checkpoint matches the private backup: $BACKUP"
 }
 
 verify_original_configuration() {
@@ -169,10 +262,17 @@ verify_original_configuration() {
   for source in screening-runtime-entrypoint.sh screening-supervisor-runtime-control.sh check-screening-queue.php; do
     [[ -f "$BUNDLE/$source" && ! -L "$BUNDLE/$source" ]] || fail "Missing regular reviewed bundle file: $source"
   done
-  [[ ! -e "$STATE_DIR" && ! -L "$STATE_DIR" && ! -e "$ENTRYPOINT" && ! -L "$ENTRYPOINT" \
+  if [[ ! -e "$STATE_DIR" && ! -L "$STATE_DIR" && ! -e "$ENTRYPOINT" && ! -L "$ENTRYPOINT" \
     && ! -e "$CONTROL" && ! -L "$CONTROL" && ! -e "$QUEUE_CHECK" && ! -L "$QUEUE_CHECK" \
-    && ! -e "$RUNTIME_CONFIG" && ! -L "$RUNTIME_CONFIG" ]] \
-    || fail 'Runtime setup already exists or is partially installed; inspect the prior private backup instead of rerunning bootstrap.'
+    && ! -e "$RUNTIME_CONFIG" && ! -L "$RUNTIME_CONFIG" ]]; then
+    RESUME_PHASE=preinstall
+  elif [[ "$RESUMING" -eq 1 && -d "$STATE_DIR" && ! -L "$STATE_DIR" \
+    && -f "$ENTRYPOINT" && ! -L "$ENTRYPOINT" && -f "$CONTROL" && ! -L "$CONTROL" \
+    && -f "$QUEUE_CHECK" && ! -L "$QUEUE_CHECK" && -f "$RUNTIME_CONFIG" && ! -L "$RUNTIME_CONFIG" ]]; then
+    RESUME_PHASE=bootstrap
+  else
+    fail 'Runtime setup already exists or is partially installed; only a verified interrupted checkpoint may resume.'
+  fi
   [[ ! -e /etc/systemd/system/php8.3-fpm.service.d/60-homecare-screening-drain.conf \
     && ! -L /etc/systemd/system/php8.3-fpm.service.d/60-homecare-screening-drain.conf ]] \
     || fail 'The proposed FPM drop-in already exists; inspect before changing it.'
@@ -370,6 +470,7 @@ wait_for_legacy_tasks "$cron_reload_wait"
 if [[ "$RESUMING" -eq 1 ]]; then verify_original_configuration; fi
 
 # Prepare a persistent admission barrier before exposing any wrapped entrypoints.
+if [[ "$RESUME_PHASE" == preinstall ]]; then
 usermod -a -G www-data ubuntu
 install -d -m 0755 -o root -g root /usr/local/libexec /etc/homecare
 install -d -m 0750 -o ubuntu -g www-data "$STATE_DIR"
@@ -420,12 +521,16 @@ os.chown(temporary, original.st_uid, original.st_gid)
 os.chmod(temporary, stat.S_IMODE(original.st_mode))
 os.replace(temporary, path)
 PY
+else
+  log 'Keeping the verified bootstrap gate, installed helpers and admission lock identities; continuing at the cached queue update.'
+fi
 
 # Change this one cached value without booting Laravel or rebuilding live view paths.
 CACHE="$APP_DIR/bootstrap/cache/config.php"
 CACHE_NEXT="$CACHE.screening-next-$$"
-sudo -u www-data /usr/bin/php /dev/stdin "$CACHE" "$CACHE_NEXT" <<'PHP'
-<?php
+# Pass the static PHP program as an argument: a switched user cannot reliably
+# reopen the root shell's here-document through /dev/stdin on Linux.
+cache_update_code="$(cat <<'PHP'
 umask(0077);
 $path = $argv[1];
 $next = $argv[2];
@@ -447,6 +552,9 @@ if (fwrite($file, $body) !== strlen($body) || !fflush($file) || !fsync($file)) {
 fclose($file);
 if ((require $next) !== $after) { throw new RuntimeException('Candidate configuration changed unexpectedly.'); }
 PHP
+)"
+sudo -u www-data /usr/bin/php -r "$cache_update_code" "$CACHE" "$CACHE_NEXT"
+unset cache_update_code
 chown --reference="$CACHE" "$CACHE_NEXT"
 chmod --reference="$CACHE" "$CACHE_NEXT"
 mv -T -- "$CACHE_NEXT" "$CACHE"
