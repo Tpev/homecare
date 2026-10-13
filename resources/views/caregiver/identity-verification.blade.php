@@ -19,6 +19,7 @@
             'declined' => 'Declined',
             'abandoned' => 'Abandoned',
             'expired' => 'Expired',
+            'kyc_expired' => 'Verification expired',
             'error' => 'Error',
             default => 'Not started',
         };
@@ -26,6 +27,7 @@
         $statusColor = match ($profile->identity_verification_status) {
             'approved' => 'green',
             'in_review' => 'yellow',
+            'kyc_expired' => 'yellow',
             'in_progress' => 'blue',
             'declined', 'abandoned', 'expired', 'error' => 'red',
             default => 'slate',
@@ -66,10 +68,18 @@
                 <form method="POST" action="{{ route('caregiver.verification.session') }}">
                     @csrf
                     <x-button color="blue" type="submit">
-                        {{ $profile->identity_verification_status === 'approved' ? 'Start new verification' : 'Start verification' }}
+                        {{ match ($profile->identity_verification_status) {
+                            'kyc_expired' => 'Renew verification',
+                            'approved' => 'Start new verification',
+                            default => 'Start verification',
+                        } }}
                     </x-button>
                 </form>
             </div>
+
+            @if ($profile->identity_verification_status === 'kyc_expired')
+                <x-alert color="yellow">Your previous identity verification has expired. Please renew it so your screening review can proceed.</x-alert>
+            @endif
 
             <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
                 You will be redirected to Didit to scan your ID and take a selfie. Results are synced automatically in a few seconds.

@@ -97,6 +97,7 @@ class DiditWebhookController extends Controller
                 CaregiverIdentityVerification::STATUS_IN_REVIEW => 'identity_auto_in_review',
                 CaregiverIdentityVerification::STATUS_ABANDONED => 'identity_auto_abandoned',
                 CaregiverIdentityVerification::STATUS_EXPIRED => 'identity_auto_expired',
+                CaregiverIdentityVerification::STATUS_KYC_EXPIRED => 'identity_auto_kyc_expired',
                 default => null,
             };
 

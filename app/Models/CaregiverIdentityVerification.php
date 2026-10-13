@@ -24,6 +24,8 @@ class CaregiverIdentityVerification extends Model
 
     public const STATUS_EXPIRED = 'expired';
 
+    public const STATUS_KYC_EXPIRED = 'kyc_expired';
+
     public const STATUS_ERROR = 'error';
 
     protected $fillable = [
@@ -71,6 +73,7 @@ class CaregiverIdentityVerification extends Model
             'in progress' => self::STATUS_IN_PROGRESS,
             'abandoned' => self::STATUS_ABANDONED,
             'expired' => self::STATUS_EXPIRED,
+            'kyc expired' => self::STATUS_KYC_EXPIRED,
             'not started' => self::STATUS_NOT_STARTED,
             default => self::STATUS_ERROR,
         };

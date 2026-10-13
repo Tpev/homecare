@@ -5,8 +5,11 @@ namespace Tests\Feature\Caregiver;
 use App\Models\CaregiverIdentityVerification;
 use App\Models\CaregiverProfile;
 use App\Models\User;
+use App\Services\Screening\CaregiverWorkEligibility;
+use App\Services\Screening\DiditVerifiedIdentityService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class DiditIdentityVerificationTest extends TestCase
@@ -156,6 +159,100 @@ class DiditIdentityVerificationTest extends TestCase
             'caregiver_profile_id' => $profile->id,
             'action' => 'identity_auto_verified',
         ]);
+    }
+
+    public function test_kyc_expired_webhook_preserves_legacy_access_and_prior_verification_history(): void
+    {
+        Queue::fake();
+        config()->set('services.didit.webhook_secret', 'webhook-secret');
+        $approvedAt = now()->subYear()->startOfSecond();
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        $profile = CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'active',
+            'screening_legacy_access' => true,
+            'identity_verification_status' => 'approved',
+            'identity_verification_session_id' => 'sess_kyc_expired',
+            'identity_verified_at' => $approvedAt,
+        ]);
+        $verification = CaregiverIdentityVerification::query()->create([
+            'caregiver_profile_id' => $profile->id,
+            'user_id' => $caregiver->id,
+            'didit_session_id' => 'sess_kyc_expired',
+            'status' => 'approved',
+            'approved_at' => $approvedAt,
+            'completed_at' => $approvedAt,
+            'provider_confirmed_at' => $approvedAt,
+            'provider_decision_payload' => ['status' => 'Approved', 'decision' => [
+                'id_verification' => ['status' => 'Approved', 'first_name' => 'Jane', 'last_name' => 'Doe'],
+            ]],
+        ]);
+        $this->assertNotNull(app(DiditVerifiedIdentityService::class)->snapshot($profile));
+
+        $payload = ['session_id' => 'sess_kyc_expired', 'status' => 'Kyc Expired'];
+        $signature = hash_hmac('sha256', json_encode($payload, JSON_UNESCAPED_SLASHES), 'webhook-secret');
+        $this->postJson(route('webhooks.didit.identity'), $payload, ['X-Signature-V2' => $signature])->assertOk();
+
+        $profile->refresh();
+        $verification->refresh();
+        $this->assertSame('kyc_expired', $profile->identity_verification_status);
+        $this->assertSame('kyc_expired', $verification->status);
+        $this->assertSame('Kyc Expired', $verification->provider_decision_payload['status']);
+        $this->assertTrue($verification->approved_at->equalTo($approvedAt));
+        $this->assertTrue($verification->completed_at->equalTo($approvedAt));
+        $this->assertTrue($profile->identity_verified_at->equalTo($approvedAt));
+        $this->assertNull(app(DiditVerifiedIdentityService::class)->snapshot($profile));
+        $this->assertSame('active', $profile->status);
+        $this->assertTrue($profile->screening_legacy_access);
+        $this->assertNull($profile->screening_suspended_at);
+        $this->assertNull($profile->screening_initial_approved_at);
+        $this->assertTrue(app(CaregiverWorkEligibility::class)->allowsNewWork($profile));
+        $this->assertDatabaseHas('caregiver_moderation_logs', [
+            'caregiver_profile_id' => $profile->id,
+            'action' => 'identity_auto_kyc_expired',
+        ]);
+        Queue::assertNothingPushed();
+    }
+
+    public function test_caregiver_can_renew_expired_kyc_without_losing_legacy_access(): void
+    {
+        config()->set('services.didit.api_key', 'test-key');
+        config()->set('services.didit.workflow_id', 'workflow-123');
+        config()->set('services.didit.base_url', 'https://verification.didit.me');
+        Http::fake([
+            'https://verification.didit.me/v3/session/*' => Http::response([
+                'session_id' => 'sess_renewed',
+                'verification_url' => 'https://verify.didit.me/session/sess_renewed',
+                'status' => 'Not Started',
+            ], 201),
+        ]);
+        $caregiver = User::factory()->create(['role' => 'caregiver']);
+        $profile = CaregiverProfile::query()->create([
+            'user_id' => $caregiver->id,
+            'status' => 'active',
+            'screening_legacy_access' => true,
+            'identity_verification_status' => 'kyc_expired',
+            'identity_verification_session_id' => 'sess_old_kyc',
+            'identity_verified_at' => now()->subYear(),
+        ]);
+        $old = CaregiverIdentityVerification::query()->create([
+            'caregiver_profile_id' => $profile->id,
+            'user_id' => $caregiver->id,
+            'didit_session_id' => 'sess_old_kyc',
+            'status' => 'kyc_expired',
+        ]);
+
+        $this->actingAs($caregiver)->get(route('caregiver.verification.show'))
+            ->assertOk()->assertSee('Verification expired')->assertSee('Renew verification');
+        $this->post(route('caregiver.verification.session'))
+            ->assertRedirect('https://verify.didit.me/session/sess_renewed');
+
+        $profile->refresh();
+        $this->assertSame('sess_renewed', $profile->identity_verification_session_id);
+        $this->assertSame('not_started', $profile->identity_verification_status);
+        $this->assertSame('kyc_expired', $old->fresh()->status);
+        $this->assertTrue(app(CaregiverWorkEligibility::class)->allowsNewWork($profile));
+        $this->assertNull(app(DiditVerifiedIdentityService::class)->snapshot($profile));
     }
 
     public function test_didit_webhook_rejects_invalid_signature(): void

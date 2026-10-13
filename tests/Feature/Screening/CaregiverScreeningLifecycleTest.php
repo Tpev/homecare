@@ -14,6 +14,7 @@ use App\Services\Screening\ScreeningAuditService;
 use App\Services\Screening\ScreeningMatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Validation\ValidationException;
 use Mockery\MockInterface;
@@ -105,6 +106,89 @@ class CaregiverScreeningLifecycleTest extends TestCase
         $this->assertSame('awaiting_kyc', $case->status);
         $this->assertTrue(app(CaregiverWorkEligibility::class)->allowsNewWork($profile->fresh()));
         $this->assertNull($case->identity_snapshot);
+    }
+
+    public function test_kyc_expired_backfill_repairs_the_unknown_status_without_revoking_legacy_access(): void
+    {
+        $profile = $this->profile();
+        $verifiedAt = $profile->identity_verified_at;
+        $case = $this->backfillExpiredKyc($profile);
+
+        $this->assertSame('legacy', $case->kind);
+        $this->assertTrue($profile->fresh()->screening_legacy_access);
+        $this->assertTrue(app(CaregiverWorkEligibility::class)->allowsNewWork($profile->fresh()));
+        $this->assertTrue($verifiedAt->equalTo($profile->fresh()->identity_verified_at));
+        $this->assertNull($profile->fresh()->screening_initial_approved_at);
+
+        $this->artisan('screening:sync', ['--refresh-identities' => true])->assertSuccessful();
+        $this->assertDatabaseCount('caregiver_screening_cases', 1);
+        $this->assertSame('awaiting_kyc', $case->fresh()->status);
+        Queue::assertNothingPushed();
+    }
+
+    public function test_kyc_expired_backfill_does_not_approve_a_new_caregiver_from_an_old_approved_document(): void
+    {
+        $profile = $this->profile(['screening_legacy_at' => null, 'screening_legacy_access' => false]);
+        $case = $this->backfillExpiredKyc($profile);
+
+        $this->assertSame('initial', $case->kind);
+        $this->assertFalse($profile->fresh()->screening_legacy_access);
+        $this->assertNull($profile->fresh()->screening_initial_approved_at);
+        $this->assertFalse(app(CaregiverWorkEligibility::class)->allowsNewWork($profile->fresh()));
+    }
+
+    public function test_kyc_expired_backfill_does_not_block_an_approved_nonlegacy_caregivers_recurring_review(): void
+    {
+        $approvedAt = now()->subMonths(7)->startOfDay();
+        $dueAt = now()->subMonth()->startOfDay();
+        $profile = $this->profile(['screening_legacy_at' => null, 'screening_legacy_access' => false,
+            'screening_initial_approved_at' => $approvedAt, 'screening_next_due_at' => $dueAt]);
+        CaregiverScreeningCase::create(['caregiver_profile_id' => $profile->id, 'caregiver_user_id' => $profile->user_id,
+            'kind' => 'initial', 'status' => 'completed', 'decision' => 'approve', 'due_at' => $approvedAt, 'completed_at' => $approvedAt]);
+        $case = $this->backfillExpiredKyc($profile);
+
+        $this->assertSame('recurring', $case->kind);
+        $this->assertFalse($profile->fresh()->screening_legacy_access);
+        $this->assertTrue($approvedAt->equalTo($profile->fresh()->screening_initial_approved_at));
+        $this->assertTrue($dueAt->equalTo($profile->fresh()->screening_next_due_at));
+        $this->assertTrue(app(CaregiverWorkEligibility::class)->allowsNewWork($profile->fresh()));
+    }
+
+    private function backfillExpiredKyc(CaregiverProfile $profile): CaregiverScreeningCase
+    {
+        config(['services.didit.api_key' => 'test-key', 'services.didit.base_url' => 'https://verification.didit.me']);
+        $verification = $profile->latestIdentityVerification;
+        $approvedAt = $verification->approved_at;
+        $response = $verification->provider_decision_payload;
+        $response['session_id'] = $verification->didit_session_id;
+        $response['status'] = 'Kyc Expired';
+        $verification->update(['status' => 'error']);
+        $profile->update(['identity_verification_status' => 'error', 'identity_verification_session_id' => $verification->didit_session_id]);
+        Http::preventStrayRequests();
+        Http::fake(['https://verification.didit.me/v3/session/'.$verification->didit_session_id.'/decision/' => Http::response($response)]);
+
+        $this->artisan('screening:sync', ['--refresh-identities' => true])->assertSuccessful();
+
+        $this->assertSame(CaregiverIdentityVerification::STATUS_KYC_EXPIRED, $verification->fresh()->status);
+        $this->assertSame(CaregiverIdentityVerification::STATUS_KYC_EXPIRED, $profile->fresh()->identity_verification_status);
+        $this->assertSame($response, $verification->fresh()->provider_decision_payload);
+        $this->assertNotNull($verification->fresh()->provider_confirmed_at);
+        $this->assertTrue($approvedAt->equalTo($verification->fresh()->approved_at));
+        $this->assertNull(app(DiditVerifiedIdentityService::class)->snapshot($profile->fresh()));
+        $this->assertSame('active', $profile->fresh()->status);
+        $this->assertNull($profile->fresh()->screening_suspended_at);
+        $case = CaregiverScreeningCase::where('open_profile_id', $profile->id)->sole();
+        $this->assertSame('awaiting_kyc', $case->status);
+        $this->assertSame('pending', $case->search_status);
+        $this->assertNull($case->identity_snapshot);
+        $this->assertNull($case->outcome);
+        $this->assertNull($case->decision);
+        $event = ScreeningAuditEvent::where('event_type', 'didit_reconciled')->sole();
+        $this->assertSame($profile->id, $event->payload['caregiver_profile_id']);
+        $this->assertSame('kyc_expired', $event->payload['status']);
+        Queue::assertNothingPushed();
+
+        return $case;
     }
 
     public function test_admin_override_and_bypass_do_not_count_as_successful_didit(): void
