@@ -2,6 +2,8 @@
 
 return [
     'required_sources' => ['nc_dac', 'nc_sbi'],
+    // Enable scheduled bulk imports only after validating capacity and the first imports.
+    'auto_refresh_enabled' => (bool) env('SCREENING_AUTO_REFRESH_ENABLED', false),
     'max_age_days' => (int) env('SCREENING_MAX_AGE_DAYS', 14),
     'max_candidates' => 1000,
     'max_download_bytes' => 536870912,

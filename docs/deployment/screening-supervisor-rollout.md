@@ -200,7 +200,7 @@ Check and setup leave `/var/www/homecare/deploy.sh` on the old active release. F
 
 This command performs a real deployment and fetches the current remote `master`; confirm that branch contains the intended reviewed application release before authorizing it. Do not run it as part of the read-only check. Once a release containing the new driver is active, later deployments can use `/var/www/homecare/deploy.sh` normally.
 
-Dataset imports and `screening:sync --refresh-identities` are separate, deliberately scheduled operations from [the screening runbook](../caregiver-screening.md). Do not add either to this setup script or the deployment critical path.
+Dataset imports and `screening:sync --refresh-identities` are separate, deliberately scheduled operations from [the screening runbook](../caregiver-screening.md). Do not add either to this setup script or the deployment critical path. Scheduled bulk refresh is off by default (`SCREENING_AUTO_REFRESH_ENABLED=false`); opt in only after the first imports and database/archive/temporary storage capacity and retention have been validated. Deploying the configuration gate rebuilds the candidate cache and removes the 03:00 refresh event from the schedule without disabling caregiver sync or audit export. Existing deployments that predate this gate still have the automatic event until the new release is activated.
 
 ## Local verification
 

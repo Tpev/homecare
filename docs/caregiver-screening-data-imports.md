@@ -89,6 +89,17 @@ Activation occurs only after validation. Failed replacements preserve the prior 
 
 ## Operations
 
+Automatic dataset refresh is disabled by default through `SCREENING_AUTO_REFRESH_ENABLED=false`. This gates only the scheduled `screening:refresh-datasets` event; explicit import/refresh commands, caregiver queue synchronization and audit export remain available. Keep it disabled until the first imports and storage plan have been verified. Check the actual filesystems for the database, temporary files and private archives; application-disk free space alone does not establish database capacity. Include database indexes and binary logs, simultaneous old/new versions, retained archives, and failed-import workspace. The SQLite measurement below is not a MySQL sizing guarantee. Historical index pruning is a separate manual operation and does not remove archives or automatically return allocated database storage to the operating system.
+
+After validating those requirements, opt in with `SCREENING_AUTO_REFRESH_ENABLED=true` in the protected deployment environment and deploy through `deploy.sh`, which rebuilds the inactive release's configuration cache. Do not rebuild the active release's configuration cache manually. Verify the cached flag and scheduler registration:
+
+```sh
+php artisan tinker --execute='echo "automatic_dataset_refresh=".(config("screening.auto_refresh_enabled", false) ? "enabled" : "disabled").PHP_EOL;'
+php artisan schedule:list --no-ansi
+```
+
+When disabled, the schedule lists `screening:sync` at 05:00 and `screening:export-audit` every minute, with no `screening:refresh-datasets` entry. When enabled, refresh appears at 03:00 in the application timezone. This switch does not cancel an import already running; let that operation finish or review its state separately. Disabling refresh leaves any existing source snapshot subject to the normal freshness limit.
+
 After deployment migrations and verified source configuration:
 
 ```sh
