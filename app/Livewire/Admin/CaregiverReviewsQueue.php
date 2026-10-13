@@ -103,12 +103,14 @@ class CaregiverReviewsQueue extends Component
             'note' => ['nullable', 'string', 'max:5000'],
         ]);
 
+        $profile = CaregiverScreeningCase::findOrFail($this->selectedCaseId())->profile;
+        $restoring = $decision === 'approve' && ($profile?->status === 'suspended' || $profile?->screening_suspended_at);
         $case = app(CaregiverScreeningService::class)->decide(
             $this->selectedCaseId(), auth()->user(), $this->outcome, $decision, $this->note, $this->expectedVersion,
         );
 
         session()->flash('status', $decision === 'approve'
-            ? 'Screening approved. Next review is due in six months.'
+            ? ($restoring ? 'Account restored. The suspension and this approval remain in the audit history. Existing booking reviews remain open.' : 'Screening approved. Next review is due in six months.')
             : 'New work is blocked. Login remains available and existing commitments are flagged for admin review.');
         $this->selectNext($case->id);
     }
@@ -143,7 +145,7 @@ class CaregiverReviewsQueue extends Component
         }
         $followUp = app(CaregiverScreeningService::class)->enqueue($case->profile);
         unset($this->reviewableProfileIds);
-        $this->filter = 'open';
+        $this->filter = $this->filter === 'suspended' ? 'suspended' : 'open';
         $this->query = '';
         $this->resetPage();
         $this->selectCase($followUp->id);
@@ -223,16 +225,40 @@ class CaregiverReviewsQueue extends Component
 
     protected function visibleCasesQuery(): Builder
     {
+        if ($this->filter === 'suspended') {
+            return CaregiverScreeningCase::query()->whereIn('caregiver_profile_id', $this->suspendedProfilesQuery()->select('id'));
+        }
+
+        return $this->reviewableCasesQuery();
+    }
+
+    protected function reviewableCasesQuery(): Builder
+    {
         return CaregiverScreeningCase::query()->where(fn (Builder $query) => $query
             ->where('status', 'completed')
             ->orWhere(fn (Builder $query) => $query->whereIn('caregiver_profile_id', $this->reviewableProfileIds)
                 ->where('status', '!=', 'awaiting_kyc')));
     }
 
+    protected function suspendedProfilesQuery(): Builder
+    {
+        return CaregiverProfile::query()->where(fn (Builder $query) => $query
+            ->where('status', 'suspended')->orWhereNotNull('screening_suspended_at'));
+    }
+
+    protected function suspendedCasesQuery(): Builder
+    {
+        return CaregiverScreeningCase::query()
+            ->whereIn('caregiver_profile_id', $this->suspendedProfilesQuery()->select('id'))
+            // The newest case is the current follow-up, or the last completed review.
+            ->whereIn('id', CaregiverScreeningCase::query()->selectRaw('MAX(id)')->groupBy('caregiver_profile_id'));
+    }
+
     protected function queueQuery(): Builder
     {
         $query = $this->visibleCasesQuery()->with(['profile.user', 'claimant']);
         match ($this->filter) {
+            'suspended' => $query->whereIn('id', $this->suspendedCasesQuery()->select('id')),
             'initial', 'legacy', 'recurring' => $query->where('kind', $this->filter)->where('status', '!=', 'completed'),
             'awaiting_investigation' => $query->where('status', $this->filter),
             'potential_matches' => $query->where('status', '!=', 'completed')->whereHas('candidates'),
@@ -261,6 +287,8 @@ class CaregiverReviewsQueue extends Component
             'profile.certifications.type', 'profile.certifications.verifier',
             'candidates', 'events', 'claimant', 'reviewer',
         ])->find($this->selectedId) : null;
+        $hasCurrentIdentity = $selectedCase?->profile
+            && app(DiditVerifiedIdentityService::class)->snapshot($selectedCase->profile) !== null;
         $history = $selectedCase?->caregiver_profile_id ? $this->visibleCasesQuery()
             ->where('caregiver_profile_id', $selectedCase->caregiver_profile_id)
             ->whereKeyNot($selectedCase->id)->with('reviewer')->latest('id')->limit(20)->get() : collect();
@@ -278,11 +306,12 @@ class CaregiverReviewsQueue extends Component
             ->orderByRaw("CASE WHEN flagged_booking.status = 'in_progress' OR flagged_shift.status = 'in_progress' THEN 0 ELSE 1 END")
             ->orderByRaw('COALESCE(flagged_booking.scheduled_start_at, flagged_shift.scheduled_start_at, flagged_plan.starts_on, screening_booking_reviews.created_at)')
             ->orderBy('screening_booking_reviews.id')->with('screeningCase.profile.user')->paginate(10, ['*'], 'bookingPage');
-        $counts = $this->visibleCasesQuery()->where('status', '!=', 'completed')
+        $counts = $this->reviewableCasesQuery()->where('status', '!=', 'completed')
             ->selectRaw('kind, COUNT(*) as aggregate')->groupBy('kind')->pluck('aggregate', 'kind');
+        $suspendedCount = $this->suspendedCasesQuery()->count();
 
         return view('livewire.admin.caregiver-reviews-queue', compact(
-            'cases', 'selectedCase', 'history', 'moderationLogs', 'bookingReviews', 'counts',
+            'cases', 'selectedCase', 'history', 'moderationLogs', 'bookingReviews', 'counts', 'suspendedCount', 'hasCurrentIdentity',
         ));
     }
 }

@@ -332,6 +332,7 @@ class CaregiverScreeningService
         return ['status' => $profile->status, 'legacy_access' => (bool) $profile->screening_legacy_access,
             'initial_approved_at' => $profile->screening_initial_approved_at?->toIso8601String(),
             'suspended_at' => $profile->screening_suspended_at?->toIso8601String(),
+            'suspension_case_id' => $profile->screening_suspension_case_id,
             'next_due_at' => $profile->screening_next_due_at?->toIso8601String()];
     }
 

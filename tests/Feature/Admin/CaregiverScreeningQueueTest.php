@@ -500,6 +500,158 @@ class CaregiverScreeningQueueTest extends TestCase
         $this->assertBlankDecisionWithCandidate('approve');
     }
 
+    public function test_suspended_filter_lists_current_accounts_once_including_missing_kyc_and_supports_search(): void
+    {
+        $suspended = $this->makeCase('legacy', ['status' => 'suspended', 'screening_legacy_at' => now()]);
+        $suspended->profile->user->update(['name' => 'Suspended Caregiver', 'email' => 'suspended@example.test']);
+        $suspended->update(['status' => 'completed', 'open_profile_id' => null, 'decision' => 'suspend', 'completed_at' => now()]);
+        $latest = $suspended->replicate();
+        $latest->save();
+        $missingKyc = $this->makeCase('legacy', ['status' => 'suspended', 'screening_legacy_at' => now()], false);
+        $missingKyc->update(['status' => 'awaiting_kyc']);
+        $flagged = $this->makeCase('recurring', ['screening_suspended_at' => now()]);
+        $restored = $this->makeCase('legacy', ['screening_legacy_access' => true]);
+        $restored->update(['status' => 'completed', 'open_profile_id' => null, 'decision' => 'suspend', 'completed_at' => now()->subDay()]);
+        $this->makeCase('initial', ['status' => 'under_review']);
+
+        $component = Livewire::actingAs(User::factory()->create(['role' => 'admin']))->test(CaregiverReviewsQueue::class)
+            ->assertViewHas('suspendedCount', 3)
+            ->assertViewHas('counts', fn ($counts) => $counts->sum() === 2)
+            ->set('filter', 'suspended')->assertSee('Suspended caregivers')
+            ->assertViewHas('cases', fn ($cases) => $cases->pluck('id')->sort()->values()->all() === [$latest->id, $missingKyc->id, $flagged->id])
+            ->set('query', 'Suspended Caregiver')->assertSet('selectedId', $latest->id)
+            ->assertViewHas('cases', fn ($cases) => $cases->pluck('id')->all() === [$latest->id])
+            ->set('query', 'suspended@example.test')->assertSet('selectedId', $latest->id)
+            ->assertViewHas('suspendedCount', 3)
+            ->set('query', 'not-a-caregiver')->assertSet('selectedId', null)
+            ->set('query', '')->call('selectCase', $missingKyc->id)->assertHasNoErrors()
+            ->assertSet('selectedId', $missingKyc->id)
+            ->assertSee('Current approved KYC is required before restoring this account.');
+
+        $component->set('filter', 'open')
+            ->assertViewHas('cases', fn ($cases) => ! $cases->contains('id', $missingKyc->id));
+        $this->assertNull($latest->fresh()->claimed_by);
+        $this->assertSame('suspended', $missingKyc->profile->fresh()->status);
+        $this->assertSame('active', $restored->profile->fresh()->status);
+    }
+
+    public function test_suspended_account_can_be_restored_with_a_follow_up_without_erasing_history_or_booking_flags(): void
+    {
+        $case = $this->makeCase('legacy', ['screening_legacy_access' => true, 'screening_legacy_at' => now()]);
+        $this->prepareSearch($case);
+        $admin = User::factory()->create(['role' => 'admin']);
+        $component = Livewire::actingAs($admin)->test(CaregiverReviewsQueue::class)
+            ->call('claim')->call('search')->call('decide', 'suspend')->assertHasNoErrors()
+            ->set('filter', 'suspended')->assertSet('selectedId', $case->id)
+            ->assertSee('Review to restore account');
+        $original = $case->fresh()->getAttributes();
+        $review = ScreeningBookingReview::create([
+            'screening_case_id' => $case->id, 'subject_type' => 'booking', 'subject_id' => 9002,
+            'status' => 'open', 'reason' => 'An existing commitment requires an explicit review.',
+        ]);
+
+        $component->call('startFollowUp')->assertHasNoErrors()->assertSet('filter', 'suspended');
+        $followUp = CaregiverScreeningCase::where('open_profile_id', $case->caregiver_profile_id)->sole();
+        $component->assertSet('selectedId', $followUp->id)
+            ->assertViewHas('suspendedCount', 1)
+            ->assertViewHas('cases', fn ($cases) => $cases->pluck('id')->all() === [$followUp->id])
+            ->assertSee('Approve & restore account');
+        $this->assertSame('suspended', $case->profile->fresh()->status);
+        $this->assertSame($case->id, $case->profile->fresh()->screening_suspension_case_id);
+
+        $component->call('claim')->call('search')->call('decide', 'approve')->assertHasNoErrors()
+            ->assertSet('selectedId', null)->assertViewHas('suspendedCount', 0)
+            ->assertViewHas('cases', fn ($cases) => $cases->isEmpty());
+
+        $profile = $case->profile->fresh();
+        $this->assertSame('active', $profile->status);
+        $this->assertNull($profile->screening_suspended_at);
+        $this->assertNull($profile->screening_suspension_case_id);
+        $this->assertNotNull($profile->screening_initial_approved_at);
+        $this->assertNotNull($profile->screening_next_due_at);
+        $this->assertSame($original, $case->fresh()->getAttributes());
+        $this->assertSame('open', $review->fresh()->status);
+        $this->assertDatabaseCount('caregiver_screening_cases', 2);
+        $event = ScreeningAuditEvent::where('screening_case_id', $followUp->id)->where('event_type', 'screening_decided')->sole();
+        $this->assertSame($admin->id, $event->actor_user_id);
+        $this->assertSame('suspended', $event->payload['before']['status']);
+        $this->assertSame($case->id, $event->payload['before']['suspension_case_id']);
+        $this->assertSame('active', $event->payload['after']['status']);
+        $this->assertNull($event->payload['after']['suspension_case_id']);
+    }
+
+    public function test_restoration_review_reuses_an_existing_open_case_without_changing_access(): void
+    {
+        $case = $this->makeCase('legacy', ['status' => 'suspended', 'screening_suspended_at' => now(), 'screening_legacy_at' => now()]);
+        $case->update(['status' => 'completed', 'open_profile_id' => null, 'decision' => 'suspend', 'completed_at' => now()]);
+        $component = Livewire::actingAs(User::factory()->create(['role' => 'admin']))->test(CaregiverReviewsQueue::class)
+            ->set('filter', 'suspended')->assertSet('selectedId', $case->id)
+            ->call('startFollowUp')->assertHasNoErrors();
+        $followUp = CaregiverScreeningCase::where('open_profile_id', $case->caregiver_profile_id)->sole();
+
+        $component->call('selectCase', $case->id)->call('startFollowUp')->assertHasNoErrors()
+            ->assertSet('filter', 'suspended')->assertSet('selectedId', $followUp->id);
+
+        $this->assertDatabaseCount('caregiver_screening_cases', 2);
+        $this->assertSame('suspended', $case->profile->fresh()->status);
+        $this->assertNotNull($case->profile->fresh()->screening_suspended_at);
+    }
+
+    public function test_expired_kyc_suspension_can_be_inspected_but_cannot_start_a_restoration_review(): void
+    {
+        $case = $this->makeCase('legacy', ['status' => 'suspended', 'screening_legacy_at' => now(), 'screening_legacy_access' => true]);
+        $case->update(['status' => 'completed', 'open_profile_id' => null, 'decision' => 'suspend', 'completed_at' => now()]);
+        $case->profile->identityVerifications()->update(['status' => 'kyc_expired']);
+
+        Livewire::actingAs(User::factory()->create(['role' => 'admin']))->test(CaregiverReviewsQueue::class)
+            ->set('filter', 'suspended')->assertSet('selectedId', $case->id)->assertViewHas('suspendedCount', 1)
+            ->call('startFollowUp')->assertHasErrors(['screening'])
+            ->assertSee('Complete approved KYC before starting a screening review.')
+            ->assertSet('filter', 'suspended')->assertSet('selectedId', $case->id);
+
+        $this->assertDatabaseCount('caregiver_screening_cases', 1);
+        $this->assertSame('suspended', $case->profile->fresh()->status);
+    }
+
+    public function test_open_suspension_can_be_restored_in_the_same_case_after_search_and_approval(): void
+    {
+        $case = $this->makeCase('legacy', ['screening_legacy_access' => true, 'screening_legacy_at' => now()]);
+        $this->prepareSearch($case);
+        $component = Livewire::actingAs(User::factory()->create(['role' => 'admin']))->test(CaregiverReviewsQueue::class)
+            ->call('claim')->call('suspendNewWork')->assertHasNoErrors()
+            ->set('filter', 'suspended')->assertSet('selectedId', $case->id)
+            ->assertSee('Approve & restore account')
+            ->call('decide', 'approve')->assertHasErrors(['screening']);
+
+        $this->assertSame('suspended', $case->profile->fresh()->status);
+        $component->call('search')->call('decide', 'approve')->assertHasNoErrors()
+            ->assertSet('selectedId', null)->assertViewHas('suspendedCount', 0);
+        $this->assertDatabaseCount('caregiver_screening_cases', 1);
+        $this->assertSame('active', $case->profile->fresh()->status);
+        $this->assertSame('approve', $case->fresh()->decision);
+        $this->assertNull($case->profile->fresh()->screening_suspended_at);
+        $this->assertNull($case->profile->fresh()->screening_suspension_case_id);
+    }
+
+    public function test_missing_kyc_open_suspension_cannot_be_restored_by_calling_actions_directly(): void
+    {
+        $case = $this->makeCase('legacy', ['status' => 'suspended', 'screening_suspended_at' => now(),
+            'screening_legacy_at' => now(), 'screening_legacy_access' => true], false);
+        $case->update(['status' => 'awaiting_kyc']);
+        $this->prepareSearch($case);
+
+        Livewire::actingAs(User::factory()->create(['role' => 'admin']))->test(CaregiverReviewsQueue::class)
+            ->set('filter', 'suspended')->assertSet('selectedId', $case->id)
+            ->assertSee('Current approved KYC is required before restoring this account.')
+            ->call('claim')->assertHasNoErrors()->call('decide', 'approve')->assertHasErrors(['screening']);
+
+        $this->assertSame('suspended', $case->profile->fresh()->status);
+        $this->assertNotNull($case->profile->fresh()->screening_suspended_at);
+        $this->assertSame('awaiting_kyc', $case->fresh()->status);
+        $this->assertNull($case->fresh()->decision);
+        $this->assertDatabaseMissing('screening_audit_events', ['screening_case_id' => $case->id, 'event_type' => 'screening_decided']);
+    }
+
     public function test_suspend_with_candidates_accepts_blank_outcome_and_note_without_recording_no_match(): void
     {
         $this->assertBlankDecisionWithCandidate('suspend');
