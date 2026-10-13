@@ -5,16 +5,9 @@
     <header class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
             <h1 class="text-2xl font-semibold text-slate-900">Caregiver screening</h1>
-            <p class="mt-1 max-w-3xl text-sm text-slate-600">Review verified identities, public-record candidates, profiles, and credentials in one queue.</p>
         </div>
         <span class="shrink-0 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">{{ $counts->sum() }} open reviews</span>
     </header>
-
-    <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-        New caregivers need initial approval before taking work. Legacy access is preserved. Six-month reviews never automatically block work, even when overdue or a possible match is found. Only an explicit suspension blocks new work.
-    </div>
-
-    @include('livewire.admin.partials.screening-dataset-health')
 
     @if ($errors->any())
         <div role="alert" class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
@@ -41,7 +34,6 @@
                     <option value="recurring">Six-month reviews ({{ $counts->get('recurring', 0) }})</option>
                     <option value="overdue">Overdue reviews</option>
                     <option value="potential_matches">Potential matches</option>
-                    <option value="awaiting_kyc">Awaiting KYC</option>
                     <option value="awaiting_investigation">Awaiting investigation</option>
                     <option value="completed">Completed / history</option>
                 </select>
@@ -104,33 +96,26 @@
                             <p class="text-xs text-slate-500">{{ $hasClaim ? 'Claimed by you until '.$selectedCase->claimed_until->format('g:i A') : ($claimedByOther ? 'Currently claimed by '.($selectedCase->claimant?->name ?? 'another admin').' until '.$selectedCase->claimed_until->format('g:i A') : 'Claim this case before searching or deciding.') }}</p>
                         </div>
                     @endif
-                    <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
                             <h3 class="font-semibold text-slate-900">Didit-verified identity</h3>
-                            @if ($identity)
-                                <dl class="mt-3 space-y-2 text-sm">
-                                    <div><dt class="text-xs text-slate-500">Legal name</dt><dd class="font-medium text-slate-900">{{ $identity['full_name'] ?? trim(($identity['first_name'] ?? '').' '.($identity['last_name'] ?? '')) }}</dd></div>
-                                    <div><dt class="text-xs text-slate-500">Date of birth</dt><dd>{{ $identity['date_of_birth'] ?? 'Not supplied by provider' }}</dd></div>
-                                </dl>
-                            @else
-                                <p class="mt-3 text-sm text-amber-900">Awaiting successful Didit KYC with verified identity evidence. A manual verification badge does not qualify.</p>
-                            @endif
-                            <p class="mt-3 text-xs text-slate-500">This identity snapshot is retained with the screening case. The profile name may differ.</p>
-                        </div>
-                        <div class="rounded-xl border border-slate-200 p-4">
-                            <h3 class="font-semibold text-slate-900">Search evidence</h3>
-                            <p class="mt-2 text-sm">Status: <strong>{{ str($selectedCase->search_status)->headline() }}</strong></p>
-                            <p class="mt-1 text-xs text-slate-500">{{ $selectedCase->searched_at ? 'Searched '.$selectedCase->searched_at->format('M j, Y g:i A') : 'Not searched yet' }}</p>
-                            @if ($selectedCase->search_error)
-                                <p role="alert" class="mt-2 break-words text-sm text-rose-800">{{ $selectedCase->search_error }}</p>
-                            @endif
-                            @if ($selectedCase->source_versions)
-                                <details class="mt-3 text-xs text-slate-600"><summary class="cursor-pointer font-semibold">Dataset versions used</summary><pre class="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-slate-50 p-2">{{ json_encode($selectedCase->source_versions, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre></details>
-                            @endif
                             @if (! $completed)
-                                <button type="button" wire:click="search" wire:loading.attr="disabled" @disabled(! $hasClaim || ! $identity || $selectedCase->status === 'awaiting_kyc') class="mt-3 min-h-11 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{{ $selectedCase->searched_at ? 'Refresh name search' : 'Search public records' }}</button>
+                                <button type="button" wire:click="search" wire:loading.attr="disabled" @disabled(! $hasClaim || ! $identity || $selectedCase->status === 'awaiting_kyc') class="min-h-11 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50">{{ $selectedCase->searched_at ? 'Refresh name search' : 'Search names' }}</button>
                             @endif
                         </div>
+                        @if ($identity)
+                            <dl class="mt-3 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                                <div><dt class="text-xs text-slate-500">Legal name</dt><dd class="font-medium text-slate-900">{{ $identity['full_name'] ?? trim(($identity['first_name'] ?? '').' '.($identity['last_name'] ?? '')) }}</dd></div>
+                                <div><dt class="text-xs text-slate-500">Date of birth</dt><dd>{{ $identity['date_of_birth'] ?? 'Not supplied' }}</dd></div>
+                            </dl>
+                        @else
+                            <p class="mt-3 text-sm text-amber-900">Verified identity unavailable.</p>
+                        @endif
+                        @if ($selectedCase->search_status === 'error')
+                            <p role="alert" class="mt-3 text-sm font-medium text-rose-800">Search failed. Refresh the name search before deciding.</p>
+                        @elseif ($selectedCase->search_status !== 'completed')
+                            <p role="status" class="mt-3 text-sm text-amber-900">Name search {{ str($selectedCase->search_status)->replace('_', ' ') }}. Results are not ready.</p>
+                        @endif
                     </div>
                     @include('livewire.admin.partials.screening-candidates')
                     @include('livewire.admin.partials.screening-decision')
@@ -154,7 +139,7 @@
                     </div>
                     <p class="mt-2 text-sm text-slate-500">The caregiver profile is no longer available. Screening evidence and completed decisions remain in the audit history.</p>
                     <p class="mt-3 text-sm text-slate-700">{{ str($selectedCase->status)->headline() }}{{ $selectedCase->outcome ? ' · '.str($selectedCase->outcome)->headline() : '' }}{{ $selectedCase->decision ? ' · '.str($selectedCase->decision)->headline() : '' }}</p>
-                    <p class="mt-2 whitespace-pre-line text-sm text-slate-700">{{ $selectedCase->note }}</p>
+                    @if ($selectedCase->note)<p class="mt-2 whitespace-pre-line text-sm text-slate-700">{{ $selectedCase->note }}</p>@endif
                     @include('livewire.admin.partials.screening-record', ['record' => $selectedCase->identity_snapshot ?? [], 'depth' => 0])
                     @include('livewire.admin.partials.screening-candidates')
                 </section>

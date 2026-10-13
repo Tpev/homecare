@@ -1,7 +1,6 @@
 <section class="rounded-2xl border border-slate-200 bg-white p-5" aria-label="Screening and moderation history">
     <h2 class="font-semibold text-slate-900">Review history & audit trail</h2>
-    <p class="mt-1 text-xs text-slate-500">Private admin evidence. Decisions and corrections are retained as separate events.</p>
-    <details class="mt-4" open>
+    <details class="mt-4">
         <summary class="cursor-pointer text-sm font-semibold text-slate-700">This case · {{ $selectedCase->events->count() }} audit events</summary>
         <ol class="mt-3 space-y-3">
             @forelse ($selectedCase->events->sortByDesc('id') as $event)

@@ -7,11 +7,13 @@ use App\Models\CaregiverModerationLog;
 use App\Models\CaregiverProfile;
 use App\Models\CaregiverScreeningCase;
 use App\Models\ScreeningBookingReview;
-use App\Models\ScreeningDatasetImport;
 use App\Services\Caregiver\CaregiverCertificationReviewService;
 use App\Services\Screening\CaregiverScreeningService;
+use App\Services\Screening\DiditVerifiedIdentityService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -66,7 +68,7 @@ class CaregiverReviewsQueue extends Component
 
     public function selectCase(int $id): void
     {
-        $case = CaregiverScreeningCase::query()->findOrFail($id);
+        $case = $this->visibleCasesQuery()->findOrFail($id);
         $this->resetValidation();
         $this->selectedId = $case->id;
         $this->expectedVersion = (int) $case->lock_version;
@@ -96,11 +98,9 @@ class CaregiverReviewsQueue extends Component
     public function decide(string $decision): void
     {
         abort_unless(in_array($decision, ['approve', 'suspend'], true), 422);
-        $needsReason = $decision === 'suspend' || $this->outcome !== 'no_match'
-            || CaregiverScreeningCase::query()->findOrFail($this->selectedCaseId())->candidates()->exists();
         $this->validate([
-            'outcome' => ['required', Rule::in(['no_match', 'potential_match', 'match'])],
-            'note' => [$needsReason ? 'required' : 'nullable', 'string', $needsReason ? 'min:10' : 'min:0', 'max:5000'],
+            'outcome' => ['nullable', Rule::in(['no_match', 'potential_match', 'match'])],
+            'note' => ['nullable', 'string', 'max:5000'],
         ]);
 
         $case = app(CaregiverScreeningService::class)->decide(
@@ -115,7 +115,7 @@ class CaregiverReviewsQueue extends Component
 
     public function keepPending(): void
     {
-        $this->validate(['note' => ['required', 'string', 'min:5', 'max:5000']]);
+        $this->validate(['note' => ['nullable', 'string', 'max:5000']]);
         $case = app(CaregiverScreeningService::class)->defer(
             $this->selectedCaseId(), auth()->user(), $this->note, $this->expectedVersion,
         );
@@ -125,7 +125,7 @@ class CaregiverReviewsQueue extends Component
 
     public function suspendNewWork(): void
     {
-        $this->validate(['note' => ['required', 'string', 'min:10', 'max:5000']]);
+        $this->validate(['note' => ['nullable', 'string', 'max:5000']]);
         $case = app(CaregiverScreeningService::class)->suspendNewWork(
             $this->selectedCaseId(), auth()->user(), $this->note, $this->expectedVersion,
         );
@@ -138,7 +138,11 @@ class CaregiverReviewsQueue extends Component
     {
         $case = CaregiverScreeningCase::query()->findOrFail($this->selectedCaseId());
         abort_unless($case->status === 'completed' && $case->profile, 422);
+        if (! app(DiditVerifiedIdentityService::class)->snapshot($case->profile)) {
+            throw ValidationException::withMessages(['screening' => 'Complete approved KYC before starting a screening review.']);
+        }
         $followUp = app(CaregiverScreeningService::class)->enqueue($case->profile);
+        unset($this->reviewableProfileIds);
         $this->filter = 'open';
         $this->query = '';
         $this->resetPage();
@@ -188,6 +192,7 @@ class CaregiverReviewsQueue extends Component
     protected function selectedCaseId(): int
     {
         abort_unless($this->selectedId, 422, 'Select a screening case first.');
+        $this->visibleCasesQuery()->findOrFail($this->selectedId);
 
         return $this->selectedId;
     }
@@ -206,15 +211,30 @@ class CaregiverReviewsQueue extends Component
         }
     }
 
+    #[Computed]
+    public function reviewableProfileIds(): array
+    {
+        $profiles = CaregiverProfile::query()->whereIn('id', CaregiverScreeningCase::query()
+            ->select('caregiver_profile_id')->where('status', '!=', 'completed'))
+            ->get(['id', 'identity_verification_session_id']);
+
+        return app(DiditVerifiedIdentityService::class)->snapshotsForProfiles($profiles)->keys()->all();
+    }
+
+    protected function visibleCasesQuery(): Builder
+    {
+        return CaregiverScreeningCase::query()->where(fn (Builder $query) => $query
+            ->where('status', 'completed')
+            ->orWhere(fn (Builder $query) => $query->whereIn('caregiver_profile_id', $this->reviewableProfileIds)
+                ->where('status', '!=', 'awaiting_kyc')));
+    }
+
     protected function queueQuery(): Builder
     {
-        $query = CaregiverScreeningCase::query()->with(['profile.user', 'claimant']);
-        if ($this->filter !== 'completed') {
-            $query->whereHas('profile');
-        }
+        $query = $this->visibleCasesQuery()->with(['profile.user', 'claimant']);
         match ($this->filter) {
             'initial', 'legacy', 'recurring' => $query->where('kind', $this->filter)->where('status', '!=', 'completed'),
-            'awaiting_kyc', 'awaiting_investigation' => $query->where('status', $this->filter),
+            'awaiting_investigation' => $query->where('status', $this->filter),
             'potential_matches' => $query->where('status', '!=', 'completed')->whereHas('candidates'),
             'overdue' => $query->where('status', '!=', 'completed')->where('due_at', '<', now()),
             'completed' => $query->where('status', 'completed'),
@@ -232,20 +252,19 @@ class CaregiverReviewsQueue extends Component
 
     public function render()
     {
+        if ($this->selectedId && ! $this->visibleCasesQuery()->whereKey($this->selectedId)->exists()) {
+            $this->selectNext();
+        }
         $cases = $this->queueQuery()->paginate(20);
         $selectedCase = $this->selectedId ? CaregiverScreeningCase::query()->with([
             'profile.user', 'profile.latestIdentityVerification', 'profile.careExperiences',
             'profile.certifications.type', 'profile.certifications.verifier',
             'candidates', 'events', 'claimant', 'reviewer',
         ])->find($this->selectedId) : null;
-        $history = $selectedCase?->caregiver_profile_id ? CaregiverScreeningCase::query()
+        $history = $selectedCase?->caregiver_profile_id ? $this->visibleCasesQuery()
             ->where('caregiver_profile_id', $selectedCase->caregiver_profile_id)
             ->whereKeyNot($selectedCase->id)->with('reviewer')->latest('id')->limit(20)->get() : collect();
         $moderationLogs = $selectedCase?->profile?->moderationLogs()->with('actor')->latest('id')->limit(20)->get() ?? collect();
-        $datasetImports = ScreeningDatasetImport::query()->where('is_active', true)
-            ->orWhereIn('id', ScreeningDatasetImport::query()->selectRaw('MAX(id)')->groupBy('source'))
-            ->orWhereIn('id', array_values($selectedCase?->source_versions ?? []))
-            ->latest('id')->get();
         $bookingReviews = ScreeningBookingReview::query()->where('screening_booking_reviews.status', 'open')
             ->leftJoin('care_bookings as flagged_booking', fn ($join) => $join
                 ->on('flagged_booking.id', '=', 'screening_booking_reviews.subject_id')->where('screening_booking_reviews.subject_type', 'booking'))
@@ -259,11 +278,11 @@ class CaregiverReviewsQueue extends Component
             ->orderByRaw("CASE WHEN flagged_booking.status = 'in_progress' OR flagged_shift.status = 'in_progress' THEN 0 ELSE 1 END")
             ->orderByRaw('COALESCE(flagged_booking.scheduled_start_at, flagged_shift.scheduled_start_at, flagged_plan.starts_on, screening_booking_reviews.created_at)')
             ->orderBy('screening_booking_reviews.id')->with('screeningCase.profile.user')->paginate(10, ['*'], 'bookingPage');
-        $counts = CaregiverScreeningCase::query()->where('status', '!=', 'completed')
+        $counts = $this->visibleCasesQuery()->where('status', '!=', 'completed')
             ->selectRaw('kind, COUNT(*) as aggregate')->groupBy('kind')->pluck('aggregate', 'kind');
 
         return view('livewire.admin.caregiver-reviews-queue', compact(
-            'cases', 'selectedCase', 'history', 'moderationLogs', 'datasetImports', 'bookingReviews', 'counts',
+            'cases', 'selectedCase', 'history', 'moderationLogs', 'bookingReviews', 'counts',
         ));
     }
 }

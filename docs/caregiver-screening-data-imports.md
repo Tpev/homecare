@@ -75,7 +75,7 @@ Each import stores `file_manifest.name_coverage` with `profile_count` (union of 
 
 Every supplied row is retained, plus the explicit source-only profiles. DAC's 1,998 nameless IDs remain stored but cannot produce a name candidate. These totals count identifiers within each source; they do not deduplicate people across sources.
 
-Candidate snapshots contain `missing_primary_record`, `coverage_warning`, `source_coverage`, and DAC `field_labels` keyed by table and original field code. Search results include coverage keyed by source even with zero candidates. Admin source cards, candidate evidence, and search audit records expose these limitations. Retain import versions referenced by reviews.
+Candidate snapshots contain `missing_primary_record`, `coverage_warning`, `source_coverage`, and DAC `field_labels` keyed by table and original field code. Search results include coverage keyed by source even with zero candidates. The review screen flags missing primary identity records on affected matches; full source coverage remains available in stored candidate evidence and search audit records. Retain import versions referenced by reviews.
 
 ## Configuration and safeguards
 

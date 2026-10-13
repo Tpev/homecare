@@ -258,13 +258,126 @@ class CaregiverScreeningLifecycleTest extends TestCase
         $this->actingAs($profile->user)->get(route('caregiver.verification.show'))->assertOk();
     }
 
+    public function test_decisions_can_omit_outcome_and_note_without_inventing_no_match(): void
+    {
+        $this->mockSearch([['source' => 'nc_dac', 'source_record_id' => '11', 'matched_name' => 'Alex Example',
+            'match_reason' => 'Normalized name', 'record_snapshot' => ['id' => '11']]]);
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        foreach (['approve', 'suspend'] as $decision) {
+            $profile = $this->profile();
+            $case = $this->claimedSearch($profile, $admin);
+            app(CaregiverScreeningService::class)->decide($case->id, $admin, '  ', $decision, null, $case->lock_version);
+
+            $case->refresh();
+            $this->assertSame('completed', $case->status);
+            $this->assertNull($case->outcome);
+            $this->assertSame($decision, $case->decision);
+            $this->assertSame('', $case->note);
+            $this->assertNull($case->open_profile_id);
+            $this->assertSame($decision === 'approve', app(CaregiverWorkEligibility::class)->allowsNewWork($profile->fresh()));
+            $this->assertSame(1, $case->candidates()->count());
+            $event = $case->events()->where('event_type', 'screening_decided')->sole();
+            $this->assertSame($admin->id, $event->actor_user_id);
+            $this->assertNull($event->payload['outcome']);
+            $this->assertSame($decision, $event->payload['decision']);
+            $this->assertSame('', $event->payload['note']);
+            $this->assertCount(1, $event->payload['candidate_ids']);
+        }
+    }
+
+    public function test_a_note_is_optional_for_every_provided_match_outcome_and_account_decision(): void
+    {
+        $this->mockSearch([['source' => 'nc_sbi', 'source_record_id' => '123', 'matched_name' => 'Alex Example',
+            'match_reason' => 'Exact normalized name', 'record_snapshot' => ['id' => '123']]]);
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        foreach (['no_match', 'potential_match', 'match'] as $outcome) {
+            foreach (['approve', 'suspend'] as $decision) {
+                $case = $this->claimedSearch($this->profile(), $admin);
+                app(CaregiverScreeningService::class)->decide($case->id, $admin, $outcome, $decision, '', $case->lock_version);
+                $this->assertSame($outcome, $case->fresh()->outcome);
+                $this->assertSame($decision, $case->fresh()->decision);
+                $this->assertSame('', $case->fresh()->note);
+            }
+        }
+    }
+
+    public function test_optional_fields_do_not_allow_invalid_decisions_or_unsubstantiated_matches(): void
+    {
+        $this->mockSearch();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $case = $this->claimedSearch($this->profile(), $admin);
+
+        foreach ([['invalid', 'approve'], [null, ''], [null, 'invalid'], ['potential_match', 'approve'], ['match', 'suspend']] as [$outcome, $decision]) {
+            try {
+                app(CaregiverScreeningService::class)->decide($case->id, $admin, $outcome, $decision, '', $case->lock_version);
+                $this->fail('An invalid decision or unsupported match was accepted.');
+            } catch (ValidationException) {
+                $this->assertSame('in_review', $case->fresh()->status);
+                $this->assertNull($case->fresh()->decision);
+                $this->assertNull($case->fresh()->outcome);
+            }
+        }
+        $this->assertFalse($case->events()->where('event_type', 'screening_decided')->exists());
+    }
+
+    public function test_investigation_and_temporary_suspension_notes_are_optional_and_audited(): void
+    {
+        $profile = $this->profile();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $service = app(CaregiverScreeningService::class);
+        $case = $service->claim($service->enqueue($profile)->id, $admin);
+        $service->defer($case->id, $admin, null, $case->lock_version);
+
+        $case->refresh();
+        $this->assertSame('awaiting_investigation', $case->status);
+        $this->assertNull($case->claimed_by);
+        $this->assertSame('', $case->note);
+        $this->assertSame('', $case->events()->where('event_type', 'case_deferred')->sole()->payload['note']);
+        $this->assertTrue(app(CaregiverWorkEligibility::class)->allowsNewWork($profile->fresh()));
+
+        $case = $service->claim($case->id, $admin);
+        $service->suspendNewWork($case->id, $admin, '  ', $case->lock_version);
+        $this->assertSame('', $case->fresh()->note);
+        $this->assertNull($case->fresh()->completed_at);
+        $this->assertNull($case->fresh()->outcome);
+        $this->assertFalse(app(CaregiverWorkEligibility::class)->allowsNewWork($profile->fresh()));
+        $this->assertSame('', $case->events()->where('event_type', 'new_work_suspended')->sole()->payload['note']);
+    }
+
+    public function test_optional_notes_still_enforce_the_length_limit_for_every_review_action(): void
+    {
+        $this->mockSearch();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $profile = $this->profile();
+        $case = $this->claimedSearch($profile, $admin);
+        $service = app(CaregiverScreeningService::class);
+
+        foreach (['decide', 'defer', 'suspendNewWork'] as $action) {
+            try {
+                if ($action === 'decide') {
+                    $service->decide($case->id, $admin, null, 'approve', str_repeat('x', 5001), $case->lock_version);
+                } else {
+                    $service->{$action}($case->id, $admin, str_repeat('x', 5001), $case->lock_version);
+                }
+                $this->fail('An oversized note was accepted.');
+            } catch (ValidationException) {
+                $this->assertSame('in_review', $case->fresh()->status);
+                $this->assertSame($case->lock_version, $case->fresh()->lock_version);
+                $this->assertNull($case->fresh()->note);
+                $this->assertTrue(app(CaregiverWorkEligibility::class)->allowsNewWork($profile->fresh()));
+            }
+        }
+    }
+
     public function test_stale_admin_version_cannot_finalize_a_case(): void
     {
         $this->mockSearch();
         $admin = User::factory()->create(['role' => 'admin']);
         $case = $this->claimedSearch($this->profile(), $admin);
         $this->expectException(ValidationException::class);
-        app(CaregiverScreeningService::class)->decide($case->id, $admin, 'no_match', 'approve', '', $case->lock_version - 1);
+        app(CaregiverScreeningService::class)->decide($case->id, $admin, null, 'approve', '', $case->lock_version - 1);
     }
 
     public function test_claim_prevents_two_admins_deciding_and_expiry_allows_takeover(): void
@@ -294,7 +407,7 @@ class CaregiverScreeningLifecycleTest extends TestCase
         $this->assertNull($case->outcome);
         $this->assertTrue(app(CaregiverWorkEligibility::class)->allowsNewWork($profile->fresh()));
         $this->expectException(ValidationException::class);
-        app(CaregiverScreeningService::class)->decide($case->id, $admin, 'no_match', 'approve', '', $case->lock_version);
+        app(CaregiverScreeningService::class)->decide($case->id, $admin, null, 'approve', '', $case->lock_version);
     }
 
     public function test_changed_verified_identity_requires_a_new_search(): void
@@ -308,7 +421,7 @@ class CaregiverScreeningLifecycleTest extends TestCase
         $payload['decision']['id_verifications'][0]['full_name'] = 'Changed Name';
         $verification->update(['provider_decision_payload' => $payload]);
         $this->expectException(ValidationException::class);
-        app(CaregiverScreeningService::class)->decide($case->id, $admin, 'no_match', 'approve', '', $case->lock_version);
+        app(CaregiverScreeningService::class)->decide($case->id, $admin, null, 'approve', '', $case->lock_version);
     }
 
     public function test_audit_files_retry_without_duplicates_and_survive_profile_deletion(): void
@@ -368,7 +481,7 @@ class CaregiverScreeningLifecycleTest extends TestCase
         $profile = $this->profile(['status' => 'suspended']);
         $admin = User::factory()->create(['role' => 'admin']);
         $case = $this->claimedSearch($profile, $admin);
-        app(CaregiverScreeningService::class)->decide($case->id, $admin, 'no_match', 'approve', 'The prior restriction was reviewed and is explicitly lifted.', $case->lock_version);
+        app(CaregiverScreeningService::class)->decide($case->id, $admin, null, 'approve', '', $case->lock_version);
         $this->assertTrue(app(CaregiverWorkEligibility::class)->allowsNewWork($profile->fresh()));
         $event = ScreeningAuditEvent::where('screening_case_id', $case->id)->where('event_type', 'screening_decided')->firstOrFail();
         $this->assertSame('suspended', $event->payload['before']['status']);

@@ -155,17 +155,16 @@ class CaregiverScreeningService
         }, 3);
     }
 
-    public function decide(int $caseId, User $admin, string $outcome, string $decision, string $note, int $expectedVersion): CaregiverScreeningCase
+    public function decide(int $caseId, User $admin, ?string $outcome, string $decision, ?string $note, int $expectedVersion): CaregiverScreeningCase
     {
         $this->authorize($admin);
-        if (! in_array($outcome, ['no_match', 'potential_match', 'match'], true)
+        $outcome = trim((string) $outcome);
+        $outcome = $outcome === '' ? null : $outcome;
+        if (($outcome !== null && ! in_array($outcome, ['no_match', 'potential_match', 'match'], true))
             || ! in_array($decision, ['approve', 'suspend'], true)) {
-            $this->fail('Choose a screening outcome and an account decision.');
+            $this->fail('Choose a valid account decision and, if supplied, a valid screening outcome.');
         }
-        $note = trim($note);
-        if (mb_strlen($note) > 5000 || (($decision === 'suspend' || $outcome !== 'no_match') && mb_strlen($note) < 10)) {
-            $this->fail('Provide a reason and supporting evidence (10–5,000 characters).');
-        }
+        $note = $this->normalizeNote($note);
 
         $profileId = CaregiverScreeningCase::findOrFail($caseId)->caregiver_profile_id;
 
@@ -183,22 +182,12 @@ class CaregiverScreeningService
             } catch (\RuntimeException $error) {
                 $this->fail($error->getMessage());
             }
-            $hasCandidates = $case->candidates()->exists();
-            if ($outcome !== 'no_match' && ! $hasCandidates) {
+            if (in_array($outcome, ['potential_match', 'match'], true) && ! $case->candidates()->exists()) {
                 $this->fail('A potential or confirmed match must reference a source candidate.');
-            }
-            if ($outcome === 'no_match' && $hasCandidates && mb_strlen($note) < 10) {
-                $this->fail('Explain why the candidate records were ruled out.');
             }
             if ($decision === 'approve' && ! $profile->screening_legacy_access
                 && collect($profile->marketplaceReadinessChecks())->except('screening')->contains(false)) {
                 $this->fail('Complete the required caregiver profile information before approval.');
-            }
-            // Lifting a pre-rollout restriction is an explicit, explained admin decision.
-            if ($decision === 'approve' && $profile->status === 'suspended' && ! $profile->screening_suspended_at) {
-                if (mb_strlen($note) < 10) {
-                    $this->fail('Explain why the existing account suspension is being lifted.');
-                }
             }
             $before = $this->accessSnapshot($profile);
             $case->update(['status' => 'completed', 'open_profile_id' => null, 'outcome' => $outcome,
@@ -227,31 +216,27 @@ class CaregiverScreeningService
         }, 3);
     }
 
-    public function defer(int $caseId, User $admin, string $note, int $expectedVersion): CaregiverScreeningCase
+    public function defer(int $caseId, User $admin, ?string $note, int $expectedVersion): CaregiverScreeningCase
     {
         $this->authorize($admin);
-        if (mb_strlen(trim($note)) < 5 || mb_strlen($note) > 5000) {
-            $this->fail('Explain what needs investigation (5–5,000 characters).');
-        }
+        $note = $this->normalizeNote($note);
 
         return DB::transaction(function () use ($caseId, $admin, $note, $expectedVersion): CaregiverScreeningCase {
             $case = CaregiverScreeningCase::lockForUpdate()->findOrFail($caseId);
             $this->assertOpen($case);
             $this->assertClaim($case, $admin, $expectedVersion);
             $case->update(['status' => $case->status === 'awaiting_kyc' ? 'awaiting_kyc' : 'awaiting_investigation',
-                'note' => trim($note), 'claimed_by' => null, 'claimed_until' => null, 'lock_version' => $case->lock_version + 1]);
-            $this->audit->record($case->id, $admin->id, 'case_deferred', ['note' => trim($note)]);
+                'note' => $note, 'claimed_by' => null, 'claimed_until' => null, 'lock_version' => $case->lock_version + 1]);
+            $this->audit->record($case->id, $admin->id, 'case_deferred', ['note' => $note]);
 
             return $case;
         }, 3);
     }
 
-    public function suspendNewWork(int $caseId, User $admin, string $note, int $expectedVersion): CaregiverScreeningCase
+    public function suspendNewWork(int $caseId, User $admin, ?string $note, int $expectedVersion): CaregiverScreeningCase
     {
         $this->authorize($admin);
-        if (mb_strlen(trim($note)) < 10 || mb_strlen($note) > 5000) {
-            $this->fail('Explain why new work is being suspended (10–5,000 characters).');
-        }
+        $note = $this->normalizeNote($note);
         $profileId = CaregiverScreeningCase::findOrFail($caseId)->caregiver_profile_id;
 
         return DB::transaction(function () use ($caseId, $admin, $note, $expectedVersion, $profileId): CaregiverScreeningCase {
@@ -263,9 +248,9 @@ class CaregiverScreeningService
             $profile->forceFill(['status' => 'suspended', 'screening_suspended_at' => now(),
                 'screening_suspension_case_id' => $case->id, 'background_check_verified_at' => null])->save();
             // Restrict work without pretending a search has completed or an identity matched.
-            $case->update(['note' => trim($note), 'lock_version' => $case->lock_version + 1]);
+            $case->update(['note' => $note, 'lock_version' => $case->lock_version + 1]);
             $this->audit->record($case->id, $admin->id, 'new_work_suspended', [
-                'caregiver_profile_id' => $profile->id, 'note' => trim($note),
+                'caregiver_profile_id' => $profile->id, 'note' => $note,
                 'before' => $before, 'after' => $this->accessSnapshot($profile),
             ]);
             app(ScreeningBookingReviewService::class)->flagExistingCommitments($profile, $case, $admin->id);
@@ -295,6 +280,16 @@ class CaregiverScreeningService
                 'resolution' => $resolution, 'note' => trim($note),
             ]);
         }, 3);
+    }
+
+    private function normalizeNote(?string $note): string
+    {
+        $note = trim((string) $note);
+        if (mb_strlen($note) > 5000) {
+            $this->fail('The decision or investigation note must not exceed 5,000 characters.');
+        }
+
+        return $note;
     }
 
     private function authorize(User $admin): void

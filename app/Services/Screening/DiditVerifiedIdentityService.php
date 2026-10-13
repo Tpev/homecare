@@ -5,6 +5,8 @@ namespace App\Services\Screening;
 use App\Models\CaregiverIdentityVerification;
 use App\Models\CaregiverProfile;
 use App\Services\Didit\DiditClient;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -12,7 +14,37 @@ class DiditVerifiedIdentityService
 {
     public function snapshot(CaregiverProfile $profile): ?array
     {
-        $verification = $this->currentVerification($profile);
+        return $this->snapshotFromVerification($this->currentVerification($profile));
+    }
+
+    /** Read queue eligibility in batches without trusting cached profile badges or case snapshots. */
+    public function snapshotsForProfiles(Collection $profiles): Collection
+    {
+        if ($profiles->isEmpty()) {
+            return collect();
+        }
+        $profileIds = $profiles->pluck('id')->all();
+        $latestIds = CaregiverIdentityVerification::query()->selectRaw('MAX(id)')
+            ->whereIn('caregiver_profile_id', $profileIds)->groupBy('caregiver_profile_id');
+        $verifications = CaregiverIdentityVerification::query()->whereIn('caregiver_profile_id', $profileIds)
+            ->where(fn (Builder $query) => $query
+                ->whereIn('didit_session_id', $profiles->pluck('identity_verification_session_id')->filter())
+                ->orWhereIn('id', $latestIds))
+            ->orderByDesc('id')->get()->groupBy('caregiver_profile_id');
+
+        return $profiles->mapWithKeys(function (CaregiverProfile $profile) use ($verifications): array {
+            $attempts = $verifications->get($profile->id, collect());
+            $verification = $profile->identity_verification_session_id
+                ? $attempts->firstWhere('didit_session_id', $profile->identity_verification_session_id)
+                : $attempts->first();
+            $snapshot = $this->snapshotFromVerification($verification);
+
+            return $snapshot ? [$profile->id => $snapshot] : [];
+        });
+    }
+
+    private function snapshotFromVerification(?CaregiverIdentityVerification $verification): ?array
+    {
         if (! $verification || $verification->status !== 'approved' || ! $this->isRealSession($verification)) {
             return null;
         }
