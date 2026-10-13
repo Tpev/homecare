@@ -45,10 +45,11 @@ class SbiPublicDataDownloaderTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_fresh_official_form_is_posted_with_session_cookies_and_hidden_state_then_streamed_as_zip(): void
+    #[DataProvider('officialActions')]
+    public function test_fresh_official_form_is_posted_with_session_cookies_and_hidden_state_then_streamed_as_zip(string $action): void
     {
         $jar = null;
-        Http::fake(function (Request $request, array $options) use (&$jar) {
+        Http::fake(function (Request $request, array $options) use (&$jar, $action) {
             $this->assertSame(SbiPublicDataDownloader::PAGE_URL, $request->url());
             $this->assertFalse($options['allow_redirects']);
             $this->assertTrue($options['verify']);
@@ -58,7 +59,7 @@ class SbiPublicDataDownloaderTest extends TestCase
             if ($request->method() === 'GET') {
                 $jar = $options['cookies'];
 
-                return Http::response($this->form(), 200, [
+                return Http::response(str_replace('action="/stats.aspx"', 'action="'.htmlspecialchars($action, ENT_QUOTES).'"', $this->form()), 200, [
                     'Content-Type' => 'text/html; charset=utf-8',
                     'Set-Cookie' => 'ASP.NET_SessionId=synthetic-session; Path=/; Secure; HttpOnly',
                 ]);
@@ -86,6 +87,16 @@ class SbiPublicDataDownloaderTest extends TestCase
 
         $this->assertSame($this->archive, file_get_contents($this->directory.'/download.zip'));
         Http::assertSentCount(2);
+    }
+
+    public static function officialActions(): array
+    {
+        return [
+            'root relative' => ['/stats.aspx'],
+            'relative' => ['stats.aspx'],
+            'observed official dot relative action' => ['./stats.aspx'],
+            'absolute official URL' => [SbiPublicDataDownloader::PAGE_URL],
+        ];
     }
 
     public function test_each_download_fetches_new_view_state_and_uses_a_new_cookie_jar(): void
@@ -135,6 +146,9 @@ class SbiPublicDataDownloaderTest extends TestCase
             'other path' => ['/admin.aspx'],
             'userinfo' => ['https://user@sexoffender.ncsbi.gov/stats.aspx'],
             'query' => ['/stats.aspx?forward=https://untrusted.example.test'],
+            'dot relative query' => ['./stats.aspx?forward=https://untrusted.example.test'],
+            'dot relative other path' => ['./other.aspx'],
+            'dot relative fragment' => ['./stats.aspx#download'],
         ];
     }
 

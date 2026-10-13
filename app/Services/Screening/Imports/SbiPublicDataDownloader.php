@@ -174,7 +174,7 @@ class SbiPublicDataDownloader
         if (! $form instanceof DOMElement || $form->getAttribute('id') !== '_ctl0'
             || strtolower($form->getAttribute('method')) !== 'post'
             || $xpath->query('//form[@id="_ctl0"]')->length !== 1
-            || ! in_array($form->getAttribute('action'), ['/stats.aspx', 'stats.aspx', self::PAGE_URL], true)) {
+            || ! in_array($form->getAttribute('action'), ['/stats.aspx', 'stats.aspx', './stats.aspx', self::PAGE_URL], true)) {
             throw new RuntimeException('The SBI download form must post to the official statistics page.');
         }
         $fields = [];

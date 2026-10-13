@@ -56,7 +56,7 @@ All tables join through `SexRegistrationNumber`. `FullName` is parsed as `SURNAM
 
 `SCREENING_SBI_LAYOUT` defaults to `{"format":"sbi_public_fixed_width"}`. Future reviewed flat CSV/XML layouts can specify `format`, exact ZIP `member`, full `headers`, semantic `fields`, and XML `record_element`. CSV BOM, quote state, and column counts are validated. XML DTD/entities, nested fields, and repeated fields are rejected. Unknown formats do not silently pass.
 
-Without `SCREENING_SBI_DOWNLOAD_URL`, the downloader loads `https://sexoffender.ncsbi.gov/stats.aspx`, reads fresh form fields/cookies, and posts `__EVENTTARGET=datadownloadbutton` to the same official endpoint. The optional URL overrides this with a verified direct HTTPS file endpoint; it must not be the statistics HTML page. Network success still needs verification from the deployment host.
+Without `SCREENING_SBI_DOWNLOAD_URL`, the downloader loads `https://sexoffender.ncsbi.gov/stats.aspx`, reads fresh form fields/cookies, and posts `__EVENTTARGET=datadownloadbutton` to the same official endpoint. The deployment host's read-only inspection on 2026-10-13 confirmed form ID `_ctl0`, method `post`, and action `./stats.aspx`; this same-page relative action is accepted alongside `/stats.aspx`, `stats.aspx`, and the exact official URL. The POST destination remains fixed to the official HTTPS URL, with redirects disabled. The optional URL overrides this with a verified direct HTTPS file endpoint; it must not be the statistics HTML page. A complete network download still needs verification from the deployment host.
 
 ## Source coverage
 
