@@ -263,9 +263,11 @@ class ScreeningDatasetImportTest extends TestCase
     {
         $exception = new \Illuminate\Database\QueryException('sqlite', 'insert into example values (?)', ['PRIVATE_SOURCE_ROW'], new \RuntimeException('database issue'));
         $this->mock(ScreeningDatasetImporter::class)->shouldReceive('import')->once()->andThrow($exception);
-        \Illuminate\Support\Facades\Log::shouldReceive('error')->once()->withArgs(function (string $message, array $context): bool {
+        \Illuminate\Support\Facades\Log::shouldReceive('error')->once()->withArgs(function (string $message, array $context) use ($exception): bool {
             return $context['source'] === 'nc_sbi'
                 && $context['exception_class'] === \Illuminate\Database\QueryException::class
+                && $context['exception_file'] === basename($exception->getFile())
+                && $context['exception_line'] === $exception->getLine()
                 && ! str_contains(json_encode([$message, $context]), 'PRIVATE_SOURCE_ROW');
         });
         $this->artisan('screening:import', ['source' => 'nc_sbi'])

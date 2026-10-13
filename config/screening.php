@@ -17,10 +17,10 @@ return [
             'page_url' => 'https://webapps.doc.state.nc.us/opi/downloads.do?method=view',
             'allowed_hosts' => ['www.doc.state.nc.us', 'webapps.doc.state.nc.us', 'opus.doc.state.nc.us'],
             'files' => [
-                'OFNT3AA1' => ['filename' => 'OFNT3AA1.zip', 'url' => env('SCREENING_DAC_OFNT3AA1_URL', 'https://www.doc.state.nc.us/offenders/OFNT3AA1.zip'), 'type' => 'profile'],
-                'OFNT3BB1' => ['filename' => 'OFNT3BB1.zip', 'url' => env('SCREENING_DAC_OFNT3BB1_URL', 'https://www.doc.state.nc.us/offenders/OFNT3BB1.zip'), 'type' => 'commitment'],
-                'OFNT3CE1' => ['filename' => 'OFNT3CE1.zip', 'url' => env('SCREENING_DAC_OFNT3CE1_URL', 'https://www.doc.state.nc.us/offenders/OFNT3CE1.zip'), 'type' => 'sentence'],
-                'APPT7AA1' => ['filename' => 'APPT7AA1.zip', 'url' => env('SCREENING_DAC_APPT7AA1_URL', 'https://www.doc.state.nc.us/offenders/APPT7AA1.zip'), 'type' => 'probation'],
+                'OFNT3AA1' => ['filename' => 'OFNT3AA1.zip', 'url' => env('SCREENING_DAC_OFNT3AA1_URL', 'https://opus.doc.state.nc.us/offenders/OFNT3AA1.zip'), 'type' => 'profile'],
+                'OFNT3BB1' => ['filename' => 'OFNT3BB1.zip', 'url' => env('SCREENING_DAC_OFNT3BB1_URL', 'https://opus.doc.state.nc.us/offenders/OFNT3BB1.zip'), 'type' => 'commitment'],
+                'OFNT3CE1' => ['filename' => 'OFNT3CE1.zip', 'url' => env('SCREENING_DAC_OFNT3CE1_URL', 'https://opus.doc.state.nc.us/offenders/OFNT3CE1.zip'), 'type' => 'sentence'],
+                'APPT7AA1' => ['filename' => 'APPT7AA1.zip', 'url' => env('SCREENING_DAC_APPT7AA1_URL', 'https://opus.doc.state.nc.us/offenders/APPT7AA1.zip'), 'type' => 'probation'],
             ],
             // AA contains demographics, not names. Index commitment and P&P names against AA IDs.
             'fields' => json_decode(env('SCREENING_DAC_FIELDS', '{}'), true) ?: [

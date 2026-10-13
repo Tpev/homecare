@@ -20,7 +20,13 @@ class ImportScreeningDataset extends Command
             return self::SUCCESS;
         } catch (\Throwable $exception) {
             $safeMessage = get_class($exception) === \RuntimeException::class ? $exception->getMessage() : 'Import failed during download, parsing, or database write. The previous snapshot remains active.';
-            \Illuminate\Support\Facades\Log::error('Screening dataset import failed.', ['source' => $this->argument('source'), 'exception_class' => get_class($exception), 'message' => $safeMessage]);
+            \Illuminate\Support\Facades\Log::error('Screening dataset import failed.', [
+                'source' => $this->argument('source'),
+                'exception_class' => get_class($exception),
+                'exception_file' => basename($exception->getFile()),
+                'exception_line' => $exception->getLine(),
+                'message' => $safeMessage,
+            ]);
             $this->error($safeMessage);
 
             return self::FAILURE;

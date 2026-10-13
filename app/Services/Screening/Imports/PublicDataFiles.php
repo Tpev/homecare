@@ -35,7 +35,10 @@ class PublicDataFiles
                 throw new RuntimeException('The downloaded screening file is empty or exceeds the size limit.');
             }
         } catch (\Throwable $exception) {
-            fclose($output);
+            // The HTTP transport may already have closed its sink after a failed request.
+            if (is_resource($output)) {
+                fclose($output);
+            }
             $output = null;
             if (is_file($destination)) {
                 unlink($destination);

@@ -6,7 +6,7 @@ The default adapters were checked against the five official ZIP files supplied o
 
 Official references: [NC DAC downloads](https://webapps.doc.state.nc.us/opi/downloads.do?method=view), [DAC public table structure](https://www.doc.state.nc.us/offenders/PublicTables.pdf), and [NC SBI public download](https://sexoffender.ncsbi.gov/stats.aspx).
 
-The default local adapters are usable with the supplied files. Automated network downloads have not been proven from this environment; direct official requests timed out. SBI's official page mechanism was inspected in the user's browser: its download control submits an ASP.NET postback. The downloader reproduces that protocol against the official host, with fresh hidden fields and cookies. A browser proxy address must never be used as a production endpoint.
+The default local adapters are usable with the supplied files. SBI's network download and import succeeded on the deployment host on 2026-10-13. Its download control submits an ASP.NET postback, which the downloader reproduces with fresh hidden fields and cookies. All four DAC ZIP endpoints passed verified HTTPS header checks on that host; a complete DAC network import still needs confirmation. Direct official requests from the development environment timed out. A browser proxy address must never be used as a production endpoint.
 
 Missing, malformed, or stale source versions prevent finalizing a screening search. They do not restrict legacy or recurring-review caregivers.
 
@@ -34,7 +34,7 @@ Approved descriptor SHA-256 values:
 
 `SCREENING_DAC_FIELDS` and `SCREENING_DAC_DESCRIPTOR_HASHES` accept reviewed JSON overrides. Field mappings support `offender_id`, `first_name`, `middle_name`, `last_name`, `full_name`, `date_of_birth`, alias fields, explicit name ordering, and documented alias separators. DAC text defaults to Windows-1252. Do not use synthetic fixture mappings in production.
 
-Per-file URL overrides are `SCREENING_DAC_OFNT3AA1_URL`, `SCREENING_DAC_OFNT3BB1_URL`, `SCREENING_DAC_OFNT3CE1_URL`, and `SCREENING_DAC_APPT7AA1_URL`. Allowed hosts are `www.doc.state.nc.us`, `webapps.doc.state.nc.us`, and `opus.doc.state.nc.us`. Supplied download metadata identifies `/offenders/<TABLE>.zip` on the `opus.doc.state.nc.us` origin, but HTTPS availability could not be established here. Defaults retain the documented `www.doc.state.nc.us` HTTPS paths; configure verified final endpoints for the deployment environment. Redirects and non-HTTPS URLs are rejected.
+Per-file URL overrides are `SCREENING_DAC_OFNT3AA1_URL`, `SCREENING_DAC_OFNT3BB1_URL`, `SCREENING_DAC_OFNT3CE1_URL`, and `SCREENING_DAC_APPT7AA1_URL`. Allowed hosts are `www.doc.state.nc.us`, `webapps.doc.state.nc.us`, and `opus.doc.state.nc.us`. Defaults use `https://opus.doc.state.nc.us/offenders/<TABLE>.zip`, matching the official download page and supplied file metadata. On 2026-10-13, the deployment host verified all four endpoints over HTTPS: each returned HTTP 200 with ZIP content type. The earlier `www.doc.state.nc.us` endpoint failed certificate-chain validation on that host. Keep TLS verification enabled and inspect any environment overrides before deployment; redirects and non-HTTPS URLs are rejected.
 
 ## NC SBI
 
@@ -56,7 +56,7 @@ All tables join through `SexRegistrationNumber`. `FullName` is parsed as `SURNAM
 
 `SCREENING_SBI_LAYOUT` defaults to `{"format":"sbi_public_fixed_width"}`. Future reviewed flat CSV/XML layouts can specify `format`, exact ZIP `member`, full `headers`, semantic `fields`, and XML `record_element`. CSV BOM, quote state, and column counts are validated. XML DTD/entities, nested fields, and repeated fields are rejected. Unknown formats do not silently pass.
 
-Without `SCREENING_SBI_DOWNLOAD_URL`, the downloader loads `https://sexoffender.ncsbi.gov/stats.aspx`, reads fresh form fields/cookies, and posts `__EVENTTARGET=datadownloadbutton` to the same official endpoint. The deployment host's read-only inspection on 2026-10-13 confirmed form ID `_ctl0`, method `post`, and action `./stats.aspx`; this same-page relative action is accepted alongside `/stats.aspx`, `stats.aspx`, and the exact official URL. The POST destination remains fixed to the official HTTPS URL, with redirects disabled. The optional URL overrides this with a verified direct HTTPS file endpoint; it must not be the statistics HTML page. A complete network download still needs verification from the deployment host.
+Without `SCREENING_SBI_DOWNLOAD_URL`, the downloader loads `https://sexoffender.ncsbi.gov/stats.aspx`, reads fresh form fields/cookies, and posts `__EVENTTARGET=datadownloadbutton` to the same official endpoint. The deployment host's read-only inspection on 2026-10-13 confirmed form ID `_ctl0`, method `post`, and action `./stats.aspx`; this same-page relative action is accepted alongside `/stats.aspx`, `stats.aspx`, and the exact official URL. The POST destination remains fixed to the official HTTPS URL, with redirects disabled. The optional URL overrides this with a verified direct HTTPS file endpoint; it must not be the statistics HTML page. The deployment host subsequently completed the network import with 32,003 source IDs.
 
 The same host returned only `__VIEWSTATE` and `__VIEWSTATEGENERATOR` hidden inputs. Both must be present and nonempty in each fresh page. The downloader supplies `__EVENTTARGET=datadownloadbutton` and an empty `__EVENTARGUMENT` from the validated download action even when their inputs are absent, and overrides any existing values. Other supplied hidden fields, including `__EVENTVALIDATION`, are retained; absent state tokens are never fabricated.
 
@@ -88,6 +88,8 @@ Limits are 512 MiB compressed per file, 8 GiB declared uncompressed per archive,
 Required tables must be nonempty, primary IDs unique, and row layouts valid. Supporting references reconcile to actual or explicit source-only profiles. A table losing over 20% of the prior version's row count prevents activation. Review legitimate large removals before changing `minimum_retained_ratio`; no CLI bypass exists. Rows are not skipped to make a source appear clean.
 
 Activation occurs only after validation. Failed replacements preserve the prior active version and remove partial searchable rows. Failed private archives and sanitized failure metadata remain for diagnosis. The previous version is usable only until its freshness limit.
+
+Import failures log the exception class, PHP filename and line number, plus a sanitized message. Database bindings and unexpected exception messages are not logged because they can contain source records. Download cleanup preserves the original failure even if the HTTP transport has already closed the private output handle.
 
 ## Operations
 
