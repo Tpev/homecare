@@ -58,6 +58,8 @@ All tables join through `SexRegistrationNumber`. `FullName` is parsed as `SURNAM
 
 Without `SCREENING_SBI_DOWNLOAD_URL`, the downloader loads `https://sexoffender.ncsbi.gov/stats.aspx`, reads fresh form fields/cookies, and posts `__EVENTTARGET=datadownloadbutton` to the same official endpoint. The deployment host's read-only inspection on 2026-10-13 confirmed form ID `_ctl0`, method `post`, and action `./stats.aspx`; this same-page relative action is accepted alongside `/stats.aspx`, `stats.aspx`, and the exact official URL. The POST destination remains fixed to the official HTTPS URL, with redirects disabled. The optional URL overrides this with a verified direct HTTPS file endpoint; it must not be the statistics HTML page. A complete network download still needs verification from the deployment host.
 
+The same host returned only `__VIEWSTATE` and `__VIEWSTATEGENERATOR` hidden inputs. Both must be present and nonempty in each fresh page. The downloader supplies `__EVENTTARGET=datadownloadbutton` and an empty `__EVENTARGUMENT` from the validated download action even when their inputs are absent, and overrides any existing values. Other supplied hidden fields, including `__EVENTVALIDATION`, are retained; absent state tokens are never fabricated.
+
 ## Source coverage
 
 Some supporting records have an ID absent from the primary table. These are preserved as explicit source-only profiles, with every published related row and all available names. No identity, name, birth date, or primary record is invented. Candidate evidence warns about the missing primary record.

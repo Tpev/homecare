@@ -188,7 +188,8 @@ class SbiPublicDataDownloader
             }
             $fields[$name] = $input->getAttribute('value');
         }
-        foreach (['__EVENTTARGET', '__EVENTARGUMENT', '__VIEWSTATE', '__VIEWSTATEGENERATOR'] as $name) {
+        // Routing fields can be absent from the page; we supply them from the validated control below.
+        foreach (['__VIEWSTATE', '__VIEWSTATEGENERATOR'] as $name) {
             if (! array_key_exists($name, $fields)) {
                 throw new RuntimeException('Required SBI postback fields are missing.');
             }

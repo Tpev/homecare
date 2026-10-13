@@ -99,6 +99,62 @@ class SbiPublicDataDownloaderTest extends TestCase
         ];
     }
 
+    #[DataProvider('optionalEventFields')]
+    public function test_postback_event_fields_are_synthesized_from_the_verified_download_control(string $eventFields): void
+    {
+        $form = <<<HTML
+<!doctype html><html><body>
+<form id="_ctl0" method="post" action="./stats.aspx">
+{$eventFields}
+<input type="hidden" name="__VIEWSTATE" value="fresh+state&amp;encoded=">
+<input type="hidden" name="__VIEWSTATEGENERATOR" value="A1B2C3D4">
+<a id="datadownloadbutton" href="javascript:__doPostBack('datadownloadbutton','')">Download Sex Offender Public data</a>
+</form></body></html>
+HTML;
+        $jar = null;
+        Http::fake(function (Request $request, array $options) use (&$jar, $form) {
+            $this->assertSame(SbiPublicDataDownloader::PAGE_URL, $request->url());
+            $this->assertFalse($options['allow_redirects']);
+            $this->assertTrue($options['verify']);
+            $this->assertTrue($options['stream']);
+            $this->assertInstanceOf(CookieJar::class, $options['cookies']);
+            if ($request->method() === 'GET') {
+                $jar = $options['cookies'];
+                $this->assertEmpty($request->header('Cookie'));
+
+                return Http::response($form, 200, [
+                    'Content-Type' => 'text/html; charset=utf-8',
+                    'Set-Cookie' => 'ASP.NET_SessionId=synthetic-session; Path=/; Secure; HttpOnly',
+                ]);
+            }
+            $this->assertSame('POST', $request->method());
+            $this->assertSame($jar, $options['cookies']);
+            $this->assertStringContainsString('ASP.NET_SessionId=synthetic-session', $request->header('Cookie')[0] ?? '');
+            $this->assertEquals([
+                '__VIEWSTATE' => 'fresh+state&encoded=', '__VIEWSTATEGENERATOR' => 'A1B2C3D4',
+                '__EVENTTARGET' => 'datadownloadbutton', '__EVENTARGUMENT' => '',
+            ], $request->data());
+            $this->assertSame([SbiPublicDataDownloader::PAGE_URL], $request->header('Referer'));
+
+            return Http::response($this->archive, 200, ['Content-Type' => 'application/zip']);
+        });
+
+        app(SbiPublicDataDownloader::class)->download($this->directory.'/download.zip');
+
+        $this->assertSame($this->archive, file_get_contents($this->directory.'/download.zip'));
+        Http::assertSentCount(2);
+    }
+
+    public static function optionalEventFields(): array
+    {
+        return [
+            'observed official form with only view state and generator' => [''],
+            'missing event target' => ['<input type="hidden" name="__EVENTARGUMENT" value="unexpected">'],
+            'missing event argument' => ['<input type="hidden" name="__EVENTTARGET" value="unexpected">'],
+            'existing event values are overridden' => ['<input type="hidden" name="__EVENTTARGET" value="unexpected"><input type="hidden" name="__EVENTARGUMENT" value="unexpected">'],
+        ];
+    }
+
     public function test_each_download_fetches_new_view_state_and_uses_a_new_cookie_jar(): void
     {
         $requestNumber = 0;
@@ -169,7 +225,12 @@ class SbiPublicDataDownloaderTest extends TestCase
             'changed control' => ['id="datadownloadbutton"', 'id="differentbutton"'],
             'unexpected script' => ["__doPostBack('datadownloadbutton','')", "__doPostBack('datadownloadbutton','');alert(1)"],
             'missing view state' => ['name="__VIEWSTATE"', 'name="other_state"'],
+            'empty view state' => ['value="fresh+state&amp;encoded="', 'value=""'],
+            'missing view state generator' => ['name="__VIEWSTATEGENERATOR"', 'name="other_generator"'],
+            'empty view state generator' => ['value="A1B2C3D4"', 'value=""'],
             'duplicate state' => ['<input type="text" name="search">', '<input type="hidden" name="__VIEWSTATE" value="ambiguous">'],
+            'duplicate generator' => ['<input type="text" name="search">', '<input type="hidden" name="__VIEWSTATEGENERATOR" value="ambiguous">'],
+            'duplicate event target' => ['<input type="text" name="search">', '<input type="hidden" name="__EVENTTARGET" value="ambiguous">'],
             'wrong form' => ['id="_ctl0"', 'id="different_form"'],
             'wrong method' => ['method="post"', 'method="get"'],
             'control outside form' => ['<a id="datadownloadbutton"', '</form><a id="datadownloadbutton"'],
