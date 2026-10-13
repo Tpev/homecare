@@ -185,7 +185,8 @@ class CaregiverScreeningService
             if (in_array($outcome, ['potential_match', 'match'], true) && ! $case->candidates()->exists()) {
                 $this->fail('A potential or confirmed match must reference a source candidate.');
             }
-            if ($decision === 'approve' && ! $profile->screening_legacy_access
+            // Existing accounts can finish screening even if their profile is incomplete.
+            if ($decision === 'approve' && $profile->screening_legacy_at === null && ! $profile->screening_legacy_access
                 && collect($profile->marketplaceReadinessChecks())->except('screening')->contains(false)) {
                 $this->fail('Complete the required caregiver profile information before approval.');
             }

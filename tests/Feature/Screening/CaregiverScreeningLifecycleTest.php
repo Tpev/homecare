@@ -244,6 +244,85 @@ class CaregiverScreeningLifecycleTest extends TestCase
         $this->assertSame([], $searchAudit->payload['candidates']);
     }
 
+    public function test_legacy_profiles_without_preserved_access_can_be_approved_with_incomplete_profile_details(): void
+    {
+        $this->mockSearch();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $service = app(CaregiverScreeningService::class);
+
+        foreach (['under_review', 'draft', 'suspended'] as $status) {
+            $legacyAt = now()->subDays(2)->startOfDay();
+            $profile = $this->profile(['status' => $status, 'screening_legacy_at' => $legacyAt,
+                'screening_legacy_access' => false]);
+            $this->assertNull($profile->bio);
+            $this->assertTrue(collect($profile->marketplaceReadinessChecks())->contains(false));
+            $this->assertFalse(app(CaregiverWorkEligibility::class)->allowsNewWork($profile));
+            $case = $this->claimedSearch($profile, $admin);
+            $this->assertSame('legacy', $case->kind);
+
+            $service->decide($case->id, $admin, null, 'approve', null, $case->lock_version);
+
+            $profile->refresh();
+            $case->refresh();
+            $this->assertSame('completed', $case->status);
+            $this->assertSame('approve', $case->decision);
+            $this->assertNull($case->open_profile_id);
+            $this->assertSame($admin->id, $case->decided_by);
+            $this->assertNotNull($case->completed_at);
+            $this->assertSame('active', $profile->status);
+            $this->assertFalse($profile->screening_legacy_access);
+            $this->assertTrue($legacyAt->equalTo($profile->screening_legacy_at));
+            $this->assertNotNull($profile->screening_initial_approved_at);
+            $this->assertNotNull($profile->background_check_verified_at);
+            $this->assertNotNull($profile->screening_next_due_at);
+            $this->assertTrue(app(CaregiverWorkEligibility::class)->allowsNewWork($profile));
+            $event = $case->events()->where('event_type', 'screening_decided')->sole();
+            $this->assertSame($admin->id, $event->actor_user_id);
+            $this->assertSame('approve', $event->payload['decision']);
+            $this->assertNull($event->payload['outcome']);
+            $this->assertSame($status, $event->payload['before']['status']);
+            $this->assertFalse($event->payload['before']['legacy_access']);
+            $this->assertNull($event->payload['before']['initial_approved_at']);
+            $this->assertSame('active', $event->payload['after']['status']);
+            $this->assertFalse($event->payload['after']['legacy_access']);
+            $this->assertSame($profile->screening_initial_approved_at->toIso8601String(), $event->payload['after']['initial_approved_at']);
+        }
+    }
+
+    public function test_new_incomplete_profiles_cannot_bypass_approval_readiness_with_a_legacy_case_or_old_creation_date(): void
+    {
+        $this->mockSearch();
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        foreach (['initial', 'legacy_case', 'old_creation_date'] as $scenario) {
+            $profile = $this->profile(['status' => 'under_review', 'screening_legacy_at' => null,
+                'screening_legacy_access' => false]);
+            if ($scenario === 'old_creation_date') {
+                $profile->update(['created_at' => now()->subYears(2)]);
+            }
+            $case = $this->claimedSearch($profile, $admin);
+            if ($scenario === 'legacy_case') {
+                $case->update(['kind' => 'legacy']);
+            }
+
+            try {
+                app(CaregiverScreeningService::class)->decide($case->id, $admin, null, 'approve', null, $case->lock_version);
+                $this->fail('An incomplete new profile was approved without a legacy marker.');
+            } catch (ValidationException $exception) {
+                $this->assertSame(['screening' => ['Complete the required caregiver profile information before approval.']], $exception->errors());
+            }
+
+            $this->assertSame('in_review', $case->fresh()->status);
+            $this->assertNull($case->fresh()->decision);
+            $this->assertSame($profile->id, $case->fresh()->open_profile_id);
+            $this->assertSame('under_review', $profile->fresh()->status);
+            $this->assertNull($profile->fresh()->screening_initial_approved_at);
+            $this->assertNull($profile->fresh()->background_check_verified_at);
+            $this->assertFalse(app(CaregiverWorkEligibility::class)->allowsNewWork($profile->fresh()));
+            $this->assertFalse($case->events()->where('event_type', 'screening_decided')->exists());
+        }
+    }
+
     public function test_explicit_suspension_is_required_and_logged(): void
     {
         $this->mockSearch([['source' => 'nc_dac', 'source_record_id' => '11', 'matched_name' => 'Alex Example',

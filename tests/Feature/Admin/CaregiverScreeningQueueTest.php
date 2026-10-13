@@ -401,6 +401,34 @@ class CaregiverScreeningQueueTest extends TestCase
         $this->assertSame('reviewed_no_change', $review->fresh()->resolution);
     }
 
+    public function test_approve_and_next_completes_an_incomplete_legacy_profile_without_a_prior_work_access_grant(): void
+    {
+        $case = $this->makeCase('legacy', ['status' => 'under_review',
+            'screening_legacy_at' => now()->subDay(), 'screening_legacy_access' => false]);
+        $this->prepareSearch($case);
+        $profile = $case->profile;
+        $readiness = $profile->marketplaceReadinessChecks();
+        $this->assertContains(false, $readiness);
+        $next = $this->makeCase('legacy', ['screening_legacy_access' => true]);
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        Livewire::actingAs($admin)->test(CaregiverReviewsQueue::class)
+            ->assertSet('selectedId', $case->id)->call('claim')->call('search')->assertHasNoErrors()
+            ->call('decide', 'approve')->assertHasNoErrors()->assertSet('selectedId', $next->id);
+
+        $this->assertSame('completed', $case->fresh()->status);
+        $this->assertSame('approve', $case->fresh()->decision);
+        $this->assertNull($case->fresh()->outcome);
+        $this->assertSame('active', $profile->fresh()->status);
+        $this->assertNotNull($profile->fresh()->screening_initial_approved_at);
+        $this->assertFalse($profile->fresh()->screening_legacy_access);
+        $this->assertSame($readiness, $profile->fresh()->marketplaceReadinessChecks());
+        $event = ScreeningAuditEvent::where('screening_case_id', $case->id)->where('event_type', 'screening_decided')->sole();
+        $this->assertSame($admin->id, $event->actor_user_id);
+        $this->assertSame('under_review', $event->payload['before']['status']);
+        $this->assertSame('active', $event->payload['after']['status']);
+    }
+
     public function test_approve_and_next_completes_an_initial_screening_after_real_search(): void
     {
         $case = $this->makeCase('initial', ['status' => 'under_review']);
